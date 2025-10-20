@@ -38,7 +38,7 @@ library LibERC173 {
     function transferOwnership(address _newOwner) internal {
         ERC173Storage storage s = getStorage();
         if (s.owner == address(0)) revert OwnableAlreadyRenounced();
-        emit OwnershipTransferred(s.owner, _newOwner);
         s.owner = _newOwner;
+        emit OwnershipTransferred(s.owner, _newOwner);
     }
 }

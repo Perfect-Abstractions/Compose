@@ -38,7 +38,7 @@ contract ERC173Facet {
     function transferOwnership(address _newOwner) external {
         ERC173Storage storage s = getStorage();
         if (msg.sender != s.owner) revert OwnableUnauthorizedAccount();
-        emit OwnershipTransferred(s.owner, _newOwner);
         s.owner = _newOwner;
+        emit OwnershipTransferred(s.owner, _newOwner);
     }
 }
