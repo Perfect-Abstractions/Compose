@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.30;
 
-import {ERC20Facet} from "../src/ERC20/ERC20/ERC20Facet.sol";
-import {LibERC20} from "../src/ERC20/ERC20/libraries/LibERC20.sol";
+import {ERC20Facet} from "../../src/ERC20/ERC20/ERC20Facet.sol";
+import {LibERC20} from "../../src/ERC20/ERC20/libraries/LibERC20.sol";
 
 
 /// @title ERC20Mock
