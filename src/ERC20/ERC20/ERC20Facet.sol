@@ -69,6 +69,8 @@ contract ERC20Facet {
         mapping(address owner => uint256 balance) balanceOf;
         mapping(address owner => mapping(address spender => uint256 allowance)) allowances;
         mapping(address owner => uint256) nonces;
+        bytes32 cachedDomainSeparator;
+        uint256 cachedChainId;
     }
 
     /**
@@ -257,9 +259,23 @@ contract ERC20Facet {
     /**
      * @notice Returns the domain separator used in the encoding of the signature for {permit}.
      * @dev This value is unique to a contract and chain ID combination to prevent replay attacks.
+     *      Caches the domain separator and recalculates only if chain ID changes (for fork safety).
      * @return The domain separator.
      */
-    function DOMAIN_SEPARATOR() external view returns (bytes32) {
+    function DOMAIN_SEPARATOR() public view returns (bytes32) {
+        ERC20Storage storage s = getStorage();
+        if (s.cachedChainId == block.chainid) {
+            return s.cachedDomainSeparator;
+        }
+        return _buildDomainSeparator();
+    }
+
+    /**
+     * @notice Builds the domain separator from current chain state.
+     * @dev Internal helper for domain separator calculation.
+     * @return The computed domain separator.
+     */
+    function _buildDomainSeparator() internal view returns (bytes32) {
         return keccak256(
             abi.encode(
                 keccak256("EIP712Domain(string name,string version,uint256 chainId,address verifyingContract)"),
@@ -269,6 +285,17 @@ contract ERC20Facet {
                 address(this)
             )
         );
+    }
+
+    /**
+     * @notice Initializes the cached domain separator for EIP-2612.
+     * @dev Should be called once during contract initialization.
+     *      For testing purposes or if chain forks, domain separator will auto-recalculate.
+     */
+    function _initializeDomainSeparator() internal {
+        ERC20Storage storage s = getStorage();
+        s.cachedChainId = block.chainid;
+        s.cachedDomainSeparator = _buildDomainSeparator();
     }
 
     /**
@@ -308,21 +335,7 @@ contract ERC20Facet {
             )
         );
 
-        bytes32 hash = keccak256(
-            abi.encodePacked(
-                "\x19\x01",
-                keccak256(
-                    abi.encode(
-                        keccak256("EIP712Domain(string name,string version,uint256 chainId,address verifyingContract)"),
-                        keccak256(bytes(s.name)),
-                        keccak256("1"),
-                        block.chainid,
-                        address(this)
-                    )
-                ),
-                structHash
-            )
-        );
+        bytes32 hash = keccak256(abi.encodePacked("\x19\x01", DOMAIN_SEPARATOR(), structHash));
 
         address signer = ecrecover(hash, _v, _r, _s);
         if (signer != _owner || signer == address(0)) {
