@@ -19,7 +19,7 @@ library LibERC173 {
     /// @notice Returns a pointer to the ERC-173 storage struct.
     /// @dev Uses inline assembly to access the storage slot defined by STORAGE_POSITION.
     /// @return s The ERC173Storage struct in storage.
-    function getStorage() internal pure returns (ERC173Storage storage s) {
+    function _getStorage() internal pure returns (ERC173Storage storage s) {
         bytes32 position = STORAGE_POSITION;
         assembly {
             s.slot := position
@@ -28,15 +28,15 @@ library LibERC173 {
 
     /// @notice Get the address of the owner
     /// @return The address of the owner.
-    function owner() internal view returns (address) {
-        return getStorage().owner;
+    function _owner() internal view returns (address) {
+        return _getStorage().owner;
     }
 
     /// @notice Set the address of the new owner of the contract
     /// @dev Set _newOwner to address(0) to renounce any ownership.
     /// @param _newOwner The address of the new owner of the contract
-    function transferOwnership(address _newOwner) internal {
-        ERC173Storage storage s = getStorage();
+    function _transferOwnership(address _newOwner) internal {
+        ERC173Storage storage s = _getStorage();
         if (s.owner == address(0)) revert OwnableAlreadyRenounced();
         emit OwnershipTransferred(s.owner, _newOwner);
         s.owner = _newOwner;

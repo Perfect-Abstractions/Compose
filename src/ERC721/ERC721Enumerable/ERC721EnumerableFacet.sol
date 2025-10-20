@@ -64,7 +64,7 @@ contract ERC721EnumerableFacet {
 
     /// @notice Returns the storage struct used by this facet.
     /// @return s The ERC721Enumerable storage struct.
-    function getStorage() internal pure returns (ERC721EnumerableStorage storage s) {
+    function _getStorage() internal pure returns (ERC721EnumerableStorage storage s) {
         bytes32 position = STORAGE_POSITION;
         assembly {
             s.slot := position
@@ -74,19 +74,19 @@ contract ERC721EnumerableFacet {
     /// @notice Returns the name of the token collection.
     /// @return The token collection name.
     function name() external view returns (string memory) {
-        return getStorage().name;
+        return _getStorage().name;
     }
 
     /// @notice Returns the symbol of the token collection.
     /// @return The token symbol.
     function symbol() external view returns (string memory) {
-        return getStorage().symbol;
+        return _getStorage().symbol;
     }
 
     /// @notice Returns the total number of tokens in existence.
     /// @return The total supply of tokens.
     function totalSupply() external view returns (uint256) {
-        return getStorage().allTokens.length;
+        return _getStorage().allTokens.length;
     }
 
     /// @notice Returns the number of tokens owned by an address.
@@ -96,14 +96,14 @@ contract ERC721EnumerableFacet {
         if (_owner == address(0)) {
             revert ERC721InvalidOwner(_owner);
         }
-        return getStorage().ownedTokensOf[_owner].length;
+        return _getStorage().ownedTokensOf[_owner].length;
     }
 
     /// @notice Returns the owner of a given token ID.
     /// @param _tokenId The token ID to query.
     /// @return The address of the token owner.
     function ownerOf(uint256 _tokenId) public view returns (address) {
-        address owner = getStorage().ownerOf[_tokenId];
+        address owner = _getStorage().ownerOf[_tokenId];
         if (owner == address(0)) {
             revert ERC721NonexistentToken(_tokenId);
         }
@@ -115,7 +115,7 @@ contract ERC721EnumerableFacet {
     /// @param _index The index of the token.
     /// @return The token ID owned by `_owner` at `_index`.
     function tokenOfOwnerByIndex(address _owner, uint256 _index) external view returns (uint256) {
-        ERC721EnumerableStorage storage s = getStorage();
+        ERC721EnumerableStorage storage s = _getStorage();
         if (_index >= s.ownedTokensOf[_owner].length) {
             revert ERC721OutOfBoundsIndex(_owner, _index);
         }
@@ -126,11 +126,11 @@ contract ERC721EnumerableFacet {
     /// @param _tokenId The token ID to query.
     /// @return The approved address for the token.
     function getApproved(uint256 _tokenId) external view returns (address) {
-        address owner = getStorage().ownerOf[_tokenId];
+        address owner = _getStorage().ownerOf[_tokenId];
         if (owner == address(0)) {
             revert ERC721NonexistentToken(_tokenId);
         }
-        return getStorage().approved[_tokenId];
+        return _getStorage().approved[_tokenId];
     }
 
     /// @notice Returns whether an operator is approved for all tokens of an owner.
@@ -138,14 +138,14 @@ contract ERC721EnumerableFacet {
     /// @param _operator The operator address.
     /// @return True if approved for all, false otherwise.
     function isApprovedForAll(address _owner, address _operator) external view returns (bool) {
-        return getStorage().isApprovedForAll[_owner][_operator];
+        return _getStorage().isApprovedForAll[_owner][_operator];
     }
 
     /// @notice Approves another address to transfer a specific token ID.
     /// @param _approved The address being approved.
     /// @param _tokenId The token ID to approve.
     function approve(address _approved, uint256 _tokenId) external {
-        ERC721EnumerableStorage storage s = getStorage();
+        ERC721EnumerableStorage storage s = _getStorage();
         address owner = s.ownerOf[_tokenId];
         if (owner == address(0)) {
             revert ERC721NonexistentToken(_tokenId);
@@ -164,7 +164,7 @@ contract ERC721EnumerableFacet {
         if (_operator == address(0)) {
             revert ERC721InvalidOperator(_operator);
         }
-        getStorage().isApprovedForAll[msg.sender][_operator] = _approved;
+        _getStorage().isApprovedForAll[msg.sender][_operator] = _approved;
         emit ApprovalForAll(msg.sender, _operator, _approved);
     }
 
@@ -172,8 +172,8 @@ contract ERC721EnumerableFacet {
     /// @param _from The address sending the token.
     /// @param _to The address receiving the token.
     /// @param _tokenId The token ID being transferred.
-    function internalTransferFrom(address _from, address _to, uint256 _tokenId) internal {
-        ERC721EnumerableStorage storage s = getStorage();
+    function _transferFrom(address _from, address _to, uint256 _tokenId) internal {
+        ERC721EnumerableStorage storage s = _getStorage();
         if (_to == address(0)) {
             revert ERC721InvalidReceiver(address(0));
         }
@@ -212,7 +212,7 @@ contract ERC721EnumerableFacet {
     /// @param _to The recipient address.
     /// @param _tokenId The token ID to transfer.
     function transferFrom(address _from, address _to, uint256 _tokenId) external {
-        internalTransferFrom(_from, _to, _tokenId);
+        _transferFrom(_from, _to, _tokenId);
     }
 
     /// @notice Safely transfers a token, checking for receiver contract compatibility.
@@ -220,7 +220,7 @@ contract ERC721EnumerableFacet {
     /// @param _to The recipient address.
     /// @param _tokenId The token ID to transfer.
     function safeTransferFrom(address _from, address _to, uint256 _tokenId) external {
-        internalTransferFrom(_from, _to, _tokenId);
+        _transferFrom(_from, _to, _tokenId);
         if (_to.code.length > 0) {
             try IERC721Receiver(_to).onERC721Received(msg.sender, _from, _tokenId, "") returns (bytes4 returnValue) {
                 if (returnValue != IERC721Receiver.onERC721Received.selector) {
@@ -241,7 +241,7 @@ contract ERC721EnumerableFacet {
     /// @param _tokenId The token ID to transfer.
     /// @param _data Additional data to send to the receiver contract.
     function safeTransferFrom(address _from, address _to, uint256 _tokenId, bytes calldata _data) external {
-        internalTransferFrom(_from, _to, _tokenId);
+        _transferFrom(_from, _to, _tokenId);
         if (_to.code.length > 0) {
             try IERC721Receiver(_to).onERC721Received(msg.sender, _from, _tokenId, _data) returns (bytes4 returnValue) {
                 if (returnValue != IERC721Receiver.onERC721Received.selector) {

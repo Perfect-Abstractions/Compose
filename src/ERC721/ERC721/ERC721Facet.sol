@@ -69,7 +69,7 @@ contract ERC721Facet {
     /// @notice Returns a pointer to the ERC-721 storage struct.
     /// @dev Uses inline assembly to access the storage slot defined by STORAGE_POSITION.
     /// @return s The ERC721Storage struct in storage.
-    function getStorage() internal pure returns (ERC721Storage storage s) {
+    function _getStorage() internal pure returns (ERC721Storage storage s) {
         bytes32 position = STORAGE_POSITION;
         assembly {
             s.slot := position
@@ -79,13 +79,13 @@ contract ERC721Facet {
     /// @notice Returns the token collection name.
     /// @return The name of the token collection.
     function name() external view returns (string memory) {
-        return getStorage().name;
+        return _getStorage().name;
     }
 
     /// @notice Returns the token collection symbol.
     /// @return The symbol of the token collection.
     function symbol() external view returns (string memory) {
-        return getStorage().symbol;
+        return _getStorage().symbol;
     }
 
     /// @notice Returns the number of tokens owned by a given address.
@@ -95,14 +95,14 @@ contract ERC721Facet {
         if (_owner == address(0)) {
             revert ERC721InvalidOwner(_owner);
         }
-        return getStorage().balanceOf[_owner];
+        return _getStorage().balanceOf[_owner];
     }
 
     /// @notice Returns the owner of a given token ID.
     /// @param _tokenId The token ID to query.
     /// @return The address of the token owner.
     function ownerOf(uint256 _tokenId) public view returns (address) {
-        address owner = getStorage().ownerOf[_tokenId];
+        address owner = _getStorage().ownerOf[_tokenId];
         if (owner == address(0)) {
             revert ERC721NonexistentToken(_tokenId);
         }
@@ -113,11 +113,11 @@ contract ERC721Facet {
     /// @param _tokenId The token ID to query the approval of.
     /// @return The approved address for the token.
     function getApproved(uint256 _tokenId) external view returns (address) {
-        address owner = getStorage().ownerOf[_tokenId];
+        address owner = _getStorage().ownerOf[_tokenId];
         if (owner == address(0)) {
             revert ERC721NonexistentToken(_tokenId);
         }
-        return getStorage().approved[_tokenId];
+        return _getStorage().approved[_tokenId];
     }
 
     /// @notice Returns true if an operator is approved to manage all of an owner's assets.
@@ -125,14 +125,14 @@ contract ERC721Facet {
     /// @param _operator The operator address.
     /// @return True if the operator is approved for all tokens of the owner.
     function isApprovedForAll(address _owner, address _operator) external view returns (bool) {
-        return getStorage().isApprovedForAll[_owner][_operator];
+        return _getStorage().isApprovedForAll[_owner][_operator];
     }
 
     /// @notice Approves another address to transfer the given token ID.
     /// @param _approved The address to be approved.
     /// @param _tokenId The token ID to approve.
     function approve(address _approved, uint256 _tokenId) external {
-        ERC721Storage storage s = getStorage();
+        ERC721Storage storage s = _getStorage();
         address owner = s.ownerOf[_tokenId];
         if (owner == address(0)) {
             revert ERC721NonexistentToken(_tokenId);
@@ -151,7 +151,7 @@ contract ERC721Facet {
         if (_operator == address(0)) {
             revert ERC721InvalidOperator(_operator);
         }
-        getStorage().isApprovedForAll[msg.sender][_operator] = _approved;
+        _getStorage().isApprovedForAll[msg.sender][_operator] = _approved;
         emit ApprovalForAll(msg.sender, _operator, _approved);
     }
 
@@ -159,8 +159,8 @@ contract ERC721Facet {
     /// @param _from The current owner of the token.
     /// @param _to The address to receive the token.
     /// @param _tokenId The token ID to transfer.
-    function internalTransferFrom(address _from, address _to, uint256 _tokenId) internal {
-        ERC721Storage storage s = getStorage();
+    function _transferFrom(address _from, address _to, uint256 _tokenId) internal {
+        ERC721Storage storage s = _getStorage();
         if (_to == address(0)) {
             revert ERC721InvalidReceiver(address(0));
         }
@@ -190,7 +190,7 @@ contract ERC721Facet {
     /// @param _to The address to receive the token.
     /// @param _tokenId The token ID to transfer.
     function transferFrom(address _from, address _to, uint256 _tokenId) external {
-        internalTransferFrom(_from, _to, _tokenId);
+        _transferFrom(_from, _to, _tokenId);
     }
 
     /// @notice Safely transfers a token, checking if the receiver can handle ERC-721 tokens.
@@ -198,7 +198,7 @@ contract ERC721Facet {
     /// @param _to The address to receive the token.
     /// @param _tokenId The token ID to transfer.
     function safeTransferFrom(address _from, address _to, uint256 _tokenId) external {
-        internalTransferFrom(_from, _to, _tokenId);
+        _transferFrom(_from, _to, _tokenId);
 
         if (_to.code.length > 0) {
             try IERC721Receiver(_to).onERC721Received(msg.sender, _from, _tokenId, "") returns (bytes4 returnValue) {
@@ -223,7 +223,7 @@ contract ERC721Facet {
     /// @param _tokenId The token ID to transfer.
     /// @param _data Additional data with no specified format.
     function safeTransferFrom(address _from, address _to, uint256 _tokenId, bytes calldata _data) external {
-        internalTransferFrom(_from, _to, _tokenId);
+        _transferFrom(_from, _to, _tokenId);
         if (_to.code.length > 0) {
             try IERC721Receiver(_to).onERC721Received(msg.sender, _from, _tokenId, _data) returns (bytes4 returnValue) {
                 if (returnValue != IERC721Receiver.onERC721Received.selector) {
@@ -245,7 +245,7 @@ contract ERC721Facet {
     /// @param _tokenId tokenID of the NFT to query the metadata from
     /// @return the URI providing the detailed metadata of the specified tokenID
     function tokenURI(uint256 _tokenId) external view returns (string memory) {
-        ERC721Storage storage s = getStorage();
+        ERC721Storage storage s = _getStorage();
         address owner = s.ownerOf[_tokenId];
         if (owner == address(0)) {
             revert ERC721NonexistentToken(_tokenId);
@@ -255,15 +255,15 @@ contract ERC721Facet {
             return "";
         }
 
-        return string.concat(s.baseURI, toString(_tokenId));
+        return string.concat(s.baseURI, _toString(_tokenId));
     }
 
     /// From openzeppelin/contracts/utils/Strings.sol
     /// @dev Converts a `uint256` to its ASCII `string` decimal representation.
-    function toString(uint256 value) internal pure returns (string memory) {
+    function _toString(uint256 value) internal pure returns (string memory) {
         bytes16 _SYMBOLS = "0123456789abcdef";
         unchecked {
-            uint256 length = log10(value) + 1;
+            uint256 length = _log10(value) + 1;
             string memory buffer = new string(length);
             uint256 ptr;
             assembly ("memory-safe") {
@@ -284,7 +284,7 @@ contract ERC721Facet {
     /// From openzeppelin/contracts/utils/Math.sol
     /// @dev Return the log in base 10 of a positive value rounded towards zero.
     /// Returns 0 if given 0.
-    function log10(uint256 value) internal pure returns (uint256) {
+    function _log10(uint256 value) internal pure returns (uint256) {
         uint256 result = 0;
         unchecked {
             if (value >= 10 ** 64) {

@@ -54,7 +54,7 @@ library LibERC721 {
     /// @notice Returns the ERC-721 storage struct from its predefined slot.
     /// @dev Uses inline assembly to access diamond storage location.
     /// @return s The storage reference for ERC-721 state variables.
-    function getStorage() internal pure returns (ERC721Storage storage s) {
+    function _getStorage() internal pure returns (ERC721Storage storage s) {
         bytes32 position = STORAGE_POSITION;
         assembly {
             s.slot := position
@@ -66,8 +66,8 @@ library LibERC721 {
     /// @param _from The current owner of the token.
     /// @param _to The address that will receive the token.
     /// @param _tokenId The ID of the token being transferred.
-    function transferFrom(address _from, address _to, uint256 _tokenId) internal {
-        ERC721Storage storage s = getStorage();
+    function _transferFrom(address _from, address _to, uint256 _tokenId) internal {
+        ERC721Storage storage s = _getStorage();
         if (_to == address(0)) {
             revert ERC721InvalidReceiver(address(0));
         }
@@ -96,8 +96,8 @@ library LibERC721 {
     /// @dev Reverts if the receiver address is zero or if the token already exists.
     /// @param _to The address that will own the newly minted token.
     /// @param _tokenId The ID of the token to mint.
-    function mint(address _to, uint256 _tokenId) internal {
-        ERC721Storage storage s = getStorage();
+    function _mint(address _to, uint256 _tokenId) internal {
+        ERC721Storage storage s = _getStorage();
         if (_to == address(0)) {
             revert ERC721InvalidReceiver(address(0));
         }
@@ -114,8 +114,8 @@ library LibERC721 {
     /// @notice Burns (destroys) a specific ERC-721 token.
     /// @dev Reverts if the token does not exist. Clears ownership and approval.
     /// @param _tokenId The ID of the token to burn.
-    function burn(uint256 _tokenId) internal {
-        ERC721Storage storage s = getStorage();
+    function _burn(uint256 _tokenId) internal {
+        ERC721Storage storage s = _getStorage();
         address owner = s.ownerOf[_tokenId];
         if (owner == address(0)) {
             revert ERC721NonexistentToken(_tokenId);

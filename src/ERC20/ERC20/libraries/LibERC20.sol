@@ -55,7 +55,7 @@ library LibERC20 {
     /// @notice Returns a pointer to the ERC-20 storage struct.
     /// @dev Uses inline assembly to bind the storage struct to the fixed storage position.
     /// @return s The ERC-20 storage struct.
-    function getStorage() internal pure returns (ERC20Storage storage s) {
+    function _getStorage() internal pure returns (ERC20Storage storage s) {
         bytes32 position = STORAGE_POSITION;
         assembly {
             s.slot := position
@@ -66,8 +66,8 @@ library LibERC20 {
     /// @dev Increases both total supply and the recipient's balance.
     /// @param _account The address receiving the newly minted tokens.
     /// @param _value The number of tokens to mint.
-    function mint(address _account, uint256 _value) internal {
-        ERC20Storage storage s = getStorage();
+    function _mint(address _account, uint256 _value) internal {
+        ERC20Storage storage s = _getStorage();
         if (_account == address(0)) {
             revert ERC20InvalidReceiver(address(0));
         }
@@ -82,8 +82,8 @@ library LibERC20 {
     /// @dev Decreases both total supply and the sender's balance.
     /// @param _account The address whose tokens will be burned.
     /// @param _value The number of tokens to burn.
-    function burn(address _account, uint256 _value) internal {
-        ERC20Storage storage s = getStorage();
+    function _burn(address _account, uint256 _value) internal {
+        ERC20Storage storage s = _getStorage();
         if (_account == address(0)) {
             revert ERC20InvalidSender(address(0));
         }
@@ -103,8 +103,8 @@ library LibERC20 {
     /// @param _from The address to send tokens from.
     /// @param _to The address to send tokens to.
     /// @param _value The number of tokens to transfer.
-    function transferFrom(address _from, address _to, uint256 _value) internal {
-        ERC20Storage storage s = getStorage();
+    function _transferFrom(address _from, address _to, uint256 _value) internal {
+        ERC20Storage storage s = _getStorage();
         if (_from == address(0)) {
             revert ERC20InvalidSender(address(0));
         }
@@ -131,8 +131,8 @@ library LibERC20 {
     /// @dev Updates balances directly without allowance mechanism.
     /// @param _to The address to send tokens to.
     /// @param _value The number of tokens to transfer.
-    function transfer(address _to, uint256 _value) internal {
-        ERC20Storage storage s = getStorage();
+    function _transfer(address _to, uint256 _value) internal {
+        ERC20Storage storage s = _getStorage();
         if (_to == address(0)) {
             revert ERC20InvalidReceiver(address(0));
         }
@@ -151,8 +151,8 @@ library LibERC20 {
     /// @dev Sets the allowance for the spender.
     /// @param _spender The address to approve for spending.
     /// @param _value The amount of tokens to approve.
-    function approve(address _spender, uint256 _value) internal {
-        ERC20Storage storage s = getStorage();
+    function _approve(address _spender, uint256 _value) internal {
+        ERC20Storage storage s = _getStorage();
         s.allowances[msg.sender][_spender] = _value;
         emit Approval(msg.sender, _spender, _value);
     }

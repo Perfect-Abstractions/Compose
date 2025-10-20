@@ -56,7 +56,7 @@ library LibERC721 {
     /// @notice Returns the ERC-721 enumerable storage struct from its predefined slot.
     /// @dev Uses inline assembly to point to the correct diamond storage position.
     /// @return s The storage reference for ERC-721 enumerable state variables.
-    function getStorage() internal pure returns (ERC721EnumerableStorage storage s) {
+    function _getStorage() internal pure returns (ERC721EnumerableStorage storage s) {
         bytes32 position = STORAGE_POSITION;
         assembly {
             s.slot := position
@@ -69,8 +69,8 @@ library LibERC721 {
     /// @param _to The address receiving the token.
     /// @param _tokenId The ID of the token being transferred.
     /// @param _sender The initiator of the transfer (may be owner or approved operator).
-    function transferFrom(address _from, address _to, uint256 _tokenId, address _sender) internal {
-        ERC721EnumerableStorage storage s = getStorage();
+    function _transferFrom(address _from, address _to, uint256 _tokenId, address _sender) internal {
+        ERC721EnumerableStorage storage s = _getStorage();
         if (_to == address(0)) {
             revert ERC721InvalidReceiver(address(0));
         }
@@ -108,8 +108,8 @@ library LibERC721 {
     /// @dev Reverts if the receiver address is zero or if the token already exists.
     /// @param _to The address that will own the newly minted token.
     /// @param _tokenId The ID of the token to mint.
-    function mint(address _to, uint256 _tokenId) internal {
-        ERC721EnumerableStorage storage s = getStorage();
+    function _mint(address _to, uint256 _tokenId) internal {
+        ERC721EnumerableStorage storage s = _getStorage();
         if (_to == address(0)) {
             revert ERC721InvalidReceiver(address(0));
         }
@@ -128,8 +128,8 @@ library LibERC721 {
     /// @dev Reverts if the token does not exist or if the sender is not authorized.
     /// @param _tokenId The ID of the token to burn.
     /// @param _sender The address initiating the burn.
-    function burn(uint256 _tokenId, address _sender) internal {
-        ERC721EnumerableStorage storage s = getStorage();
+    function _burn(uint256 _tokenId, address _sender) internal {
+        ERC721EnumerableStorage storage s = _getStorage();
         address owner = s.ownerOf[_tokenId];
         if (owner == address(0)) {
             revert ERC721NonexistentToken(_tokenId);

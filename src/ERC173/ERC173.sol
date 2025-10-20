@@ -19,7 +19,7 @@ contract ERC173Facet {
     /// @notice Returns a pointer to the ERC-173 storage struct.
     /// @dev Uses inline assembly to access the storage slot defined by STORAGE_POSITION.
     /// @return s The ERC173Storage struct in storage.
-    function getStorage() internal pure returns (ERC173Storage storage s) {
+    function _getStorage() internal pure returns (ERC173Storage storage s) {
         bytes32 position = STORAGE_POSITION;
         assembly {
             s.slot := position
@@ -29,14 +29,14 @@ contract ERC173Facet {
     /// @notice Get the address of the owner
     /// @return The address of the owner.
     function owner() external view returns (address) {
-        return getStorage().owner;
+        return _getStorage().owner;
     }
 
     /// @notice Set the address of the new owner of the contract
     /// @dev Set _newOwner to address(0) to renounce any ownership.
     /// @param _newOwner The address of the new owner of the contract
     function transferOwnership(address _newOwner) external {
-        ERC173Storage storage s = getStorage();
+        ERC173Storage storage s = _getStorage();
         if (msg.sender != s.owner) revert OwnableUnauthorizedAccount();
         emit OwnershipTransferred(s.owner, _newOwner);
         s.owner = _newOwner;

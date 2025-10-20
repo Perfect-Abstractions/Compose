@@ -76,7 +76,7 @@ contract ERC20Facet {
      * @dev Uses inline assembly to set the storage slot reference.
      * @return s The ERC20 storage struct reference.
      */
-    function getStorage() internal pure returns (ERC20Storage storage s) {
+    function _getStorage() internal pure returns (ERC20Storage storage s) {
         bytes32 position = STORAGE_POSITION;
         assembly {
             s.slot := position
@@ -88,7 +88,7 @@ contract ERC20Facet {
      * @return The token name.
      */
     function name() external view returns (string memory) {
-        return getStorage().name;
+        return _getStorage().name;
     }
 
     /**
@@ -96,7 +96,7 @@ contract ERC20Facet {
      * @return The token symbol.
      */
     function symbol() external view returns (string memory) {
-        return getStorage().symbol;
+        return _getStorage().symbol;
     }
 
     /**
@@ -104,7 +104,7 @@ contract ERC20Facet {
      * @return The number of decimals.
      */
     function decimals() external view returns (uint8) {
-        return getStorage().decimals;
+        return _getStorage().decimals;
     }
 
     /**
@@ -112,7 +112,7 @@ contract ERC20Facet {
      * @return The total token supply.
      */
     function totalSupply() external view returns (uint256) {
-        return getStorage().totalSupply;
+        return _getStorage().totalSupply;
     }
 
     /**
@@ -121,7 +121,7 @@ contract ERC20Facet {
      * @return The account balance.
      */
     function balanceOf(address _account) external view returns (uint256) {
-        return getStorage().balanceOf[_account];
+        return _getStorage().balanceOf[_account];
     }
 
     /**
@@ -131,7 +131,7 @@ contract ERC20Facet {
      * @return The remaining allowance.
      */
     function allowance(address _owner, address _spender) external view returns (uint256) {
-        return getStorage().allowances[_owner][_spender];
+        return _getStorage().allowances[_owner][_spender];
     }
 
     /**
@@ -141,7 +141,7 @@ contract ERC20Facet {
      * @param _value The number of tokens to approve.
      */
     function approve(address _spender, uint256 _value) external {
-        ERC20Storage storage s = getStorage();
+        ERC20Storage storage s = _getStorage();
         if (_spender == address(0)) {
             revert ERC20InvalidSpender(address(0));
         }
@@ -156,7 +156,7 @@ contract ERC20Facet {
      * @param _value The amount of tokens to transfer.
      */
     function transfer(address _to, uint256 _value) external {
-        ERC20Storage storage s = getStorage();
+        ERC20Storage storage s = _getStorage();
         if (_to == address(0)) {
             revert ERC20InvalidReceiver(address(0));
         }
@@ -179,7 +179,7 @@ contract ERC20Facet {
      * @param _value The amount of tokens to transfer.
      */
     function transferFrom(address _from, address _to, uint256 _value) external {
-        ERC20Storage storage s = getStorage();
+        ERC20Storage storage s = _getStorage();
         if (_from == address(0)) {
             revert ERC20InvalidSender(address(0));
         }
@@ -208,7 +208,7 @@ contract ERC20Facet {
      * @param _value The amount of tokens to burn.
      */
     function burn(uint256 _value) external {
-        ERC20Storage storage s = getStorage();
+        ERC20Storage storage s = _getStorage();
         uint256 balance = s.balanceOf[msg.sender];
         if (balance < _value) {
             revert ERC20InsufficientBalance(msg.sender, balance, _value);
@@ -226,7 +226,7 @@ contract ERC20Facet {
      * @param _value The amount of tokens to burn.
      */
     function burnFrom(address _account, uint256 _value) external {
-        ERC20Storage storage s = getStorage();
+        ERC20Storage storage s = _getStorage();
         uint256 currentAllowance = s.allowances[_account][msg.sender];
         if (currentAllowance < _value) {
             revert ERC20InsufficientAllowance(msg.sender, currentAllowance, _value);
@@ -251,7 +251,7 @@ contract ERC20Facet {
      * @return The current nonce.
      */
     function nonces(address _owner) external view returns (uint256) {
-        return getStorage().nonces[_owner];
+        return _getStorage().nonces[_owner];
     }
 
     /**
@@ -263,7 +263,7 @@ contract ERC20Facet {
         return keccak256(
             abi.encode(
                 keccak256("EIP712Domain(string name,string version,uint256 chainId,address verifyingContract)"),
-                keccak256(bytes(getStorage().name)),
+                keccak256(bytes(_getStorage().name)),
                 keccak256("1"),
                 block.chainid,
                 address(this)
@@ -295,7 +295,7 @@ contract ERC20Facet {
             revert ERC2612InvalidSignature(_owner, _spender, _value, _deadline, _v, _r, _s);
         }
 
-        ERC20Storage storage s = getStorage();
+        ERC20Storage storage s = _getStorage();
         uint256 currentNonce = s.nonces[_owner];
         bytes32 structHash = keccak256(
             abi.encode(
