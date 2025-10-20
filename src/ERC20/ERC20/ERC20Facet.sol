@@ -24,7 +24,7 @@ contract ERC20Facet {
 
     /// @notice Thrown when the approver address is invalid (e.g., zero address).
     /// @param _approver Invalid approver address.
-    error ERC20InvalidApprover(address _approver);
+    error ERC20InvalidApprover(address _approver); // q not used
 
     /// @notice Thrown when the spender address is invalid (e.g., zero address).
     /// @param _spender Invalid spender address.
@@ -195,7 +195,10 @@ contract ERC20Facet {
             revert ERC20InsufficientBalance(_from, fromBalance, _value);
         }
         unchecked {
-            s.allowances[_from][msg.sender] = currentAllowance - _value;
+        if (currentAllowance != type(uint256).max) {
+                uint256 newAllowance = currentAllowance - _value;
+                s.allowances[_from][msg.sender] = newAllowance;
+            }           
             s.balanceOf[_from] = fromBalance - _value;
             s.balanceOf[_to] += _value;
         }
@@ -236,7 +239,9 @@ contract ERC20Facet {
             revert ERC20InsufficientBalance(_account, balance, _value);
         }
         unchecked {
-            s.allowances[_account][msg.sender] = currentAllowance - _value;
+        if (currentAllowance != type(uint256).max) {
+                s.allowances[_account][msg.sender] = currentAllowance - _value;
+            }   
             s.balanceOf[_account] = balance - _value;
         }
         emit Transfer(msg.sender, address(0), _value);
