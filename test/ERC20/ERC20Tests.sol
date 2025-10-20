@@ -8,7 +8,7 @@ import {ERC20Mock} from "./ERC20Mock.sol";
 /// @title ERC20Tests
 /// @notice Tests for the ERC20 implementation following Compose's philosophy.
 /// @dev Tests use alice, bob, and charlie as standard test addresses.
-contract ERC20Tests is Test{
+contract ERC20Tests is Test {
     ERC20Mock public token;
 
     // test addresses
@@ -20,7 +20,7 @@ contract ERC20Tests is Test{
     string constant TOKEN_NAME = "Test Token";
     string constant TOKEN_SYMBOL = "TEST";
     uint8 constant TOKEN_DECIMALS = 18;
-    uint256 constant INITIAL_SUPPLY = 1_000_000 * 10**18; // 1 million tokens
+    uint256 constant INITIAL_SUPPLY = 1_000_000 * 10 ** 18; // 1 million tokens
 
     /// @notice Sets up the test environment before each test.
     /// @dev Deploys fresh instance of ERC20Mock (which extends ERC20Facet).
@@ -41,7 +41,6 @@ contract ERC20Tests is Test{
         // mint initial supply to alice
         token.mint(alice, INITIAL_SUPPLY);
     }
-
 
     // ===================== Metadata Tests =======================
 
@@ -80,7 +79,7 @@ contract ERC20Tests is Test{
     /// @notice Tests a successful token transfer from alice to bob.
     /// @dev Verifies balances are updated correctly and Transfer event is emitted.
     function test_Transfer() public {
-        uint256 amount = 1000 * 10**18;
+        uint256 amount = 1000 * 10 ** 18;
 
         // alice's balance before transfer
         uint256 aliceBalanceBefore = token.balanceOf(alice);
@@ -126,15 +125,10 @@ contract ERC20Tests is Test{
     /// @notice Tests that transfer to zero address reverts.
     /// @dev Security: prevents accidental token burning via transfer.
     function test_TransferToZeroAddressReverts() public {
-        uint256 amount = 100 * 10**18;
+        uint256 amount = 100 * 10 ** 18;
 
         vm.prank(alice);
-        vm.expectRevert(
-            abi.encodeWithSelector(
-                ERC20Facet.ERC20InvalidReceiver.selector,
-                address(0)
-            )
-        );
+        vm.expectRevert(abi.encodeWithSelector(ERC20Facet.ERC20InvalidReceiver.selector, address(0)));
         token.transfer(address(0), amount);
     }
 
@@ -146,12 +140,7 @@ contract ERC20Tests is Test{
 
         vm.prank(bob);
         vm.expectRevert(
-            abi.encodeWithSelector(
-                ERC20Facet.ERC20InsufficientBalance.selector,
-                bob,
-                bobBalance,
-                transferAmount
-            )
+            abi.encodeWithSelector(ERC20Facet.ERC20InsufficientBalance.selector, bob, bobBalance, transferAmount)
         );
         token.transfer(alice, transferAmount);
     }
@@ -161,7 +150,7 @@ contract ERC20Tests is Test{
     /// @notice Tests setting allowance via approve().
     /// @dev Verifies Approval event is emitted and allowance is set correctly.
     function test_Approve() public {
-        uint256 amount = 500 * 10**18;
+        uint256 amount = 500 * 10 ** 18;
 
         // expect approval event
         vm.expectEmit(true, true, false, true);
@@ -198,8 +187,8 @@ contract ERC20Tests is Test{
     /// @notice Tests that approve overwrites previous allowance.
     /// @dev Important: new approval replaces old one, doesn't add to it.
     function test_ApproveOverwrite() public {
-        uint256 firstAmount = 100 * 10**18;
-        uint256 secondAmount = 200 * 10**18;
+        uint256 firstAmount = 100 * 10 ** 18;
+        uint256 secondAmount = 200 * 10 ** 18;
 
         vm.startPrank(alice);
         token.approve(bob, firstAmount);
@@ -213,15 +202,10 @@ contract ERC20Tests is Test{
     /// @notice Tests that approving zero address as spender reverts.
     /// @dev Security: prevents accidental approval to invalid address.
     function test_ApproveZeroAddressReverts() public {
-        uint256 amount = 100 * 10**18;
+        uint256 amount = 100 * 10 ** 18;
 
         vm.prank(alice);
-        vm.expectRevert(
-            abi.encodeWithSelector(
-                ERC20Facet.ERC20InvalidSpender.selector,
-                address(0)
-            )
-        );
+        vm.expectRevert(abi.encodeWithSelector(ERC20Facet.ERC20InvalidSpender.selector, address(0)));
         token.approve(address(0), amount);
     }
 
@@ -230,8 +214,8 @@ contract ERC20Tests is Test{
     /// @notice Tests successful transferFrom after approval.
     /// @dev Verifies allowance is decreased and balances are updated.
     function test_TransferFrom() public {
-        uint256 approvalAmount = 1000 * 10**18;
-        uint256 transferAmount = 500 * 10**18;
+        uint256 approvalAmount = 1000 * 10 ** 18;
+        uint256 transferAmount = 500 * 10 ** 18;
 
         // Alice approves bob
         vm.prank(alice);
@@ -258,7 +242,7 @@ contract ERC20Tests is Test{
     /// @notice Tests transferFrom using entire allowance.
     /// @dev Edge case: allowance should be zero after.
     function test_TransferFromEntireAllowance() public {
-        uint256 amount = 500 * 10**18;
+        uint256 amount = 500 * 10 ** 18;
 
         vm.prank(alice);
         token.approve(bob, amount);
@@ -273,20 +257,15 @@ contract ERC20Tests is Test{
     /// @notice Tests that transferFrom with insufficient allowance reverts.
     /// @dev Security: prevents unauthorized spending beyond approval.
     function test_TransferFromInsufficientAllowanceReverts() public {
-        uint256 approvalAmount = 100 * 10**18;
-        uint256 transferAmount = 200 * 10**18;
+        uint256 approvalAmount = 100 * 10 ** 18;
+        uint256 transferAmount = 200 * 10 ** 18;
 
         vm.prank(alice);
         token.approve(bob, approvalAmount);
 
         vm.prank(bob);
         vm.expectRevert(
-            abi.encodeWithSelector(
-                ERC20Facet.ERC20InsufficientAllowance.selector,
-                bob,
-                approvalAmount,
-                transferAmount
-            )
+            abi.encodeWithSelector(ERC20Facet.ERC20InsufficientAllowance.selector, bob, approvalAmount, transferAmount)
         );
         token.transferFrom(alice, charlie, transferAmount);
     }
@@ -303,12 +282,7 @@ contract ERC20Tests is Test{
 
         vm.prank(bob);
         vm.expectRevert(
-            abi.encodeWithSelector(
-                ERC20Facet.ERC20InsufficientBalance.selector,
-                alice,
-                aliceBalance,
-                transferAmount
-            )
+            abi.encodeWithSelector(ERC20Facet.ERC20InsufficientBalance.selector, alice, aliceBalance, transferAmount)
         );
         token.transferFrom(alice, charlie, transferAmount);
     }
@@ -316,43 +290,32 @@ contract ERC20Tests is Test{
     /// @notice Tests that transferFrom from zero address reverts.
     /// @dev Security: prevents invalid sender.
     function test_TransferFromZeroAddressSenderReverts() public {
-        uint256 amount = 100 * 10**18;
+        uint256 amount = 100 * 10 ** 18;
 
         vm.prank(bob);
-        vm.expectRevert(
-            abi.encodeWithSelector(
-                ERC20Facet.ERC20InvalidSender.selector,
-                address(0)
-            )
-        );
+        vm.expectRevert(abi.encodeWithSelector(ERC20Facet.ERC20InvalidSender.selector, address(0)));
         token.transferFrom(address(0), charlie, amount);
     }
 
     /// @notice Tests that transferFrom to zero address reverts.
     /// @dev Security: prevents invalid receiver.
     function test_TransferFromZeroAddressReceiverReverts() public {
-        uint256 amount = 100 * 10**18;
+        uint256 amount = 100 * 10 ** 18;
 
         vm.prank(alice);
         token.approve(bob, amount);
 
         vm.prank(bob);
-        vm.expectRevert(
-            abi.encodeWithSelector(
-                ERC20Facet.ERC20InvalidReceiver.selector,
-                address(0)
-            )
-        );
+        vm.expectRevert(abi.encodeWithSelector(ERC20Facet.ERC20InvalidReceiver.selector, address(0)));
         token.transferFrom(alice, address(0), amount);
     }
-
 
     // =================== Burn and BurnFrom tests =========================
 
     /// @notice Tests burning tokens from caller's balance.
     /// @dev Verifies total supply decreases and Transfer to zero address is emitted.
     function test_Burn() public {
-        uint256 burnAmount = 100 * 10**18;
+        uint256 burnAmount = 100 * 10 ** 18;
         uint256 aliceBalanceBefore = token.balanceOf(alice);
         uint256 totalSupplyBefore = token.totalSupply();
 
@@ -389,12 +352,7 @@ contract ERC20Tests is Test{
 
         vm.prank(alice);
         vm.expectRevert(
-            abi.encodeWithSelector(
-                ERC20Facet.ERC20InsufficientBalance.selector,
-                alice,
-                aliceBalance,
-                burnAmount
-            )
+            abi.encodeWithSelector(ERC20Facet.ERC20InsufficientBalance.selector, alice, aliceBalance, burnAmount)
         );
         token.burn(burnAmount);
     }
@@ -402,8 +360,8 @@ contract ERC20Tests is Test{
     /// @notice Tests burning tokens from another account with approval.
     /// @dev Verifies allowance is decreased and tokens are burned.
     function test_BurnFrom() public {
-        uint256 approvalAmount = 500 * 10**18;
-        uint256 burnAmount = 200 * 10**18;
+        uint256 approvalAmount = 500 * 10 ** 18;
+        uint256 burnAmount = 200 * 10 ** 18;
 
         // Alice approves bob to burn her tokens
         vm.prank(alice);
@@ -428,7 +386,7 @@ contract ERC20Tests is Test{
     /// @notice Tests burning entire allowance.
     /// @dev Edge case: allowance should be zero after.
     function test_BurnFromEntireAllowance() public {
-        uint256 amount = 300 * 10**18;
+        uint256 amount = 300 * 10 ** 18;
 
         vm.prank(alice);
         token.approve(bob, amount);
@@ -442,20 +400,15 @@ contract ERC20Tests is Test{
     /// @notice Tests that burnFrom with insufficient allowance reverts.
     /// @dev Security: prevents unauthorized burning beyond approval.
     function test_BurnFromInsufficientAllowanceReverts() public {
-        uint256 approvalAmount = 100 * 10**18;
-        uint256 burnAmount = 200 * 10**18;
+        uint256 approvalAmount = 100 * 10 ** 18;
+        uint256 burnAmount = 200 * 10 ** 18;
 
         vm.prank(alice);
         token.approve(bob, approvalAmount);
 
         vm.prank(bob);
         vm.expectRevert(
-            abi.encodeWithSelector(
-                ERC20Facet.ERC20InsufficientAllowance.selector,
-                bob,
-                approvalAmount,
-                burnAmount
-            )
+            abi.encodeWithSelector(ERC20Facet.ERC20InsufficientAllowance.selector, bob, approvalAmount, burnAmount)
         );
         token.burnFrom(alice, burnAmount);
     }
@@ -471,17 +424,11 @@ contract ERC20Tests is Test{
 
         vm.prank(bob);
         vm.expectRevert(
-            abi.encodeWithSelector(
-                ERC20Facet.ERC20InsufficientBalance.selector,
-                alice,
-                aliceBalance,
-                burnAmount
-            )
+            abi.encodeWithSelector(ERC20Facet.ERC20InsufficientBalance.selector, alice, aliceBalance, burnAmount)
         );
         token.burnFrom(alice, burnAmount);
     }
 
-    
     // =================== EIP-2612 PERMIT TESTS ==========================
 
     /// @notice Tests the nonces() view function returns initial nonce.
@@ -512,9 +459,9 @@ contract ERC20Tests is Test{
         address aliceAddress = vm.addr(alicePrivateKey);
 
         // Mint tokens to alice
-        token.mint(aliceAddress, 1000 * 10**18);
+        token.mint(aliceAddress, 1000 * 10 ** 18);
 
-        uint256 value = 500 * 10**18;
+        uint256 value = 500 * 10 ** 18;
         uint256 deadline = block.timestamp + 1 days;
         uint256 nonce = token.nonces(aliceAddress);
 
@@ -530,9 +477,7 @@ contract ERC20Tests is Test{
                 deadline
             )
         );
-        bytes32 digest = keccak256(
-            abi.encodePacked("\x19\x01", domainSeparator, structHash)
-        );
+        bytes32 digest = keccak256(abi.encodePacked("\x19\x01", domainSeparator, structHash));
 
         // sign the digest
         (uint8 v, bytes32 r, bytes32 s) = vm.sign(alicePrivateKey, digest);
@@ -557,7 +502,7 @@ contract ERC20Tests is Test{
         uint256 alicePrivateKey = 0xA11CE;
         address aliceAddress = vm.addr(alicePrivateKey);
 
-        uint256 value = 500 * 10**18;
+        uint256 value = 500 * 10 ** 18;
         uint256 deadline = block.timestamp - 1; // already expired
         uint256 nonce = token.nonces(aliceAddress);
 
@@ -573,22 +518,13 @@ contract ERC20Tests is Test{
                 deadline
             )
         );
-        bytes32 digest = keccak256(
-            abi.encodePacked("\x19\x01", domainSeparator, structHash)
-        );
+        bytes32 digest = keccak256(abi.encodePacked("\x19\x01", domainSeparator, structHash));
         (uint8 v, bytes32 r, bytes32 s) = vm.sign(alicePrivateKey, digest);
 
         // should revert with ERC2612InvalidSignature
         vm.expectRevert(
             abi.encodeWithSelector(
-                ERC20Facet.ERC2612InvalidSignature.selector,
-                aliceAddress,
-                bob,
-                value,
-                deadline,
-                v,
-                r,
-                s
+                ERC20Facet.ERC2612InvalidSignature.selector, aliceAddress, bob, value, deadline, v, r, s
             )
         );
         token.permit(aliceAddress, bob, value, deadline, v, r, s);
@@ -602,7 +538,7 @@ contract ERC20Tests is Test{
 
         uint256 bobPrivateKey = 0xB0B;
 
-        uint256 value = 500 * 10**18;
+        uint256 value = 500 * 10 ** 18;
         uint256 deadline = block.timestamp + 1 days;
         uint256 nonce = token.nonces(aliceAddress);
 
@@ -618,9 +554,7 @@ contract ERC20Tests is Test{
                 deadline
             )
         );
-        bytes32 digest = keccak256(
-            abi.encodePacked("\x19\x01", domainSeparator, structHash)
-        );
+        bytes32 digest = keccak256(abi.encodePacked("\x19\x01", domainSeparator, structHash));
 
         // sign with bob's key instead of alice's (wrong signer)
         (uint8 v, bytes32 r, bytes32 s) = vm.sign(bobPrivateKey, digest);
@@ -628,14 +562,7 @@ contract ERC20Tests is Test{
         // should revert because signer doesn't match owner
         vm.expectRevert(
             abi.encodeWithSelector(
-                ERC20Facet.ERC2612InvalidSignature.selector,
-                aliceAddress,
-                bob,
-                value,
-                deadline,
-                v,
-                r,
-                s
+                ERC20Facet.ERC2612InvalidSignature.selector, aliceAddress, bob, value, deadline, v, r, s
             )
         );
         token.permit(aliceAddress, bob, value, deadline, v, r, s);
@@ -647,7 +574,7 @@ contract ERC20Tests is Test{
         uint256 alicePrivateKey = 0xA11CE;
         address aliceAddress = vm.addr(alicePrivateKey);
 
-        uint256 value = 500 * 10**18;
+        uint256 value = 500 * 10 ** 18;
         uint256 deadline = block.timestamp + 1 days;
         uint256 wrongNonce = 99; // wrong nonce
 
@@ -663,22 +590,13 @@ contract ERC20Tests is Test{
                 deadline
             )
         );
-        bytes32 digest = keccak256(
-            abi.encodePacked("\x19\x01", domainSeparator, structHash)
-        );
+        bytes32 digest = keccak256(abi.encodePacked("\x19\x01", domainSeparator, structHash));
         (uint8 v, bytes32 r, bytes32 s) = vm.sign(alicePrivateKey, digest);
 
         // should revert because nonce doesn't match
         vm.expectRevert(
             abi.encodeWithSelector(
-                ERC20Facet.ERC2612InvalidSignature.selector,
-                aliceAddress,
-                bob,
-                value,
-                deadline,
-                v,
-                r,
-                s
+                ERC20Facet.ERC2612InvalidSignature.selector, aliceAddress, bob, value, deadline, v, r, s
             )
         );
         token.permit(aliceAddress, bob, value, deadline, v, r, s);
@@ -690,7 +608,7 @@ contract ERC20Tests is Test{
         uint256 alicePrivateKey = 0xA11CE;
         address aliceAddress = vm.addr(alicePrivateKey);
 
-        uint256 value = 500 * 10**18;
+        uint256 value = 500 * 10 ** 18;
         uint256 deadline = block.timestamp + 1 days;
 
         // First permit
@@ -708,9 +626,7 @@ contract ERC20Tests is Test{
                     deadline
                 )
             );
-            bytes32 digest = keccak256(
-                abi.encodePacked("\x19\x01", domainSeparator, structHash)
-            );
+            bytes32 digest = keccak256(abi.encodePacked("\x19\x01", domainSeparator, structHash));
             (uint8 v, bytes32 r, bytes32 s) = vm.sign(alicePrivateKey, digest);
             token.permit(aliceAddress, bob, value, deadline, v, r, s);
         }
@@ -730,9 +646,7 @@ contract ERC20Tests is Test{
                     deadline
                 )
             );
-            bytes32 digest = keccak256(
-                abi.encodePacked("\x19\x01", domainSeparator, structHash)
-            );
+            bytes32 digest = keccak256(abi.encodePacked("\x19\x01", domainSeparator, structHash));
             (uint8 v, bytes32 r, bytes32 s) = vm.sign(alicePrivateKey, digest);
             token.permit(aliceAddress, charlie, value, deadline, v, r, s);
         }
@@ -747,10 +661,10 @@ contract ERC20Tests is Test{
         address aliceAddress = vm.addr(alicePrivateKey);
 
         // mint tokens to alice
-        uint256 balance = 1000 * 10**18;
+        uint256 balance = 1000 * 10 ** 18;
         token.mint(aliceAddress, balance);
 
-        uint256 value = 500 * 10**18;
+        uint256 value = 500 * 10 ** 18;
         uint256 deadline = block.timestamp + 1 days;
         uint256 nonce = token.nonces(aliceAddress);
 
@@ -766,16 +680,14 @@ contract ERC20Tests is Test{
                 deadline
             )
         );
-        bytes32 digest = keccak256(
-            abi.encodePacked("\x19\x01", domainSeparator, structHash)
-        );
+        bytes32 digest = keccak256(abi.encodePacked("\x19\x01", domainSeparator, structHash));
         (uint8 v, bytes32 r, bytes32 s) = vm.sign(alicePrivateKey, digest);
 
         // execute permit
         token.permit(aliceAddress, bob, value, deadline, v, r, s);
 
         // bob can use transferFrom
-        uint256 transferAmount = 300 * 10**18;
+        uint256 transferAmount = 300 * 10 ** 18;
         vm.prank(bob);
         token.transferFrom(aliceAddress, charlie, transferAmount);
 
@@ -806,9 +718,7 @@ contract ERC20Tests is Test{
                 deadline
             )
         );
-        bytes32 digest = keccak256(
-            abi.encodePacked("\x19\x01", domainSeparator, structHash)
-        );
+        bytes32 digest = keccak256(abi.encodePacked("\x19\x01", domainSeparator, structHash));
         (uint8 v, bytes32 r, bytes32 s) = vm.sign(alicePrivateKey, digest);
 
         token.permit(aliceAddress, bob, value, deadline, v, r, s);
@@ -822,7 +732,7 @@ contract ERC20Tests is Test{
         uint256 alicePrivateKey = 0xA11CE;
         address aliceAddress = vm.addr(alicePrivateKey);
 
-        uint256 value = 500 * 10**18;
+        uint256 value = 500 * 10 ** 18;
         uint256 deadline = block.timestamp; // Exact current time
         uint256 nonce = token.nonces(aliceAddress);
 
@@ -837,14 +747,11 @@ contract ERC20Tests is Test{
                 deadline
             )
         );
-        bytes32 digest = keccak256(
-            abi.encodePacked("\x19\x01", domainSeparator, structHash)
-        );
+        bytes32 digest = keccak256(abi.encodePacked("\x19\x01", domainSeparator, structHash));
         (uint8 v, bytes32 r, bytes32 s) = vm.sign(alicePrivateKey, digest);
 
         // should succeed at exact deadline
         token.permit(aliceAddress, bob, value, deadline, v, r, s);
         assertEq(token.allowance(aliceAddress, bob), value);
     }
-
 }

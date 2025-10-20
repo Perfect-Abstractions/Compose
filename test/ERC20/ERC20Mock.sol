@@ -4,12 +4,10 @@ pragma solidity ^0.8.30;
 import {ERC20Facet} from "../../src/ERC20/ERC20/ERC20Facet.sol";
 import {LibERC20} from "../../src/ERC20/ERC20/libraries/LibERC20.sol";
 
-
 /// @title ERC20Mock
 /// @notice Helper contract that extends ERC20Facet and exposes mint function for testing.
 /// @dev This contract is NOT part of the library. It exists solely to enable testing of ERC20Facet functionality.
 contract ERC20Mock is ERC20Facet {
-    
     /// @notice Mints tokens to address.
     /// @dev External function for LibERC20.mint() to enable testing.
     /// @param _to Address to receive minted tokens.
