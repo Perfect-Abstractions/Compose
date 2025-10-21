@@ -261,7 +261,7 @@ contract ERC721Facet {
     /// From openzeppelin/contracts/utils/Strings.sol
     /// @dev Converts a `uint256` to its ASCII `string` decimal representation.
     function toString(uint256 value) internal pure returns (string memory) {
-        bytes16 _SYMBOLS = "0123456789abcdef";
+        bytes16 _SYMBOLS = "0123456789";
         unchecked {
             uint256 length = log10(value) + 1;
             string memory buffer = new string(length);
