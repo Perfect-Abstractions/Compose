@@ -138,7 +138,7 @@ contract ERC721Facet {
             revert ERC721NonexistentToken(_tokenId);
         }
         if (msg.sender != owner && !s.isApprovedForAll[owner][msg.sender]) {
-            revert ERC721InvalidApprover(_approved);
+            revert ERC721InvalidApprover(msg.sender);
         }
         s.approved[_tokenId] = _approved;
         emit Approval(owner, _approved, _tokenId);
