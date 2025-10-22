@@ -122,3 +122,26 @@ This project is licensed under the MIT License. See the [LICENSE.md](LICENSE.md)
 
 **-Nick**
 
+## Adding yourself as a contributor
+
+If you've contributed to this project, you can easily add yourself to the contributors list by commenting on any issue or pull request with: `@all-contributors please add <your-github-username> for <contribution-type>`
+
+For example: `@all-contributors please add @mudgen for code, doc, business, and ideas`
+
+For a full list of contribution types, check out the [emoji key](https://allcontributors.org/docs/en/emoji-key).
+
+
+## Contributors ✨
+
+Thanks goes to these wonderful people 1:
+
+<!-- ALL-CONTRIBUTORS-LIST:START - Do not remove or modify this section -->
+<!-- prettier-ignore-start -->
+<!-- markdownlint-disable -->
+<!-- markdownlint-restore -->
+<!-- prettier-ignore-end -->
+
+<!-- ALL-CONTRIBUTORS-LIST:END -->
+
+This project follows the [all-contributors](https://github.com/all-contributors/all-contributors) specification.
+Contributions of any kind welcome!
