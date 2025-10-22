@@ -36,17 +36,17 @@ Implementations of existing ERCs MUST use `ERC<number>` as a prefix of directory
 
 ```
 src/
----- tokens/
--------- ERC20/
------------- ERC20Facet.sol
+---- erc20/
+-------- ERC20Facet.sol
 ```
 
 *NO*
 
 ```
 src/
----- erc20/
--------- ERC20Facet.sol
+---- tokens/
+-------- ERC20/
+------------ ERC20Facet.sol
 ```
 
 ## Implementation Scopes
@@ -65,7 +65,7 @@ STORAGE_POSITION constant MUST be defined as the keccak256 hash of a ABI encoded
 *YES*
 
 ```solidity
-bytes32 constant STORAGE_POSITION = keccak256(abi.encode("compose.tokens.erc20"));
+bytes32 constant STORAGE_POSITION = keccak256(abi.encode("compose.erc20"));
 ```
 
 *NO*
@@ -81,6 +81,7 @@ Diamond Storage libraries MUST expose a `getStorage()` function that returns a s
 The `getStorage()` function MUST be defined as an internal pure function.
 
 Diamond Storage libraries MUST implement atomic state change logic relevant to ERC or intended business logic.
+Diamond Storage libraries MAY include helper functions that do not modify state to support atomic state change logic.
 
 *YES*
 
@@ -120,4 +121,50 @@ Diamond Storage libraries MUST implement atomic state change logic relevant to E
             s.balanceOf[_from] = fromBalance - _value;
         }
     }
+```
+
+Libraries consisting of pure and other non-state changing functions MUST use the `Utils` suffix.
+`Utils` libraries MUST NOT define or modify state.
+
+*YES*
+
+```solidity
+library ERC20Utils {
+    function calculateTransferFee(uint256 _value, uint256 _feeBasisPoints) internal pure returns (uint256) {
+        return (_value * _feeBasisPoints) / 10000;
+    }
+}
+```
+
+*NO*
+
+```solidity
+library ERC20Math {
+    function incrementBalance(mapping(address => uint256) storage _balances, address _to, uint256 _value) internal {
+        _balances[_to] += _value;
+    }
+}
+```
+
+Libraries that make external calls MUST be named descriptively to indicate their purpose.
+Libraries that make external calls MUST use the `Caller` suffix.
+
+*YES*
+
+```solidity
+library ERC20PermitCaller {
+    function callPermit(address _token, address _owner, address _spender, uint256 _value, uint256 _deadline, uint8 _v, bytes32 _r, bytes32 _s) internal {
+        IERC20Permit(_token).permit(_owner, _spender, _value, _deadline, _v, _r, _s);
+    }
+}
+```
+
+*NO*
+
+```solidity
+library ERC20External {
+    function approveExternal(address _token, address _spender, uint256 _value) internal {
+        IERC20(_token).approve(_spender, _value);
+    }
+}
 ```
