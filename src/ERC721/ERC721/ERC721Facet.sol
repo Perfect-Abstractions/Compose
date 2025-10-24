@@ -129,19 +129,19 @@ contract ERC721Facet {
     }
 
     /// @notice Approves another address to transfer the given token ID.
-    /// @param _approved The address to be approved.
+    /// @param _to The address to be approved.
     /// @param _tokenId The token ID to approve.
-    function approve(address _approved, uint256 _tokenId) external {
+    function approve(address _to, uint256 _tokenId) external {
         ERC721Storage storage s = _getStorage();
         address owner = s.ownerOf[_tokenId];
         if (owner == address(0)) {
             revert ERC721NonexistentToken(_tokenId);
         }
         if (msg.sender != owner && !s.isApprovedForAll[owner][msg.sender]) {
-            revert ERC721InvalidApprover(_approved);
+            revert ERC721InvalidApprover(_to);
         }
-        s.approved[_tokenId] = _approved;
-        emit Approval(owner, _approved, _tokenId);
+        s.approved[_tokenId] = _to;
+        emit Approval(owner, _to, _tokenId);
     }
 
     /// @notice Approves or revokes permission for an operator to manage all caller's assets.
@@ -239,82 +239,5 @@ contract ERC721Facet {
                 }
             }
         }
-    }
-
-    /// @notice Provide the metadata URI for a given token ID.
-    /// @param _tokenId tokenID of the NFT to query the metadata from
-    /// @return the URI providing the detailed metadata of the specified tokenID
-    function tokenURI(uint256 _tokenId) external view returns (string memory) {
-        ERC721Storage storage s = _getStorage();
-        address owner = s.ownerOf[_tokenId];
-        if (owner == address(0)) {
-            revert ERC721NonexistentToken(_tokenId);
-        }
-
-        if (bytes(s.baseURI).length == 0) {
-            return "";
-        }
-
-        return string.concat(s.baseURI, _toString(_tokenId));
-    }
-
-    /// From openzeppelin/contracts/utils/Strings.sol
-    /// @dev Converts a `uint256` to its ASCII `string` decimal representation.
-    function _toString(uint256 value) internal pure returns (string memory) {
-        bytes16 _SYMBOLS = "0123456789abcdef";
-        unchecked {
-            uint256 length = _log10(value) + 1;
-            string memory buffer = new string(length);
-            uint256 ptr;
-            assembly ("memory-safe") {
-                ptr := add(buffer, add(32, length))
-            }
-            while (true) {
-                ptr--;
-                assembly ("memory-safe") {
-                    mstore8(ptr, byte(mod(value, 10), _SYMBOLS))
-                }
-                value /= 10;
-                if (value == 0) break;
-            }
-            return buffer;
-        }
-    }
-
-    /// From openzeppelin/contracts/utils/Math.sol
-    /// @dev Return the log in base 10 of a positive value rounded towards zero.
-    /// Returns 0 if given 0.
-    function _log10(uint256 value) internal pure returns (uint256) {
-        uint256 result = 0;
-        unchecked {
-            if (value >= 10 ** 64) {
-                value /= 10 ** 64;
-                result += 64;
-            }
-            if (value >= 10 ** 32) {
-                value /= 10 ** 32;
-                result += 32;
-            }
-            if (value >= 10 ** 16) {
-                value /= 10 ** 16;
-                result += 16;
-            }
-            if (value >= 10 ** 8) {
-                value /= 10 ** 8;
-                result += 8;
-            }
-            if (value >= 10 ** 4) {
-                value /= 10 ** 4;
-                result += 4;
-            }
-            if (value >= 10 ** 2) {
-                value /= 10 ** 2;
-                result += 2;
-            }
-            if (value >= 10 ** 1) {
-                result += 1;
-            }
-        }
-        return result;
     }
 }

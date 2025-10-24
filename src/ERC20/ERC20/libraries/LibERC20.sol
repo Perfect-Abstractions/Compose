@@ -25,6 +25,10 @@ library LibERC20 {
     /// @param _needed The required amount to complete the transfer.
     error ERC20InsufficientAllowance(address _spender, uint256 _allowance, uint256 _needed);
 
+    /// @notice Thrown when the spender address is invalid (e.g., zero address).
+    /// @param _spender The invalid spender address.
+    error ERC20InvalidSpender(address _spender);
+
     /// @notice Emitted when tokens are transferred between addresses.
     /// @param _from The address tokens are transferred from.
     /// @param _to The address tokens are transferred to.
@@ -152,6 +156,9 @@ library LibERC20 {
     /// @param _spender The address to approve for spending.
     /// @param _value The amount of tokens to approve.
     function _approve(address _spender, uint256 _value) internal {
+        if ( _spender == address(0)) {
+            revert ERC20InvalidSpender(address(0));
+        }
         ERC20Storage storage s = _getStorage();
         s.allowances[msg.sender][_spender] = _value;
         emit Approval(msg.sender, _spender, _value);

@@ -142,19 +142,19 @@ contract ERC721EnumerableFacet {
     }
 
     /// @notice Approves another address to transfer a specific token ID.
-    /// @param _approved The address being approved.
+    /// @param _to The address being approved.
     /// @param _tokenId The token ID to approve.
-    function approve(address _approved, uint256 _tokenId) external {
+    function approve(address _to, uint256 _tokenId) external {
         ERC721EnumerableStorage storage s = _getStorage();
         address owner = s.ownerOf[_tokenId];
         if (owner == address(0)) {
             revert ERC721NonexistentToken(_tokenId);
         }
         if (msg.sender != owner && !s.isApprovedForAll[owner][msg.sender]) {
-            revert ERC721InvalidApprover(_approved);
+            revert ERC721InvalidApprover(_to);
         }
-        s.approved[_tokenId] = _approved;
-        emit Approval(owner, _approved, _tokenId);
+        s.approved[_tokenId] = _to;
+        emit Approval(owner, _to, _tokenId);
     }
 
     /// @notice Approves or revokes an operator to manage all tokens of the caller.
