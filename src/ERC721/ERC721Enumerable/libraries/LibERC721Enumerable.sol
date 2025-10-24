@@ -3,8 +3,9 @@ pragma solidity >=0.8.30;
 
 /// @title ERC-721 Enumerable Library for Compose
 /// @notice Provides internal logic for enumerable ERC-721 tokens using diamond storage.
+///         This library is intended to be used by custom facets to integrate with ERC-721 functionality.
 /// @dev Implements ERC-721 operations with token enumeration support (tracking owned and global tokens).
-/// Follows ERC-8042 for storage layout and ERC-6093 for standardized custom errors.
+///      Follows ERC-8042 for storage layout and ERC-6093 for standardized custom errors.
 library LibERC721 {
     /// @notice Thrown when attempting to interact with a non-existent token.
     /// @param _tokenId The ID of the token that does not exist.
@@ -44,6 +45,7 @@ library LibERC721 {
     struct ERC721EnumerableStorage {
         string name;
         string symbol;
+        string baseURI;
         mapping(uint256 tokenId => address owner) ownerOf;
         mapping(address owner => uint256[] ownedTokens) ownedTokensOf;
         mapping(uint256 tokenId => uint256 ownedTokensIndex) ownedTokensIndexOf;

@@ -75,10 +75,8 @@ library LibERC20 {
         if (_account == address(0)) {
             revert ERC20InvalidReceiver(address(0));
         }
-        unchecked {
-            s.totalSupply += _value;
-            s.balanceOf[_account] += _value;
-        }
+        s.totalSupply += _value;
+        s.balanceOf[_account] += _value;
         emit Transfer(address(0), _account, _value);
     }
 
@@ -126,8 +124,8 @@ library LibERC20 {
         unchecked {
             s.allowances[_from][msg.sender] = currentAllowance - _value;
             s.balanceOf[_from] = fromBalance - _value;
-            s.balanceOf[_to] += _value;
         }
+        s.balanceOf[_to] += _value;
         emit Transfer(_from, _to, _value);
     }
 
@@ -146,8 +144,8 @@ library LibERC20 {
         }
         unchecked {
             s.balanceOf[msg.sender] = fromBalance - _value;
-            s.balanceOf[_to] += _value;
         }
+        s.balanceOf[_to] += _value;
         emit Transfer(msg.sender, _to, _value);
     }
 
@@ -155,11 +153,19 @@ library LibERC20 {
     /// @dev Sets the allowance for the spender.
     /// @param _spender The address to approve for spending.
     /// @param _value The amount of tokens to approve.
+<<<<<<< HEAD
     function _approve(address _spender, uint256 _value) internal {
         if ( _spender == address(0)) {
             revert ERC20InvalidSpender(address(0));
         }
         ERC20Storage storage s = _getStorage();
+=======
+    function approve(address _spender, uint256 _value) internal {
+        if (_spender == address(0)) {
+            revert ERC20InvalidSpender(address(0));
+        }
+        ERC20Storage storage s = getStorage();
+>>>>>>> upstream/main
         s.allowances[msg.sender][_spender] = _value;
         emit Approval(msg.sender, _spender, _value);
     }

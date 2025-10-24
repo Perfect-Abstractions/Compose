@@ -1,6 +1,8 @@
 // SPDX-License-Identifier: MIT
 pragma solidity >=0.8.30;
 
+import {LibUtils} from "../../Libraries/LibUtils.sol";
+
 /// @title ERC721 Receiver Interface
 /// @notice Interface for contracts that want to support safe ERC721 token transfers.
 /// @dev Implementers must return the function selector to confirm token receipt.
@@ -16,7 +18,7 @@ interface IERC721Receiver {
         returns (bytes4);
 }
 
-/// @title ERC-721 Enumerable Token (Zero-dependency Implementation)
+/// @title ERC-721 Enumerable Token
 /// @notice A complete, dependency-free ERC-721 implementation with enumeration support using a custom storage layout.
 /// @dev Provides metadata, ownership, approvals, enumeration, safe transfers, minting, and burning features.
 contract ERC721EnumerableFacet {
@@ -42,7 +44,7 @@ contract ERC721EnumerableFacet {
     /// @notice Emitted when a token is transferred between addresses.
     event Transfer(address indexed _from, address indexed _to, uint256 indexed _tokenId);
     /// @notice Emitted when a token is approved for transfer by another address.
-    event Approval(address indexed _owner, address indexed _approved, uint256 indexed _tokenId);
+    event Approval(address indexed _owner, address indexed _to, uint256 indexed _tokenId);
     /// @notice Emitted when an operator is approved or revoked for all tokens of an owner.
     event ApprovalForAll(address indexed _owner, address indexed _operator, bool _approved);
 
@@ -52,6 +54,7 @@ contract ERC721EnumerableFacet {
     struct ERC721EnumerableStorage {
         string name;
         string symbol;
+        string baseURI;
         mapping(uint256 tokenId => string tokenURI) tokenURIOf;
         mapping(uint256 tokenId => address owner) ownerOf;
         mapping(address owner => uint256[] ownedTokens) ownedTokensOf;
@@ -81,6 +84,23 @@ contract ERC721EnumerableFacet {
     /// @return The token symbol.
     function symbol() external view returns (string memory) {
         return _getStorage().symbol;
+    }
+
+    /// @notice Provide the metadata URI for a given token ID.
+    /// @param _tokenId tokenID of the NFT to query the metadata from
+    /// @return the URI providing the detailed metadata of the specified tokenID
+    function tokenURI(uint256 _tokenId) external view returns (string memory) {
+        ERC721EnumerableStorage storage s = getStorage();
+        address owner = s.ownerOf[_tokenId];
+        if (owner == address(0)) {
+            revert ERC721NonexistentToken(_tokenId);
+        }
+
+        if (bytes(s.baseURI).length == 0) {
+            return "";
+        }
+
+        return string.concat(s.baseURI, LibUtils.toString(_tokenId));
     }
 
     /// @notice Returns the total number of tokens in existence.
@@ -145,13 +165,21 @@ contract ERC721EnumerableFacet {
     /// @param _to The address being approved.
     /// @param _tokenId The token ID to approve.
     function approve(address _to, uint256 _tokenId) external {
+<<<<<<< HEAD
         ERC721EnumerableStorage storage s = _getStorage();
+=======
+        ERC721EnumerableStorage storage s = getStorage();
+>>>>>>> upstream/main
         address owner = s.ownerOf[_tokenId];
         if (owner == address(0)) {
             revert ERC721NonexistentToken(_tokenId);
         }
         if (msg.sender != owner && !s.isApprovedForAll[owner][msg.sender]) {
+<<<<<<< HEAD
             revert ERC721InvalidApprover(_to);
+=======
+            revert ERC721InvalidApprover(msg.sender);
+>>>>>>> upstream/main
         }
         s.approved[_tokenId] = _to;
         emit Approval(owner, _to, _tokenId);

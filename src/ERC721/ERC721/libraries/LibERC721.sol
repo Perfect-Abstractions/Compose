@@ -3,8 +3,9 @@ pragma solidity >=0.8.30;
 
 /// @title ERC-721 Library for Compose
 /// @notice Provides internal logic for ERC-721 token management using diamond storage.
+///         This library is intended to be used by custom facets to integrate with ERC-721 functionality.
 /// @dev Implements minting, burning, and transferring of ERC-721 tokens without dependencies.
-/// Uses ERC-8042-compliant storage definition and includes ERC-6093 standard custom errors.
+///      Uses ERC-8042-compliant storage definition and includes ERC-6093 standard custom errors.
 library LibERC721 {
     /// @notice Thrown when attempting to interact with a non-existent token.
     /// @param _tokenId The ID of the token that does not exist.

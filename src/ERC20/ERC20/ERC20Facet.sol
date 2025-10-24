@@ -22,10 +22,6 @@ contract ERC20Facet {
     /// @param _needed Amount required to complete the operation.
     error ERC20InsufficientAllowance(address _spender, uint256 _allowance, uint256 _needed);
 
-    /// @notice Thrown when the approver address is invalid (e.g., zero address).
-    /// @param _approver Invalid approver address.
-    error ERC20InvalidApprover(address _approver);
-
     /// @notice Thrown when the spender address is invalid (e.g., zero address).
     /// @param _spender Invalid spender address.
     error ERC20InvalidSpender(address _spender);
@@ -139,9 +135,14 @@ contract ERC20Facet {
      * @dev Emits an {Approval} event.
      * @param _spender The address approved to spend tokens.
      * @param _value The number of tokens to approve.
+     * @return True if the approval was successful.
      */
     function approve(address _spender, uint256 _value) external returns (bool) {
+<<<<<<< HEAD
         ERC20Storage storage s = _getStorage();
+=======
+        ERC20Storage storage s = getStorage();
+>>>>>>> upstream/main
         if (_spender == address(0)) {
             revert ERC20InvalidSpender(address(0));
         }
@@ -155,9 +156,14 @@ contract ERC20Facet {
      * @dev Emits a {Transfer} event.
      * @param _to The address to receive the tokens.
      * @param _value The amount of tokens to transfer.
+     * @return True if the transfer was successful.
      */
     function transfer(address _to, uint256 _value) external returns (bool) {
+<<<<<<< HEAD
         ERC20Storage storage s = _getStorage();
+=======
+        ERC20Storage storage s = getStorage();
+>>>>>>> upstream/main
         if (_to == address(0)) {
             revert ERC20InvalidReceiver(address(0));
         }
@@ -167,8 +173,8 @@ contract ERC20Facet {
         }
         unchecked {
             s.balanceOf[msg.sender] = fromBalance - _value;
-            s.balanceOf[_to] += _value;
         }
+        s.balanceOf[_to] += _value;
         emit Transfer(msg.sender, _to, _value);
         return true;
     }
@@ -179,9 +185,14 @@ contract ERC20Facet {
      * @param _from The address to transfer tokens from.
      * @param _to The address to transfer tokens to.
      * @param _value The amount of tokens to transfer.
+     * @return True if the transfer was successful.
      */
     function transferFrom(address _from, address _to, uint256 _value) external returns (bool) {
+<<<<<<< HEAD
         ERC20Storage storage s = _getStorage();
+=======
+        ERC20Storage storage s = getStorage();
+>>>>>>> upstream/main
         if (_from == address(0)) {
             revert ERC20InvalidSender(address(0));
         }
@@ -199,8 +210,8 @@ contract ERC20Facet {
         unchecked {
             s.allowances[_from][msg.sender] = currentAllowance - _value;
             s.balanceOf[_from] = fromBalance - _value;
-            s.balanceOf[_to] += _value;
         }
+        s.balanceOf[_to] += _value;
         emit Transfer(_from, _to, _value);
         return true;
     }
@@ -218,6 +229,7 @@ contract ERC20Facet {
         }
         unchecked {
             s.balanceOf[msg.sender] = balance - _value;
+            s.totalSupply -= _value;
         }
         emit Transfer(msg.sender, address(0), _value);
     }
@@ -241,8 +253,9 @@ contract ERC20Facet {
         unchecked {
             s.allowances[_account][msg.sender] = currentAllowance - _value;
             s.balanceOf[_account] = balance - _value;
+            s.totalSupply -= _value;
         }
-        emit Transfer(msg.sender, address(0), _value);
+        emit Transfer(_account, address(0), _value);
     }
 
     // EIP-2612 Permit Extension
@@ -294,6 +307,9 @@ contract ERC20Facet {
         bytes32 _r,
         bytes32 _s
     ) external {
+        if (_spender == address(0)) {
+            revert ERC20InvalidSpender(address(0));
+        }
         if (block.timestamp > _deadline) {
             revert ERC2612InvalidSignature(_owner, _spender, _value, _deadline, _v, _r, _s);
         }

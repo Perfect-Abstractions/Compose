@@ -1,0 +1,11 @@
+blank_issues_enabled: false
+contact_links:
+  - name: GitHub Discussions
+    url: https://github.com/Perfect-Abstractions/Compose/discussions
+    about: Ask questions, share ideas, and discuss the project
+  - name: Discord Community
+    url: https://discord.gg/DCBD2UKbxc
+    about: Join our Discord for real-time discussions and support
+  - name: Contributing
+    url: https://github.com/Perfect-Abstractions/Compose/blob/main/CONTRIBUTING.md
+    about: Read the contributing guide to get started
