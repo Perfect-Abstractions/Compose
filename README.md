@@ -42,6 +42,8 @@ forge build
 
 # Run tests
 forge test
+
+# For test documentation, see test/README.md
 ```
 
 ## What Makes Compose Different

@@ -273,6 +273,29 @@ forge test --match-path test/ERC20.sol
 forge test --gas-report
 ```
 
+### Test Structure
+
+Tests in Compose follow a specific organizational pattern:
+
+- **Facet Tests** (`test/[Feature]/[Feature]Facet.t.sol`): Test external functions of facets
+- **Library Tests** (`test/[Feature]/Lib[Feature].t.sol`): Test internal library functions
+- **Test Harnesses** (`test/[Feature]/harnesses/`): Special contracts that expose internal functions for testing
+  - Facet harnesses add initialization and helper functions
+  - Library harnesses expose internal functions as external
+
+Example structure:
+```
+test/
+├── ERC20/
+│   ├── ERC20Facet.t.sol          # Tests for facet external functions
+│   ├── LibERC20.t.sol             # Tests for library internal functions
+│   └── harnesses/
+│       ├── ERC20FacetHarness.sol  # Adds mint() and initialize()
+│       └── LibERC20Harness.sol    # Exposes internal functions
+```
+
+See [test/README.md](test/README.md) for detailed testing documentation and patterns.
+
 ### Test Writing Guidelines
 - Write comprehensive tests for all new functionality
 - Test edge cases and error conditions
