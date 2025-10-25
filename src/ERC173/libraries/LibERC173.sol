@@ -43,4 +43,16 @@ library LibERC173 {
 
         emit OwnershipTransferred(previousOwner, _newOwner);
     }
+
+    /// @notice Renounce ownership of the contract
+    /// @dev Sets the owner to address(0), disabling all functions restricted to the owner
+    function renounceOwnership() internal {
+        ERC173Storage storage s = getStorage();
+        if (s.owner == address(0)) revert OwnableAlreadyRenounced();
+
+        address previousOwner = s.owner;
+        s.owner = address(0);
+
+        emit OwnershipTransferred(previousOwner, address(0));
+    }
 }

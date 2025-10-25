@@ -43,4 +43,17 @@ contract ERC173Facet {
 
         emit OwnershipTransferred(previousOwner, _newOwner);
     }
+
+    /// @notice Renounce ownership of the contract
+    /// @dev Sets the owner to address(0), disabling all functions restricted to the owner.
+    function renounceOwnership() external {
+        ERC173Storage storage s = getStorage();
+        if (msg.sender != s.owner) revert OwnableUnauthorizedAccount();
+
+        address previousOwner = s.owner;
+        s.owner = address(0);
+
+        emit OwnershipTransferred(previousOwner, address(0));
+    }
+
 }
