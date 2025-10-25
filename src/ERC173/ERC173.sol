@@ -9,6 +9,10 @@ contract ERC173Facet {
     /// @notice Thrown when attempting to transfer ownership while not being the owner.
     error OwnableUnauthorizedAccount();
 
+    /// @notice Thrown for the same owner. 
+    /// @dev Thrown when the owner tries transferring ownership to self.
+    error OwnableSameOwner(address _owner);
+
     bytes32 constant STORAGE_POSITION = keccak256("compose.erc173");
 
     /// @custom:storage-location erc8042:compose.erc173
@@ -26,21 +30,27 @@ contract ERC173Facet {
         }
     }
 
-    /// @notice Get the address of the owner
+    /// @notice Returns the owner's address.
     /// @return The address of the owner.
     function owner() external view returns (address) {
         return getStorage().owner;
     }
 
-    /// @notice Set the address of the new owner of the contract
+    /// @notice Sets the contract's new owner. 
     /// @dev Set _newOwner to address(0) to renounce any ownership.
     /// @param _newOwner The address of the new owner of the contract
     function transferOwnership(address _newOwner) external {
         ERC173Storage storage s = getStorage();
         if (msg.sender != s.owner) revert OwnableUnauthorizedAccount();
-        address previousOwner = s.owner;
+
+        if (_newOwner == s.owner) {
+            revert OwnableSameOwner(_newOwner);
+        }
+
+        address oldOwner = s.owner;
+        
         s.owner = _newOwner;
 
-        emit OwnershipTransferred(previousOwner, _newOwner);
+        emit OwnershipTransferred(oldOwner, _newOwner);
     }
 }
