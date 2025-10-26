@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity >=0.8.30;
 
-import {LibUtils} from "../../Libraries/LibUtils.sol";
+import {LibUtils} from "../../../libraries/LibUtils.sol";
 
 /// @title ERC721 Receiver Interface
 /// @notice Interface for contracts that want to support safe ERC721 token transfers.
@@ -99,8 +99,26 @@ contract ERC721EnumerableFacet {
         if (bytes(s.baseURI).length == 0) {
             return "";
         }
-
-        return string.concat(s.baseURI, LibUtils.toString(_tokenId));
+        if (_tokenId == 0) {
+            return string.concat(s.baseURI, "0");
+        }
+        // Convert _tokenId to string
+        uint256 temp = _tokenId;
+        uint256 stringLength;
+        while (temp != 0) {
+            stringLength++;
+            temp /= 10;
+        }
+        bytes memory tokenIdString = new bytes(stringLength);
+        while (_tokenId != 0) {
+            stringLength--;
+            // Convert each digit to its ASCII representation
+            // by adding 48 to get the ASCII code for the digit.
+            // Then store it in the byte array
+            tokenIdString[stringLength] = bytes1(uint8(48 + (_tokenId % 10)));
+            _tokenId /= 10;
+        }
+        return string.concat(s.baseURI, string(tokenIdString));
     }
 
     /// @notice Returns the total number of tokens in existence.

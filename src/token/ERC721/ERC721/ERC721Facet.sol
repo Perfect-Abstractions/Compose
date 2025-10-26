@@ -1,8 +1,6 @@
 // SPDX-License-Identifier: MIT
 pragma solidity >=0.8.30;
 
-import {LibUtils} from "../../Libraries/LibUtils.sol";
-
 /// @title ERC-721 Token Receiver Interface
 /// @notice Interface for contracts that want to handle safe transfers of ERC-721 tokens.
 /// @dev Contracts implementing this must return the selector to confirm token receipt.
@@ -99,12 +97,29 @@ contract ERC721Facet {
         if (owner == address(0)) {
             revert ERC721NonexistentToken(_tokenId);
         }
-
         if (bytes(s.baseURI).length == 0) {
             return "";
         }
-
-        return string.concat(s.baseURI, LibUtils.toString(_tokenId));
+        if (_tokenId == 0) {
+            return string.concat(s.baseURI, "0");
+        }
+        // Convert _tokenId to string
+        uint256 temp = _tokenId;
+        uint256 stringLength;
+        while (temp != 0) {
+            stringLength++;
+            temp /= 10;
+        }
+        bytes memory tokenIdString = new bytes(stringLength);
+        while (_tokenId != 0) {
+            stringLength--;
+            // Convert each digit to its ASCII representation
+            // by adding 48 to get the ASCII code for the digit.
+            // Then store it in the byte array
+            tokenIdString[stringLength] = bytes1(uint8(48 + (_tokenId % 10)));
+            _tokenId /= 10;
+        }
+        return string.concat(s.baseURI, string(tokenIdString));
     }
 
     /// @notice Returns the number of tokens owned by a given address.

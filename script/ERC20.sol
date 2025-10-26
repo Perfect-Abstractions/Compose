@@ -2,7 +2,7 @@
 pragma solidity ^0.8.13;
 
 import {Script} from "forge-std/Script.sol";
-import {ERC20Facet} from "../src/ERC20/ERC20/ERC20Facet.sol";
+import {ERC20Facet} from "../src/token/ERC20/ERC20/ERC20Facet.sol";
 
 contract CounterScript is Script {
     ERC20Facet public erc20;
