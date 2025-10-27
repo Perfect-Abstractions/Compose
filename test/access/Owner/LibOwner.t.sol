@@ -264,4 +264,13 @@ contract LibOwnerTest is Test {
             harness.requireOwner();
         }
     }
+
+    function test_GasReportTest() public {
+        // This adds gas usage to the test suite
+        uint256 sum = 0;
+        for (uint256 i = 0; i < 5; i++) {
+            sum += i;
+        }
+        assertEq(sum, 10);
+    }
 }
