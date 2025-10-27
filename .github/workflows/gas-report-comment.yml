@@ -1,0 +1,163 @@
+name: Post Gas Report Comment
+
+on:
+  workflow_run:
+    workflows: ["Gas Report"]
+    types:
+      - completed
+
+permissions:
+  actions: read
+  pull-requests: write
+  issues: write
+  contents: read
+
+jobs:
+  comment:
+    name: Post Gas Report Comment
+    runs-on: ubuntu-latest
+    # Only run if the workflow run was for a pull request
+    if: github.event.workflow_run.event == 'pull_request'
+    steps:
+      - name: Check workflow run status
+        run: |
+          echo "Workflow run conclusion: ${{ github.event.workflow_run.conclusion }}"
+          echo "Workflow run event: ${{ github.event.workflow_run.event }}"
+          echo "Workflow run ID: ${{ github.event.workflow_run.id }}"
+          echo "Head branch: ${{ github.event.workflow_run.head_branch }}"
+
+      - name: Checkout repository
+        if: github.event.workflow_run.conclusion == 'success'
+        uses: actions/checkout@v4
+
+      - name: Download and post gas report comment
+        if: github.event.workflow_run.conclusion == 'success'
+        uses: actions/github-script@v7
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const fs = require('fs');
+            const path = require('path');
+            const { execSync } = require('child_process');
+
+            console.log('Starting gas report comment posting process...');
+
+            // Download artifact
+            console.log('Fetching artifacts from workflow run...');
+            const artifacts = await github.rest.actions.listWorkflowRunArtifacts({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              run_id: context.payload.workflow_run.id,
+            });
+
+            const gasReportArtifact = artifacts.data.artifacts.find(
+              artifact => artifact.name === 'gas-report-data'
+            );
+
+            if (!gasReportArtifact) {
+              console.log('No gas report artifact found - likely no gas changes or error in generation');
+              console.log('Available artifacts:', artifacts.data.artifacts.map(a => a.name).join(', '));
+              return;
+            }
+
+            console.log('Found gas report artifact, downloading...');
+
+            const download = await github.rest.actions.downloadArtifact({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              artifact_id: gasReportArtifact.id,
+              archive_format: 'zip',
+            });
+
+            // Save and extract the artifact
+            const artifactPath = path.join(process.env.GITHUB_WORKSPACE, 'gas-report-data.zip');
+            fs.writeFileSync(artifactPath, Buffer.from(download.data));
+
+            console.log('Artifact downloaded, extracting...');
+
+            // Unzip the artifact
+            execSync(`unzip -o ${artifactPath} -d ${process.env.GITHUB_WORKSPACE}`);
+
+            // Read the report and metadata
+            const reportPath = path.join(process.env.GITHUB_WORKSPACE, 'gas-report.md');
+            const dataPath = path.join(process.env.GITHUB_WORKSPACE, 'gas-report-data.txt');
+
+            if (!fs.existsSync(reportPath)) {
+              console.log('No gas report found in artifact');
+              return;
+            }
+
+            const report = fs.readFileSync(reportPath, 'utf8');
+            const dataContent = fs.readFileSync(dataPath, 'utf8');
+
+            // Parse PR number from data file
+            const prNumberMatch = dataContent.match(/PR_NUMBER=(\d+)/);
+            if (!prNumberMatch) {
+              console.error('Could not find PR number in data file');
+              return;
+            }
+
+            const prNumber = parseInt(prNumberMatch[1]);
+            console.log(`Posting comment to PR #${prNumber}`);
+
+            // Find existing comment
+            const { data: comments } = await github.rest.issues.listComments({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: prNumber,
+            });
+
+            const botComment = comments.find(comment =>
+              comment.user.type === 'Bot' &&
+              comment.body.includes('📊 Gas Report')
+            );
+
+            if (botComment) {
+              console.log('Updating existing gas report comment');
+              await github.rest.issues.updateComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                comment_id: botComment.id,
+                body: report
+              });
+            } else {
+              console.log('Creating new gas report comment');
+              await github.rest.issues.createComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: prNumber,
+                body: report
+              });
+            }
+
+            console.log('Gas report comment posted successfully');
+
+      - name: Post failure comment
+        if: github.event.workflow_run.conclusion == 'failure'
+        uses: actions/github-script@v7
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            // Try to get PR number from workflow run
+            const pullRequests = context.payload.workflow_run.pull_requests;
+            if (!pullRequests || pullRequests.length === 0) {
+              console.log('No associated PR found for failed workflow');
+              return;
+            }
+
+            const prNumber = pullRequests[0].number;
+            const body = `## 📊 Gas Report
+
+            ⚠️ Gas report generation failed. Please check the [workflow logs](${context.payload.workflow_run.html_url}) for details.
+
+            Common issues:
+            - Compilation errors in the PR
+            - Forge snapshot command failed
+            - Merge conflicts with base branch`;
+
+            await github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: prNumber,
+              body
+            });

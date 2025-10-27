@@ -1,0 +1,30 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(forge test:*)",
+      "Bash(git stash:*)",
+      "Bash(git checkout:*)",
+      "Bash(git add:*)",
+      "Bash(git commit:*)",
+      "Bash(git log --oneline -10 --grep=\"fmt\\|format\" -i)",
+      "WebFetch(domain:github.com)",
+      "WebFetch(domain:api.github.com)",
+      "WebSearch",
+      "Bash(gh pr view:*)",
+      "Bash(gh pr diff:*)",
+      "Bash(git log:*)",
+      "Bash(gh issue view:*)",
+      "Bash(tree:*)",
+      "Bash(forge clean:*)",
+      "WebFetch(domain:raw.githubusercontent.com)",
+      "Bash(gh pr checkout:*)",
+      "Bash(mkdir:*)",
+      "Bash(forge build:*)",
+      "Bash(forge coverage:*)",
+      "Bash(forge config:*)",
+      "Bash(forge snapshot:*)"
+    ],
+    "deny": [],
+    "ask": []
+  }
+}

@@ -27,4 +27,13 @@ quote_style = 'double'
 number_underscore = 'preserve'
 single_line_statement_blocks = 'preserve'
 
+# Gas snapshot settings
+[profile.default.gas_snapshots]
+snap = ".gas-snapshot"
+diff = true
+
+[profile.ci.gas_snapshots]
+snap = ".gas-snapshot"
+diff = true
+
 # See more config options https://github.com/foundry-rs/foundry/blob/master/crates/config/README.md#all-options

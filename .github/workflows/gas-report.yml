@@ -1,0 +1,83 @@
+name: Gas Report
+
+on:
+  pull_request:
+    paths-ignore:
+      - '**.md'
+      - 'docs/**'
+  workflow_dispatch:
+
+env:
+  FOUNDRY_PROFILE: ci
+
+# No write permissions for security (works with forks)
+permissions:
+  contents: read
+
+jobs:
+  gas-report:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout PR branch
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - name: Install Foundry
+        uses: foundry-rs/foundry-toolchain@v1
+
+      - name: Generate gas snapshot for PR
+        run: forge snapshot --snap .gas-snapshot-pr
+
+      - name: Checkout base branch
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.base.sha }}
+          submodules: recursive
+
+      - name: Generate gas snapshot for base
+        run: forge snapshot --snap .gas-snapshot-base
+
+      - name: Checkout PR branch again
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - name: Generate gas report
+        env:
+          BASE_BRANCH: ${{ github.event.pull_request.base.ref }}
+          HEAD_BRANCH: ${{ github.event.pull_request.head.ref }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+        run: |
+          # Run diff and capture output
+          forge snapshot --diff .gas-snapshot-base --snap .gas-snapshot-pr > gas-diff.txt 2>&1 || true
+
+          # Generate the formatted report
+          node .github/scripts/gas-report.js generate
+
+          # Create metadata file for the comment workflow
+          echo "PR_NUMBER=${{ github.event.pull_request.number }}" > gas-report-data.txt
+          echo "BASE_BRANCH=${{ github.event.pull_request.base.ref }}" >> gas-report-data.txt
+          echo "HEAD_BRANCH=${{ github.event.pull_request.head.ref }}" >> gas-report-data.txt
+          echo "HEAD_SHA=${{ github.event.pull_request.head.sha }}" >> gas-report-data.txt
+
+          echo "Generated gas report for PR #${{ github.event.pull_request.number }}"
+
+      - name: Upload gas report
+        uses: actions/upload-artifact@v4
+        with:
+          name: gas-report-data
+          path: |
+            gas-report.md
+            gas-report-data.txt
+            gas-diff.txt
+          retention-days: 1
+
+      - name: Upload debug artifacts
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: gas-snapshots-debug
+          path: |
+            .gas-snapshot*
+            gas-diff.txt
