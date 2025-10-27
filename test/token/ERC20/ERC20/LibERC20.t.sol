@@ -3,7 +3,7 @@ pragma solidity >=0.8.30;
 
 import {Test} from "forge-std/Test.sol";
 import {LibERC20Harness} from "./harnesses/LibERC20Harness.sol";
-import {LibERC20} from "../../src/token/ERC20/ERC20/LibERC20.sol";
+import {LibERC20} from "../../../../src/token/ERC20/ERC20/LibERC20.sol";
 
 contract LibERC20Test is Test {
     LibERC20Harness public harness;
@@ -73,7 +73,7 @@ contract LibERC20Test is Test {
         assertEq(harness.totalSupply(), 350e18);
     }
 
-    function test_Fuzz_Mint(address to, uint256 amount) public {
+    function testFuzz_Mint(address to, uint256 amount) public {
         vm.assume(to != address(0));
         vm.assume(amount < type(uint256).max / 2);
 
@@ -117,7 +117,7 @@ contract LibERC20Test is Test {
         assertEq(harness.totalSupply(), 0);
     }
 
-    function test_Fuzz_Burn(address account, uint256 mintAmount, uint256 burnAmount) public {
+    function testFuzz_Burn(address account, uint256 mintAmount, uint256 burnAmount) public {
         vm.assume(account != address(0));
         vm.assume(mintAmount < type(uint256).max / 2);
         vm.assume(burnAmount <= mintAmount);
@@ -185,7 +185,7 @@ contract LibERC20Test is Test {
         assertEq(harness.balanceOf(bob), 0);
     }
 
-    function test_Fuzz_Transfer(uint256 balance, uint256 amount) public {
+    function testFuzz_Transfer(uint256 balance, uint256 amount) public {
         vm.assume(balance < type(uint256).max / 2);
         vm.assume(amount <= balance);
 
@@ -277,7 +277,7 @@ contract LibERC20Test is Test {
         assertEq(harness.allowance(alice, bob), 0);
     }
 
-    function test_Fuzz_Approve(address spender, uint256 amount) public {
+    function testFuzz_Approve(address spender, uint256 amount) public {
         vm.assume(spender != address(0));
 
         vm.prank(alice);
@@ -331,7 +331,7 @@ contract LibERC20Test is Test {
         assertEq(harness.allowance(alice, bob), allowanceAmount - transferAmount);
     }
 
-    function test_Fuzz_TransferFrom(uint256 balance, uint256 approval, uint256 amount) public {
+    function testFuzz_TransferFrom(uint256 balance, uint256 approval, uint256 amount) public {
         vm.assume(balance < type(uint256).max / 2);
         vm.assume(approval <= balance);
         vm.assume(amount <= approval);

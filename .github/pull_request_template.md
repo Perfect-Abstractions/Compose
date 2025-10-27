@@ -2,7 +2,6 @@
 <!-- Provide a brief summary of your changes -->
 
 ## Changes Made
-
 <!-- List the main changes you made -->
 
 ## Checklist
@@ -26,5 +25,4 @@ Before submitting this PR, please ensure:
 Make sure to follow the [CONTRIBUTING.md](https://github.com/Perfect-Abstractions/Compose/blob/main/CONTRIBUTING.md) guidelines.
 
 ## Additional Notes
-
 <!-- Any additional information, concerns, or questions for reviewers -->

@@ -249,14 +249,29 @@ All Solidity libraries in Compose are prefixed with `Lib`.
 
 ## Testing
 
-### Testing Requirements
+### Required
 Before submitting a pull request:
+- Format your code: `forge fmt`
 - Run all tests: `forge test`
 - Update gas snapshots: `forge snapshot`
 - Ensure your code follows the banned features list
-- Test your changes thoroughly
+- Ensure your code follows the coding style in the existing code base.
+
+## Recommended
 - Write tests for new functionality 
+- Test your changes thoroughly
 - Ensure test coverage is maintained or improved
+
+If you make changes to existing functionality, please make sure that the existing tests still work for that functionality and write new tests as necessary that cover the changes you made.
+
+Please note that you can submit a pull request for new functionality without tests. Another person can write tests for new functionality.
+
+### When writing tests
+- Write comprehensive tests for all functionality
+- Test edge cases and error conditions
+- Use descriptive test names
+- Follow the existing test patterns in the codebase
+- Include gas optimization tests where relevant
 
 ### Running Tests
 ```bash
@@ -295,16 +310,6 @@ test/
 ```
 
 See [test/README.md](test/README.md) for detailed testing documentation and patterns.
-
-### Test Writing Guidelines
-- Write comprehensive tests for all new functionality
-- Test edge cases and error conditions
-- Use descriptive test names
-- Follow the existing test patterns in the codebase
-- Include gas optimization tests where relevant
-- Only make a pull request with full test coverage of your code.
-
-**Note**: If you don't want to write tests for new functionality then we can find someone to work with you to write the tests.
 
 ## Available Commands
 

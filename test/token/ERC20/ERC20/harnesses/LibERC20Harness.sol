@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity >=0.8.30;
 
-import {LibERC20} from "../../../src/token/ERC20/ERC20/LibERC20.sol";
+import {LibERC20} from "../../../../../src/token/ERC20/ERC20/LibERC20.sol";
 
 /// @title LibERC20Harness
 /// @notice Test harness that exposes LibERC20's internal functions as external

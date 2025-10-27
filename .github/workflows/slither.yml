@@ -30,6 +30,7 @@ jobs:
         run: |
           pip install slither-analyzer
 
+      # Slither analysis ONLY FOR REPORTING PURPOSES
       - name: Run Slither analysis
         run: |
-          slither . --exclude-dependencies
+          slither . --exclude-dependencies --fail-none 

@@ -11,7 +11,7 @@ contract OwnerFacet {
 
     bytes32 constant STORAGE_POSITION = keccak256("compose.owner");
 
-    /// @custom:storage-location erc8042:compose.erc173
+    /// @custom:storage-location erc8042:compose.owner
     struct OwnerStorage {
         address owner;
     }

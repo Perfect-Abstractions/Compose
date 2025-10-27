@@ -11,6 +11,8 @@ library LibOwnerTwoSteps {
 
     /// @notice Thrown when a non-owner attempts an action restricted to owner.
     error OwnerUnauthorizedAccount();
+    /// @notice Thrown when attempting to transfer ownership from a renounced state.
+    error OwnerAlreadyRenounced();
 
     bytes32 constant STORAGE_POSITION = keccak256("compose.owner");
 
@@ -51,8 +53,12 @@ library LibOwnerTwoSteps {
     /// @param _newOwner The address of the new owner of the contract
     function transferOwnership(address _newOwner) internal {
         OwnerTwoStepsStorage storage s = getStorage();
+        address previousOwner = s.owner;
+        if (previousOwner == address(0)) {
+            revert OwnerAlreadyRenounced();
+        }
         s.pendingOwner = _newOwner;
-        emit OwnershipTransferStarted(s.owner, _newOwner);
+        emit OwnershipTransferStarted(previousOwner, _newOwner);
     }
 
     /// @notice Finalizes ownership transfer; must be called by the pending owner.

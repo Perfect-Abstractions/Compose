@@ -2,7 +2,7 @@
 pragma solidity >=0.8.30;
 
 import {Test} from "forge-std/Test.sol";
-import {ERC20Facet} from "../../src/token/ERC20/ERC20/ERC20Facet.sol";
+import {ERC20Facet} from "../../../../src/token/ERC20/ERC20/ERC20Facet.sol";
 import {ERC20FacetHarness} from "./harnesses/ERC20FacetHarness.sol";
 
 contract ERC20FacetTest is Test {
@@ -106,7 +106,7 @@ contract ERC20FacetTest is Test {
         assertEq(token.balanceOf(bob), INITIAL_SUPPLY);
     }
 
-    function test_Fuzz_Transfer(address to, uint256 amount) public {
+    function testFuzz_Transfer(address to, uint256 amount) public {
         vm.assume(to != address(0));
         vm.assume(amount <= INITIAL_SUPPLY);
 
@@ -198,7 +198,7 @@ contract ERC20FacetTest is Test {
         assertEq(token.allowance(alice, bob), 0);
     }
 
-    function test_Fuzz_Approve(address spender, uint256 amount) public {
+    function testFuzz_Approve(address spender, uint256 amount) public {
         vm.assume(spender != address(0));
 
         vm.prank(alice);
@@ -261,7 +261,7 @@ contract ERC20FacetTest is Test {
         assertEq(token.allowance(alice, bob), allowanceAmount - transferAmount);
     }
 
-    function test_Fuzz_TransferFrom(uint256 approval, uint256 amount) public {
+    function testFuzz_TransferFrom(uint256 approval, uint256 amount) public {
         vm.assume(approval <= INITIAL_SUPPLY);
         vm.assume(amount <= approval);
 
@@ -397,7 +397,7 @@ contract ERC20FacetTest is Test {
         assertEq(token.totalSupply(), 0);
     }
 
-    function test_Fuzz_Burn(uint256 amount) public {
+    function testFuzz_Burn(uint256 amount) public {
         vm.assume(amount <= INITIAL_SUPPLY);
 
         vm.prank(alice);
@@ -458,7 +458,7 @@ contract ERC20FacetTest is Test {
         assertEq(token.totalSupply(), INITIAL_SUPPLY - burnAmount);
     }
 
-    function test_Fuzz_BurnFrom(uint256 approval, uint256 amount) public {
+    function testFuzz_BurnFrom(uint256 approval, uint256 amount) public {
         vm.assume(approval <= INITIAL_SUPPLY);
         vm.assume(amount <= approval);
 
@@ -1001,7 +1001,7 @@ contract ERC20FacetTest is Test {
         token.permit(owner, bob, value, deadline, v, r, bytes32(0));
     }
 
-    function test_Fuzz_Permit(uint256 ownerKey, address spender, uint256 value, uint256 deadline) public {
+    function testFuzz_Permit(uint256 ownerKey, address spender, uint256 value, uint256 deadline) public {
         vm.assume(ownerKey != 0 && ownerKey < type(uint256).max / 2);
         vm.assume(spender != address(0));
         vm.assume(deadline > block.timestamp);
