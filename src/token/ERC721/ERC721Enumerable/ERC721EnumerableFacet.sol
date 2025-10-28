@@ -1,8 +1,6 @@
 // SPDX-License-Identifier: MIT
 pragma solidity >=0.8.30;
 
-import {LibUtils} from "../../../libraries/LibUtils.sol";
-
 /// @title ERC721 Receiver Interface
 /// @notice Interface for contracts that want to support safe ERC721 token transfers.
 /// @dev Implementers must return the function selector to confirm token receipt.
