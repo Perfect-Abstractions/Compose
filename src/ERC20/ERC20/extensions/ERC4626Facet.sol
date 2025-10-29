@@ -161,32 +161,24 @@ contract ERC4626Facet {
     /// @param _value Amount of tokens transferred.
     event Transfer(address indexed _from, address indexed _to, uint256 _value);
 
-    /**
-     * @dev Attempted to deposit more assets than the max amount for `receiver`.
-     */
+    /// @dev Attempted to deposit more assets than the max amount for `receiver`.
     error ERC4626ExceededMaxDeposit(
         address receiver,
         uint256 assets,
         uint256 max
     );
 
-    /**
-     * @dev Attempted to mint more shares than the max amount for `receiver`.
-     */
+    /// @dev Attempted to mint more shares than the max amount for `receiver`.
     error ERC4626ExceededMaxMint(address receiver, uint256 shares, uint256 max);
 
-    /**
-     * @dev Attempted to withdraw more assets than the max amount for `receiver`.
-     */
+    /// @dev Attempted to withdraw more assets than the max amount for `receiver`.
     error ERC4626ExceededMaxWithdraw(
         address owner,
         uint256 assets,
         uint256 max
     );
 
-    /**
-     * @dev Attempted to redeem more shares than the max amount for `receiver`.
-     */
+    /// @dev Attempted to redeem more shares than the max amount for `receiver`.
     error ERC4626ExceededMaxRedeem(address owner, uint256 shares, uint256 max);
 
     /// @dev Storage position determined by the keccak256 hash of the diamond storage identifier.
@@ -211,53 +203,41 @@ contract ERC4626Facet {
         }
     }
 
-    /**
-     * @notice Returns the name of the token.
-     * @return The token name.
-     */
+    /// @notice Returns the name of the token.
+    /// @return The token name.
     function name() external view returns (string memory) {
         return getStorage().name;
     }
 
-    /**
-     * @notice Returns the symbol of the token.
-     * @return The token symbol.
-     */
+    /// @notice Returns the symbol of the token.
+    /// @return The token symbol.
     function symbol() external view returns (string memory) {
         return getStorage().symbol;
     }
 
-    /**
-     * @notice Returns the number of decimals used for token precision.
-     * @return The number of decimals.
-     */
+    /// @notice Returns the number of decimals used for token precision.
+    /// @return The number of decimals.
     function decimals() external view returns (uint8) {
         return getStorage().underlyingDecimals + _decimalsOffset();
     }
 
-    /**
-     * @notice Returns the total supply of tokens.
-     * @return The total token supply.
-     */
+    /// @notice Returns the total supply of tokens.
+    /// @return The total token supply.
     function totalSupply() external view returns (uint256) {
         return getStorage().totalSupply;
     }
 
-    /**
-     * @notice Returns the balance of a specific account.
-     * @param _account The address of the account.
-     * @return The account balance.
-     */
+    /// @notice Returns the balance of a specific account.
+    /// @param _account The address of the account.
+    /// @return The account balance.
     function balanceOf(address _account) external view returns (uint256) {
         return getStorage().balanceOf[_account];
     }
 
-    /**
-     * @notice Returns the remaining number of tokens that a spender is allowed to spend on behalf of an owner.
-     * @param _owner The address of the token owner.
-     * @param _spender The address of the spender.
-     * @return The remaining allowance.
-     */
+    /// @notice Returns the remaining number of tokens that a spender is allowed to spend on behalf of an owner.
+    /// @param _owner The address of the token owner.
+    /// @param _spender The address of the spender.
+    /// @return The remaining allowance.
     function allowance(
         address _owner,
         address _spender
@@ -265,13 +245,11 @@ contract ERC4626Facet {
         return getStorage().allowances[_owner][_spender];
     }
 
-    /**
-     * @notice Approves a spender to transfer up to a certain amount of tokens on behalf of the caller.
-     * @dev Emits an {Approval} event.
-     * @param _spender The address approved to spend tokens.
-     * @param _value The number of tokens to approve.
-     * @return True if the approval was successful.
-     */
+    /// @notice Approves a spender to transfer up to a certain amount of tokens on behalf of the caller.
+    /// @dev Emits an {Approval} event.
+    /// @param _spender The address approved to spend tokens.
+    /// @param _value The number of tokens to approve.
+    /// @return True if the approval was successful.
     function approve(address _spender, uint256 _value) external returns (bool) {
         ERC20Storage storage s = getStorage();
         if (_spender == address(0)) {
@@ -282,13 +260,11 @@ contract ERC4626Facet {
         return true;
     }
 
-    /**
-     * @notice Transfers tokens to another address.
-     * @dev Emits a {Transfer} event.
-     * @param _to The address to receive the tokens.
-     * @param _value The amount of tokens to transfer.
-     * @return True if the transfer was successful.
-     */
+    /// @notice Transfers tokens to another address.
+    /// @dev Emits a {Transfer} event.
+    /// @param _to The address to receive the tokens.
+    /// @param _value The amount of tokens to transfer.
+    /// @return True if the transfer was successful.
     function transfer(address _to, uint256 _value) external returns (bool) {
         ERC20Storage storage s = getStorage();
         if (_to == address(0)) {
@@ -306,14 +282,12 @@ contract ERC4626Facet {
         return true;
     }
 
-    /**
-     * @notice Transfers tokens on behalf of another account, provided sufficient allowance exists.
-     * @dev Emits a {Transfer} event and decreases the spender's allowance.
-     * @param _from The address to transfer tokens from.
-     * @param _to The address to transfer tokens to.
-     * @param _value The amount of tokens to transfer.
-     * @return True if the transfer was successful.
-     */
+    /// @notice Transfers tokens on behalf of another account, provided sufficient allowance exists.
+    /// @dev Emits a {Transfer} event and decreases the spender's allowance.
+    /// @param _from The address to transfer tokens from.
+    /// @param _to The address to transfer tokens to.
+    /// @param _value The amount of tokens to transfer.
+    /// @return True if the transfer was successful.
     function transferFrom(
         address _from,
         address _to,
@@ -349,11 +323,9 @@ contract ERC4626Facet {
         return true;
     }
 
-    /**
-     * @notice Burns (destroys) a specific amount of tokens from the caller's balance.
-     * @dev Emits a {Transfer} event to the zero address.
-     * @param _value The amount of tokens to burn.
-     */
+    /// @notice Burns (destroys) a specific amount of tokens from the caller's balance.
+    /// @dev Emits a {Transfer} event to the zero address.
+    /// @param _value The amount of tokens to burn.
     function burn(uint256 _value) external {
         ERC20Storage storage s = getStorage();
         uint256 balance = s.balanceOf[msg.sender];
@@ -367,12 +339,10 @@ contract ERC4626Facet {
         emit Transfer(msg.sender, address(0), _value);
     }
 
-    /**
-     * @notice Burns tokens from another account, deducting from the caller's allowance.
-     * @dev Emits a {Transfer} event to the zero address.
-     * @param _account The address whose tokens will be burned.
-     * @param _value The amount of tokens to burn.
-     */
+    /// @notice Burns tokens from another account, deducting from the caller's allowance.
+    /// @dev Emits a {Transfer} event to the zero address.
+    /// @param _account The address whose tokens will be burned.
+    /// @param _value The amount of tokens to burn.
     function burnFrom(address _account, uint256 _value) external {
         ERC20Storage storage s = getStorage();
         uint256 currentAllowance = s.allowances[_account][msg.sender];
@@ -399,21 +369,17 @@ contract ERC4626Facet {
 
     // EIP-2612 Permit Extension
 
-    /**
-     * @notice Returns the current nonce for an owner.
-     * @dev This value changes each time a permit is used.
-     * @param _owner The address of the owner.
-     * @return The current nonce.
-     */
+    /// @notice Returns the current nonce for an owner.
+    /// @dev This value changes each time a permit is used.
+    /// @param _owner The address of the owner.
+    /// @return The current nonce.
     function nonces(address _owner) external view returns (uint256) {
         return getStorage().nonces[_owner];
     }
 
-    /**
-     * @notice Returns the domain separator used in the encoding of the signature for {permit}.
-     * @dev This value is unique to a contract and chain ID combination to prevent replay attacks.
-     * @return The domain separator.
-     */
+    /// @notice Returns the domain separator used in the encoding of the signature for {permit}.
+    /// @dev This value is unique to a contract and chain ID combination to prevent replay attacks.
+    /// @return The domain separator.
     function DOMAIN_SEPARATOR() external view returns (bytes32) {
         return
             keccak256(
@@ -429,17 +395,15 @@ contract ERC4626Facet {
             );
     }
 
-    /**
-     * @notice Sets the allowance for a spender via a signature.
-     * @dev This function implements EIP-2612 permit functionality.
-     * @param _owner The address of the token owner.
-     * @param _spender The address of the spender.
-     * @param _value The amount of tokens to approve.
-     * @param _deadline The deadline for the permit (timestamp).
-     * @param _v The recovery byte of the signature.
-     * @param _r The r value of the signature.
-     * @param _s The s value of the signature.
-     */
+    /// @notice Sets the allowance for a spender via a signature.
+    /// @dev This function implements EIP-2612 permit functionality.
+    /// @param _owner The address of the token owner.
+    /// @param _spender The address of the spender.
+    /// @param _value The amount of tokens to approve.
+    /// @param _deadline The deadline for the permit (timestamp).
+    /// @param _v The recovery byte of the signature.
+    /// @param _r The r value of the signature.
+    /// @param _s The s value of the signature.
     function permit(
         address _owner,
         address _spender,
@@ -515,9 +479,7 @@ contract ERC4626Facet {
         emit Approval(_owner, _spender, _value);
     }
 
-    /**
-     * @dev Set the underlying asset contract. This must be an ERC20-compatible contract (ERC-20 or ERC-777).
-     */
+    /// @dev Set the underlying asset contract. This must be an ERC20-compatible contract (ERC-20 or ERC-777).
     // constructor(IERC20 asset_) {
     //     (bool success, uint8 assetDecimals) = _tryGetAssetDecimals(asset_);
     //     _underlyingDecimals = success ? assetDecimals : 18;
@@ -651,9 +613,7 @@ contract ERC4626Facet {
         return assets;
     }
 
-    /**
-     * @dev Internal conversion function (from assets to shares) with support for direction.
-     */
+    /// @dev Internal conversion function (from assets to shares) with support for direction.
     function _convertToShares(
         uint256 assets,
         Math.Rounding rounding
@@ -667,9 +627,7 @@ contract ERC4626Facet {
             );
     }
 
-    /**
-     * @dev Internal conversion function (from shares to assets) with support for rounding direction.
-     */
+    /// @dev Internal conversion function (from shares to assets) with support for rounding direction.
     function _convertToAssets(
         uint256 shares,
         Math.Rounding rounding
@@ -683,9 +641,7 @@ contract ERC4626Facet {
             );
     }
 
-    /**
-     * @dev Deposit/mint common workflow.
-     */
+    /// @dev Deposit/mint common workflow.
     function _deposit(
         address caller,
         address receiver,
@@ -704,9 +660,7 @@ contract ERC4626Facet {
         emit Deposit(caller, receiver, assets, shares);
     }
 
-    /**
-     * @dev Withdraw/redeem common workflow.
-     */
+    /// @dev Withdraw/redeem common workflow.
     function _withdraw(
         address caller,
         address receiver,
@@ -728,20 +682,15 @@ contract ERC4626Facet {
         return 0;
     }
 
-    /**
-     * @dev Cast a boolean (false or true) to a uint256 (0 or 1) with no jump.
-     */
+    /// @dev Cast a boolean (false or true) to a uint256 (0 or 1) with no jump.
     function toUint(bool b) internal pure returns (uint256 u) {
         assembly ("memory-safe") {
             u := iszero(iszero(b))
         }
     }
 
-    /**
-     * @dev Return the 512-bit multiplication of two uint256.
-     *
-     * The result is stored in two 256 variables such that product = high * 2²⁵⁶ + low.
-     */
+    /// @dev Return the 512-bit multiplication of two uint256.
+    /// The result is stored in two 256 variables such that product = high * 2²⁵⁶ + low.
     function mul512(
         uint256 a,
         uint256 b
@@ -756,13 +705,10 @@ contract ERC4626Facet {
         }
     }
 
-    /**
-     * @dev Calculates floor(x * y / denominator) with full precision. Throws if result overflows a uint256 or
-     * denominator == 0.
-     *
-     * Original credit to Remco Bloemen under MIT license (https://xn--2-umb.com/21/muldiv) with further edits by
-     * Uniswap Labs also under MIT license.
-     */
+    /// @dev Calculates floor(x * y / denominator) with full precision. Throws if result overflows a uint256 or
+    /// denominator == 0.
+    /// Original credit to Remco Bloemen under MIT license (https://xn--2-umb.com/21/muldiv) with further edits by
+    /// Uniswap Labs also under MIT license.
     function mulDiv(
         uint256 x,
         uint256 y,
@@ -846,9 +792,7 @@ contract ERC4626Facet {
         }
     }
 
-    /**
-     * @dev Calculates x * y / denominator with full precision, following the selected rounding direction.
-     */
+    /// @dev Calculates x * y / denominator with full precision, following the selected rounding direction.
     function mulDiv(
         uint256 x,
         uint256 y,
@@ -860,9 +804,7 @@ contract ERC4626Facet {
             toUint(unsignedRoundsUp(rounding) && mulmod(x, y, denominator) > 0);
     }
 
-    /**
-     * @dev Returns whether a provided rounding mode is considered rounding up for unsigned integers.
-     */
+    /// @dev Returns whether a provided rounding mode is considered rounding up for unsigned integers.
     function unsignedRoundsUp(Rounding rounding) internal pure returns (bool) {
         return uint8(rounding) % 2 == 1;
     }
