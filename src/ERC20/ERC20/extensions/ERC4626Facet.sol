@@ -34,52 +34,9 @@ interface IERC20 {
 /**
  * @dev Implementation of the ERC-4626 "Tokenized Vault Standard" as defined in
  * https://eips.ethereum.org/EIPS/eip-4626[ERC-4626].
- *
- * [CAUTION]
- * ====
- * In empty (or nearly empty) ERC-4626 vaults, deposits are at high risk of being stolen through frontrunning
- * with a "donation" to the vault that inflates the price of a share. This is variously known as a donation or inflation
- * attack and is essentially a problem of slippage. Vault deployers can protect against this attack by making an initial
- * deposit of a non-trivial amount of the asset, such that price manipulation becomes infeasible. Withdrawals may
- * similarly be affected by slippage. Users can protect against this attack as well as unexpected slippage in general by
- * verifying the amount received is as expected, using a wrapper that performs these checks such as
- * https://github.com/fei-protocol/ERC4626#erc4626router-and-base[ERC4626Router].
- *
- * Since v4.9, this implementation introduces configurable virtual assets and shares to help developers mitigate that risk.
- * The `_decimalsOffset()` corresponds to an offset in the decimal representation between the underlying asset's decimals
- * and the vault decimals. This offset also determines the rate of virtual shares to virtual assets in the vault, which
- * itself determines the initial exchange rate. While not fully preventing the attack, analysis shows that the default
- * offset (0) makes it non-profitable even if an attacker is able to capture value from multiple user deposits, as a result
- * of the value being captured by the virtual shares (out of the attacker's donation) matching the attacker's expected gains.
- * With a larger offset, the attack becomes orders of magnitude more expensive than it is profitable. More details about the
- * underlying math can be found xref:ROOT:erc4626.adoc#inflation-attack[here].
- *
- * The drawback of this approach is that the virtual shares do capture (a very small) part of the value being accrued
- * to the vault. Also, if the vault experiences losses, the users try to exit the vault, the virtual shares and assets
- * will cause the first user to exit to experience reduced losses in detriment to the last users that will experience
- * bigger losses. Developers willing to revert back to the pre-v4.9 behavior just need to override the
- * `_convertToShares` and `_convertToAssets` functions.
- * ====
- *
- * [NOTE]
- * ====
- * When overriding this contract, some elements must be considered:
- *
- * * When overriding the behavior of the deposit or withdraw mechanisms, it is recommended to override the internal
- * functions. Overriding {_deposit} automatically affects both {deposit} and {mint}. Similarly, overriding {_withdraw}
- * automatically affects both {withdraw} and {redeem}. Overall it is not recommended to override the public facing
- * functions since that could lead to inconsistent behaviors between the {deposit} and {mint} or between {withdraw} and
- * {redeem}, which is documented to have lead to loss of funds.
- *
- * * Overrides to the deposit or withdraw mechanism must be reflected in the preview functions as well.
- *
- * * {maxWithdraw} depends on {maxRedeem}. Therefore, overriding {maxRedeem} only is enough. On the other hand,
- * overriding {maxWithdraw} only would have no effect on {maxRedeem}, and could create an inconsistency between the two
- * functions.
- *
- * * If {previewRedeem} is overridden to revert, {maxWithdraw} must be overridden as necessary to ensure it
- * always return successfully.
- * ====
+ * Please follow all the best practices when dealing with vaults such as protection against inflation
+ * attacks and correct way to seed the vault. This implementation is similar to Openzeppelin's with
+ * virtual shares
  */
 // abstract contract ERC4626 is ERC20, IERC4626 {
 contract ERC4626Facet {
