@@ -62,15 +62,25 @@ Facets may not inherit other contracts or interfaces.
     delete balances[_owner];
     ```
 
-## 8. Formatting
+## 8. Avoid Assembly
+ - Avoid using assembly if you can. If you can't and you access memory, do it [safely](https://docs.soliditylang.org/en/latest/assembly.html#memory-safety), and use `assembly ("memory-safe")`.
+   `"memory safe"` tells the Solidity compiler that memory is being used safely so it should not disable optimizations.
+   - Example:
+     ```solidity
+     assembly ("memory-safe") {
+         revert(add(reason, 0x20), mload(reason))
+     }
+     ```
+
+## 9. Formatting
 - Format code using the default settings of `forge fmt`. Run `forge fmt` before submitting code.
 
-## 9. References and Examples
+## 10. References and Examples
 - For more examples, see:
   - [`src/token/ERC721/ERC721/ERC721Facet.sol`](src/token/ERC721/ERC721/ERC721Facet.sol)
   - [`src/token/ERC721/ERC721/LibERC721.sol`](src/token/ERC721/ERC721/LibERC721.sol)
 
-## 10. Additional Rules
+## 11. Additional Rules
 - More rules may be derived from the above example files. When in doubt, follow the patterns established in those files.
 
 ---
