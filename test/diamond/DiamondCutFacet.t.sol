@@ -251,4 +251,50 @@ contract DiamondCutFacetTest is Test {
         );
         facet.diamondCut(_cut, _init, _calldata);
     }
+
+    /// This test multiple actions in a single call.
+    /// 1. Add the function to a facet.
+    /// 2. Replace the function with another facet.
+    /// 3. Remove the function.
+    function test_DiamondCut_multipleActions() public {
+        bytes4[] memory functionSelectors = new bytes4[](1);
+        functionSelectors[0] = bytes4(keccak256("balanceOf(address)"));
+
+        // New ERC20 Facet
+        ERC20FacetHarness newFacet = new ERC20FacetHarness();
+        newFacet.initialize(TOKEN_NAME, TOKEN_SYMBOL, TOKEN_DECIMALS);
+
+        DiamondCutFacet.FacetCut[] memory _cut = new DiamondCutFacet.FacetCut[](3);
+        _cut[0] = DiamondCutFacet.FacetCut({
+            facetAddress: address(token),
+            action: DiamondCutFacet.FacetCutAction.Add,
+            functionSelectors: functionSelectors
+        });
+
+        _cut[1] = DiamondCutFacet.FacetCut({
+            facetAddress: address(newFacet),
+            action: DiamondCutFacet.FacetCutAction.Replace,
+            functionSelectors: functionSelectors
+        });
+
+        _cut[2] = DiamondCutFacet.FacetCut({
+            facetAddress: ADDRESS_ZERO,
+            action: DiamondCutFacet.FacetCutAction.Remove,
+            functionSelectors: functionSelectors
+        });
+
+        address _init = ADDRESS_ZERO;
+        bytes memory _calldata = bytes("0x0");
+
+        vm.recordLogs();
+
+        vm.prank(owner);
+        facet.diamondCut(_cut, _init, _calldata);
+
+        Vm.Log[] memory entries = vm.getRecordedLogs();
+
+        bytes memory data = abi.encode(_cut, _init, _calldata);
+
+        assertEq(entries[0].data, data);
+    }
 }
