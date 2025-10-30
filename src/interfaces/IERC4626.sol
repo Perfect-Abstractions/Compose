@@ -184,18 +184,18 @@ interface IERC4626 is IERC20 {
         bytes32 _s
     ) external;
 
-    /// @dev Returns the address of the underlying token used for the Vault for accounting, depositing, and withdrawing.
+    /// @notice Returns the address of the underlying token used for the Vault for accounting, depositing, and withdrawing.
     /// - MUST be an ERC-20 token contract.
     /// - MUST NOT revert.
     function asset() external view returns (address assetTokenAddress);
 
-    /// @dev Returns the total amount of the underlying asset that is "managed" by Vault.
+    /// @notice Returns the total amount of the underlying asset that is "managed" by Vault.
     /// - SHOULD include any compounding that occurs from yield.
     /// - MUST be inclusive of any fees that are charged against assets in the Vault.
     /// - MUST NOT revert.
     function totalAssets() external view returns (uint256 totalManagedAssets);
 
-    /// @dev Returns the amount of shares that the Vault would exchange for the amount of assets provided, in an ideal
+    /// @notice Returns the amount of shares that the Vault would exchange for the amount of assets provided, in an ideal
     /// scenario where all the conditions are met.
     /// - MUST NOT be inclusive of any fees that are charged against assets in the Vault.
     /// - MUST NOT show any variations depending on the caller.
@@ -208,7 +208,7 @@ interface IERC4626 is IERC20 {
         uint256 assets
     ) external view returns (uint256 shares);
 
-    /// @dev Returns the amount of assets that the Vault would exchange for the amount of shares provided, in an ideal
+    /// @notice Returns the amount of assets that the Vault would exchange for the amount of shares provided, in an ideal
     /// scenario where all the conditions are met.
     /// - MUST NOT be inclusive of any fees that are charged against assets in the Vault.
     /// - MUST NOT show any variations depending on the caller.
@@ -221,7 +221,7 @@ interface IERC4626 is IERC20 {
         uint256 shares
     ) external view returns (uint256 assets);
 
-    /// @dev Returns the maximum amount of the underlying asset that can be deposited into the Vault for the receiver,
+    /// @notice Returns the maximum amount of the underlying asset that can be deposited into the Vault for the receiver,
     /// through a deposit call.
     ///
     /// - MUST return a limited value if receiver is subject to some deposit limit.
@@ -231,7 +231,7 @@ interface IERC4626 is IERC20 {
         address receiver
     ) external view returns (uint256 maxAssets);
 
-    /// @dev Allows an on-chain or off-chain user to simulate the effects of their deposit at the current block, given
+    /// @notice Allows an on-chain or off-chain user to simulate the effects of their deposit at the current block, given
     /// current on-chain conditions.
     ///
     /// - MUST return as close to and no more than the exact amount of Vault shares that would be minted in a deposit
@@ -248,7 +248,7 @@ interface IERC4626 is IERC20 {
         uint256 assets
     ) external view returns (uint256 shares);
 
-    /// @dev Mints shares Vault shares to receiver by depositing exactly amount of underlying tokens.
+    /// @notice Mints shares Vault shares to receiver by depositing exactly amount of underlying tokens.
     ///
     /// - MUST emit the Deposit event.
     /// - MAY support an additional flow in which the underlying tokens are owned by the Vault contract before the
@@ -262,7 +262,7 @@ interface IERC4626 is IERC20 {
         address receiver
     ) external returns (uint256 shares);
 
-    /// @dev Returns the maximum amount of the Vault shares that can be minted for the receiver, through a mint call.
+    /// @notice Returns the maximum amount of the Vault shares that can be minted for the receiver, through a mint call.
     /// - MUST return a limited value if receiver is subject to some mint limit.
     /// - MUST return 2 ** 256 - 1 if there is no limit on the maximum amount of shares that may be minted.
     /// - MUST NOT revert.
@@ -270,7 +270,7 @@ interface IERC4626 is IERC20 {
         address receiver
     ) external view returns (uint256 maxShares);
 
-    /// @dev Allows an on-chain or off-chain user to simulate the effects of their mint at the current block, given
+    /// @notice Allows an on-chain or off-chain user to simulate the effects of their mint at the current block, given
     /// current on-chain conditions.
     ///
     /// - MUST return as close to and no fewer than the exact amount of assets that would be deposited in a mint call
@@ -285,7 +285,7 @@ interface IERC4626 is IERC20 {
     /// share price or some other type of condition, meaning the depositor will lose assets by minting.
     function previewMint(uint256 shares) external view returns (uint256 assets);
 
-    /// @dev Mints exactly shares Vault shares to receiver by depositing amount of underlying tokens.
+    /// @notice Mints exactly shares Vault shares to receiver by depositing amount of underlying tokens.
     ///
     /// - MUST emit the Deposit event.
     /// - MAY support an additional flow in which the underlying tokens are owned by the Vault contract before the mint
@@ -299,7 +299,7 @@ interface IERC4626 is IERC20 {
         address receiver
     ) external returns (uint256 assets);
 
-    /// @dev Returns the maximum amount of the underlying asset that can be withdrawn from the owner balance in the
+    /// @notice Returns the maximum amount of the underlying asset that can be withdrawn from the owner balance in the
     /// Vault, through a withdraw call.
     ///
     /// - MUST return a limited value if owner is subject to some withdrawal limit or timelock.
@@ -308,7 +308,7 @@ interface IERC4626 is IERC20 {
         address owner
     ) external view returns (uint256 maxAssets);
 
-    /// @dev Allows an on-chain or off-chain user to simulate the effects of their withdrawal at the current block,
+    /// @notice Allows an on-chain or off-chain user to simulate the effects of their withdrawal at the current block,
     /// given current on-chain conditions.
     ///
     /// - MUST return as close to and no fewer than the exact amount of Vault shares that would be burned in a withdraw
@@ -326,7 +326,7 @@ interface IERC4626 is IERC20 {
         uint256 assets
     ) external view returns (uint256 shares);
 
-    /// @dev Burns shares from owner and sends exactly assets of underlying tokens to receiver.
+    /// @notice Burns shares from owner and sends exactly assets of underlying tokens to receiver.
     ///
     /// - MUST emit the Withdraw event.
     /// - MAY support an additional flow in which the underlying tokens are owned by the Vault contract before the
@@ -342,7 +342,7 @@ interface IERC4626 is IERC20 {
         address owner
     ) external returns (uint256 shares);
 
-    /// @dev Returns the maximum amount of Vault shares that can be redeemed from the owner balance in the Vault,
+    /// @notice Returns the maximum amount of Vault shares that can be redeemed from the owner balance in the Vault,
     /// through a redeem call.
     ///
     /// - MUST return a limited value if owner is subject to some withdrawal limit or timelock.
@@ -350,7 +350,7 @@ interface IERC4626 is IERC20 {
     /// - MUST NOT revert.
     function maxRedeem(address owner) external view returns (uint256 maxShares);
 
-    /// @dev Allows an on-chain or off-chain user to simulate the effects of their redemption at the current block,
+    /// @notice Allows an on-chain or off-chain user to simulate the effects of their redemption at the current block,
     /// given current on-chain conditions.
     ///
     /// - MUST return as close to and no more than the exact amount of assets that would be withdrawn in a redeem call
@@ -367,7 +367,7 @@ interface IERC4626 is IERC20 {
         uint256 shares
     ) external view returns (uint256 assets);
 
-    /// @dev Burns exactly shares from owner and sends assets of underlying tokens to receiver.
+    /// @notice Burns exactly shares from owner and sends assets of underlying tokens to receiver.
     ///
     /// - MUST emit the Withdraw event.
     /// - MAY support an additional flow in which the underlying tokens are owned by the Vault contract before the

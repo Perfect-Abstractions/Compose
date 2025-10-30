@@ -35,11 +35,6 @@ interface IERC20 {
  * @dev Implementation of the ERC-4626 "Tokenized Vault Standard" as defined in
  * https://eips.ethereum.org/EIPS/eip-4626[ERC-4626].
  *
- * This extension allows the minting and burning of "shares" (represented using the ERC-20 inheritance) in exchange for
- * underlying "assets" through standardized {deposit}, {mint}, {redeem} and {burn} workflows. This contract extends
- * the ERC-20 standard. Any additional extensions included along it would affect the "shares" token represented by this
- * contract and not the "assets" token which is an independent contract.
- *
  * [CAUTION]
  * ====
  * In empty (or nearly empty) ERC-4626 vaults, deposits are at high risk of being stolen through frontrunning
@@ -64,8 +59,6 @@ interface IERC20 {
  * will cause the first user to exit to experience reduced losses in detriment to the last users that will experience
  * bigger losses. Developers willing to revert back to the pre-v4.9 behavior just need to override the
  * `_convertToShares` and `_convertToAssets` functions.
- *
- * To learn more, check out our xref:ROOT:erc4626.adoc[ERC-4626 guide].
  * ====
  *
  * [NOTE]
@@ -90,11 +83,6 @@ interface IERC20 {
  */
 // abstract contract ERC4626 is ERC20, IERC4626 {
 contract ERC4626Facet {
-    // using Math for uint256;
-
-    // IERC20 private immutable _asset;
-    // uint8 private immutable _underlyingDecimals;
-
     /// @notice Thrown when an account has insufficient balance for a transfer or burn.
     /// @param _sender Address attempting the transfer.
     /// @param _balance Current balance of the sender.
@@ -479,49 +467,47 @@ contract ERC4626Facet {
         emit Approval(_owner, _spender, _value);
     }
 
-    /// @dev Set the underlying asset contract. This must be an ERC20-compatible contract (ERC-20 or ERC-777).
-    // constructor(IERC20 asset_) {
-    //     (bool success, uint8 assetDecimals) = _tryGetAssetDecimals(asset_);
-    //     _underlyingDecimals = success ? assetDecimals : 18;
-    //     _asset = asset_;
-    // }
-
     /// @inheritdoc IERC4626
     function asset() public view returns (address) {
         return address(getStorage().asset);
     }
 
-    /// @inheritdoc IERC4626
+    /// @notice Returns the total amount of the underlying asset that is "managed" by Vault.
     function totalAssets() public view returns (uint256) {
         return IERC20(asset()).balanceOf(address(this));
     }
 
-    /// @inheritdoc IERC4626
+    /// @notice Returns the amount of shares that the Vault would exchange for the amount of assets provided, in an ideal
+    /// scenario where all the conditions are met.
     function convertToShares(uint256 assets) public view returns (uint256) {
         return _convertToShares(assets, Math.Rounding.Floor);
     }
 
-    /// @inheritdoc IERC4626
+    /// @notice Returns the amount of assets that the Vault would exchange for the amount of shares provided, in an ideal
+    /// scenario where all the conditions are met.
     function convertToAssets(uint256 shares) public view returns (uint256) {
         return _convertToAssets(shares, Math.Rounding.Floor);
     }
 
-    /// @inheritdoc IERC4626
+    /// @notice Returns the maximum amount of the underlying asset that can be deposited into the Vault for the receiver,
+    /// through a deposit call.
     function maxDeposit(address) public view returns (uint256) {
         return type(uint256).max;
     }
 
-    /// @inheritdoc IERC4626
+    /// @notice Returns the maximum amount of the Vault shares that can be minted for the receiver, through a mint call.
     function maxMint(address) public view returns (uint256) {
         return type(uint256).max;
     }
 
-    /// @inheritdoc IERC4626
+    /// @notice Returns the maximum amount of the underlying asset that can be withdrawn from the owner balance in the
+    /// Vault, through a withdraw call.
     function maxWithdraw(address owner) public view returns (uint256) {
         return previewRedeem(maxRedeem(owner));
     }
 
-    /// @inheritdoc IERC4626
+    /// @notice Returns the maximum amount of Vault shares that can be redeemed from the owner balance in the Vault,
+    /// through a redeem call.
     function maxRedeem(address owner) public view returns (uint256) {
         return balanceOf(owner);
     }
@@ -531,26 +517,29 @@ contract ERC4626Facet {
         return _convertToShares(assets, Math.Rounding.Floor);
     }
 
-    /// @inheritdoc IERC4626
+    /// @notice Allows an on-chain or off-chain user to simulate the effects of their mint at the current block, given
+    /// current on-chain conditions.
     function previewMint(uint256 shares) public view returns (uint256) {
         return _convertToAssets(shares, Math.Rounding.Ceil);
     }
 
-    /// @inheritdoc IERC4626
+    /// @notice Allows an on-chain or off-chain user to simulate the effects of their withdrawal at the current block,
+    /// given current on-chain conditions.
     function previewWithdraw(
         uint256 assets
     ) public view virtual returns (uint256) {
         return _convertToShares(assets, Math.Rounding.Ceil);
     }
 
-    /// @inheritdoc IERC4626
+    /// @notice Allows an on-chain or off-chain user to simulate the effects of their redemption at the current block,
+    /// given current on-chain conditions.
     function previewRedeem(
         uint256 shares
     ) public view virtual returns (uint256) {
         return _convertToAssets(shares, Math.Rounding.Floor);
     }
 
-    /// @inheritdoc IERC4626
+    /// @notice Mints shares Vault shares to receiver by depositing exactly amount of underlying tokens.
     function deposit(
         uint256 assets,
         address receiver
@@ -566,7 +555,7 @@ contract ERC4626Facet {
         return shares;
     }
 
-    /// @inheritdoc IERC4626
+    /// @notice Returns the maximum amount of the Vault shares that can be minted for the receiver, through a mint call.
     function mint(uint256 shares, address receiver) public returns (uint256) {
         uint256 maxShares = maxMint(receiver);
         if (shares > maxShares) {
@@ -579,7 +568,7 @@ contract ERC4626Facet {
         return assets;
     }
 
-    /// @inheritdoc IERC4626
+    /// @notice Burns shares from owner and sends exactly assets of underlying tokens to receiver.
     function withdraw(
         uint256 assets,
         address receiver,
@@ -596,7 +585,7 @@ contract ERC4626Facet {
         return shares;
     }
 
-    /// @inheritdoc IERC4626
+    /// @notice Burns exactly shares from owner and sends assets of underlying tokens to receiver.
     function redeem(
         uint256 shares,
         address receiver,
