@@ -152,31 +152,31 @@ contract LibERC721Test is Test {
         uint256 gasStart = gasleft();
         harness.mint(alice, 1);
         uint256 gasUsed = gasStart - gasleft();
-        
+
         // Mint should use less than 100k gas
         assertLt(gasUsed, 100_000);
     }
 
     function test_GasBenchmark_Burn() public {
         harness.mint(alice, 1);
-        
+
         uint256 gasStart = gasleft();
         harness.burn(1);
         uint256 gasUsed = gasStart - gasleft();
-        
+
         // Burn should use less than 50k gas
         assertLt(gasUsed, 50_000);
     }
 
     function test_GasBenchmark_MintMultiple() public {
         uint256 gasStart = gasleft();
-        
+
         for (uint256 i = 1; i <= 10; i++) {
             harness.mint(alice, i);
         }
-        
+
         uint256 gasUsed = gasStart - gasleft();
-        
+
         // 10 mints should use less than 1M gas
         assertLt(gasUsed, 1_000_000);
     }
@@ -186,15 +186,15 @@ contract LibERC721Test is Test {
         for (uint256 i = 1; i <= 10; i++) {
             harness.mint(alice, i);
         }
-        
+
         uint256 gasStart = gasleft();
-        
+
         for (uint256 i = 1; i <= 10; i++) {
             harness.burn(i);
         }
-        
+
         uint256 gasUsed = gasStart - gasleft();
-        
+
         // 10 burns should use less than 500k gas
         assertLt(gasUsed, 500_000);
     }

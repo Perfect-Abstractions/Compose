@@ -17,12 +17,9 @@ contract LibERC721EnumerableHarness {
     }
 
     /// @notice Exposes LibERC721Enumerable.mint as an external function
-    /// @dev Note: This fixes the library bug by manually setting ownerOf
+    /// @dev Only used for testing
     function mint(address _to, uint256 _tokenId) external {
         LibERC721Enumerable.mint(_to, _tokenId);
-        // Fix the library bug by manually setting ownerOf
-        LibERC721Enumerable.ERC721EnumerableStorage storage s = LibERC721Enumerable.getStorage();
-        s.ownerOf[_tokenId] = _to;
     }
 
     /// @notice Exposes LibERC721Enumerable.burn as an external function

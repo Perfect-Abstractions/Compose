@@ -15,8 +15,8 @@ contract ERC721EnumerableFacetHarness is ERC721EnumerableFacet {
         s.baseURI = _baseURI;
     }
 
-    /// @notice Mint tokens to an address
-    /// @dev Only used for testing - exposes internal mint functionality
+    /// @notice Mint a token to an address
+    /// @dev Only used for testing - implements minimal mint for harnessing
     function mint(address _to, uint256 _tokenId) external {
         ERC721EnumerableStorage storage s = getStorage();
         if (_to == address(0)) {
@@ -35,7 +35,7 @@ contract ERC721EnumerableFacetHarness is ERC721EnumerableFacet {
     }
 
     /// @notice Burn a token
-    /// @dev Only used for testing - exposes internal burn functionality
+    /// @dev Only used for testing - implements minimal burn for harnessing
     function burn(uint256 _tokenId) external {
         ERC721EnumerableStorage storage s = getStorage();
         address owner = s.ownerOf[_tokenId];

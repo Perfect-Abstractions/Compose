@@ -540,11 +540,11 @@ contract ERC721EnumerableFacetTest is Test {
         // This test specifically verifies that the bug fix in our harness
         // correctly sets the ownerOf mapping when minting
         token.mint(alice, 1);
-        
+
         // Verify the token is properly owned
         assertEq(token.ownerOf(1), alice);
         assertEq(token.balanceOf(alice), 1);
-        
+
         // Verify enumeration works correctly
         assertEq(token.totalSupply(), 1);
         assertEq(token.tokenOfOwnerByIndex(alice, 0), 1);
@@ -555,12 +555,12 @@ contract ERC721EnumerableFacetTest is Test {
         token.mint(alice, 1);
         token.mint(alice, 2);
         token.mint(bob, 3);
-        
+
         // Verify all tokens are properly owned
         assertEq(token.ownerOf(1), alice);
         assertEq(token.ownerOf(2), alice);
         assertEq(token.ownerOf(3), bob);
-        
+
         // Verify enumeration is correct
         assertEq(token.totalSupply(), 3);
         assertEq(token.balanceOf(alice), 2);
@@ -573,20 +573,20 @@ contract ERC721EnumerableFacetTest is Test {
     function test_EnumerationBugFix_TransferAfterMint() public {
         // Test that transfers work correctly after the bug fix
         token.mint(alice, 1);
-        
+
         // Verify initial state
         assertEq(token.ownerOf(1), alice);
         assertEq(token.balanceOf(alice), 1);
-        
+
         // Transfer should work correctly
         vm.prank(alice);
         token.transferFrom(alice, bob, 1);
-        
+
         // Verify transfer worked
         assertEq(token.ownerOf(1), bob);
         assertEq(token.balanceOf(alice), 0);
         assertEq(token.balanceOf(bob), 1);
-        
+
         // Verify enumeration updated correctly
         assertEq(token.tokenOfOwnerByIndex(bob, 0), 1);
     }
@@ -594,21 +594,21 @@ contract ERC721EnumerableFacetTest is Test {
     function test_EnumerationBugFix_ApprovalAfterMint() public {
         // Test that approvals work correctly after the bug fix
         token.mint(alice, 1);
-        
+
         // Verify initial state
         assertEq(token.ownerOf(1), alice);
-        
+
         // Approval should work correctly
         vm.prank(alice);
         token.approve(bob, 1);
-        
+
         // Verify approval worked
         assertEq(token.getApproved(1), bob);
-        
+
         // Transfer using approval should work
         vm.prank(bob);
         token.transferFrom(alice, charlie, 1);
-        
+
         // Verify transfer worked
         assertEq(token.ownerOf(1), charlie);
     }
@@ -616,19 +616,19 @@ contract ERC721EnumerableFacetTest is Test {
     function test_EnumerationBugFix_BurnAfterMint() public {
         // Test that burning works correctly after the bug fix
         token.mint(alice, 1);
-        
+
         // Verify initial state
         assertEq(token.ownerOf(1), alice);
         assertEq(token.totalSupply(), 1);
-        
+
         // Burn should work correctly
         vm.prank(alice);
         token.burn(1);
-        
+
         // Verify burn worked
         assertEq(token.totalSupply(), 0);
         assertEq(token.balanceOf(alice), 0);
-        
+
         // Verify token no longer exists
         vm.expectRevert();
         token.ownerOf(1);
@@ -641,37 +641,37 @@ contract ERC721EnumerableFacetTest is Test {
         token.mint(alice, 2);
         token.mint(bob, 3);
         token.mint(charlie, 4);
-        
+
         // Verify all tokens are properly owned
         assertEq(token.ownerOf(1), alice);
         assertEq(token.ownerOf(2), alice);
         assertEq(token.ownerOf(3), bob);
         assertEq(token.ownerOf(4), charlie);
-        
+
         // Verify enumeration
         assertEq(token.totalSupply(), 4);
         assertEq(token.balanceOf(alice), 2);
         assertEq(token.balanceOf(bob), 1);
         assertEq(token.balanceOf(charlie), 1);
-        
+
         // Perform transfers
         vm.prank(alice);
         token.transferFrom(alice, bob, 1);
-        
+
         vm.prank(bob);
         token.transferFrom(bob, charlie, 3);
-        
+
         // Verify final state
         assertEq(token.ownerOf(1), bob);
         assertEq(token.ownerOf(2), alice);
         assertEq(token.ownerOf(3), charlie);
         assertEq(token.ownerOf(4), charlie);
-        
+
         // Verify enumeration updated correctly
         assertEq(token.balanceOf(alice), 1);
         assertEq(token.balanceOf(bob), 1);
         assertEq(token.balanceOf(charlie), 2);
-        
+
         assertEq(token.tokenOfOwnerByIndex(alice, 0), 2);
         assertEq(token.tokenOfOwnerByIndex(bob, 0), 1);
         assertEq(token.tokenOfOwnerByIndex(charlie, 0), 4);
@@ -680,17 +680,17 @@ contract ERC721EnumerableFacetTest is Test {
 
     function testFuzz_EnumerationBugFix_ComplexScenario(uint256 numTokens) public {
         vm.assume(numTokens > 0 && numTokens < 50);
-        
+
         // Mint tokens to alice
         for (uint256 i = 1; i <= numTokens; i++) {
             token.mint(alice, i);
             assertEq(token.ownerOf(i), alice);
         }
-        
+
         // Verify enumeration
         assertEq(token.totalSupply(), numTokens);
         assertEq(token.balanceOf(alice), numTokens);
-        
+
         // Transfer half to bob
         uint256 halfTokens = numTokens / 2;
         for (uint256 i = 1; i <= halfTokens; i++) {
@@ -698,7 +698,7 @@ contract ERC721EnumerableFacetTest is Test {
             token.transferFrom(alice, bob, i);
             assertEq(token.ownerOf(i), bob);
         }
-        
+
         // Verify final enumeration
         assertEq(token.totalSupply(), numTokens);
         assertEq(token.balanceOf(alice), numTokens - halfTokens);

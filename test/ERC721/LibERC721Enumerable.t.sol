@@ -225,32 +225,32 @@ contract LibERC721EnumerableTest is Test {
         uint256 gasStart = gasleft();
         harness.mint(alice, 1);
         uint256 gasUsed = gasStart - gasleft();
-        
+
         // Mint should use less than 150k gas (includes enumeration)
         assertLt(gasUsed, 150_000);
     }
 
     function test_GasBenchmark_Burn() public {
         harness.mint(alice, 1);
-        
+
         uint256 gasStart = gasleft();
         vm.prank(alice);
         harness.burn(1, alice);
         uint256 gasUsed = gasStart - gasleft();
-        
+
         // Burn should use less than 100k gas (includes enumeration)
         assertLt(gasUsed, 100_000);
     }
 
     function test_GasBenchmark_MintMultiple() public {
         uint256 gasStart = gasleft();
-        
+
         for (uint256 i = 1; i <= 10; i++) {
             harness.mint(alice, i);
         }
-        
+
         uint256 gasUsed = gasStart - gasleft();
-        
+
         // 10 mints should use less than 1.5M gas
         assertLt(gasUsed, 1_500_000);
     }
@@ -260,17 +260,17 @@ contract LibERC721EnumerableTest is Test {
         for (uint256 i = 1; i <= 10; i++) {
             harness.mint(alice, i);
         }
-        
+
         uint256 gasStart = gasleft();
-        
+
         vm.startPrank(alice);
         for (uint256 i = 1; i <= 10; i++) {
             harness.burn(i, alice);
         }
         vm.stopPrank();
-        
+
         uint256 gasUsed = gasStart - gasleft();
-        
+
         // 10 burns should use less than 1M gas
         assertLt(gasUsed, 1_000_000);
     }
@@ -282,14 +282,14 @@ contract LibERC721EnumerableTest is Test {
         }
 
         uint256 gasStart = gasleft();
-        
+
         // Test tokenOfOwnerByIndex
         for (uint256 i = 0; i < 100; i++) {
             harness.tokenOfOwnerByIndex(alice, i);
         }
-        
+
         uint256 gasUsed = gasStart - gasleft();
-        
+
         // 100 tokenOfOwnerByIndex calls should use less than 500k gas
         assertLt(gasUsed, 500_000);
     }
