@@ -28,9 +28,7 @@ library LibERC7802 {
     /// @param interfaceId The unsupported interface id.
     error ERC7802InvalidInterfaceId(bytes4 interfaceId);
 
-
-
-error ERC7802InsufficientBalance(address from,uint256 accountBalance,uint256 value);
+    error ERC7802InsufficientBalance(address from, uint256 accountBalance, uint256 value);
     /// @notice Emitted when tokens are minted via a cross-chain bridge.
     /// @param to The recipient of minted tokens.
     /// @param amount The amount minted.
@@ -44,7 +42,7 @@ error ERC7802InsufficientBalance(address from,uint256 accountBalance,uint256 val
     /// @param sender   Address of the caller (msg.sender) who invoked crosschainBurn.
     event CrosschainBurn(address indexed from, uint256 amount, address indexed sender);
 
-   /// @notice Mint tokens through a crosschain transfer.
+    /// @notice Mint tokens through a crosschain transfer.
     /// @param to     Address to mint tokens to.
     /// @param amount Amount of tokens to mint.
 
@@ -109,7 +107,7 @@ error ERC7802InsufficientBalance(address from,uint256 accountBalance,uint256 val
 
         uint256 accountBalance = s.balanceOf[_from];
 
-        if (accountBalance < _value) revert ERC7802InsufficientBalance(_from,accountBalance, _value);
+        if (accountBalance < _value) revert ERC7802InsufficientBalance(_from, accountBalance, _value);
 
         unchecked {
             s.totalSupply -= _value;
@@ -122,9 +120,9 @@ error ERC7802InsufficientBalance(address from,uint256 accountBalance,uint256 val
     //ERC165 and 7805 supports
     /// @notice Query whether an interface id is supported (ERC-165 style).
     /// @param interfaceId The interface id to query.
-    
+
     function supportInterface(bytes4 interfaceId) internal {
-           ERC7802Storage storage s = getStorage();
+        ERC7802Storage storage s = getStorage();
         if (interfaceId != 0x33331994 || interfaceId == 0x01ffc9a7) revert ERC7802InvalidInterfaceId(interfaceId);
 
         s._supportedInterfaces[interfaceId] = true;

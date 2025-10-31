@@ -25,8 +25,7 @@ contract ERC7802Facet {
     /// @param interfaceId The unsupported interface id.
     error ERC7802InvalidInterfaceId(bytes4 interfaceId);
 
-
-error ERC7802InsufficientBalance(address from,uint256 accountBalance,uint256 value);
+    error ERC7802InsufficientBalance(address from, uint256 accountBalance, uint256 value);
     /// @notice Emitted when tokens are minted via a cross-chain bridge.
     /// @param to The recipient of minted tokens.
     /// @param amount The amount minted.
@@ -46,9 +45,9 @@ error ERC7802InsufficientBalance(address from,uint256 accountBalance,uint256 val
 
     event Transfer(address indexed from, address indexed to, uint256 amount);
 
-  /// @notice Emitted when an interface ID is registered or supported.
-/// @param interfaceId The supported interface identifier.
-event Interface(bytes4 indexed interfaceId);
+    /// @notice Emitted when an interface ID is registered or supported.
+    /// @param interfaceId The supported interface identifier.
+    event Interface(bytes4 indexed interfaceId);
 
     /// @notice Storage slot for ERC-7802 using ERC8042
 
@@ -78,10 +77,9 @@ event Interface(bytes4 indexed interfaceId);
         return getStorage().owner;
     }
 
-  
-     /// @notice Returns the total supply of tokens.
-     /// @return The total token supply.
-     
+    /// @notice Returns the total supply of tokens.
+    /// @return The total token supply.
+
     function totalSupply() external view returns (uint256) {
         return getStorage().totalSupply;
     }
@@ -117,7 +115,7 @@ event Interface(bytes4 indexed interfaceId);
     /// @param _from The account to burn tokens from.
     /// @param _value The amount to burn.
     function crosschainBurn(address _from, uint256 _value) external {
-       ERC7802Storage storage s = getStorage();
+        ERC7802Storage storage s = getStorage();
 
         if (s._trustedBridges[msg.sender] == false) revert ERC7802InvalidBridgeAccount(msg.sender);
         if (_from == address(0)) revert ERC7802InvalidReciever(address(0));
@@ -137,7 +135,7 @@ event Interface(bytes4 indexed interfaceId);
     //ERC165 and 7805 supports
     /// @notice Query whether an interface id is supported (ERC-165 style).
     /// @param interfaceId The interface id to query.
-    
+
     function supportInterface(bytes4 interfaceId) external {
         ERC7802Storage storage s = getStorage();
 
