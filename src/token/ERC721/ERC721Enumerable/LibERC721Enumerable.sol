@@ -123,6 +123,7 @@ library LibERC721 {
         s.ownedTokensOf[_to].push(_tokenId);
         s.allTokensIndexOf[_tokenId] = s.allTokens.length;
         s.allTokens.push(_tokenId);
+        s.ownerOf[_tokenId] = _to;
         emit Transfer(address(0), _to, _tokenId);
     }
 
