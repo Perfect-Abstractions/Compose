@@ -309,6 +309,37 @@ contract DiamondCutFacetTest is Test {
         facet.diamondCut(_cut, _init, _calldata);
     }
 
+    function test_DiamondCut_removeActionRemovingImmutableFunction() public {
+        bytes4[] memory functionSelectors = new bytes4[](1);
+        functionSelectors[0] = bytes4(keccak256("decimals()"));
+
+        DiamondCutFacet.FacetCut[] memory _cutToAddImmutableFunction = new DiamondCutFacet.FacetCut[](1);
+        _cutToAddImmutableFunction[0] = DiamondCutFacet.FacetCut({
+            facetAddress: address(facet),
+            action: DiamondCutFacet.FacetCutAction.Add,
+            functionSelectors: functionSelectors
+        });
+
+        address _init = ADDRESS_ZERO;
+        bytes memory _calldata = bytes("0x0");
+
+        vm.prank(owner);
+        facet.diamondCut(_cutToAddImmutableFunction, _init, _calldata);
+
+        DiamondCutFacet.FacetCut[] memory _cutToRemoveImmutableFunction = new DiamondCutFacet.FacetCut[](1);
+        _cutToRemoveImmutableFunction[0] = DiamondCutFacet.FacetCut({
+            facetAddress: ADDRESS_ZERO,
+            action: DiamondCutFacet.FacetCutAction.Remove,
+            functionSelectors: functionSelectors
+        });
+
+        vm.prank(owner);
+        vm.expectRevert(
+            abi.encodeWithSelector(DiamondCutFacet.CannotRemoveImmutableFunction.selector, functionSelectors[0])
+        );
+        facet.diamondCut(_cutToRemoveImmutableFunction, _init, _calldata);
+    }
+
     function test_DiamondCut_replaceActionWithSameFacetAndSameFunction() public addActionSetup {
         bytes4[] memory functionSelectors = new bytes4[](1);
         functionSelectors[0] = bytes4(keccak256("decimals()"));
@@ -353,6 +384,37 @@ contract DiamondCutFacetTest is Test {
             )
         );
         facet.diamondCut(_cut, _init, _calldata);
+    }
+
+    function test_DiamondCut_replaceActionReplacingImmutableFunction() public {
+        bytes4[] memory functionSelectors = new bytes4[](1);
+        functionSelectors[0] = bytes4(keccak256("decimals()"));
+
+        DiamondCutFacet.FacetCut[] memory _cutToAddImmutableFunction = new DiamondCutFacet.FacetCut[](1);
+        _cutToAddImmutableFunction[0] = DiamondCutFacet.FacetCut({
+            facetAddress: address(facet),
+            action: DiamondCutFacet.FacetCutAction.Add,
+            functionSelectors: functionSelectors
+        });
+
+        address _init = ADDRESS_ZERO;
+        bytes memory _calldata = bytes("0x0");
+
+        vm.prank(owner);
+        facet.diamondCut(_cutToAddImmutableFunction, _init, _calldata);
+
+        DiamondCutFacet.FacetCut[] memory _cutToReplaceImmutableFunction = new DiamondCutFacet.FacetCut[](1);
+        _cutToReplaceImmutableFunction[0] = DiamondCutFacet.FacetCut({
+            facetAddress: address(token),
+            action: DiamondCutFacet.FacetCutAction.Replace,
+            functionSelectors: functionSelectors
+        });
+
+        vm.prank(owner);
+        vm.expectRevert(
+            abi.encodeWithSelector(DiamondCutFacet.CannotReplaceImmutableFunction.selector, functionSelectors[0])
+        );
+        facet.diamondCut(_cutToReplaceImmutableFunction, _init, _calldata);
     }
 
     function test_DiamondCut_initalizeFunctionExecutionWithoutCode() public {

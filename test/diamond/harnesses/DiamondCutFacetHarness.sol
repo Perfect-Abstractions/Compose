@@ -6,6 +6,8 @@ import {DiamondCutFacet} from "../../../src/diamond/DiamondCutFacet.sol";
 /// @title DiamondCutFacetHarness
 /// @notice Test harness for DiamondCutFacet that adds initializaton
 contract DiamondCutFacetHarness is DiamondCutFacet {
+    error FunctionNotFound(bytes4 selector);
+
     /// @notice Initialize DiamondCutFacet owner storage
     /// @dev Only used for testing - production diamonds should initialize in constructor
     /// @param _owner Address of the Facet owner
@@ -14,8 +16,6 @@ contract DiamondCutFacetHarness is DiamondCutFacet {
 
         s.owner = _owner;
     }
-
-    error FunctionNotFound(bytes4 selector);
 
     fallback() external payable {
         DiamondStorage storage s = getDiamondStorage();
