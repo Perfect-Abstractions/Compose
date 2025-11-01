@@ -6,6 +6,7 @@ out = "out"
 libs = ["lib"]
 optimizer = true
 optimizer_runs = 20_000
+via_ir = true
 
 [profile.ci]
 src = "src"
@@ -13,6 +14,7 @@ out = "out"
 libs = ["lib"]
 optimizer = true
 optimizer_runs = 20_000
+via_ir = true
 # Coverage settings
 fuzz = { runs = 1000 }
 invariant = { runs = 1000 }
