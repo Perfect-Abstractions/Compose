@@ -46,27 +46,23 @@ contract DiamondLoupeFacet {
         // total number of facets
         uint256 numFacets;
         // loop through function selectors
-        for (uint256 selectorIndex; selectorIndex < selectorCount; ) {
+        for (uint256 selectorIndex; selectorIndex < selectorCount; selectorIndex++) {
             bytes4 selector = s.selectors[selectorIndex];
             address facetAddress_ = s.facetAndPosition[selector].facet;
             bool continueLoop = false;
             // find the functionSelectors array for selector and add selector to it
-            for (uint256 facetIndex; facetIndex < numFacets; ) {
+            for (uint256 facetIndex; facetIndex < numFacets; facetIndex++) {
                 if (allFacets[facetIndex].facet == facetAddress_) {
                     allFacets[facetIndex].functionSelectors[numFacetSelectors[facetIndex]] = selector;
                     unchecked{
-                        ++numFacetSelectors[facetIndex];
+                        numFacetSelectors[facetIndex]++;
                     }
                     continueLoop = true;
                     break;
                 }
-                unchecked{
-                    ++facetIndex;
-                }
             }
             // if functionSelectors array exists for selector then continue loop
             if (continueLoop) {
-                //continueLoop = false;         no need 
                 continue;
             }
             // create a new functionSelectors array for selector
@@ -75,20 +71,15 @@ contract DiamondLoupeFacet {
             allFacets[numFacets].functionSelectors[0] = selector;
             numFacetSelectors[numFacets] = 1;
             unchecked{
-                ++numFacets;
-                ++selectorIndex;
+                numFacets++;
             }
-            
         }
-        for (uint256 facetIndex; facetIndex < numFacets; ) {
+        for (uint256 facetIndex; facetIndex < numFacets; facetIndex++) {
             uint256 numSelectors = numFacetSelectors[facetIndex];
             bytes4[] memory selectors = allFacets[facetIndex].functionSelectors;
             // setting the number of selectors
             assembly ("memory-safe") {
                 mstore(selectors, numSelectors)
-            }
-            unchecked{
-                ++facetIndex;
             }
         }
         // setting the number of facets
@@ -106,17 +97,14 @@ contract DiamondLoupeFacet {
         uint256 numSelectors;
         facetSelectors = new bytes4[](selectorCount);
         // loop through function selectors
-        for (uint256 selectorIndex; selectorIndex < selectorCount; ) {
+        for (uint256 selectorIndex; selectorIndex < selectorCount; selectorIndex++) {
             bytes4 selector = s.selectors[selectorIndex];
             address facetAddress_ = s.facetAndPosition[selector].facet;
             if (_facet == facetAddress_) {
                 facetSelectors[numSelectors] = selector;
                 unchecked{
-                    ++numSelectors;
-                }    
-            }
-            unchecked{
-                ++selectorIndex;
+                    numSelectors++;
+                }
             }
         }
         // Set the number of selectors in the array
@@ -134,31 +122,26 @@ contract DiamondLoupeFacet {
         allFacets = new address[](selectorCount);
         uint256 numFacets;
         // loop through function selectors
-        for (uint256 selectorIndex; selectorIndex < selectorCount; ) {
+        for (uint256 selectorIndex; selectorIndex < selectorCount; selectorIndex++) {
             bytes4 selector = s.selectors[selectorIndex];
             address facetAddress_ = s.facetAndPosition[selector].facet;
             bool continueLoop = false;
             // see if we have collected the address already and break out of loop if we have
-            for (uint256 facetIndex; facetIndex < numFacets; ) {
+            for (uint256 facetIndex; facetIndex < numFacets; facetIndex++) {
                 if (facetAddress_ == allFacets[facetIndex]) {
                     continueLoop = true;
                     break;
                 }
-                unchecked{
-                    ++facetIndex;
-                }
             }
             // continue loop if we already have the address
             if (continueLoop) {
-                //continueLoop = false;
                 continue;
             }
             // include address
             allFacets[numFacets] = facetAddress_;
             unchecked{
-                ++numFacets;
-                ++selectorIndex;
-            } 
+                numFacets++;
+            }
         }
         // Set the number of facet addresses in the array
         assembly ("memory-safe") {
