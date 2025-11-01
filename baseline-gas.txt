@@ -1,0 +1,702 @@
+Compiling 70 files with Solc 0.8.30
+Solc 0.8.30 finished in 5.53s
+Compiler run successful!
+
+Ran 27 tests for test/token/Royalty/RoyaltyFacet.t.sol:RoyaltyFacetTest
+[PASS] testFuzz_RoyaltyInfo_WithTokenRoyalty(uint256,uint96,uint256) (runs: 256, μ: 61142, ~: 61108)
+[PASS] testFuzz_RoyaltyInfo_WithValidFee(uint96,uint256) (runs: 256, μ: 62974, ~: 62978)
+[PASS] test_ComplexScenario_MultipleTokensAndDefaults() (gas: 169111)
+[PASS] test_RoyaltyInfo_100PercentRoyalty() (gas: 59441)
+[PASS] test_RoyaltyInfo_10PercentRoyalty() (gas: 59464)
+[PASS] test_RoyaltyInfo_50PercentRoyalty() (gas: 59464)
+[PASS] test_RoyaltyInfo_5PercentRoyalty() (gas: 59486)
+[PASS] test_RoyaltyInfo_DefaultRoyaltyAddress() (gas: 59457)
+[PASS] test_RoyaltyInfo_DefaultRoyaltyOnly() (gas: 59614)
+[PASS] test_RoyaltyInfo_FallsBackWhenTokenRoyaltyNotSet() (gas: 59466)
+[PASS] test_RoyaltyInfo_FractionalRoyalty() (gas: 59475)
+[PASS] test_RoyaltyInfo_LargeSalePrice() (gas: 59590)
+[PASS] test_RoyaltyInfo_MinimalRoyaltyFee() (gas: 59429)
+[PASS] test_RoyaltyInfo_MultipleTokensDifferentRoyalties() (gas: 169103)
+[PASS] test_RoyaltyInfo_NoRoyaltySet() (gas: 10550)
+[PASS] test_RoyaltyInfo_SmallTokenId() (gas: 57582)
+[PASS] test_RoyaltyInfo_TokenSpecificOverridesDefault() (gas: 104413)
+[PASS] test_RoyaltyInfo_TokenSpecificRoyalty() (gas: 57576)
+[PASS] test_RoyaltyInfo_VariousFeePercentages() (gas: 249481)
+[PASS] test_RoyaltyInfo_VariousTokenIds() (gas: 167285)
+[PASS] test_RoyaltyInfo_VeryLargeTokenId() (gas: 57978)
+[PASS] test_RoyaltyInfo_WithMaximumValues() (gas: 59478)
+[PASS] test_RoyaltyInfo_ZeroAddressReceiverReturnsZero() (gas: 10540)
+[PASS] test_RoyaltyInfo_ZeroRoyaltyPercentage() (gas: 59431)
+[PASS] test_RoyaltyInfo_ZeroSalePrice() (gas: 59475)
+[PASS] test_StorageSlot_Consistency() (gas: 59388)
+[PASS] test_StorageSlot_TokenRoyaltyConsistency() (gas: 57522)
+Suite result: ok. 27 passed; 0 failed; 0 skipped; finished in 100.62ms (97.14ms CPU time)
+
+Ran 22 tests for test/access/Owner/LibOwner.t.sol:LibOwnerTest
+[PASS] testFuzz_MultipleTransfers(address,address,address) (runs: 256, μ: 116177, ~: 116525)
+[PASS] testFuzz_RequireOwner(address) (runs: 256, μ: 13130, ~: 13130)
+[PASS] testFuzz_RevertWhen_RenouncedOwnerTransfers(address) (runs: 256, μ: 65698, ~: 65790)
+[PASS] testFuzz_TransferOwnership(address) (runs: 256, μ: 41771, ~: 41889)
+[PASS] test_Events_CorrectPreviousOwner() (gas: 76567)
+[PASS] test_Events_RenounceEmitsZeroAddress() (gas: 33054)
+[PASS] test_GetStorage_ReturnsCorrectOwner() (gas: 17048)
+[PASS] test_LibraryDoesNotCheckMsgSender() (gas: 45929)
+[PASS] test_MultipleTransfers() (gas: 128288)
+[PASS] test_Owner_ReturnsCurrentOwner() (gas: 51142)
+[PASS] test_Owner_ReturnsZeroAfterRenounce() (gas: 36090)
+[PASS] test_RenounceOwnership_EmitsCorrectEvent() (gas: 32177)
+[PASS] test_RenounceOwnership_PermanentlyDisablesTransfers() (gas: 67402)
+[PASS] test_RenounceOwnership_SetsOwnerToZero() (gas: 28720)
+[PASS] test_RequireOwner_PassesForOwner() (gas: 12557)
+[PASS] test_RevertWhen_RequireOwner_CalledByNonOwner() (gas: 12928)
+[PASS] test_RevertWhen_TransferOwnership_FromRenouncedOwner() (gas: 58416)
+[PASS] test_StorageSlot_UsesCorrectPosition() (gas: 46664)
+[PASS] test_TransferOwnership_AllowsTransferToSelf() (gas: 41108)
+[PASS] test_TransferOwnership_AllowsTransferToZeroAddress() (gas: 36067)
+[PASS] test_TransferOwnership_EmitsOwnershipTransferredEvent() (gas: 42894)
+[PASS] test_TransferOwnership_UpdatesOwner() (gas: 45896)
+Suite result: ok. 22 passed; 0 failed; 0 skipped; finished in 111.39ms (111.14ms CPU time)
+
+Ran 38 tests for test/token/Royalty/LibRoyalty.t.sol:LibRoyaltyTest
+[PASS] testFuzz_ResetTokenRoyalty(uint256,uint96) (runs: 256, μ: 81942, ~: 80601)
+[PASS] testFuzz_RoyaltyInfo_WithTokenRoyalty(uint256,uint96,uint256) (runs: 256, μ: 61299, ~: 61269)
+[PASS] testFuzz_RoyaltyInfo_WithValidFee(uint96,uint256) (runs: 256, μ: 63113, ~: 63117)
+[PASS] testFuzz_SetDefaultRoyalty(address,uint96) (runs: 256, μ: 60898, ~: 60823)
+[PASS] testFuzz_SetTokenRoyalty(uint256,address,uint96) (runs: 256, μ: 61419, ~: 61305)
+[PASS] test_ComplexRoyaltyFlow() (gas: 194664)
+[PASS] test_DeleteDefaultRoyalty() (gas: 76908)
+[PASS] test_DeleteDefaultRoyalty_NoEffectOnTokenRoyalty() (gas: 126305)
+[PASS] test_DeleteDefaultRoyalty_RoyaltyInfoReturnsZero() (gas: 74716)
+[PASS] test_ResetTokenRoyalty() (gas: 77562)
+[PASS] test_ResetTokenRoyalty_FallsBackToDefault() (gas: 136721)
+[PASS] test_ResetTokenRoyalty_MultipleTokens() (gas: 196568)
+[PASS] test_RevertWhen_SetDefaultRoyalty_InvalidFee() (gas: 32989)
+[PASS] test_RevertWhen_SetDefaultRoyalty_ZeroReceiver() (gas: 30238)
+[PASS] test_RevertWhen_SetTokenRoyalty_InvalidFee() (gas: 33371)
+[PASS] test_RevertWhen_SetTokenRoyalty_ZeroReceiver() (gas: 30694)
+[PASS] test_RoyaltyInfo_100PercentRoyalty() (gas: 59599)
+[PASS] test_RoyaltyInfo_10PercentRoyalty() (gas: 59665)
+[PASS] test_RoyaltyInfo_50PercentRoyalty() (gas: 59633)
+[PASS] test_RoyaltyInfo_5PercentRoyalty() (gas: 59626)
+[PASS] test_RoyaltyInfo_AfterResetTokenRoyalty() (gas: 132028)
+[PASS] test_RoyaltyInfo_DefaultRoyaltyOnly() (gas: 59773)
+[PASS] test_RoyaltyInfo_MultipleTokensDifferentRoyalties() (gas: 169570)
+[PASS] test_RoyaltyInfo_NoRoyaltySet() (gas: 10614)
+[PASS] test_RoyaltyInfo_TokenSpecificOverridesDefault() (gas: 104633)
+[PASS] test_RoyaltyInfo_TokenSpecificRoyalty() (gas: 104688)
+[PASS] test_RoyaltyInfo_ZeroRoyaltyPercentage() (gas: 59555)
+[PASS] test_RoyaltyInfo_ZeroSalePrice() (gas: 59632)
+[PASS] test_SetDefaultRoyalty() (gas: 61872)
+[PASS] test_SetDefaultRoyalty_MaxPercentage() (gas: 61840)
+[PASS] test_SetDefaultRoyalty_UpdatesExisting() (gas: 91583)
+[PASS] test_SetDefaultRoyalty_ZeroPercentage() (gas: 61836)
+[PASS] test_SetDefaultThenTokenThenReset() (gas: 141947)
+[PASS] test_SetTokenRoyalty() (gas: 62275)
+[PASS] test_SetTokenRoyalty_MaxPercentage() (gas: 62331)
+[PASS] test_SetTokenRoyalty_MultipleTokens() (gas: 181240)
+[PASS] test_SetTokenRoyalty_UpdatesExisting() (gas: 92324)
+[PASS] test_SetTokenRoyalty_ZeroPercentage() (gas: 62208)
+Suite result: ok. 38 passed; 0 failed; 0 skipped; finished in 122.99ms (263.47ms CPU time)
+
+Ran 31 tests for test/access/OwnerTwoSteps/LibOwnerTwoSteps.t.sol:LibOwnerTwoStepsTest
+[PASS] testFuzz_AcceptOwnership(address) (runs: 256, μ: 92672, ~: 92750)
+[PASS] testFuzz_AcceptOwnership_AnyCaller(address) (runs: 256, μ: 96611, ~: 96611)
+[PASS] testFuzz_SequentialTransfers(address,address,address) (runs: 256, μ: 246655, ~: 246910)
+[PASS] testFuzz_TransferOwnership(address) (runs: 256, μ: 68153, ~: 68237)
+[PASS] testFuzz_TransferOwnership_AnyCaller(address,address) (runs: 256, μ: 66034, ~: 66190)
+[PASS] test_AcceptOwnership_ClearsPendingOwner() (gas: 89385)
+[PASS] test_AcceptOwnership_CompletesTransfer() (gas: 96576)
+[PASS] test_AcceptOwnership_CurrentOwnerCanCall() (gas: 96619)
+[PASS] test_AcceptOwnership_EmitsOwnershipTransferredEvent() (gas: 86339)
+[PASS] test_AcceptOwnership_LibraryAllowsAnyCaller() (gas: 98610)
+[PASS] test_AcceptOwnership_NoPendingOwner_SetsOwnerToZero() (gas: 50385)
+[PASS] test_CancelPendingTransfer() (gas: 140866)
+[PASS] test_GetStorage_ReturnsCorrectOwner() (gas: 17094)
+[PASS] test_GetStorage_ReturnsCorrectPendingOwner() (gas: 86562)
+[PASS] test_MultiplePendingChanges_OnlyLastOneMatters() (gas: 189177)
+[PASS] test_Owner_ReturnsCurrentOwner() (gas: 9916)
+[PASS] test_PendingOwner_ReturnsCurrentPendingOwner() (gas: 72259)
+[PASS] test_RenounceOwnership_CannotBeCompleted() (gas: 52137)
+[PASS] test_RenounceOwnership_PreventsNewTransfersAfterForceRenounce() (gas: 60729)
+[PASS] test_RevertWhen_TransferOwnership_FromRenouncedOwner() (gas: 60717)
+[PASS] test_SequentialTransfers() (gas: 258661)
+[PASS] test_StorageCollision_DocumentedBug() (gas: 479)
+[PASS] test_StorageSlot_CurrentlyCollides() (gas: 584)
+[PASS] test_StorageSlot_UsesCorrectPosition() (gas: 61429)
+[PASS] test_TransferOwnership_AllowsTransferToZeroAddress() (gas: 44960)
+[PASS] test_TransferOwnership_CanUpdatePendingOwner() (gas: 110318)
+[PASS] test_TransferOwnership_EmitsOwnershipTransferStartedEvent() (gas: 62044)
+[PASS] test_TransferOwnership_FromPendingOwner_Allowed() (gas: 115540)
+[PASS] test_TransferOwnership_LibraryDoesNotCheckCaller() (gas: 70289)
+[PASS] test_TransferOwnership_SetsPendingOwner() (gas: 72258)
+[PASS] test_TransferToSelf() (gas: 94312)
+Suite result: ok. 31 passed; 0 failed; 0 skipped; finished in 131.05ms (166.17ms CPU time)
+
+Ran 37 tests for test/token/ERC20/ERC20/LibERC20.t.sol:LibERC20Test
+[PASS] testFuzz_Approve(address,uint256) (runs: 256, μ: 60001, ~: 60235)
+[PASS] testFuzz_Burn(address,uint256,uint256) (runs: 256, μ: 119939, ~: 120130)
+[PASS] testFuzz_Mint(address,uint256) (runs: 256, μ: 84836, ~: 85005)
+[PASS] testFuzz_Transfer(uint256,uint256) (runs: 256, μ: 143656, ~: 143930)
+[PASS] testFuzz_TransferFrom(uint256,uint256,uint256) (runs: 256, μ: 208645, ~: 209204)
+[PASS] test_Approve() (gas: 64394)
+[PASS] test_ApproveTransferFromBurn_Flow() (gas: 247311)
+[PASS] test_Approve_ToZero() (gas: 82243)
+[PASS] test_Approve_UpdateExisting() (gas: 91952)
+[PASS] test_Burn() (gas: 123949)
+[PASS] test_Burn_EntireBalance() (gas: 104846)
+[PASS] test_Decimals() (gas: 7773)
+[PASS] test_InitialTotalSupply() (gas: 7613)
+[PASS] test_Mint() (gas: 88672)
+[PASS] test_MintTransferBurn_Flow() (gas: 251100)
+[PASS] test_Mint_Multiple() (gas: 179616)
+[PASS] test_Name() (gas: 11988)
+[PASS] test_RevertWhen_ApproveZeroAddressSpender() (gas: 32879)
+[PASS] test_RevertWhen_BurnFromZeroAddress() (gas: 30393)
+[PASS] test_RevertWhen_BurnInsufficientBalance() (gas: 103943)
+[PASS] test_RevertWhen_BurnZeroBalance() (gas: 34941)
+[PASS] test_RevertWhen_MintOverflowsRecipient() (gas: 103695)
+[PASS] test_RevertWhen_MintToZeroAddress() (gas: 30421)
+[PASS] test_RevertWhen_TransferFromInsufficientAllowance() (gas: 156370)
+[PASS] test_RevertWhen_TransferFromInsufficientBalance() (gas: 158600)
+[PASS] test_RevertWhen_TransferFromNoAllowance() (gas: 109152)
+[PASS] test_RevertWhen_TransferFromZeroAddressReceiver() (gas: 152072)
+[PASS] test_RevertWhen_TransferFromZeroAddressSender() (gas: 33416)
+[PASS] test_RevertWhen_TransferInsufficientBalance() (gas: 106489)
+[PASS] test_RevertWhen_TransferOverflowsRecipient() (gas: 109445)
+[PASS] test_RevertWhen_TransferToZeroAddress() (gas: 101820)
+[PASS] test_Symbol() (gas: 12016)
+[PASS] test_Transfer() (gas: 145467)
+[PASS] test_TransferFrom() (gas: 200587)
+[PASS] test_TransferFrom_PartialAllowance() (gas: 207888)
+[PASS] test_Transfer_ToSelf() (gas: 106334)
+[PASS] test_Transfer_ZeroAmount() (gas: 120240)
+Suite result: ok. 37 passed; 0 failed; 0 skipped; finished in 143.00ms (189.71ms CPU time)
+
+Ran 38 tests for test/access/OwnerTwoSteps/OwnerTwoSteps.t.sol:OwnerTwoStepsFacetTest
+[PASS] testFuzz_AcceptOwnership(address) (runs: 256, μ: 92756, ~: 92851)
+[PASS] testFuzz_RenounceOwnership_OnlyOwner(address) (runs: 256, μ: 39341, ~: 39341)
+[PASS] testFuzz_RenounceWithPendingOwner(address) (runs: 256, μ: 120572, ~: 120661)
+[PASS] testFuzz_RevertWhen_UnauthorizedAccept(address) (runs: 256, μ: 85281, ~: 85281)
+[PASS] testFuzz_RevertWhen_UnauthorizedTransfer(address,address) (runs: 256, μ: 35019, ~: 35090)
+[PASS] testFuzz_StateAfterRenounce(address,address) (runs: 256, μ: 107541, ~: 107631)
+[PASS] testFuzz_TransferOwnership(address) (runs: 256, μ: 68007, ~: 68247)
+[PASS] test_AcceptOwnership_ClearsPendingOwner() (gas: 89567)
+[PASS] test_AcceptOwnership_CompletesTransfer() (gas: 96665)
+[PASS] test_AcceptOwnership_EmitsOwnershipTransferredEvent() (gas: 86513)
+[PASS] test_DirectRenounce_vs_TwoStepRenounce() (gas: 158499)
+[PASS] test_MultiplePendingChanges_OnlyLastOneMatters() (gas: 233733)
+[PASS] test_Owner_ReturnsCorrectInitialOwner() (gas: 9904)
+[PASS] test_PendingOwner_InitiallyZero() (gas: 9936)
+[PASS] test_RenounceOwnership_CannotBeReversed() (gas: 82348)
+[PASS] test_RenounceOwnership_ClearsPendingOwner() (gas: 104778)
+[PASS] test_RenounceOwnership_DirectlyRenounces() (gas: 43158)
+[PASS] test_RenounceOwnership_EmitsOwnershipTransferredEvent() (gas: 34983)
+[PASS] test_RenounceOwnership_OnlyOwnerCanCall() (gas: 35941)
+[PASS] test_RenounceOwnership_PreventsAllFutureTransfers() (gas: 87416)
+[PASS] test_RenounceOwnership_TwoStep() (gas: 52103)
+[PASS] test_RenounceOwnership_WithPendingTransfer() (gas: 136054)
+[PASS] test_RevertWhen_AcceptOwnership_CalledByCurrentOwner() (gas: 84765)
+[PASS] test_RevertWhen_AcceptOwnership_CalledByNonPendingOwner() (gas: 86743)
+[PASS] test_RevertWhen_AcceptOwnership_NoPendingOwner() (gas: 34048)
+[PASS] test_RevertWhen_RenounceOwnership_CalledByNonOwner() (gas: 39141)
+[PASS] test_RevertWhen_RenounceOwnership_CalledByPendingOwner() (gas: 84730)
+[PASS] test_RevertWhen_TransferOwnership_CalledByNonOwner() (gas: 34552)
+[PASS] test_RevertWhen_TransferOwnership_CalledByPendingOwner() (gas: 87269)
+[PASS] test_SequentialTransfers() (gas: 259052)
+[PASS] test_StorageSlot_Consistency() (gas: 90270)
+[PASS] test_StorageSlot_PendingOwner() (gas: 65922)
+[PASS] test_TransferOwnership_CanCancelBySettingToZero() (gas: 100547)
+[PASS] test_TransferOwnership_CanTransferToZeroAddress() (gas: 45026)
+[PASS] test_TransferOwnership_CanUpdatePendingOwner() (gas: 110432)
+[PASS] test_TransferOwnership_EmitsOwnershipTransferStartedEvent() (gas: 62137)
+[PASS] test_TransferOwnership_OnlyOwnerCanInitiate() (gas: 72287)
+[PASS] test_TransferToSelf() (gas: 94369)
+Suite result: ok. 38 passed; 0 failed; 0 skipped; finished in 143.15ms (161.18ms CPU time)
+
+Ran 17 tests for test/access/Owner/OwnerFacet.t.sol:OwnerFacetTest
+[PASS] testFuzz_RenouncePreventsAllTransfers(address,address) (runs: 256, μ: 56404, ~: 56493)
+[PASS] testFuzz_RevertWhen_UnauthorizedCaller(address,address) (runs: 256, μ: 34967, ~: 35054)
+[PASS] testFuzz_SequentialTransfers(address,address,address) (runs: 256, μ: 116222, ~: 116458)
+[PASS] testFuzz_TransferOwnership(address) (runs: 256, μ: 41631, ~: 41760)
+[PASS] test_Owner_ReturnsCorrectInitialOwner() (gas: 9820)
+[PASS] test_Owner_ReturnsZeroWhenRenounced() (gas: 35951)
+[PASS] test_RenounceOwnership_EmitsEvent() (gas: 33033)
+[PASS] test_RenounceOwnership_PreventsAllFurtherTransfers() (gas: 85393)
+[PASS] test_RenounceOwnership_SetsOwnerToZero() (gas: 35928)
+[PASS] test_RevertWhen_TransferOwnership_CalledByNonOwner() (gas: 34473)
+[PASS] test_RevertWhen_TransferOwnership_CalledByPreviousOwner() (gas: 67994)
+[PASS] test_StorageSlot_Consistency() (gas: 46546)
+[PASS] test_TransferOwnership_EmitsCorrectPreviousOwner() (gas: 76439)
+[PASS] test_TransferOwnership_EmitsOwnershipTransferredEvent() (gas: 42894)
+[PASS] test_TransferOwnership_ImmediateTransfer() (gas: 45822)
+[PASS] test_TransferOwnership_MultipleTransfers() (gas: 127960)
+[PASS] test_TransferOwnership_ToSelf() (gas: 40967)
+Suite result: ok. 17 passed; 0 failed; 0 skipped; finished in 149.98ms (108.93ms CPU time)
+
+Ran 37 tests for test/access/AccessControl/LibAccessControl.t.sol:LibAccessControlTest
+[PASS] testFuzz_GrantRole_AlwaysReturnsCorrectBool(address,bytes32) (runs: 256, μ: 89326, ~: 89781)
+[PASS] testFuzz_HasRole_ConsistentWithStorage(address,bytes32,bool) (runs: 256, μ: 37475, ~: 58129)
+[PASS] testFuzz_MultipleRolesPerAccount(address) (runs: 256, μ: 363817, ~: 364503)
+[PASS] testFuzz_RevokeRole_AlwaysReturnsCorrectBool(address,bytes32) (runs: 256, μ: 115354, ~: 115882)
+[PASS] testFuzz_SetRoleAdmin_AlwaysUpdatesCorrectly(bytes32,bytes32) (runs: 256, μ: 54552, ~: 54819)
+[PASS] test_DefaultAdminRole_IsZeroBytes() (gas: 5533)
+[PASS] test_EdgeCase_CircularRoleAdminHierarchy() (gas: 158631)
+[PASS] test_EdgeCase_GrantAndRevokeMultipleTimes() (gas: 172865)
+[PASS] test_EdgeCase_RoleAdminOfItself() (gas: 54691)
+[PASS] test_GetStorage_ReturnsCorrectInitialState() (gas: 17563)
+[PASS] test_GrantRole_CanGrantToZeroAddress() (gas: 58045)
+[PASS] test_GrantRole_DoesNotEmitEventWhenAlreadyGranted() (gas: 80743)
+[PASS] test_GrantRole_EmitsRoleGrantedEvent() (gas: 57356)
+[PASS] test_GrantRole_GrantsRoleToAccount() (gas: 58227)
+[PASS] test_GrantRole_MultipleRolesToSameAccount() (gas: 168515)
+[PASS] test_GrantRole_ReturnsFalseWhenAlreadyGranted() (gas: 84121)
+[PASS] test_GrantRole_SameRoleToMultipleAccounts() (gas: 172536)
+[PASS] test_HasRole_HandlesMultipleAccountsPerRole() (gas: 164530)
+[PASS] test_HasRole_HandlesMultipleRolesPerAccount() (gas: 167962)
+[PASS] test_HasRole_ReturnsFalseForNonGrantedRole() (gas: 10150)
+[PASS] test_HasRole_ReturnsFalseForZeroAddress() (gas: 10177)
+[PASS] test_HasRole_ReturnsTrueForGrantedRole() (gas: 55328)
+[PASS] test_RequireRole_PassesWhenAccountHasRole() (gas: 55179)
+[PASS] test_RevertWhen_RequireRole_AccountDoesNotHaveRole() (gas: 13380)
+[PASS] test_RevertWhen_RequireRole_ZeroAddressDoesNotHaveRole() (gas: 13389)
+[PASS] test_RevokeRole_DoesNotEmitEventWhenNotGranted() (gas: 32710)
+[PASS] test_RevokeRole_EmitsRoleRevokedEvent() (gas: 78261)
+[PASS] test_RevokeRole_OnlyRevokesFromSpecificAccount() (gas: 188366)
+[PASS] test_RevokeRole_OnlyRevokesSpecificRole() (gas: 184322)
+[PASS] test_RevokeRole_ReturnsFalseWhenNotGranted() (gas: 36076)
+[PASS] test_RevokeRole_RevokesRoleFromAccount() (gas: 86644)
+[PASS] test_SetRoleAdmin_CanSetToDefaultAdminRole() (gas: 34390)
+[PASS] test_SetRoleAdmin_CanSetToSameRole() (gas: 54736)
+[PASS] test_SetRoleAdmin_EmitsRoleAdminChangedEvent() (gas: 56542)
+[PASS] test_SetRoleAdmin_MultipleChanges() (gas: 114472)
+[PASS] test_SetRoleAdmin_UpdatesAdminRole() (gas: 54689)
+[PASS] test_StorageSlot_UsesCorrectPosition() (gas: 59295)
+Suite result: ok. 37 passed; 0 failed; 0 skipped; finished in 152.11ms (241.05ms CPU time)
+
+Ran 63 tests for test/token/ERC20/ERC20/ERC20Facet.t.sol:ERC20FacetTest
+[PASS] testFuzz_Approve(address,uint256) (runs: 256, μ: 60137, ~: 60402)
+[PASS] testFuzz_Burn(uint256) (runs: 256, μ: 52263, ~: 52428)
+[PASS] testFuzz_BurnFrom(uint256,uint256) (runs: 256, μ: 117225, ~: 117660)
+[PASS] testFuzz_Permit(uint256,address,uint256,uint256) (runs: 256, μ: 104146, ~: 104278)
+[PASS] testFuzz_Transfer(address,uint256) (runs: 256, μ: 70307, ~: 70765)
+[PASS] testFuzz_TransferFrom(uint256,uint256) (runs: 256, μ: 138943, ~: 139799)
+[PASS] test_Approve() (gas: 64594)
+[PASS] test_Approve_ReturnsTrue() (gas: 58641)
+[PASS] test_Approve_UpdateExisting() (gas: 92105)
+[PASS] test_Approve_ZeroAmount() (gas: 82473)
+[PASS] test_BalanceOf() (gas: 17161)
+[PASS] test_Burn() (gas: 54423)
+[PASS] test_BurnFrom() (gas: 109646)
+[PASS] test_BurnFrom_PartialAllowance() (gas: 116980)
+[PASS] test_BurnFrom_UnlimitedAllowance() (gas: 174126)
+[PASS] test_BurnFrom_UnlimitedAllowance_MultipleBurns() (gas: 558020)
+[PASS] test_Burn_EntireBalance() (gas: 38482)
+[PASS] test_DOMAIN_SEPARATOR() (gas: 8483)
+[PASS] test_DOMAIN_SEPARATOR_ConsistentWithinSameChain() (gas: 13795)
+[PASS] test_DOMAIN_SEPARATOR_RecalculatesAfterFork() (gas: 19283)
+[PASS] test_Decimals() (gas: 7742)
+[PASS] test_Name() (gas: 12046)
+[PASS] test_Nonces() (gas: 17226)
+[PASS] test_Permit() (gas: 107233)
+[PASS] test_Permit_IncreasesNonce() (gas: 219965)
+[PASS] test_Permit_MaxValue() (gas: 107481)
+[PASS] test_Permit_MultipleDifferentSpenders() (gas: 260682)
+[PASS] test_Permit_OverwritesExistingAllowance() (gas: 191123)
+[PASS] test_Permit_ThenTransferFrom() (gas: 237955)
+[PASS] test_Permit_ZeroValue() (gas: 87183)
+[PASS] test_RevertWhen_ApproveZeroAddressSpender() (gas: 32898)
+[PASS] test_RevertWhen_BurnFromInsufficientAllowance() (gas: 84821)
+[PASS] test_RevertWhen_BurnFromInsufficientBalance() (gas: 87168)
+[PASS] test_RevertWhen_BurnFromNoAllowance() (gas: 37557)
+[PASS] test_RevertWhen_BurnFromZeroBalance() (gas: 34761)
+[PASS] test_RevertWhen_BurnInsufficientBalance() (gas: 34927)
+[PASS] test_RevertWhen_PermitExpired() (gas: 49312)
+[PASS] test_RevertWhen_PermitInvalidSignature() (gas: 55394)
+[PASS] test_RevertWhen_PermitMalformedSignature() (gas: 123589)
+[PASS] test_RevertWhen_PermitReplay() (gas: 133146)
+[PASS] test_RevertWhen_PermitWrongNonce() (gas: 55378)
+[PASS] test_RevertWhen_PermitZeroAddressSpender() (gas: 44208)
+[PASS] test_RevertWhen_TransferFromInsufficientAllowance() (gas: 87472)
+[PASS] test_RevertWhen_TransferFromInsufficientBalance() (gas: 89776)
+[PASS] test_RevertWhen_TransferFromNoAllowance() (gas: 40177)
+[PASS] test_RevertWhen_TransferFromZeroAddressReceiver() (gas: 83219)
+[PASS] test_RevertWhen_TransferFromZeroAddressSender() (gas: 33501)
+[PASS] test_RevertWhen_TransferFromZeroBalance() (gas: 37428)
+[PASS] test_RevertWhen_TransferInsufficientBalance() (gas: 37624)
+[PASS] test_RevertWhen_TransferOverflowsRecipient() (gas: 94196)
+[PASS] test_RevertWhen_TransferToZeroAddress() (gas: 32899)
+[PASS] test_Symbol() (gas: 12053)
+[PASS] test_TotalSupply() (gas: 7747)
+[PASS] test_Transfer() (gas: 76688)
+[PASS] test_TransferFrom() (gas: 131981)
+[PASS] test_TransferFrom_PartialAllowance() (gas: 139118)
+[PASS] test_TransferFrom_ReturnsTrue() (gas: 109541)
+[PASS] test_TransferFrom_UnlimitedAllowance() (gas: 201307)
+[PASS] test_TransferFrom_UnlimitedAllowance_MultipleTransfers() (gas: 606138)
+[PASS] test_Transfer_EntireBalance() (gas: 64566)
+[PASS] test_Transfer_ReturnsTrue() (gas: 63855)
+[PASS] test_Transfer_ToSelf() (gas: 37433)
+[PASS] test_Transfer_ZeroAmount() (gas: 51371)
+Suite result: ok. 63 passed; 0 failed; 0 skipped; finished in 188.59ms (479.60ms CPU time)
+
+Ran 56 tests for test/access/AccessControl/AccessControlFacet.t.sol:AccessControlFacetTest
+[PASS] testFuzz_GrantRole_OnlyAdminCanGrant(address,address) (runs: 256, μ: 38359, ~: 38434)
+[PASS] testFuzz_HasRole_ConsistentAcrossMultipleRoles(address) (runs: 256, μ: 771064, ~: 772462)
+[PASS] testFuzz_RenounceRole_OnlyAccountCanRenounce(address,address) (runs: 256, μ: 77563, ~: 77860)
+[PASS] testFuzz_RevokeRole_OnlyAdminCanRevoke(address,address) (runs: 256, μ: 83295, ~: 83468)
+[PASS] testFuzz_RoleAdminHierarchy(bytes32,bytes32,bytes32) (runs: 256, μ: 321927, ~: 322993)
+[PASS] test_ComplexRoleHierarchy_CannotGrantWithoutProperAdmin() (gas: 108188)
+[PASS] test_ComplexRoleHierarchy_GrantingThroughHierarchy() (gas: 258424)
+[PASS] test_ComplexRoleHierarchy_Setup() (gas: 86075)
+[PASS] test_DelegatedAdminCanExerciseAdminPowers() (gas: 217628)
+[PASS] test_EdgeCase_CircularRoleAdminHierarchy() (gas: 247116)
+[PASS] test_EdgeCase_GrantAndRevokeInSameBlock() (gas: 92299)
+[PASS] test_EdgeCase_MultipleOperationsOnSameRole() (gas: 240331)
+[PASS] test_EdgeCase_RoleAdminOfItself() (gas: 157044)
+[PASS] test_GetRoleAdmin_DefaultAdminRoleAdminIsItself() (gas: 7754)
+[PASS] test_GetRoleAdmin_ReturnsCorrectAdminAfterChange() (gas: 52755)
+[PASS] test_GetRoleAdmin_ReturnsDefaultAdminForNewRole() (gas: 7742)
+[PASS] test_GrantRoleBatch_SkipsAlreadyGrantedWithoutExtraEvents() (gas: 173023)
+[PASS] test_GrantRoleBatch_SucceedsAndEmitsPerNewGrant() (gas: 145443)
+[PASS] test_GrantRoleBatch_SucceedsWithEmptyArray() (gas: 37251)
+[PASS] test_GrantRole_CanGrantToSelf() (gas: 64842)
+[PASS] test_GrantRole_CanGrantToZeroAddress() (gas: 66663)
+[PASS] test_GrantRole_DoesNotEmitEventWhenAlreadyGranted() (gas: 97021)
+[PASS] test_GrantRole_SucceedsWithCustomRoleAdmin() (gas: 159585)
+[PASS] test_GrantRole_SucceedsWithDefaultAdmin() (gas: 69411)
+[PASS] test_HasRole_HandlesMultipleAccountsPerRole() (gas: 189522)
+[PASS] test_HasRole_HandlesMultipleRolesPerAccount() (gas: 192883)
+[PASS] test_HasRole_ReturnsCorrectInitialState() (gas: 17476)
+[PASS] test_HasRole_ReturnsFalseForNonGrantedRole() (gas: 10101)
+[PASS] test_HasRole_ReturnsTrueForGrantedRole() (gas: 66853)
+[PASS] test_RenounceRole_CanRenounceDefaultAdminRole() (gas: 40763)
+[PASS] test_RenounceRole_CanRenounceMultipleRoles() (gas: 273024)
+[PASS] test_RenounceRole_DoesNotEmitEventWhenNotGranted() (gas: 38345)
+[PASS] test_RenounceRole_SucceedsForOwnRole() (gas: 100390)
+[PASS] test_RequireRole_PassesWhenAccountHasRole() (gas: 66795)
+[PASS] test_RevertWhen_GrantRoleBatch_CallerIsNotAdmin() (gas: 41528)
+[PASS] test_RevertWhen_GrantRole_CallerIsNotAdmin() (gas: 39978)
+[PASS] test_RevertWhen_GrantRole_CallerIsNotCustomAdmin() (gas: 84998)
+[PASS] test_RevertWhen_RenounceRole_AdminCannotRenounceForOthers() (gas: 88874)
+[PASS] test_RevertWhen_RenounceRole_CallerIsNotAccount() (gas: 81773)
+[PASS] test_RevertWhen_RequireRole_AccountDoesNotHaveRole() (gas: 13349)
+[PASS] test_RevertWhen_RequireRole_ZeroAddressDoesNotHaveRole() (gas: 13380)
+[PASS] test_RevertWhen_RevokeRoleBatch_CallerIsNotAdmin() (gas: 95115)
+[PASS] test_RevertWhen_RevokeRole_CallerIsNotAdmin() (gas: 83157)
+[PASS] test_RevertWhen_RevokeRole_CallerIsNotCustomAdmin() (gas: 130166)
+[PASS] test_RevertWhen_SetRoleAdmin_CallerIsNotCurrentAdmin() (gas: 82956)
+[PASS] test_RevokeRoleBatch_SkipsNotGrantedWithoutExtraEvents() (gas: 121704)
+[PASS] test_RevokeRoleBatch_SucceedsAndEmitsPerRevocation() (gas: 230139)
+[PASS] test_RevokeRoleBatch_SucceedsWithEmptyArray() (gas: 37251)
+[PASS] test_RevokeRole_CanRevokeFromZeroAddress() (gas: 103938)
+[PASS] test_RevokeRole_DoesNotEmitEventWhenNotGranted() (gas: 44750)
+[PASS] test_RevokeRole_SucceedsWithCustomRoleAdmin() (gas: 178009)
+[PASS] test_RevokeRole_SucceedsWithDefaultAdmin() (gas: 106824)
+[PASS] test_SetRoleAdmin_SucceedsWhenCallerIsCurrentAdmin() (gas: 64339)
+[PASS] test_StorageConsistency_HasRoleMatchesStorage() (gas: 74261)
+[PASS] test_StorageConsistency_RoleAdminMatchesStorage() (gas: 57788)
+[PASS] test_StorageSlot_UsesCorrectPosition() (gas: 5594)
+Suite result: ok. 56 passed; 0 failed; 0 skipped; finished in 221.81ms (344.88ms CPU time)
+
+╭------------------------------------------------------------------------------------------------------+-----------------+-------+--------+--------+---------╮
+| test/access/AccessControl/harnesses/AccessControlFacetHarness.sol:AccessControlFacetHarness Contract |                 |       |        |        |         |
++============================================================================================================================================================+
+| Deployment Cost                                                                                      | Deployment Size |       |        |        |         |
+|------------------------------------------------------------------------------------------------------+-----------------+-------+--------+--------+---------|
+| 1110669                                                                                              | 4930            |       |        |        |         |
+|------------------------------------------------------------------------------------------------------+-----------------+-------+--------+--------+---------|
+|                                                                                                      |                 |       |        |        |         |
+|------------------------------------------------------------------------------------------------------+-----------------+-------+--------+--------+---------|
+| Function Name                                                                                        | Min             | Avg   | Median | Max    | # Calls |
+|------------------------------------------------------------------------------------------------------+-----------------+-------+--------+--------+---------|
+| forceGrantRole                                                                                       | 44333           | 44488 | 44573  | 44573  | 520     |
+|------------------------------------------------------------------------------------------------------+-----------------+-------+--------+--------+---------|
+| forceSetRoleAdmin                                                                                    | 23877           | 37640 | 43837  | 44533  | 779     |
+|------------------------------------------------------------------------------------------------------+-----------------+-------+--------+--------+---------|
+| getRoleAdmin                                                                                         | 2470            | 2470  | 2470   | 2470   | 776     |
+|------------------------------------------------------------------------------------------------------+-----------------+-------+--------+--------+---------|
+| getStorageHasRole                                                                                    | 2666            | 2666  | 2666   | 2666   | 1       |
+|------------------------------------------------------------------------------------------------------+-----------------+-------+--------+--------+---------|
+| getStoragePosition                                                                                   | 248             | 248   | 248    | 248    | 1       |
+|------------------------------------------------------------------------------------------------------+-----------------+-------+--------+--------+---------|
+| getStorageRoleAdmin                                                                                  | 2471            | 2471  | 2471   | 2471   | 1       |
+|------------------------------------------------------------------------------------------------------+-----------------+-------+--------+--------+---------|
+| grantRole                                                                                            | 26619           | 49361 | 51197  | 51209  | 3626    |
+|------------------------------------------------------------------------------------------------------+-----------------+-------+--------+--------+---------|
+| grantRoleBatch                                                                                       | 26823           | 59085 | 53740  | 102039 | 4       |
+|------------------------------------------------------------------------------------------------------+-----------------+-------+--------+--------+---------|
+| hasRole                                                                                              | 2662            | 2662  | 2662   | 2662   | 5946    |
+|------------------------------------------------------------------------------------------------------+-----------------+-------+--------+--------+---------|
+| initialize                                                                                           | 44017           | 44017 | 44017  | 44017  | 56      |
+|------------------------------------------------------------------------------------------------------+-----------------+-------+--------+--------+---------|
+| renounceRole                                                                                         | 22760           | 23192 | 23360  | 24920  | 265     |
+|------------------------------------------------------------------------------------------------------+-----------------+-------+--------+--------+---------|
+| requireRole                                                                                          | 2635            | 2692  | 2721   | 2721   | 3       |
+|------------------------------------------------------------------------------------------------------+-----------------+-------+--------+--------+---------|
+| revokeRole                                                                                           | 26605           | 28800 | 29111  | 29303  | 1545    |
+|------------------------------------------------------------------------------------------------------+-----------------+-------+--------+--------+---------|
+| revokeRoleBatch                                                                                      | 26824           | 32614 | 31525  | 40585  | 4       |
+|------------------------------------------------------------------------------------------------------+-----------------+-------+--------+--------+---------|
+| setRoleAdmin                                                                                         | 26897           | 41509 | 48816  | 48816  | 3       |
+|------------------------------------------------------------------------------------------------------+-----------------+-------+--------+--------+---------|
+| setupComplexRoleHierarchy                                                                            | 67703           | 67703 | 67703  | 67703  | 3       |
+╰------------------------------------------------------------------------------------------------------+-----------------+-------+--------+--------+---------╯
+
+╭--------------------------------------------------------------------------------------------------+-----------------+-------+--------+-------+---------╮
+| test/access/AccessControl/harnesses/LibAccessControlHarness.sol:LibAccessControlHarness Contract |                 |       |        |       |         |
++=======================================================================================================================================================+
+| Deployment Cost                                                                                  | Deployment Size |       |        |       |         |
+|--------------------------------------------------------------------------------------------------+-----------------+-------+--------+-------+---------|
+| 516067                                                                                           | 2170            |       |        |       |         |
+|--------------------------------------------------------------------------------------------------+-----------------+-------+--------+-------+---------|
+|                                                                                                  |                 |       |        |       |         |
+|--------------------------------------------------------------------------------------------------+-----------------+-------+--------+-------+---------|
+| Function Name                                                                                    | Min             | Avg   | Median | Max   | # Calls |
+|--------------------------------------------------------------------------------------------------+-----------------+-------+--------+-------+---------|
+| forceGrantRole                                                                                   | 43985           | 44389 | 44573  | 44573 | 152     |
+|--------------------------------------------------------------------------------------------------+-----------------+-------+--------+-------+---------|
+| getDefaultAdminRole                                                                              | 224             | 224   | 224    | 224   | 1       |
+|--------------------------------------------------------------------------------------------------+-----------------+-------+--------+-------+---------|
+| getRoleAdmin                                                                                     | 2470            | 2470  | 2470   | 2470  | 266     |
+|--------------------------------------------------------------------------------------------------+-----------------+-------+--------+-------+---------|
+| getStorageHasRole                                                                                | 2643            | 2643  | 2643   | 2643  | 257     |
+|--------------------------------------------------------------------------------------------------+-----------------+-------+--------+-------+---------|
+| grantRole                                                                                        | 24153           | 44002 | 46897  | 46909 | 2064    |
+|--------------------------------------------------------------------------------------------------+-----------------+-------+--------+-------+---------|
+| hasRole                                                                                          | 2704            | 2704  | 2704   | 2704  | 4130    |
+|--------------------------------------------------------------------------------------------------+-----------------+-------+--------+-------+---------|
+| initialize                                                                                       | 43998           | 43998 | 43998  | 43998 | 37      |
+|--------------------------------------------------------------------------------------------------+-----------------+-------+--------+-------+---------|
+| requireRole                                                                                      | 2669            | 2709  | 2730   | 2730  | 3       |
+|--------------------------------------------------------------------------------------------------+-----------------+-------+--------+-------+---------|
+| revokeRole                                                                                       | 24130           | 24828 | 24812  | 25004 | 1288    |
+|--------------------------------------------------------------------------------------------------+-----------------+-------+--------+-------+---------|
+| setRoleAdmin                                                                                     | 24196           | 45989 | 46468  | 46480 | 267     |
+╰--------------------------------------------------------------------------------------------------+-----------------+-------+--------+-------+---------╯
+
+╭--------------------------------------------------------------------------+-----------------+-------+--------+-------+---------╮
+| test/access/Owner/harnesses/LibOwnerHarness.sol:LibOwnerHarness Contract |                 |       |        |       |         |
++===============================================================================================================================+
+| Deployment Cost                                                          | Deployment Size |       |        |       |         |
+|--------------------------------------------------------------------------+-----------------+-------+--------+-------+---------|
+| 301235                                                                   | 1182            |       |        |       |         |
+|--------------------------------------------------------------------------+-----------------+-------+--------+-------+---------|
+|                                                                          |                 |       |        |       |         |
+|--------------------------------------------------------------------------+-----------------+-------+--------+-------+---------|
+| Function Name                                                            | Min             | Avg   | Median | Max   | # Calls |
+|--------------------------------------------------------------------------+-----------------+-------+--------+-------+---------|
+| forceRenounce                                                            | 21411           | 21411 | 21411  | 21411 | 1       |
+|--------------------------------------------------------------------------+-----------------+-------+--------+-------+---------|
+| getStorageOwner                                                          | 2283            | 2283  | 2283   | 2283  | 1       |
+|--------------------------------------------------------------------------+-----------------+-------+--------+-------+---------|
+| initialize                                                               | 43859           | 43859 | 43859  | 43859 | 22      |
+|--------------------------------------------------------------------------+-----------------+-------+--------+-------+---------|
+| owner                                                                    | 2353            | 2353  | 2353   | 2353  | 1295    |
+|--------------------------------------------------------------------------+-----------------+-------+--------+-------+---------|
+| renounceOwnership                                                        | 23042           | 23042 | 23042  | 23042 | 2       |
+|--------------------------------------------------------------------------+-----------------+-------+--------+-------+---------|
+| requireOwner                                                             | 2318            | 2343  | 2344   | 2344  | 258     |
+|--------------------------------------------------------------------------+-----------------+-------+--------+-------+---------|
+| transferOwnership                                                        | 23437           | 26794 | 28261  | 28477 | 1553    |
+╰--------------------------------------------------------------------------+-----------------+-------+--------+-------+---------╯
+
+╭------------------------------------------------------------------------------+-----------------+-------+--------+-------+---------╮
+| test/access/Owner/harnesses/OwnerFacetHarness.sol:OwnerFacetHarness Contract |                 |       |        |       |         |
++===================================================================================================================================+
+| Deployment Cost                                                              | Deployment Size |       |        |       |         |
+|------------------------------------------------------------------------------+-----------------+-------+--------+-------+---------|
+| 246764                                                                       | 929             |       |        |       |         |
+|------------------------------------------------------------------------------+-----------------+-------+--------+-------+---------|
+|                                                                              |                 |       |        |       |         |
+|------------------------------------------------------------------------------+-----------------+-------+--------+-------+---------|
+| Function Name                                                                | Min             | Avg   | Median | Max   | # Calls |
+|------------------------------------------------------------------------------+-----------------+-------+--------+-------+---------|
+| initialize                                                                   | 43837           | 43837 | 43837  | 43837 | 17      |
+|------------------------------------------------------------------------------+-----------------+-------+--------+-------+---------|
+| owner                                                                        | 2279            | 2279  | 2279   | 2279  | 1033    |
+|------------------------------------------------------------------------------+-----------------+-------+--------+-------+---------|
+| transferOwnership                                                            | 23394           | 26337 | 28218  | 28434 | 1810    |
+╰------------------------------------------------------------------------------+-----------------+-------+--------+-------+---------╯
+
+╭--------------------------------------------------------------------------------------------------+-----------------+-------+--------+-------+---------╮
+| test/access/OwnerTwoSteps/harnesses/LibOwnerTwoStepsHarness.sol:LibOwnerTwoStepsHarness Contract |                 |       |        |       |         |
++=======================================================================================================================================================+
+| Deployment Cost                                                                                  | Deployment Size |       |        |       |         |
+|--------------------------------------------------------------------------------------------------+-----------------+-------+--------+-------+---------|
+| 437269                                                                                           | 1813            |       |        |       |         |
+|--------------------------------------------------------------------------------------------------+-----------------+-------+--------+-------+---------|
+|                                                                                                  |                 |       |        |       |         |
+|--------------------------------------------------------------------------------------------------+-----------------+-------+--------+-------+---------|
+| Function Name                                                                                    | Min             | Avg   | Median | Max   | # Calls |
+|--------------------------------------------------------------------------------------------------+-----------------+-------+--------+-------+---------|
+| acceptOwnership                                                                                  | 25303           | 28096 | 28103  | 28103 | 1292    |
+|--------------------------------------------------------------------------------------------------+-----------------+-------+--------+-------+---------|
+| forceRenounce                                                                                    | 23661           | 23661 | 23661  | 23661 | 2       |
+|--------------------------------------------------------------------------------------------------+-----------------+-------+--------+-------+---------|
+| getStorageOwner                                                                                  | 2306            | 2306  | 2306   | 2306  | 1       |
+|--------------------------------------------------------------------------------------------------+-----------------+-------+--------+-------+---------|
+| getStoragePendingOwner                                                                           | 2316            | 2316  | 2316   | 2316  | 2       |
+|--------------------------------------------------------------------------------------------------+-----------------+-------+--------+-------+---------|
+| initialize                                                                                       | 46104           | 46104 | 46104  | 46104 | 31      |
+|--------------------------------------------------------------------------------------------------+-----------------+-------+--------+-------+---------|
+| owner                                                                                            | 2376            | 2376  | 2376   | 2376  | 1810    |
+|--------------------------------------------------------------------------------------------------+-----------------+-------+--------+-------+---------|
+| pendingOwner                                                                                     | 2375            | 2375  | 2375   | 2375  | 1050    |
+|--------------------------------------------------------------------------------------------------+-----------------+-------+--------+-------+---------|
+| transferOwnership                                                                                | 23933           | 47412 | 47592  | 47592 | 1820    |
+╰--------------------------------------------------------------------------------------------------+-----------------+-------+--------+-------+---------╯
+
+╭------------------------------------------------------------------------------------------------------+-----------------+-------+--------+-------+---------╮
+| test/access/OwnerTwoSteps/harnesses/OwnerTwoStepsFacetHarness.sol:OwnerTwoStepsFacetHarness Contract |                 |       |        |       |         |
++===========================================================================================================================================================+
+| Deployment Cost                                                                                      | Deployment Size |       |        |       |         |
+|------------------------------------------------------------------------------------------------------+-----------------+-------+--------+-------+---------|
+| 447509                                                                                               | 1863            |       |        |       |         |
+|------------------------------------------------------------------------------------------------------+-----------------+-------+--------+-------+---------|
+|                                                                                                      |                 |       |        |       |         |
+|------------------------------------------------------------------------------------------------------+-----------------+-------+--------+-------+---------|
+| Function Name                                                                                        | Min             | Avg   | Median | Max   | # Calls |
+|------------------------------------------------------------------------------------------------------+-----------------+-------+--------+-------+---------|
+| acceptOwnership                                                                                      | 23443           | 24659 | 23443  | 28216 | 1041    |
+|------------------------------------------------------------------------------------------------------+-----------------+-------+--------+-------+---------|
+| initialize                                                                                           | 46059           | 46059 | 46059  | 46059 | 38      |
+|------------------------------------------------------------------------------------------------------+-----------------+-------+--------+-------+---------|
+| owner                                                                                                | 2318            | 2318  | 2318   | 2318  | 1040    |
+|------------------------------------------------------------------------------------------------------+-----------------+-------+--------+-------+---------|
+| pendingOwner                                                                                         | 2350            | 2350  | 2350   | 2350  | 790     |
+|------------------------------------------------------------------------------------------------------+-----------------+-------+--------+-------+---------|
+| renounceOwnership                                                                                    | 23418           | 24650 | 25373  | 26379 | 1035    |
+|------------------------------------------------------------------------------------------------------+-----------------+-------+--------+-------+---------|
+| transferOwnership                                                                                    | 23689           | 39668 | 47447  | 47663 | 1568    |
+╰------------------------------------------------------------------------------------------------------+-----------------+-------+--------+-------+---------╯
+
+╭-----------------------------------------------------------------------------------+-----------------+-------+--------+-------+---------╮
+| test/token/ERC20/ERC20/harnesses/ERC20FacetHarness.sol:ERC20FacetHarness Contract |                 |       |        |       |         |
++========================================================================================================================================+
+| Deployment Cost                                                                   | Deployment Size |       |        |       |         |
+|-----------------------------------------------------------------------------------+-----------------+-------+--------+-------+---------|
+| 1422472                                                                           | 6387            |       |        |       |         |
+|-----------------------------------------------------------------------------------+-----------------+-------+--------+-------+---------|
+|                                                                                   |                 |       |        |       |         |
+|-----------------------------------------------------------------------------------+-----------------+-------+--------+-------+---------|
+| Function Name                                                                     | Min             | Avg   | Median | Max   | # Calls |
+|-----------------------------------------------------------------------------------+-----------------+-------+--------+-------+---------|
+| DOMAIN_SEPARATOR                                                                  | 2926            | 2926  | 2926   | 2926  | 278     |
+|-----------------------------------------------------------------------------------+-----------------+-------+--------+-------+---------|
+| allowance                                                                         | 2774            | 2774  | 2774   | 2774  | 1064    |
+|-----------------------------------------------------------------------------------+-----------------+-------+--------+-------+---------|
+| approve                                                                           | 22010           | 45939 | 46123  | 46483 | 790     |
+|-----------------------------------------------------------------------------------+-----------------+-------+--------+-------+---------|
+| balanceOf                                                                         | 2555            | 2555  | 2555   | 2555  | 1565    |
+|-----------------------------------------------------------------------------------+-----------------+-------+--------+-------+---------|
+| burn                                                                              | 23754           | 33247 | 33509  | 33605 | 260     |
+|-----------------------------------------------------------------------------------+-----------------+-------+--------+-------+---------|
+| burnFrom                                                                          | 24405           | 38766 | 39385  | 39445 | 273     |
+|-----------------------------------------------------------------------------------+-----------------+-------+--------+-------+---------|
+| decimals                                                                          | 2333            | 2333  | 2333   | 2333  | 1       |
+|-----------------------------------------------------------------------------------+-----------------+-------+--------+-------+---------|
+| initialize                                                                        | 90378           | 90378 | 90378  | 90378 | 63      |
+|-----------------------------------------------------------------------------------+-----------------+-------+--------+-------+---------|
+| mint                                                                              | 51100           | 67427 | 68200  | 68200 | 66      |
+|-----------------------------------------------------------------------------------+-----------------+-------+--------+-------+---------|
+| name                                                                              | 3106            | 3106  | 3106   | 3106  | 1       |
+|-----------------------------------------------------------------------------------+-----------------+-------+--------+-------+---------|
+| nonces                                                                            | 2599            | 2599  | 2599   | 2599  | 265     |
+|-----------------------------------------------------------------------------------+-----------------+-------+--------+-------+---------|
+| permit                                                                            | 26220           | 75173 | 77123  | 77675 | 276     |
+|-----------------------------------------------------------------------------------+-----------------+-------+--------+-------+---------|
+| symbol                                                                            | 3110            | 3110  | 3110   | 3110  | 1       |
+|-----------------------------------------------------------------------------------+-----------------+-------+--------+-------+---------|
+| totalSupply                                                                       | 2370            | 2370  | 2370   | 2370  | 520     |
+|-----------------------------------------------------------------------------------+-----------------+-------+--------+-------+---------|
+| transfer                                                                          | 22010           | 50096 | 51113  | 51413 | 265     |
+|-----------------------------------------------------------------------------------+-----------------+-------+--------+-------+---------|
+| transferFrom                                                                      | 22930           | 55087 | 57193  | 57277 | 277     |
+╰-----------------------------------------------------------------------------------+-----------------+-------+--------+-------+---------╯
+
+╭-------------------------------------------------------------------------------+-----------------+-------+--------+-------+---------╮
+| test/token/ERC20/ERC20/harnesses/LibERC20Harness.sol:LibERC20Harness Contract |                 |       |        |       |         |
++====================================================================================================================================+
+| Deployment Cost                                                               | Deployment Size |       |        |       |         |
+|-------------------------------------------------------------------------------+-----------------+-------+--------+-------+---------|
+| 965181                                                                        | 4265            |       |        |       |         |
+|-------------------------------------------------------------------------------+-----------------+-------+--------+-------+---------|
+|                                                                               |                 |       |        |       |         |
+|-------------------------------------------------------------------------------+-----------------+-------+--------+-------+---------|
+| Function Name                                                                 | Min             | Avg   | Median | Max   | # Calls |
+|-------------------------------------------------------------------------------+-----------------+-------+--------+-------+---------|
+| allowance                                                                     | 2766            | 2766  | 2766   | 2766  | 518     |
+|-------------------------------------------------------------------------------+-----------------+-------+--------+-------+---------|
+| approve                                                                       | 22010           | 45878 | 46093  | 46435 | 524     |
+|-------------------------------------------------------------------------------+-----------------+-------+--------+-------+---------|
+| balanceOf                                                                     | 2555            | 2555  | 2555   | 2555  | 1555    |
+|-------------------------------------------------------------------------------+-----------------+-------+--------+-------+---------|
+| burn                                                                          | 22010           | 33753 | 34018  | 34390 | 263     |
+|-------------------------------------------------------------------------------+-----------------+-------+--------+-------+---------|
+| decimals                                                                      | 2355            | 2355  | 2355   | 2355  | 1       |
+|-------------------------------------------------------------------------------+-----------------+-------+--------+-------+---------|
+| initialize                                                                    | 90346           | 90346 | 90346  | 90346 | 37      |
+|-------------------------------------------------------------------------------+-----------------+-------+--------+-------+---------|
+| mint                                                                          | 22010           | 68216 | 68383  | 68665 | 1048    |
+|-------------------------------------------------------------------------------+-----------------+-------+--------+-------+---------|
+| name                                                                          | 3106            | 3106  | 3106   | 3106  | 1       |
+|-------------------------------------------------------------------------------+-----------------+-------+--------+-------+---------|
+| symbol                                                                        | 3155            | 3155  | 3155   | 3155  | 1       |
+|-------------------------------------------------------------------------------+-----------------+-------+--------+-------+---------|
+| totalSupply                                                                   | 2303            | 2303  | 2303   | 2303  | 520     |
+|-------------------------------------------------------------------------------+-----------------+-------+--------+-------+---------|
+| transfer                                                                      | 22010           | 50519 | 51293  | 51617 | 264     |
+|-------------------------------------------------------------------------------+-----------------+-------+--------+-------+---------|
+| transferFrom                                                                  | 22930           | 56002 | 57184  | 57448 | 264     |
+╰-------------------------------------------------------------------------------+-----------------+-------+--------+-------+---------╯
+
+╭-------------------------------------------------------------------------------+-----------------+-------+--------+-------+---------╮
+| test/token/Royalty/harnesses/LibRoyaltyHarness.sol:LibRoyaltyHarness Contract |                 |       |        |       |         |
++====================================================================================================================================+
+| Deployment Cost                                                               | Deployment Size |       |        |       |         |
+|-------------------------------------------------------------------------------+-----------------+-------+--------+-------+---------|
+| 519076                                                                        | 2198            |       |        |       |         |
+|-------------------------------------------------------------------------------+-----------------+-------+--------+-------+---------|
+|                                                                               |                 |       |        |       |         |
+|-------------------------------------------------------------------------------+-----------------+-------+--------+-------+---------|
+| Function Name                                                                 | Min             | Avg   | Median | Max   | # Calls |
+|-------------------------------------------------------------------------------+-----------------+-------+--------+-------+---------|
+| deleteDefaultRoyalty                                                          | 21468           | 21468 | 21468  | 21468 | 4       |
+|-------------------------------------------------------------------------------+-----------------+-------+--------+-------+---------|
+| getDefaultRoyaltyFraction                                                     | 2383            | 2383  | 2383   | 2383  | 261     |
+|-------------------------------------------------------------------------------+-----------------+-------+--------+-------+---------|
+| getDefaultRoyaltyReceiver                                                     | 2340            | 2340  | 2340   | 2340  | 261     |
+|-------------------------------------------------------------------------------+-----------------+-------+--------+-------+---------|
+| getTokenRoyaltyFraction                                                       | 2483            | 2483  | 2483   | 2483  | 523     |
+|-------------------------------------------------------------------------------+-----------------+-------+--------+-------+---------|
+| getTokenRoyaltyReceiver                                                       | 2473            | 2473  | 2473   | 2473  | 526     |
+|-------------------------------------------------------------------------------+-----------------+-------+--------+-------+---------|
+| resetTokenRoyalty                                                             | 21712           | 21846 | 21736  | 22440 | 262     |
+|-------------------------------------------------------------------------------+-----------------+-------+--------+-------+---------|
+| royaltyInfo                                                                   | 2905            | 4010  | 5087   | 5087  | 535     |
+|-------------------------------------------------------------------------------+-----------------+-------+--------+-------+---------|
+| setDefaultRoyalty                                                             | 21862           | 44083 | 44255  | 44267 | 536     |
+|-------------------------------------------------------------------------------+-----------------+-------+--------+-------+---------|
+| setTokenRoyalty                                                               | 22210           | 44517 | 44589  | 44949 | 792     |
+╰-------------------------------------------------------------------------------+-----------------+-------+--------+-------+---------╯
+
+╭-----------------------------------------------------------------------------------+-----------------+-------+--------+-------+---------╮
+| test/token/Royalty/harnesses/RoyaltyFacetHarness.sol:RoyaltyFacetHarness Contract |                 |       |        |       |         |
++========================================================================================================================================+
+| Deployment Cost                                                                   | Deployment Size |       |        |       |         |
+|-----------------------------------------------------------------------------------+-----------------+-------+--------+-------+---------|
+| 293697                                                                            | 1147            |       |        |       |         |
+|-----------------------------------------------------------------------------------+-----------------+-------+--------+-------+---------|
+|                                                                                   |                 |       |        |       |         |
+|-----------------------------------------------------------------------------------+-----------------+-------+--------+-------+---------|
+| Function Name                                                                     | Min             | Avg   | Median | Max   | # Calls |
+|-----------------------------------------------------------------------------------+-----------------+-------+--------+-------+---------|
+| royaltyInfo                                                                       | 2824            | 3938  | 5006   | 5006  | 548     |
+|-----------------------------------------------------------------------------------+-----------------+-------+--------+-------+---------|
+| setDefaultRoyalty                                                                 | 27031           | 43833 | 44143  | 44143 | 279     |
+|-----------------------------------------------------------------------------------+-----------------+-------+--------+-------+---------|
+| setTokenRoyalty                                                                   | 44402           | 44471 | 44438  | 44798 | 268     |
+╰-----------------------------------------------------------------------------------+-----------------+-------+--------+-------+---------╯
+
+
+Ran 10 test suites in 1.68s (1.46s CPU time): 366 tests passed, 0 failed, 0 skipped (366 total tests)
