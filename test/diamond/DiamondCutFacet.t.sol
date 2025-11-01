@@ -4,8 +4,7 @@ pragma solidity >=0.8.30;
 import {Vm} from "forge-std/Vm.sol";
 import {console2} from "forge-std/console2.sol";
 import {Test} from "forge-std/Test.sol";
-import {DiamondCutFacet} from "../../src/diamond/DiamondCutFacet.sol";
-import {DiamondCutFacetHarness} from "./harnesses/DiamondCutFacetHarness.sol";
+import {DiamondCutFacetHarness, DiamondCutFacet} from "./harnesses/DiamondCutFacetHarness.sol";
 import {ERC20FacetHarness} from "../token/ERC20/ERC20/harnesses/ERC20FacetHarness.sol";
 import {ERC20FacetHarnessWithFallback} from "./harnesses/ERC20FacetHarnessWithFallback.sol";
 

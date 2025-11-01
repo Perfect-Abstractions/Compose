@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity >=0.8.30;
 
-import {ERC20Facet} from "../../../../../src/token/ERC20/ERC20/ERC20Facet.sol";
+import {ERC20Facet} from "../../../src/token/ERC20/ERC20/ERC20Facet.sol";
 
 /// @title ERC20FacetHarness
 /// @notice Test harness for ERC20Facet that adds initialization and minting for testing
