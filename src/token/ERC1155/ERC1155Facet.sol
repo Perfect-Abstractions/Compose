@@ -257,9 +257,8 @@ contract ERC1155Facet {
         emit TransferSingle(msg.sender, _from, _to, _id, _value);
 
         if (_to.code.length > 0) {
-            try IERC1155Receiver(_to).onERC1155Received(msg.sender, _from, _id, _value, _data) returns (
-                bytes4 response
-            ) {
+            try IERC1155Receiver(_to).onERC1155Received(msg.sender, _from, _id, _value, _data) returns (bytes4 response)
+            {
                 if (response != IERC1155Receiver.onERC1155Received.selector) {
                     revert ERC1155InvalidReceiver(_to);
                 }
