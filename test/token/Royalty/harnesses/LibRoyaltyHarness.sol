@@ -56,4 +56,3 @@ contract LibRoyaltyHarness {
         return LibRoyalty.getStorage().tokenRoyaltyInfo[_tokenId].royaltyFraction;
     }
 }
-

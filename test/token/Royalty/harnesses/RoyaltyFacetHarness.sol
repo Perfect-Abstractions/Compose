@@ -21,4 +21,3 @@ contract RoyaltyFacetHarness is RoyaltyFacet {
         s.tokenRoyaltyInfo[_tokenId] = RoyaltyInfo(_receiver, _feeNumerator);
     }
 }
-

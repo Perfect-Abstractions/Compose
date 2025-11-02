@@ -525,4 +525,3 @@ contract LibRoyaltyTest is Test {
         assertEq(royalty3, 0);
     }
 }
-
