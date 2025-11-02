@@ -35,6 +35,10 @@ contract LoupeGasBenchmarkTest is Test {
         diamond.initialize(dc, args);
     }
 
+    /*//////////////////////////////////////////////////////////////
+                            STORAGE HELPERS
+    //////////////////////////////////////////////////////////////*/
+
     function _facetAndPositionsSlot(bytes4 selector) internal pure returns (bytes32) {
         return keccak256(abi.encode(selector, DIAMOND_STORAGE_POSITION));
     }
@@ -45,5 +49,29 @@ contract LoupeGasBenchmarkTest is Test {
 
     function _storeFacetAndPosition(address account, bytes4 selector, address facet, uint16 position) internal {
         vm.store(account, _facetAndPositionsSlot(selector), _packFacetAndPosition(facet, position));
+    }
+
+    function _selectorsLengthSlot() internal pure returns (bytes32) {
+        return bytes32(uint256(DIAMOND_STORAGE_POSITION) + 1);
+    }
+
+    function _selectorsDataBase() internal pure returns (bytes32) {
+        return keccak256(abi.encode(uint256(DIAMOND_STORAGE_POSITION) + 1));
+    }
+
+    function _storeSelectorAtIndex(address account, bytes4 selector, uint256 index) internal {
+        bytes32 base = _selectorsDataBase();
+        uint256 packedWordIndex = index / 8;
+        uint256 laneIndex = index % 8;
+        bytes32 packedWordSlot = bytes32(uint256(base) + packedWordIndex);
+
+        bytes32 oldPackedWord = vm.load(account, packedWordSlot);
+
+        uint256 laneShiftBits = laneIndex * 32;
+        uint256 clearLaneMask = ~(uint256(0xffffffff) << laneShiftBits);
+        uint256 laneInsertBits = (uint256(uint32(selector)) << laneShiftBits);
+        uint256 newPackedWord = (uint256(oldPackedWord) & clearLaneMask) | laneInsertBits;
+
+        vm.store(account, packedWordSlot, bytes32(newPackedWord));
     }
 }
