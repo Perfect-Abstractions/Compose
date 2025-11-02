@@ -34,94 +34,123 @@ contract DiamondLoupeFacet {
         bytes4[] functionSelectors;
     }
 
+    struct FacetInfo {
+        address facet;
+        bytes4[] selectors;
+        uint256 count;
+    }
+
     /// @notice Gets all facets and their selectors.
-    /// @return allFacetsAndSelectors Facet
-    function facets() external view returns (Facet[] memory allFacetsAndSelectors) {
+    /// @return facetsAndSelectors Facet
+    function facets() external view returns (Facet[] memory facetsAndSelectors) {
         DiamondStorage storage s = getStorage();
-        uint256 selectorCount = s.selectors.length;
+        bytes4[] memory selectors = s.selectors;
+        bytes4 selector;
+        uint256 selectorsCount = selectors.length;
     
-        // First pass: count unique facets
-        uint256 numFacets;        
-        uint256 uniqueFacetsArray;
-        uint256 uniqueFacetAndCount;
+        // This is an array of pointers to FacetInfo structs which don't exist yet.                
+        // We will fill in the actual FacetInfo structs as we go.
+        uint256[] memory facetInfoPointers = new uint256[](selectorsCount);
+        uint256 pointer;
+        FacetInfo memory facetInfo;
 
-        assembly ("memory-safe") {
-            // Set uniqueFacetsArray position in memory
-            uniqueFacetsArray := mload(0x40)            
-        }
-        
+        uint256[][256] memory map;
+        uint256 key;
+        uint256[] memory mapFacetInfoPointers;
+                        
+        // count unique facets
+        uint256 numFacets;                     
         // Count unique facets and their selectors
-        for (uint256 i; i < selectorCount; i++) {
-            address facet = s.facetAndPosition[s.selectors[i]].facet;
-            
-            // Look for existing facet
-            uint256 facetIndex;
-            for (; facetIndex < numFacets; facetIndex++) {                      
-                assembly ("memory-safe") {
-                    // Load facet address from uniqueFacets array
-                    uniqueFacetAndCount := mload(add(uniqueFacetsArray, mul(facetIndex, 0x20)))
+        for (uint256 i; i < selectorsCount; i++) {            
+            selector = selectors[i];
+            address facet = s.facetAndPosition[selector].facet;                        
+            // Look for existing facet            
+            key =  uint256(uint160(facet)) & 0xff;
+            mapFacetInfoPointers = map[key];
+            bool found;          
+            uint256 mapIndex;
+            for(; mapIndex < mapFacetInfoPointers.length; mapIndex++) {
+                pointer = mapFacetInfoPointers[mapIndex];
+                if(pointer == 0) {
+                    break;
                 }
-                if (address(uint160(uniqueFacetAndCount >> 0x20)) == facet) {
-                    assembly ("memory-safe") {
-                        // Increment the selector count for this facet in uniqueFacets array
-                        mstore(
-                            add(uniqueFacetsArray, mul(facetIndex, 0x20)), 
-                            add(uniqueFacetAndCount, 1)
-                        )
+                assembly ("memory-safe") {
+                    facetInfo := pointer
+                }
+                if(facetInfo.facet == facet) {
+                    found = true;
+                    if(facetInfo.count == facetInfo.selectors.length) {
+                        // expand array
+                        bytes4[] memory selectorStorage = new bytes4[](facetInfo.count + 20);
+                        for(uint256 k; k < facetInfo.count; k++) {
+                            selectorStorage[k] = facetInfo.selectors[k];
+                        }
+                        facetInfo.selectors = selectorStorage;
+                    }
+                    facetInfo.selectors[facetInfo.count] = selector;
+                    unchecked {
+                        facetInfo.count++;
                     }
                     break;
                 }
-            }            
-            // If facet not found, add it
-            if (facetIndex == numFacets) {                                
-                assembly ("memory-safe") {
-                    // Combine facet address and selectors count into a single value to store in uniqueFacetsArray
-                    let facetAndSelectorsCount := or(shl(0x20, facet), 1)
-                    // Store in uniqueFacets array
-                    mstore(add(uniqueFacetsArray, mul(facetIndex, 0x20)), facetAndSelectorsCount)
-                }
-                numFacets++;
             }
-        }
-        assembly ("memory-safe") {
-            // Move the free memory pointer after the uniqueFacetsArray
-            mstore(0x40, add(0x20, add(uniqueFacetsArray, mul(numFacets, 0x20))))
+
+            // There are 3 ways a facet is not found:
+            // 1. The facet key has never been used in the map. 
+            //    Therefore mapIndex is 0 and mapFacetInfoPointers.length is 0.
+            // 2. The facet key has been used, ane we started iterating over the
+            //    mapFacetInfoPointers and we found an empty one (0).
+            // 3. The facet key has been used, and we iterated over all the mapFacetInfoPointers
+            //    and the facet address wasn't found.            
+            
+            // If facet not found, add it            
+            if(found == false) {
+                // The facet key has never been used in the map
+                if(mapIndex == 0) {
+                    mapFacetInfoPointers = new uint256[](3);
+                }
+                // Facet address was not found in all the mapFacetInfoPointers
+                else if(mapIndex == mapFacetInfoPointers.length) {                    
+                    // expand
+                    uint256[] memory newPointers = new uint256[](mapIndex + 3);
+                    for(uint256 k; k < mapIndex; k++) {
+                        newPointers[k] = mapFacetInfoPointers[k];
+                    }
+                    mapFacetInfoPointers = newPointers;
+                } // else we found an empty mapFacetInfoPointer (0)
+                               
+                map[key] = mapFacetInfoPointers;
+                bytes4[] memory selectorStorage = new bytes4[](20);
+                selectorStorage[0] = selector;
+                facetInfo = FacetInfo({facet: facet, selectors: selectorStorage, count: 1});
+                assembly ("memory-safe") {
+                    pointer := facetInfo
+                }
+                mapFacetInfoPointers[mapIndex] = pointer;
+                facetInfoPointers[numFacets] = pointer;
+                unchecked {
+                    numFacets++;    
+                }                
+            }
         }
 
-        
+        facetsAndSelectors = new Facet[](numFacets);
+
         // Allocate return array with exact size
-        allFacetsAndSelectors = new Facet[](numFacets);
-        
-        // Initialize facet arrays with correct sizes
-        for (uint256 i; i < numFacets; i++) {
+        // allFacets = new Facet[](numFacets);
+        for (uint256 i; i < numFacets; i++) {            
+            pointer = facetInfoPointers[i];
+            assembly ("memory-safe") {
+                facetInfo := pointer
+            }            
+            facetsAndSelectors[i].facet = facetInfo.facet;
+            bytes4[] memory facetSelectors = facetInfo.selectors;
+            uint256 facetSelectorCount = facetInfo.count;
             assembly {
-                uniqueFacetAndCount := mload(add(uniqueFacetsArray, mul(i, 0x20)))
+                mstore(facetSelectors, facetSelectorCount)
             }
-            allFacetsAndSelectors[i].facet = address(uint160(uniqueFacetAndCount >> 0x20));
-            allFacetsAndSelectors[i].functionSelectors = new bytes4[](uniqueFacetAndCount & 0xFFFFFFFF);
+            facetsAndSelectors[i].functionSelectors = facetSelectors;            
         }
-        
-        // Second pass: populate selector arrays
-        for (uint256 i; i < selectorCount; i++) {
-            bytes4 selector = s.selectors[i];
-            address facet = s.facetAndPosition[selector].facet;
-            
-            // Find the facet index
-            for (uint256 facetIndex; facetIndex < numFacets; facetIndex++) {
-                if (allFacetsAndSelectors[facetIndex].facet == facet) {
-                    uint256 selectorIndex;
-                    assembly ("memory-safe") {
-                        // Load the current selector count for this facet from uniqueFacets array
-                        selectorIndex := sub(mload(add(uniqueFacetsArray, mul(facetIndex, 0x20))), 1)
-                        mstore(add(uniqueFacetsArray, mul(facetIndex, 0x20)), selectorIndex)
-                        selectorIndex := and(selectorIndex, 0xFFFFFFFF) // Mask to get the selector index for this facet
-                    }
-                    allFacetsAndSelectors[facetIndex].functionSelectors[selectorIndex] = selector;
-                    break;
-                }
-            }
-        }
-      
     }
 
     /// @notice Gets all the function selectors supported by a specific facet.
