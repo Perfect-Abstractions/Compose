@@ -154,6 +154,72 @@ contract LibERC1155Test is Test {
         harness.mintBatch(alice, ids, amounts);
     }
 
+    function test_MintBatch_EmptyArrays() public {
+        uint256[] memory ids = new uint256[](0);
+        uint256[] memory amounts = new uint256[](0);
+
+        harness.mintBatch(alice, ids, amounts);
+        // Should not revert
+    }
+
+    function test_Mint_ToReceiverContract() public {
+        ERC1155ReceiverMock receiver = new ERC1155ReceiverMock(
+            RECEIVER_SINGLE_MAGIC_VALUE, RECEIVER_BATCH_MAGIC_VALUE, ERC1155ReceiverMock.RevertType.None
+        );
+
+        harness.mint(address(receiver), TOKEN_ID_1, 100);
+        assertEq(harness.balanceOf(address(receiver), TOKEN_ID_1), 100);
+    }
+
+    function test_RevertWhen_Mint_ToReceiverContractWithWrongReturnValue() public {
+        ERC1155ReceiverMock receiver =
+            new ERC1155ReceiverMock(0x00c0ffee, RECEIVER_BATCH_MAGIC_VALUE, ERC1155ReceiverMock.RevertType.None);
+
+        vm.expectRevert(abi.encodeWithSelector(LibERC1155.ERC1155InvalidReceiver.selector, address(receiver)));
+        harness.mint(address(receiver), TOKEN_ID_1, 100);
+    }
+
+    function test_RevertWhen_Mint_ToReceiverContractWithRevert() public {
+        ERC1155ReceiverMock receiver = new ERC1155ReceiverMock(
+            RECEIVER_SINGLE_MAGIC_VALUE, RECEIVER_BATCH_MAGIC_VALUE, ERC1155ReceiverMock.RevertType.RevertWithMessage
+        );
+
+        vm.expectRevert("ERC1155ReceiverMock: reverting on receive");
+        harness.mint(address(receiver), TOKEN_ID_1, 100);
+    }
+
+    function test_MintBatch_ToReceiverContract() public {
+        ERC1155ReceiverMock receiver = new ERC1155ReceiverMock(
+            RECEIVER_SINGLE_MAGIC_VALUE, RECEIVER_BATCH_MAGIC_VALUE, ERC1155ReceiverMock.RevertType.None
+        );
+
+        uint256[] memory ids = new uint256[](2);
+        ids[0] = TOKEN_ID_1;
+        ids[1] = TOKEN_ID_2;
+
+        uint256[] memory amounts = new uint256[](2);
+        amounts[0] = 100;
+        amounts[1] = 200;
+
+        harness.mintBatch(address(receiver), ids, amounts);
+        assertEq(harness.balanceOf(address(receiver), TOKEN_ID_1), 100);
+        assertEq(harness.balanceOf(address(receiver), TOKEN_ID_2), 200);
+    }
+
+    function test_RevertWhen_MintBatch_ToReceiverContractWithWrongReturnValue() public {
+        ERC1155ReceiverMock receiver = new ERC1155ReceiverMock(
+            RECEIVER_SINGLE_MAGIC_VALUE, RECEIVER_SINGLE_MAGIC_VALUE, ERC1155ReceiverMock.RevertType.None
+        );
+
+        uint256[] memory ids = new uint256[](1);
+        ids[0] = TOKEN_ID_1;
+        uint256[] memory amounts = new uint256[](1);
+        amounts[0] = 100;
+
+        vm.expectRevert(abi.encodeWithSelector(LibERC1155.ERC1155InvalidReceiver.selector, address(receiver)));
+        harness.mintBatch(address(receiver), ids, amounts);
+    }
+
     // ============================================
     // Burn Tests
     // ============================================
@@ -546,6 +612,10 @@ contract LibERC1155Test is Test {
         assertEq(harness.balanceOf(alice, TOKEN_ID_2), 200);
     }
 
+    function test_BalanceOf_ZeroAddress() public view {
+        assertEq(harness.balanceOf(address(0), TOKEN_ID_1), 0);
+    }
+
     // ============================================
     // BalanceOfBatch Tests
     // ============================================
@@ -572,6 +642,68 @@ contract LibERC1155Test is Test {
         assertEq(balances[2], 300);
     }
 
+    function test_BalanceOfBatch_EmptyArrays() public view {
+        address[] memory accounts = new address[](0);
+        uint256[] memory ids = new uint256[](0);
+
+        uint256[] memory balances = harness.balanceOfBatch(accounts, ids);
+        assertEq(balances.length, 0);
+    }
+
+    function test_BalanceOfBatch_SameAccountMultipleTimes() public {
+        harness.mint(alice, TOKEN_ID_1, 100);
+        harness.mint(alice, TOKEN_ID_2, 200);
+
+        address[] memory accounts = new address[](2);
+        accounts[0] = alice;
+        accounts[1] = alice;
+
+        uint256[] memory ids = new uint256[](2);
+        ids[0] = TOKEN_ID_1;
+        ids[1] = TOKEN_ID_2;
+
+        uint256[] memory balances = harness.balanceOfBatch(accounts, ids);
+        assertEq(balances[0], 100);
+        assertEq(balances[1], 200);
+    }
+
+    function test_BalanceOfBatch_DifferentAccountsSameTokenId() public {
+        harness.mint(alice, TOKEN_ID_1, 100);
+        harness.mint(bob, TOKEN_ID_1, 200);
+
+        address[] memory accounts = new address[](2);
+        accounts[0] = alice;
+        accounts[1] = bob;
+
+        uint256[] memory ids = new uint256[](2);
+        ids[0] = TOKEN_ID_1;
+        ids[1] = TOKEN_ID_1;
+
+        uint256[] memory balances = harness.balanceOfBatch(accounts, ids);
+        assertEq(balances[0], 100);
+        assertEq(balances[1], 200);
+    }
+
+    function test_BalanceOfBatch_WithZeroAddress() public {
+        harness.mint(alice, TOKEN_ID_1, 100);
+        harness.mint(bob, TOKEN_ID_3, 300);
+
+        address[] memory accounts = new address[](3);
+        accounts[0] = alice;
+        accounts[1] = address(0);
+        accounts[2] = bob;
+
+        uint256[] memory ids = new uint256[](3);
+        ids[0] = TOKEN_ID_1;
+        ids[1] = TOKEN_ID_2;
+        ids[2] = TOKEN_ID_3;
+
+        uint256[] memory balances = harness.balanceOfBatch(accounts, ids);
+        assertEq(balances[0], 100);
+        assertEq(balances[1], 0);
+        assertEq(balances[2], 300);
+    }
+
     // ============================================
     // Approval Tests
     // ============================================
@@ -591,6 +723,13 @@ contract LibERC1155Test is Test {
         harness.setApprovalForAll(bob, false);
 
         assertFalse(harness.isApprovedForAll(alice, bob));
+    }
+
+    function test_SetApprovalForAll_Self() public {
+        vm.prank(alice);
+        harness.setApprovalForAll(alice, true);
+
+        assertTrue(harness.isApprovedForAll(alice, alice));
     }
 
     function testFuzz_SetApprovalForAll(address owner, address operator, bool approved) public {
@@ -686,6 +825,23 @@ contract LibERC1155Test is Test {
         assertEq(harness.balanceOf(address(receiver), TOKEN_ID_2), 100);
     }
 
+    function test_RevertWhen_SafeBatchTransferFrom_ToContractWithRevertNoMessage() public {
+        ERC1155ReceiverMock receiver = new ERC1155ReceiverMock(
+            RECEIVER_SINGLE_MAGIC_VALUE, RECEIVER_BATCH_MAGIC_VALUE, ERC1155ReceiverMock.RevertType.RevertWithoutMessage
+        );
+
+        uint256[] memory ids = new uint256[](1);
+        ids[0] = TOKEN_ID_1;
+        uint256[] memory amounts = new uint256[](1);
+        amounts[0] = 50;
+
+        harness.mint(alice, TOKEN_ID_1, 100);
+
+        vm.prank(alice);
+        vm.expectRevert(abi.encodeWithSelector(LibERC1155.ERC1155InvalidReceiver.selector, address(receiver)));
+        harness.safeBatchTransferFrom(alice, address(receiver), ids, amounts);
+    }
+
     function test_RevertWhen_SafeBatchTransferFrom_ToContractWithWrongReturnValue() public {
         ERC1155ReceiverMock receiver = new ERC1155ReceiverMock(
             RECEIVER_SINGLE_MAGIC_VALUE,
@@ -722,6 +878,124 @@ contract LibERC1155Test is Test {
         vm.prank(alice);
         vm.expectRevert("ERC1155ReceiverMock: reverting on batch receive");
         harness.safeBatchTransferFrom(alice, address(receiver), ids, amounts);
+    }
+
+    function test_RevertWhen_SafeTransferFrom_ToContractWithPanic() public {
+        ERC1155ReceiverMock receiver = new ERC1155ReceiverMock(
+            RECEIVER_SINGLE_MAGIC_VALUE, RECEIVER_BATCH_MAGIC_VALUE, ERC1155ReceiverMock.RevertType.Panic
+        );
+
+        harness.mint(alice, TOKEN_ID_1, 100);
+
+        vm.prank(alice);
+        vm.expectRevert();
+        harness.safeTransferFrom(alice, address(receiver), TOKEN_ID_1, 50);
+    }
+
+    function test_RevertWhen_SafeBatchTransferFrom_ToContractWithPanic() public {
+        ERC1155ReceiverMock receiver = new ERC1155ReceiverMock(
+            RECEIVER_SINGLE_MAGIC_VALUE, RECEIVER_BATCH_MAGIC_VALUE, ERC1155ReceiverMock.RevertType.Panic
+        );
+
+        uint256[] memory ids = new uint256[](1);
+        ids[0] = TOKEN_ID_1;
+        uint256[] memory amounts = new uint256[](1);
+        amounts[0] = 50;
+
+        harness.mint(alice, TOKEN_ID_1, 100);
+
+        vm.prank(alice);
+        vm.expectRevert();
+        harness.safeBatchTransferFrom(alice, address(receiver), ids, amounts);
+    }
+
+    function test_RevertWhen_SafeTransferFrom_ToContractWithCustomError() public {
+        ERC1155ReceiverMock receiver = new ERC1155ReceiverMock(
+            RECEIVER_SINGLE_MAGIC_VALUE,
+            RECEIVER_BATCH_MAGIC_VALUE,
+            ERC1155ReceiverMock.RevertType.RevertWithCustomError
+        );
+
+        harness.mint(alice, TOKEN_ID_1, 100);
+
+        vm.prank(alice);
+        vm.expectRevert(abi.encodeWithSelector(ERC1155ReceiverMock.CustomError.selector, RECEIVER_SINGLE_MAGIC_VALUE));
+        harness.safeTransferFrom(alice, address(receiver), TOKEN_ID_1, 50);
+    }
+
+    function test_RevertWhen_SafeBatchTransferFrom_ToContractWithCustomError() public {
+        ERC1155ReceiverMock receiver = new ERC1155ReceiverMock(
+            RECEIVER_SINGLE_MAGIC_VALUE,
+            RECEIVER_BATCH_MAGIC_VALUE,
+            ERC1155ReceiverMock.RevertType.RevertWithCustomError
+        );
+
+        uint256[] memory ids = new uint256[](1);
+        ids[0] = TOKEN_ID_1;
+        uint256[] memory amounts = new uint256[](1);
+        amounts[0] = 50;
+
+        harness.mint(alice, TOKEN_ID_1, 100);
+
+        vm.prank(alice);
+        vm.expectRevert(abi.encodeWithSelector(ERC1155ReceiverMock.CustomError.selector, RECEIVER_BATCH_MAGIC_VALUE));
+        harness.safeBatchTransferFrom(alice, address(receiver), ids, amounts);
+    }
+
+    function test_SafeBatchTransferFrom_EmptyArrays() public {
+        uint256[] memory ids = new uint256[](0);
+        uint256[] memory amounts = new uint256[](0);
+
+        vm.prank(alice);
+        harness.safeBatchTransferFrom(alice, bob, ids, amounts);
+        // Should not revert
+    }
+
+    function test_SafeBatchTransferFrom_WithZeroAmounts() public {
+        uint256[] memory ids = new uint256[](3);
+        ids[0] = TOKEN_ID_1;
+        ids[1] = TOKEN_ID_2;
+        ids[2] = TOKEN_ID_3;
+
+        uint256[] memory amounts = new uint256[](3);
+        amounts[0] = 100;
+        amounts[1] = 200;
+        amounts[2] = 300;
+
+        harness.mintBatch(alice, ids, amounts);
+
+        uint256[] memory transferAmounts = new uint256[](3);
+        transferAmounts[0] = 30;
+        transferAmounts[1] = 0; // Zero amount
+        transferAmounts[2] = 50;
+
+        vm.prank(alice);
+        harness.safeBatchTransferFrom(alice, bob, ids, transferAmounts);
+
+        assertEq(harness.balanceOf(alice, TOKEN_ID_1), 70);
+        assertEq(harness.balanceOf(alice, TOKEN_ID_2), 200);
+        assertEq(harness.balanceOf(alice, TOKEN_ID_3), 250);
+        assertEq(harness.balanceOf(bob, TOKEN_ID_1), 30);
+        assertEq(harness.balanceOf(bob, TOKEN_ID_2), 0);
+        assertEq(harness.balanceOf(bob, TOKEN_ID_3), 50);
+    }
+
+    function test_SafeBatchTransferFrom_DuplicateTokenIds() public {
+        harness.mint(alice, TOKEN_ID_1, 100);
+
+        uint256[] memory ids = new uint256[](2);
+        ids[0] = TOKEN_ID_1;
+        ids[1] = TOKEN_ID_1; // Duplicate
+
+        uint256[] memory amounts = new uint256[](2);
+        amounts[0] = 10;
+        amounts[1] = 20;
+
+        vm.prank(alice);
+        harness.safeBatchTransferFrom(alice, bob, ids, amounts);
+
+        assertEq(harness.balanceOf(alice, TOKEN_ID_1), 70);
+        assertEq(harness.balanceOf(bob, TOKEN_ID_1), 30);
     }
 
     // ============================================

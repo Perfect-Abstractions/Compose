@@ -79,12 +79,8 @@ contract ERC1155FacetTest is Test {
         assertEq(facet.balanceOf(alice, TOKEN_ID_2), 200);
     }
 
-    function test_BalanceOf_MultipleAccounts() public {
-        facet.mint(alice, TOKEN_ID_1, 100);
-        facet.mint(bob, TOKEN_ID_1, 200);
-
-        assertEq(facet.balanceOf(alice, TOKEN_ID_1), 100);
-        assertEq(facet.balanceOf(bob, TOKEN_ID_1), 200);
+    function test_BalanceOf_ZeroAddress() public view {
+        assertEq(facet.balanceOf(address(0), TOKEN_ID_1), 0);
     }
 
     // ============================================
@@ -125,6 +121,68 @@ contract ERC1155FacetTest is Test {
         facet.balanceOfBatch(accounts, ids);
     }
 
+    function test_BalanceOfBatch_EmptyArrays() public view {
+        address[] memory accounts = new address[](0);
+        uint256[] memory ids = new uint256[](0);
+
+        uint256[] memory balances = facet.balanceOfBatch(accounts, ids);
+        assertEq(balances.length, 0);
+    }
+
+    function test_BalanceOfBatch_SameAccountMultipleTimes() public {
+        facet.mint(alice, TOKEN_ID_1, 100);
+        facet.mint(alice, TOKEN_ID_2, 200);
+
+        address[] memory accounts = new address[](2);
+        accounts[0] = alice;
+        accounts[1] = alice;
+
+        uint256[] memory ids = new uint256[](2);
+        ids[0] = TOKEN_ID_1;
+        ids[1] = TOKEN_ID_2;
+
+        uint256[] memory balances = facet.balanceOfBatch(accounts, ids);
+        assertEq(balances[0], 100);
+        assertEq(balances[1], 200);
+    }
+
+    function test_BalanceOfBatch_DifferentAccountsSameTokenId() public {
+        facet.mint(alice, TOKEN_ID_1, 100);
+        facet.mint(bob, TOKEN_ID_1, 200);
+
+        address[] memory accounts = new address[](2);
+        accounts[0] = alice;
+        accounts[1] = bob;
+
+        uint256[] memory ids = new uint256[](2);
+        ids[0] = TOKEN_ID_1;
+        ids[1] = TOKEN_ID_1;
+
+        uint256[] memory balances = facet.balanceOfBatch(accounts, ids);
+        assertEq(balances[0], 100);
+        assertEq(balances[1], 200);
+    }
+
+    function test_BalanceOfBatch_WithZeroAddress() public {
+        facet.mint(alice, TOKEN_ID_1, 100);
+        facet.mint(bob, TOKEN_ID_3, 300);
+
+        address[] memory accounts = new address[](3);
+        accounts[0] = alice;
+        accounts[1] = address(0);
+        accounts[2] = bob;
+
+        uint256[] memory ids = new uint256[](3);
+        ids[0] = TOKEN_ID_1;
+        ids[1] = TOKEN_ID_2;
+        ids[2] = TOKEN_ID_3;
+
+        uint256[] memory balances = facet.balanceOfBatch(accounts, ids);
+        assertEq(balances[0], 100);
+        assertEq(balances[1], 0);
+        assertEq(balances[2], 300);
+    }
+
     // ============================================
     // SetApprovalForAll Tests
     // ============================================
@@ -152,20 +210,17 @@ contract ERC1155FacetTest is Test {
         assertFalse(facet.isApprovedForAll(alice, bob));
     }
 
-    function test_SetApprovalForAll_MultipleOperators() public {
-        vm.startPrank(alice);
-        facet.setApprovalForAll(bob, true);
-        facet.setApprovalForAll(charlie, true);
-        vm.stopPrank();
-
-        assertTrue(facet.isApprovedForAll(alice, bob));
-        assertTrue(facet.isApprovedForAll(alice, charlie));
-    }
-
     function test_RevertWhen_SetApprovalForAllZeroAddress() public {
         vm.prank(alice);
         vm.expectRevert(abi.encodeWithSelector(ERC1155Facet.ERC1155InvalidOperator.selector, address(0)));
         facet.setApprovalForAll(address(0), true);
+    }
+
+    function test_SetApprovalForAll_Self() public {
+        vm.prank(alice);
+        facet.setApprovalForAll(alice, true);
+
+        assertTrue(facet.isApprovedForAll(alice, alice));
     }
 
     function testFuzz_SetApprovalForAll(address owner, address operator, bool approved) public {
@@ -516,6 +571,14 @@ contract ERC1155FacetTest is Test {
         facet.mintBatch(alice, ids, amounts);
     }
 
+    function test_MintBatch_EmptyArrays() public {
+        uint256[] memory ids = new uint256[](0);
+        uint256[] memory amounts = new uint256[](0);
+
+        facet.mintBatch(alice, ids, amounts);
+        // Should not revert
+    }
+
     // ============================================
     // Burn Tests (via Harness)
     // ============================================
@@ -653,6 +716,21 @@ contract ERC1155FacetTest is Test {
         assertEq(facet.balanceOf(address(receiver), TOKEN_ID_1), 50);
     }
 
+    function test_SafeTransferFrom_ForwardsDataParameter() public {
+        ERC1155ReceiverMock receiver = new ERC1155ReceiverMock(
+            RECEIVER_SINGLE_MAGIC_VALUE, RECEIVER_BATCH_MAGIC_VALUE, ERC1155ReceiverMock.RevertType.None
+        );
+
+        facet.mint(alice, TOKEN_ID_1, 100);
+
+        bytes memory data = hex"deadbeef";
+
+        vm.prank(alice);
+        vm.expectEmit(true, true, true, false);
+        emit ERC1155ReceiverMock.Received(alice, alice, TOKEN_ID_1, 50, data, 0);
+        facet.safeTransferFrom(alice, address(receiver), TOKEN_ID_1, 50, data);
+    }
+
     function test_RevertWhen_SafeTransferFrom_ToContractWithWrongReturnValue() public {
         ERC1155ReceiverMock receiver = new ERC1155ReceiverMock(
             0x00c0ffee, // Wrong return value
@@ -719,6 +797,46 @@ contract ERC1155FacetTest is Test {
         assertEq(facet.balanceOf(address(receiver), TOKEN_ID_2), 100);
     }
 
+    function test_SafeBatchTransferFrom_ForwardsDataParameter() public {
+        ERC1155ReceiverMock receiver = new ERC1155ReceiverMock(
+            RECEIVER_SINGLE_MAGIC_VALUE, RECEIVER_BATCH_MAGIC_VALUE, ERC1155ReceiverMock.RevertType.None
+        );
+
+        uint256[] memory ids = new uint256[](2);
+        ids[0] = TOKEN_ID_1;
+        ids[1] = TOKEN_ID_2;
+
+        uint256[] memory amounts = new uint256[](2);
+        amounts[0] = 50;
+        amounts[1] = 100;
+
+        facet.mintBatch(alice, ids, amounts);
+
+        bytes memory data = hex"c0ffee";
+
+        vm.prank(alice);
+        vm.expectEmit(true, true, true, false);
+        emit ERC1155ReceiverMock.BatchReceived(alice, alice, ids, amounts, data, 0);
+        facet.safeBatchTransferFrom(alice, address(receiver), ids, amounts, data);
+    }
+
+    function test_RevertWhen_SafeBatchTransferFrom_ToContractWithRevertNoMessage() public {
+        ERC1155ReceiverMock receiver = new ERC1155ReceiverMock(
+            RECEIVER_SINGLE_MAGIC_VALUE, RECEIVER_BATCH_MAGIC_VALUE, ERC1155ReceiverMock.RevertType.RevertWithoutMessage
+        );
+
+        uint256[] memory ids = new uint256[](1);
+        ids[0] = TOKEN_ID_1;
+        uint256[] memory amounts = new uint256[](1);
+        amounts[0] = 50;
+
+        facet.mint(alice, TOKEN_ID_1, 100);
+
+        vm.prank(alice);
+        vm.expectRevert(abi.encodeWithSelector(ERC1155Facet.ERC1155InvalidReceiver.selector, address(receiver)));
+        facet.safeBatchTransferFrom(alice, address(receiver), ids, amounts, "");
+    }
+
     function test_RevertWhen_SafeBatchTransferFrom_ToContractWithWrongReturnValue() public {
         ERC1155ReceiverMock receiver = new ERC1155ReceiverMock(
             RECEIVER_SINGLE_MAGIC_VALUE,
@@ -755,6 +873,124 @@ contract ERC1155FacetTest is Test {
         vm.prank(alice);
         vm.expectRevert("ERC1155ReceiverMock: reverting on batch receive");
         facet.safeBatchTransferFrom(alice, address(receiver), ids, amounts, "");
+    }
+
+    function test_RevertWhen_SafeTransferFrom_ToContractWithPanic() public {
+        ERC1155ReceiverMock receiver = new ERC1155ReceiverMock(
+            RECEIVER_SINGLE_MAGIC_VALUE, RECEIVER_BATCH_MAGIC_VALUE, ERC1155ReceiverMock.RevertType.Panic
+        );
+
+        facet.mint(alice, TOKEN_ID_1, 100);
+
+        vm.prank(alice);
+        vm.expectRevert();
+        facet.safeTransferFrom(alice, address(receiver), TOKEN_ID_1, 50, "");
+    }
+
+    function test_RevertWhen_SafeBatchTransferFrom_ToContractWithPanic() public {
+        ERC1155ReceiverMock receiver = new ERC1155ReceiverMock(
+            RECEIVER_SINGLE_MAGIC_VALUE, RECEIVER_BATCH_MAGIC_VALUE, ERC1155ReceiverMock.RevertType.Panic
+        );
+
+        uint256[] memory ids = new uint256[](1);
+        ids[0] = TOKEN_ID_1;
+        uint256[] memory amounts = new uint256[](1);
+        amounts[0] = 50;
+
+        facet.mint(alice, TOKEN_ID_1, 100);
+
+        vm.prank(alice);
+        vm.expectRevert();
+        facet.safeBatchTransferFrom(alice, address(receiver), ids, amounts, "");
+    }
+
+    function test_RevertWhen_SafeTransferFrom_ToContractWithCustomError() public {
+        ERC1155ReceiverMock receiver = new ERC1155ReceiverMock(
+            RECEIVER_SINGLE_MAGIC_VALUE,
+            RECEIVER_BATCH_MAGIC_VALUE,
+            ERC1155ReceiverMock.RevertType.RevertWithCustomError
+        );
+
+        facet.mint(alice, TOKEN_ID_1, 100);
+
+        vm.prank(alice);
+        vm.expectRevert(abi.encodeWithSelector(ERC1155ReceiverMock.CustomError.selector, RECEIVER_SINGLE_MAGIC_VALUE));
+        facet.safeTransferFrom(alice, address(receiver), TOKEN_ID_1, 50, "");
+    }
+
+    function test_RevertWhen_SafeBatchTransferFrom_ToContractWithCustomError() public {
+        ERC1155ReceiverMock receiver = new ERC1155ReceiverMock(
+            RECEIVER_SINGLE_MAGIC_VALUE,
+            RECEIVER_BATCH_MAGIC_VALUE,
+            ERC1155ReceiverMock.RevertType.RevertWithCustomError
+        );
+
+        uint256[] memory ids = new uint256[](1);
+        ids[0] = TOKEN_ID_1;
+        uint256[] memory amounts = new uint256[](1);
+        amounts[0] = 50;
+
+        facet.mint(alice, TOKEN_ID_1, 100);
+
+        vm.prank(alice);
+        vm.expectRevert(abi.encodeWithSelector(ERC1155ReceiverMock.CustomError.selector, RECEIVER_BATCH_MAGIC_VALUE));
+        facet.safeBatchTransferFrom(alice, address(receiver), ids, amounts, "");
+    }
+
+    function test_SafeBatchTransferFrom_EmptyArrays() public {
+        uint256[] memory ids = new uint256[](0);
+        uint256[] memory amounts = new uint256[](0);
+
+        vm.prank(alice);
+        facet.safeBatchTransferFrom(alice, bob, ids, amounts, "");
+        // Should not revert
+    }
+
+    function test_SafeBatchTransferFrom_WithZeroAmounts() public {
+        uint256[] memory ids = new uint256[](3);
+        ids[0] = TOKEN_ID_1;
+        ids[1] = TOKEN_ID_2;
+        ids[2] = TOKEN_ID_3;
+
+        uint256[] memory amounts = new uint256[](3);
+        amounts[0] = 100;
+        amounts[1] = 200;
+        amounts[2] = 300;
+
+        facet.mintBatch(alice, ids, amounts);
+
+        uint256[] memory transferAmounts = new uint256[](3);
+        transferAmounts[0] = 30;
+        transferAmounts[1] = 0; // Zero amount
+        transferAmounts[2] = 50;
+
+        vm.prank(alice);
+        facet.safeBatchTransferFrom(alice, bob, ids, transferAmounts, "");
+
+        assertEq(facet.balanceOf(alice, TOKEN_ID_1), 70);
+        assertEq(facet.balanceOf(alice, TOKEN_ID_2), 200);
+        assertEq(facet.balanceOf(alice, TOKEN_ID_3), 250);
+        assertEq(facet.balanceOf(bob, TOKEN_ID_1), 30);
+        assertEq(facet.balanceOf(bob, TOKEN_ID_2), 0);
+        assertEq(facet.balanceOf(bob, TOKEN_ID_3), 50);
+    }
+
+    function test_SafeBatchTransferFrom_DuplicateTokenIds() public {
+        facet.mint(alice, TOKEN_ID_1, 100);
+
+        uint256[] memory ids = new uint256[](2);
+        ids[0] = TOKEN_ID_1;
+        ids[1] = TOKEN_ID_1; // Duplicate
+
+        uint256[] memory amounts = new uint256[](2);
+        amounts[0] = 10;
+        amounts[1] = 20;
+
+        vm.prank(alice);
+        facet.safeBatchTransferFrom(alice, bob, ids, amounts, "");
+
+        assertEq(facet.balanceOf(alice, TOKEN_ID_1), 70);
+        assertEq(facet.balanceOf(bob, TOKEN_ID_1), 30);
     }
 
     // ============================================
