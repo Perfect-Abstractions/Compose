@@ -5,7 +5,7 @@ src = "src"
 out = "out"
 libs = ["lib"]
 optimizer = true
-via_ir = true
+#via_ir = true
 optimizer_runs = 20_000
 
 [profile.ci]
