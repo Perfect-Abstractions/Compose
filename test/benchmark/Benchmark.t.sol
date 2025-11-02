@@ -13,12 +13,14 @@ contract LoupeGasBenchmarkTest is Test {
     bytes32 internal constant DIAMOND_STORAGE_POSITION = keccak256("compose.diamond");
     uint256 internal constant NUM_FACETS = 200;
     uint256 internal constant SELECTORS_PER_FACET = 10;
+    uint256 internal constant NUM_LOUPE_SELECTORS = 4;
+    uint256 internal constant TOTAL_SELECTORS = NUM_FACETS * SELECTORS_PER_FACET + NUM_LOUPE_SELECTORS;
 
     function setUp() public {
         loupe = new DiamondLoupeFacet();
         diamond = new MinimalDiamond();
 
-        bytes4[] memory loupeSelectors = new bytes4[](4);
+        bytes4[] memory loupeSelectors = new bytes4[](NUM_LOUPE_SELECTORS);
         loupeSelectors[0] = DiamondLoupeFacet.facets.selector;
         loupeSelectors[1] = DiamondLoupeFacet.facetFunctionSelectors.selector;
         loupeSelectors[2] = DiamondLoupeFacet.facetAddresses.selector;
@@ -37,6 +39,50 @@ contract LoupeGasBenchmarkTest is Test {
         diamond.initialize(dc, args);
 
         _buildDiamond(address(diamond), NUM_FACETS, SELECTORS_PER_FACET);
+    }
+
+    /*//////////////////////////////////////////////////////////////
+                             GAS BENCHMARKS
+    //////////////////////////////////////////////////////////////*/
+
+    // Estimated gas: 370_049_638
+    function testGas_Loupe_Facets() external {
+        uint256 startGas = gasleft();
+        (bool success, bytes memory data) = address(diamond).call(abi.encodeCall(DiamondLoupeFacet.facets, ()));
+        emit log_uint(startGas - gasleft());
+
+        DiamondLoupeFacet.Facet[] memory allFacets = abi.decode(data, (DiamondLoupeFacet.Facet[]));
+        assertEq(allFacets.length, NUM_FACETS + 1); // plus Loupe
+    }
+
+    // Estimated gas: 5_889_482
+    function testGas_Loupe_FacetFunctionSelectors() external {
+        uint256 startGas = gasleft();
+        (bool success, bytes memory data) =
+            address(diamond).call(abi.encodeCall(DiamondLoupeFacet.facetFunctionSelectors, (address(loupe))));
+        emit log_uint(startGas - gasleft());
+
+        bytes4[] memory facetSelectors = abi.decode(data, (bytes4[]));
+        assertEq(facetSelectors.length, NUM_LOUPE_SELECTORS);
+    }
+
+    // Estimated gas: 31_606_629
+    function testGas_Loupe_FacetAddresses() external {
+        uint256 startGas = gasleft();
+        (bool success, bytes memory data) = address(diamond).call(abi.encodeCall(DiamondLoupeFacet.facetAddresses, ()));
+        emit log_uint(startGas - gasleft());
+
+        address[] memory allFacets = abi.decode(data, (address[]));
+        assertEq(allFacets.length, NUM_FACETS + 1); // plus Loupe
+    }
+
+    // Estimated gas: 12_654
+    function testGas_Loupe_FacetAddress() external {
+        uint256 startGas = gasleft();
+        (bool success, bytes memory data) = address(diamond).call(
+            abi.encodeCall(DiamondLoupeFacet.facetAddress, (DiamondLoupeFacet.facetAddresses.selector))
+        );
+        emit log_uint(startGas - gasleft());
     }
 
     /*//////////////////////////////////////////////////////////////
