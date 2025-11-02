@@ -37,7 +37,7 @@ contract DiamondLoupeFacetTest is Test {
     // }
 
     function testFacetsA() public view {
-        DiamondLoupeFacet.Facet[] memory facets = loupe.facets8();
+        DiamondLoupeFacet.Facet[] memory facets = loupe.facets9();
         console.log("facets length:", facets.length);
         for(uint256 i; i < facets.length; i++) {
             console.log("Facet", i, "address:", facets[i].facet);

@@ -11,11 +11,11 @@ contract DiamondLoupeFacetHarness is DiamondLoupeFacet {
     function initialize() external {
         DiamondStorage storage s = getStorage();
         address a = 0x71C7656EC7ab88b098defB751B7401B5f6d8976F;
-        for(uint256 i = 1; i < 501; i++) {
+        for(uint256 i = 1; i < 1001; i++) {
             bytes4 selector = bytes4(uint32(i));
             s.selectors.push(selector);
             s.facetAndPosition[selector] = FacetAndPosition(a, 0);
-            if(i % 5 == 0) {
+            if(i % 12 == 0) {
 
                 a = address(uint160(uint256(keccak256(abi.encodePacked(i)))));
             }
