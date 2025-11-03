@@ -15,7 +15,7 @@ We welcome contributions from the community. Here are some ways you can help:
 ### Reporting Issues
 
 If you find a bug or have a feature request, please open an issue on our repository.
-Testing.
+u
 
 ### Pull Requests
 
