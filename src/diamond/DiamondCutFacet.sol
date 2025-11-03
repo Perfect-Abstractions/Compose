@@ -34,7 +34,7 @@ contract DiamondCutFacet {
     error CannotRemoveImmutableFunction(bytes4 _selector);
     error InitializationFunctionReverted(address _initializationContractAddress, bytes _calldata);
 
-    bytes32 constant DIAMOND_STORAGE_POSITION = keccak256("compose.diamond");
+    bytes32 constant DIAMOND_STORAGE_POSITION = keccak256("compose.diamond"); 
 
     /// @notice Data stored for each function selector
     /// @dev Facet address of function selector
