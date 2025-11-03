@@ -122,4 +122,156 @@ contract LibDiamondHarnessTest is Test {
 
         assertEq(saveSelectors.length, _functionSelectors.length);
     }
+
+    // ============================================
+    // Error Condition Tests
+    // ============================================
+
+    function test_addFunctions_FacetWithZeroCode() public {
+        bytes4[] memory _functionSelectors = new bytes4[](1);
+        _functionSelectors[0] = bytes4(keccak256("decimals()"));
+
+        address facetWithZeroCode = makeAddr("zerocode");
+
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                LibDiamond.NoBytecodeAtAddress.selector, facetWithZeroCode, "LibDiamond: Add facet has no code"
+            )
+        );
+        harness.addFunctions(facetWithZeroCode, _functionSelectors);
+    }
+
+    function test_addFunctions_FacetThatAlreadyExists() public addFunctionSetup {
+        bytes4[] memory _functionSelectors = new bytes4[](1);
+        _functionSelectors[0] = bytes4(keccak256("decimals()"));
+
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                LibDiamond.CannotAddFunctionToDiamondThatAlreadyExists.selector, _functionSelectors[0]
+            )
+        );
+        harness.addFunctions(address(facet), _functionSelectors);
+    }
+
+    function test_replaceFunctions_FacetWithZeroCode() public addFunctionSetup {
+        bytes4[] memory _functionSelectors = new bytes4[](1);
+        _functionSelectors[0] = bytes4(keccak256("decimals()"));
+
+        address facetWithZeroCode = makeAddr("zerocode");
+
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                LibDiamond.NoBytecodeAtAddress.selector, facetWithZeroCode, "LibDiamond: Replace facet has no code"
+            )
+        );
+        harness.replaceFunctions(facetWithZeroCode, _functionSelectors);
+    }
+
+    function test_replaceFunctions_ReplacingImmutableFunction() public {
+        bytes4[] memory _functionSelectors = new bytes4[](1);
+        _functionSelectors[0] = bytes4(keccak256("decimals()"));
+
+        harness.addFunctions(address(harness), _functionSelectors);
+
+        vm.expectRevert(
+            abi.encodeWithSelector(LibDiamond.CannotReplaceImmutableFunction.selector, _functionSelectors[0])
+        );
+        harness.replaceFunctions(address(facet), _functionSelectors);
+    }
+
+    function test_replaceFunctions_ReplacingWithSameFacet() public addFunctionSetup {
+        bytes4[] memory _functionSelectors = new bytes4[](1);
+        _functionSelectors[0] = bytes4(keccak256("decimals()"));
+
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                LibDiamond.CannotReplaceFunctionWithTheSameFunctionFromTheSameFacet.selector, _functionSelectors[0]
+            )
+        );
+        harness.replaceFunctions(address(facet), _functionSelectors);
+    }
+
+    function test_replaceFunctions_ReplaceFunctionThatDoesNotExists() public addFunctionSetup {
+        bytes4[] memory _functionSelectors = new bytes4[](1);
+        _functionSelectors[0] = bytes4(keccak256("balanceOf()"));
+
+        ERC20FacetHarness newFacet = new ERC20FacetHarness();
+
+        vm.expectRevert(
+            abi.encodeWithSelector(LibDiamond.CannotReplaceFunctionThatDoesNotExists.selector, _functionSelectors[0])
+        );
+        harness.replaceFunctions(address(newFacet), _functionSelectors);
+    }
+
+    function test_removeFunctions_FacetAddressNotZero() public addFunctionSetup {
+        bytes4[] memory _functionSelectors = new bytes4[](1);
+        _functionSelectors[0] = bytes4(keccak256("decimals()"));
+
+        vm.expectRevert(abi.encodeWithSelector(LibDiamond.RemoveFacetAddressMustBeZeroAddress.selector, address(facet)));
+        harness.removeFunctions(address(facet), _functionSelectors);
+    }
+
+    function test_removeFunctions_RemovingFunctionThatDoesNotExists() public {
+        bytes4[] memory _functionSelectors = new bytes4[](1);
+        _functionSelectors[0] = bytes4(keccak256("decimals()"));
+
+        vm.expectRevert(
+            abi.encodeWithSelector(LibDiamond.CannotRemoveFunctionThatDoesNotExist.selector, _functionSelectors[0])
+        );
+        harness.removeFunctions(ADDRESS_ZERO, _functionSelectors);
+    }
+
+    function test_removeFunctions_RemovingImmutableFunction() public {
+        bytes4[] memory _functionSelectors = new bytes4[](1);
+        _functionSelectors[0] = bytes4(keccak256("decimals()"));
+
+        harness.addFunctions(address(harness), _functionSelectors);
+
+        vm.expectRevert(
+            abi.encodeWithSelector(LibDiamond.CannotRemoveImmutableFunction.selector, _functionSelectors[0])
+        );
+        harness.removeFunctions(ADDRESS_ZERO, _functionSelectors);
+    }
+
+    function test_diamondCut_InitAddressWithZeroCode() public {
+        bytes4[] memory _functionSelectors = new bytes4[](1);
+        _functionSelectors[0] = bytes4(keccak256("decimals()"));
+
+        LibDiamond.FacetCut[] memory _cut = new LibDiamond.FacetCut[](1);
+        _cut[0] = LibDiamond.FacetCut({
+            facetAddress: address(facet),
+            action: LibDiamond.FacetCutAction.Add,
+            functionSelectors: _functionSelectors
+        });
+
+        address _init = makeAddr("zerocode");
+        bytes memory _calldata = abi.encode("0x00");
+
+        vm.expectRevert(
+            abi.encodeWithSelector(LibDiamond.NoBytecodeAtAddress.selector, _init, "LibDiamond: _init address no code")
+        );
+        harness.diamondCut(_cut, _init, _calldata);
+    }
+
+    function test_diamondCut_InitializeCallWithWrongCalldata() public {
+        bytes4[] memory _functionSelectors = new bytes4[](1);
+        _functionSelectors[0] = bytes4(keccak256("decimals()"));
+
+        LibDiamond.FacetCut[] memory _cut = new LibDiamond.FacetCut[](1);
+        _cut[0] = LibDiamond.FacetCut({
+            facetAddress: address(facet),
+            action: LibDiamond.FacetCutAction.Add,
+            functionSelectors: _functionSelectors
+        });
+
+        ERC20FacetHarness newFacet = new ERC20FacetHarness();
+        address _init = address(newFacet);
+
+        bytes memory _wrongCalldata = abi.encodeWithSelector(bytes4(keccak256("doesNotExist(uint256)")), uint256(123));
+
+        vm.expectRevert(
+            abi.encodeWithSelector(LibDiamond.InitializationFunctionReverted.selector, _init, _wrongCalldata)
+        );
+        harness.diamondCut(_cut, _init, _wrongCalldata);
+    }
 }
