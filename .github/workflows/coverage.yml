@@ -1,21 +1,24 @@
 name: Coverage
 
 on:
-  push:
-    branches: [main]
   pull_request:
     paths-ignore:
       - '**.md'
+      - 'docs/**'
   workflow_dispatch:
 
 env:
   FOUNDRY_PROFILE: ci
 
+permissions:
+  contents: read
+
 jobs:
-  check:
+  generate-report:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout PR branch
+        uses: actions/checkout@v4
         with:
           submodules: recursive
 

@@ -119,6 +119,7 @@ library LibERC721 {
             revert ERC721InvalidSender(address(0));
         }
 
+        s.ownerOf[_tokenId] = _to;
         s.ownedTokensIndexOf[_tokenId] = s.ownedTokensOf[_to].length;
         s.ownedTokensOf[_to].push(_tokenId);
         s.allTokensIndexOf[_tokenId] = s.allTokens.length;

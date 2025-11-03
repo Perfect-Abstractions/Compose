@@ -1,0 +1,14 @@
+/**
+ * Table Component Styles
+ * General table styling (not markdown tables)
+ */
+
+/* Table styling */
+table {
+  border-radius: var(--ifm-global-radius);
+  overflow: hidden;
+}
+
+thead {
+  background: var(--ifm-color-emphasis-100);
+}

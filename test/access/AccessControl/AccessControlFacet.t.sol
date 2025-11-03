@@ -120,6 +120,203 @@ contract AccessControlFacetTest is Test {
         assertEq(accessControl.getRoleAdmin(MINTER_ROLE), PAUSER_ROLE);
     }
 
+    // ============================================
+    // setRoleAdmin Tests (external)
+    // ============================================
+
+    function test_SetRoleAdmin_SucceedsWhenCallerIsCurrentAdmin() public {
+        // DEFAULT_ADMIN_ROLE is current admin for new roles
+        vm.expectEmit(true, true, true, true);
+        emit RoleAdminChanged(MINTER_ROLE, DEFAULT_ADMIN_ROLE, PAUSER_ROLE);
+
+        vm.prank(ADMIN);
+        accessControl.setRoleAdmin(MINTER_ROLE, PAUSER_ROLE);
+
+        assertEq(accessControl.getRoleAdmin(MINTER_ROLE), PAUSER_ROLE);
+    }
+
+    function test_RevertWhen_SetRoleAdmin_CallerIsNotCurrentAdmin() public {
+        // Set current admin to PAUSER_ROLE
+        accessControl.forceSetRoleAdmin(MINTER_ROLE, PAUSER_ROLE);
+
+        // ADMIN has DEFAULT_ADMIN_ROLE but not PAUSER_ROLE
+        vm.expectRevert(
+            abi.encodeWithSelector(AccessControlFacet.AccessControlUnauthorizedAccount.selector, ADMIN, PAUSER_ROLE)
+        );
+        vm.prank(ADMIN);
+        accessControl.setRoleAdmin(MINTER_ROLE, UPGRADER_ROLE);
+    }
+
+    // ============================================
+    // Batch Grant/Revoke Tests
+    // ============================================
+
+    function test_GrantRoleBatch_SucceedsAndEmitsPerNewGrant() public {
+        address[] memory accounts = new address[](3);
+        accounts[0] = ALICE;
+        accounts[1] = BOB;
+        accounts[2] = CHARLIE;
+
+        vm.startPrank(ADMIN);
+        // Expect three RoleGranted events
+        vm.expectEmit(true, true, true, true);
+        emit RoleGranted(MINTER_ROLE, ALICE, ADMIN);
+        vm.expectEmit(true, true, true, true);
+        emit RoleGranted(MINTER_ROLE, BOB, ADMIN);
+        vm.expectEmit(true, true, true, true);
+        emit RoleGranted(MINTER_ROLE, CHARLIE, ADMIN);
+        accessControl.grantRoleBatch(MINTER_ROLE, accounts);
+        vm.stopPrank();
+
+        assertTrue(accessControl.hasRole(MINTER_ROLE, ALICE));
+        assertTrue(accessControl.hasRole(MINTER_ROLE, BOB));
+        assertTrue(accessControl.hasRole(MINTER_ROLE, CHARLIE));
+    }
+
+    function test_GrantRoleBatch_SkipsAlreadyGrantedWithoutExtraEvents() public {
+        // Pre-grant ALICE
+        vm.prank(ADMIN);
+        accessControl.grantRole(MINTER_ROLE, ALICE);
+
+        address[] memory accounts = new address[](3);
+        accounts[0] = ALICE; // already granted
+        accounts[1] = BOB;
+        accounts[2] = CHARLIE;
+
+        vm.startPrank(ADMIN);
+        // Expect only two events for new grants
+        vm.expectEmit(true, true, true, true);
+        emit RoleGranted(MINTER_ROLE, BOB, ADMIN);
+        vm.expectEmit(true, true, true, true);
+        emit RoleGranted(MINTER_ROLE, CHARLIE, ADMIN);
+        accessControl.grantRoleBatch(MINTER_ROLE, accounts);
+        vm.stopPrank();
+
+        assertTrue(accessControl.hasRole(MINTER_ROLE, ALICE));
+        assertTrue(accessControl.hasRole(MINTER_ROLE, BOB));
+        assertTrue(accessControl.hasRole(MINTER_ROLE, CHARLIE));
+    }
+
+    function test_RevertWhen_GrantRoleBatch_CallerIsNotAdmin() public {
+        address[] memory accounts = new address[](2);
+        accounts[0] = ALICE;
+        accounts[1] = BOB;
+
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                AccessControlFacet.AccessControlUnauthorizedAccount.selector, ALICE, DEFAULT_ADMIN_ROLE
+            )
+        );
+        vm.prank(ALICE);
+        accessControl.grantRoleBatch(MINTER_ROLE, accounts);
+    }
+
+    function test_RevokeRoleBatch_SucceedsAndEmitsPerRevocation() public {
+        // Setup grants
+        vm.startPrank(ADMIN);
+        accessControl.grantRole(MINTER_ROLE, ALICE);
+        accessControl.grantRole(MINTER_ROLE, BOB);
+        accessControl.grantRole(MINTER_ROLE, CHARLIE);
+        vm.stopPrank();
+
+        address[] memory accounts = new address[](3);
+        accounts[0] = ALICE;
+        accounts[1] = BOB;
+        accounts[2] = CHARLIE;
+
+        vm.startPrank(ADMIN);
+        vm.expectEmit(true, true, true, true);
+        emit RoleRevoked(MINTER_ROLE, ALICE, ADMIN);
+        vm.expectEmit(true, true, true, true);
+        emit RoleRevoked(MINTER_ROLE, BOB, ADMIN);
+        vm.expectEmit(true, true, true, true);
+        emit RoleRevoked(MINTER_ROLE, CHARLIE, ADMIN);
+        accessControl.revokeRoleBatch(MINTER_ROLE, accounts);
+        vm.stopPrank();
+
+        assertFalse(accessControl.hasRole(MINTER_ROLE, ALICE));
+        assertFalse(accessControl.hasRole(MINTER_ROLE, BOB));
+        assertFalse(accessControl.hasRole(MINTER_ROLE, CHARLIE));
+    }
+
+    function test_RevokeRoleBatch_SkipsNotGrantedWithoutExtraEvents() public {
+        // Only ALICE has the role
+        vm.prank(ADMIN);
+        accessControl.grantRole(MINTER_ROLE, ALICE);
+
+        address[] memory accounts = new address[](3);
+        accounts[0] = ALICE; // granted
+        accounts[1] = BOB; // not granted
+        accounts[2] = CHARLIE; // not granted
+
+        vm.startPrank(ADMIN);
+        vm.expectEmit(true, true, true, true);
+        emit RoleRevoked(MINTER_ROLE, ALICE, ADMIN);
+        accessControl.revokeRoleBatch(MINTER_ROLE, accounts);
+        vm.stopPrank();
+
+        assertFalse(accessControl.hasRole(MINTER_ROLE, ALICE));
+        assertFalse(accessControl.hasRole(MINTER_ROLE, BOB));
+        assertFalse(accessControl.hasRole(MINTER_ROLE, CHARLIE));
+    }
+
+    function test_RevertWhen_RevokeRoleBatch_CallerIsNotAdmin() public {
+        // Setup grants
+        vm.prank(ADMIN);
+        accessControl.grantRole(MINTER_ROLE, ALICE);
+
+        address[] memory accounts = new address[](1);
+        accounts[0] = ALICE;
+
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                AccessControlFacet.AccessControlUnauthorizedAccount.selector, BOB, DEFAULT_ADMIN_ROLE
+            )
+        );
+        vm.prank(BOB);
+        accessControl.revokeRoleBatch(MINTER_ROLE, accounts);
+    }
+
+    function test_GrantRoleBatch_SucceedsWithEmptyArray() public {
+        address[] memory accounts = new address[](0);
+
+        // Should just succeed with no reverts and no events
+        vm.prank(ADMIN);
+        accessControl.grantRoleBatch(MINTER_ROLE, accounts);
+    }
+
+    function test_RevokeRoleBatch_SucceedsWithEmptyArray() public {
+        address[] memory accounts = new address[](0);
+
+        // Should just succeed with no reverts and no events
+        vm.prank(ADMIN);
+        accessControl.revokeRoleBatch(MINTER_ROLE, accounts);
+    }
+
+    function test_DelegatedAdminCanExerciseAdminPowers() public {
+        // === Arrange ===
+        vm.startPrank(ADMIN);
+        accessControl.grantRole(MINTER_ROLE, BOB);
+        accessControl.grantRole(PAUSER_ROLE, ALICE);
+        accessControl.setRoleAdmin(MINTER_ROLE, PAUSER_ROLE);
+        vm.stopPrank();
+
+        // Assert the setup is correct before acting
+        assertTrue(accessControl.hasRole(MINTER_ROLE, BOB));
+        assertTrue(accessControl.hasRole(PAUSER_ROLE, ALICE));
+
+        // === Act ===
+        // Expect the event to be emitted
+        vm.expectEmit(true, true, true, true);
+        emit RoleRevoked(MINTER_ROLE, BOB, ALICE);
+
+        vm.prank(ALICE);
+        accessControl.revokeRole(MINTER_ROLE, BOB);
+
+        // === Assert ===
+        assertFalse(accessControl.hasRole(MINTER_ROLE, BOB));
+    }
+
     function test_GetRoleAdmin_DefaultAdminRoleAdminIsItself() public view {
         assertEq(accessControl.getRoleAdmin(DEFAULT_ADMIN_ROLE), DEFAULT_ADMIN_ROLE);
     }

@@ -1,4 +1,4 @@
-name: Comment Report on Coverage
+name: Post Coverage Comment
 
 on:
   workflow_run:

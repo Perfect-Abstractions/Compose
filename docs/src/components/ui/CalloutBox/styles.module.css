@@ -1,0 +1,117 @@
+.callout {
+  border-radius: 0.75rem;
+  padding: 1.5rem;
+  margin: 2rem 0;
+  border-left: 4px solid;
+  background: var(--ifm-background-surface-color);
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+  transition: all 0.3s ease;
+}
+
+.callout:hover {
+  transform: translateX(4px);
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+}
+
+.calloutHeader {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-bottom: 0.75rem;
+}
+
+.calloutIcon {
+  font-size: 1.5rem;
+  line-height: 1;
+}
+
+.calloutTitle {
+  font-size: 1.125rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.calloutContent {
+  font-size: 1rem;
+  line-height: 1.7;
+  color: var(--ifm-color-emphasis-800);
+}
+
+.calloutContent > *:last-child {
+  margin-bottom: 0;
+}
+
+/* Type variants */
+.callout.info {
+  border-left-color: #3b82f6;
+  background: linear-gradient(135deg, rgba(59, 130, 246, 0.05) 0%, transparent 100%);
+}
+
+.callout.info .calloutTitle {
+  color: #3b82f6;
+}
+
+.callout.tip {
+  border-left-color: #3b82f6;
+  background: linear-gradient(135deg, rgba(59, 130, 246, 0.05) 0%, transparent 100%);
+}
+
+.callout.tip .calloutTitle {
+  color: #3b82f6;
+}
+
+.callout.warning {
+  border-left-color: #f59e0b;
+  background: linear-gradient(135deg, rgba(245, 158, 11, 0.05) 0%, transparent 100%);
+}
+
+.callout.warning .calloutTitle {
+  color: #f59e0b;
+}
+
+.callout.danger {
+  border-left-color: #ef4444;
+  background: linear-gradient(135deg, rgba(239, 68, 68, 0.05) 0%, transparent 100%);
+}
+
+.callout.danger .calloutTitle {
+  color: #ef4444;
+}
+
+.callout.success {
+  border-left-color: #10b981;
+  background: linear-gradient(135deg, rgba(16, 185, 129, 0.05) 0%, transparent 100%);
+}
+
+.callout.success .calloutTitle {
+  color: #10b981;
+}
+
+.callout.note {
+  border-left-color: #6366f1;
+  background: linear-gradient(135deg, rgba(99, 102, 241, 0.05) 0%, transparent 100%);
+}
+
+.callout.note .calloutTitle {
+  color: #6366f1;
+}
+
+@media (max-width: 768px) {
+  .callout {
+    padding: 1.25rem;
+  }
+
+  .calloutIcon {
+    font-size: 1.25rem;
+  }
+
+  .calloutTitle {
+    font-size: 1rem;
+  }
+
+  .calloutContent {
+    font-size: 0.95rem;
+  }
+}
+

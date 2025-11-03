@@ -1,0 +1,136 @@
+.tableContainer {
+  overflow-x: auto;
+  margin: 2rem 0;
+}
+
+.comparisonTable {
+  width: 100%;
+  border-collapse: collapse;
+  background: var(--ifm-background-surface-color);
+}
+
+.comparisonTable thead {
+  background: linear-gradient(135deg, #3b82f6 0%, #1e40af 100%);
+}
+
+.comparisonTable th {
+  padding: 1.5rem 1rem;
+  text-align: center;
+  color: white;
+  font-weight: 700;
+  font-size: 1rem;
+  border-bottom: 3px solid var(--ifm-color-primary-darker);
+}
+
+.featureColumn {
+  text-align: left !important;
+  min-width: 200px;
+}
+
+.productColumn {
+  min-width: 150px;
+}
+
+.columnHeader {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.badge {
+  background: rgba(255, 255, 255, 0.2);
+  color: white;
+  padding: 0.25rem 0.75rem;
+  border-radius: 9999px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+}
+
+.columnTitle {
+  font-size: 1.125rem;
+}
+
+.comparisonTable tbody tr {
+  border-bottom: 1px solid var(--ifm-color-emphasis-200);
+  transition: background-color 0.2s ease;
+}
+
+.comparisonTable tbody tr:hover {
+  background-color: var(--ifm-color-emphasis-100);
+}
+
+.comparisonTable tbody tr:last-child {
+  border-bottom: none;
+}
+
+.featureCell {
+  padding: 1.25rem 1rem;
+  text-align: left;
+}
+
+.featureName {
+  font-weight: 600;
+  color: var(--ifm-color-emphasis-900);
+  margin-bottom: 0.25rem;
+}
+
+.featureDescription {
+  font-size: 0.875rem;
+  color: var(--ifm-color-emphasis-600);
+  line-height: 1.5;
+}
+
+.valueCell {
+  padding: 1.25rem 1rem;
+  text-align: center;
+}
+
+.checkmark {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2rem;
+  height: 2rem;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #10b981 0%, #34d399 100%);
+  color: white;
+  font-weight: 700;
+  font-size: 1.25rem;
+}
+
+.cross {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2rem;
+  height: 2rem;
+  border-radius: 50%;
+  background: var(--ifm-color-emphasis-200);
+  color: var(--ifm-color-emphasis-500);
+  font-weight: 700;
+  font-size: 1.25rem;
+}
+
+.value {
+  font-weight: 600;
+  color: var(--ifm-color-emphasis-800);
+}
+
+@media (max-width: 768px) {
+  .comparisonTable th,
+  .featureCell,
+  .valueCell {
+    padding: 1rem 0.75rem;
+  }
+
+  .featureName {
+    font-size: 0.95rem;
+  }
+
+  .featureDescription {
+    font-size: 0.8rem;
+  }
+}
+

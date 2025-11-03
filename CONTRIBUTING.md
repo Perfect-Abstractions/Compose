@@ -100,6 +100,9 @@ Once you have a clear idea of what you want to do, [create an issue](https://git
 
 ## Code Standards
 
+### Coding Style Guide
+All code must follow the Compose coding style guide. See [STYLE.md](STYLE.md) for required conventions, rules, and examples.
+
 ### Solidity Feature Ban
 
 **IMPORTANT**: This library has strict rules about which Solidity features can be used. Anyone submitting a pull request that uses any of the banned features will be fined **$100 USDC**.

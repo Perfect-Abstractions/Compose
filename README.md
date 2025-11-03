@@ -4,7 +4,7 @@
 
 ## What is Compose?
 
-Compose is a smart contract library that helps developers create their own smart contract systems using the [ERC-2535 Diamond Standard](https://eips.ethereum.org/EIPS/eip-2535).
+Compose is a smart contract library that helps developers create smart contract systems using [ERC-2535 Diamonds](https://eips.ethereum.org/EIPS/eip-2535).
 
 **Compose provides:**
 
@@ -58,8 +58,9 @@ Compose uses two complementary patterns for smart contract development:
 **Facets** are standalone contracts that contain all the logic needed to implement specific functionality. They're designed to be:
 
 - **Self-contained**: All code needed for the feature is in one file
-- **Readable top-to-bottom**: No jumping between files to understand the logic
+- **Readable top-to-bottom**: No jumping between files (or within the same file) to understand the logic
 - **Deployed once**: Reused across multiple diamonds on-chain
+- **Deployed everywhere**: Our facets will be deployed on many blockchains at the same addresses
 
 **Example**: `ERC20Facet.sol` contains the complete ERC-20 token implementation.
 
@@ -82,14 +83,13 @@ Compose uses two complementary patterns for smart contract development:
 **Use a Facet when you want:**
 
 - The complete, standard implementation (e.g., full ERC-20 functionality)
-- To deploy once and reuse across multiple diamonds
+- To reuse it (onchain) across multiple diamonds
 - A verified, audited implementation
 
 **Use a Library when you're:**
 
 - Building a custom facet that needs to interact with Compose features
 - Extending standard functionality with custom logic
-- Composing multiple Compose features together
 
 ### Practical Example
 
@@ -122,20 +122,9 @@ contract GameNFTFacet {
 //    Both facets operate on the SAME NFT collection!
 ```
 
-## Available Facets
+## Available Facets & Libraries
 
-Compose currently provides these production-ready facets:
-
-### Access Control
-
-- **OwnerFacet**: Single-step ownership (ERC-173)
-- **OwnerTwoStepsFacet**: Two-step ownership transfer for added security
-
-### Token Standards
-
-- **ERC20Facet**: Complete ERC-20 implementation with permit support
-- **ERC721Facet**: Full ERC-721 NFT implementation
-- **ERC721EnumerableFacet**: ERC-721 with enumeration capabilities
+Look in the [src directory](https://github.com/Perfect-Abstractions/Compose/tree/main/src) to see the currently provided functionality, facets and libraries.
 
 ### Diamond Infrastructure
 
@@ -213,3 +202,13 @@ This project is licensed under the MIT License. See the [LICENSE.md](LICENSE.md)
 **Compose is evolving with your help. Join us in building the future of smart contract development.**
 
 **-Nick & The Compose Community**
+
+<!-- automd:contributors github="Perfect-Abstractions/Compose" license="MIT" -->
+
+### Made with 🩵 by the [Compose Community](https://github.com/Perfect-Abstractions/Compose/graphs/contributors)
+
+<a href="https://github.com/Perfect-Abstractions/Compose/graphs/contributors">
+<img src="https://contrib.rocks/image?repo=Perfect-Abstractions/Compose" />
+</a>
+
+<!-- /automd -->
