@@ -52,7 +52,9 @@ contract DiamondLoupeFacet {
     }
 
     
-    function facets12() external view returns (Facet[] memory allFacets) {
+
+
+function facets13() external view returns (Facet[] memory allFacets) {
         DiamondStorage storage s = getStorage();
         bytes4[] memory selectors = s.selectors;
         bytes4 selector;
@@ -65,30 +67,39 @@ contract DiamondLoupeFacet {
         FacetInfo memory facetInfo;
 
         uint256[][256] memory map;
-        uint256 key;
+        uint256 key;        
         uint256[] memory mapFacetInfoPointers;
-                        
+
         // count unique facets
         uint256 numFacets;                     
         // Count unique facets and their selectors
         for (uint256 i; i < selectorsCount; i++) {            
             selector = selectors[i];
-            address facet = s.facetAndPosition[selector].facet;                        
+            address facet = s.facetAndPosition[selector].facet;                          
             // Look for existing facet            
             key =  uint256(uint160(facet)) & 0xff;
-            mapFacetInfoPointers = map[key];
-            bool found;          
+            mapFacetInfoPointers = map[key];            
             uint256 mapIndex;
             for(; mapIndex < mapFacetInfoPointers.length; mapIndex++) {
                 pointer = mapFacetInfoPointers[mapIndex];
                 if(pointer == 0) {
+                    bytes4[] memory selectorStorage = new bytes4[](20);
+                    selectorStorage[0] = selector;
+                    facetInfo = FacetInfo({facet: facet, selectors: selectorStorage, count: 1});                    
+                    assembly ("memory-safe") {
+                        pointer := facetInfo
+                    }
+                    mapFacetInfoPointers[mapIndex] = pointer;
+                    facetInfoPointers[numFacets] = pointer;
+                    unchecked {
+                        numFacets++;    
+                    }
                     break;
                 }
                 assembly ("memory-safe") {
                     facetInfo := pointer
-                }
-                if(facetInfo.facet == facet) {
-                    found = true;
+                }            
+                if(facetInfo.facet == facet) {                    
                     if(facetInfo.count == facetInfo.selectors.length) {
                         // expand array
                         bytes4[] memory selectorStorage = new bytes4[](facetInfo.count + 20);
@@ -101,47 +112,33 @@ contract DiamondLoupeFacet {
                     unchecked {
                         facetInfo.count++;
                     }
-                    break;
+                    break;               
                 }
             }
 
-            // There are 3 ways a facet is not found:
-            // 1. The facet key has never been used in the map. 
-            //    Therefore mapIndex is 0 and mapFacetInfoPointers.length is 0.
-            // 2. The facet key has been used, ane we started iterating over the
-            //    mapFacetInfoPointers and we found an empty one (0).
-            // 3. The facet key has been used, and we iterated over all the mapFacetInfoPointers
-            //    and the facet address wasn't found.            
-            
-            // If facet not found, add it            
-            if(found == false) {
-                // The facet key has never been used in the map
-                if(mapIndex == 0) {
-                    mapFacetInfoPointers = new uint256[](3);
+            // facet was not found and looped through all options
+            // Or there were no options
+            if(mapFacetInfoPointers.length == mapIndex) {
+                // expand
+                uint256[] memory newPointers = new uint256[](mapIndex + 3);
+                for(uint256 k; k < mapIndex; k++) {
+                    newPointers[k] = mapFacetInfoPointers[k];
                 }
-                // Facet address was not found in all the mapFacetInfoPointers
-                else if(mapIndex == mapFacetInfoPointers.length) {                    
-                    // expand
-                    uint256[] memory newPointers = new uint256[](mapIndex + 3);
-                    for(uint256 k; k < mapIndex; k++) {
-                        newPointers[k] = mapFacetInfoPointers[k];
-                    }
-                    mapFacetInfoPointers = newPointers;
-                } // else we found an empty mapFacetInfoPointer (0)
-                               
+                mapFacetInfoPointers = newPointers;
                 map[key] = mapFacetInfoPointers;
+                
                 bytes4[] memory selectorStorage = new bytes4[](20);
                 selectorStorage[0] = selector;
-                facetInfo = FacetInfo({facet: facet, selectors: selectorStorage, count: 1});
+                facetInfo = FacetInfo({facet: facet, selectors: selectorStorage, count: 1});                    
                 assembly ("memory-safe") {
                     pointer := facetInfo
-                }
+                }                
                 mapFacetInfoPointers[mapIndex] = pointer;
                 facetInfoPointers[numFacets] = pointer;
                 unchecked {
                     numFacets++;    
                 }                
-            }
+            }                                     
         }
 
         allFacets = new Facet[](numFacets);
@@ -162,7 +159,6 @@ contract DiamondLoupeFacet {
             allFacets[i].functionSelectors = facetSelectors;            
         }
     }
-
    
 
 
