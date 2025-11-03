@@ -1,0 +1,261 @@
+/**
+ * CSS Custom Properties (Variables)
+ * Base color palette and theme variables for Compose Documentation
+ */
+
+/* Base color palette for Compose - Blockchain-inspired blues */
+:root {
+  /* Primary brand colors - Vibrant blue tones */
+  --ifm-color-primary: #3b82f6;
+  --ifm-color-primary-dark: #2563eb;
+  --ifm-color-primary-darker: #1d4ed8;
+  --ifm-color-primary-darkest: #1e40af;
+  --ifm-color-primary-light: #60a5fa;
+  --ifm-color-primary-lighter: #93c5fd;
+  --ifm-color-primary-lightest: #bfdbfe;
+  
+  /* Accent colors - Blue accent */
+  --ifm-color-accent: #0ea5e9;
+  --ifm-color-accent-light: #38bdf8;
+  
+  /* Background and surface colors - Light mode */
+  --ifm-background-color: #ffffff;
+  --ifm-background-surface-color: #f8fafc;
+  
+  /* Text colors - Light mode */
+  --ifm-font-color-base: #1e293b;
+  --ifm-heading-color: #0f172a;
+  
+  /* Border colors - Light mode */
+  --ifm-color-emphasis-100: #f1f5f9;
+  --ifm-color-emphasis-200: #e2e8f0;
+  --ifm-color-emphasis-300: #cbd5e1;
+  
+  /* Code and technical colors */
+  --ifm-code-font-size: 95%;
+  --ifm-code-background: #f1f5f9;
+  --docusaurus-highlighted-code-line-bg: rgba(59, 130, 246, 0.1);
+  
+  /* Typography */
+  --ifm-font-family-base: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
+  --ifm-font-family-monospace: 'JetBrains Mono', 'Fira Code', 'Consolas', monospace;
+  --ifm-heading-font-weight: 700;
+  
+  /* Spacing and borders */
+  --ifm-global-radius: 0.5rem;
+  --ifm-button-border-radius: 0.5rem;
+  
+  /* Brand tokens for homepage sections */
+  --compose-bg-900: #0f172a; /* dark navy */
+  --compose-bg-800: #1e293b; /* slate */
+  --compose-primary-500: #3b82f6; /* ifm primary */
+  --compose-primary-600: #2563eb;
+
+  /* Hero gradient - Blue focused */
+  --hero-gradient: linear-gradient(135deg, var(--compose-primary-500) 0%, #1e40af 100%);
+  --hero-gradient-alt: linear-gradient(135deg, #60a5fa 0%, var(--compose-primary-600) 100%);
+
+  /* Homepage hero tokens */
+  --hero-bg-start: #0f172a;
+  --hero-bg-end: #1e293b;
+  --hero-accent-1: rgba(59, 130, 246, 0.25);
+  --hero-accent-2: rgba(37, 99, 235, 0.15);
+  --hero-accent-3: rgba(96, 165, 250, 0.15);
+  --hero-text-strong: rgba(255, 255, 255, 1);
+  --hero-text-medium: rgba(255, 255, 255, 0.85);
+  --hero-text-weak: rgba(255, 255, 255, 0.7);
+  --hero-surface-glass: rgba(255, 255, 255, 0.05);
+  --hero-border-weak: rgba(255, 255, 255, 0.15);
+  --hero-border-weaker: rgba(255, 255, 255, 0.1);
+  --hero-pattern-line: rgba(255, 255, 255, 0.1);
+  --hero-pulse: #ef4444;
+
+  /* Shadows */
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.08), 0 1px 1px rgba(0, 0, 0, 0.06);
+  --shadow-md: 0 4px 8px rgba(0, 0, 0, 0.12), 0 2px 4px rgba(0, 0, 0, 0.08);
+  --shadow-lg: 0 8px 32px rgba(0, 0, 0, 0.15);
+  --shadow-xl: 0 12px 48px rgba(0, 0, 0, 0.25);
+
+  /* Motion & focus tokens */
+  --motion-duration-fast: 150ms;
+  --motion-duration-normal: 250ms;
+  --motion-ease-standard: cubic-bezier(0.4, 0, 0.2, 1);
+  --focus-ring-color: var(--compose-primary-500);
+}
+
+/* Dark mode palette - MoneyKit inspired dark theme */
+[data-theme='dark'] {
+  --ifm-color-primary: #60a5fa;
+  --ifm-color-primary-dark: #3b82f6;
+  --ifm-color-primary-darker: #2563eb;
+  --ifm-color-primary-darkest: #1d4ed8;
+  --ifm-color-primary-light: #93c5fd;
+  --ifm-color-primary-lighter: #bfdbfe;
+  --ifm-color-primary-lightest: #dbeafe;
+  
+  --ifm-color-accent: #38bdf8;
+  --ifm-color-accent-light: #7dd3fc;
+  
+  /* Dark blue backgrounds */
+  --ifm-background-color: #0f172a;
+  --ifm-background-surface-color: #1e293b;
+  --ifm-navbar-background-color: #0a0e1a;
+  
+  /* Sidebar colors */
+  --ifm-menu-color: #a0a0a0;
+  --ifm-menu-color-active: #ffffff;
+  --ifm-menu-color-background-active: rgba(255, 255, 255, 0.05);
+  
+  /* Text colors */
+  --ifm-font-color-base: #e0e0e0;
+  --ifm-heading-color: #ffffff;
+  --ifm-color-emphasis-300: #4a4a4a;
+  --ifm-color-emphasis-400: #5a5a5a;
+  --ifm-color-emphasis-500: #707070;
+  --ifm-color-emphasis-600: #909090;
+  --ifm-color-emphasis-700: #b0b0b0;
+  --ifm-color-emphasis-800: #d0d0d0;
+  --ifm-color-emphasis-900: #ffffff;
+  
+  /* Border colors - blue tones */
+  --ifm-color-emphasis-100: #1e293b;
+  --ifm-color-emphasis-200: #334155;
+  
+  --ifm-code-background: #1e293b;
+  --docusaurus-highlighted-code-line-bg: rgba(59, 130, 246, 0.15);
+  
+  /* Brand tokens (dark) */
+  --compose-bg-900: #0f172a;
+  --compose-bg-800: #1e293b;
+  --compose-primary-500: #60a5fa;
+  --compose-primary-600: #3b82f6;
+
+  /* Hero gradient - dark blue */
+  --hero-gradient: linear-gradient(135deg, var(--compose-bg-900) 0%, var(--compose-bg-800) 100%);
+  --hero-gradient-alt: linear-gradient(135deg, var(--compose-bg-800) 0%, #334155 100%);
+
+  /* Homepage hero tokens (dark overrides if needed) */
+  --hero-bg-start: #0f172a;
+  --hero-bg-end: #1e293b;
+  --hero-text-strong: rgba(255, 255, 255, 1);
+  --hero-text-medium: rgba(255, 255, 255, 0.9);
+  --hero-text-weak: rgba(255, 255, 255, 0.75);
+  --hero-surface-glass: rgba(255, 255, 255, 0.06);
+  --hero-border-weak: rgba(255, 255, 255, 0.22);
+  --hero-border-weaker: rgba(255, 255, 255, 0.12);
+  --hero-pattern-line: rgba(255, 255, 255, 0.1);
+}
+
+/* ============================================
+   GLOBAL BASE STYLES
+   ============================================ */
+
+/* Smooth scrolling for the entire page */
+html {
+  scroll-behavior: smooth;
+}
+
+/* Global improvements */
+* {
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Main content area dark styling */
+[data-theme='dark'] .main-wrapper {
+  background: #0f172a;
+}
+
+[data-theme='dark'] .docMainContainer {
+  background: #0f172a;
+}
+
+[data-theme='dark'] article {
+  background: #0f172a;
+}
+
+/* Documentation content wrapper */
+.theme-doc-wrapper {
+  z-index: 0;
+  position: relative;
+}
+
+/* Main layout */
+main {
+  position: relative;
+  z-index: 0;
+}
+
+/* Markdown typography variables */
+.markdown {
+  --ifm-h1-font-size: 2.5rem;
+  --ifm-h2-font-size: 2rem;
+  --ifm-h3-font-size: 1.5rem;
+}
+
+/* Markdown headings */
+.markdown h1 {
+  background: var(--hero-gradient-alt);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  margin-bottom: 2rem;
+}
+
+.markdown h2 {
+  border-bottom: 2px solid var(--ifm-color-emphasis-200);
+  padding-bottom: 0.5rem;
+  margin-top: 3rem;
+  margin-bottom: 1.5rem;
+}
+
+/* Dark mode markdown */
+[data-theme='dark'] .theme-doc-markdown {
+  color: #e0e0e0;
+}
+
+[data-theme='dark'] .theme-doc-markdown h1,
+[data-theme='dark'] .theme-doc-markdown h2,
+[data-theme='dark'] .theme-doc-markdown h3,
+[data-theme='dark'] .theme-doc-markdown h4,
+[data-theme='dark'] .theme-doc-markdown h5,
+[data-theme='dark'] .theme-doc-markdown h6 {
+  color: #ffffff;
+}
+
+/* Dark mode override for markdown h1 - better contrast with light gradient */
+[data-theme='dark'] .markdown h1 {
+  background: linear-gradient(135deg, #93c5fd 0%, #60a5fa 50%, #3b82f6 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* Dark mode headings - ensure all headings have good contrast */
+[data-theme='dark'] .markdown h2,
+[data-theme='dark'] .markdown h3,
+[data-theme='dark'] .markdown h4,
+[data-theme='dark'] .markdown h5,
+[data-theme='dark'] .markdown h6 {
+  color: #ffffff;
+}
+
+[data-theme='dark'] .theme-doc-markdown a {
+  color: #60a5fa;
+}
+
+[data-theme='dark'] .theme-doc-markdown a:hover {
+  color: #93c5fd;
+}
+
+/* Reduced motion support */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation: none !important;
+    transition: none !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+
+

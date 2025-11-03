@@ -1,0 +1,57 @@
+/**
+ * Custom Utility Classes
+ * Additional utility classes beyond utilities.css
+ */
+
+/* Custom utility classes */
+.gradient-text {
+  background: linear-gradient(135deg, #3b82f6 0%, #1e40af 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* Announcement bar */
+.announcement {
+  background: linear-gradient(135deg, #3b82f6 0%, #1e40af 100%);
+  color: white;
+  font-weight: 600;
+}
+
+/* Search bar input styling (navbar search button) */
+.navbar__search-input {
+  border-radius: 9999px;
+  border: 2px solid var(--ifm-color-emphasis-200);
+  transition: all 0.2s ease;
+}
+
+.navbar__search-input:focus {
+  border-color: var(--ifm-color-primary);
+  box-shadow: 0 0 0 3px rgba(74, 95, 255, 0.1);
+}
+
+/* Light mode search button */
+.DocSearch-Button {
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  color: #64748b;
+}
+
+.DocSearch-Button:hover {
+  background: #f1f5f9;
+  border-color: #cbd5e1;
+  color: #1e293b;
+}
+
+/* Dark mode search button */
+[data-theme='dark'] .DocSearch-Button {
+  background: #1e293b;
+  border: 1px solid #334155;
+  color: #a0a0a0;
+}
+
+[data-theme='dark'] .DocSearch-Button:hover {
+  background: #334155;
+  border-color: #475569;
+  color: #ffffff;
+}

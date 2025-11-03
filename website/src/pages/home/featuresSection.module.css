@@ -1,0 +1,47 @@
+/* Features Section */
+
+.featuresSection { padding: 8rem 0; background: #ffffff; position: relative; }
+
+.sectionHeader { text-align: center; max-width: 760px; margin: 0 auto 5rem; }
+.sectionBadge { display: inline-block; padding: 0.5rem 1rem; background: linear-gradient(135deg, rgba(59,130,246,0.1), rgba(37,99,235,0.1)); border: 1px solid rgba(59,130,246,0.2); border-radius: 9999px; color: var(--compose-primary-500); font-size: 0.875rem; font-weight: 600; letter-spacing: 0.05em; text-transform: uppercase; margin-bottom: 1.5rem; }
+.sectionTitle { font-size: clamp(2.25rem, 5vw, 3.5rem); font-weight: 800; line-height: 1.2; letter-spacing: -0.03em; color: #0f172a; margin-bottom: 1.5rem; }
+.sectionSubtitle { font-size: clamp(1rem, 2vw, 1.25rem); line-height: 1.7; color: #64748b; margin: 0; }
+
+.featuresGrid { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 2rem; max-width: 1280px; margin: 0 auto; }
+
+.featureCard { position: relative; padding: 2.5rem; background: white; border: 1px solid #e2e8f0; border-radius: 1.25rem; transition: all var(--motion-duration-normal) var(--motion-ease-standard); overflow: hidden; }
+.featureCard::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 4px; background: linear-gradient(90deg, var(--compose-primary-500), #60a5fa); transform: scaleX(0); transform-origin: left; transition: transform var(--motion-duration-normal) ease; }
+.featureCard:hover { border-color: #cbd5e1; box-shadow: 0 20px 40px rgba(0,0,0,0.08), 0 4px 8px rgba(0,0,0,0.03); transform: translateY(-4px); }
+.featureCard:hover::before { transform: scaleX(1); }
+
+.featureIcon { width: 56px; height: 56px; display: flex; align-items: center; justify-content: center; background: linear-gradient(135deg, rgba(59,130,246,0.1), rgba(37,99,235,0.1)); border-radius: 1rem; margin-bottom: 1.5rem; color: var(--compose-primary-500); }
+.featureIcon svg { width: 28px; height: 28px; }
+
+.featureTitle { font-size: 1.375rem; font-weight: 700; color: #0f172a; margin: 0 0 1rem; line-height: 1.3; }
+.featureDescription { font-size: 1rem; line-height: 1.7; color: #64748b; margin: 0; }
+
+/* Responsive */
+@media screen and (max-width: 1024px) {
+  .featuresGrid { grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1.5rem; }
+}
+@media screen and (max-width: 768px) {
+  .featuresSection { padding: 5rem 0; }
+  .sectionHeader { margin-bottom: 3rem; }
+  .sectionTitle { font-size: 2rem; margin-bottom: 1rem; }
+  .sectionSubtitle { font-size: 1rem; }
+  .featuresGrid { grid-template-columns: 1fr; gap: 1.25rem; }
+  .featureCard { padding: 2rem; }
+  .featureIcon { width: 48px; height: 48px; }
+  .featureIcon svg { width: 24px; height: 24px; }
+  .featureTitle { font-size: 1.25rem; }
+  .featureDescription { font-size: 0.9375rem; }
+}
+
+/* Dark mode */
+[data-theme='dark'] .featuresSection { background: var(--compose-bg-900); }
+[data-theme='dark'] .featureCard { background: rgba(255,255,255,0.03); border-color: rgba(255,255,255,0.08); }
+[data-theme='dark'] .featureCard:hover { background: rgba(255,255,255,0.05); border-color: rgba(255,255,255,0.15); }
+[data-theme='dark'] .sectionTitle, [data-theme='dark'] .featureTitle { color: #ffffff; }
+[data-theme='dark'] .sectionSubtitle, [data-theme='dark'] .featureDescription { color: rgba(255,255,255,0.7); }
+
+

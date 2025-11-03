@@ -1,0 +1,514 @@
+/**
+ * Documentation-specific CSS enhancements
+ * MoneyKit-inspired styling for documentation pages
+ */
+
+/* ============================================
+   DOCUMENTATION CONTENT STYLING
+   ============================================ */
+
+/* Enhanced markdown content */
+.markdown {
+  font-size: 1rem;
+  line-height: 1.75;
+}
+
+.markdown > h1 {
+  font-size: 2.75rem;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  margin-top: 0;
+  margin-bottom: 1.5rem;
+  line-height: 1.1;
+}
+
+.markdown > h2 {
+  font-size: 2rem;
+  font-weight: 700;
+  letter-spacing: -0.015em;
+  margin-top: 3rem;
+  margin-bottom: 1.25rem;
+  padding-bottom: 0.75rem;
+  border-bottom: 2px solid var(--ifm-color-emphasis-200);
+}
+
+[data-theme='dark'] .markdown > h2 {
+  border-bottom-color: #2a2a2a;
+}
+
+.markdown > h3 {
+  font-size: 1.5rem;
+  font-weight: 700;
+  margin-top: 2.5rem;
+  margin-bottom: 1rem;
+  color: var(--ifm-heading-color);
+}
+
+.markdown > h4 {
+  font-size: 1.25rem;
+  font-weight: 600;
+  margin-top: 2rem;
+  margin-bottom: 0.875rem;
+  color: var(--ifm-heading-color);
+}
+
+/* Dark mode heading colors */
+[data-theme='dark'] .markdown > h1 {
+  color: #ffffff;
+}
+
+[data-theme='dark'] .markdown > h3 {
+  color: #ffffff;
+}
+
+[data-theme='dark'] .markdown > h4 {
+  color: #ffffff;
+}
+
+.markdown > p {
+  margin-bottom: 1.5rem;
+  color: var(--ifm-color-emphasis-800);
+}
+
+[data-theme='dark'] .markdown > p {
+  color: #d0d0d0;
+}
+
+/* Links in documentation */
+.markdown a {
+  color: var(--ifm-color-primary);
+  text-decoration: none;
+  border-bottom: 1px solid transparent;
+  transition: all 0.2s ease;
+}
+
+.markdown a:hover {
+  border-bottom-color: var(--ifm-color-primary);
+}
+
+[data-theme='dark'] .markdown a {
+  color: #60a5fa;
+}
+
+[data-theme='dark'] .markdown a:hover {
+  border-bottom-color: #60a5fa;
+  color: #93c5fd;
+}
+
+/* Lists in documentation */
+.markdown ul,
+.markdown ol {
+  margin-bottom: 1.5rem;
+  padding-left: 1.75rem;
+}
+
+.markdown li {
+  margin-bottom: 0.5rem;
+  line-height: 1.7;
+}
+
+.markdown li > p {
+  margin-bottom: 0.5rem;
+}
+
+/* Blockquotes */
+.markdown blockquote {
+  margin: 1.5rem 0;
+  padding: 1rem 1.5rem;
+  border-left: 4px solid var(--ifm-color-primary);
+  background: var(--ifm-background-surface-color);
+  border-radius: 0 0.5rem 0.5rem 0;
+}
+
+[data-theme='dark'] .markdown blockquote {
+  background: #0f0f0f;
+  border-left-color: #60a5fa;
+}
+
+.markdown blockquote p:last-child {
+  margin-bottom: 0;
+}
+
+/* Inline code */
+.markdown code:not([class*="language-"]) {
+  background: var(--ifm-code-background);
+  color: var(--ifm-color-primary-dark);
+  padding: 0.2em 0.4em;
+  border-radius: 0.25rem;
+  font-size: 0.9em;
+  border: 1px solid var(--ifm-color-emphasis-200);
+  font-weight: 500;
+}
+
+[data-theme='dark'] .markdown code:not([class*="language-"]) {
+  background: #1a1a1a;
+  color: #93c5fd;
+  border: none;
+}
+
+/* Code blocks */
+.markdown pre {
+  margin: 0 !important;
+  border-radius: 0.75rem !important;
+  background: #f8fafc !important;
+  border: none !important;
+  box-shadow: none !important;
+  outline: none !important;
+  padding: 1.25rem !important;
+}
+
+[data-theme='dark'] .markdown pre {
+  background: #1a1a1a !important;
+  border: none !important;
+  outline: none !important;
+  margin: 0 !important;
+  padding: 1.25rem !important;
+  border-radius: 0.75rem !important;
+}
+
+.markdown pre code {
+  background: transparent !important;
+  border: none !important;
+  border-radius: 0 !important;
+  outline: none !important;
+  padding: 0 !important;
+  display: block !important;
+  color: var(--ifm-font-color-base) !important;
+}
+
+[data-theme='dark'] .markdown pre code {
+  background: transparent !important;
+  border: none !important;
+  color: var(--ifm-font-color-base) !important;
+  padding: 0 !important;
+}
+
+/* Tables */
+.markdown table {
+  margin: 2rem 0;
+  border-collapse: collapse;
+  width: 100%;
+  border-radius: 0.75rem;
+  overflow: hidden;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+[data-theme='dark'] .markdown table {
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+}
+
+.markdown table thead {
+  background: var(--ifm-color-emphasis-100);
+}
+
+[data-theme='dark'] .markdown table thead {
+  background: #1a1a1a;
+}
+
+.markdown table th {
+  padding: 1rem 1.25rem;
+  text-align: left;
+  font-weight: 700;
+  font-size: 0.95rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--ifm-heading-color);
+  border-bottom: 2px solid var(--ifm-color-emphasis-200);
+}
+
+[data-theme='dark'] .markdown table th {
+  border-bottom-color: #2a2a2a;
+  color: #ffffff;
+}
+
+.markdown table td {
+  padding: 1rem 1.25rem;
+  border-bottom: 1px solid var(--ifm-color-emphasis-200);
+}
+
+[data-theme='dark'] .markdown table td {
+  border-bottom-color: #2a2a2a;
+}
+
+.markdown table tbody tr:hover {
+  background: var(--ifm-color-emphasis-100);
+}
+
+[data-theme='dark'] .markdown table tbody tr:hover {
+  background: #0f0f0f;
+}
+
+.markdown table tbody tr:last-child td {
+  border-bottom: none;
+}
+
+/* Horizontal rules */
+.markdown hr {
+  margin: 3rem 0;
+  border: none;
+  height: 1px;
+  background: linear-gradient(
+    to right,
+    transparent,
+    var(--ifm-color-emphasis-300) 50%,
+    transparent
+  );
+}
+
+/* ============================================
+   TABLE OF CONTENTS
+   ============================================ */
+
+.table-of-contents {
+  font-size: 0.9rem;
+}
+
+.table-of-contents__heading {
+  font-weight: 700;
+  font-size: 0.875rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--ifm-color-emphasis-600);
+  margin-bottom: 0.75rem;
+}
+
+[data-theme='dark'] .table-of-contents__heading {
+  color: #909090;
+}
+
+.table-of-contents__link {
+  display: block;
+  padding: 0.375rem 0;
+  color: var(--ifm-color-emphasis-700);
+  transition: all 0.2s ease;
+  border-left: 2px solid transparent;
+  padding-left: 0.75rem;
+  margin-left: -0.75rem;
+}
+
+.table-of-contents__link:hover {
+  color: var(--ifm-color-primary);
+  border-left-color: var(--ifm-color-primary);
+}
+
+.table-of-contents__link--active {
+  color: var(--ifm-color-primary);
+  border-left-color: var(--ifm-color-primary);
+  font-weight: 600;
+}
+
+[data-theme='dark'] .table-of-contents__link {
+  color: #909090;
+}
+
+[data-theme='dark'] .table-of-contents__link:hover,
+[data-theme='dark'] .table-of-contents__link--active {
+  color: #60a5fa;
+  border-left-color: #60a5fa;
+}
+
+/* ============================================
+   DOCUMENT NAVIGATION (Prev/Next)
+   ============================================ */
+
+.pagination-nav {
+  margin-top: 4rem;
+  padding-top: 2rem;
+  border-top: 1px solid var(--ifm-color-emphasis-200);
+}
+
+[data-theme='dark'] .pagination-nav {
+  border-top-color: #2a2a2a;
+}
+
+.pagination-nav__link {
+  border: 1px solid var(--ifm-color-emphasis-200);
+  border-radius: 0.75rem;
+  padding: 1.5rem;
+  transition: all 0.3s ease;
+  background: var(--ifm-background-surface-color);
+}
+
+[data-theme='dark'] .pagination-nav__link {
+  background: #0f0f0f;
+  border-color: #2a2a2a;
+}
+
+.pagination-nav__link:hover {
+  border-color: var(--ifm-color-primary);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 16px -4px rgba(59, 130, 246, 0.2);
+}
+
+[data-theme='dark'] .pagination-nav__link:hover {
+  border-color: #60a5fa;
+  box-shadow: 0 8px 16px -4px rgba(96, 165, 250, 0.2);
+}
+
+.pagination-nav__sublabel {
+  font-size: 0.875rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  font-weight: 600;
+  color: var(--ifm-color-emphasis-600);
+  margin-bottom: 0.5rem;
+}
+
+[data-theme='dark'] .pagination-nav__sublabel {
+  color: #909090;
+}
+
+.pagination-nav__label {
+  font-size: 1.125rem;
+  font-weight: 700;
+  color: var(--ifm-heading-color);
+}
+
+[data-theme='dark'] .pagination-nav__label {
+  color: #ffffff;
+}
+
+/* ============================================
+   ENHANCED ADMONITIONS
+   ============================================ */
+
+.admonition {
+  margin: 1.5rem 0;
+  padding: 1.25rem 1.5rem;
+  border-radius: 0.75rem;
+  border-left: 4px solid;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  background: var(--ifm-background-surface-color);
+}
+
+[data-theme='dark'] .admonition {
+  background: #0f0f0f;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+}
+
+.admonition-heading {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-bottom: 0.75rem;
+  font-weight: 700;
+  font-size: 1rem;
+}
+
+.admonition-icon {
+  font-size: 1.5rem;
+}
+
+.admonition-content > p:last-child {
+  margin-bottom: 0;
+}
+
+/* Admonition types */
+.alert--info,
+.admonition-info {
+  border-left-color: #3b82f6;
+  background: linear-gradient(to right, rgba(59, 130, 246, 0.05), transparent);
+}
+
+[data-theme='dark'] .alert--info,
+[data-theme='dark'] .admonition-info {
+  border-left-color: #60a5fa;
+  background: linear-gradient(to right, rgba(96, 165, 250, 0.1), rgba(15, 15, 15, 1));
+}
+
+.alert--warning,
+.admonition-warning {
+  border-left-color: #f59e0b;
+  background: linear-gradient(to right, rgba(245, 158, 11, 0.05), transparent);
+}
+
+[data-theme='dark'] .alert--warning,
+[data-theme='dark'] .admonition-warning {
+  border-left-color: #fbbf24;
+  background: linear-gradient(to right, rgba(251, 191, 36, 0.1), rgba(15, 15, 15, 1));
+}
+
+.alert--danger,
+.admonition-danger {
+  border-left-color: #ef4444;
+  background: linear-gradient(to right, rgba(239, 68, 68, 0.05), transparent);
+}
+
+[data-theme='dark'] .alert--danger,
+[data-theme='dark'] .admonition-danger {
+  border-left-color: #f87171;
+  background: linear-gradient(to right, rgba(248, 113, 113, 0.1), rgba(15, 15, 15, 1));
+}
+
+.alert--success,
+.admonition-success {
+  border-left-color: #10b981;
+  background: linear-gradient(to right, rgba(16, 185, 129, 0.05), transparent);
+}
+
+[data-theme='dark'] .alert--success,
+[data-theme='dark'] .admonition-success {
+  border-left-color: #34d399;
+  background: linear-gradient(to right, rgba(52, 211, 153, 0.1), rgba(15, 15, 15, 1));
+}
+
+.alert--tip,
+.admonition-tip {
+  border-left-color: #3b82f6;
+  background: linear-gradient(to right, rgba(59, 130, 246, 0.05), transparent);
+}
+
+[data-theme='dark'] .alert--tip,
+[data-theme='dark'] .admonition-tip {
+  border-left-color: #60a5fa;
+  background: linear-gradient(to right, rgba(59, 130, 246, 0.1), rgba(15, 15, 15, 1));
+}
+
+/* ============================================
+   RESPONSIVE DOCUMENTATION
+   ============================================ */
+
+@media (max-width: 996px) {
+  .markdown > h1 {
+    font-size: 2.25rem;
+  }
+  
+  .markdown > h2 {
+    font-size: 1.75rem;
+    margin-top: 2.5rem;
+  }
+  
+  .markdown > h3 {
+    font-size: 1.375rem;
+  }
+}
+
+@media (max-width: 768px) {
+  .markdown {
+    font-size: 0.95rem;
+  }
+  
+  .markdown > h1 {
+    font-size: 2rem;
+  }
+  
+  .markdown > h2 {
+    font-size: 1.5rem;
+    margin-top: 2rem;
+  }
+  
+  .markdown > h3 {
+    font-size: 1.25rem;
+    margin-top: 1.75rem;
+  }
+  
+  .markdown table {
+    font-size: 0.875rem;
+  }
+  
+  .markdown table th,
+  .markdown table td {
+    padding: 0.75rem 1rem;
+  }
+}
+

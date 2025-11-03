@@ -1,0 +1,938 @@
+---
+sidebar_position: 1
+title: Documentation Design Guide
+description: Comprehensive guide for creating consistent, high-quality documentation
+---
+
+import Badge from '@site/src/components/ui/Badge';
+import GradientText from '@site/src/components/ui/GradientText';
+import Callout from '@site/src/components/ui/Callout';
+import DocCard, { DocCardGrid } from '@site/src/components/docs/DocCard';
+import StepIndicator from '@site/src/components/docs/StepIndicator';
+import DocSubtitle from '@site/src/components/docs/DocSubtitle';
+
+# <GradientText>Documentation System Design Guide</GradientText>
+
+<DocSubtitle>
+  A comprehensive guide to ensure everyone collaborates on documentation the same way, maintaining consistency, quality, and professional standards.
+</DocSubtitle>  
+
+<Badge variant="primary">Essential Reading</Badge> <Badge variant="info">For All Contributors</Badge>
+
+---
+
+## Purpose of This Guide
+
+This guide establishes:
+- **Consistent patterns** for documentation structure
+- **Component usage standards** across all pages
+- **Writing style guidelines** for clarity
+- **Visual design principles** for professional appearance
+- **Quality standards** for all documentation
+
+<Callout type="success" title="Goal">
+Every documentation page should feel like it was written by the same team, regardless of who actually authored it.
+</Callout>
+
+---
+
+## Table of Contents
+
+1. [Documentation Structure](#documentation-structure)
+2. [Component Usage Patterns](#component-usage-patterns)
+3. [Writing Style Guide](#writing-style-guide)
+4. [Visual Design Principles](#visual-design-principles)
+5. [Page Templates](#page-templates)
+6. [Quality Checklist](#quality-checklist)
+7. [Common Patterns](#common-patterns)
+
+---
+
+## Documentation Structure
+
+### Folder Organization
+
+```
+docs/
+├── intro.mdx                    # Landing page
+├── getting-started/             # Onboarding docs
+│   ├── quickstart.mdx
+│   ├── installation.mdx
+│   └── first-project.mdx
+├── foundations/                 # Core concepts
+│   ├── overview.mdx
+│   └── authentication.mdx
+├── components/                  # Component docs
+│   ├── complete-component-reference.mdx
+│   └── component-inventory.mdx
+├── examples/                    # Code examples & tutorials
+│   ├── basic-usage.mdx
+│   └── advanced-patterns.mdx
+└── api-reference/              # API documentation
+    ├── endpoints.mdx
+    └── schemas.mdx
+```
+
+<Callout type="tip" title="Naming Convention">
+Use kebab-case for file names: `getting-started.mdx`, `api-reference.mdx`
+</Callout>
+
+### File Naming Standards
+
+| Type | Format | Example |
+|------|--------|---------|
+| Regular page | `topic-name.mdx` | `user-authentication.mdx` |
+| Index page | `index.mdx` or folder name | `getting-started/index.mdx` |
+| Category config | `_category_.json` | Each folder needs one |
+
+### Frontmatter Standards
+
+Every MDX file must include frontmatter:
+
+```yaml
+---
+sidebar_position: 1           # Order in sidebar (required)
+title: Page Title             # Page title (required)
+description: Brief summary    # SEO & preview (required)
+keywords: [api, auth, guide]  # Optional keywords
+---
+```
+
+<Callout type="warning">
+Always include `sidebar_position`, `title`, and `description` in frontmatter.
+</Callout>
+
+---
+
+## Component Usage Patterns
+
+### Standard Page Structure
+
+Every documentation page should follow this structure:
+
+```jsx
+---
+sidebar_position: 1
+title: Page Title
+description: Page description
+---
+
+import Badge from '@site/src/components/Badge';
+import GradientText from '@site/src/components/GradientText';
+import Callout from '@site/src/components/Callout';
+
+# <GradientText>Page Title</GradientText>
+
+<p className="hero__subtitle">
+  Brief introduction explaining what this page covers.
+</p>
+
+<Badge variant="info">Category</Badge> <Badge variant="success">Status</Badge>
+
+---
+
+## Section 1
+
+Content...
+
+---
+
+## Section 2
+
+Content...
+
+---
+
+## Related Resources
+
+<RelatedDocs items={[...]} />
+```
+
+### When to Use Each Component
+
+<StepIndicator
+  currentStep={0}
+  steps={[
+    {
+      title: 'Page Hero',
+      description: 'Use GradientText for main title, subtitle, and badges'
+    },
+    {
+      title: 'Content Sections',
+      description: 'Use Callout, CodeShowcase, and tables for content'
+    },
+    {
+      title: 'Navigation',
+      description: 'Use RelatedDocs at page bottom for related content'
+    }
+  ]}
+/>
+
+#### Component Decision Matrix
+
+| Purpose | Component | When to Use |
+|---------|-----------|-------------|
+| Main page title | `GradientText` | Every page |
+| Section highlights | `Badge` | Status, categories, versions |
+| Important info | `Callout` | Warnings, tips, notes |
+| Code examples | `CodeShowcase` | Multi-language examples |
+| CLI commands | `TerminalCommand` | Shell commands |
+| API docs | `ApiEndpoint` | REST API endpoints |
+| Properties | `PropertyTable` | Object properties |
+| Parameters | `ParameterTable` | Function parameters |
+| Features | `FeatureCard` | Feature lists |
+| Navigation | `DocCard` | Link to other docs |
+| Steps | `StepIndicator` | Multi-step processes |
+| FAQs | `Accordion` | Collapsible Q&A |
+| Comparisons | `ComparisonTable` | Feature comparison |
+| Timeline | `Timeline` | Roadmap, changelog |
+
+### Component Combinations
+
+**Landing Page Pattern:**
+```jsx
+<DocHero
+  title="API Documentation"
+  subtitle="Complete reference for our REST API"
+  variant="gradient"
+  height="medium"
+>
+  <GradientButton to="/docs/quickstart" size="large">
+    Get Started
+  </GradientButton>
+</DocHero>
+
+<FeatureGrid columns={3}>
+  <FeatureGridItem icon={<Icon name="lightning" size={32} />} title="Fast" description="..." />
+  <FeatureGridItem icon={<Icon name="padlock" size={32} />} title="Secure" description="..." />
+  <FeatureGridItem icon={<Icon name="chart" size={32} />} title="Scalable" description="..." />
+</FeatureGrid>
+```
+
+**API Documentation Pattern:**
+```jsx
+<ApiEndpoint
+  method="GET"
+  path="/api/v1/users/:id"
+  description="Retrieve user information"
+/>
+
+<ParameterTable
+  title="Path Parameters"
+  parameters={[...]}
+/>
+
+<PropertyTable
+  title="Response Properties"
+  properties={[...]}
+/>
+
+<CodeShowcase
+  title="Example Request"
+  examples={[...]}
+/>
+```
+
+**Tutorial Pattern:**
+```jsx
+<StepIndicator
+  steps={[
+    { title: 'Step 1', description: '...' },
+    { title: 'Step 2', description: '...' },
+    { title: 'Step 3', description: '...' }
+  ]}
+/>
+
+<Callout type="tip">
+  Pro tip: Follow best practices...
+</Callout>
+
+<CodeShowcase examples={[...]} />
+
+<RelatedDocs items={[...]} />
+```
+
+---
+
+## ️ Writing Style Guide
+
+### Voice and Tone
+
+**We use:**
+- ✅ **Active voice**: "Configure the API key" (not "The API key should be configured")
+- ✅ **Second person**: "You can now..." (not "Users can now...")
+- ✅ **Present tense**: "The function returns..." (not "The function will return...")
+- ✅ **Direct language**: "Click Submit" (not "You might want to click Submit")
+
+### Writing Principles
+
+1. **Be Clear and Concise**
+   - One idea per sentence
+   - Short paragraphs (3-4 sentences max)
+   - Use simple words over complex ones
+
+2. **Be Specific**
+   - ❌ "The API is fast"
+   - ✅ "The API responds in under 100ms"
+
+3. **Be Helpful**
+   - Anticipate questions
+   - Provide context
+   - Include examples
+
+4. **Be Consistent**
+   - Use the same terms throughout
+   - Follow established patterns
+   - Maintain parallel structure
+
+### Terminology Standards
+
+| Use This | Not This | Why |
+|----------|----------|-----|
+| API key | api key, Api Key | Consistency |
+| username | user name, userName | Single word |
+| endpoint | end point, API endpoint | Standard term |
+| parameter | param, argument | Clarity |
+| function | method, procedure | Consistency |
+
+<Callout type="info" title="Terminology Guide">
+Maintain a project glossary and always use consistent terms.
+</Callout>
+
+### Heading Standards
+
+**Heading Hierarchy:**
+```markdown
+# H1 - Page Title (use GradientText)
+## H2 - Major Sections
+### H3 - Subsections
+#### H4 - Minor Points
+```
+
+**Heading Style:**
+- ✅ Use sentence case: "Getting started with authentication"
+- ❌ Avoid title case: "Getting Started With Authentication"
+- ✅ Be descriptive: "Install the SDK"
+- ❌ Avoid vague: "Installation"
+
+### Code in Text
+
+**Inline Code:**
+- Use backticks for: code, filenames, variable names, commands
+- Examples: `npm install`, `config.json`, `userName`, `fetch()`
+
+**Code Blocks:**
+```jsx
+// Always include language identifier
+// Add comments to explain complex code
+// Keep examples focused and minimal
+```
+
+### Lists and Bullets
+
+**Unordered Lists:** Use for items without sequence
+```markdown
+- First item
+- Second item
+- Third item
+```
+
+**Ordered Lists:** Use for sequential steps
+```markdown
+1. First step
+2. Second step
+3. Third step
+```
+
+**Checklists:** Use for requirements
+```markdown
+- [ ] Requirement 1
+- [x] Completed requirement
+```
+
+### Links
+
+**Internal Links:**
+```markdown
+See the [Getting Started](../getting-started/quickstart) guide.
+```
+
+**External Links:**
+```markdown
+Visit [GitHub](https://github.com/example) for source code.
+```
+
+**Best Practices:**
+- ✅ Use descriptive link text: "Read the authentication guide"
+- ❌ Avoid generic text: "Click here" or "Read more"
+
+---
+
+## Visual Design Principles
+
+### Color Usage
+
+**Component Variants:**
+| Variant | Use Case | Example |
+|---------|----------|---------|
+| `primary` | Main actions, primary info | Get Started button |
+| `success` | Positive states, completion | "New" badge, checkmarks |
+| `warning` | Cautions, beta features | "Beta" badge, warnings |
+| `danger` | Errors, critical info | "Deprecated" badge |
+| `info` | General information | "v2.0" badge, notes |
+
+**Consistency Rules:**
+- Use the same variant for the same meaning across all pages
+- Success = green, Warning = yellow, Danger = red, Info = blue
+- Don't mix variant meanings
+
+### Spacing Standards
+
+```css
+/* Standard spacing units */
+Small gap:    0.5rem (8px)
+Medium gap:   1rem   (16px)
+Large gap:    2rem   (32px)
+Section gap:  3rem   (48px)
+```
+
+**Between Elements:**
+- Paragraph to paragraph: 1rem
+- Heading to content: 0.5rem
+- Section to section: 3rem (use `---` horizontal rule)
+- Component to component: 2rem
+
+### Typography
+
+**Font Sizes:**
+```markdown
+# H1 - 2.5rem (40px) - Page title
+## H2 - 2rem (32px) - Major sections
+### H3 - 1.5rem (24px) - Subsections
+#### H4 - 1.25rem (20px) - Minor points
+Body - 1rem (16px) - Content
+```
+
+**Font Styles:**
+- **Bold**: For emphasis and important terms
+- *Italic*: For subtle emphasis and citations
+- `Code`: For code, filenames, technical terms
+
+### Image Guidelines
+
+1. **Screenshots:**
+   - Use 2x resolution for retina displays
+   - Include clear borders or shadows
+   - Annotate with arrows or highlights if needed
+
+2. **Diagrams:**
+   - Use MermaidDiagram for flow charts
+   - Keep diagrams simple and focused
+   - Use consistent colors
+
+3. **Alt Text:**
+   - Always provide descriptive alt text
+   - Explain what the image shows
+   - Keep it concise (under 125 characters)
+
+---
+
+## Page Templates
+
+### 1. Quickstart/Getting Started
+
+```mdx
+---
+sidebar_position: 1
+title: Quick Start
+description: Get up and running in 5 minutes
+---
+
+import Badge from '@site/src/components/Badge';
+import GradientText from '@site/src/components/GradientText';
+import TerminalCommand from '@site/src/components/TerminalCommand';
+import StepIndicator from '@site/src/components/StepIndicator';
+
+# <GradientText>Quick Start Guide</GradientText>
+
+<p className="hero__subtitle">
+  Get started with [Product Name] in under 5 minutes.
+</p>
+
+<Badge variant="success">Beginner Friendly</Badge>
+
+---
+
+## Prerequisites
+
+Before you begin, make sure you have:
+- [ ] Requirement 1
+- [ ] Requirement 2
+- [ ] Requirement 3
+
+---
+
+## Installation
+
+<StepIndicator
+  currentStep={0}
+  steps={[
+    { title: 'Install Package', description: 'Install via npm' },
+    { title: 'Configure', description: 'Set up configuration' },
+    { title: 'Test', description: 'Verify installation' }
+  ]}
+/>
+
+### Step 1: Install the Package
+
+<TerminalCommand command="npm install package-name" />
+
+### Step 2: Configure
+
+[Configuration steps...]
+
+### Step 3: Test Your Installation
+
+[Testing steps...]
+
+---
+
+## Next Steps
+
+<DocCardGrid columns={2}>
+  <DocCard
+    title="Tutorials"
+    description="Learn with hands-on tutorials"
+    href="/"
+    icon={<Icon name="books" size={32} />}
+  />
+  <DocCard
+    title="API Reference"
+    description="Complete API documentation"
+    href="/"
+    icon={<Icon name="book" size={32} />}
+  />
+</DocCardGrid>
+```
+
+### 2. API Reference
+
+```mdx
+---
+sidebar_position: 3
+title: API Reference
+description: Complete REST API documentation
+---
+
+import ApiEndpoint from '@site/src/components/ApiEndpoint';
+import ParameterTable from '@site/src/components/ParameterTable';
+import PropertyTable from '@site/src/components/PropertyTable';
+import CodeShowcase from '@site/src/components/CodeShowcase';
+
+# <GradientText>API Reference</GradientText>
+
+<p className="hero__subtitle">
+  Complete reference for the REST API.
+</p>
+
+---
+
+## Authentication
+
+[Auth documentation...]
+
+---
+
+## Endpoints
+
+### Get User
+
+<ApiEndpoint
+  method="GET"
+  path="/api/v1/users/:id"
+  description="Retrieve user information by ID"
+/>
+
+#### Path Parameters
+
+<ParameterTable
+  parameters={[
+    {
+      name: 'id',
+      type: 'string',
+      required: true,
+      description: 'Unique user identifier'
+    }
+  ]}
+/>
+
+#### Response
+
+<PropertyTable
+  properties={[
+    {
+      name: 'id',
+      type: 'string',
+      required: true,
+      description: 'User ID'
+    },
+    {
+      name: 'email',
+      type: 'string',
+      required: true,
+      description: 'User email address'
+    }
+  ]}
+/>
+
+#### Example
+
+<CodeShowcase
+  examples={[
+    {
+      label: 'cURL',
+      language: 'bash',
+      code: `curl -X GET https://api.example.com/v1/users/123 \\
+  -H "Authorization: Bearer YOUR_API_KEY"`
+    },
+    {
+      label: 'JavaScript',
+      language: 'javascript',
+      code: `const response = await fetch('https://api.example.com/v1/users/123', {
+  headers: {
+    'Authorization': 'Bearer YOUR_API_KEY'
+  }
+});
+const data = await response.json();`
+    }
+  ]}
+/>
+```
+
+### 3. Tutorial/Guide
+
+```mdx
+---
+sidebar_position: 2
+title: Building Your First Integration
+description: Step-by-step tutorial for beginners
+---
+
+import Callout from '@site/src/components/Callout';
+import CodeShowcase from '@site/src/components/CodeShowcase';
+
+# <GradientText>Building Your First Integration</GradientText>
+
+<p className="hero__subtitle">
+  Learn how to build a complete integration in 30 minutes.
+</p>
+
+<Badge variant="info">Tutorial</Badge> <Badge variant="success">30 min</Badge>
+
+---
+
+## What You'll Build
+
+[Description of what they'll create...]
+
+<Callout type="info" title="What You'll Learn">
+- Concept 1
+- Concept 2
+- Concept 3
+</Callout>
+
+---
+
+## Step 1: Setup
+
+[Step content...]
+
+<CodeShowcase examples={[...]} />
+
+<Callout type="tip">
+Pro tip: [Helpful advice]
+</Callout>
+
+---
+
+## Step 2: Implementation
+
+[Step content...]
+
+---
+
+## Conclusion
+
+[Summary and next steps...]
+
+<RelatedDocs
+  items={[
+    {
+      title: 'Advanced Patterns',
+      href: '/docs/advanced',
+      description: 'Take your skills further'
+    }
+  ]}
+/>
+```
+
+### 4. Concept/Explanation
+
+```mdx
+---
+sidebar_position: 1
+title: Understanding Authentication
+description: How authentication works in our system
+---
+
+import Callout from '@site/src/components/Callout';
+import MermaidDiagram from '@site/src/components/MermaidDiagram';
+
+# <GradientText>Understanding Authentication</GradientText>
+
+<p className="hero__subtitle">
+  Learn how authentication works and best practices.
+</p>
+
+---
+
+## Overview
+
+[High-level explanation...]
+
+<Callout type="info">
+Key concept: [Important point]
+</Callout>
+
+---
+
+## How It Works
+
+[Detailed explanation...]
+
+<MermaidDiagram
+  diagram={`
+sequenceDiagram
+    Client->>Server: Request with credentials
+    Server->>Database: Validate credentials
+    Database->>Server: Return user data
+    Server->>Client: Return auth token
+  `}
+/>
+
+---
+
+## Best Practices
+
+1. **Security First**
+   - [Advice]
+   
+2. **Performance**
+   - [Advice]
+
+---
+
+## Common Patterns
+
+<Accordion title="Pattern 1">
+[Explanation...]
+</Accordion>
+
+<Accordion title="Pattern 2">
+[Explanation...]
+</Accordion>
+```
+
+---
+
+## Quality Checklist
+
+Before publishing any documentation page, verify:
+
+### Content Quality
+
+- [ ] Title is clear and descriptive
+- [ ] Introduction explains page purpose
+- [ ] All sections are well-organized
+- [ ] Examples are relevant and tested
+- [ ] No spelling or grammar errors
+- [ ] Technical accuracy verified
+
+### Component Usage
+
+- [ ] GradientText used for main title
+- [ ] Appropriate badges included
+- [ ] Callouts used for important info
+- [ ] Code examples use proper components
+- [ ] Related docs linked at bottom
+
+### Formatting
+
+- [ ] Frontmatter is complete
+- [ ] Headings follow hierarchy (H2 → H3 → H4)
+- [ ] Lists are properly formatted
+- [ ] Code blocks have language identifiers
+- [ ] Images have alt text
+
+### Links and Navigation
+
+- [ ] All links work correctly
+- [ ] Internal links use relative paths
+- [ ] External links open in new tabs
+- [ ] Related documentation linked
+
+### Accessibility
+
+- [ ] Images have descriptive alt text
+- [ ] Code examples are readable
+- [ ] Color contrast is sufficient
+- [ ] Keyboard navigation works
+
+### Mobile Responsive
+
+- [ ] Layout works on mobile
+- [ ] Images scale properly
+- [ ] Tables are scrollable
+- [ ] Code blocks don't overflow
+
+---
+
+## Common Patterns
+
+### Pattern: Multi-Language Code Examples
+
+```jsx
+<CodeShowcase
+  title="Make an API Request"
+  examples={[
+    {
+      label: 'JavaScript',
+      language: 'javascript',
+      code: `// JavaScript example`
+    },
+    {
+      label: 'Python',
+      language: 'python',
+      code: `# Python example`
+    },
+    {
+      label: 'cURL',
+      language: 'bash',
+      code: `# cURL example`
+    }
+  ]}
+/>
+```
+
+### Pattern: Feature Showcase
+
+```jsx
+<FeatureGrid columns={3}>
+  <FeatureGridItem
+    icon={<Icon name="lightning" size={32} />}
+    title="Fast"
+    description="Lightning-fast performance"
+  />
+  <FeatureGridItem
+    icon={<Icon name="padlock" size={32} />}
+    title="Secure"
+    description="Enterprise-grade security"
+  />
+  <FeatureGridItem
+    icon={<Icon name="chart" size={32} />}
+    title="Scalable"
+    description="Grows with your needs"
+  />
+</FeatureGrid>
+```
+
+### Pattern: Step-by-Step Guide
+
+```jsx
+<StepIndicator
+  currentStep={0}
+  steps={[
+    { title: 'Step 1', description: 'Description' },
+    { title: 'Step 2', description: 'Description' },
+    { title: 'Step 3', description: 'Description' }
+  ]}
+/>
+```
+
+### Pattern: Important Callouts
+
+```jsx
+<Callout type="warning" title="Important">
+Critical information users must know.
+</Callout>
+
+<Callout type="tip">
+Helpful tip to improve user experience.
+</Callout>
+
+<Callout type="info">
+Additional context or background information.
+</Callout>
+```
+
+### Pattern: Related Documentation
+
+```jsx
+<RelatedDocs
+  title="Related Topics"
+  items={[
+    {
+      title: 'Topic 1',
+      href: '/docs/topic1',
+      description: 'Brief description',
+      icon: '📚'
+    },
+    {
+      title: 'Topic 2',
+      href: '/docs/topic2',
+      description: 'Brief description',
+      icon: '🔧'
+    }
+  ]}
+/>
+```
+
+---
+
+## Getting Started
+
+<DocCardGrid columns={2}>
+  <DocCard
+    title="Component Reference"
+    description="Complete guide to all components"
+    href="/docs/contribution/documentation/all-components"
+    icon={<Icon name="puzzle" size={32} />}
+    variant="primary"
+  />
+  <DocCard
+    title="Component Inventory"
+    description="Quick component lookup"
+    href="/"
+    icon={<Icon name="package" size={32} />}
+    variant="secondary"
+  />
+</DocCardGrid>
+
+---
+
+## Need Help?
+
+<Callout type="info" title="Questions?">
+If you have questions about documentation standards, reach out to the documentation team or create an issue in the docs repository.
+</Callout>
+
+---
+
+<div style={{ marginTop: '3rem', textAlign: 'center' }}>
+  <Badge variant="success">Complete Guide</Badge>
+  <p style={{ marginTop: '1rem', color: 'var(--ifm-color-emphasis-600)' }}>
+    Last updated: {new Date().toLocaleDateString()}
+  </p>
+</div>
+
+

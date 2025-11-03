@@ -1,0 +1,26 @@
+# LLMs crawling policy
+# Purpose: Signal intent to common AI/LLM crawlers.
+# Note: This file is advisory; enforcement depends on each crawler.
+
+User-agent: GPTBot
+Allow: /
+
+User-agent: CCBot
+Allow: /
+
+User-agent: ClaudeBot
+Allow: /
+
+User-agent: Amazonbot
+Allow: /
+
+User-agent: PerplexityBot
+Allow: /
+
+# Fallback for other AI crawlers
+User-agent: *
+Allow: /
+
+# Reference sitemap (update domain when finalized)
+Sitemap: https://docusaurus-test-seven-sage.vercel.app/sitemap.xml
+

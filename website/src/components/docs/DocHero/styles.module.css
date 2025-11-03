@@ -1,0 +1,244 @@
+/* DocHero - MoneyKit-inspired hero section */
+.docHero {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 4rem 2rem;
+  background: linear-gradient(135deg, #0a0a0a 0%, #1a1a1a 100%);
+  overflow: hidden;
+  margin-bottom: 3rem;
+  border-radius: 1.5rem;
+}
+
+/* Background Image Support */
+.docHero--hasImage {
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+}
+
+/* Overlay for better text readability */
+.docHeroOverlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(
+    135deg,
+    rgba(10, 10, 10, 0.95) 0%,
+    rgba(10, 10, 10, 0.85) 100%
+  );
+  pointer-events: none;
+  z-index: 1;
+}
+
+[data-theme='light'] .docHeroOverlay {
+  background: linear-gradient(
+    135deg,
+    rgba(59, 130, 246, 0.95) 0%,
+    rgba(30, 64, 175, 0.95) 100%
+  );
+}
+
+/* Content */
+.docHeroContent {
+  position: relative;
+  z-index: 2;
+  max-width: 900px;
+  text-align: center;
+  width: 100%;
+}
+
+.docHeroTitle {
+  margin: 0 0 1.5rem 0;
+  font-size: 3rem;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 1) 0%, rgba(255, 255, 255, 0.85) 100%) !important;
+  -webkit-background-clip: text !important;
+  -webkit-text-fill-color: transparent !important;
+  background-clip: text !important;
+  line-height: 1.1;
+}
+
+.docHeroSubtitle {
+  margin: 0 auto 2rem auto;
+  font-size: 1.25rem;
+  font-weight: 400;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.95) 0%, rgba(255, 255, 255, 0.7) 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  line-height: 1.6;
+  max-width: 700px;
+}
+
+/* Button spacing in hero */
+.docHeroContent > * + * {
+  margin-top: 2rem;
+}
+
+/* Variants */
+.docHero--gradient {
+  background: linear-gradient(135deg, #3b82f6 0%, #1e40af 100%);
+}
+
+[data-theme='dark'] .docHero--gradient {
+  background: linear-gradient(135deg, #0a0a0a 0%, #1a1a1a 100%);
+}
+
+.docHero--dark {
+  background: #000000;
+}
+
+.docHero--dark .docHeroOverlay {
+  background: linear-gradient(
+    135deg,
+    rgba(0, 0, 0, 0.7) 0%,
+    rgba(0, 0, 0, 0.5) 100%
+  );
+}
+
+.docHero--image {
+  background: #0a0a0a;
+}
+
+/* Height variants */
+.docHero--small {
+  padding: 3rem 2rem;
+}
+
+.docHero--small .docHeroTitle {
+  font-size: 2.25rem;
+}
+
+.docHero--small .docHeroSubtitle {
+  font-size: 1.125rem;
+}
+
+.docHero--medium {
+  padding: 5rem 2rem;
+}
+
+.docHero--large {
+  padding: 8rem 2rem;
+}
+
+.docHero--large .docHeroTitle {
+  font-size: 3.5rem;
+}
+
+.docHero--large .docHeroSubtitle {
+  font-size: 1.5rem;
+}
+
+.docHero--full {
+  min-height: 70vh;
+  padding: 6rem 2rem;
+}
+
+.docHero--full .docHeroTitle {
+  font-size: 4rem;
+}
+
+.docHero--full .docHeroSubtitle {
+  font-size: 1.75rem;
+}
+
+/* DocHeroSection */
+.docHeroSection {
+  padding: 3rem 0;
+}
+
+.docHeroSectionTitle {
+  text-align: center;
+  font-size: 2rem;
+  font-weight: 700;
+  margin-bottom: 2.5rem;
+  color: var(--ifm-heading-color);
+}
+
+[data-theme='dark'] .docHeroSectionTitle {
+  color: #ffffff;
+}
+
+/* Responsive */
+@media (max-width: 996px) {
+  .docHero {
+    padding: 4rem 1.5rem;
+  }
+  
+  .docHeroTitle {
+    font-size: 2.5rem;
+  }
+  
+  .docHeroSubtitle {
+    font-size: 1.125rem;
+  }
+  
+  .docHero--large {
+    padding: 6rem 1.5rem;
+  }
+  
+  .docHero--large .docHeroTitle {
+    font-size: 3rem;
+  }
+  
+  .docHero--full {
+    min-height: 50vh;
+    padding: 5rem 1.5rem;
+  }
+  
+  .docHero--full .docHeroTitle {
+    font-size: 3rem;
+  }
+}
+
+@media (max-width: 768px) {
+  .docHero {
+    padding: 3rem 1.25rem;
+  }
+  
+  .docHeroTitle {
+    font-size: 2rem;
+  }
+  
+  .docHeroSubtitle {
+    font-size: 1rem;
+  }
+  
+  .docHero--small {
+    padding: 2rem 1.25rem;
+  }
+  
+  .docHero--small .docHeroTitle {
+    font-size: 1.75rem;
+  }
+  
+  .docHero--large {
+    padding: 4rem 1.25rem;
+  }
+  
+  .docHero--large .docHeroTitle {
+    font-size: 2.25rem;
+  }
+  
+  .docHero--large .docHeroSubtitle {
+    font-size: 1.125rem;
+  }
+  
+  .docHero--full {
+    min-height: 40vh;
+  }
+  
+  .docHero--full .docHeroTitle {
+    font-size: 2.5rem;
+  }
+  
+  .docHero--full .docHeroSubtitle {
+    font-size: 1.125rem;
+  }
+}
+
