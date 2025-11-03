@@ -1,0 +1,20 @@
+<svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <defs>
+        <linearGradient id="blueGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" style="stop-color:#60A5FA;stop-opacity:1" />
+            <stop offset="100%" style="stop-color:#2563EB;stop-opacity:1" />
+        </linearGradient>
+    </defs>
+  <path d="M9 18H15" stroke="url(#blueGradient)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M10 22H14" stroke="url(#blueGradient)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M15.0901 10C15.0901 11.6569 13.7469 13 12.0901 13C10.4332 13 9.09009 11.6569 9.09009 10C9.09009 8.34315 10.4332 7 12.0901 7C13.7469 7 15.0901 8.34315 15.0901 10Z" stroke="url(#blueGradient)" stroke-width="2"/>
+  <path d="M12 2V3" stroke="url(#blueGradient)" stroke-width="2" stroke-linecap="round"/>
+  <path d="M4.93018 4.93018L5.63728 5.63728" stroke="url(#blueGradient)" stroke-width="2" stroke-linecap="round"/>
+  <path d="M2 12H3" stroke="url(#blueGradient)" stroke-width="2" stroke-linecap="round"/>
+  <path d="M4.93018 19.0698L5.63728 18.3627" stroke="url(#blueGradient)" stroke-width="2" stroke-linecap="round"/>
+  <path d="M19.0698 19.0698L18.3627 18.3627" stroke="url(#blueGradient)" stroke-width="2" stroke-linecap="round"/>
+  <path d="M22 12H21" stroke="url(#blueGradient)" stroke-width="2" stroke-linecap="round"/>
+  <path d="M19.0698 4.93018L18.3627 5.63728" stroke="url(#blueGradient)" stroke-width="2" stroke-linecap="round"/>
+  <path d="M12 13V18" stroke="url(#blueGradient)" stroke-width="2" stroke-linecap="round"/>
+</svg>
+

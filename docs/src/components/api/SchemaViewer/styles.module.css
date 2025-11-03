@@ -1,0 +1,157 @@
+/* SchemaViewer Component */
+.schemaViewer {
+  margin: 1rem 0;
+  font-family: var(--ifm-font-family-monospace);
+  font-size: 0.875rem;
+}
+
+.schemaContainer {
+  background: var(--ifm-code-background);
+  border: 1px solid var(--ifm-color-emphasis-200);
+  border-radius: 0.5rem;
+  padding: 1rem;
+  overflow-x: auto;
+}
+
+[data-theme='dark'] .schemaContainer {
+  background: #1a1a1a;
+  border-color: #2a2a2a;
+}
+
+.schemaViewer .schemaViewer .schemaContainer {
+  padding: 0 0 0 1rem;
+  border: none;
+  background: transparent;
+}
+
+.schemaBody {
+  margin: 0.125rem 0;
+}
+
+.property {
+  margin: 0.125rem 0;
+}
+
+.propertyComplex {
+  display: block;
+}
+
+.propertyHeader {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.propertyKey {
+  color: var(--ifm-color-primary-dark);
+  font-weight: 600;
+}
+
+[data-theme='dark'] .propertyKey {
+  color: #93c5fd;
+}
+
+.propertySeparator {
+  color: var(--ifm-color-emphasis-500);
+}
+
+.propertyValue {
+  transition: max-height 0.3s ease;
+  display: inline-block;
+}
+
+.propertyComplex .propertyValue {
+  display: block;
+  margin-top: 0.125rem;
+}
+
+.propertyValueCollapsed {
+  max-height: 0;
+  overflow: hidden;
+}
+
+.expandButton {
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0.25rem;
+  display: flex;
+  align-items: center;
+  color: var(--ifm-color-emphasis-600);
+  transition: color 0.2s ease;
+}
+
+.expandButton:hover {
+  color: var(--ifm-color-primary);
+}
+
+.expandIcon {
+  transition: transform 0.2s ease;
+}
+
+.expandIconOpen {
+  transform: rotate(180deg);
+}
+
+.stringValue {
+  color: #10b981;
+}
+
+[data-theme='dark'] .stringValue {
+  color: #34d399;
+}
+
+.primitiveValue {
+  color: var(--ifm-color-primary);
+}
+
+[data-theme='dark'] .primitiveValue {
+  color: #93c5fd;
+}
+
+.nullValue {
+  color: var(--ifm-color-emphasis-500);
+  font-style: italic;
+}
+
+.undefinedValue {
+  color: var(--ifm-color-emphasis-500);
+  font-style: italic;
+}
+
+.emptyObject,
+.emptyArray {
+  color: var(--ifm-color-emphasis-500);
+  font-style: italic;
+}
+
+.arrayContainer {
+  display: inline-flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.arrayItems {
+  margin-left: 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.arrayItem {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .schemaViewer {
+    font-size: 0.8125rem;
+  }
+
+  .schemaContainer {
+    padding: 0.75rem;
+  }
+}
+

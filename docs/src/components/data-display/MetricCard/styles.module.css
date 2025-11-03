@@ -1,0 +1,285 @@
+.metricCard {
+  background: var(--ifm-background-surface-color);
+  border-radius: 1.25rem;
+  padding: 2rem;
+  text-align: center;
+  border: 1px solid var(--ifm-color-emphasis-300);
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+  overflow: hidden;
+  box-shadow: 
+    0 4px 6px -1px rgba(0, 0, 0, 0.1),
+    0 2px 4px -1px rgba(0, 0, 0, 0.06),
+    0 0 0 1px rgba(59, 130, 246, 0.05);
+  backdrop-filter: blur(10px);
+}
+
+.metricCard::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 100%;
+  background: linear-gradient(135deg, rgba(59, 130, 246, 0.08) 0%, rgba(37, 99, 235, 0.08) 50%, rgba(30, 64, 175, 0.08) 100%);
+  opacity: 1;
+  transition: opacity 0.4s ease;
+  z-index: 0;
+}
+
+.metricCard::after {
+  content: '';
+  position: absolute;
+  top: -50%;
+  right: -50%;
+  width: 200%;
+  height: 200%;
+  background: radial-gradient(circle, rgba(59, 130, 246, 0.1) 0%, transparent 70%);
+  opacity: 0;
+  transition: opacity 0.4s ease;
+  z-index: 0;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .metricCard:hover {
+    transform: translateY(-8px) scale(1.02);
+    box-shadow: 
+      0 25px 50px -12px rgba(59, 130, 246, 0.25),
+      0 0 0 1px rgba(59, 130, 246, 0.1),
+      inset 0 1px 0 rgba(255, 255, 255, 0.1);
+    border-color: rgba(59, 130, 246, 0.3);
+  }
+
+  .metricCard:hover::before {
+    opacity: 1;
+  }
+
+  .metricCard:hover::after {
+    opacity: 1;
+  }
+}
+
+.metricHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 1rem;
+  position: relative;
+  z-index: 1;
+}
+
+.metricIcon {
+  font-size: 2rem;
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 3.5rem;
+  height: 3.5rem;
+  border-radius: 1rem;
+  background: linear-gradient(135deg, rgba(59, 130, 246, 0.15) 0%, rgba(37, 99, 235, 0.15) 100%);
+  padding: 0.75rem;
+  position: relative;
+  z-index: 1;
+  box-shadow: 
+    0 4px 6px -1px rgba(59, 130, 246, 0.15),
+    inset 0 1px 0 rgba(255, 255, 255, 0.1);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .metricCard:hover .metricIcon {
+    transform: scale(1.1) rotate(5deg);
+    background: linear-gradient(135deg, rgba(59, 130, 246, 0.25) 0%, rgba(37, 99, 235, 0.25) 100%);
+    box-shadow: 
+      0 8px 12px -2px rgba(59, 130, 246, 0.3),
+      inset 0 1px 0 rgba(255, 255, 255, 0.2);
+  }
+}
+
+.trend {
+  font-size: 0.875rem;
+  font-weight: 700;
+  padding: 0.375rem 0.875rem;
+  border-radius: 9999px;
+  white-space: nowrap;
+  flex-shrink: 0;
+  position: relative;
+  z-index: 1;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.trend.up {
+  background: linear-gradient(135deg, rgba(16, 185, 129, 0.2) 0%, rgba(5, 150, 105, 0.2) 100%);
+  color: #10b981;
+  border: 1px solid rgba(16, 185, 129, 0.3);
+  box-shadow: 
+    0 2px 4px rgba(0, 0, 0, 0.1),
+    0 0 8px rgba(16, 185, 129, 0.15);
+  filter: drop-shadow(0 2px 4px rgba(16, 185, 129, 0.2));
+}
+
+.trend.down {
+  background: linear-gradient(135deg, rgba(239, 68, 68, 0.2) 0%, rgba(220, 38, 38, 0.2) 100%);
+  color: #ef4444;
+  border: 1px solid rgba(239, 68, 68, 0.3);
+  box-shadow: 
+    0 2px 4px rgba(0, 0, 0, 0.1),
+    0 0 8px rgba(239, 68, 68, 0.15);
+  filter: drop-shadow(0 2px 4px rgba(239, 68, 68, 0.2));
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .metricCard:hover .trend.up {
+    background: linear-gradient(135deg, rgba(16, 185, 129, 0.3) 0%, rgba(5, 150, 105, 0.3) 100%);
+    transform: scale(1.05);
+    box-shadow: 
+      0 4px 8px rgba(16, 185, 129, 0.25),
+      0 0 16px rgba(16, 185, 129, 0.3);
+    filter: drop-shadow(0 4px 8px rgba(16, 185, 129, 0.3));
+  }
+
+  .metricCard:hover .trend.down {
+    background: linear-gradient(135deg, rgba(239, 68, 68, 0.3) 0%, rgba(220, 38, 38, 0.3) 100%);
+    transform: scale(1.05);
+    box-shadow: 
+      0 4px 8px rgba(239, 68, 68, 0.25),
+      0 0 16px rgba(239, 68, 68, 0.3);
+    filter: drop-shadow(0 4px 8px rgba(239, 68, 68, 0.3));
+  }
+}
+
+.metricValue {
+  font-size: 2rem;
+  font-weight: 900;
+  background: linear-gradient(135deg, #3b82f6 0%, #2563eb 50%, #1e40af 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  margin-bottom: 0.75rem;
+  position: relative;
+  z-index: 1;
+  line-height: 1.1;
+  word-break: break-word;
+  overflow-wrap: break-word;
+  letter-spacing: -0.02em;
+  filter: drop-shadow(0 2px 4px rgba(59, 130, 246, 0.2));
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .metricCard:hover .metricValue {
+    transform: scale(1.05);
+    filter: drop-shadow(0 4px 8px rgba(59, 130, 246, 0.3));
+  }
+}
+
+.metricLabel {
+  font-size: 0.875rem;
+  color: var(--ifm-color-emphasis-700);
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.15em;
+  position: relative;
+  z-index: 1;
+  margin-top: 0.25rem;
+  opacity: 0.9;
+  transition: opacity 0.3s ease;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .metricCard:hover .metricLabel {
+    opacity: 1;
+    color: var(--ifm-color-emphasis-800);
+  }
+}
+
+/* Tablet breakpoint */
+@media (max-width: 996px) {
+  .metricCard {
+    padding: 1.75rem;
+    border-radius: 1rem;
+  }
+
+  .metricValue {
+    font-size: 1.875rem;
+  }
+
+  .metricIcon {
+    font-size: 2rem;
+    width: 3rem;
+    height: 3rem;
+    padding: 0.625rem;
+  }
+}
+
+/* Mobile breakpoint */
+@media (max-width: 768px) {
+  .metricCard {
+    padding: 1.5rem;
+    border-radius: 1rem;
+    box-shadow: 
+      0 2px 4px -1px rgba(0, 0, 0, 0.1),
+      0 1px 2px -1px rgba(0, 0, 0, 0.06);
+  }
+
+  .metricHeader {
+    justify-content: center;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+  }
+
+  .metricValue {
+    font-size: 2rem;
+  }
+
+  .metricIcon {
+    font-size: 1.75rem;
+    width: 2.75rem;
+    height: 2.75rem;
+    padding: 0.5rem;
+    border-radius: 0.75rem;
+  }
+
+  .trend {
+    font-size: 0.75rem;
+    padding: 0.3rem 0.65rem;
+  }
+
+  .metricLabel {
+    font-size: 0.8125rem;
+    letter-spacing: 0.1em;
+  }
+}
+
+/* Small mobile breakpoint */
+@media (max-width: 480px) {
+  .metricCard {
+    padding: 1.25rem;
+    border-radius: 0.875rem;
+  }
+
+  .metricValue {
+    font-size: 1.75rem;
+  }
+
+  .metricIcon {
+    font-size: 1.5rem;
+    width: 2.5rem;
+    height: 2.5rem;
+    padding: 0.45rem;
+    border-radius: 0.625rem;
+  }
+
+  .trend {
+    font-size: 0.6875rem;
+    padding: 0.25rem 0.55rem;
+  }
+
+  .metricLabel {
+    font-size: 0.75rem;
+    letter-spacing: 0.08em;
+  }
+}
+

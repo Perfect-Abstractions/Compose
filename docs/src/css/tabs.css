@@ -1,0 +1,41 @@
+/**
+ * Tab Component Styles
+ * Tab navigation styling
+ */
+
+/* Light mode tabs */
+.tabs {
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.tabs__item {
+  color: #64748b;
+}
+
+.tabs__item:hover {
+  color: #1e293b;
+}
+
+.tabs__item--active {
+  color: #3b82f6;
+  border-bottom-color: #3b82f6;
+}
+
+/* Dark mode tabs */
+[data-theme='dark'] .tabs {
+  border-bottom: 1px solid #334155;
+}
+
+[data-theme='dark'] .tabs__item {
+  color: #909090;
+  border-bottom: 2px solid transparent;
+}
+
+[data-theme='dark'] .tabs__item:hover {
+  color: #ffffff;
+}
+
+[data-theme='dark'] .tabs__item--active {
+  color: #60a5fa;
+  border-bottom-color: #60a5fa;
+}

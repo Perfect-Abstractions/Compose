@@ -1,0 +1,269 @@
+/* ExpandableCode Component */
+.expandableCode {
+  margin: 2rem 0;
+  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
+  border-radius: 0.75rem;
+  overflow: hidden;
+  background: var(--ifm-background-surface-color);
+  border: 1px solid var(--ifm-color-emphasis-200);
+  transition: box-shadow 0.3s ease, border-color 0.3s ease;
+}
+
+.expandableCode:hover {
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+}
+
+[data-theme='dark'] .expandableCode {
+  background: #1a1a1a;
+  border-color: #2a2a2a;
+  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.3), 0 1px 2px 0 rgba(0, 0, 0, 0.2);
+}
+
+[data-theme='dark'] .expandableCode:hover {
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.4), 0 2px 4px -1px rgba(0, 0, 0, 0.3);
+  border-color: #334155;
+}
+
+.codeTitle {
+  padding: 0.875rem 1.25rem;
+  background: linear-gradient(135deg, var(--ifm-color-emphasis-100) 0%, var(--ifm-color-emphasis-50) 100%);
+  border-bottom: 1px solid var(--ifm-color-emphasis-200);
+  font-weight: 700;
+  font-size: 0.9375rem;
+  color: var(--ifm-heading-color);
+  letter-spacing: -0.01em;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.codeTitle::before {
+  content: '';
+  width: 3px;
+  height: 16px;
+  background: linear-gradient(135deg, var(--ifm-color-primary) 0%, var(--ifm-color-primary-light) 100%);
+  border-radius: 2px;
+  flex-shrink: 0;
+}
+
+[data-theme='dark'] .codeTitle {
+  background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+  border-color: #334155;
+  color: #ffffff;
+}
+
+[data-theme='dark'] .codeTitle::before {
+  background: linear-gradient(135deg, #60a5fa 0%, #93c5fd 100%);
+}
+
+.codeWrapper {
+  position: relative;
+  overflow: hidden;
+  margin: 0 !important;
+  padding: 0 !important;
+}
+
+.codeBlock {
+  margin: 0 !important;
+  margin-top: 0 !important;
+  margin-bottom: 0 !important;
+  margin-left: 0 !important;
+  margin-right: 0 !important;
+  padding: 1.25rem 1.25rem 0 1.25rem !important;
+  padding-bottom: 0 !important;
+  background: #f8fafc;
+  border: none;
+  border-radius: 0;
+  overflow-x: auto;
+  overflow-y: hidden;
+  transition: max-height 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+}
+
+.codeBlock:has(+ .expandButton) {
+  padding-bottom: 0 !important;
+  margin-bottom: 0 !important;
+}
+
+[data-theme='dark'] .codeBlock {
+  background: #0f0f0f;
+  color: #e5e7eb;
+}
+
+.codeBlock code {
+  font-family: var(--ifm-font-family-monospace);
+  font-size: 0.8125rem;
+  line-height: 1.6;
+  margin: 0 !important;
+  padding: 0 !important;
+  display: block;
+}
+
+.codeBlock code:last-child {
+  margin-bottom: 0 !important;
+  padding-bottom: 0 !important;
+}
+
+.codeBlockCollapsed {
+  max-height: calc(1.6em * var(--max-lines, 10));
+  overflow: hidden;
+  position: relative;
+}
+
+.codeBlockCollapsed::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 120px;
+  background: linear-gradient(
+    to bottom,
+    rgba(248, 250, 252, 0) 0%,
+    rgba(248, 250, 252, 0.3) 30%,
+    rgba(248, 250, 252, 0.6) 60%,
+    rgba(248, 250, 252, 0.85) 85%,
+    rgba(248, 250, 252, 1) 100%
+  );
+  pointer-events: none;
+  z-index: 1;
+}
+
+[data-theme='dark'] .codeBlockCollapsed::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 120px;
+  background: linear-gradient(
+    to bottom,
+    rgba(15, 15, 15, 0) 0%,
+    rgba(15, 15, 15, 0.3) 30%,
+    rgba(15, 15, 15, 0.6) 60%,
+    rgba(15, 15, 15, 0.85) 85%,
+    rgba(15, 15, 15, 1) 100%
+  );
+  pointer-events: none;
+  z-index: 1;
+}
+
+.expandButton {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  width: 100%;
+  padding: 0.5rem 1.25rem !important;
+  padding-top: 1rem !important;
+  margin: 0 !important;
+  margin-top: -0.75rem !important;
+  background: var(--ifm-color-emphasis-100);
+  border: none !important;
+  outline: none !important;
+  box-shadow: none !important;
+  cursor: pointer;
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--ifm-color-primary);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+  overflow: visible;
+  z-index: 15;
+}
+
+.expandButton::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(59, 130, 246, 0.1), transparent);
+  transition: left 0.5s ease;
+}
+
+.expandButton:hover::before {
+  left: 100%;
+}
+
+.expandButton:hover {
+  background: var(--ifm-color-emphasis-200);
+  color: var(--ifm-color-primary-dark);
+  border: none !important;
+  outline: none !important;
+  transform: translateY(-1px);
+}
+
+.expandButton:active {
+  transform: translateY(0);
+}
+
+[data-theme='dark'] .expandButton {
+  background: #0f0f0f;
+  color: #60a5fa;
+  margin-top: -0.75rem !important;
+  box-shadow: none !important;
+  border: none !important;
+  outline: none !important;
+}
+
+[data-theme='dark'] .expandButton:hover {
+  background: #1a1a1a;
+  color: #93c5fd;
+  box-shadow: 0 4px 12px rgba(96, 165, 250, 0.15);
+  border: none !important;
+  outline: none !important;
+}
+
+[data-theme='dark'] .expandButton::before {
+  background: linear-gradient(90deg, transparent, rgba(96, 165, 250, 0.1), transparent);
+}
+
+.expandButton:focus {
+  outline: none !important;
+  border: none !important;
+}
+
+.expandButton:focus-visible {
+  outline: none !important;
+  border: none !important;
+}
+
+.expandButton svg {
+  flex-shrink: 0;
+  width: 16px;
+  height: 16px;
+  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.expandButton:hover svg {
+  transform: translateY(1px) scale(1.05);
+}
+
+.expandButton:active svg {
+  transform: translateY(0) scale(1);
+}
+
+/* Expanded state - no background */
+.expandButtonExpanded {
+  background: transparent !important;
+}
+
+.expandButtonExpanded:hover {
+  background: transparent !important;
+}
+
+[data-theme='dark'] .expandButtonExpanded {
+  background: transparent !important;
+}
+
+[data-theme='dark'] .expandButtonExpanded:hover {
+  background: transparent !important;
+}
+
+
+
+
+
+
