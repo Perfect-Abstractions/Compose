@@ -39,6 +39,52 @@ contract DiamondLoupeFacet {
 
 // Temporary struct to hold facet info
 
+function facets15() external view returns (Facet[] memory allFacets) {
+    uint numFacets;
+
+    DiamondStorage storage s = getStorage();
+    uint256 selectorCount = s.selectors.length;
+    uint[] memory selectorsFacetID = new uint[](selectorCount);
+    uint[] memory uniqueFacets = new uint[](1); // [(160)address |(96) corresponding selectors count]
+    uint facetIndex;
+
+    for (uint256 i; i < selectorCount; i++) {
+        address facet = s.facetAndPosition[s.selectors[i]].facet;
+        // Look for existing facet
+        for (facetIndex = 0; facetIndex < numFacets; facetIndex++) {
+            if (uniqueFacets[facetIndex]>>96 == uint160(facet)) {
+                uniqueFacets[facetIndex]++;
+                break;
+            }
+        }            
+        // If facet not found, add it
+        if (facetIndex == numFacets) {
+            numFacets++;
+            assembly ("memory-safe"){
+                mstore(uniqueFacets, numFacets)
+            }
+            uniqueFacets[facetIndex] = (uint(uint160(facet))<<96) + 1;
+        }
+        selectorsFacetID[i] = facetIndex;
+    }
+    assembly{
+        mstore(0x40,add(add(uniqueFacets,0x20),mul(mload(uniqueFacets),0x20)))
+    }
+
+    allFacets = new Facet[](numFacets);
+   
+    for (uint256 i; i < numFacets; i++) {
+        allFacets[i].functionSelectors = new bytes4[](uint(uniqueFacets[i]) & 0xffffffffffffffffffffffff);
+        allFacets[i].facet = address(uint160(uniqueFacets[i] >> 96));
+    }
+
+    uint256[] memory selectorsIdx = new uint256[](numFacets);
+    for (uint256 i; i < selectorCount; i++) {
+        allFacets[selectorsFacetID[i]].functionSelectors[selectorsIdx[selectorsFacetID[i]]++] = s.selectors[i];
+    }
+
+}
+
    struct FacetInfo {
         address facet;
         bytes4[] selectors;
