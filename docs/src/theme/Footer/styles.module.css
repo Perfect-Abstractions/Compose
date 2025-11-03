@@ -1,0 +1,13 @@
+/**
+ * Footer Component Styles (CSS Modules)
+ * 
+ * Note: Main badge styles are in footer.css for global access.
+ * This file only contains component-specific layout styles.
+ */
+
+.footerWrapper {
+  position: relative;
+  margin-bottom: 0;
+  padding-bottom: 0;
+}
+
