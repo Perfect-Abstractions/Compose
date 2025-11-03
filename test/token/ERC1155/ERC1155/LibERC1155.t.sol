@@ -410,8 +410,13 @@ contract LibERC1155Test is Test {
         vm.prank(from);
         harness.safeTransferFrom(from, to, id, amount);
 
-        assertEq(harness.balanceOf(from, id), 0);
-        assertEq(harness.balanceOf(to, id), amount);
+        if (from == to) {
+            // Self-transfer is a no-op; balance remains unchanged
+            assertEq(harness.balanceOf(from, id), amount);
+        } else {
+            assertEq(harness.balanceOf(from, id), 0);
+            assertEq(harness.balanceOf(to, id), amount);
+        }
     }
 
     function test_RevertWhen_SafeTransferFromToZeroAddress() public {
