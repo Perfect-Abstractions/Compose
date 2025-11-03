@@ -108,11 +108,13 @@ Displays tabbed code examples with syntax highlighting, perfect for showing the 
 
 #### Props
 
-| Prop | Type | Required | Description |
-|------|------|----------|-------------|
-| `title` | string | No | Optional title for the code showcase |
-| `description` | string | No | Optional description |
-| `examples` | Array | Yes | Array of example objects |
+<PropertyTable 
+  properties={[
+    { name: 'title', type: 'string', required: false, description: 'Optional title for the code showcase' },
+    { name: 'description', type: 'string', required: false, description: 'Optional description' },
+    { name: 'examples', type: 'Array', required: true, description: 'Array of example objects' }
+  ]}
+/>
 
 **Example Object Structure:**
 ```js
@@ -196,12 +198,14 @@ Collapsible code blocks for long code snippets with automatic expansion controls
 
 #### Props
 
-| Prop | Type | Default | Description |
-|------|------|---------|-------------|
-| `language` | string | 'javascript' | Code language for syntax highlighting |
-| `maxLines` | number | 10 | Lines visible before collapse |
-| `title` | string | undefined | Optional code block title |
-| `children` | ReactNode | Required | Code content |
+<PropertyTable 
+  properties={[
+    { name: 'language', type: 'string', required: false, description: 'Code language for syntax highlighting', default: "'javascript'" },
+    { name: 'maxLines', type: 'number', required: false, description: 'Lines visible before collapse', default: '10' },
+    { name: 'title', type: 'string', required: false, description: 'Optional code block title', default: 'undefined' },
+    { name: 'children', type: 'ReactNode', required: true, description: 'Code content' }
+  ]}
+/>
 
 #### Usage
 
@@ -254,12 +258,14 @@ Styled terminal/shell command display with copy functionality.
 
 #### Props
 
-| Prop | Type | Default | Description |
-|------|------|---------|-------------|
-| `command` | string | Required | Command to display |
-| `copyable` | boolean | true | Show copy button |
-| `prompt` | string | '$' | Command prompt symbol |
-| `language` | string | 'bash' | Syntax highlighting language |
+<PropertyTable 
+  properties={[
+    { name: 'command', type: 'string', required: true, description: 'Command to display' },
+    { name: 'copyable', type: 'boolean', required: false, description: 'Show copy button', default: 'true' },
+    { name: 'prompt', type: 'string', required: false, description: 'Command prompt symbol', default: "'$'" },
+    { name: 'language', type: 'string', required: false, description: 'Syntax highlighting language', default: "'bash'" }
+  ]}
+/>
 
 #### Usage
 
@@ -311,12 +317,14 @@ Collapsible sections perfect for FAQs, detailed explanations, or any content tha
 
 #### Props
 
-| Prop | Type | Default | Description |
-|------|------|---------|-------------|
-| `title` | string | Required | Accordion header text |
-| `defaultOpen` | boolean | false | Whether accordion starts expanded |
-| `variant` | string | 'default' | Style variant ('default', 'bordered') |
-| `children` | ReactNode | Required | Content to display when expanded |
+<PropertyTable 
+  properties={[
+    { name: 'title', type: 'string', required: true, description: 'Accordion header text' },
+    { name: 'defaultOpen', type: 'boolean', required: false, description: 'Whether accordion starts expanded', default: 'false' },
+    { name: 'variant', type: 'string', required: false, description: "Style variant ('default', 'bordered')", default: "'default'" },
+    { name: 'children', type: 'ReactNode', required: true, description: 'Content to display when expanded' }
+  ]}
+/>
 
 #### Usage
 
@@ -361,11 +369,13 @@ Hover over this <Tooltip content="This is a helpful tooltip with additional cont
 
 #### Props
 
-| Prop | Type | Default | Description |
-|------|------|---------|-------------|
-| `content` | string | Required | Tooltip text |
-| `position` | string | 'top' | Position ('top', 'bottom', 'left', 'right') |
-| `children` | ReactNode | Required | Trigger element |
+<PropertyTable 
+  properties={[
+    { name: 'content', type: 'string', required: true, description: 'Tooltip text' },
+    { name: 'position', type: 'string', required: false, description: "Position ('top', 'bottom', 'left', 'right')", default: "'top'" },
+    { name: 'children', type: 'ReactNode', required: true, description: 'Trigger element' }
+  ]}
+/>
 
 #### Usage
 
@@ -429,12 +439,14 @@ Display REST API endpoints with HTTP method badges and parameters.
 
 #### Props
 
-| Prop | Type | Required | Description |
-|------|------|----------|-------------|
-| `method` | string | Yes | HTTP method (GET, POST, PUT, DELETE, PATCH) |
-| `path` | string | Yes | API endpoint path |
-| `description` | string | No | Optional description |
-| `params` | Array | No | Query parameters |
+<PropertyTable 
+  properties={[
+    { name: 'method', type: 'string', required: true, description: 'HTTP method (GET, POST, PUT, DELETE, PATCH)' },
+    { name: 'path', type: 'string', required: true, description: 'API endpoint path' },
+    { name: 'description', type: 'string', required: false, description: 'Optional description' },
+    { name: 'params', type: 'Array', required: false, description: 'Query parameters' }
+  ]}
+/>
 
 **Parameter Object:**
 ```js
@@ -515,12 +527,14 @@ Documentation table for API object properties.
 
 #### Props
 
-| Prop | Type | Default | Description |
-|------|------|---------|-------------|
-| `properties` | Array | Required | Array of property objects |
-| `showRequired` | boolean | true | Show required column |
-| `showTypes` | boolean | true | Show type column |
-| `title` | string | undefined | Optional table title |
+<PropertyTable 
+  properties={[
+    { name: 'properties', type: 'Array', required: true, description: 'Array of property objects' },
+    { name: 'showRequired', type: 'boolean', required: false, description: 'Show required column', default: 'true' },
+    { name: 'showTypes', type: 'boolean', required: false, description: 'Show type column', default: 'true' },
+    { name: 'title', type: 'string', required: false, description: 'Optional table title', default: 'undefined' }
+  ]}
+/>
 
 **Property Object:**
 ```js
@@ -664,11 +678,13 @@ Interactive JSON schema visualization with expandable nested properties.
 
 #### Props
 
-| Prop | Type | Default | Description |
-|------|------|---------|-------------|
-| `schema` | Object | Required | JSON schema object |
-| `collapsed` | boolean | false | Start collapsed |
-| `depth` | number | 0 | Initial nesting depth |
+<PropertyTable 
+  properties={[
+    { name: 'schema', type: 'Object', required: true, description: 'JSON schema object' },
+    { name: 'collapsed', type: 'boolean', required: false, description: 'Start collapsed', default: 'false' },
+    { name: 'depth', type: 'number', required: false, description: 'Initial nesting depth', default: '0' }
+  ]}
+/>
 
 #### Usage
 
@@ -745,13 +761,15 @@ Complete API reference section with parameters and response tabs.
 
 #### Props
 
-| Prop | Type | Required | Description |
-|------|------|----------|-------------|
-| `method` | string | Yes | HTTP method |
-| `endpoint` | string | Yes | API endpoint |
-| `description` | string | No | Endpoint description |
-| `parameters` | Array | No | Parameters |
-| `response` | Object | No | Example response |
+<PropertyTable 
+  properties={[
+    { name: 'method', type: 'string', required: true, description: 'HTTP method' },
+    { name: 'endpoint', type: 'string', required: true, description: 'API endpoint' },
+    { name: 'description', type: 'string', required: false, description: 'Endpoint description' },
+    { name: 'parameters', type: 'Array', required: false, description: 'Parameters' },
+    { name: 'response', type: 'Object', required: false, description: 'Example response' }
+  ]}
+/>
 
 #### Usage
 
@@ -815,11 +833,13 @@ Multi-step process visualization with completion states.
 
 #### Props
 
-| Prop | Type | Default | Description |
-|------|------|---------|-------------|
-| `steps` | Array | Required | Array of step objects |
-| `currentStep` | number | 0 | Current active step (0-based) |
-| `orientation` | string | 'vertical' | Layout ('vertical', 'horizontal') |
+<PropertyTable 
+  properties={[
+    { name: 'steps', type: 'Array', required: true, description: 'Array of step objects' },
+    { name: 'currentStep', type: 'number', required: false, description: 'Current active step (0-based)', default: '0' },
+    { name: 'orientation', type: 'string', required: false, description: "Layout ('vertical', 'horizontal')", default: "'vertical'" }
+  ]}
+/>
 
 **Step Object:**
 ```js
@@ -886,14 +906,16 @@ Hero section for documentation pages with gradient backgrounds.
 
 #### Props
 
-| Prop | Type | Default | Description |
-|------|------|---------|-------------|
-| `title` | string | undefined | Hero title |
-| `subtitle` | string | undefined | Hero subtitle |
-| `backgroundImage` | string | undefined | Background image URL |
-| `variant` | string | 'gradient' | Style ('default', 'gradient', 'dark', 'image') |
-| `height` | string | 'medium' | Height ('small', 'medium', 'large', 'full') |
-| `children` | ReactNode | undefined | Additional content |
+<PropertyTable 
+  properties={[
+    { name: 'title', type: 'string', required: false, description: 'Hero title', default: 'undefined' },
+    { name: 'subtitle', type: 'string', required: false, description: 'Hero subtitle', default: 'undefined' },
+    { name: 'backgroundImage', type: 'string', required: false, description: 'Background image URL', default: 'undefined' },
+    { name: 'variant', type: 'string', required: false, description: "Style ('default', 'gradient', 'dark', 'image')", default: "'gradient'" },
+    { name: 'height', type: 'string', required: false, description: "Height ('small', 'medium', 'large', 'full')", default: "'medium'" },
+    { name: 'children', type: 'ReactNode', required: false, description: 'Additional content', default: 'undefined' }
+  ]}
+/>
 
 #### Usage
 
@@ -987,15 +1009,17 @@ Navigation cards for linking to documentation pages.
 
 #### Props
 
-| Prop | Type | Default | Description |
-|------|------|---------|-------------|
-| `title` | string | Required | Card title |
-| `description` | string | undefined | Card description |
-| `href` | string | undefined | Link destination |
-| `icon` | string/ReactNode | undefined | Icon (emoji or component) |
-| `variant` | string | 'default' | Style ('default', 'primary', 'secondary') |
-| `size` | string | 'medium' | Size ('small', 'medium', 'large') |
-| `external` | boolean | false | External link |
+<PropertyTable 
+  properties={[
+    { name: 'title', type: 'string', required: true, description: 'Card title' },
+    { name: 'description', type: 'string', required: false, description: 'Card description', default: 'undefined' },
+    { name: 'href', type: 'string', required: false, description: 'Link destination', default: 'undefined' },
+    { name: 'icon', type: 'string/ReactNode', required: false, description: 'Icon (emoji or component)', default: 'undefined' },
+    { name: 'variant', type: 'string', required: false, description: "Style ('default', 'primary', 'secondary')", default: "'default'" },
+    { name: 'size', type: 'string', required: false, description: "Size ('small', 'medium', 'large')", default: "'medium'" },
+    { name: 'external', type: 'boolean', required: false, description: 'External link', default: 'false' }
+  ]}
+/>
 
 #### Usage
 
@@ -1075,18 +1099,23 @@ Responsive grid layout for displaying features.
 #### Props
 
 **FeatureGrid:**
-| Prop | Type | Default | Description |
-|------|------|---------|-------------|
-| `columns` | number | 3 | Number of columns (2, 3, 4) |
-| `children` | ReactNode | Required | FeatureGridItem components |
+<PropertyTable 
+  properties={[
+    { name: 'columns', type: 'number', required: false, description: 'Number of columns (2, 3, 4)', default: '3' },
+    { name: 'children', type: 'ReactNode', required: true, description: 'FeatureGridItem components' }
+  ]}
+/>
 
 **FeatureGridItem:**
-| Prop | Type | Description |
-|------|------|-------------|
-| `icon` | string/ReactNode | Icon (emoji or component) |
-| `title` | string | Feature title |
-| `description` | string | Feature description |
-| `href` | string | Optional link |
+<PropertyTable 
+  showRequired={false}
+  properties={[
+    { name: 'icon', type: 'string/ReactNode', description: 'Icon (emoji or component)' },
+    { name: 'title', type: 'string', description: 'Feature title' },
+    { name: 'description', type: 'string', description: 'Feature description' },
+    { name: 'href', type: 'string', description: 'Optional link' }
+  ]}
+/>
 
 #### Usage
 
@@ -1152,13 +1181,16 @@ Animated feature card with gradient effects and hover animations.
 
 #### Props
 
-| Prop | Type | Description |
-|------|------|-------------|
-| `icon` | string | Emoji or icon |
-| `title` | string | Card title |
-| `description` | string | Card description |
-| `gradient` | string | Gradient variant ('gradientBlue', 'gradientPurple', 'gradientPink', 'gradientGreen') |
-| `link` | string | Optional link URL |
+<PropertyTable 
+  showRequired={false}
+  properties={[
+    { name: 'icon', type: 'string', description: 'Emoji or icon' },
+    { name: 'title', type: 'string', description: 'Card title' },
+    { name: 'description', type: 'string', description: 'Card description' },
+    { name: 'gradient', type: 'string', description: "Gradient variant ('gradientBlue', 'gradientPurple', 'gradientPink', 'gradientGreen')" },
+    { name: 'link', type: 'string', description: 'Optional link URL' }
+  ]}
+/>
 
 #### Usage
 
@@ -1197,10 +1229,12 @@ Frosted glass effect container with backdrop blur.
 
 #### Props
 
-| Prop | Type | Default | Description |
-|------|------|---------|-------------|
-| `hover` | boolean | false | Enable hover animation |
-| `children` | ReactNode | Required | Card content |
+<PropertyTable 
+  properties={[
+    { name: 'hover', type: 'boolean', required: false, description: 'Enable hover animation', default: 'false' },
+    { name: 'children', type: 'ReactNode', required: true, description: 'Card content' }
+  ]}
+/>
 
 #### Usage
 
@@ -1268,12 +1302,15 @@ Display statistics and metrics with optional trend indicators.
 
 #### Props
 
-| Prop | Type | Description |
-|------|------|-------------|
-| `value` | string/ReactNode | Metric value |
-| `label` | string | Metric label |
-| `icon` | string | Optional icon |
-| `trend` | Object | Optional trend `{direction: 'up'/'down', value: '12%'}` |
+<PropertyTable 
+  showRequired={false}
+  properties={[
+    { name: 'value', type: 'string/ReactNode', description: 'Metric value' },
+    { name: 'label', type: 'string', description: 'Metric label' },
+    { name: 'icon', type: 'string', description: 'Optional icon' },
+    { name: 'trend', type: 'Object', description: "Optional trend {direction: 'up'/'down', value: '12%'}" }
+  ]}
+/>
 
 #### Usage
 
@@ -1334,9 +1371,12 @@ Vertical timeline for roadmaps, changelogs, or historical events.
 
 #### Props
 
-| Prop | Type | Description |
-|------|------|-------------|
-| `items` | Array | Required array of timeline items |
+<PropertyTable 
+  showRequired={false}
+  properties={[
+    { name: 'items', type: 'Array', required: true, description: 'Required array of timeline items' }
+  ]}
+/>
 
 **Timeline Item:**
 ```js
@@ -1421,10 +1461,13 @@ Feature comparison table with highlighted columns.
 
 #### Props
 
-| Prop | Type | Description |
-|------|------|-------------|
-| `features` | Array | Array of feature objects |
-| `columns` | Array | Array of column objects |
+<PropertyTable 
+  showRequired={false}
+  properties={[
+    { name: 'features', type: 'Array', description: 'Array of feature objects' },
+    { name: 'columns', type: 'Array', description: 'Array of column objects' }
+  ]}
+/>
 
 **Column Object:**
 ```js
@@ -1490,10 +1533,13 @@ Text with gradient color effects - perfect for headings and emphasis.
 
 #### Props
 
-| Prop | Type | Description |
-|------|------|-------------|
-| `variant` | string | Gradient variant ('primary', 'secondary', 'accent', 'success') |
-| `children` | ReactNode | Text content |
+<PropertyTable 
+  showRequired={false}
+  properties={[
+    { name: 'variant', type: 'string', description: "Gradient variant ('primary', 'secondary', 'accent', 'success')" },
+    { name: 'children', type: 'ReactNode', description: 'Text content' }
+  ]}
+/>
 
 #### Usage
 
@@ -1545,11 +1591,13 @@ Pill-shaped label for status, tags, and metadata.
 
 #### Props
 
-| Prop | Type | Default | Description |
-|------|------|---------|-------------|
-| `variant` | string | 'primary' | Style variant |
-| `size` | string | 'medium' | Size ('small', 'medium', 'large') |
-| `children` | ReactNode | Required | Badge content |
+<PropertyTable 
+  properties={[
+    { name: 'variant', type: 'string', required: false, description: 'Style variant', default: "'primary'" },
+    { name: 'size', type: 'string', required: false, description: "Size ('small', 'medium', 'large')", default: "'medium'" },
+    { name: 'children', type: 'ReactNode', required: true, description: 'Badge content' }
+  ]}
+/>
 
 **Variants:**
 - `primary` - Main actions
@@ -1604,13 +1652,15 @@ Animated button with gradient effects and glow on hover.
 
 #### Props
 
-| Prop | Type | Default | Description |
-|------|------|---------|-------------|
-| `to` or `href` | string | undefined | Link destination |
-| `variant` | string | 'primary' | Style ('primary', 'secondary', 'success', 'outline') |
-| `size` | string | 'medium' | Size ('small', 'medium', 'large') |
-| `external` | boolean | false | Open in new tab |
-| `children` | ReactNode | Required | Button content |
+<PropertyTable 
+  properties={[
+    { name: 'to or href', type: 'string', required: false, description: 'Link destination', default: 'undefined' },
+    { name: 'variant', type: 'string', required: false, description: "Style ('primary', 'secondary', 'success', 'outline')", default: "'primary'" },
+    { name: 'size', type: 'string', required: false, description: "Size ('small', 'medium', 'large')", default: "'medium'" },
+    { name: 'external', type: 'boolean', required: false, description: 'Open in new tab', default: 'false' },
+    { name: 'children', type: 'ReactNode', required: true, description: 'Button content' }
+  ]}
+/>
 
 #### Usage
 
@@ -1676,14 +1726,16 @@ Smooth counting animation for numbers.
 
 #### Props
 
-| Prop | Type | Default | Description |
-|------|------|---------|-------------|
-| `end` | number | Required | Target number |
-| `duration` | number | 2000 | Animation duration (ms) |
-| `prefix` | string | '' | Prefix (e.g., '$') |
-| `suffix` | string | '' | Suffix (e.g., '+', 'K') |
-| `separator` | string | ',' | Thousands separator |
-| `decimals` | number | 0 | Decimal places |
+<PropertyTable 
+  properties={[
+    { name: 'end', type: 'number', required: true, description: 'Target number' },
+    { name: 'duration', type: 'number', required: false, description: 'Animation duration (ms)', default: '2000' },
+    { name: 'prefix', type: 'string', required: false, description: "Prefix (e.g., '$')", default: "''" },
+    { name: 'suffix', type: 'string', required: false, description: "Suffix (e.g., '+', 'K')", default: "''" },
+    { name: 'separator', type: 'string', required: false, description: 'Thousands separator', default: "','" },
+    { name: 'decimals', type: 'number', required: false, description: 'Decimal places', default: '0' }
+  ]}
+/>
 
 #### Usage
 
@@ -1726,10 +1778,13 @@ Feedback widget for collecting user feedback on documentation pages.
 
 #### Props
 
-| Prop | Type | Description |
-|------|------|-------------|
-| `pageId` | string | Unique page identifier |
-| `onSubmit` | Function | Callback when feedback submitted |
+<PropertyTable 
+  showRequired={false}
+  properties={[
+    { name: 'pageId', type: 'string', description: 'Unique page identifier' },
+    { name: 'onSubmit', type: 'Function', description: 'Callback when feedback submitted' }
+  ]}
+/>
 
 #### Usage
 
@@ -1779,11 +1834,13 @@ Display when page was last updated.
 
 #### Props
 
-| Prop | Type | Default | Description |
-|------|------|---------|-------------|
-| `date` | string/Date | Required | Date value |
-| `author` | string | undefined | Optional author |
-| `showAuthor` | boolean | false | Show author name |
+<PropertyTable 
+  properties={[
+    { name: 'date', type: 'string/Date', required: true, description: 'Date value' },
+    { name: 'author', type: 'string', required: false, description: 'Optional author', default: 'undefined' },
+    { name: 'showAuthor', type: 'boolean', required: false, description: 'Show author name', default: 'false' }
+  ]}
+/>
 
 #### Usage
 
@@ -1825,10 +1882,12 @@ the overall user experience of your documentation site.`}
 
 #### Props
 
-| Prop | Type | Default | Description |
-|------|------|---------|-------------|
-| `content` | string/ReactNode | Required | Content to analyze |
-| `wordsPerMinute` | number | 200 | Reading speed |
+<PropertyTable 
+  properties={[
+    { name: 'content', type: 'string/ReactNode', required: true, description: 'Content to analyze' },
+    { name: 'wordsPerMinute', type: 'number', required: false, description: 'Reading speed', default: '200' }
+  ]}
+/>
 
 #### Usage
 
@@ -1882,10 +1941,12 @@ Display related documentation articles with navigation cards.
 
 #### Props
 
-| Prop | Type | Default | Description |
-|------|------|---------|-------------|
-| `items` | Array | Required | Array of related items |
-| `title` | string | 'Related Documentation' | Section title |
+<PropertyTable 
+  properties={[
+    { name: 'items', type: 'Array', required: true, description: 'Array of related items' },
+    { name: 'title', type: 'string', required: false, description: 'Section title', default: "'Related Documentation'" }
+  ]}
+/>
 
 **Item Object:**
 ```js
@@ -1963,12 +2024,14 @@ This is a simple note without a custom title.
 
 #### Props
 
-| Prop | Type | Default | Description |
-|------|------|---------|-------------|
-| `type` | string | 'info' | Type ('info', 'warning', 'danger', 'success', 'tip', 'note') |
-| `title` | string | undefined | Optional custom title |
-| `icon` | boolean | true | Show icon |
-| `children` | ReactNode | Required | Content |
+<PropertyTable 
+  properties={[
+    { name: 'type', type: 'string', required: false, description: "Type ('info', 'warning', 'danger', 'success', 'tip', 'note')", default: "'info'" },
+    { name: 'title', type: 'string', required: false, description: 'Optional custom title', default: 'undefined' },
+    { name: 'icon', type: 'boolean', required: false, description: 'Show icon', default: 'true' },
+    { name: 'children', type: 'ReactNode', required: true, description: 'Content' }
+  ]}
+/>
 
 #### Usage
 
@@ -2148,4 +2211,3 @@ import Icon from '@site/src/components/ui/Icon';
 <WasThisHelpful pageId="all-components-reference" />
 
 <LastUpdated date={new Date().toISOString()} />
-
