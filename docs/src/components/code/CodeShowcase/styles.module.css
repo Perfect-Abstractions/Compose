@@ -1,0 +1,304 @@
+/* CodeShowcase - Clean, modern code display component */
+
+.showcase {
+  margin: 2rem 0;
+  border-radius: 12px;
+  overflow: hidden;
+  background: #1e293b;
+  border: 1px solid #334155;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+}
+
+[data-theme='light'] .showcase {
+  background: #ffffff;
+  border-color: #e2e8f0;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+}
+
+/* Header with Title */
+.header {
+  padding: 1rem 1.5rem;
+  background: #1e293b;
+}
+
+[data-theme='light'] .header {
+  background: #f8fafc;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.title {
+  margin: 0;
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: #f1f5f9;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+[data-theme='light'] .title {
+  color: #1e293b;
+}
+
+.titleIcon {
+  color: #60a5fa;
+  font-size: 1rem;
+  opacity: 0.7;
+}
+
+[data-theme='light'] .titleIcon {
+  color: #3b82f6;
+  opacity: 0.8;
+}
+
+/* Tab Bar */
+.tabBar {
+  display: flex;
+  gap: 0;
+  background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+  border-top: 1px solid #1a202c;
+  border-bottom: 1px solid #1a202c;
+  padding: 0;
+  overflow-x: auto;
+  scrollbar-width: thin;
+}
+
+[data-theme='light'] .tabBar {
+  background: linear-gradient(135deg, var(--ifm-color-emphasis-100) 0%, var(--ifm-color-emphasis-50) 100%);
+  border-top-color: #e2e8f0;
+  border-bottom-color: #cbd5e1;
+}
+
+/* Hide scrollbar but keep functionality */
+.tabBar::-webkit-scrollbar {
+  height: 4px;
+}
+
+.tabBar::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.tabBar::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 2px;
+}
+
+[data-theme='light'] .tabBar::-webkit-scrollbar-thumb {
+  background: rgba(0, 0, 0, 0.2);
+}
+
+/* Individual Tab */
+.tab {
+  all: unset;
+  padding: 0.75rem 1.5rem;
+  font-size: 0.9375rem;
+  font-weight: 500;
+  color: #94a3b8;
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  white-space: nowrap;
+  background: transparent;
+  border: none;
+  box-sizing: border-box;
+  position: relative;
+  border-radius: 6px 6px 0 0;
+}
+
+[data-theme='light'] .tab {
+  color: #64748b;
+}
+
+/* Hover effect with subtle glow */
+.tab:hover {
+  color: #cbd5e1;
+  background: rgba(255, 255, 255, 0.08);
+  transform: translateY(-1px);
+}
+
+[data-theme='light'] .tab:hover {
+  color: #334155;
+  background: rgba(59, 130, 246, 0.08);
+}
+
+/* Active Tab - Modern with gradient accent */
+.tabActive {
+  color: #60a5fa;
+  background: linear-gradient(180deg, rgba(59, 130, 246, 0.15) 0%, rgba(59, 130, 246, 0.08) 100%);
+  box-shadow: inset 0 -2px 0 0 #60a5fa;
+}
+
+[data-theme='light'] .tabActive {
+  color: #2563eb;
+  background: linear-gradient(180deg, rgba(59, 130, 246, 0.12) 0%, rgba(59, 130, 246, 0.06) 100%);
+  box-shadow: inset 0 -2px 0 0 #3b82f6;
+}
+
+.tabActive:hover {
+  color: #60a5fa;
+  background: linear-gradient(180deg, rgba(59, 130, 246, 0.2) 0%, rgba(59, 130, 246, 0.12) 100%);
+  transform: none;
+}
+
+[data-theme='light'] .tabActive:hover {
+  color: #2563eb;
+  background: linear-gradient(180deg, rgba(59, 130, 246, 0.15) 0%, rgba(59, 130, 246, 0.08) 100%);
+}
+
+/* Focus state for accessibility */
+.tab:focus-visible {
+  outline: 2px solid #60a5fa;
+  outline-offset: -2px;
+  border-radius: 6px 6px 0 0;
+}
+
+[data-theme='light'] .tab:focus-visible {
+  outline-color: #3b82f6;
+}
+
+/* Code Wrapper */
+.codeWrapper {
+  background: #1A1A1A;
+}
+
+[data-theme='light'] .codeWrapper {
+  background: #f6f8fa;
+}
+
+/* Override Docusaurus CodeBlock styles */
+.codeWrapper :global(div[class*="codeBlockContainer"]) {
+  background: #1A1A1A !important;
+  border-radius: 0 !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  box-shadow: none !important;
+}
+
+[data-theme='light'] .codeWrapper :global(div[class*="codeBlockContainer"]) {
+  background: #f6f8fa !important;
+}
+
+.codeWrapper :global(.prism-code) {
+  background: #1A1A1A !important;
+  margin: 0 !important;
+  padding: 1.25rem 1.5rem !important;
+  border-radius: 0 !important;
+  font-size: 0.9375rem;
+  line-height: 1.6;
+}
+
+[data-theme='dark'] .codeWrapper :global(.prism-code) {
+  background: #1A1A1A !important;
+  margin: 0 !important;
+  padding: 1.25rem 1.5rem !important;
+}
+
+[data-theme='light'] .codeWrapper :global(.prism-code) {
+  background: #f6f8fa !important;
+  margin: 0 !important;
+  padding: 1.25rem 1.5rem !important;
+}
+
+/* Override Docusaurus pre element margins */
+[data-theme='dark'] .codeWrapper :global(pre[class*="language-"]) {
+  margin: 0 !important;
+}
+
+[data-theme='light'] .codeWrapper :global(pre[class*="language-"]) {
+  margin: 0 !important;
+}
+
+.codeWrapper :global(pre) {
+  background: transparent !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  border: none !important;
+  border-radius: 0 !important;
+}
+
+.codeWrapper :global(code) {
+  background: transparent !important;
+  padding: 0 !important;
+  font-size: 0.9375rem;
+}
+
+.codeWrapper :global(pre code) {
+  padding: 0 !important;
+}
+
+/* Force consistent spacing across all Docusaurus code block elements */
+.codeWrapper :global(div),
+.codeWrapper :global(pre),
+.codeWrapper :global(code) {
+  box-sizing: border-box !important;
+}
+
+/* Copy button positioning */
+.codeWrapper :global(.clean-btn) {
+  right: 1rem !important;
+  top: 1rem !important;
+  opacity: 0.7;
+}
+
+.codeWrapper :global(.clean-btn):hover {
+  opacity: 1;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .showcase {
+    margin: 1.5rem 0;
+    border-radius: 10px;
+  }
+
+  .header {
+    padding: 0.875rem 1.25rem;
+  }
+
+  .title {
+    font-size: 1.125rem;
+  }
+
+  .tab {
+    padding: 0.625rem 1.25rem;
+    font-size: 0.875rem;
+  }
+
+  .codeWrapper :global(.prism-code) {
+    padding: 1rem 1.25rem !important;
+    font-size: 0.875rem;
+  }
+
+  [data-theme='dark'] .codeWrapper :global(.prism-code),
+  [data-theme='light'] .codeWrapper :global(.prism-code) {
+    padding: 1rem 1.25rem !important;
+  }
+}
+
+@media (max-width: 480px) {
+  .showcase {
+    border-radius: 8px;
+  }
+
+  .header {
+    padding: 0.75rem 1rem;
+  }
+
+  .title {
+    font-size: 1rem;
+  }
+
+  .tab {
+    padding: 0.5rem 1rem;
+    font-size: 0.8125rem;
+  }
+
+  .codeWrapper :global(.prism-code) {
+    padding: 0.875rem 1rem !important;
+    font-size: 0.8125rem;
+  }
+
+  [data-theme='dark'] .codeWrapper :global(.prism-code),
+  [data-theme='light'] .codeWrapper :global(.prism-code) {
+    padding: 0.875rem 1rem !important;
+  }
+}

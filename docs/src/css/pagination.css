@@ -1,0 +1,30 @@
+/**
+ * Pagination Component Styles
+ * Prev/Next pagination navigation styling
+ */
+
+/* Light mode pagination */
+.pagination-nav__link {
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  color: #1e293b;
+}
+
+.pagination-nav__link:hover {
+  background: #f8fafc;
+  border-color: #3b82f6;
+  color: #0f172a;
+}
+
+/* Dark mode pagination */
+[data-theme='dark'] .pagination-nav__link {
+  background: #1e293b;
+  border: 1px solid #334155;
+  color: #e0e0e0;
+}
+
+[data-theme='dark'] .pagination-nav__link:hover {
+  background: #334155;
+  border-color: #475569;
+  color: #ffffff;
+}

@@ -1,0 +1,219 @@
+/* DocCard - MoneyKit-inspired card component */
+.docCard {
+  display: flex;
+  align-items: center;
+  gap: 1.25rem;
+  padding: 2rem;
+  background: var(--ifm-background-surface-color);
+  border: 1px solid var(--ifm-color-emphasis-200);
+  border-radius: 0.75rem;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  text-decoration: none;
+  color: inherit;
+  position: relative;
+  overflow: hidden;
+  cursor: pointer;
+}
+
+.docCard::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: linear-gradient(90deg, var(--ifm-color-primary) 0%, var(--ifm-color-accent) 100%);
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.docCard:hover {
+  transform: translateY(-4px);
+  border-color: var(--ifm-color-primary);
+  box-shadow: 0 12px 24px -6px rgba(59, 130, 246, 0.25);
+}
+
+.docCard:hover::before {
+  opacity: 1;
+}
+
+/* Dark theme */
+[data-theme='dark'] .docCard {
+  background: #141414;
+  border-color: #2a2a2a;
+}
+
+[data-theme='dark'] .docCard:hover {
+  background: #1a1a1a;
+  border-color: #60a5fa;
+  box-shadow: 0 12px 24px -6px rgba(96, 165, 250, 0.25);
+}
+
+/* Card Icon */
+.docCardIcon {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 3.5rem;
+  height: 3.5rem;
+  border-radius: 0.75rem;
+  background: linear-gradient(135deg, var(--ifm-color-primary-lightest) 0%, var(--ifm-color-primary-lighter) 100%);
+  transition: transform 0.3s ease;
+}
+
+[data-theme='dark'] .docCardIcon {
+  background: linear-gradient(135deg, rgba(96, 165, 250, 0.15) 0%, rgba(59, 130, 246, 0.15) 100%);
+}
+
+.docCard:hover .docCardIcon {
+  transform: scale(1.1);
+}
+
+.iconEmoji {
+  font-size: 2rem;
+  line-height: 1;
+}
+
+/* Card Content */
+.docCardContent {
+  flex: 1;
+  min-width: 0;
+}
+
+.docCardTitle {
+  margin: 0 0 0.5rem 0;
+  font-size: 1.125rem;
+  font-weight: 700;
+  color: var(--ifm-heading-color);
+  letter-spacing: -0.01em;
+}
+
+.docCardDescription {
+  margin: 0;
+  font-size: 0.95rem;
+  line-height: 1.6;
+  color: var(--ifm-color-emphasis-700);
+}
+
+[data-theme='dark'] .docCardDescription {
+  color: #a0a0a0;
+}
+
+/* Card Arrow */
+.docCardArrow {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--ifm-color-emphasis-500);
+  transition: all 0.3s ease;
+}
+
+.docCard:hover .docCardArrow {
+  color: var(--ifm-color-primary);
+  transform: translateX(4px);
+}
+
+[data-theme='dark'] .docCard:hover .docCardArrow {
+  color: #60a5fa;
+}
+
+/* Card Variants */
+.docCard--primary {
+  background: linear-gradient(135deg, var(--ifm-color-primary) 0%, var(--ifm-color-primary-dark) 100%);
+  border-color: var(--ifm-color-primary);
+  color: white;
+}
+
+.docCard--primary .docCardTitle,
+.docCard--primary .docCardDescription,
+.docCard--primary .docCardArrow {
+  color: white;
+}
+
+.docCard--primary .docCardIcon {
+  background: rgba(255, 255, 255, 0.2);
+  backdrop-filter: blur(10px);
+}
+
+.docCard--primary:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 16px 32px -8px rgba(59, 130, 246, 0.4);
+}
+
+.docCard--secondary {
+  border: 2px solid var(--ifm-color-emphasis-300);
+}
+
+/* Card Sizes */
+.docCard--small {
+  padding: 1.25rem 1.5rem;
+  gap: 1rem;
+}
+
+.docCard--small .docCardIcon {
+  width: 2.5rem;
+  height: 2.5rem;
+}
+
+.docCard--small .iconEmoji {
+  font-size: 1.5rem;
+}
+
+.docCard--small .docCardTitle {
+  font-size: 1rem;
+}
+
+.docCard--small .docCardDescription {
+  font-size: 0.875rem;
+}
+
+.docCard--large {
+  padding: 2.5rem;
+  gap: 1.5rem;
+}
+
+.docCard--large .docCardIcon {
+  width: 4rem;
+  height: 4rem;
+}
+
+.docCard--large .iconEmoji {
+  font-size: 2.5rem;
+}
+
+.docCard--large .docCardTitle {
+  font-size: 1.5rem;
+}
+
+/* DocCardGrid */
+.docCardGrid {
+  display: grid;
+  grid-template-columns: repeat(var(--grid-columns, 2), 1fr);
+  gap: 1.5rem;
+  margin: 2rem 0;
+}
+
+@media (max-width: 996px) {
+  .docCardGrid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 768px) {
+  .docCard {
+    padding: 1.5rem;
+    gap: 1rem;
+  }
+  
+  .docCardIcon {
+    width: 3rem;
+    height: 3rem;
+  }
+  
+  .iconEmoji {
+    font-size: 1.75rem;
+  }
+}
+

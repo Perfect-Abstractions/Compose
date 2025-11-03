@@ -1,0 +1,71 @@
+/* MermaidDiagram Component */
+.mermaidDiagram {
+  margin: 2rem 0;
+  padding: 1.5rem;
+  background: var(--ifm-background-surface-color);
+  border: 1px solid var(--ifm-color-emphasis-200);
+  border-radius: 0.75rem;
+  overflow-x: auto;
+}
+
+[data-theme='dark'] .mermaidDiagram {
+  background: #0f0f0f;
+  border-color: #2a2a2a;
+}
+
+.mermaidContainer {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 200px;
+}
+
+.mermaidContainer svg {
+  max-width: 100%;
+  height: auto;
+}
+
+.error {
+  padding: 1.5rem;
+  background: rgba(239, 68, 68, 0.1);
+  border: 1px solid rgba(239, 68, 68, 0.3);
+  border-radius: 0.5rem;
+  color: #ef4444;
+}
+
+.error p {
+  margin: 0 0 1rem 0;
+  font-weight: 600;
+}
+
+.errorCode {
+  margin: 0;
+  padding: 1rem;
+  background: rgba(0, 0, 0, 0.1);
+  border-radius: 0.375rem;
+  font-family: var(--ifm-font-family-monospace);
+  font-size: 0.875rem;
+  overflow-x: auto;
+}
+
+[data-theme='dark'] .error {
+  background: rgba(239, 68, 68, 0.15);
+  border-color: rgba(248, 113, 113, 0.3);
+  color: #f87171;
+}
+
+[data-theme='dark'] .errorCode {
+  background: rgba(255, 255, 255, 0.05);
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .mermaidDiagram {
+    padding: 1rem;
+  }
+}
+
+
+
+
+

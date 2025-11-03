@@ -1,0 +1,26 @@
+/**
+ * Breadcrumb Component Styles
+ * Breadcrumb navigation styling
+ */
+
+/* Light mode breadcrumbs */
+.breadcrumbs__link {
+  color: #64748b;
+}
+
+.breadcrumbs__link:hover {
+  color: #3b82f6;
+}
+
+/* Dark mode breadcrumbs */
+[data-theme='dark'] .breadcrumbs__link {
+  color: #909090;
+}
+
+[data-theme='dark'] .breadcrumbs__link:hover {
+  color: #60a5fa;
+}
+
+[data-theme='dark'] .breadcrumbs__item--active .breadcrumbs__link {
+  color: #d0d0d0;
+}

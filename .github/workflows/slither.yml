@@ -4,9 +4,13 @@ name: Slither
 on:
   push:
     branches: [main]
+    paths-ignore:
+      - '**.md'
+      - 'docs/**'
   pull_request:
     paths-ignore:
       - '**.md'
+      - 'docs/**'
   workflow_dispatch:
 
 env:

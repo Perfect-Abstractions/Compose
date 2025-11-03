@@ -1,0 +1,33 @@
+/**
+ * Footer Component Styles
+ * Footer styling for light and dark modes
+ */
+
+/* Light mode footer */
+.footer {
+  background: linear-gradient(135deg, #1e3a8a 0%, #1e293b 100%);
+  color: #ffffff;
+}
+
+.footer__title {
+  color: var(--ifm-color-primary-lighter);
+  font-weight: 700;
+}
+
+/* Dark mode footer */
+[data-theme='dark'] .footer {
+  background: #0a0e1a;
+  border-top: 1px solid #1e293b;
+}
+
+[data-theme='dark'] .footer__title {
+  color: #ffffff;
+}
+
+[data-theme='dark'] .footer__item {
+  color: #909090;
+}
+
+[data-theme='dark'] .footer__link-item:hover {
+  color: #60a5fa;
+}

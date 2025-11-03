@@ -1,0 +1,28 @@
+/* Stats Section */
+
+.statsSection { padding: 6rem 0; background: var(--compose-bg-900); position: relative; overflow: hidden; }
+.statsSection::before { content: ''; position: absolute; inset: 0; background: radial-gradient(ellipse 60% 50% at 50% 50%, rgba(59,130,246,0.1), transparent); pointer-events: none; }
+
+.statsGrid { position: relative; display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 2rem; max-width: 1200px; margin: 0 auto; }
+
+.statCard { position: relative; text-align: center; padding: 3rem 2rem; background: rgba(255,255,255,0.03); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); border: 1px solid rgba(255,255,255,0.08); border-radius: 1.25rem; transition: all var(--motion-duration-normal) var(--motion-ease-standard); overflow: hidden; display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 220px; }
+.statCard::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px; background: linear-gradient(90deg, #60a5fa, var(--compose-primary-500), var(--compose-primary-600)); opacity: 0; transition: opacity var(--motion-duration-normal) ease; }
+.statCard:hover { background: rgba(255,255,255,0.06); border-color: rgba(255,255,255,0.15); transform: translateY(-6px); box-shadow: 0 20px 40px rgba(0,0,0,0.2); }
+.statCard:hover::before { opacity: 1; }
+
+.statIcon { font-size: 3rem; margin-bottom: 1.25rem; display: block; filter: grayscale(0); transition: transform var(--motion-duration-normal) ease; }
+.statCard:hover .statIcon { transform: scale(1.1); }
+.statValue { font-size: clamp(1.75rem, 2.2vw, 2.5rem); font-weight: 900; background: linear-gradient(135deg, #60a5fa 0%, var(--compose-primary-500) 50%, var(--compose-primary-600) 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; margin-bottom: 0.75rem; line-height: 1; white-space: nowrap; word-break: keep-all; }
+.statLabel { font-size: 1rem; color: rgba(255,255,255,0.7); font-weight: 600; letter-spacing: 0.025em; }
+
+/* Responsive */
+@media screen and (max-width: 768px) {
+  .statsSection { padding: 4rem 0; }
+  .statsGrid { grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 1.25rem; }
+  .statCard { padding: 2rem 1rem; }
+  .statIcon { font-size: 2.5rem; margin-bottom: 1rem; }
+  .statValue { font-size: 2rem; }
+  .statLabel { font-size: 0.875rem; }
+}
+
+
