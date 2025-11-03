@@ -6,7 +6,7 @@ import {console2} from "forge-std/console2.sol";
 import {Test} from "forge-std/Test.sol";
 import {DiamondCutFacetHarness, DiamondCutFacet} from "./harnesses/DiamondCutFacetHarness.sol";
 import {ERC20FacetHarness} from "../token/ERC20/ERC20/harnesses/ERC20FacetHarness.sol";
-import {ERC20FacetHarnessWithFallback} from "./harnesses/ERC20FacetHarnessWithFallback.sol";
+import {ERC20FacetWithFallbackHarness} from "./harnesses/ERC20FacetWithFallbackHarness.sol";
 
 contract DiamondCutFacetTest is Test {
     DiamondCutFacetHarness public facet;
@@ -532,7 +532,7 @@ contract DiamondCutFacetTest is Test {
     function test_DiamondCut_initalizeCallWithWrongCalldataReturningErrorMessage() public {
         (DiamondCutFacet.FacetCut[] memory _cut,,) = _basicAction();
 
-        ERC20FacetHarnessWithFallback newFacet = new ERC20FacetHarnessWithFallback();
+        ERC20FacetWithFallbackHarness newFacet = new ERC20FacetWithFallbackHarness();
         address _init = address(newFacet);
 
         bytes memory _wrongCalldata = abi.encodeWithSelector(

@@ -5,7 +5,7 @@ import {ERC20Facet} from "../../../src/token/ERC20/ERC20/ERC20Facet.sol";
 
 /// @title ERC20FacetHarness
 /// @notice Test harness for ERC20Facet that adds initialization and minting for testing
-contract ERC20FacetHarnessWithFallback is ERC20Facet {
+contract ERC20FacetWithFallbackHarness is ERC20Facet {
     /// @notice Initialize the ERC20 token storage
     /// @dev Only used for testing - production diamonds should initialize in constructor
     function initialize(string memory _name, string memory _symbol, uint8 _decimals) external {
