@@ -5,14 +5,8 @@ pragma solidity >=0.8.30;
 /// @notice Provides internal functions and storage layout for ERC-6909 minimal multi-token logic.
 /// @dev Uses ERC-8042 for storage location standardization and ERC-6093 for error conventions.
 ///      This library is intended to be used by custom facets to integrate with ERC-6909 functionality.
-/// @dev Adapted from: https://github.com/Vectorized/solady/blob/main/src/tokens/ERC6909.sol
+/// @dev Adapted from: https://github.com/transmissions11/solmate/blob/main/src/tokens/ERC6909.sol
 library LibERC6909 {
-    /// @notice Thrown when owner balance for id is insufficient.
-    error ERC6909InsufficientBalance();
-
-    /// @notice Thrown when spender allowance for id is insufficient.
-    error ERC6909InsufficientPermission();
-
     /// @notice Emitted when a transfer occurs.
     event Transfer(
         address _caller, address indexed _sender, address indexed _receiver, uint256 indexed _id, uint256 _amount
@@ -81,13 +75,8 @@ library LibERC6909 {
 
         if (_by != address(0) && !s.isOperator[_from][_by]) {
             uint256 allowed = s.allowance[_from][_by][_id];
-            if (allowed != type(uint256).max) {
-                if (_amount > allowed) revert ERC6909InsufficientPermission();
-                s.allowance[_from][_by][_id] = allowed - _amount;
-            }
+            if (allowed != type(uint256).max) s.allowance[_from][_by][_id] = allowed - _amount;
         }
-
-        if (_amount > s.balanceOf[_from][_id]) revert ERC6909InsufficientBalance();
 
         s.balanceOf[_from][_id] -= _amount;
         s.balanceOf[_to][_id] += _amount;
