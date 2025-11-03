@@ -184,7 +184,7 @@ const config = {
             ],
           },
           {
-            href: 'https://discord.gg/compose',
+            href: 'https://discord.gg/DCBD2UKbxc',
             label: 'Discord',
             position: 'right',
           },
@@ -220,7 +220,7 @@ const config = {
             items: [
               {
                 label: 'Discord',
-                href: 'https://discord.gg/compose',
+                href: 'https://discord.gg/DCBD2UKbxc',
               },
               {
                 label: 'GitHub Discussions',
