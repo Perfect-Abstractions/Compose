@@ -1,19 +1,37 @@
 /* FeatureGrid Component */
 .featureGrid {
   display: grid;
-  grid-template-columns: repeat(var(--grid-columns, 3), 1fr);
+  grid-template-columns: repeat(var(--grid-columns, 2), 1fr);
   gap: 2rem;
   margin: 2.5rem 0;
 }
 
-@media (max-width: 996px) {
+/* When sidebar is visible on narrower screens, switch to single column for better fit */
+@media (min-width: 997px) and (max-width: 1200px) {
+  .featureGrid {
+    grid-template-columns: 1fr;
+    gap: 1.5rem;
+  }
+}
+
+/* Wider screens with sidebar, keep 2 columns */
+@media (min-width: 1201px) {
+  .featureGrid {
+    grid-template-columns: repeat(var(--grid-columns, 2), 1fr);
+    gap: 2rem;
+  }
+}
+
+/* Tablet range - 2 columns */
+@media (min-width: 689px) and (max-width: 996px) {
   .featureGrid {
     grid-template-columns: repeat(2, 1fr);
     gap: 1.5rem;
   }
 }
 
-@media (max-width: 768px) {
+/* Mobile - single column with adjusted spacing */
+@media (max-width: 688px) {
   .featureGrid {
     grid-template-columns: 1fr;
     gap: 1.25rem;
