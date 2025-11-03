@@ -5,6 +5,7 @@ import {Test} from "forge-std/Test.sol";
 import {LibDiamond} from "../../src/diamond/LibDiamond.sol";
 import {LibDiamondHarness} from "./harnesses/LibDiamondHarness.sol";
 import {ERC20FacetHarness} from "../token/ERC20/ERC20/harnesses/ERC20FacetHarness.sol";
+import {ERC20FacetWithFallbackHarness} from "./harnesses/ERC20FacetWithFallbackHarness.sol";
 
 contract LibDiamondHarnessTest is Test {
     LibDiamondHarness public harness;
@@ -253,6 +254,23 @@ contract LibDiamondHarnessTest is Test {
         harness.diamondCut(_cut, _init, _calldata);
     }
 
+    function test_diamondCut_WithZeroFunctionSelectors() public {
+        bytes4[] memory _functionSelectors = new bytes4[](0);
+
+        LibDiamond.FacetCut[] memory _cut = new LibDiamond.FacetCut[](1);
+        _cut[0] = LibDiamond.FacetCut({
+            facetAddress: address(facet),
+            action: LibDiamond.FacetCutAction.Add,
+            functionSelectors: _functionSelectors
+        });
+
+        address _init = ADDRESS_ZERO;
+        bytes memory _calldata = abi.encode("0x00");
+
+        vm.expectRevert(abi.encodeWithSelector(LibDiamond.NoSelectorsProvidedForFacet.selector, address(facet)));
+        harness.diamondCut(_cut, _init, _calldata);
+    }
+
     function test_diamondCut_InitializeCallWithWrongCalldata() public {
         bytes4[] memory _functionSelectors = new bytes4[](1);
         _functionSelectors[0] = bytes4(keccak256("decimals()"));
@@ -272,6 +290,26 @@ contract LibDiamondHarnessTest is Test {
         vm.expectRevert(
             abi.encodeWithSelector(LibDiamond.InitializationFunctionReverted.selector, _init, _wrongCalldata)
         );
+        harness.diamondCut(_cut, _init, _wrongCalldata);
+    }
+
+    function test_diamondCut_InitializeCallWithWrongCalldataReturningErrorMessage() public {
+        bytes4[] memory _functionSelectors = new bytes4[](1);
+        _functionSelectors[0] = bytes4(keccak256("decimals()"));
+
+        LibDiamond.FacetCut[] memory _cut = new LibDiamond.FacetCut[](1);
+        _cut[0] = LibDiamond.FacetCut({
+            facetAddress: address(facet),
+            action: LibDiamond.FacetCutAction.Add,
+            functionSelectors: _functionSelectors
+        });
+
+        ERC20FacetWithFallbackHarness newFacet = new ERC20FacetWithFallbackHarness();
+        address _init = address(newFacet);
+
+        bytes memory _wrongCalldata = abi.encodeWithSelector(bytes4(keccak256("doesNotExist(uint256)")), uint256(123));
+
+        vm.expectRevert(abi.encode("WRONG FUNCTION CALL"));
         harness.diamondCut(_cut, _init, _wrongCalldata);
     }
 }
