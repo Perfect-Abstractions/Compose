@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity >=0.8.30;
 
+import {Vm} from "forge-std/Vm.sol";
 import {Test} from "forge-std/Test.sol";
 import {LibDiamond} from "../../src/diamond/LibDiamond.sol";
 import {LibDiamondHarness} from "./harnesses/LibDiamondHarness.sol";
@@ -311,5 +312,67 @@ contract LibDiamondHarnessTest is Test {
 
         vm.expectRevert(abi.encode("WRONG FUNCTION CALL"));
         harness.diamondCut(_cut, _init, _wrongCalldata);
+    }
+
+    // ============================================
+    // Multiple Functions Tests
+    // ============================================
+
+    function test_removeFunctions_RemovingFunctionFromMultipleFunctions() public {
+        bytes4[] memory _functionSelectors = new bytes4[](2);
+        _functionSelectors[0] = bytes4(keccak256("decimals()"));
+        _functionSelectors[1] = bytes4(keccak256("balanceOf(address)"));
+
+        harness.addFunctions(address(facet), _functionSelectors);
+
+        (, uint16 positionOfSelectorBeforeRemoval) = harness.getFacetAndPosition(_functionSelectors[1]);
+
+        bytes4[] memory _functionSelectorToRemove = new bytes4[](1);
+        _functionSelectorToRemove[0] = bytes4(keccak256("decimals()"));
+
+        harness.removeFunctions(ADDRESS_ZERO, _functionSelectorToRemove);
+
+        (, uint16 positionOfFunctionSelectorAfterRemoval) = harness.getFacetAndPosition(_functionSelectors[1]);
+
+        assertEq(positionOfSelectorBeforeRemoval - positionOfFunctionSelectorAfterRemoval, 1);
+    }
+
+    /// This test multiple actions in a single call.
+    /// 1. Add the function to a facet.
+    /// 2. Replace the function with another facet.
+    /// 3. Remove the function.
+    function test_diamondCut_MultipleActions() public {
+        bytes4[] memory _functionSelectors = new bytes4[](1);
+        _functionSelectors[0] = bytes4(keccak256("decimals()"));
+
+        // New ERC20 Facet
+        ERC20FacetHarness newFacet = new ERC20FacetHarness();
+
+        LibDiamond.FacetCut[] memory _cut = new LibDiamond.FacetCut[](3);
+        _cut[0] = LibDiamond.FacetCut({
+            facetAddress: address(facet),
+            action: LibDiamond.FacetCutAction.Add,
+            functionSelectors: _functionSelectors
+        });
+
+        _cut[1] = LibDiamond.FacetCut({
+            facetAddress: address(newFacet),
+            action: LibDiamond.FacetCutAction.Replace,
+            functionSelectors: _functionSelectors
+        });
+
+        _cut[2] = LibDiamond.FacetCut({
+            facetAddress: ADDRESS_ZERO,
+            action: LibDiamond.FacetCutAction.Remove,
+            functionSelectors: _functionSelectors
+        });
+
+        address _init = ADDRESS_ZERO;
+        bytes memory _calldata = bytes("0x0");
+
+        harness.diamondCut(_cut, _init, _calldata);
+
+        (address savedFacet,) = harness.getFacetAndPosition(_functionSelectors[0]);
+        assertEq(savedFacet, ADDRESS_ZERO);
     }
 }
