@@ -23,7 +23,7 @@ const config = {
   },
 
   // Set the production url of your site here
-  url: 'https://docusaurus-test-seven-sage.vercel.app/',
+  url: 'https://compose.diamonds/',
   // Set the /<baseUrl>/ pathname under which your site is served
   // For GitHub pages deployment, it is often '/<projectName>/'
   baseUrl: '/',
@@ -79,6 +79,19 @@ const config = {
         content: 'website',
       },
     },
+    {
+      tagName: 'script',
+      attributes: {
+        type: 'application/ld+json',
+      },
+      innerHTML: JSON.stringify({
+        '@context': 'https://schema.org/',
+        '@type': 'Organization',
+        name: 'Compose',
+        url: 'https://compose.diamonds/',
+        logo: 'https://compose.diamonds/img/logo.svg',
+      }),
+    },
   ],
 
   presets: [
@@ -91,7 +104,7 @@ const config = {
           // Please change this to your repo.
           // Remove this to remove the "edit this page" links.
           editUrl:
-            'https://github.com/Perfect-Abstractions/Compose/tree/main/docs/',
+            'https://github.com/Perfect-Abstractions/Compose/tree/main/docs/docs/',
         },
         blog: {
           showReadingTime: true,
@@ -102,7 +115,7 @@ const config = {
           // Please change this to your repo.
           // Remove this to remove the "edit this page" links.
           editUrl:
-            'https://github.com/Perfect-Abstractions/Compose/tree/main/blog/',
+            'https://github.com/Perfect-Abstractions/Compose/tree/main/docs/blog/',
           // Useful options to enforce blogging best practices
           onInlineTags: 'warn',
           onInlineAuthors: 'warn',
@@ -233,7 +246,7 @@ const config = {
             ],
           },
         ],
-        copyright: `Made with DELEGATECALL by the Compose Community.<br/>
+        copyright: `Made with DELEGATECALL by the <a href="https://github.com/Perfect-Abstractions/Compose/graphs/contributors">Compose Community</a>.<br/>
           Copyright © ${new Date().getFullYear()}`,
       },
       prism: {
