@@ -388,6 +388,118 @@ function facets15() external view returns (Facet[] memory allFacets) {
         }
     }
 
+    function facetAddresses3() external view returns (address[] memory allFacets) {
+    assembly {
+        // --- 0. Setup and Storage Pointers ---
+        
+        // Custom base storage position: keccak256("compose.diamond")
+        let COMPOSE_DIAMOND_SLOT := 0x9dea51a0972159e0838d8a036f01982ec1d78b3b2a8e1570e8f17e011984b3ce
+        
+        // Diamond Storage Layout:
+        let FACET_MAP_SLOT := COMPOSE_DIAMOND_SLOT          // facetAndPosition mapping slot
+
+        // keccak256(COMPOSE_DIAMOND_SLOT + 1)
+        let SELECTORS_BASE := 0x72c389824b9f57a6b0843a72db8f29826b9ecb297b4acd2b1188a7db453a6934
+        
+        // Memory start for the return array
+        let FACETS_ARRAY_PTR := 0x80      
+        
+        // Start of array elements (FACETS_ARRAY_PTR + 32)
+        let FACETS_ELEMENTS_PTR := 0xa0
+
+        let selectorCount := sload(add(COMPOSE_DIAMOND_SLOT, 1)) // SLOAD the array length from SELECTORS_SLOT
+        
+        // --- 1. Initialization ---
+        
+        // Initialize the 256-bit collision map on the stack
+        let collisionMap := 0
+        let numFacets := 0  // Actual number of unique facets collected
+        let i := 0          // Selector index
+        
+        // --- 2. Main Loop: Iterate Selectors and Uniquely Collect Facets ---
+    
+        // Store the mapping slot pointer once for facetAndPosition[selector].facet slot calculation
+        mstore(0x20, FACET_MAP_SLOT)
+
+        for { } lt(i, selectorCount) { i := add(i, 1) } {
+            
+            // --- 2a. Load Selector and Find Facet Address ---
+                     
+            // 1. Calculate selector's storage slot: i / 8 (8 selectors per 32 bytes)
+            let selectorSlot := add(SELECTORS_BASE, div(i, 0x08))            
+            
+            // 2. SLOAD: Load the 32-byte word containing up to 8 selectors
+            let packedWord := sload(selectorSlot)
+            
+            // 3. Calculate Bit Offset: (i % 8) * 4 bytes * 8 bits
+            // This is the shift amount needed to move the selector to the rightmost position (LSB).
+            let shiftAmount := mul(mod(i, 0x08), 0x20)
+            
+            // 4. Extract Selector: Shift right and mask (bytes4 is 4 bytes/32 bits) and shift to the left
+            // @dev no need to mask bytes4 selector with 0xffffffff as shr and shl cleans remaining bits to 0
+            let selector := shl(0xe0, shr(shiftAmount, packedWord))
+            
+            // Calculate storage slot for facetAndPosition[selector].facet
+            mstore(0x00, selector)
+            // Reuses constantly stored FACET_MAP_SLOT at 0x20
+            let facetDataSlot := keccak256(0x00, 0x40) 
+            
+            // SLOAD 2: Load the facet address and clear out selector position
+            let facetAddress := and(0xffffffffffffffffffffffffffffffffffffffff, sload(facetDataSlot))
+            
+            // --- 2b. O(1) Unique Check (Collision Map) ---
+            
+            let found := 0
+            
+            // Collision BitMask based on LSB of address
+            let bitMask := shl(and(facetAddress, 0xff), 0x01)
+            
+            // Probabilistic O(1) Check: Check if the bit is set (collisionMap AND bitMask) != 0
+            if iszero(iszero(and(collisionMap, bitMask))) {
+                
+                // Fallback: Linear O(N) check (only runs on hash collision)
+                let facetIndex := 0
+                for {} lt(facetIndex, numFacets) { facetIndex := add(facetIndex, 1) } {
+                    let elementPtr := add(FACETS_ELEMENTS_PTR, mul(facetIndex, 0x20))
+                    if eq(mload(elementPtr), facetAddress) {
+                        found := 1
+                        break
+                    }
+                }
+            }
+            
+            // --- 2c. Conditional Append and Update Collision Map ---
+            
+            if iszero(found) {
+                // Not found: Append the facet
+                
+                let newElementPtr := add(FACETS_ELEMENTS_PTR, mul(numFacets, 0x20))
+                mstore(newElementPtr, facetAddress)
+                
+                // Update the collision map
+                collisionMap := or(collisionMap, bitMask) 
+                
+                numFacets := add(numFacets, 1)
+            }
+        }
+        
+        // --- 3. Finalize Return Array ---
+
+        // Memory start for the return data
+        let RETURN_PTR := 0x60
+
+        // Store offset of the array in the return data
+        mstore(RETURN_PTR, 0x20)
+
+        // Store the actual number of unique facets in the array's length slot
+        mstore(FACETS_ARRAY_PTR, numFacets)
+        
+        // Return memory segment
+        let returnSize := add(0x40, mul(numFacets, 0x20))
+        return(RETURN_PTR, returnSize)
+    }
+}
+
     function facetAddresses2() external view returns (address[] memory allFacets) {
         DiamondStorage storage s = getStorage();
         bytes4[] memory selectors = s.selectors;

@@ -69,6 +69,19 @@ contract DiamondLoupeFacetTest is Test {
         
         }
 
+          function testFacetsP() public view {
+            address[] memory facets = loupe.facetAddresses3();
+
+            console.log("facets length:", facets.length);
+            for(uint256 i; i < facets.length; i++) {
+                console.log("Facet", i, "address:", facets[i]);                
+                // for (uint256 j; j < facets[i].functionSelectors.length; j++) {
+                //     console.logBytes4(facets[i].functionSelectors[j]);
+                // }
+            }
+        
+        }
+
         //    function testFacetsA() public view {
         //     address[] memory facets = loupe.facetAddresses2();
 
@@ -85,44 +98,44 @@ contract DiamondLoupeFacetTest is Test {
     
  
  
-      function testFacetsJ() public view {
-        DiamondLoupeFacet.Facet[] memory facets = loupe.facets15();
-        console.log("facets length:", facets.length);
-        uint256 count;
+    //   function testFacetsJ() public view {
+    //     DiamondLoupeFacet.Facet[] memory facets = loupe.facets15();
+    //     console.log("facets length:", facets.length);
+    //     uint256 count;
         
-        for(uint256 i; i < facets.length; i++) {
+    //     for(uint256 i; i < facets.length; i++) {
             
-            count += facets[i].functionSelectors.length;
+    //         count += facets[i].functionSelectors.length;
             
-            //console.log("Facet", i, "address:", facets[i].facet);
-            //console.log("Facet", i, "selectors length:", facets[i].functionSelectors.length);
-            // for (uint256 j; j < facets[i].functionSelectors.length; j++) {
-            //     console.logBytes4(facets[i].functionSelectors[j]);
-            // }
-        }
-        console.log("Total function:", count);
+    //         //console.log("Facet", i, "address:", facets[i].facet);
+    //         //console.log("Facet", i, "selectors length:", facets[i].functionSelectors.length);
+    //         // for (uint256 j; j < facets[i].functionSelectors.length; j++) {
+    //         //     console.logBytes4(facets[i].functionSelectors[j]);
+    //         // }
+    //     }
+    //     console.log("Total function:", count);
         
-    }
+    // }
 
 
-      function testFacetsE() public view {
-        DiamondLoupeFacet.Facet[] memory facets = loupe.facets13();
-        console.log("facets length:", facets.length);
-        uint256 count;
+    //   function testFacetsE() public view {
+    //     DiamondLoupeFacet.Facet[] memory facets = loupe.facets13();
+    //     console.log("facets length:", facets.length);
+    //     uint256 count;
         
-        for(uint256 i; i < facets.length; i++) {
+    //     for(uint256 i; i < facets.length; i++) {
             
-            count += facets[i].functionSelectors.length;
+    //         count += facets[i].functionSelectors.length;
             
-            // console.log("Facet", i, "address:", facets[i].facet);
-            // console.log("Facet", i, "selectors length:", facets[i].functionSelectors.length);
-            // for (uint256 j; j < facets[i].functionSelectors.length; j++) {
-            //     console.logBytes4(facets[i].functionSelectors[j]);
-            // }
-        }
-        console.log("Total function:", count);
+    //         // console.log("Facet", i, "address:", facets[i].facet);
+    //         // console.log("Facet", i, "selectors length:", facets[i].functionSelectors.length);
+    //         // for (uint256 j; j < facets[i].functionSelectors.length; j++) {
+    //         //     console.logBytes4(facets[i].functionSelectors[j]);
+    //         // }
+    //     }
+    //     console.log("Total function:", count);
         
-    }
+    // }
 
 //       function testFacetsE() public view {
 //         DiamondLoupeFacet.Facet[] memory facets = loupe.facets5()
