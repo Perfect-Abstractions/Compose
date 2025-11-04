@@ -34,9 +34,4 @@ jobs:
 
       - name: Build documentation
         run: npm run build
-        env:
-          # Prevent build failures from missing Algolia keys in PRs
-          ALGOLIA_APP_ID: ${{ secrets.ALGOLIA_APP_ID || 'dummy' }}
-          ALGOLIA_API_KEY: ${{ secrets.ALGOLIA_API_KEY || 'dummy' }}
-          ALGOLIA_INDEX_NAME: ${{ secrets.ALGOLIA_INDEX_NAME || 'compose' }}
 
