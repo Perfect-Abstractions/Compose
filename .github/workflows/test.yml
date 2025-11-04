@@ -5,11 +5,11 @@ on:
     branches: [main]
     paths-ignore:
       - '**.md'
-      - 'docs/**'
+      - 'website/**'
   pull_request:
     paths-ignore:
       - '**.md'
-      - 'docs/**'
+      - 'website/**'
   workflow_dispatch:
 
 env:

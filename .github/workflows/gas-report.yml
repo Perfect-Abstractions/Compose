@@ -4,7 +4,7 @@ on:
   pull_request:
     paths-ignore:
       - '**.md'
-      - 'docs/**'
+      - 'website/**'
   workflow_dispatch:
 
 env:
