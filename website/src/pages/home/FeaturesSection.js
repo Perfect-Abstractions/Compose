@@ -17,7 +17,7 @@ export default function FeaturesSection() {
     {
       icon: 'composition',
       title: 'Composition Over Inheritance',
-      description: 'Combine deployed facets instead of inheriting contracts. Build complex systems from simple, reusable pieces.',
+      description: 'Combine deployed facets instead of inheriting contracts. Build systems from simple, reusable pieces.',
     },
     {
       icon: 'simplicity',

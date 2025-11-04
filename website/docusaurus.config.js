@@ -255,12 +255,15 @@ const config = {
         darkTheme: prismThemes.dracula,
         additionalLanguages: ['solidity'],
       },
-      algolia: {
-        appId: process.env.ALGOLIA_APP_ID,
-        apiKey: process.env.ALGOLIA_API_KEY,
-        indexName: process.env.ALGOLIA_INDEX_NAME || 'compose',
-        contextualSearch: true,
-      },
+      // Only include Algolia config if appId is available (for production)
+      ...(process.env.ALGOLIA_APP_ID && {
+        algolia: {
+          appId: process.env.ALGOLIA_APP_ID,
+          apiKey: process.env.ALGOLIA_API_KEY,
+          indexName: process.env.ALGOLIA_INDEX_NAME || 'compose',
+          contextualSearch: true,
+        },
+      }),
     }),
 };
 

@@ -185,7 +185,7 @@
 
 /* Tables */
 .markdown table {
-  margin: 2rem 0;
+  margin: 0 !important;
   border-collapse: collapse;
   width: 100%;
   border-radius: 0.75rem;

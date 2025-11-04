@@ -195,9 +195,47 @@
   margin: 2rem 0;
 }
 
+/* When sidebar is visible (typical desktop width), adjust for better fit */
+@media (min-width: 997px) and (max-width: 1200px) {
+  .docCardGrid {
+    grid-template-columns: 1fr;
+    gap: 1.25rem;
+  }
+}
+
+/* Wider screens with sidebar, allow 2 columns if space permits */
+@media (min-width: 1201px) and (max-width: 1400px) {
+  .docCardGrid {
+    grid-template-columns: repeat(var(--grid-columns, 2), 1fr);
+    gap: 1.25rem;
+  }
+}
+
+/* Very wide screens, allow configured columns */
+@media (min-width: 1401px) {
+  .docCardGrid {
+    grid-template-columns: repeat(var(--grid-columns, 2), 1fr);
+    gap: 1.5rem;
+  }
+}
+
 @media (max-width: 996px) {
   .docCardGrid {
     grid-template-columns: 1fr;
+    gap: 1.25rem;
+  }
+}
+
+/* Responsive adjustments for cards when sidebar is visible */
+@media (min-width: 997px) and (max-width: 1200px) {
+  .docCard {
+    padding: 1.75rem;
+    gap: 1.125rem;
+  }
+  
+  .docCardIcon {
+    width: 3.25rem;
+    height: 3.25rem;
   }
 }
 
@@ -216,4 +254,3 @@
     font-size: 1.75rem;
   }
 }
-

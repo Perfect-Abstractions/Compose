@@ -51,7 +51,7 @@ export default function HomepageHeader() {
               <Icon name="github" size={20} />
               <span>GitHub</span>
             </a>
-            <a href="https://discord.gg/compose" 
+            <a href="https://discord.gg/DCBD2UKbxc" 
                target="_blank" 
                rel="noopener noreferrer" 
                className={styles.heroLink}>
