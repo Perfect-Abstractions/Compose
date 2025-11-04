@@ -105,7 +105,7 @@ const config = {
           // Please change this to your repo.
           // Remove this to remove the "edit this page" links.
           editUrl:
-            'https://github.com/Perfect-Abstractions/Compose/tree/main/website/docs/',
+            'https://github.com/Perfect-Abstractions/Compose/tree/main/website/',
         },
         blog: {
           showReadingTime: true,
@@ -116,7 +116,7 @@ const config = {
           // Please change this to your repo.
           // Remove this to remove the "edit this page" links.
           editUrl:
-            'https://github.com/Perfect-Abstractions/Compose/tree/main/website/blog/',
+            'https://github.com/Perfect-Abstractions/Compose/tree/main/website/',
           // Useful options to enforce blogging best practices
           onInlineTags: 'warn',
           onInlineAuthors: 'warn',
