@@ -43,16 +43,31 @@ contract DiamondLoupeFacetTest is Test {
     //     // }
     // }
 
-        // function testFacetsB() public view {
-        //     bytes4[] memory selectors = loupe.facetFunctionSelectors(0xe2a986102C38609d1468bd54Ef96596A1f6332Fc);
+        //    function testFacetsP() public view {
+        //     bytes4[] memory selectors = loupe.facetFunctionSelectors2(0xf8964C9a443B862F02d4c7611D18C2bC4e6FF697);
 
         //     console.log("selectors length:", selectors.length);
-        //     // for(uint256 i; i < selectors.length; i++) {
-        //     //     console.log(selectors);                
-        //     //     // for (uint256 j; j < facets[i].functionSelectors.length; j++) {
-        //     //     //     console.logBytes4(facets[i].functionSelectors[j]);
-        //     //     // }
-        //     // }
+        //     //console.log(selectors);
+        //     for(uint256 i; i < selectors.length; i++) {
+        //         console.logBytes4(selectors[i]);
+        //         // for (uint256 j; j < facets[i].functionSelectors.length; j++) {
+        //         //     console.logBytes4(facets[i].functionSelectors[j]);
+        //         // }
+        //     }
+        
+        // }
+
+        // function testFacetsB() public view {
+        //     bytes4[] memory selectors = loupe.facetFunctionSelectors(0xf8964C9a443B862F02d4c7611D18C2bC4e6FF697);
+
+        //     console.log("selectors length:", selectors.length);
+        //     //console.log(selectors);
+        //     for(uint256 i; i < selectors.length; i++) {
+        //         console.logBytes4(selectors[i]);
+        //         // for (uint256 j; j < facets[i].functionSelectors.length; j++) {
+        //         //     console.logBytes4(facets[i].functionSelectors[j]);
+        //         // }
+        //     }
         
         // }
 
@@ -69,18 +84,18 @@ contract DiamondLoupeFacetTest is Test {
         
         }
 
-          function testFacetsP() public view {
-            address[] memory facets = loupe.facetAddresses3();
+        //   function testFacetsP() public view {
+        //     address[] memory facets = loupe.facetAddresses3();
 
-            console.log("facets length:", facets.length);
-            for(uint256 i; i < facets.length; i++) {
-                console.log("Facet", i, "address:", facets[i]);                
-                // for (uint256 j; j < facets[i].functionSelectors.length; j++) {
-                //     console.logBytes4(facets[i].functionSelectors[j]);
-                // }
-            }
+        //     console.log("facets length:", facets.length);
+        //     for(uint256 i; i < facets.length; i++) {
+        //         console.log("Facet", i, "address:", facets[i]);                
+        //         // for (uint256 j; j < facets[i].functionSelectors.length; j++) {
+        //         //     console.logBytes4(facets[i].functionSelectors[j]);
+        //         // }
+        //     }
         
-        }
+        // }
 
         //    function testFacetsA() public view {
         //     address[] memory facets = loupe.facetAddresses2();

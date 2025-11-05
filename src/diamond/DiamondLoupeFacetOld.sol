@@ -39,51 +39,52 @@ contract DiamondLoupeFacet {
 
 // Temporary struct to hold facet info
 
-function facets15() external view returns (Facet[] memory allFacets) {
-    uint numFacets;
+    function facets15() external view returns (Facet[] memory allFacets) {
+        uint numFacets;
 
-    DiamondStorage storage s = getStorage();
-    uint256 selectorCount = s.selectors.length;
-    uint[] memory selectorsFacetID = new uint[](selectorCount);
-    uint[] memory uniqueFacets = new uint[](1); // [(160)address |(96) corresponding selectors count]
-    uint facetIndex;
+        DiamondStorage storage s = getStorage();
+        uint256 selectorCount = s.selectors.length;
+        uint[] memory selectorsFacetID = new uint[](selectorCount);
+        uint[] memory uniqueFacets = new uint[](1); // [(160)address |(96) corresponding selectors count]
+        uint facetIndex;
 
-    for (uint256 i; i < selectorCount; i++) {
-        address facet = s.facetAndPosition[s.selectors[i]].facet;
-        // Look for existing facet
-        for (facetIndex = 0; facetIndex < numFacets; facetIndex++) {
-            if (uniqueFacets[facetIndex]>>96 == uint160(facet)) {
-                uniqueFacets[facetIndex]++;
-                break;
+        for (uint256 i; i < selectorCount; i++) {
+            address facet = s.facetAndPosition[s.selectors[i]].facet;
+            // Look for existing facet
+            for (facetIndex = 0; facetIndex < numFacets; facetIndex++) {
+                if (uniqueFacets[facetIndex]>>96 == uint160(facet)) {
+                    uniqueFacets[facetIndex]++;
+                    break;
+                }
+            }            
+            // If facet not found, add it
+            if (facetIndex == numFacets) {
+                numFacets++;
+                assembly ("memory-safe"){
+                    mstore(uniqueFacets, numFacets)
+                }
+                uniqueFacets[facetIndex] = (uint(uint160(facet))<<96) + 1;
             }
-        }            
-        // If facet not found, add it
-        if (facetIndex == numFacets) {
-            numFacets++;
-            assembly ("memory-safe"){
-                mstore(uniqueFacets, numFacets)
-            }
-            uniqueFacets[facetIndex] = (uint(uint160(facet))<<96) + 1;
+            selectorsFacetID[i] = facetIndex;
         }
-        selectorsFacetID[i] = facetIndex;
-    }
-    assembly{
-        mstore(0x40,add(add(uniqueFacets,0x20),mul(mload(uniqueFacets),0x20)))
+        assembly{
+            mstore(0x40,add(add(uniqueFacets,0x20),mul(mload(uniqueFacets),0x20)))
+        }
+
+        allFacets = new Facet[](numFacets);
+    
+        for (uint256 i; i < numFacets; i++) {
+            allFacets[i].functionSelectors = new bytes4[](uint(uniqueFacets[i]) & 0xffffffffffffffffffffffff);
+            allFacets[i].facet = address(uint160(uniqueFacets[i] >> 96));
+        }
+
+        uint256[] memory selectorsIdx = new uint256[](numFacets);
+        for (uint256 i; i < selectorCount; i++) {
+            allFacets[selectorsFacetID[i]].functionSelectors[selectorsIdx[selectorsFacetID[i]]++] = s.selectors[i];
+        }
+
     }
 
-    allFacets = new Facet[](numFacets);
-   
-    for (uint256 i; i < numFacets; i++) {
-        allFacets[i].functionSelectors = new bytes4[](uint(uniqueFacets[i]) & 0xffffffffffffffffffffffff);
-        allFacets[i].facet = address(uint160(uniqueFacets[i] >> 96));
-    }
-
-    uint256[] memory selectorsIdx = new uint256[](numFacets);
-    for (uint256 i; i < selectorCount; i++) {
-        allFacets[selectorsFacetID[i]].functionSelectors[selectorsIdx[selectorsFacetID[i]]++] = s.selectors[i];
-    }
-
-}
 
    struct FacetInfo {
         address facet;
@@ -364,6 +365,39 @@ function facets15() external view returns (Facet[] memory allFacets) {
         }
     }
 
+     /// @notice Gets all the function selectors supported by a specific facet.
+    /// @param _facet The facet address.
+    /// @return facetSelectors The function selectors associated with a facet address.
+    function facetFunctionSelectors2(address _facet) external view returns (bytes4[] memory facetSelectors) {
+        DiamondStorage storage s = getStorage();
+        bytes4[] memory selectors = s.selectors;
+        uint256 selectorCount = selectors.length;
+        uint256 numSelectors;
+        facetSelectors = new bytes4[](0);
+        // loop through function selectors
+        for (uint256 i; i < selectorCount; i++) {
+            bytes4 selector = selectors[i];
+            address facetAddress_ = s.facetAndPosition[selector].facet;
+            if (_facet == facetAddress_) {
+                numSelectors++;
+                //assembly ("memory-safe") {
+                assembly {
+                    // Store selector in the next position in the facetSelectors array          
+                    mstore(add(facetSelectors, mul(numSelectors, 0x20)), selector)
+                }    
+                
+            }
+        }        
+        // assembly ("memory-safe") {
+        assembly {
+            // Set the total number of selectors in the array
+            mstore(facetSelectors, numSelectors)
+            // Properly allocate memory by setting memory pointer after facetSelectors array
+            mstore(0x40, add(0x20, add(facetSelectors, mul(numSelectors, 0x20))))
+        }        
+
+    }
+
     // /// @notice Gets all the function selectors supported by a specific facet.
     // /// @param _facet The facet address.
     // /// @return facetSelectors The function selectors associated with a facet address.
@@ -376,8 +410,8 @@ function facets15() external view returns (Facet[] memory allFacets) {
         // loop through function selectors
         for (uint256 selectorIndex; selectorIndex < selectorCount; selectorIndex++) {
             bytes4 selector = s.selectors[selectorIndex];
-            address facetAddress_ = s.facetAndPosition[selector].facet;
-            if (_facet == facetAddress_) {
+            address selectorFacet = s.facetAndPosition[selector].facet;
+            if (_facet == selectorFacet) {
                 facetSelectors[numSelectors] = selector;
                 numSelectors++;
             }
@@ -508,7 +542,7 @@ function facets15() external view returns (Facet[] memory allFacets) {
     
         // This is an array of pointers to FacetInfo structs which don't exist yet.                
         // We will fill in the actual FacetInfo structs as we go.
-        address[] memory uniqueFacets = new address[](selectorsCount);
+        allFacets = new address[](selectorsCount);
         
         address[][256] memory map;
         uint256 key;
@@ -529,7 +563,7 @@ function facets15() external view returns (Facet[] memory allFacets) {
                 address uniqueFacet = bucket[bucketIndex];
                 if(uniqueFacet == address(0)) {
                     bucket[bucketIndex] = facet;
-                    uniqueFacets[numFacets] = facet;
+                    allFacets[numFacets] = facet;
                     unchecked {
                         numFacets++;
                     }
@@ -550,16 +584,15 @@ function facets15() external view returns (Facet[] memory allFacets) {
                             
                 map[key] = bucket;
                 bucket[bucketIndex] = facet;
-                uniqueFacets[numFacets] = facet;
+                allFacets[numFacets] = facet;
                 unchecked {
                     numFacets++;
                 }     
             }                       
          }
          assembly ("memory-safe") {
-            mstore(uniqueFacets, numFacets)
-         }
-         allFacets = uniqueFacets;
+            mstore(allFacets, numFacets)
+         }         
     }
 
     // /// @notice Get all the facet addresses used by a diamond.

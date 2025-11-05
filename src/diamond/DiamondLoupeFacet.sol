@@ -37,7 +37,7 @@ contract DiamondLoupeFacet {
         facet = s.facetAndPosition[_functionSelector].facet;
     }
 
-     /// @notice Gets all the function selectors supported by a specific facet.
+    /// @notice Gets all the function selectors supported by a specific facet.
     /// @param _facet The facet address.
     /// @return facetSelectors The function selectors associated with a facet address.
     function facetFunctionSelectors(address _facet) external view returns (bytes4[] memory facetSelectors) {
@@ -45,26 +45,20 @@ contract DiamondLoupeFacet {
         bytes4[] memory selectors = s.selectors;
         uint256 selectorCount = selectors.length;
         uint256 numSelectors;
-        facetSelectors = new bytes4[](0);
+        facetSelectors = new bytes4[](selectorCount);
         // loop through function selectors
-        for (uint256 i; i < selectorCount; i++) {
-            bytes4 selector = selectors[i];
-            address facetAddress_ = s.facetAndPosition[selector].facet;
-            if (_facet == facetAddress_) {
+        for (uint256 selectorIndex; selectorIndex < selectorCount; selectorIndex++) {
+            bytes4 selector = s.selectors[selectorIndex];
+            address selectorFacet = s.facetAndPosition[selector].facet;
+            if (_facet == selectorFacet) {
+                facetSelectors[numSelectors] = selector;
                 numSelectors++;
-                assembly ("memory-safe") {
-                    // Store selector in the next position in the facetSelectors array          
-                    mstore(add(facetSelectors, mul(numSelectors, 0x20)), selector)
-                }                
             }
-        }        
+        }
+        // Set the number of selectors in the array
         assembly ("memory-safe") {
-            // Set the total number of selectors in the array
             mstore(facetSelectors, numSelectors)
-            // Properly allocate memory by setting memory pointer after facetSelectors array
-            mstore(0x40, add(0x20, add(facetSelectors, mul(numSelectors, 0x20))))
-        }        
-
+        }
     }
 
     /// @notice Get all the facet addresses used by a diamond.
@@ -74,43 +68,54 @@ contract DiamondLoupeFacet {
         bytes4[] memory selectors = s.selectors;
         bytes4 selector;
         uint256 selectorsCount = selectors.length;
-    
-        // This is an array of pointers to FacetInfo structs which don't exist yet.                
-        // We will fill in the actual FacetInfo structs as we go.
-        address[] memory uniqueFacets = new address[](selectorsCount);
+            
+        // Allocate the largest possible number of facet addresses
+        allFacets = new address[](selectorsCount);
         
+        // We create an in-memory mapping of the last byte of a facet address
+        // to the facet address
         address[][256] memory map;
+        // The key will hold the last byte of an ethereum address
         uint256 key;
+        // If different facet addresses have the same last byte then we
+        // store them in a bucket.
         address[] memory bucket;
                         
-        // count unique facets
-        uint256 numFacets;            
-        // Count unique facets and their selectors 
+        // This variable counts how many unique facets there are
+        uint256 numFacets;                    
 
          for (uint256 i; i < selectorsCount; i++) {            
             selector = selectors[i];
             address facet = s.facetAndPosition[selector].facet;                        
-            // Look for existing facet            
+            // Assign to key the last byte of the facet            
             key =  uint160(facet) & 0xff;
+            // Get an array of all facets that have the same last byte
             bucket = map[key];            
             uint256 bucketIndex;
-            for(; bucketIndex < bucket.length; bucketIndex++) {
+            for(; bucketIndex < bucket.length; bucketIndex++) {                
                 address uniqueFacet = bucket[bucketIndex];
+                // If uniqueFacet is address(0) then there is
+                // an empty slot in the bucket array where 
+                // we can put the facet address
                 if(uniqueFacet == address(0)) {
                     bucket[bucketIndex] = facet;
-                    uniqueFacets[numFacets] = facet;
+                    allFacets[numFacets] = facet;
                     unchecked {
                         numFacets++;
                     }
                     break;                     
-                }
+                }                
                 if(uniqueFacet == facet) {
                     break;            
                 }
             }
 
+            // Either we have looped through all the available slots
+            // in the bucket and found no match or
+            // the bucket array was empty because the last address
+            // byte hasn't been seen before
             if(bucketIndex == bucket.length) {                    
-                // expand
+                // Create three additional slots in the bucket
                 address[] memory newBucket = new address[](bucketIndex + 3);
                 for(uint256 k; k < bucketIndex; k++) {
                     newBucket[k] = bucket[k];
@@ -119,16 +124,15 @@ contract DiamondLoupeFacet {
                             
                 map[key] = bucket;
                 bucket[bucketIndex] = facet;
-                uniqueFacets[numFacets] = facet;
+                allFacets[numFacets] = facet;
                 unchecked {
                     numFacets++;
                 }     
             }                       
          }
          assembly ("memory-safe") {
-            mstore(uniqueFacets, numFacets)
-         }
-         allFacets = uniqueFacets;
+            mstore(allFacets, numFacets)
+         }         
     }
 
     /// @notice Struct to hold facet address and its function selectors
@@ -140,6 +144,7 @@ contract DiamondLoupeFacet {
     struct FacetInfo {
         address facet;
         bytes4[] selectors;
+        // The actual number of selectors in "bytes4[] selectors"
         uint256 count;
     }
 
@@ -154,26 +159,34 @@ contract DiamondLoupeFacet {
         // This is an array of pointers to FacetInfo structs which don't exist yet.                
         // We will fill in the actual FacetInfo structs as we go.
         uint256[] memory facetInfoPointers = new uint256[](selectorsCount);
+        // Holds a memory address to a FacetInfo struct
         uint256 pointer;
         FacetInfo memory facetInfo;
 
+        // Memory-based mapping from the last byte of a facet address to
+        // a dynamic array of pointers to FacetInfo structs 
         uint256[][256] memory map;
-        uint256 key;        
+        // The last byte of a facet address
+        uint256 key;
+        // An array of pointers to FacetInfo structs
         uint256[] memory bucket;
 
         // count unique facets
-        uint256 numFacets;                     
-        // Count unique facets and their selectors
+        uint256 numFacets;                             
         for (uint256 i; i < selectorsCount; i++) {            
             selector = selectors[i];
             address facet = s.facetAndPosition[selector].facet;                          
-            // Look for existing facet            
+            // Get the last byte of an address
             key =  uint160(facet) & 0xff;
+            // Get an array of pointers to FacetInfo structs that have the same
+            // facet last byte
             bucket = map[key];            
             uint256 bucketIndex;
             for(; bucketIndex < bucket.length; bucketIndex++) {
                 pointer = bucket[bucketIndex];
-                if(pointer == 0) {
+                // If pointer == 0 then there is an empty slot in the bucket
+                // that we will fill with a new pointer to a new FacetInfo struct
+                if(pointer == 0) {                    
                     bytes4[] memory selectorStorage = new bytes4[](20);
                     selectorStorage[0] = selector;
                     facetInfo = FacetInfo({facet: facet, selectors: selectorStorage, count: 1});                    
@@ -187,10 +200,13 @@ contract DiamondLoupeFacet {
                     }
                     break;
                 }
+                // Assign the pointer to a variable so we can access the facetInfo struct
                 assembly ("memory-safe") {
                     facetInfo := pointer
-                }            
-                if(facetInfo.facet == facet) {                    
+                }
+                // If we have found this facet before, then we add the selector            
+                if(facetInfo.facet == facet) {
+                    // If there are no more empty facetInfo.selectors slots then we make more
                     if(facetInfo.count == facetInfo.selectors.length) {
                         // expand array
                         bytes4[] memory selectorStorage = new bytes4[](facetInfo.count + 20);
@@ -207,17 +223,19 @@ contract DiamondLoupeFacet {
                 }
             }
 
-            // facet was not found and looped through all options
-            // Or there were no options
+            // Either we have looped through all the available slots
+            // in the bucket and found no match or
+            // the bucket array was empty because the last address
+            // byte hasn't been seen before
             if(bucket.length == bucketIndex) {
-                // expand
+                // Make more bucket slots
                 uint256[] memory newPointers = new uint256[](bucketIndex + 3);
                 for(uint256 k; k < bucketIndex; k++) {
                     newPointers[k] = bucket[k];
                 }
                 bucket = newPointers;
                 map[key] = bucket;
-                
+                // Make selector slots
                 bytes4[] memory selectorStorage = new bytes4[](20);
                 selectorStorage[0] = selector;
                 facetInfo = FacetInfo({facet: facet, selectors: selectorStorage, count: 1});                    
@@ -232,10 +250,10 @@ contract DiamondLoupeFacet {
             }                                     
         }
 
+        // Allocate return array with exact size
         facetsAndSelectors = new Facet[](numFacets);
         
-        // Allocate return array with exact size
-        // allFacets = new Facet[](numFacets);
+        // Fill up facetsAndSelectors
         for (uint256 i; i < numFacets; i++) {            
             pointer = facetInfoPointers[i];
             assembly ("memory-safe") {
@@ -249,11 +267,5 @@ contract DiamondLoupeFacet {
             }
             facetsAndSelectors[i].functionSelectors = facetSelectors;            
         }
-    }
-
-   
-
-    
-
-    
+    }    
 }
