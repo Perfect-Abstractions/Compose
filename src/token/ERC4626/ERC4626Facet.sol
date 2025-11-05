@@ -625,7 +625,8 @@ contract ERC4626Facet {
     }
 
     function _decimalsOffset() internal view virtual returns (uint8) {
-        return 0;
+        // Note This will make the decimals for shares= asset decimals + 3
+        return 3;
     }
 
     /// @dev Cast a boolean (false or true) to a uint256 (0 or 1) with no jump.
