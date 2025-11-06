@@ -34,20 +34,19 @@ contract DiamondLoupeFacet {
         bytes4[] functionSelectors;
     }
 
-    
     function facets() external view returns (Facet[] memory allFacets) {
         DiamondStorage storage s = getStorage();
         uint256 selectorCount = s.selectors.length;
-        
+
         // First pass: count unique facets
         uint256 numFacets;
         address[] memory uniqueFacets = new address[](selectorCount);
         uint256[] memory selectorsByFacet = new uint256[](selectorCount);
-        
+
         // Count unique facets and their selectors
         for (uint256 i; i < selectorCount; i++) {
             address facet = s.facetAndPosition[s.selectors[i]].facet;
-            
+
             // Look for existing facet
             uint256 facetIndex;
             for (; facetIndex < numFacets; facetIndex++) {
@@ -56,7 +55,7 @@ contract DiamondLoupeFacet {
                     break;
                 }
             }
-            
+
             // If facet not found, add it
             if (facetIndex == numFacets) {
                 uniqueFacets[numFacets] = facet;
@@ -64,26 +63,26 @@ contract DiamondLoupeFacet {
                 numFacets++;
             }
         }
-        
+
         // Allocate return array with exact size
         allFacets = new Facet[](numFacets);
-        
+
         // Initialize facet arrays with correct sizes
         for (uint256 i; i < numFacets; i++) {
             allFacets[i].facet = uniqueFacets[i];
             allFacets[i].functionSelectors = new bytes4[](selectorsByFacet[i]);
         }
-        
+
         // // Reset selector counts for use as indices
         // for (uint256 i; i < numFacets; i++) {
         //     selectorsByFacet[i] = 0;
         // }
-        
+
         // Second pass: populate selector arrays
         for (uint256 i; i < selectorCount; i++) {
             bytes4 selector = s.selectors[i];
             address facet = s.facetAndPosition[selector].facet;
-            
+
             // Find the facet index
             for (uint256 facetIndex; facetIndex < numFacets; facetIndex++) {
                 if (allFacets[facetIndex].facet == facet) {
@@ -93,6 +92,7 @@ contract DiamondLoupeFacet {
             }
         }
     }
+
     /// @notice Gets all the function selectors supported by a specific facet.
     /// @param _facet The facet address.
     /// @return facetSelectors The function selectors associated with a facet address.
@@ -109,18 +109,17 @@ contract DiamondLoupeFacet {
             if (_facet == facetAddress_) {
                 numSelectors++;
                 assembly ("memory-safe") {
-                    // Store selector in the next position in the facetSelectors array          
+                    // Store selector in the next position in the facetSelectors array
                     mstore(add(facetSelectors, mul(numSelectors, 0x20)), selector)
-                }                
+                }
             }
-        }        
+        }
         assembly ("memory-safe") {
             // Set the total number of selectors in the array
             mstore(facetSelectors, numSelectors)
             // Properly allocate memory by setting memory pointer after facetSelectors array
             mstore(0x40, add(0x20, add(facetSelectors, mul(numSelectors, 0x20))))
-        }        
-
+        }
     }
 
     /// @notice Get all the facet addresses used by a diamond.
