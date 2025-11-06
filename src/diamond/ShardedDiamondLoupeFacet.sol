@@ -174,7 +174,13 @@ contract ShardedDiamondLoupeFacet {
         uint256 k;
         for (uint256 i; i < cats.length; i++) {
             bytes memory packed = LibBlob.read(sls.shards[cats[i]].selectorsBlob);
-            k = LibShardedLoupe.unpackAppend(packed, facetsAndSelectors, k);
+            (address[] memory facets, bytes4[][] memory selectors) = LibShardedLoupe.unpackFacetsAndSelectors(packed);
+            
+            // Convert to Facet structs
+            for (uint256 j; j < facets.length; j++) {
+                facetsAndSelectors[k] = Facet({facet: facets[j], functionSelectors: selectors[j]});
+                k++;
+            }
         }
     }
 

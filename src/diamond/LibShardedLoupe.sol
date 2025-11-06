@@ -104,22 +104,26 @@ library LibShardedLoupe {
         return startIndex + count;
     }
 
-    /// @notice Unpack selectors and append to Facet array
+    /// @notice Unpack selectors and append to output arrays
     /// @param packed The packed bytes containing selector data
-    /// @param output The output Facet array to fill
-    /// @param startIndex The starting index in output array
-    /// @return nextIndex The next available index after unpacking
-    function unpackAppend(bytes memory packed, Facet[] memory output, uint256 startIndex)
+    /// @return facets Array of facet addresses
+    /// @return selectors Array of selector arrays (one per facet)
+    function unpackFacetsAndSelectors(bytes memory packed)
         internal
         pure
-        returns (uint256 nextIndex)
+        returns (address[] memory facets, bytes4[][] memory selectors)
     {
-        if (packed.length < 4) return startIndex;
+        if (packed.length < 4) {
+            return (new address[](0), new bytes4[][](0));
+        }
 
         uint32 facetCount;
         assembly ("memory-safe") {
             facetCount := shr(224, mload(add(packed, 0x20)))
         }
+
+        facets = new address[](facetCount);
+        selectors = new bytes4[][](facetCount);
 
         uint256 offset = 4;
         for (uint256 i; i < facetCount; i++) {
@@ -131,24 +135,17 @@ library LibShardedLoupe {
             }
             offset += 24;
 
-            bytes4[] memory selectors = new bytes4[](selectorCount);
+            facets[i] = facet;
+            bytes4[] memory facetSelectors = new bytes4[](selectorCount);
             for (uint256 j; j < selectorCount; j++) {
                 bytes4 selector;
                 assembly ("memory-safe") {
                     selector := mload(add(add(packed, 0x20), offset))
                 }
-                selectors[j] = selector;
+                facetSelectors[j] = selector;
                 offset += 4;
             }
-
-            output[startIndex + i] = Facet({facet: facet, functionSelectors: selectors});
+            selectors[i] = facetSelectors;
         }
-        return startIndex + facetCount;
-    }
-
-    /// @notice Struct to hold facet address and its function selectors
-    struct Facet {
-        address facet;
-        bytes4[] functionSelectors;
     }
 }
