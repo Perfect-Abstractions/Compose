@@ -49,6 +49,11 @@ contract ShardedDiamondLoupeFacet {
     /// @param _facet The facet address
     /// @return facetSelectors The function selectors associated with a facet address
     function facetFunctionSelectors(address _facet) external view returns (bytes4[] memory facetSelectors) {
+        LibShardedLoupe.ShardedLoupeStorage storage sls = LibShardedLoupe.getStorage();
+        if (sls.enabled && sls.categories.length > 0) {
+            return LibShardedLoupe.getFacetSelectors(_facet);
+        }
+
         DiamondStorage storage s = getStorage();
         bytes4[] memory selectors = s.selectors;
         uint256 selectorCount = selectors.length;
@@ -95,8 +100,16 @@ contract ShardedDiamondLoupeFacet {
         allFacets = new address[](total);
         uint256 k;
         for (uint256 i; i < cats.length; i++) {
-            bytes memory packed = LibBlob.read(sls.shards[cats[i]].facetsBlob);
-            k = LibShardedLoupe.unpackAddresses(packed, allFacets, k);
+            LibShardedLoupe.Shard storage shard = sls.shards[cats[i]];
+            bytes memory packed = LibBlob.read(shard.facetsBlob);
+            address[] memory categoryFacets = new address[](shard.facetCount);
+            LibShardedLoupe.unpackAddresses(packed, categoryFacets, 0);
+            for (uint256 j; j < categoryFacets.length; j++) {
+                allFacets[k] = categoryFacets[j];
+                unchecked {
+                    k++;
+                }
+            }
         }
     }
 
@@ -175,13 +188,17 @@ contract ShardedDiamondLoupeFacet {
         facetsAndSelectors = new Facet[](total);
         uint256 k;
         for (uint256 i; i < cats.length; i++) {
-            bytes memory packed = LibBlob.read(sls.shards[cats[i]].selectorsBlob);
-            (address[] memory facets, bytes4[][] memory selectors) = LibShardedLoupe.unpackFacetsAndSelectors(packed);
-            
-            // Convert to Facet structs
-            for (uint256 j; j < facets.length; j++) {
-                facetsAndSelectors[k] = Facet({facet: facets[j], functionSelectors: selectors[j]});
-                k++;
+            LibShardedLoupe.Shard storage shard = sls.shards[cats[i]];
+            bytes memory packed = LibBlob.read(shard.facetsBlob);
+            address[] memory categoryFacets = new address[](shard.facetCount);
+            LibShardedLoupe.unpackAddresses(packed, categoryFacets, 0);
+
+            for (uint256 j; j < categoryFacets.length; j++) {
+                address facetAddr = categoryFacets[j];
+                facetsAndSelectors[k] = Facet({facet: facetAddr, functionSelectors: LibShardedLoupe.getFacetSelectors(facetAddr)});
+                unchecked {
+                    k++;
+                }
             }
         }
     }

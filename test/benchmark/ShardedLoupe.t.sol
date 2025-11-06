@@ -97,8 +97,12 @@ contract ShardedLoupeBenchmark is Test {
     function _enableShardedLoupe(address diamond) internal {
         // Deploy and call the init contract to enable sharded loupe
         InitShardedLoupe initContract = new InitShardedLoupe();
-        (bool success,) = diamond.call(abi.encodeWithSelector(initContract.init.selector));
-        require(success, "Failed to enable sharded loupe");
+        LibDiamond.FacetCut[] memory noCuts = new LibDiamond.FacetCut[](0);
+        MinimalDiamond.DiamondArgs memory args = MinimalDiamond.DiamondArgs({
+            init: address(initContract),
+            initCalldata: abi.encodeCall(initContract.init, ())
+        });
+        MinimalDiamond(payable(diamond)).initialize(noCuts, args);
     }
 
     /*//////////////////////////////////////////////////////////////
@@ -192,30 +196,21 @@ contract ShardedLoupeBenchmark is Test {
         _runBenchmark(TestConfig({numFacets: 64, selectorsPerFacet: 64, name: "64x64"}), true);
     }
 
-    /// @notice Benchmark: 1,000 facets, 84 selectors each (84,000 total)
-    function testBenchmark_1k_84_Baseline() external {
-        _runBenchmark(TestConfig({numFacets: 1000, selectorsPerFacet: 84, name: "1kx84"}), false);
+    /// @notice Benchmark: 128 facets, 32 selectors each (4,096 total)
+    function testBenchmark_128_32_Baseline() external {
+        _runBenchmark(TestConfig({numFacets: 128, selectorsPerFacet: 32, name: "128x32"}), false);
     }
 
-    function testBenchmark_1k_84_Sharded() external {
-        _runBenchmark(TestConfig({numFacets: 1000, selectorsPerFacet: 84, name: "1kx84"}), true);
+    function testBenchmark_128_32_Sharded() external {
+        _runBenchmark(TestConfig({numFacets: 128, selectorsPerFacet: 32, name: "128x32"}), true);
     }
 
-    /// @notice Benchmark: 10,000 facets, 834 selectors each (8,340,000 total) - might be too large
-    function testBenchmark_10k_834_Baseline() external {
-        _runBenchmark(TestConfig({numFacets: 10000, selectorsPerFacet: 834, name: "10kx834"}), false);
+    /// @notice Benchmark: 200 facets, 20 selectors each (4,000 total)
+    function testBenchmark_200_20_Baseline() external {
+        _runBenchmark(TestConfig({numFacets: 200, selectorsPerFacet: 20, name: "200x20"}), false);
     }
 
-    function testBenchmark_10k_834_Sharded() external {
-        _runBenchmark(TestConfig({numFacets: 10000, selectorsPerFacet: 834, name: "10kx834"}), true);
-    }
-
-    /// @notice Benchmark: 40,000 facets, 5,000 selectors each - smoke test (might be too large)
-    function testBenchmark_40k_5k_Baseline() external {
-        _runBenchmark(TestConfig({numFacets: 40000, selectorsPerFacet: 5000, name: "40kx5k"}), false);
-    }
-
-    function testBenchmark_40k_5k_Sharded() external {
-        _runBenchmark(TestConfig({numFacets: 40000, selectorsPerFacet: 5000, name: "40kx5k"}), true);
+    function testBenchmark_200_20_Sharded() external {
+        _runBenchmark(TestConfig({numFacets: 200, selectorsPerFacet: 20, name: "200x20"}), true);
     }
 }

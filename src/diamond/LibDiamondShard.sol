@@ -38,53 +38,57 @@ library LibDiamondShard {
 
         bytes4[] memory selectors = ds.selectors;
         uint256 selectorCount = selectors.length;
-        
-        // Identify unique facets - O(n²) but acceptable for write path
-        address[] memory tempFacets = new address[](selectorCount);
-        uint256 uniqueFacetCount;
-        
-        for (uint256 i; i < selectorCount; i++) {
-            address facet = ds.facetAndPosition[selectors[i]].facet;
-            bool found = false;
-            for (uint256 j; j < uniqueFacetCount; j++) {
-                if (tempFacets[j] == facet) {
-                    found = true;
-                    break;
-                }
-            }
-            if (!found) {
-                tempFacets[uniqueFacetCount] = facet;
-                uniqueFacetCount++;
-            }
+
+        if (selectorCount == 0) {
+            LibShardedLoupe.rebuildShard(DEFAULT_CATEGORY, new address[](0), new bytes4[][](0));
+            return;
         }
-        
-        // Create properly sized arrays
+
+        uint256[] memory counts = new uint256[](selectorCount);
+        uint256 uniqueFacetCount;
+
+        // First pass: count selectors per facet while tracking unique facets via storage-backed scratchpad
+        for (uint256 i; i < selectorCount; i++) {
+            bytes4 selector = selectors[i];
+            address facet = ds.facetAndPosition[selector].facet;
+            uint256 index = sls.facetIndex[facet];
+            if (index == 0) {
+                uniqueFacetCount++;
+                sls.facetIndex[facet] = uniqueFacetCount;
+                sls.facetIndexList.push(facet);
+                index = uniqueFacetCount;
+            }
+            counts[index - 1]++;
+        }
+
         address[] memory facets = new address[](uniqueFacetCount);
         bytes4[][] memory facetSelectors = new bytes4[][](uniqueFacetCount);
-        
+        uint256[] memory writePositions = new uint256[](uniqueFacetCount);
+
         for (uint256 i; i < uniqueFacetCount; i++) {
-            facets[i] = tempFacets[i];
-            
-            // Count selectors for this facet
-            uint256 count;
-            for (uint256 j; j < selectorCount; j++) {
-                if (ds.facetAndPosition[selectors[j]].facet == facets[i]) {
-                    count++;
-                }
-            }
-            
-            // Fill selectors
-            facetSelectors[i] = new bytes4[](count);
-            uint256 idx;
-            for (uint256 j; j < selectorCount; j++) {
-                if (ds.facetAndPosition[selectors[j]].facet == facets[i]) {
-                    facetSelectors[i][idx] = selectors[j];
-                    idx++;
-                }
-            }
+            address facetAddr = sls.facetIndexList[i];
+            facets[i] = facetAddr;
+            facetSelectors[i] = new bytes4[](counts[i]);
         }
-        
+
+        // Second pass: populate selector arrays per facet
+        for (uint256 i; i < selectorCount; i++) {
+            bytes4 selector = selectors[i];
+            address facet = ds.facetAndPosition[selector].facet;
+            uint256 index = sls.facetIndex[facet] - 1;
+            uint256 writeIndex = writePositions[index];
+            facetSelectors[index][writeIndex] = selector;
+            writePositions[index] = writeIndex + 1;
+        }
+
         LibShardedLoupe.rebuildShard(DEFAULT_CATEGORY, facets, facetSelectors);
+
+        // Clean up scratch space to avoid stale indexes on subsequent rebuilds
+        for (uint256 i; i < uniqueFacetCount; i++) {
+            address facetAddr = sls.facetIndexList[sls.facetIndexList.length - 1];
+            sls.facetIndex[facetAddr] = 0;
+            sls.facetIndexList.pop();
+        }
     }
 
     /// @notice Enable sharded loupe and perform initial build
