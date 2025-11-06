@@ -49,8 +49,7 @@ contract DiamondLoupeFacet {
         // loop through function selectors
         for (uint256 selectorIndex; selectorIndex < selectorCount; selectorIndex++) {
             bytes4 selector = s.selectors[selectorIndex];
-            address selectorFacet = s.facetAndPosition[selector].facet;
-            if (_facet == selectorFacet) {
+            if (_facet == s.facetAndPosition[selector].facet) {
                 facetSelectors[numSelectors] = selector;
                 numSelectors++;
             }
@@ -130,6 +129,7 @@ contract DiamondLoupeFacet {
                 }
             }
         }
+        // Set the correct length of the allFacets array
         assembly ("memory-safe") {
             mstore(allFacets, numFacets)
         }
