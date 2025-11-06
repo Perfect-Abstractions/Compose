@@ -28,6 +28,7 @@ library LibDiamondShard {
 
     /// @notice Rebuild the default shard with current diamond state
     /// @dev Should be called after any diamond cut operation
+    /// @dev Uses O(n²) for finding unique facets, but this only runs during cuts (rare operation)
     function rebuildDefaultShard() internal {
         DiamondStorage storage ds = getStorage();
         LibShardedLoupe.ShardedLoupeStorage storage sls = LibShardedLoupe.getStorage();
@@ -38,7 +39,7 @@ library LibDiamondShard {
         bytes4[] memory selectors = ds.selectors;
         uint256 selectorCount = selectors.length;
         
-        // Count unique facets
+        // Identify unique facets - O(n²) but acceptable for write path
         address[] memory tempFacets = new address[](selectorCount);
         uint256 uniqueFacetCount;
         

@@ -20,6 +20,7 @@ library LibShardedLoupe {
     struct ShardedLoupeStorage {
         mapping(bytes32 categoryId => Shard) shards;
         bytes32[] categories;
+        mapping(bytes32 categoryId => bool) categoryExists; // Track category existence
         bool enabled; // Flag to enable/disable sharded loupe
     }
 
@@ -62,16 +63,10 @@ library LibShardedLoupe {
         s.shards[categoryId] =
             Shard({facetsBlob: facetsBlob, selectorsBlob: selectorsBlob, facetCount: uint32(facets.length), selectorCount: totalSelectors});
 
-        // Add category if not already present
-        bool found = false;
-        for (uint256 i; i < s.categories.length; i++) {
-            if (s.categories[i] == categoryId) {
-                found = true;
-                break;
-            }
-        }
-        if (!found) {
+        // Add category if not already present - O(1) lookup
+        if (!s.categoryExists[categoryId]) {
             s.categories.push(categoryId);
+            s.categoryExists[categoryId] = true;
         }
     }
 

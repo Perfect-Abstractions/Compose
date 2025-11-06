@@ -89,7 +89,9 @@ contract ShardedLoupeBenchmark is Test {
     }
 
     function _selectorFor(uint256 f, uint16 j) internal pure returns (bytes4) {
-        return bytes4(keccak256(abi.encodePacked("fn_f_", vm.toString(f), "_idx_", vm.toString(j), "()")));
+        // Efficient deterministic selector generation using bit packing
+        // This avoids string concatenation and hashing overhead
+        return bytes4(keccak256(abi.encodePacked(uint256(f), uint256(j))));
     }
 
     function _enableShardedLoupe(address diamond) internal {

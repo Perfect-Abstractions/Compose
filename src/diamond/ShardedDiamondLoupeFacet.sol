@@ -38,6 +38,8 @@ contract ShardedDiamondLoupeFacet {
     /// @notice Gets the facet address that supports the given selector
     /// @param _functionSelector The function selector
     /// @return facet The facet address
+    /// @dev This function is already O(1) via direct mapping lookup
+    /// @dev Sharded optimization not needed as there's no enumeration
     function facetAddress(bytes4 _functionSelector) external view returns (address facet) {
         DiamondStorage storage s = getStorage();
         facet = s.facetAndPosition[_functionSelector].facet;

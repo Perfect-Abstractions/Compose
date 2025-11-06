@@ -12,7 +12,9 @@ library LibBlob {
     /// @return blob The address of the deployed blob contract
     function write(bytes memory data) internal returns (address blob) {
         // Deploy contract with initcode that returns the data as runtime code
-        // Format: PUSH2 <length> RETURNDATASIZE DUP2 PUSH1 0x0a RETURNDATASIZE CODECOPY RETURN <data>
+        // Opcodes: PUSH2 (0x61) <length>, RETURNDATASIZE (0x3d), DUP2 (0x81), 
+        //          PUSH1 0x0a (0x600a), RETURNDATASIZE (0x3d), CODECOPY (0x39), RETURN (0xf3)
+        // This creates a contract whose code is exactly the input data
         bytes memory init = abi.encodePacked(hex"61", uint16(data.length), hex"3d81600a3d39f3", data);
         assembly ("memory-safe") {
             blob := create(0, add(init, 0x20), mload(init))
