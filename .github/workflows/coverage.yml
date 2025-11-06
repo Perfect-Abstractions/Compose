@@ -1,0 +1,55 @@
+name: Coverage
+
+on:
+  pull_request:
+    paths-ignore:
+      - '**.md'
+      - 'website/**'
+  workflow_dispatch:
+
+env:
+  FOUNDRY_PROFILE: ci
+
+permissions:
+  contents: read
+
+jobs:
+  generate-report:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout PR branch
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - name: Install Foundry
+        uses: foundry-rs/foundry-toolchain@v1
+
+      - name: Run coverage
+        run: |
+          forge coverage --report summary --report lcov
+          ls -la lcov.info || echo "lcov.info not found"
+
+      - name: Generate coverage report
+        if: github.event_name == 'pull_request'
+        env:
+          COMMIT_SHA: ${{ github.event.pull_request.head.sha }}
+          REPO_OWNER: ${{ github.repository_owner }}
+          REPO_NAME: ${{ github.event.repository.name }}
+        run: |
+          node .github/scripts/coverage-comment.js
+          echo "PR_NUMBER=${{ github.event.pull_request.number }}" >> coverage-data.txt
+          echo "COMMIT_SHA=${{ github.event.pull_request.head.sha }}" >> coverage-data.txt
+          echo "REPO_OWNER=${{ github.repository_owner }}" >> coverage-data.txt
+          echo "REPO_NAME=${{ github.event.repository.name }}" >> coverage-data.txt
+          echo "Generated coverage report for PR #${{ github.event.pull_request.number }}"
+
+      - name: Upload coverage data
+        if: github.event_name == 'pull_request'
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-data
+          path: |
+            coverage-report.md
+            coverage-data.txt
+          retention-days: 1

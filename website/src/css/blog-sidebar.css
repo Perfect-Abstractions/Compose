@@ -1,0 +1,269 @@
+/**
+ * Blog Sidebar Timeline Styles
+ * Blog sidebar with timeline visualization
+ */
+
+/* Target blog sidebar with more specific selectors */
+.theme-blog-wrapper .col--3,
+.theme-blog-wrapper [class*="col--3"],
+[class*="blog"] [class*="col--3"],
+.col--3:has(strong) {
+  position: relative;
+  padding: 1.5rem 0 1.5rem 2rem !important;
+}
+
+/* Timeline vertical line */
+.theme-blog-wrapper .col--3::before,
+.theme-blog-wrapper [class*="col--3"]::before,
+[class*="blog"] [class*="col--3"]::before,
+.col--3:has(strong)::before {
+  content: '';
+  position: absolute;
+  left: 0.625rem;
+  top: 0;
+  bottom: 0;
+  width: 2px;
+  background: linear-gradient(180deg, 
+    var(--ifm-color-primary) 0%,
+    var(--ifm-color-primary-lighter) 10%,
+    var(--ifm-color-emphasis-300) 100%
+  );
+  z-index: 1;
+}
+
+[data-theme='dark'] .theme-blog-wrapper .col--3::before,
+[data-theme='dark'] .theme-blog-wrapper [class*="col--3"]::before,
+[data-theme='dark'] [class*="blog"] [class*="col--3"]::before,
+[data-theme='dark'] .col--3:has(strong)::before {
+  background: linear-gradient(180deg, 
+    #60a5fa 0%,
+    #93c5fd 10%,
+    var(--ifm-color-emphasis-300) 100%
+  );
+}
+
+/* Sidebar title */
+.theme-blog-wrapper .col--3 h3,
+.theme-blog-wrapper [class*="col--3"] h3,
+[class*="blog"] [class*="col--3"] h3 {
+  width: 65%;
+  font-size: 1.125rem;
+  font-weight: 700;
+  color: var(--ifm-color-emphasis-900);
+  margin-bottom: 1rem;
+  padding-bottom: 0.5rem;
+  border-bottom: 2px solid var(--ifm-color-emphasis-200)
+}
+
+/* Blog sidebar list container */
+.theme-blog-wrapper .col--3 ul,
+.theme-blog-wrapper [class*="col--3"] ul,
+[class*="blog"] [class*="col--3"] ul {
+  list-style: none !important;
+  padding: 0;
+  margin: 0;
+  position: relative;
+}
+
+/* Year group items */
+.theme-blog-wrapper .col--3 ul li,
+.theme-blog-wrapper [class*="col--3"] ul li,
+[class*="blog"] [class*="col--3"] ul li {
+  position: relative;
+  margin-bottom: 1rem;
+  padding-left: 0;
+}
+
+.theme-blog-wrapper .col--3 ul li:last-child,
+.theme-blog-wrapper [class*="col--3"] ul li:last-child,
+[class*="blog"] [class*="col--3"] ul li:last-child {
+  margin-bottom: 0;
+}
+
+/* Year heading with timeline dot */
+.theme-blog-wrapper .col--3 ul li strong,
+.theme-blog-wrapper [class*="col--3"] ul li strong,
+[class*="blog"] [class*="col--3"] ul li strong {
+  display: inline-block !important;
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--ifm-color-emphasis-900);
+  margin-bottom: 0.5rem;
+  position: relative;
+  padding-left: 0;
+  padding-bottom: 0.25rem;
+  border-bottom: 1px solid var(--ifm-color-emphasis-300) !important;
+  max-width: 50% !important;
+  width: 50% !important;
+}
+
+/* Timeline dot for years */
+.theme-blog-wrapper .col--3 ul li strong::before,
+.theme-blog-wrapper [class*="col--3"] ul li strong::before,
+[class*="blog"] [class*="col--3"] ul li strong::before {
+  content: '';
+  position: absolute;
+  left: -2.125rem;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 1rem;
+  height: 1rem;
+  border-radius: 50%;
+  background: var(--ifm-color-primary);
+  border: 3px solid var(--ifm-background-color);
+  box-shadow: 0 0 0 2px var(--ifm-color-primary);
+  flex-shrink: 0;
+  z-index: 2;
+}
+
+[data-theme='dark'] .theme-blog-wrapper .col--3 ul li strong::before,
+[data-theme='dark'] .theme-blog-wrapper [class*="col--3"] ul li strong::before,
+[data-theme='dark'] [class*="blog"] [class*="col--3"] ul li strong::before {
+  background: #60a5fa;
+  border-color: var(--ifm-background-color);
+  box-shadow: 0 0 0 2px #60a5fa;
+}
+
+/* Older years - grey dots */
+.theme-blog-wrapper .col--3 ul li:not(:first-child) strong::before,
+.theme-blog-wrapper [class*="col--3"] ul li:not(:first-child) strong::before,
+[class*="blog"] [class*="col--3"] ul li:not(:first-child) strong::before {
+  background: var(--ifm-color-emphasis-300);
+  box-shadow: 0 0 0 2px var(--ifm-color-emphasis-300);
+}
+
+[data-theme='dark'] .theme-blog-wrapper .col--3 ul li:not(:first-child) strong::before,
+[data-theme='dark'] .theme-blog-wrapper [class*="col--3"] ul li:not(:first-child) strong::before,
+[data-theme='dark'] [class*="blog"] [class*="col--3"] ul li:not(:first-child) strong::before {
+  background: var(--ifm-color-emphasis-400);
+  box-shadow: 0 0 0 2px var(--ifm-color-emphasis-400);
+}
+
+/* Blog post links - timeline items */
+.theme-blog-wrapper .col--3 ul li a,
+.theme-blog-wrapper [class*="col--3"] ul li a,
+[class*="blog"] [class*="col--3"] ul li a {
+  display: block;
+  color: var(--ifm-color-emphasis-600);
+  font-size: 0.875rem;
+  padding: 0.25rem 0;
+  text-decoration: none;
+  position: relative;
+  padding-left: 0.875rem;
+  margin-left: 0;
+  transition: all 0.2s ease;
+  margin-bottom: 0;
+}
+
+/* Small dot for individual posts */
+.theme-blog-wrapper .col--3 ul li a::before,
+.theme-blog-wrapper [class*="col--3"] ul li a::before,
+[class*="blog"] [class*="col--3"] ul li a::before {
+  content: '';
+  position: absolute;
+  left: -2.125rem;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 0.5rem;
+  height: 0.5rem;
+  border-radius: 50%;
+  background: var(--ifm-color-emphasis-300);
+  transition: all 0.2s ease;
+  z-index: 2;
+}
+
+[data-theme='dark'] .theme-blog-wrapper .col--3 ul li a::before,
+[data-theme='dark'] .theme-blog-wrapper [class*="col--3"] ul li a::before,
+[data-theme='dark'] [class*="blog"] [class*="col--3"] ul li a::before {
+  background: var(--ifm-color-emphasis-400);
+}
+
+/* Active/hover state for posts */
+.theme-blog-wrapper .col--3 ul li a:hover,
+.theme-blog-wrapper [class*="col--3"] ul li a:hover,
+[class*="blog"] [class*="col--3"] ul li a:hover {
+  color: var(--ifm-color-primary);
+  padding-left: 1rem;
+}
+
+.theme-blog-wrapper .col--3 ul li a:hover::before,
+.theme-blog-wrapper [class*="col--3"] ul li a:hover::before,
+[class*="blog"] [class*="col--3"] ul li a:hover::before {
+  background: var(--ifm-color-primary);
+  width: 0.625rem;
+  height: 0.625rem;
+}
+
+[data-theme='dark'] .theme-blog-wrapper .col--3 ul li a:hover,
+[data-theme='dark'] .theme-blog-wrapper [class*="col--3"] ul li a:hover,
+[data-theme='dark'] [class*="blog"] [class*="col--3"] ul li a:hover {
+  color: #60a5fa;
+}
+
+[data-theme='dark'] .theme-blog-wrapper .col--3 ul li a:hover::before,
+[data-theme='dark'] .theme-blog-wrapper [class*="col--3"] ul li a:hover::before,
+[data-theme='dark'] [class*="blog"] [class*="col--3"] ul li a:hover::before {
+  background: #60a5fa;
+}
+
+/* Active blog post */
+.theme-blog-wrapper .col--3 ul li a[aria-current],
+.theme-blog-wrapper [class*="col--3"] ul li a[aria-current],
+[class*="blog"] [class*="col--3"] ul li a[aria-current] {
+  color: var(--ifm-color-primary);
+  font-weight: 600;
+}
+
+.theme-blog-wrapper .col--3 ul li a[aria-current]::before,
+.theme-blog-wrapper [class*="col--3"] ul li a[aria-current]::before,
+[class*="blog"] [class*="col--3"] ul li a[aria-current]::before {
+  background: var(--ifm-color-primary);
+  width: 0.625rem;
+  height: 0.625rem;
+}
+
+[data-theme='dark'] .theme-blog-wrapper .col--3 ul li a[aria-current],
+[data-theme='dark'] .theme-blog-wrapper [class*="col--3"] ul li a[aria-current],
+[data-theme='dark'] [class*="blog"] [class*="col--3"] ul li a[aria-current] {
+  color: #60a5fa;
+}
+
+[data-theme='dark'] .theme-blog-wrapper .col--3 ul li a[aria-current]::before,
+[data-theme='dark'] .theme-blog-wrapper [class*="col--3"] ul li a[aria-current]::before,
+[data-theme='dark'] [class*="blog"] [class*="col--3"] ul li a[aria-current]::before {
+  background: #60a5fa;
+}
+
+/* Responsive adjustments */
+@media (max-width: 996px) {
+  .theme-blog-wrapper .col--3,
+  .theme-blog-wrapper [class*="col--3"],
+  [class*="blog"] [class*="col--3"] {
+    padding-left: 0 !important;
+    margin-top: 2rem;
+    padding-top: 2rem;
+    border-top: 2px solid var(--ifm-color-emphasis-200);
+  }
+
+  .theme-blog-wrapper .col--3::before,
+  .theme-blog-wrapper [class*="col--3"]::before,
+  [class*="blog"] [class*="col--3"]::before {
+    display: none;
+  }
+
+  .theme-blog-wrapper .col--3 ul li strong::before,
+  .theme-blog-wrapper [class*="col--3"] ul li strong::before,
+  [class*="blog"] [class*="col--3"] ul li strong::before,
+  .theme-blog-wrapper .col--3 ul li a::before,
+  .theme-blog-wrapper [class*="col--3"] ul li a::before,
+  [class*="blog"] [class*="col--3"] ul li a::before {
+    display: none;
+  }
+
+  .theme-blog-wrapper .col--3 ul li a,
+  .theme-blog-wrapper [class*="col--3"] ul li a,
+  [class*="blog"] [class*="col--3"] ul li a {
+    padding-left: 0;
+  }
+}
+

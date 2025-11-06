@@ -1,0 +1,30 @@
+# Forge Version: 1.4.3-stable
+
+[profile.default]
+src = "src"
+out = "out"
+libs = ["lib"]
+optimizer = true
+optimizer_runs = 20_000
+
+[profile.ci]
+src = "src"
+out = "out"
+libs = ["lib"]
+optimizer = true
+optimizer_runs = 20_000
+# Coverage settings
+fuzz = { runs = 1000 }
+invariant = { runs = 1000 }
+
+[fmt]
+line_length = 120
+tab_width = 4
+bracket_spacing = false
+int_types = 'long'
+multiline_func_header = 'attributes_first'
+quote_style = 'double'
+number_underscore = 'preserve'
+single_line_statement_blocks = 'preserve'
+
+# See more config options https://github.com/foundry-rs/foundry/blob/master/crates/config/README.md#all-options

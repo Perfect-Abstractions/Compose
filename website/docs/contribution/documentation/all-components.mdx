@@ -1,0 +1,2213 @@
+---
+sidebar_position: 2
+title: All Components - Complete Reference
+description: Complete guide to all 30+ components with live examples, detailed documentation, and usage
+---
+
+import Badge from '@site/src/components/ui/Badge';
+import GradientText from '@site/src/components/ui/GradientText';
+import Callout from '@site/src/components/ui/Callout';
+import CalloutBox from '@site/src/components/ui/CalloutBox';
+import Accordion, { AccordionGroup } from '@site/src/components/ui/Accordion';
+import StepIndicator from '@site/src/components/docs/StepIndicator';
+import ApiEndpoint from '@site/src/components/api/ApiEndpoint';
+import PropertyTable from '@site/src/components/api/PropertyTable';
+import ParameterTable from '@site/src/components/api/ParameterTable';
+import SchemaViewer from '@site/src/components/api/SchemaViewer';
+import Tooltip from '@site/src/components/ui/Tooltip';
+import ExpandableCode from '@site/src/components/code/ExpandableCode';
+import TerminalCommand from '@site/src/components/code/TerminalCommand';
+import WasThisHelpful from '@site/src/components/docs/WasThisHelpful';
+import LastUpdated from '@site/src/components/docs/LastUpdated';
+import ReadingTime from '@site/src/components/docs/ReadingTime';
+import RelatedDocs from '@site/src/components/docs/RelatedDocs';
+import CodeShowcase from '@site/src/components/code/CodeShowcase';
+import FeatureCard from '@site/src/components/features/FeatureCard';
+import MetricCard from '@site/src/components/data-display/MetricCard';
+import GlassCard from '@site/src/components/ui/GlassCard';
+import GradientButton from '@site/src/components/ui/GradientButton';
+import AnimatedCounter from '@site/src/components/animations/AnimatedCounter';
+import Timeline from '@site/src/components/data-display/Timeline';
+import ComparisonTable from '@site/src/components/data-display/ComparisonTable';
+import DocCard, { DocCardGrid } from '@site/src/components/docs/DocCard';
+import DocHero from '@site/src/components/docs/DocHero';
+import DocSubtitle from '@site/src/components/docs/DocSubtitle';
+import FeatureGrid, { FeatureGridItem } from '@site/src/components/features/FeatureGrid';
+import APIReference from '@site/src/components/api/APIReference';
+import IconGallery from '@site/src/components/docs/IconGallery';
+
+# <GradientText>Complete Component Reference & Showcase</GradientText>
+
+<DocSubtitle>
+  All 30+ components in one place - complete documentation with live examples, detailed props, usage patterns, and best practices.
+</DocSubtitle>
+
+<Badge variant="success">30+ Components</Badge> <Badge variant="info">Fully Documented</Badge> <Badge variant="primary">Live Examples</Badge>
+
+<Callout type="info" title="How to Use This Guide">
+Each component section includes:
+- **Live Example** - See it in action
+- **Props** - Complete parameter reference
+- **Usage Code** - Copy-paste examples
+- **Best Practices** - When and how to use it
+</Callout>
+
+---
+
+## Table of Contents
+
+1. [Content Display Components](#content-display-components) (8 components)
+2. [API Documentation Components](#api-documentation-components) (6 components)
+3. [Visual & Layout Components](#visual--layout-components) (8 components)
+4. [Navigation Components](#navigation-components) (5 components)
+5. [Content Enhancement Components](#content-enhancement-components) (4 components)
+6. [Data Display Components](#data-display-components) (2 components)
+7. [Typography & UI Components](#typography--ui-components) (4 components)
+8. [Feedback & Metadata Components](#feedback--metadata-components) (3 components)
+
+---
+
+## Content Display Components
+
+### CodeShowcase
+
+Displays tabbed code examples with syntax highlighting, perfect for showing the same implementation in multiple languages.
+
+<Badge variant="info">Content Display</Badge>
+
+#### Live Example
+
+<CodeShowcase
+  title="Authentication Example"
+  description="How to authenticate API requests"
+  examples={[
+    {
+      label: 'JavaScript',
+      language: 'javascript',
+      code: `const response = await fetch('/api/auth', {
+  headers: {
+    'Authorization': 'Bearer ' + token
+  }
+});`
+    },
+    {
+      label: 'Python',
+      language: 'python',
+      code: `response = requests.get('/api/auth',
+  headers={'Authorization': f'Bearer {token}'}
+)`
+    },
+    {
+      label: 'cURL',
+      language: 'bash',
+      code: `curl -X GET https://api.example.com/auth \\
+  -H "Authorization: Bearer YOUR_TOKEN"`
+    }
+  ]}
+/>
+
+#### Props
+
+<PropertyTable 
+  properties={[
+    { name: 'title', type: 'string', required: false, description: 'Optional title for the code showcase' },
+    { name: 'description', type: 'string', required: false, description: 'Optional description' },
+    { name: 'examples', type: 'Array', required: true, description: 'Array of example objects' }
+  ]}
+/>
+
+**Example Object Structure:**
+```js
+{
+  label: 'JavaScript',      // Tab label
+  language: 'javascript',   // Syntax highlighting language
+  description: 'Optional',  // Optional description
+  code: 'console.log();'    // Code content
+}
+```
+
+#### Usage
+
+```jsx
+<CodeShowcase
+  title="API Request Examples"
+  examples={[
+    {
+      label: 'JavaScript',
+      language: 'javascript',
+      code: `console.log("Hello");`
+    },
+    {
+      label: 'Python',
+      language: 'python',
+      code: `print("Hello")`
+    }
+  ]}
+/>
+```
+
+#### Best Practices
+
+- Provide examples in most commonly used languages (JavaScript, Python, cURL)
+- Keep code examples concise and focused on the specific feature
+- Include explanatory descriptions when needed
+- Test all code examples before publishing
+- Use consistent formatting across all tabs
+
+#### When to Use
+
+- Multi-language API documentation
+- Tutorial code examples
+- SDK usage demonstrations
+- Comparing different approaches
+
+---
+
+### ExpandableCode
+
+Collapsible code blocks for long code snippets with automatic expansion controls.
+
+<Badge variant="info">Content Display</Badge>
+
+#### Live Example
+
+<ExpandableCode 
+  language="javascript"
+  maxLines={5}
+  title="Full Implementation Example"
+>
+{`function complexFunction() {
+  // Line 1
+  console.log('First line');
+  // Line 2
+  console.log('Second line');
+  // Line 3
+  console.log('Third line');
+  // Line 4
+  console.log('Fourth line');
+  // Line 5
+  console.log('Fifth line');
+  // Line 6 - Hidden until expanded
+  console.log('Sixth line');
+  // Line 7
+  console.log('Seventh line');
+  // Line 8
+  console.log('Eighth line');
+}`}
+</ExpandableCode>
+
+#### Props
+
+<PropertyTable 
+  properties={[
+    { name: 'language', type: 'string', required: false, description: 'Code language for syntax highlighting', default: "'javascript'" },
+    { name: 'maxLines', type: 'number', required: false, description: 'Lines visible before collapse', default: '10' },
+    { name: 'title', type: 'string', required: false, description: 'Optional code block title', default: 'undefined' },
+    { name: 'children', type: 'ReactNode', required: true, description: 'Code content' }
+  ]}
+/>
+
+#### Usage
+
+```jsx
+<ExpandableCode language="typescript" maxLines={15} title="Full Implementation">
+{`
+function yourCode() {
+  // Your code here...
+}
+`}
+</ExpandableCode>
+```
+
+#### Best Practices
+
+- Use for code longer than 20 lines
+- Set appropriate maxLines based on context (10-15 typically)
+- Include title to describe what code does
+- Use for complete implementations or long examples
+
+#### When to Use
+
+- Long code examples
+- Complete file contents
+- Detailed implementations
+- When you want to show full code but save space
+
+---
+
+### TerminalCommand
+
+Styled terminal/shell command display with copy functionality.
+
+<Badge variant="info">Content Display</Badge>
+
+#### Live Example
+
+<TerminalCommand 
+  command="npm install @myapp/sdk"
+  copyable={true}
+  prompt="$"
+/>
+
+<br />
+
+<TerminalCommand 
+  command="sudo systemctl start nginx"
+  prompt="#"
+/>
+
+#### Props
+
+<PropertyTable 
+  properties={[
+    { name: 'command', type: 'string', required: true, description: 'Command to display' },
+    { name: 'copyable', type: 'boolean', required: false, description: 'Show copy button', default: 'true' },
+    { name: 'prompt', type: 'string', required: false, description: 'Command prompt symbol', default: "'$'" },
+    { name: 'language', type: 'string', required: false, description: 'Syntax highlighting language', default: "'bash'" }
+  ]}
+/>
+
+#### Usage
+
+```jsx
+<TerminalCommand command="npm install package-name" />
+<TerminalCommand command="sudo apt update" prompt="#" />
+<TerminalCommand 
+  command="docker run -p 8080:80 nginx" 
+  copyable={true}
+/>
+```
+
+#### Best Practices
+
+- Use `$` prompt for user-level commands
+- Use `#` prompt for root/admin commands
+- Keep commands on single line when possible
+- Enable copyable for commands users will run
+
+#### When to Use
+
+- Installation instructions
+- CLI commands
+- Shell scripts
+- Docker commands
+- Package manager commands
+
+---
+
+### Accordion
+
+Collapsible sections perfect for FAQs, detailed explanations, or any content that benefits from progressive disclosure.
+
+<Badge variant="primary">Content Enhancement</Badge>
+
+#### Live Example
+
+<AccordionGroup>
+  <Accordion title="What is Compose?" defaultOpen>
+    Compose is a revolutionary smart contract library that helps developers create sophisticated smart contract systems using the ERC-2535 Diamond standard.
+  </Accordion>
+  <Accordion title="How does it work?">
+    Compose uses a shared storage architecture where both standard facets and your custom facets access the same data. This enables seamless integration without inheritance conflicts.
+  </Accordion>
+  <Accordion title="Is it production ready?">
+    Yes! Compose is thoroughly tested and used in production systems. However, smart contracts should always be audited before deployment.
+  </Accordion>
+</AccordionGroup>
+
+#### Props
+
+<PropertyTable 
+  properties={[
+    { name: 'title', type: 'string', required: true, description: 'Accordion header text' },
+    { name: 'defaultOpen', type: 'boolean', required: false, description: 'Whether accordion starts expanded', default: 'false' },
+    { name: 'variant', type: 'string', required: false, description: "Style variant ('default', 'bordered')", default: "'default'" },
+    { name: 'children', type: 'ReactNode', required: true, description: 'Content to display when expanded' }
+  ]}
+/>
+
+#### Usage
+
+```jsx
+<Accordion title="FAQ Question" defaultOpen>
+  Your answer content here. Can include any MDX content.
+</Accordion>
+
+<AccordionGroup>
+  <Accordion title="Question 1">Answer 1</Accordion>
+  <Accordion title="Question 2">Answer 2</Accordion>
+  <Accordion title="Question 3">Answer 3</Accordion>
+</AccordionGroup>
+```
+
+#### Best Practices
+
+- Keep titles concise and descriptive
+- Use AccordionGroup for related FAQs
+- Consider defaultOpen for most important information
+- Use question format for FAQ titles
+
+#### When to Use
+
+- FAQ sections
+- Collapsible details
+- Progressive disclosure of information
+- Step-by-step instructions with expandable sections
+- Technical specifications
+
+---
+
+### Tooltip
+
+Contextual information on hover.
+
+<Badge variant="primary">Content Enhancement</Badge>
+
+#### Live Example
+
+Hover over this <Tooltip content="This is a helpful tooltip with additional context!">highlighted text</Tooltip> to see the tooltip in action. You can also hover over <Tooltip content="Tooltips support all positions" position="bottom">this text</Tooltip> for a bottom tooltip.
+
+#### Props
+
+<PropertyTable 
+  properties={[
+    { name: 'content', type: 'string', required: true, description: 'Tooltip text' },
+    { name: 'position', type: 'string', required: false, description: "Position ('top', 'bottom', 'left', 'right')", default: "'top'" },
+    { name: 'children', type: 'ReactNode', required: true, description: 'Trigger element' }
+  ]}
+/>
+
+#### Usage
+
+```jsx
+<Tooltip content="Additional information" position="top">
+  Hover me
+</Tooltip>
+
+<Tooltip content="Technical term explanation">
+  <Badge>Term</Badge>
+</Tooltip>
+```
+
+#### Best Practices
+
+- Keep tooltip text concise (under 2 sentences)
+- Use for additional context, not essential information
+- Ensure tooltips are accessible with keyboard navigation
+- Don't nest interactive elements inside tooltips
+
+#### When to Use
+
+- Defining technical terms
+- Providing additional context
+- Explaining abbreviations
+- Offering hints or tips
+
+---
+
+## API Documentation Components
+
+### ApiEndpoint
+
+Display REST API endpoints with HTTP method badges and parameters.
+
+<Badge variant="success">API Documentation</Badge>
+
+#### Live Example
+
+<ApiEndpoint 
+  method="GET"
+  path="/api/v1/users/{id}"
+  description="Retrieve a specific user by ID"
+  params={[
+    { name: "id", required: true, description: "User identifier" },
+    { name: "include", required: false, description: "Relations to include (comma-separated)" }
+  ]}
+/>
+
+<br />
+
+<ApiEndpoint 
+  method="POST"
+  path="/api/v1/users"
+  description="Create a new user account"
+  params={[
+    { name: "name", required: true, description: "User's full name" },
+    { name: "email", required: true, description: "User's email address" }
+  ]}
+/>
+
+#### Props
+
+<PropertyTable 
+  properties={[
+    { name: 'method', type: 'string', required: true, description: 'HTTP method (GET, POST, PUT, DELETE, PATCH)' },
+    { name: 'path', type: 'string', required: true, description: 'API endpoint path' },
+    { name: 'description', type: 'string', required: false, description: 'Optional description' },
+    { name: 'params', type: 'Array', required: false, description: 'Query parameters' }
+  ]}
+/>
+
+**Parameter Object:**
+```js
+{
+  name: 'parameter_name',
+  required: true,
+  description: 'What this parameter does'
+}
+```
+
+#### Usage
+
+```jsx
+<ApiEndpoint
+  method="GET"
+  path="/api/v1/users/:id"
+  description="Retrieve user information"
+  params={[
+    { name: 'include', required: false, description: 'Related resources' }
+  ]}
+/>
+```
+
+#### Best Practices
+
+- Use correct HTTP method colors (automatically handled)
+- Include clear, concise descriptions
+- List all relevant parameters with required status
+- Use path parameter syntax consistently
+
+#### When to Use
+
+- REST API documentation
+- Endpoint references
+- API guides and tutorials
+
+---
+
+### PropertyTable
+
+Documentation table for API object properties.
+
+<Badge variant="success">API Documentation</Badge>
+
+#### Live Example
+
+<PropertyTable 
+  title="User Object Properties"
+  properties={[
+    { 
+      name: "id", 
+      type: "string", 
+      required: true, 
+      description: "Unique identifier for the user" 
+    },
+    { 
+      name: "name", 
+      type: "string", 
+      required: true, 
+      description: "User's full name" 
+    },
+    { 
+      name: "email", 
+      type: "string", 
+      required: false, 
+      description: "User's email address", 
+      example: "user@example.com",
+      default: "null"
+    },
+    { 
+      name: "created_at", 
+      type: "timestamp", 
+      required: true, 
+      description: "Account creation timestamp" 
+    }
+  ]}
+/>
+
+#### Props
+
+<PropertyTable 
+  properties={[
+    { name: 'properties', type: 'Array', required: true, description: 'Array of property objects' },
+    { name: 'showRequired', type: 'boolean', required: false, description: 'Show required column', default: 'true' },
+    { name: 'showTypes', type: 'boolean', required: false, description: 'Show type column', default: 'true' },
+    { name: 'title', type: 'string', required: false, description: 'Optional table title', default: 'undefined' }
+  ]}
+/>
+
+**Property Object:**
+```js
+{
+  name: 'propertyName',
+  type: 'string',
+  required: true,
+  description: 'What this property is',
+  default: 'defaultValue',  // optional
+  example: 'exampleValue'   // optional
+}
+```
+
+#### Usage
+
+```jsx
+<PropertyTable
+  title="Response Object"
+  properties={[
+    {
+      name: 'id',
+      type: 'string',
+      required: true,
+      description: 'Unique identifier'
+    }
+  ]}
+/>
+```
+
+#### Best Practices
+
+- Always include type information
+- Mark required fields accurately
+- Provide examples for complex types
+- Include default values when applicable
+
+#### When to Use
+
+- API response documentation
+- Object property documentation
+- Configuration options
+- Schema documentation
+
+---
+
+### ParameterTable
+
+Similar to PropertyTable but optimized for function/API parameters.
+
+<Badge variant="success">API Documentation</Badge>
+
+#### Live Example
+
+<ParameterTable 
+  title="Function Parameters"
+  parameters={[
+    { 
+      name: "userId", 
+      type: "string", 
+      required: true, 
+      description: "The ID of the user to retrieve" 
+    },
+    { 
+      name: "options", 
+      type: "object", 
+      required: false, 
+      description: "Optional configuration object",
+      default: "{}"
+    },
+    { 
+      name: "includeMetadata", 
+      type: "boolean", 
+      required: false, 
+      description: "Whether to include user metadata",
+      default: "false"
+    }
+  ]}
+/>
+
+#### Props
+
+Same as PropertyTable - optimized for parameter documentation.
+
+#### Usage
+
+```jsx
+<ParameterTable
+  title="Request Parameters"
+  parameters={[
+    {
+      name: 'data',
+      type: 'object',
+      required: true,
+      description: 'Data to process'
+    }
+  ]}
+/>
+```
+
+#### When to Use
+
+- Function parameter documentation
+- API request parameters
+- Method signatures
+- Configuration parameters
+
+---
+
+### SchemaViewer
+
+Interactive JSON schema visualization with expandable nested properties.
+
+<Badge variant="success">API Documentation</Badge>
+
+#### Live Example
+
+<SchemaViewer 
+  schema={{
+    user: {
+      id: "usr_12345",
+      name: "John Doe",
+      email: "john@example.com",
+      profile: {
+        avatar: "https://example.com/avatar.jpg",
+        bio: "Software developer",
+        location: "San Francisco",
+        verified: true
+      },
+      preferences: {
+        theme: "dark",
+        notifications: {
+          email: true,
+          push: false,
+          sms: false
+        }
+      },
+      created_at: "2024-01-15T10:30:00Z"
+    }
+  }}
+/>
+
+#### Props
+
+<PropertyTable 
+  properties={[
+    { name: 'schema', type: 'Object', required: true, description: 'JSON schema object' },
+    { name: 'collapsed', type: 'boolean', required: false, description: 'Start collapsed', default: 'false' },
+    { name: 'depth', type: 'number', required: false, description: 'Initial nesting depth', default: '0' }
+  ]}
+/>
+
+#### Usage
+
+```jsx
+<SchemaViewer
+  schema={{
+    user: {
+      id: '12345',
+      name: 'John Doe',
+      profile: {
+        email: 'john@example.com'
+      }
+    }
+  }}
+/>
+```
+
+#### Best Practices
+
+- Use realistic example data
+- Keep nesting reasonable (3-4 levels max)
+- Include common use case scenarios
+- Use descriptive property names
+
+#### When to Use
+
+- JSON API responses
+- Configuration file examples
+- Nested object documentation
+- Complex data structure visualization
+
+---
+
+### APIReference
+
+Complete API reference section with parameters and response tabs.
+
+<Badge variant="success">API Documentation</Badge>
+
+#### Live Example
+
+<APIReference
+  method="POST"
+  endpoint="/api/v1/transactions"
+  description="Create a new financial transaction"
+  parameters={[
+    { 
+      name: 'amount', 
+      type: 'number', 
+      required: true, 
+      description: 'Transaction amount in cents' 
+    },
+    { 
+      name: 'currency', 
+      type: 'string', 
+      required: true, 
+      description: 'Three-letter currency code (e.g., USD)' 
+    },
+    { 
+      name: 'description', 
+      type: 'string', 
+      required: false, 
+      description: 'Transaction description' 
+    }
+  ]}
+  response={{
+    id: 'txn_1234567890',
+    status: 'success',
+    amount: 10000,
+    currency: 'USD',
+    created_at: '2024-01-15T10:30:00Z'
+  }}
+/>
+
+#### Props
+
+<PropertyTable 
+  properties={[
+    { name: 'method', type: 'string', required: true, description: 'HTTP method' },
+    { name: 'endpoint', type: 'string', required: true, description: 'API endpoint' },
+    { name: 'description', type: 'string', required: false, description: 'Endpoint description' },
+    { name: 'parameters', type: 'Array', required: false, description: 'Parameters' },
+    { name: 'response', type: 'Object', required: false, description: 'Example response' }
+  ]}
+/>
+
+#### Usage
+
+```jsx
+<APIReference
+  method="GET"
+  endpoint="/api/v1/users"
+  description="List all users"
+  parameters={[
+    { name: 'page', type: 'number', required: false }
+  ]}
+  response={{
+    users: [],
+    total: 0
+  }}
+/>
+```
+
+#### When to Use
+
+- Complete API documentation
+- When you need both parameters and response
+- Detailed endpoint documentation
+
+---
+
+### StepIndicator
+
+Multi-step process visualization with completion states.
+
+<Badge variant="info">Navigation</Badge>
+
+#### Live Example
+
+<StepIndicator 
+  steps={[
+    { 
+      title: "Install SDK", 
+      description: "Install the package via npm or yarn",
+      status: "completed"
+    },
+    { 
+      title: "Configure", 
+      description: "Set up your API keys and configuration",
+      status: "active"
+    },
+    { 
+      title: "Test Integration", 
+      description: "Verify your setup with a test request",
+      status: "pending"
+    },
+    { 
+      title: "Deploy", 
+      description: "Deploy to production",
+      status: "pending"
+    }
+  ]}
+  currentStep={1}
+  orientation="vertical"
+/>
+
+#### Props
+
+<PropertyTable 
+  properties={[
+    { name: 'steps', type: 'Array', required: true, description: 'Array of step objects' },
+    { name: 'currentStep', type: 'number', required: false, description: 'Current active step (0-based)', default: '0' },
+    { name: 'orientation', type: 'string', required: false, description: "Layout ('vertical', 'horizontal')", default: "'vertical'" }
+  ]}
+/>
+
+**Step Object:**
+```js
+{
+  title: 'Step Title',
+  description: 'Step description',
+  status: 'completed' | 'active' | 'pending'  // optional
+}
+```
+
+#### Usage
+
+```jsx
+<StepIndicator
+  currentStep={1}
+  orientation="vertical"
+  steps={[
+    { title: 'Create Account', description: 'Sign up' },
+    { title: 'Get API Key', description: 'Generate credentials' },
+    { title: 'Make First Call', description: 'Test integration' }
+  ]}
+/>
+```
+
+#### Best Practices
+
+- Use clear, action-oriented step titles
+- Keep descriptions brief (one sentence)
+- Update currentStep as user progresses
+- Use vertical orientation for detailed steps
+
+#### When to Use
+
+- Installation guides
+- Multi-step tutorials
+- Setup workflows
+- Process documentation
+- Onboarding flows
+
+---
+
+## Visual & Layout Components
+
+### DocHero
+
+Hero section for documentation pages with gradient backgrounds.
+
+<Badge variant="primary">Layout</Badge>
+
+#### Live Example
+
+<DocHero
+  title="API Documentation"
+  subtitle="Build powerful integrations with our comprehensive REST API"
+  variant="gradient"
+  height="medium"
+>
+  <div style={{ marginTop: '2rem' }}>
+    <GradientButton to="/docs/" size="large">
+      Get Started
+    </GradientButton>
+  </div>
+</DocHero>
+
+#### Props
+
+<PropertyTable 
+  properties={[
+    { name: 'title', type: 'string', required: false, description: 'Hero title', default: 'undefined' },
+    { name: 'subtitle', type: 'string', required: false, description: 'Hero subtitle', default: 'undefined' },
+    { name: 'backgroundImage', type: 'string', required: false, description: 'Background image URL', default: 'undefined' },
+    { name: 'variant', type: 'string', required: false, description: "Style ('default', 'gradient', 'dark', 'image')", default: "'gradient'" },
+    { name: 'height', type: 'string', required: false, description: "Height ('small', 'medium', 'large', 'full')", default: "'medium'" },
+    { name: 'children', type: 'ReactNode', required: false, description: 'Additional content', default: 'undefined' }
+  ]}
+/>
+
+#### Usage
+
+```jsx
+<DocHero
+  title="Welcome"
+  subtitle="Get started with our platform"
+  variant="gradient"
+  height="large"
+>
+  <div style={{ marginTop: '2rem' }}>
+    <GradientButton to="/docs" size="large">
+      Get Started
+    </GradientButton>
+  </div>
+</DocHero>
+
+{/* Or with multiple buttons */}
+<DocHero
+  title="Get Started"
+  subtitle="Choose your path"
+  variant="gradient"
+>
+  <div style={{ display: 'flex', gap: '1rem', justifyContent: 'center', marginTop: '2rem', flexWrap: 'wrap' }}>
+    <GradientButton to="/docs/quickstart" size="large">
+      Quick Start
+    </GradientButton>
+    <GradientButton variant="outline" size="large">
+      View Examples
+    </GradientButton>
+  </div>
+</DocHero>
+```
+
+#### Best Practices
+
+- Keep titles concise and impactful
+- Use subtitle for additional context
+- Include clear call-to-action buttons with proper spacing
+- Wrap buttons in a div with marginTop for proper spacing
+- Choose appropriate height for content
+- Use size="large" for hero buttons to make them prominent
+
+#### When to Use
+
+- Documentation landing pages
+- Section introductions
+- Feature showcase pages
+- Getting started pages
+
+---
+
+### DocCard
+
+Navigation cards for linking to documentation pages.
+
+<Badge variant="primary">Layout</Badge>
+
+#### Live Example
+
+<DocCardGrid columns={2}>
+  <DocCard
+    title="Getting Started"
+    description="Learn the basics and create your first integration in under 10 minutes"
+    href="/"
+    icon={<Icon name="rocket" size={32} />}
+    variant="primary"
+  />
+  <DocCard
+    title="API Reference"
+    description="Complete API documentation with examples and best practices"
+    href="/"
+    icon={<Icon name="books" size={32} />}
+    variant="default"
+  />
+  <DocCard
+    title="Tutorials"
+    description="Step-by-step guides for common use cases and patterns"
+    href="/"
+    icon={<Icon name="graduation" size={32} />}
+    variant="secondary"
+  />
+  <DocCard
+    title="Examples"
+    description="Real-world code examples and implementation patterns"
+    href="/"
+    icon={<Icon name="lightbulb" size={32} />}
+    variant="default"
+  />
+</DocCardGrid>
+
+#### Props
+
+<PropertyTable 
+  properties={[
+    { name: 'title', type: 'string', required: true, description: 'Card title' },
+    { name: 'description', type: 'string', required: false, description: 'Card description', default: 'undefined' },
+    { name: 'href', type: 'string', required: false, description: 'Link destination', default: 'undefined' },
+    { name: 'icon', type: 'string/ReactNode', required: false, description: 'Icon (emoji or component)', default: 'undefined' },
+    { name: 'variant', type: 'string', required: false, description: "Style ('default', 'primary', 'secondary')", default: "'default'" },
+    { name: 'size', type: 'string', required: false, description: "Size ('small', 'medium', 'large')", default: "'medium'" },
+    { name: 'external', type: 'boolean', required: false, description: 'External link', default: 'false' }
+  ]}
+/>
+
+#### Usage
+
+```jsx
+<DocCard
+  title="Guide Title"
+  description="Guide description"
+  href="/docs/guide"
+  icon={<Icon name="book" size={28} />}
+  variant="primary"
+/>
+
+<DocCardGrid columns={3}>
+  <DocCard title="Guide 1" href="/guide1" icon={<Icon name="book" size={28} />} />
+  <DocCard title="Guide 2" href="/guide2" icon={<Icon name="wrench" size={28} />} />
+  <DocCard title="Guide 3" href="/guide3" icon={<Icon name="lightning" size={28} />} />
+</DocCardGrid>
+```
+
+#### Best Practices
+
+- Use emojis or icons for visual appeal
+- Keep descriptions concise (1-2 sentences)
+- Group related cards with DocCardGrid
+- Use variant to highlight important cards
+
+#### When to Use
+
+- Documentation navigation
+- Section landing pages
+- Resource directories
+- Quick link collections
+
+---
+
+### FeatureGrid
+
+Responsive grid layout for displaying features.
+
+<Badge variant="primary">Layout</Badge>
+
+#### Live Example
+
+<FeatureGrid columns={3}>
+  <FeatureGridItem
+    icon={<Icon name="lightning" size={28} />}
+    title="Lightning Fast"
+    description="Optimized for speed with sub-100ms response times"
+  />
+  <FeatureGridItem
+    icon={<Icon name="padlock" size={32} />}
+    title="Secure"
+    description="Enterprise-grade security with end-to-end encryption"
+  />
+  <FeatureGridItem
+    icon={<Icon name="chart" size={32} />}
+    title="Scalable"
+    description="Grows with your needs from startup to enterprise"
+  />
+  <FeatureGridItem
+    icon={<Icon name="target" size={32} />}
+    title="Accurate"
+    description="Precision targeting with 99.9% accuracy rate"
+  />
+  <FeatureGridItem
+    icon={<Icon name="globe" size={32} />}
+    title="Global"
+    description="Available in 150+ countries worldwide"
+  />
+  <FeatureGridItem
+    icon={<Icon name="lightbulb" size={32} />}
+    title="Easy to Use"
+    description="Intuitive API with comprehensive documentation"
+  />
+</FeatureGrid>
+
+#### Props
+
+**FeatureGrid:**
+<PropertyTable 
+  properties={[
+    { name: 'columns', type: 'number', required: false, description: 'Number of columns (2, 3, 4)', default: '3' },
+    { name: 'children', type: 'ReactNode', required: true, description: 'FeatureGridItem components' }
+  ]}
+/>
+
+**FeatureGridItem:**
+<PropertyTable 
+  showRequired={false}
+  properties={[
+    { name: 'icon', type: 'string/ReactNode', description: 'Icon (emoji or component)' },
+    { name: 'title', type: 'string', description: 'Feature title' },
+    { name: 'description', type: 'string', description: 'Feature description' },
+    { name: 'href', type: 'string', description: 'Optional link' }
+  ]}
+/>
+
+#### Usage
+
+```jsx
+<FeatureGrid columns={3}>
+  <FeatureGridItem
+    icon={<Icon name="lightning" size={28} />}
+    title="Fast"
+    description="Lightning fast performance"
+  />
+  <FeatureGridItem
+    icon={<Icon name="padlock" size={32} />}
+    title="Secure"
+    description="Bank-level security"
+  />
+</FeatureGrid>
+```
+
+#### Best Practices
+
+- Use 3 columns for desktop
+- Keep titles short (2-3 words)
+- Make descriptions concise
+- Use consistent icon style
+
+#### When to Use
+
+- Feature showcases
+- Benefit lists
+- Product highlights
+- Capability overviews
+
+---
+
+### FeatureCard
+
+Animated feature card with gradient effects and hover animations.
+
+<Badge variant="primary">Visual</Badge>
+
+#### Live Example
+
+<div style={{display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: '1rem', marginBottom: '2rem'}}>
+  <FeatureCard
+    icon={<Icon name="target" size={32} />}
+    title="Precise Targeting"
+    description="Target your audience with laser precision using advanced AI algorithms"
+    gradient="gradientBlue"
+  />
+  <FeatureCard
+    icon={<Icon name="diamond" size={32} />}
+    title="Premium Quality"
+    description="Enterprise-grade quality with 99.99% uptime guarantee"
+    gradient="gradientPurple"
+  />
+  <FeatureCard
+    icon={<Icon name="wrench" size={28} />}
+    title="Easy Integration"
+    description="Integrate in minutes with our simple SDK and comprehensive docs"
+    gradient="gradientPink"
+  />
+</div>
+
+#### Props
+
+<PropertyTable 
+  showRequired={false}
+  properties={[
+    { name: 'icon', type: 'string', description: 'Emoji or icon' },
+    { name: 'title', type: 'string', description: 'Card title' },
+    { name: 'description', type: 'string', description: 'Card description' },
+    { name: 'gradient', type: 'string', description: "Gradient variant ('gradientBlue', 'gradientPurple', 'gradientPink', 'gradientGreen')" },
+    { name: 'link', type: 'string', description: 'Optional link URL' }
+  ]}
+/>
+
+#### Usage
+
+```jsx
+<FeatureCard
+  icon={<Icon name="target" size={32} />}
+  title="Feature Title"
+  description="Feature description"
+  gradient="gradientBlue"
+  link="/docs/feature"
+/>
+```
+
+#### When to Use
+
+- Product features
+- Service highlights
+- Capability showcases
+- Landing pages
+
+---
+
+### GlassCard
+
+Frosted glass effect container with backdrop blur.
+
+<Badge variant="primary">Visual</Badge>
+
+#### Live Example
+
+<GlassCard hover={true}>
+  <h3>Glassmorphism Effect</h3>
+  <p>This card features a beautiful frosted glass effect with backdrop blur. It works great in both light and dark modes.</p>
+  <p>Perfect for highlighting important content or creating visual depth in your documentation.</p>
+</GlassCard>
+
+#### Props
+
+<PropertyTable 
+  properties={[
+    { name: 'hover', type: 'boolean', required: false, description: 'Enable hover animation', default: 'false' },
+    { name: 'children', type: 'ReactNode', required: true, description: 'Card content' }
+  ]}
+/>
+
+#### Usage
+
+```jsx
+<GlassCard hover={true}>
+  <h3>Important Information</h3>
+  <p>Content with glassmorphism effect.</p>
+</GlassCard>
+```
+
+#### Best Practices
+
+- Use for important content highlights
+- Don't nest too deeply
+- Works best against colorful backgrounds
+- Test in both light and dark modes
+
+#### When to Use
+
+- Special announcements
+- Featured content
+- Call-out sections
+- Visual emphasis
+
+---
+
+### MetricCard
+
+Display statistics and metrics with optional trend indicators.
+
+<Badge variant="info">Data Display</Badge>
+
+#### Live Example
+
+<div style={{
+  display: 'grid', 
+  gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 180px), 1fr))', 
+  gap: '1rem', 
+  marginBottom: '2rem'
+}}>
+  <MetricCard
+    value="1,234"
+    label="Active Users"
+    icon={<Icon name="users" size={32} />}
+    trend={{ direction: 'up', value: '12%' }}
+  />
+  <MetricCard
+    value="99.9%"
+    label="Uptime"
+    icon={<Icon name="lightning" size={28} />}
+    trend={{ direction: 'up', value: '0.1%' }}
+  />
+  <MetricCard
+    value="150+"
+    label="Countries"
+    icon={<Icon name="globe" size={32} />}
+  />
+  <MetricCard
+    value="< 100ms"
+    label="Response Time"
+    icon={<Icon name="rocket" size={32} />}
+    trend={{ direction: 'down', value: '15%' }}
+  />
+</div>
+
+#### Props
+
+<PropertyTable 
+  showRequired={false}
+  properties={[
+    { name: 'value', type: 'string/ReactNode', description: 'Metric value' },
+    { name: 'label', type: 'string', description: 'Metric label' },
+    { name: 'icon', type: 'string', description: 'Optional icon' },
+    { name: 'trend', type: 'Object', description: "Optional trend {direction: 'up'/'down', value: '12%'}" }
+  ]}
+/>
+
+#### Usage
+
+```jsx
+<MetricCard
+  value="1,234"
+  label="Users"
+  icon={<Icon name="users" size={32} />}
+  trend={{ direction: 'up', value: '12%' }}
+/>
+```
+
+#### When to Use
+
+- Dashboard statistics
+- Performance metrics
+- Usage statistics
+- KPI displays
+
+---
+
+### Timeline
+
+Vertical timeline for roadmaps, changelogs, or historical events.
+
+<Badge variant="info">Navigation</Badge>
+
+#### Live Example
+
+<Timeline
+  items={[
+    {
+      icon: '🎉',
+      date: 'January 2024',
+      title: 'Product Launch',
+      description: 'Initial release with core features and API v1'
+    },
+    {
+      icon: '⚡',
+      date: 'March 2024',
+      title: 'Performance Update',
+      description: '2x faster processing with optimized algorithms'
+    },
+    {
+      icon: '🔒',
+      date: 'May 2024',
+      title: 'Security Enhancement',
+      description: 'Added OAuth 2.0 and enterprise security features'
+    },
+    {
+      icon: '🚀',
+      date: 'Q3 2024',
+      title: 'Version 2.0 (Upcoming)',
+      description: 'Major update with AI-powered features and analytics'
+    }
+  ]}
+/>
+
+#### Props
+
+<PropertyTable 
+  showRequired={false}
+  properties={[
+    { name: 'items', type: 'Array', required: true, description: 'Required array of timeline items' }
+  ]}
+/>
+
+**Timeline Item:**
+```js
+{
+  icon: '🚀',
+  date: 'Q1 2024',
+  title: 'Milestone Title',
+  description: 'Milestone description'
+}
+```
+
+#### Usage
+
+```jsx
+<Timeline
+  items={[
+    {
+      icon: '🎉',
+      date: 'January 2024',
+      title: 'Launch',
+      description: 'Initial release'
+    },
+    {
+      icon: '⚡',
+      date: 'March 2024',
+      title: 'Update',
+      description: 'Performance improvements'
+    }
+  ]}
+/>
+```
+
+#### When to Use
+
+- Product roadmaps
+- Version history
+- Changelogs
+- Project milestones
+- Historical timelines
+
+---
+
+### ComparisonTable
+
+Feature comparison table with highlighted columns.
+
+<Badge variant="info">Data Display</Badge>
+
+#### Live Example
+
+<ComparisonTable
+  columns={[
+    { name: 'Free', highlight: false },
+    { name: 'Pro', highlight: true },
+    { name: 'Enterprise', highlight: false }
+  ]}
+  features={[
+    {
+      name: 'API Calls',
+      description: 'Monthly API request limit',
+      values: ['1,000', '100,000', 'Unlimited']
+    },
+    {
+      name: 'Support',
+      description: 'Customer support level',
+      values: ['Community', 'Email', '24/7 Phone']
+    },
+    {
+      name: 'Analytics',
+      values: [false, true, true]
+    },
+    {
+      name: 'Custom Domain',
+      values: [false, true, true]
+    },
+    {
+      name: 'SLA',
+      values: [false, false, true]
+    }
+  ]}
+/>
+
+#### Props
+
+<PropertyTable 
+  showRequired={false}
+  properties={[
+    { name: 'features', type: 'Array', description: 'Array of feature objects' },
+    { name: 'columns', type: 'Array', description: 'Array of column objects' }
+  ]}
+/>
+
+**Column Object:**
+```js
+{
+  name: 'Plan Name',
+  highlight: true  // highlights this column
+}
+```
+
+**Feature Object:**
+```js
+{
+  name: 'Feature Name',
+  description: 'Optional description',
+  values: [true, false, 'text']  // one per column
+}
+```
+
+#### Usage
+
+```jsx
+<ComparisonTable
+  columns={[
+    { name: 'Basic', highlight: false },
+    { name: 'Pro', highlight: true }
+  ]}
+  features={[
+    {
+      name: 'Storage',
+      values: ['10GB', '100GB']
+    },
+    {
+      name: 'Support',
+      values: [false, true]
+    }
+  ]}
+/>
+```
+
+#### When to Use
+
+- Pricing comparisons
+- Feature comparisons
+- Plan differences
+- Product tiers
+
+---
+
+## Typography & UI Components
+
+### GradientText
+
+Text with gradient color effects - perfect for headings and emphasis.
+
+<Badge variant="warning">Typography</Badge>
+
+#### Live Example
+
+<h1><GradientText variant="primary">Primary Gradient Heading</GradientText></h1>
+<h2><GradientText variant="secondary">Secondary Gradient Heading</GradientText></h2>
+<h3><GradientText variant="accent">Accent Gradient Heading</GradientText></h3>
+<p><GradientText variant="success">Success gradient for inline text</GradientText></p>
+
+#### Props
+
+<PropertyTable 
+  showRequired={false}
+  properties={[
+    { name: 'variant', type: 'string', description: "Gradient variant ('primary', 'secondary', 'accent', 'success')" },
+    { name: 'children', type: 'ReactNode', description: 'Text content' }
+  ]}
+/>
+
+#### Usage
+
+```jsx
+<h1><GradientText variant="primary">Title</GradientText></h1>
+<GradientText variant="accent">Highlighted text</GradientText>
+```
+
+#### Best Practices
+
+- Use for main page titles
+- Use for important headings
+- Don't overuse - 1-2 per section max
+- Works great with DocHero
+
+#### When to Use
+
+- Page titles
+- Section headings
+- Emphasis on important text
+- Brand elements
+
+---
+
+### Badge
+
+Pill-shaped label for status, tags, and metadata.
+
+<Badge variant="warning">Typography</Badge>
+
+#### Live Example
+
+<div style={{display: 'flex', gap: '0.5rem', flexWrap: 'wrap', marginBottom: '1rem'}}>
+  <Badge variant="primary">Primary</Badge>
+  <Badge variant="secondary">Secondary</Badge>
+  <Badge variant="success">Success</Badge>
+  <Badge variant="warning">Warning</Badge>
+  <Badge variant="danger">Danger</Badge>
+  <Badge variant="info">Info</Badge>
+  <Badge variant="outline">Outline</Badge>
+  <Badge variant="glass">Glass</Badge>
+</div>
+
+<div style={{display: 'flex', gap: '0.5rem', flexWrap: 'wrap', marginBottom: '1rem'}}>
+  <Badge variant="primary" size="small">Small</Badge>
+  <Badge variant="primary" size="medium">Medium</Badge>
+  <Badge variant="primary" size="large">Large</Badge>
+</div>
+
+#### Props
+
+<PropertyTable 
+  properties={[
+    { name: 'variant', type: 'string', required: false, description: 'Style variant', default: "'primary'" },
+    { name: 'size', type: 'string', required: false, description: "Size ('small', 'medium', 'large')", default: "'medium'" },
+    { name: 'children', type: 'ReactNode', required: true, description: 'Badge content' }
+  ]}
+/>
+
+**Variants:**
+- `primary` - Main actions
+- `secondary` - Secondary info
+- `success` - Positive states
+- `warning` - Cautions
+- `danger` - Errors
+- `info` - Information
+- `outline` - Subtle emphasis
+- `glass` - Glass effect
+
+#### Usage
+
+```jsx
+<Badge variant="success">New</Badge>
+<Badge variant="warning" size="large">Beta</Badge>
+<Badge variant="info">v2.0</Badge>
+```
+
+#### When to Use
+
+- Status indicators
+- Version numbers
+- Tags and categories
+- Feature flags
+- Metadata
+
+---
+
+### GradientButton
+
+Animated button with gradient effects and glow on hover.
+
+<Badge variant="warning">Typography</Badge>
+
+#### Live Example
+
+<div style={{display: 'flex', gap: '1rem', flexWrap: 'wrap', marginBottom: '1rem'}}>
+  <GradientButton to="/" variant="primary" size="large">
+    Get Started
+  </GradientButton>
+  <GradientButton variant="secondary" size="medium">
+    Learn More
+  </GradientButton>
+  <GradientButton variant="success" size="small">
+    Success
+  </GradientButton>
+  <GradientButton variant="outline">
+    Outline Style
+  </GradientButton>
+</div>
+
+#### Props
+
+<PropertyTable 
+  properties={[
+    { name: 'to or href', type: 'string', required: false, description: 'Link destination', default: 'undefined' },
+    { name: 'variant', type: 'string', required: false, description: "Style ('primary', 'secondary', 'success', 'outline')", default: "'primary'" },
+    { name: 'size', type: 'string', required: false, description: "Size ('small', 'medium', 'large')", default: "'medium'" },
+    { name: 'external', type: 'boolean', required: false, description: 'Open in new tab', default: 'false' },
+    { name: 'children', type: 'ReactNode', required: true, description: 'Button content' }
+  ]}
+/>
+
+#### Usage
+
+```jsx
+<GradientButton to="/docs/start" variant="primary" size="large">
+  Get Started
+</GradientButton>
+
+<GradientButton href="https://github.com" external variant="outline">
+  View on GitHub
+</GradientButton>
+
+<GradientButton variant="success" size="medium">
+  Success
+</GradientButton>
+```
+
+**Note:** Button sizing has been optimized for a more compact, square-like appearance with balanced padding.
+
+#### When to Use
+
+- Call-to-action buttons
+- Primary actions
+- Navigation buttons
+- Download links
+
+---
+
+### AnimatedCounter
+
+Smooth counting animation for numbers.
+
+<Badge variant="warning">Typography</Badge>
+
+#### Live Example
+
+<div style={{display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', gap: '2rem', marginBottom: '2rem', textAlign: 'center'}}>
+  <div>
+    <div style={{fontSize: '2.5rem', fontWeight: 'bold'}}>
+      <AnimatedCounter end={1000} suffix="+" />
+    </div>
+    <div>Users</div>
+  </div>
+  <div>
+    <div style={{fontSize: '2.5rem', fontWeight: 'bold'}}>
+      <AnimatedCounter end={99.99} prefix="$" decimals={2} />
+    </div>
+    <div>Price</div>
+  </div>
+  <div>
+    <div style={{fontSize: '2.5rem', fontWeight: 'bold'}}>
+      <AnimatedCounter end={5000} suffix="M" separator="," />
+    </div>
+    <div>Revenue</div>
+  </div>
+  <div>
+    <div style={{fontSize: '2.5rem', fontWeight: 'bold'}}>
+      <AnimatedCounter end={150} suffix="+" />
+    </div>
+    <div>Countries</div>
+  </div>
+</div>
+
+#### Props
+
+<PropertyTable 
+  properties={[
+    { name: 'end', type: 'number', required: true, description: 'Target number' },
+    { name: 'duration', type: 'number', required: false, description: 'Animation duration (ms)', default: '2000' },
+    { name: 'prefix', type: 'string', required: false, description: "Prefix (e.g., '$')", default: "''" },
+    { name: 'suffix', type: 'string', required: false, description: "Suffix (e.g., '+', 'K')", default: "''" },
+    { name: 'separator', type: 'string', required: false, description: 'Thousands separator', default: "','" },
+    { name: 'decimals', type: 'number', required: false, description: 'Decimal places', default: '0' }
+  ]}
+/>
+
+#### Usage
+
+```jsx
+<AnimatedCounter end={1000} suffix="+" />
+<AnimatedCounter end={99.99} prefix="$" decimals={2} />
+<AnimatedCounter end={5000000} suffix="M" separator="," />
+```
+
+#### Best Practices
+
+- Use sparingly (3-4 per page max)
+- Only for important metrics
+- Animates on scroll into view
+- Works great with MetricCard
+
+#### When to Use
+
+- Statistics
+- Metrics dashboards
+- Landing pages
+- Achievement displays
+
+---
+
+## Feedback & Metadata Components
+
+### WasThisHelpful
+
+Feedback widget for collecting user feedback on documentation pages.
+
+<Badge variant="success">Feedback</Badge>
+
+#### Live Example
+
+<WasThisHelpful
+  pageId="all-components-demo"
+  onSubmit={(feedback) => console.log(feedback)}
+/>
+
+#### Props
+
+<PropertyTable 
+  showRequired={false}
+  properties={[
+    { name: 'pageId', type: 'string', description: 'Unique page identifier' },
+    { name: 'onSubmit', type: 'Function', description: 'Callback when feedback submitted' }
+  ]}
+/>
+
+#### Usage
+
+```jsx
+<WasThisHelpful
+  pageId="unique-page-id"
+  onSubmit={(feedback) => {
+    // Handle feedback
+    console.log(feedback);
+  }}
+/>
+```
+
+#### Best Practices
+
+- Place at bottom of pages
+- Use unique pageId per page
+- Integrate with analytics
+- Respond to feedback
+
+#### When to Use
+
+- End of documentation pages
+- After tutorials
+- Product documentation
+- Help articles
+
+---
+
+### LastUpdated
+
+Display when page was last updated.
+
+<Badge variant="success">Metadata</Badge>
+
+#### Live Example
+
+<LastUpdated date="2024-01-15" />
+
+<br />
+
+<LastUpdated 
+  date={new Date()} 
+  author="John Doe" 
+  showAuthor={true} 
+/>
+
+#### Props
+
+<PropertyTable 
+  properties={[
+    { name: 'date', type: 'string/Date', required: true, description: 'Date value' },
+    { name: 'author', type: 'string', required: false, description: 'Optional author', default: 'undefined' },
+    { name: 'showAuthor', type: 'boolean', required: false, description: 'Show author name', default: 'false' }
+  ]}
+/>
+
+#### Usage
+
+```jsx
+<LastUpdated date="2024-01-15" />
+<LastUpdated 
+  date={new Date()} 
+  author="John Doe" 
+  showAuthor={true} 
+/>
+```
+
+#### When to Use
+
+- Page metadata
+- Documentation updates
+- Content freshness indicators
+- Author attribution
+
+---
+
+### ReadingTime
+
+Calculate and display estimated reading time.
+
+<Badge variant="success">Metadata</Badge>
+
+#### Live Example
+
+<ReadingTime wordsPerMinute={200}>
+{`This is a sample article that demonstrates the reading time calculator component. 
+The component analyzes the content provided and calculates an estimated reading time 
+based on the average reading speed of 200 words per minute. This is particularly useful 
+for longer documentation pages, blog posts, and articles where users want to know 
+how much time they'll need to invest in reading the content. The reading time estimate 
+helps users make informed decisions about when to read the content and can improve 
+the overall user experience of your documentation site.`}
+</ReadingTime>
+
+#### Props
+
+<PropertyTable 
+  properties={[
+    { name: 'content', type: 'string/ReactNode', required: true, description: 'Content to analyze' },
+    { name: 'wordsPerMinute', type: 'number', required: false, description: 'Reading speed', default: '200' }
+  ]}
+/>
+
+#### Usage
+
+```jsx
+<ReadingTime content={articleContent} />
+<ReadingTime wordsPerMinute={250}>
+  Your content here...
+</ReadingTime>
+```
+
+#### When to Use
+
+- Long articles
+- Tutorials
+- Blog posts
+- Detailed documentation
+
+---
+
+### RelatedDocs
+
+Display related documentation articles with navigation cards.
+
+<Badge variant="info">Navigation</Badge>
+
+#### Live Example
+
+<RelatedDocs 
+  title="Related Documentation"
+  items={[
+    { 
+      title: "System Design Guide", 
+      href: "/docs/contribution/documentation/system-design-guide", 
+      description: "Learn our documentation standards and best practices",
+      icon: "📐" 
+    },
+    { 
+      title: "Component Inventory", 
+      href: "/", 
+      description: "Quick reference of all available components",
+      icon: "📦" 
+    },
+    { 
+      title: "Getting Started", 
+      href: "/docs/getting-started/installation", 
+      description: "Start building with our platform",
+      icon: "🚀" 
+    }
+  ]}
+/>
+
+#### Props
+
+<PropertyTable 
+  properties={[
+    { name: 'items', type: 'Array', required: true, description: 'Array of related items' },
+    { name: 'title', type: 'string', required: false, description: 'Section title', default: "'Related Documentation'" }
+  ]}
+/>
+
+**Item Object:**
+```js
+{
+  title: 'Page Title',
+  href: '/docs/page',
+  description: 'Page description',
+  icon: '📚'
+}
+```
+
+#### Usage
+
+```jsx
+<RelatedDocs
+  title="See Also"
+  items={[
+    {
+      title: 'API Reference',
+      href: '/',
+      description: 'Complete API docs',
+      icon: '📚'
+    }
+  ]}
+/>
+```
+
+#### Best Practices
+
+- Place at end of pages
+- Link to 2-4 related pages
+- Use descriptive icons
+- Write clear descriptions
+
+#### When to Use
+
+- End of documentation pages
+- Navigation between related topics
+- Cross-referencing content
+- Guiding user journey
+
+---
+
+### Callout
+
+Enhanced admonition-style component for important information.
+
+<Badge variant="primary">Content Enhancement</Badge>
+
+#### Live Example
+
+<Callout type="info" title="Information">
+This is an informational callout with useful context.
+</Callout>
+
+<Callout type="tip" title="Pro Tip">
+Use callouts to highlight important information throughout your documentation.
+</Callout>
+
+<Callout type="warning" title="Warning">
+Make sure to backup your data before proceeding with this operation.
+</Callout>
+
+<Callout type="danger" title="Danger">
+This action cannot be undone. Proceed with caution.
+</Callout>
+
+<Callout type="success" title="Success">
+Your configuration has been saved successfully!
+</Callout>
+
+<Callout type="note">
+This is a simple note without a custom title.
+</Callout>
+
+#### Props
+
+<PropertyTable 
+  properties={[
+    { name: 'type', type: 'string', required: false, description: "Type ('info', 'warning', 'danger', 'success', 'tip', 'note')", default: "'info'" },
+    { name: 'title', type: 'string', required: false, description: 'Optional custom title', default: 'undefined' },
+    { name: 'icon', type: 'boolean', required: false, description: 'Show icon', default: 'true' },
+    { name: 'children', type: 'ReactNode', required: true, description: 'Content' }
+  ]}
+/>
+
+#### Usage
+
+```jsx
+<Callout type="warning" title="Important">
+  Make sure to backup your data.
+</Callout>
+
+<Callout type="tip">
+  Pro tip: Use keyboard shortcuts.
+</Callout>
+```
+
+#### Best Practices
+
+- Use appropriate type for content
+- Keep content concise
+- Don't nest callouts
+- Use sparingly for impact
+
+#### When to Use
+
+- Important warnings
+- Helpful tips
+- Dangerous operations
+- Success messages
+- Additional context
+
+---
+
+### CalloutBox
+
+Alternative callout component with different styling.
+
+<Badge variant="primary">Content Enhancement</Badge>
+
+#### Live Example
+
+<CalloutBox type="info" title="Did You Know?">
+CalloutBox offers an alternative styling to the standard Callout component.
+</CalloutBox>
+
+<CalloutBox type="success" title="Best Practice">
+Always validate user input before processing.
+</CalloutBox>
+
+#### Props
+
+Same as Callout component.
+
+#### Usage
+
+```jsx
+<CalloutBox type="info" title="Note">
+  Content here
+</CalloutBox>
+```
+
+---
+
+## Icon Gallery
+
+Complete visual reference of all available icons. Use the Icon component with the icon name (without `.svg` extension).
+
+<IconGallery />
+
+#### Usage
+
+```jsx
+import Icon from '@site/src/components/ui/Icon';
+
+<Icon name="star" size={32} />
+<Icon name="warning" size={24} />
+<Icon name="lightbulb" size={48} />
+```
+
+**Note:** Use the icon name without the `.svg` extension. All icons support the `size` prop to adjust their dimensions.
+
+---
+
+## Quick Reference
+
+### Component Selection Guide
+
+| Need | Use This Component |
+|------|-------------------|
+| Multi-language code | `CodeShowcase` |
+| Long code blocks | `ExpandableCode` |
+| CLI commands | `TerminalCommand` |
+| FAQ section | `Accordion` |
+| Important info | `Callout` |
+| API endpoint | `ApiEndpoint` |
+| Object properties | `PropertyTable` |
+| Function params | `ParameterTable` |
+| JSON schema | `SchemaViewer` |
+| Step-by-step guide | `StepIndicator` |
+| Roadmap/changelog | `Timeline` |
+| Feature comparison | `ComparisonTable` |
+| Hero section | `DocHero` |
+| Navigation cards | `DocCard` |
+| Feature showcase | `FeatureGrid` or `FeatureCard` |
+| Statistics | `MetricCard` with `AnimatedCounter` |
+| Page title | `GradientText` |
+| Status badge | `Badge` |
+| CTA button | `GradientButton` |
+| Related pages | `RelatedDocs` |
+| Page feedback | `WasThisHelpful` |
+
+---
+
+## Best Practices Summary
+
+### Component Usage
+1. Use the right component for the job
+2. Don't overuse animated components
+3. Maintain consistency across pages
+4. Test in both light and dark modes
+5. Verify mobile responsiveness
+
+### Performance
+1. Limit AnimatedCounter usage (3-4 per page)
+2. Use ExpandableCode for long snippets
+3. Optimize images for web use
+4. Don't nest complex components deeply
+
+### Accessibility
+1. Always provide alt text for images
+2. Use semantic HTML
+3. Ensure keyboard navigation works
+4. Maintain proper heading hierarchy
+5. Test with screen readers
+
+### Visual Design
+1. Use consistent color variants
+2. Maintain proper spacing
+3. Follow typography guidelines
+4. Use gradients sparingly
+5. Keep layouts clean and organized
+
+---
+
+## Additional Resources
+
+<RelatedDocs
+  items={[
+    {
+      title: 'System Design Guide',
+      href: '/docs/contribution/documentation/system-design-guide',
+      description: 'Complete documentation standards and guidelines',
+      icon: '📐'
+    },
+    {
+      title: 'Component Inventory',
+      href: '/',
+      description: 'Quick component reference and categorization',
+      icon: '📦'
+    }
+  ]}
+/>
+
+---
+
+<div style={{ marginTop: '3rem', padding: '2rem', background: 'var(--ifm-background-surface-color)', borderRadius: '1rem' }}>
+  <div style={{ textAlign: 'center' }}>
+    <h2><GradientText>You're All Set! 🎉</GradientText></h2>
+    <p>You now have access to 30+ production-ready components with complete documentation.</p>
+    <div style={{ marginTop: '2rem' }}>
+      <Badge variant="success">30+ Components</Badge>
+      <Badge variant="info">Fully Documented</Badge>
+      <Badge variant="primary">Production Ready</Badge>
+    </div>
+  </div>
+</div>
+
+---
+
+<WasThisHelpful pageId="all-components-reference" />
+
+<LastUpdated date={new Date().toISOString()} />

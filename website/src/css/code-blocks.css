@@ -1,0 +1,150 @@
+/**
+ * Code Block Styles
+ * Inline code, code blocks, and syntax highlighting
+ */
+
+/* Remove borders from outer code block containers - BOTH light and dark mode */
+.theme-code-block,
+.theme-code-block > div,
+.theme-code-block > div > div,
+.prism-code-wrapper,
+div[class*="codeBlockContainer"],
+div[class*="codeBlockContent"],
+div[class*="codeBlockLines"] {
+  border: none !important;
+  outline: none !important;
+  background: #f8fafc !important;
+  background-color: #f8fafc !important;
+  padding: 0 !important;
+  box-shadow: none !important;
+  border-radius: 0.75rem !important;
+}
+
+[data-theme='dark'] .theme-code-block,
+[data-theme='dark'] .theme-code-block > div,
+[data-theme='dark'] .theme-code-block > div > div,
+[data-theme='dark'] .prism-code-wrapper,
+[data-theme='dark'] div[class*="codeBlockContainer"],
+[data-theme='dark'] div[class*="codeBlockContent"],
+[data-theme='dark'] div[class*="codeBlockLines"] {
+  border: none !important;
+  outline: none !important;
+  background: #1a1a1a !important;
+  background-color: #1a1a1a !important;
+  padding: 0 !important;
+  margin: 0 !important;
+  box-shadow: none !important;
+  border-radius: 0.75rem !important;
+}
+
+[data-theme='dark'] pre[class*="language-"],
+[data-theme='dark'] .prism-code {
+  background: #1a1a1a !important;
+  border: none !important;
+  outline: none !important;
+  margin: 0 !important;
+  padding: 1.25rem !important;
+  border-radius: 0.75rem !important;
+}
+
+/* Target all wrapper divs around pre elements - match code block background */
+[data-theme='dark'] pre[class*="language-"] > div,
+[data-theme='dark'] div:has(> pre[class*="language-"]) {
+  background: #1a1a1a !important;
+  padding: 0 !important;
+  box-shadow: none !important;
+  border-radius: 0.75rem !important;
+}
+
+[data-theme='dark'] pre[class*="language-"] code,
+[data-theme='dark'] .prism-code code {
+  padding: 0 !important;
+  background: transparent !important;
+  border: none !important;
+  border-radius: 0 !important;
+  display: block !important;
+  color: var(--ifm-font-color-base) !important;
+}
+
+/* Match background of parent wrapper divs to code blocks - BOTH light and dark mode */
+.markdown div:has(> pre),
+article div:has(> pre),
+.theme-doc-markdown div:has(> pre) {
+  background: #f8fafc !important;
+  padding: 0 !important;
+  box-shadow: none !important;
+  border-radius: 0.75rem !important;
+}
+
+[data-theme='dark'] .markdown div:has(> pre),
+[data-theme='dark'] article div:has(> pre),
+[data-theme='dark'] .theme-doc-markdown div:has(> pre) {
+  background: #1a1a1a !important;
+  padding: 0 !important;
+  box-shadow: none !important;
+  border-radius: 0.75rem !important;
+}
+
+/* Code blocks - Light mode */
+pre[class*="language-"],
+.prism-code {
+  border-radius: 0.75rem !important;
+  box-shadow: none !important;
+  border: none !important;
+  outline: none !important;
+  background: #f8fafc !important;
+  margin: 0 !important;
+  padding: 1.25rem !important;
+}
+
+pre[class*="language-"] code,
+.prism-code code {
+  padding: 0 !important;
+  background: transparent !important;
+  border: none !important;
+  border-radius: 0 !important;
+  display: block !important;
+  color: var(--ifm-font-color-base) !important;
+}
+
+/* Ensure wrapper divs in light mode match code block background */
+pre[class*="language-"] > div,
+div:has(> pre[class*="language-"]) {
+  background: #f8fafc !important;
+  padding: 0 !important;
+  box-shadow: none !important;
+  border-radius: 0.75rem !important;
+}
+
+/* Inline code */
+code {
+  background: #f1f5f9;
+  border: 1px solid #e2e8f0;
+  border-radius: 0.25rem;
+  padding: 0.15rem 0.4rem;
+  font-size: 0.9em;
+  color: #1e293b;
+}
+
+/* Solidity syntax highlighting enhancements */
+.token.keyword {
+  color: #60a5fa;
+}
+
+.token.function {
+  color: #82aaff;
+}
+
+.token.string {
+  color: #c3e88d;
+}
+
+.token.number {
+  color: #f78c6c;
+}
+
+.token.comment {
+  color: #546e7a;
+  font-style: italic;
+}
+
