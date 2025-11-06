@@ -103,7 +103,7 @@ contract DiamondLoupeFacet {
             }
             // If we didn't find this facet in the bucket (new facet address encountered).
             // Either we looped through all the available slots in the bucket and found no match or
-            // the bucket array was empty because the last address byte hasn't been seen before.
+            // the bucket size was 0 because the last address byte hasn't been seen before.
             // Either way we found a new facet address!
             if (bucketIndex == bucket.length) {
                 // Expand the bucket if it’s full or its length is zero.
@@ -192,26 +192,24 @@ contract DiamondLoupeFacet {
                 }
                 // If this facet was already found before, just append the selector.
                 if (facetAndSelectors.facet == facet) {
-                    uint256 selectorsLength = facetAndSelectors.functionSelectors.length;
+                    bytes4[] memory functionSelectors = facetAndSelectors.functionSelectors;
+                    uint256 selectorsLength = functionSelectors.length;
                     // If the selector array is full (multiple of 16), expand it by 16 slots.
                     // This uses `& 15 == 0` as a cheaper modulus check (selectorsLength % 16 == 0).
                     if (selectorsLength & 15 == 0) {
                         // Allocate a new larger array and copy existing selectors into it.
-                        bytes4[] memory selectorStorage = new bytes4[](selectorsLength + 16);
+                        bytes4[] memory newFunctionSelectors = new bytes4[](selectorsLength + 16);
                         for (uint256 k; k < selectorsLength; k++) {
-                            selectorStorage[k] = facetAndSelectors.functionSelectors[k];
-                        }
-                        // Reset the logical length of the array to the current count.
-                        assembly ("memory-safe") {
-                            mstore(selectorStorage, selectorsLength)
-                        }
-                        facetAndSelectors.functionSelectors = selectorStorage;
+                            newFunctionSelectors[k] = functionSelectors[k];
+                        }                        
+                        functionSelectors = newFunctionSelectors;
+                        facetAndSelectors.functionSelectors = functionSelectors;
                     }
-                    // Increment the selector array length by 1 and store the new selector.
-                    bytes4[] memory functionSelectors = facetAndSelectors.functionSelectors;
+                    // Increment the logical selector array length.                    
                     assembly ("memory-safe") {
-                        mstore(functionSelectors, add(mload(functionSelectors), 1))
+                        mstore(functionSelectors, add(selectorsLength, 1))
                     }
+                    // Store the new selector.
                     functionSelectors[selectorsLength] = selector;
                     break;
                 }
@@ -219,7 +217,7 @@ contract DiamondLoupeFacet {
 
             // If we didn't find this facet in the bucket (new facet address encountered).
             // Either we looped through all the available slots in the bucket and found no match or
-            // the bucket array was empty because the last address byte hasn't been seen before.
+            // the bucket size was 0 because the last address byte hasn't been seen before.
             // Either way we found a new facet address!
             if (bucket.length == bucketIndex) {
                 // Expand the bucket if it’s full or its length is zero.
