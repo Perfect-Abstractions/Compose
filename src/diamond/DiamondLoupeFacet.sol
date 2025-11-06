@@ -181,7 +181,8 @@ contract DiamondLoupeFacet {
                 // that would incur extra gas cost.
                 //
                 // The remaining selectors are processed in a similar manner,
-                // albeit outside the loop.
+                // albeit outside the loop, and up to 7 times (just shy of a
+                // full storage slot).
                 //
                 // shr(3, x) = div(x, 8)
                 let selectorSlots := shr(3, selectorCount)
@@ -255,10 +256,7 @@ contract DiamondLoupeFacet {
                                 //    mstore(tablePtr, <step-5>)
                                 mstore(
                                     tablePtr,
-                                    or(
-                                        and(tableSlot, COUNT_FIELD_CLEARING_MASK),
-                                        shl(176, add(shr(176, tableSlot), 1))
-                                    )
+                                    or(and(tableSlot, COUNT_FIELD_CLEARING_MASK), shl(176, add(shr(176, tableSlot), 1)))
                                 )
                                 break
                             }
@@ -287,10 +285,7 @@ contract DiamondLoupeFacet {
                             if eq(and(tableSlot, STACK_CONST_ADDR_MASK), facetAddress) {
                                 mstore(
                                     tablePtr,
-                                    or(
-                                        and(tableSlot, COUNT_FIELD_CLEARING_MASK),
-                                        shl(176, add(shr(176, tableSlot), 1))
-                                    )
+                                    or(and(tableSlot, COUNT_FIELD_CLEARING_MASK), shl(176, add(shr(176, tableSlot), 1)))
                                 )
                                 break
                             }
@@ -315,10 +310,7 @@ contract DiamondLoupeFacet {
                             if eq(and(tableSlot, STACK_CONST_ADDR_MASK), facetAddress) {
                                 mstore(
                                     tablePtr,
-                                    or(
-                                        and(tableSlot, COUNT_FIELD_CLEARING_MASK),
-                                        shl(176, add(shr(176, tableSlot), 1))
-                                    )
+                                    or(and(tableSlot, COUNT_FIELD_CLEARING_MASK), shl(176, add(shr(176, tableSlot), 1)))
                                 )
                                 break
                             }
@@ -343,10 +335,7 @@ contract DiamondLoupeFacet {
                             if eq(and(tableSlot, STACK_CONST_ADDR_MASK), facetAddress) {
                                 mstore(
                                     tablePtr,
-                                    or(
-                                        and(tableSlot, COUNT_FIELD_CLEARING_MASK),
-                                        shl(176, add(shr(176, tableSlot), 1))
-                                    )
+                                    or(and(tableSlot, COUNT_FIELD_CLEARING_MASK), shl(176, add(shr(176, tableSlot), 1)))
                                 )
                                 break
                             }
@@ -371,10 +360,7 @@ contract DiamondLoupeFacet {
                             if eq(and(tableSlot, STACK_CONST_ADDR_MASK), facetAddress) {
                                 mstore(
                                     tablePtr,
-                                    or(
-                                        and(tableSlot, COUNT_FIELD_CLEARING_MASK),
-                                        shl(176, add(shr(176, tableSlot), 1))
-                                    )
+                                    or(and(tableSlot, COUNT_FIELD_CLEARING_MASK), shl(176, add(shr(176, tableSlot), 1)))
                                 )
                                 break
                             }
@@ -399,10 +385,7 @@ contract DiamondLoupeFacet {
                             if eq(and(tableSlot, STACK_CONST_ADDR_MASK), facetAddress) {
                                 mstore(
                                     tablePtr,
-                                    or(
-                                        and(tableSlot, COUNT_FIELD_CLEARING_MASK),
-                                        shl(176, add(shr(176, tableSlot), 1))
-                                    )
+                                    or(and(tableSlot, COUNT_FIELD_CLEARING_MASK), shl(176, add(shr(176, tableSlot), 1)))
                                 )
                                 break
                             }
@@ -427,10 +410,7 @@ contract DiamondLoupeFacet {
                             if eq(and(tableSlot, STACK_CONST_ADDR_MASK), facetAddress) {
                                 mstore(
                                     tablePtr,
-                                    or(
-                                        and(tableSlot, COUNT_FIELD_CLEARING_MASK),
-                                        shl(176, add(shr(176, tableSlot), 1))
-                                    )
+                                    or(and(tableSlot, COUNT_FIELD_CLEARING_MASK), shl(176, add(shr(176, tableSlot), 1)))
                                 )
                                 break
                             }
@@ -455,10 +435,7 @@ contract DiamondLoupeFacet {
                             if eq(and(tableSlot, STACK_CONST_ADDR_MASK), facetAddress) {
                                 mstore(
                                     tablePtr,
-                                    or(
-                                        and(tableSlot, COUNT_FIELD_CLEARING_MASK),
-                                        shl(176, add(shr(176, tableSlot), 1))
-                                    )
+                                    or(and(tableSlot, COUNT_FIELD_CLEARING_MASK), shl(176, add(shr(176, tableSlot), 1)))
                                 )
                                 break
                             }
@@ -489,10 +466,7 @@ contract DiamondLoupeFacet {
                             if eq(and(tableSlot, STACK_CONST_ADDR_MASK), facetAddress) {
                                 mstore(
                                     tablePtr,
-                                    or(
-                                        and(tableSlot, COUNT_FIELD_CLEARING_MASK),
-                                        shl(176, add(shr(176, tableSlot), 1))
-                                    )
+                                    or(and(tableSlot, COUNT_FIELD_CLEARING_MASK), shl(176, add(shr(176, tableSlot), 1)))
                                 )
                                 break
                             }
@@ -516,10 +490,7 @@ contract DiamondLoupeFacet {
                             if eq(and(tableSlot, STACK_CONST_ADDR_MASK), facetAddress) {
                                 mstore(
                                     tablePtr,
-                                    or(
-                                        and(tableSlot, COUNT_FIELD_CLEARING_MASK),
-                                        shl(176, add(shr(176, tableSlot), 1))
-                                    )
+                                    or(and(tableSlot, COUNT_FIELD_CLEARING_MASK), shl(176, add(shr(176, tableSlot), 1)))
                                 )
                                 break
                             }
@@ -543,10 +514,7 @@ contract DiamondLoupeFacet {
                             if eq(and(tableSlot, STACK_CONST_ADDR_MASK), facetAddress) {
                                 mstore(
                                     tablePtr,
-                                    or(
-                                        and(tableSlot, COUNT_FIELD_CLEARING_MASK),
-                                        shl(176, add(shr(176, tableSlot), 1))
-                                    )
+                                    or(and(tableSlot, COUNT_FIELD_CLEARING_MASK), shl(176, add(shr(176, tableSlot), 1)))
                                 )
                                 break
                             }
@@ -570,10 +538,7 @@ contract DiamondLoupeFacet {
                             if eq(and(tableSlot, STACK_CONST_ADDR_MASK), facetAddress) {
                                 mstore(
                                     tablePtr,
-                                    or(
-                                        and(tableSlot, COUNT_FIELD_CLEARING_MASK),
-                                        shl(176, add(shr(176, tableSlot), 1))
-                                    )
+                                    or(and(tableSlot, COUNT_FIELD_CLEARING_MASK), shl(176, add(shr(176, tableSlot), 1)))
                                 )
                                 break
                             }
@@ -597,10 +562,7 @@ contract DiamondLoupeFacet {
                             if eq(and(tableSlot, STACK_CONST_ADDR_MASK), facetAddress) {
                                 mstore(
                                     tablePtr,
-                                    or(
-                                        and(tableSlot, COUNT_FIELD_CLEARING_MASK),
-                                        shl(176, add(shr(176, tableSlot), 1))
-                                    )
+                                    or(and(tableSlot, COUNT_FIELD_CLEARING_MASK), shl(176, add(shr(176, tableSlot), 1)))
                                 )
                                 break
                             }
@@ -624,10 +586,7 @@ contract DiamondLoupeFacet {
                             if eq(and(tableSlot, STACK_CONST_ADDR_MASK), facetAddress) {
                                 mstore(
                                     tablePtr,
-                                    or(
-                                        and(tableSlot, COUNT_FIELD_CLEARING_MASK),
-                                        shl(176, add(shr(176, tableSlot), 1))
-                                    )
+                                    or(and(tableSlot, COUNT_FIELD_CLEARING_MASK), shl(176, add(shr(176, tableSlot), 1)))
                                 )
                                 break
                             }
@@ -651,10 +610,7 @@ contract DiamondLoupeFacet {
                             if eq(and(tableSlot, STACK_CONST_ADDR_MASK), facetAddress) {
                                 mstore(
                                     tablePtr,
-                                    or(
-                                        and(tableSlot, COUNT_FIELD_CLEARING_MASK),
-                                        shl(176, add(shr(176, tableSlot), 1))
-                                    )
+                                    or(and(tableSlot, COUNT_FIELD_CLEARING_MASK), shl(176, add(shr(176, tableSlot), 1)))
                                 )
                                 break
                             }
@@ -775,7 +731,7 @@ contract DiamondLoupeFacet {
             // This is relatively cheap, because the storage slots are already
             // considered warm.
             {
-                let selectorSlots := div(selectorCount, 8)
+                let selectorSlots := shr(3, selectorCount)
                 let remainingSelectors := mod(selectorCount, 8)
 
                 for { let slotIndex := 0 } lt(slotIndex, selectorSlots) { slotIndex := add(slotIndex, 1) } {
@@ -1415,17 +1371,38 @@ contract DiamondLoupeFacet {
                 return(SCRATCH_SPACE_POINTER_1, WORD_SIZE_2)
             }
 
+            // Copy over constants to the stack for cheaper repeated access.
             let STACK_CONST_ADDR_MASK := ADDRESS_MASK
             let STACK_CONST_BASE_SELECTOR_SLOT := STORAGE_POINTER_SELECTORS_ENTRIES
             let STACK_CONST_SELECTOR_MASK := SELECTOR_MASK
 
+            // Place the `facetAndPosition` mapping's base storage position in
+            // the scratch space to prepare for keccak256 hashing to access the
+            // appropriate storage slots per function selector.
             mstore(SCRATCH_SPACE_POINTER_2, DIAMOND_STORAGE_POSITION)
 
             let returnPtr := mload(FREE_MEMORY_POINTER)
-            let arrayLengthPtr := add(returnPtr, WORD_SIZE_1)
-            let arrayPtr := add(arrayLengthPtr, WORD_SIZE_1)
 
-            let selectorSlots := div(selectorCount, 8)
+            // Moving pointer to track the next free memory to write data to.
+            let dataWriteCursor := add(returnPtr, WORD_SIZE_2)
+
+            // Count how many fully packed selector slots to process, and how 
+            // many "remaining" selectors there are in the last slot that's not
+            // full.
+            //
+            // For each full selector slot, we perform an almost equivalent
+            // operation 8 times, as that is how many selectors fit into a
+            // single storage slot.
+            //
+            // These operations do not make use of a helper function as
+            // that would incur extra gas cost.
+            //
+            // The remaining selectors are processed in a similar manner,
+            // albeit outside the loop, and up to 7 times (just shy of a full
+            // storage slot).
+            //
+            // shr(3, x) = div(x, 8)
+            let selectorSlots := shr(3, selectorCount)
             let remainingSelectors := mod(selectorCount, 8)
 
             for { let slotIndex := 0 } lt(slotIndex, selectorSlots) {
@@ -1433,68 +1410,80 @@ contract DiamondLoupeFacet {
             } {
                 let packedSelectors := sload(add(STACK_CONST_BASE_SELECTOR_SLOT, slotIndex))
 
+                // This snippet processes one function selector. It checks if
+                // the selector belongs to the correct facet, and if so, writes 
+                // it to the correct memory position.
+                //
+                // The snippet is repeated 8 times in this loop for gas
+                // optimization purposes. Similarly, it happens at most 7 times
+                // outside of this loop.
+                //
+                // The only changing variable is the selector. The rest of the
+                // snippet is exactly the same for all those 15 iterations, but
+                // unrolling them like this saves the gas cost from the JUMP
+                // related opcodes.
                 {
                     let selector := shl(224, and(packedSelectors, STACK_CONST_SELECTOR_MASK))
                     mstore(SCRATCH_SPACE_POINTER_1, selector)
                     if eq(and(sload(keccak256(SCRATCH_SPACE_POINTER_1, WORD_SIZE_2)), STACK_CONST_ADDR_MASK), _facet) {
-                        mstore(arrayPtr, selector)
-                        arrayPtr := add(arrayPtr, WORD_SIZE_1)
+                        mstore(dataWriteCursor, selector)
+                        dataWriteCursor := add(dataWriteCursor, WORD_SIZE_1)
                     }
                 }
                 {
                     let selector := shl(224, and(shr(32, packedSelectors), STACK_CONST_SELECTOR_MASK))
                     mstore(SCRATCH_SPACE_POINTER_1, selector)
                     if eq(and(sload(keccak256(SCRATCH_SPACE_POINTER_1, WORD_SIZE_2)), STACK_CONST_ADDR_MASK), _facet) {
-                        mstore(arrayPtr, selector)
-                        arrayPtr := add(arrayPtr, WORD_SIZE_1)
+                        mstore(dataWriteCursor, selector)
+                        dataWriteCursor := add(dataWriteCursor, WORD_SIZE_1)
                     }
                 }
                 {
                     let selector := shl(224, and(shr(64, packedSelectors), STACK_CONST_SELECTOR_MASK))
                     mstore(SCRATCH_SPACE_POINTER_1, selector)
                     if eq(and(sload(keccak256(SCRATCH_SPACE_POINTER_1, WORD_SIZE_2)), STACK_CONST_ADDR_MASK), _facet) {
-                        mstore(arrayPtr, selector)
-                        arrayPtr := add(arrayPtr, WORD_SIZE_1)
+                        mstore(dataWriteCursor, selector)
+                        dataWriteCursor := add(dataWriteCursor, WORD_SIZE_1)
                     }
                 }
                 {
                     let selector := shl(224, and(shr(96, packedSelectors), STACK_CONST_SELECTOR_MASK))
                     mstore(SCRATCH_SPACE_POINTER_1, selector)
                     if eq(and(sload(keccak256(SCRATCH_SPACE_POINTER_1, WORD_SIZE_2)), STACK_CONST_ADDR_MASK), _facet) {
-                        mstore(arrayPtr, selector)
-                        arrayPtr := add(arrayPtr, WORD_SIZE_1)
+                        mstore(dataWriteCursor, selector)
+                        dataWriteCursor := add(dataWriteCursor, WORD_SIZE_1)
                     }
                 }
                 {
                     let selector := shl(224, and(shr(128, packedSelectors), STACK_CONST_SELECTOR_MASK))
                     mstore(SCRATCH_SPACE_POINTER_1, selector)
                     if eq(and(sload(keccak256(SCRATCH_SPACE_POINTER_1, WORD_SIZE_2)), STACK_CONST_ADDR_MASK), _facet) {
-                        mstore(arrayPtr, selector)
-                        arrayPtr := add(arrayPtr, WORD_SIZE_1)
+                        mstore(dataWriteCursor, selector)
+                        dataWriteCursor := add(dataWriteCursor, WORD_SIZE_1)
                     }
                 }
                 {
                     let selector := shl(224, and(shr(160, packedSelectors), STACK_CONST_SELECTOR_MASK))
                     mstore(SCRATCH_SPACE_POINTER_1, selector)
                     if eq(and(sload(keccak256(SCRATCH_SPACE_POINTER_1, WORD_SIZE_2)), STACK_CONST_ADDR_MASK), _facet) {
-                        mstore(arrayPtr, selector)
-                        arrayPtr := add(arrayPtr, WORD_SIZE_1)
+                        mstore(dataWriteCursor, selector)
+                        dataWriteCursor := add(dataWriteCursor, WORD_SIZE_1)
                     }
                 }
                 {
                     let selector := shl(224, and(shr(192, packedSelectors), STACK_CONST_SELECTOR_MASK))
                     mstore(SCRATCH_SPACE_POINTER_1, selector)
                     if eq(and(sload(keccak256(SCRATCH_SPACE_POINTER_1, WORD_SIZE_2)), STACK_CONST_ADDR_MASK), _facet) {
-                        mstore(arrayPtr, selector)
-                        arrayPtr := add(arrayPtr, WORD_SIZE_1)
+                        mstore(dataWriteCursor, selector)
+                        dataWriteCursor := add(dataWriteCursor, WORD_SIZE_1)
                     }
                 }
                 {
                     let selector := shl(224, shr(224, packedSelectors))
                     mstore(SCRATCH_SPACE_POINTER_1, selector)
                     if eq(and(sload(keccak256(SCRATCH_SPACE_POINTER_1, WORD_SIZE_2)), STACK_CONST_ADDR_MASK), _facet) {
-                        mstore(arrayPtr, selector)
-                        arrayPtr := add(arrayPtr, WORD_SIZE_1)
+                        mstore(dataWriteCursor, selector)
+                        dataWriteCursor := add(dataWriteCursor, WORD_SIZE_1)
                     }
                 }
             }
@@ -1506,68 +1495,81 @@ contract DiamondLoupeFacet {
                     let selector := shl(224, and(packedSelectors, STACK_CONST_SELECTOR_MASK))
                     mstore(SCRATCH_SPACE_POINTER_1, selector)
                     if eq(and(sload(keccak256(SCRATCH_SPACE_POINTER_1, WORD_SIZE_2)), STACK_CONST_ADDR_MASK), _facet) {
-                        mstore(arrayPtr, selector)
-                        arrayPtr := add(arrayPtr, WORD_SIZE_1)
+                        mstore(dataWriteCursor, selector)
+                        dataWriteCursor := add(dataWriteCursor, WORD_SIZE_1)
                     }
                 }
                 if gt(remainingSelectors, 1) {
                     let selector := shl(224, and(shr(32, packedSelectors), STACK_CONST_SELECTOR_MASK))
                     mstore(SCRATCH_SPACE_POINTER_1, selector)
                     if eq(and(sload(keccak256(SCRATCH_SPACE_POINTER_1, WORD_SIZE_2)), STACK_CONST_ADDR_MASK), _facet) {
-                        mstore(arrayPtr, selector)
-                        arrayPtr := add(arrayPtr, WORD_SIZE_1)
+                        mstore(dataWriteCursor, selector)
+                        dataWriteCursor := add(dataWriteCursor, WORD_SIZE_1)
                     }
                 }
                 if gt(remainingSelectors, 2) {
                     let selector := shl(224, and(shr(64, packedSelectors), STACK_CONST_SELECTOR_MASK))
                     mstore(SCRATCH_SPACE_POINTER_1, selector)
                     if eq(and(sload(keccak256(SCRATCH_SPACE_POINTER_1, WORD_SIZE_2)), STACK_CONST_ADDR_MASK), _facet) {
-                        mstore(arrayPtr, selector)
-                        arrayPtr := add(arrayPtr, WORD_SIZE_1)
+                        mstore(dataWriteCursor, selector)
+                        dataWriteCursor := add(dataWriteCursor, WORD_SIZE_1)
                     }
                 }
                 if gt(remainingSelectors, 3) {
                     let selector := shl(224, and(shr(96, packedSelectors), STACK_CONST_SELECTOR_MASK))
                     mstore(SCRATCH_SPACE_POINTER_1, selector)
                     if eq(and(sload(keccak256(SCRATCH_SPACE_POINTER_1, WORD_SIZE_2)), STACK_CONST_ADDR_MASK), _facet) {
-                        mstore(arrayPtr, selector)
-                        arrayPtr := add(arrayPtr, WORD_SIZE_1)
+                        mstore(dataWriteCursor, selector)
+                        dataWriteCursor := add(dataWriteCursor, WORD_SIZE_1)
                     }
                 }
                 if gt(remainingSelectors, 4) {
                     let selector := shl(224, and(shr(128, packedSelectors), STACK_CONST_SELECTOR_MASK))
                     mstore(SCRATCH_SPACE_POINTER_1, selector)
                     if eq(and(sload(keccak256(SCRATCH_SPACE_POINTER_1, WORD_SIZE_2)), STACK_CONST_ADDR_MASK), _facet) {
-                        mstore(arrayPtr, selector)
-                        arrayPtr := add(arrayPtr, WORD_SIZE_1)
+                        mstore(dataWriteCursor, selector)
+                        dataWriteCursor := add(dataWriteCursor, WORD_SIZE_1)
                     }
                 }
                 if gt(remainingSelectors, 5) {
                     let selector := shl(224, and(shr(160, packedSelectors), STACK_CONST_SELECTOR_MASK))
                     mstore(SCRATCH_SPACE_POINTER_1, selector)
                     if eq(and(sload(keccak256(SCRATCH_SPACE_POINTER_1, WORD_SIZE_2)), STACK_CONST_ADDR_MASK), _facet) {
-                        mstore(arrayPtr, selector)
-                        arrayPtr := add(arrayPtr, WORD_SIZE_1)
+                        mstore(dataWriteCursor, selector)
+                        dataWriteCursor := add(dataWriteCursor, WORD_SIZE_1)
                     }
                 }
                 if gt(remainingSelectors, 6) {
                     let selector := shl(224, and(shr(192, packedSelectors), STACK_CONST_SELECTOR_MASK))
                     mstore(SCRATCH_SPACE_POINTER_1, selector)
                     if eq(and(sload(keccak256(SCRATCH_SPACE_POINTER_1, WORD_SIZE_2)), STACK_CONST_ADDR_MASK), _facet) {
-                        mstore(arrayPtr, selector)
-                        arrayPtr := add(arrayPtr, WORD_SIZE_1)
+                        mstore(dataWriteCursor, selector)
+                        dataWriteCursor := add(dataWriteCursor, WORD_SIZE_1)
                     }
                 }
             }
 
+            // Set free memory pointer to the correct address. The last word
+            // that was added to `dataWriteCursor` is still unused.
+            mstore(FREE_MEMORY_POINTER, dataWriteCursor)
+
+            // Set return data offset to array start as per ABI.
             mstore(returnPtr, WORD_SIZE_1)
 
-            let len := div(sub(arrayPtr, add(returnPtr, WORD_SIZE_2)), WORD_SIZE_1)
-            mstore(add(returnPtr, WORD_SIZE_1), len)
 
-            mstore(FREE_MEMORY_POINTER, arrayPtr)
+            // The first slot after `returnPtr` marks the start of the return 
+            // data.
+            //
+            // The return data is a dynamic array. The first slot is its length
+            // and we get the length by dividing the total number of bytes used
+            // by the array elements by the size of a memory slot.
+            //
+            // This does rely on the elements being placed "normally", and not
+            // in a tightly packed encoding.
+            let selectorBytes := sub(dataWriteCursor, add(returnPtr, WORD_SIZE_2))
+            mstore(add(returnPtr, WORD_SIZE_1), div(selectorBytes, WORD_SIZE_1))
 
-            return(returnPtr, add(WORD_SIZE_2, shl(5, len)))
+            return(returnPtr, add(WORD_SIZE_2, selectorBytes))
         }
     }
 
@@ -1974,24 +1976,29 @@ contract DiamondLoupeFacet {
             let arrayLengthPtr := add(returnPtr, WORD_SIZE_1)
             mstore(arrayLengthPtr, unique)
 
-            let nextArraySlotPtr := add(arrayLengthPtr, WORD_SIZE_1)
+            let dataWriteCursor := add(arrayLengthPtr, WORD_SIZE_1)
+            let arrayIndex := 0
 
-            let writeIndex := 0
+            // Scan the entire hash table for facet addresses and write them 
+            // into the correct memory position.
             for { let tableIndex := 0 } lt(tableIndex, hashTableSize) { tableIndex := add(tableIndex, 1) } {
                 let tableSlot := mload(add(table, shl(5, tableIndex)))
                 if iszero(tableSlot) {
                     continue
                 }
-                mstore(nextArraySlotPtr, tableSlot)
 
-                nextArraySlotPtr := add(nextArraySlotPtr, WORD_SIZE_1)
-                writeIndex := add(writeIndex, 1)
-                if eq(writeIndex, unique) {
+                mstore(dataWriteCursor, tableSlot)
+
+                dataWriteCursor := add(dataWriteCursor, WORD_SIZE_1)
+                arrayIndex := add(arrayIndex, 1)
+
+                // All facet addresses found. Can stop scanning.
+                if eq(arrayIndex, unique) {
                     break
                 }
             }
 
-            return(returnPtr, sub(nextArraySlotPtr, returnPtr))
+            return(returnPtr, sub(dataWriteCursor, returnPtr))
         }
     }
 
@@ -2001,9 +2008,16 @@ contract DiamondLoupeFacet {
     /// @return facet The facet address.
     function facetAddress(bytes4 _functionSelector) external view returns (address facet) {
         assembly {
+            // Place `_functionSelector` and `facetAndPosition` mapping's base 
+            // storage position in sequential scratch space memory slots to 
+            // prepare for keccak256 hashing to access the storage slot of the
+            // given function selector.
             mstore(SCRATCH_SPACE_POINTER_1, _functionSelector)
             mstore(SCRATCH_SPACE_POINTER_2, DIAMOND_STORAGE_POSITION)
 
+            // We explicitly don't mask the data, because the ABI specification
+            // forces clients to ignore the other bits outside the 160 bits of
+            // the address return type.
             mstore(SCRATCH_SPACE_POINTER_1, sload(keccak256(SCRATCH_SPACE_POINTER_1, WORD_SIZE_2)))
 
             return(SCRATCH_SPACE_POINTER_1, WORD_SIZE_1)
