@@ -39,11 +39,9 @@ contract LoupeBenchmarkScript is Utils {
 
         for (uint256 j = 0; j < impls.length; j++) {
             for (uint256 i = 0; i < configs.length; i++) {
-                vm.startBroadcast();
                 Config memory cfg = configs[i];
                 Impl memory impl = impls[j];
                 _run_test(impl.loupe, impl.name, cfg.facets, cfg.selectors);
-                vm.stopBroadcast();
             }
         }
 
@@ -93,32 +91,30 @@ contract LoupeBenchmarkScript is Utils {
     function _run_test(address loupe, string memory name, uint256 nFacet, uint256 perFacet) internal {
         MinimalDiamond diamond = _createTest(loupe, nFacet, perFacet);
 
-        uint256 gasStart = gasleft();
-        (bool ok1,) = address(diamond).call(abi.encodeWithSelector(SELECTOR_FACETS));
-        uint256 gasUsed1 = gasStart - gasleft();
-        string memory gasUsed1s;
-        if (ok1) {
-            gasUsed1s = vm.toString(gasUsed1);
-        } else {
-            gasUsed1s = "out of gas";
-        }
+        uint256 gasUsed1 = gasFacets(address(diamond));
         vm.writeLine(
-            CSV_FILE, string.concat(name, ",facets(),", vm.toString(nFacet), ",", vm.toString(perFacet), ",", gasUsed1s)
+            CSV_FILE, string.concat(name, ",facets(),", vm.toString(nFacet), ",", vm.toString(perFacet), ",", vm.toString(gasUsed1))
         );
 
-        gasStart = gasleft();
-        (bool ok2,) = address(diamond).call(abi.encodeWithSelector(SELECTOR_FACET_ADDRESSES));
-        uint256 gasUsed2 = gasStart - gasleft();
-        string memory gasUsed2s;
-        if (ok2) {
-            gasUsed2s = vm.toString(gasUsed2);
-        } else {
-            gasUsed2s = "out of gas";
-        }
+        uint256 gasUsed2 = gasFacetAddresses(address(diamond));
         vm.writeLine(
             CSV_FILE,
-            string.concat(name, ",facetAddresses(),", vm.toString(nFacet), ",", vm.toString(perFacet), ",", gasUsed2s)
+            string.concat(name, ",facetAddresses(),", vm.toString(nFacet), ",", vm.toString(perFacet), ",", vm.toString(gasUsed2))
         );
+    }
+
+    function gasFacets(address diamond) internal returns (uint256 gasUsed) {
+        uint256 gasStart = gasleft();
+        (bool ok,) = diamond.call(abi.encodeWithSelector(SELECTOR_FACETS));
+        gasUsed = gasStart - gasleft();
+        require(ok);
+    }
+
+    function gasFacetAddresses(address diamond) internal returns (uint256 gasUsed) {
+        uint256 gasStart = gasleft();
+        (bool ok,) = diamond.call(abi.encodeWithSelector(SELECTOR_FACET_ADDRESSES));
+        gasUsed = gasStart - gasleft();
+        require(ok);
     }
 
     function _createTest(address loupe, uint256 nFacet, uint256 perFacet) internal returns (MinimalDiamond diamond) {
