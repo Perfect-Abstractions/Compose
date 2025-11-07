@@ -23,6 +23,9 @@ contract PackedLoupeExtension {
         // Read all blobs and concatenate
         for (uint256 i; i < cats.length; i++) {
             LibShardedLoupe.Shard storage shard = sls.shards[cats[i]];
+            if (shard.facetsBlob == address(0) || shard.facetCount == 0) {
+                continue;
+            }
             bytes memory blob = LibBlob.read(shard.facetsBlob);
             if (blob.length > 4) {
                 uint256 len = blob.length - 4;
@@ -65,8 +68,11 @@ contract PackedLoupeExtension {
         
         for (uint256 i; i < cats.length; i++) {
             LibShardedLoupe.Shard storage shard = sls.shards[cats[i]];
+            if (shard.facetsBlob == address(0) || shard.facetCount == 0) {
+                continue;
+            }
             bytes memory blob = LibBlob.read(shard.facetsBlob);
-            if (shard.facetCount == 0 || blob.length < 4) {
+            if (blob.length < 4) {
                 continue;
             }
 

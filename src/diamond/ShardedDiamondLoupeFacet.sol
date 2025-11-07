@@ -101,11 +101,18 @@ contract ShardedDiamondLoupeFacet {
         uint256 k;
         for (uint256 i; i < cats.length; i++) {
             LibShardedLoupe.Shard storage shard = sls.shards[cats[i]];
+            if (shard.facetsBlob == address(0) || shard.facetCount == 0) {
+                continue;
+            }
             bytes memory packed = LibBlob.read(shard.facetsBlob);
-            address[] memory categoryFacets = new address[](shard.facetCount);
-            LibShardedLoupe.unpackAddresses(packed, categoryFacets, 0);
-            for (uint256 j; j < categoryFacets.length; j++) {
-                allFacets[k] = categoryFacets[j];
+            uint256 offset = 4;
+            for (uint256 j; j < shard.facetCount; j++) {
+                address facet;
+                assembly ("memory-safe") {
+                    facet := shr(96, mload(add(add(packed, 0x20), offset)))
+                }
+                offset += 20;
+                allFacets[k] = facet;
                 unchecked {
                     k++;
                 }
@@ -189,12 +196,17 @@ contract ShardedDiamondLoupeFacet {
         uint256 k;
         for (uint256 i; i < cats.length; i++) {
             LibShardedLoupe.Shard storage shard = sls.shards[cats[i]];
+            if (shard.facetsBlob == address(0) || shard.facetCount == 0) {
+                continue;
+            }
             bytes memory packed = LibBlob.read(shard.facetsBlob);
-            address[] memory categoryFacets = new address[](shard.facetCount);
-            LibShardedLoupe.unpackAddresses(packed, categoryFacets, 0);
-
-            for (uint256 j; j < categoryFacets.length; j++) {
-                address facetAddr = categoryFacets[j];
+            uint256 offset = 4;
+            for (uint256 j; j < shard.facetCount; j++) {
+                address facetAddr;
+                assembly ("memory-safe") {
+                    facetAddr := shr(96, mload(add(add(packed, 0x20), offset)))
+                }
+                offset += 20;
                 facetsAndSelectors[k] = Facet({facet: facetAddr, functionSelectors: LibShardedLoupe.getFacetSelectors(facetAddr)});
                 unchecked {
                     k++;

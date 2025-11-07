@@ -32,9 +32,17 @@ abstract contract BaseBenchmark is Utils {
 
         diamond.initialize(dc, args);
 
+        _afterLoupeInstalled();
+
         // Initiatlise complex storage for minimal diamond
         _buildDiamond(address(diamond), NUM_FACETS, SELECTORS_PER_FACET);
+
+        _afterDiamondPopulated();
     }
 
     function _deployLoupe() internal virtual returns (address);
+
+    function _afterLoupeInstalled() internal virtual {}
+
+    function _afterDiamondPopulated() internal virtual {}
 }

@@ -43,24 +43,23 @@ library LibShardedLoupe {
 
         Shard storage shard = s.shards[categoryId];
 
+        // Mark current facets for quick membership checks
+        for (uint256 i; i < facets.length; i++) {
+            s.facetIndex[facets[i]] = 1;
+        }
+
         // Clean up selectors for facets no longer in this category
         if (shard.facetsBlob != address(0) && shard.facetCount != 0) {
-            address[] memory previousFacets = new address[](shard.facetCount);
             bytes memory previousPacked = LibBlob.read(shard.facetsBlob);
-            uint256 filled = unpackAddresses(previousPacked, previousFacets, 0);
-            if (filled > previousFacets.length) {
-                filled = previousFacets.length;
-            }
-            for (uint256 i; i < filled; i++) {
-                address oldFacet = previousFacets[i];
-                bool stillPresent;
-                for (uint256 j; j < facets.length; j++) {
-                    if (facets[j] == oldFacet) {
-                        stillPresent = true;
-                        break;
-                    }
+            uint256 prevOffset = 4;
+            for (uint256 i; i < shard.facetCount; i++) {
+                address oldFacet;
+                assembly ("memory-safe") {
+                    oldFacet := shr(96, mload(add(add(previousPacked, 0x20), prevOffset)))
                 }
-                if (!stillPresent) {
+                prevOffset += 20;
+
+                if (s.facetIndex[oldFacet] == 0) {
                     s.facetSelectorsBlob[oldFacet] = address(0);
                     s.facetSelectorCount[oldFacet] = 0;
                     s.facetCategory[oldFacet] = bytes32(0);
@@ -88,32 +87,16 @@ library LibShardedLoupe {
 
         // Store the shard
         shard.facetsBlob = facetsBlob;
-        shard.facetCount = uint32(facetCount);
+        shard.facetCount = uint32(facets.length);
 
         // Store per-facet selector blobs
         for (uint256 i; i < facetCount; i++) {
-            address facet = facets[i];
-            bytes4[] memory facetSelectors = selectors[i];
+            _storeFacetSelectors(s, facets[i], selectors[i], categoryId);
+        }
 
-            uint256 selsLength = facetSelectors.length;
-            bytes memory packedSelectors = new bytes(4 + selsLength * 4);
-            assembly ("memory-safe") {
-                mstore(add(packedSelectors, 0x20), shl(224, selsLength))
-            }
-
-            uint256 selectorOffset = 4;
-            for (uint256 j; j < selsLength; j++) {
-                bytes4 selector = facetSelectors[j];
-                assembly ("memory-safe") {
-                    mstore(add(add(packedSelectors, 0x20), selectorOffset), selector)
-                }
-                selectorOffset += 4;
-            }
-
-            address selectorsBlob = LibBlob.write(packedSelectors);
-            s.facetSelectorsBlob[facet] = selectorsBlob;
-            s.facetSelectorCount[facet] = uint32(selsLength);
-            s.facetCategory[facet] = categoryId;
+        // Clear temporary facet index marks
+        for (uint256 i; i < facets.length; i++) {
+            s.facetIndex[facets[i]] = 0;
         }
 
         // Add category if not already present - O(1) lookup
@@ -247,4 +230,52 @@ library LibShardedLoupe {
             }
         }
     }
+
+    function _storeFacetSelectors(
+        ShardedLoupeStorage storage s,
+        address facet,
+        bytes4[] memory facetSelectors,
+        bytes32 categoryId
+    ) internal {
+        uint256 selsLength = facetSelectors.length;
+        bytes memory packedSelectors = new bytes(4 + selsLength * 4);
+        assembly ("memory-safe") {
+            mstore(add(packedSelectors, 0x20), shl(224, selsLength))
+        }
+
+        uint256 selectorOffset = 4;
+        for (uint256 j; j < selsLength; j++) {
+            bytes4 selector = facetSelectors[j];
+            assembly ("memory-safe") {
+                mstore(add(add(packedSelectors, 0x20), selectorOffset), selector)
+            }
+            selectorOffset += 4;
+        }
+
+        bytes32 newHash = keccak256(packedSelectors);
+        address selectorsBlob = s.facetSelectorsBlob[facet];
+        if (selectorsBlob != address(0)) {
+            uint256 existingSize;
+            assembly ("memory-safe") {
+                existingSize := extcodesize(selectorsBlob)
+            }
+            if (existingSize == packedSelectors.length) {
+                bytes memory existing = LibBlob.read(selectorsBlob);
+                if (keccak256(existing) != newHash) {
+                    selectorsBlob = address(0);
+                }
+            } else {
+                selectorsBlob = address(0);
+            }
+        }
+
+        if (selectorsBlob == address(0)) {
+            selectorsBlob = LibBlob.write(packedSelectors);
+        }
+
+        s.facetSelectorsBlob[facet] = selectorsBlob;
+        s.facetSelectorCount[facet] = uint32(selsLength);
+        s.facetCategory[facet] = categoryId;
+    }
+
 }
