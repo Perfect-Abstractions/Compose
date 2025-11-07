@@ -6,6 +6,9 @@ import "forge-std/console2.sol";
 import {DiamondLoupeFacet} from "../src/diamond/DiamondLoupeFacet.sol";
 import {MinimalDiamond} from "../test/benchmark/MinimalDiamond.sol";
 import {LibDiamond} from "../src/diamond/LibDiamond.sol";
+import {OriginalDiamondLoupeFacet} from "./loupeImplementations/OriginalDiamondLoupeFacet.sol";
+import {TwoPassDiamondLoupeFacet} from "./loupeImplementations/TwoPassDiamondLoupeFacet.sol";
+import {CollisionMapDiamondLoupeFacet} from "./loupeImplementations/CollisionMapDiamondLoupeFacet.sol";
 
 import "./Utils.sol";
 
@@ -58,7 +61,10 @@ contract LoupeBenchmarkScript is Utils {
 
     function _init_implentations() internal {
         // TODO: add more implementations
-        impls.push(Impl("Original", address(new DiamondLoupeFacet())));
+        impls.push(Impl("Current", address(new DiamondLoupeFacet())));
+        impls.push(Impl("Original", address(new OriginalDiamondLoupeFacet())));
+        impls.push(Impl("TwoPass", address(new TwoPassDiamondLoupeFacet())));
+        impls.push(Impl("CollisionMap", address(new CollisionMapDiamondLoupeFacet())));
     }
 
     function _init_configs(bool huge_config) internal {
