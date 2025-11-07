@@ -33,41 +33,42 @@ def format_table(func_name, rows, implementations):
     md.append("\n---\n")
     return "\n".join(md)
 
-# Estraggo le implementazioni (es. Original, Current, ecc.)
 implementations = sorted(
     {impl for func_data in data.values() for pair in func_data.values() for impl in pair}
 )
 
-# Costruzione Markdown
-md = [
-    "# Diamond Loupe Gas Benchmark Report",
-    "",
-    "Generated from the script gen_benchmark_report.py Before running this python script run `forge script script/LoupeBenchmark.s.sol --gas-limit 1000000000000000000`.",
-    "",
-    "**Compiler Settings in foundry.toml:**",
-    "- Optimizer Runs: 20,000",
-    "- viaIR: Disabled",
-    "",
-    "---",
-    "",
-]
+md = """
+
+# Diamond Loupe Gas Benchmark Report
+    
+## Usage
 
 
-md.append(format_table("facets()", data["facets()"], implementations))
-md.append(format_table("facetAddresses()", data["facetAddresses()"], implementations))
+Run the following command to execute the benchmark and generate the .csv results:
+```bash
+forge script script/LoupeBenchmark.s.sol --gas-limit 1000000000000000000
+```
+
+Use a very high gas limit to avoid out-of-gas errors during execution.
 
 
-extra_facets = {k: v for k, v in data["facets()"].items() if k[0] > 10}
-extra_addresses = {k: v for k, v in data["facetAddresses()"].items() if k[0] > 10}
+Then, convert the CSV results into a Markdown report (BENCHMARK_REPORT.md) with:
 
-if extra_facets:
-    md.append("## Additional Configurations\n")
-    md.append(format_table("facets()", extra_facets, implementations))
-if extra_addresses:
-    md.append(format_table("facetAddresses()", extra_addresses, implementations))
+```bash
+python3 gen_benchmark_report.py 
+```
+    **Compiler Settings in foundry.toml:**
+    - Optimizer Runs: 20,000"
+    - viaIR: Disabled
+"""
+
+
+md += format_table("facets()", data["facets()"], implementations)
+md +=format_table("facetAddresses()", data["facetAddresses()"], implementations)
+
 
 # Scrive su file
 with open(output_file, "w") as f:
-    f.write("\n".join(md))
+    f.write(md)
 
 print(f"Markdown report generated: {output_file}")

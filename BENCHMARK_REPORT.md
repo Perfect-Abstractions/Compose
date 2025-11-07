@@ -1,13 +1,26 @@
+
+
 # Diamond Loupe Gas Benchmark Report
+    
+## Usage
 
-Generated from the script gen_benchmark_report.py Before running this python script run `forge script script/LoupeBenchmark.s.sol --gas-limit 1000000000000000000`.
 
-**Compiler Settings in foundry.toml:**
-- Optimizer Runs: 20,000
-- viaIR: Disabled
+Run the following command to execute the benchmark and generate the .csv results:
+```bash
+forge script script/LoupeBenchmark.s.sol --gas-limit 1000000000000000000
+```
 
----
+Use a very high gas limit to avoid out-of-gas errors during execution.
 
+
+Then, convert the CSV results into a Markdown report (BENCHMARK_REPORT.md) with:
+
+```bash
+python3 gen_benchmark_report.py 
+```
+    **Compiler Settings in foundry.toml:**
+    - Optimizer Runs: 20,000"
+    - viaIR: Disabled
 ## facets() Function Gas Costs
 
 | Selectors/Facets | CollisionMap | Current | Original | TwoPass |
@@ -30,7 +43,6 @@ Generated from the script gen_benchmark_report.py Before running this python scr
 | 334/1000 | 100,724,149,731 | 57,967,499,070 | 220,563,206,623,241 | 87,535,763,487 |
 
 ---
-
 ## facetAddresses() Function Gas Costs
 
 | Selectors/Facets | CollisionMap | Current | Original | TwoPass |
@@ -41,42 +53,6 @@ Generated from the script gen_benchmark_report.py Before running this python scr
 | 3/6 | 371,539 | 32,889 | 139,056 | 255,954 |
 | 7/20 | 2,420,756 | 181,358 | 1,036,242 | 1,737,628 |
 | 10/40 | 5,719,114 | 369,833 | 2,837,340 | 4,318,045 |
-| 16/64 | 12,116,618 | 919,475 | 7,469,354 | 9,885,242 |
-| 17/50 | 8,940,798 | 864,299 | 5,410,004 | 7,280,368 |
-| 20/40 | 7,111,712 | 705,171 | 4,208,336 | 5,689,042 |
-| 32/64 | 17,132,405 | 1,803,367 | 12,547,070 | 14,962,959 |
-| 34/100 | 35,953,434 | 3,281,122 | 28,633,487 | 32,452,149 |
-| 42/504 | 752,543,045 | 25,001,252 | 717,466,100 | 737,027,001 |
-| 64/64 | 27,527,719 | 3,620,707 | 22,714,567 | 25,130,455 |
-| 84/1000 | 5,549,878,146 | 162,651,759 | 5,475,128,330 | 5,514,070,014 |
-| 167/500 | 2,800,028,631 | 138,561,174 | 2,761,825,692 | 2,781,230,729 |
-| 334/1000 | 21,887,614,130 | 1,278,178,022 | 21,799,209,757 | 21,838,175,693 |
-
----
-
-## Additional Configurations
-
-## facets() Function Gas Costs
-
-| Selectors/Facets | CollisionMap | Current | Original | TwoPass |
-|----------------|------------|-------|--------|-------|
-| 16/64 | 161,175,109 | 1,516,270 | 66,743,449 | 111,268,248 |
-| 17/50 | 133,121,497 | 3,643,473 | 52,337,984 | 92,086,419 |
-| 20/40 | 118,852,653 | 1,227,610 | 43,896,698 | 81,292,617 |
-| 32/64 | 292,451,598 | 3,555,982 | 143,682,050 | 202,566,804 |
-| 34/100 | 506,598,370 | 15,397,520 | 442,188,429 | 358,581,033 |
-| 42/504 | 4,217,713,125 | 110,187,797 | 229,506,364,813 | 3,317,742,757 |
-| 64/64 | 556,116,656 | 9,696,909 | 358,685,924 | 386,276,006 |
-| 84/1000 | 23,002,761,552 | 2,175,055,546 | 13,959,796,331,233 | 19,574,768,149 |
-| 167/500 | 16,608,157,053 | 2,139,567,119 | 3,494,285,946,522 | 13,275,237,395 |
-| 334/1000 | 100,724,149,731 | 57,967,499,070 | 220,563,206,623,241 | 87,535,763,487 |
-
----
-
-## facetAddresses() Function Gas Costs
-
-| Selectors/Facets | CollisionMap | Current | Original | TwoPass |
-|----------------|------------|-------|--------|-------|
 | 16/64 | 12,116,618 | 919,475 | 7,469,354 | 9,885,242 |
 | 17/50 | 8,940,798 | 864,299 | 5,410,004 | 7,280,368 |
 | 20/40 | 7,111,712 | 705,171 | 4,208,336 | 5,689,042 |
