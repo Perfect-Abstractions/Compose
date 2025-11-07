@@ -6,7 +6,7 @@ import {DiamondLoupeFacet} from "../../src/diamond/DiamondLoupeFacet.sol";
 
 /// @notice Simple template for testing a single optimized diamond loupe implementation
 /// @dev Please override `_deployLoupe` with the deployment of your optimised contract.
-/// 
+///
 /// For comprehensive benchmarking across multiple implementations with various configurations,
 /// see ComprehensiveBenchmark.t.sol which tests Original, Current, TwoPass, and CollisionMap
 /// implementations and generates detailed gas reports.
