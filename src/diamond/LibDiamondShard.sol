@@ -2,6 +2,8 @@
 pragma solidity >=0.8.30;
 
 import {LibShardedLoupe} from "./LibShardedLoupe.sol";
+import {LibDiamondQuery} from "./LibDiamondQuery.sol";
+
 
 /// @title LibDiamondShard
 /// @notice Helper library for managing sharded loupe updates during diamond cuts

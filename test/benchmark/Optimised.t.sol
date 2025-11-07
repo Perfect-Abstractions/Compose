@@ -88,6 +88,8 @@ contract OptimisedLoupeBenchmarkTest is Utils {
         returns (MinimalDiamond benchDiamond, address loupeAddr)
     {
         benchDiamond = new MinimalDiamond();
+        LibDiamond.FacetCut[] memory dc = new LibDiamond.FacetCut[](1);
+
         loupeAddr = useSharded ? address(new ShardedDiamondLoupeFacet()) : address(new DiamondLoupeFacet());
 
         bytes4[] memory loupeSelectors = new bytes4[](NUM_LOUPE_SELECTORS);
@@ -96,7 +98,6 @@ contract OptimisedLoupeBenchmarkTest is Utils {
         loupeSelectors[2] = SELECTOR_FACET_ADDRESSES;
         loupeSelectors[3] = SELECTOR_FACET_ADDRESS;
 
-        LibDiamond.FacetCut[] memory dc = new LibDiamond.FacetCut[](1);
         dc[0] = LibDiamond.FacetCut({
             facetAddress: loupeAddr,
             action: LibDiamond.FacetCutAction.Add,

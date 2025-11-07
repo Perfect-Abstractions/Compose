@@ -1,6 +1,9 @@
 // SPDX-License-Identifier: MIT
 pragma solidity >=0.8.30;
 
+import {LibDiamondQuery} from './LibDiamondQuery.sol';
+
+
 // The functions in DiamondLoupeFacet MUST be added to a diamond.
 // The EIP-2535 Diamond standard requires these functions.
 contract DiamondLoupeFacet {
