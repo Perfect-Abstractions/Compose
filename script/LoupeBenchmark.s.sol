@@ -29,7 +29,7 @@ contract LoupeBenchmarkScript is Utils {
     string constant CSV_FILE = "./benchmark.csv";
 
     function _run(bool huge_config) internal {
-        vm.startBroadcast();
+        
 
         // Init CSV file
         vm.writeLine(CSV_FILE, "Implementation,Function,Facets,Selectors,GasUsed");
@@ -39,13 +39,15 @@ contract LoupeBenchmarkScript is Utils {
 
         for (uint256 j = 0; j < impls.length; j++) {
             for (uint256 i = 0; i < configs.length; i++) {
+                vm.startBroadcast();
                 Config memory cfg = configs[i];
                 Impl memory impl = impls[j];
                 _run_test(impl.loupe, impl.name, cfg.facets, cfg.selectors);
+                vm.stopBroadcast();
             }
         }
 
-        vm.stopBroadcast();
+        
     }
 
     function run() external {
@@ -67,24 +69,24 @@ contract LoupeBenchmarkScript is Utils {
     function _init_configs(bool huge_config) internal {
         // Test cases
         configs.push(Config(0, 0));
-        configs.push(Config(2, 1));
-        configs.push(Config(4, 2));
-        configs.push(Config(6, 3));
-        configs.push(Config(40, 10));
-        configs.push(Config(40, 20));
-        configs.push(Config(64, 16));
-        configs.push(Config(64, 32));
+        configs.push(Config(1, 2));
+        configs.push(Config(2, 4));
+        configs.push(Config(3, 6));
+        configs.push(Config(10, 40));
+        configs.push(Config(20, 40));
+        configs.push(Config(16, 64));
+        configs.push(Config(32, 64));
         configs.push(Config(64, 64));
-        configs.push(Config(504, 42));
-        configs.push(Config(20, 7));
-        configs.push(Config(50, 17));
-        configs.push(Config(100, 34));
-        configs.push(Config(500, 167));
-        configs.push(Config(1000, 84));
-        configs.push(Config(1000, 334));
+        configs.push(Config(42, 504));
+        configs.push(Config(7, 20));
+        configs.push(Config(17, 50));
+        configs.push(Config(34, 100));
+        configs.push(Config(167, 500));
+        configs.push(Config(84, 1000));
+        configs.push(Config(334, 1000));
         if (huge_config) {
-            configs.push(Config(10000, 834));
-            configs.push(Config(40000, 5000));
+            configs.push(Config(834, 10000));
+            configs.push(Config(5000, 40000));
         }
     }
 

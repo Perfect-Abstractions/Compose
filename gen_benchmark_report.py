@@ -1,6 +1,8 @@
 import csv
 from collections import defaultdict
 
+import sys
+
 input_file = "benchmark.csv"
 output_file = "BENCHMARK_REPORT.md"
 
@@ -72,3 +74,9 @@ with open(output_file, "w") as f:
     f.write(md)
 
 print(f"Markdown report generated: {output_file}")
+
+if sys.argv[1] == "plt":
+    import matplotlib as plt # type: ignore
+    # TODO matplotlib
+    
+    
