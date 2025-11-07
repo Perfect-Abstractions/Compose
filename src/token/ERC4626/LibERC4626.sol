@@ -62,7 +62,6 @@ library LibERC4626 {
         string name;
         string symbol;
         uint8 decimals;
-        uint8 underlyingDecimals;
         IERC20 asset;
         uint256 totalSupply;
         mapping(address owner => uint256 balance) balanceOf;

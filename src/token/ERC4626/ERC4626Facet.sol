@@ -132,9 +132,8 @@ contract ERC4626Facet {
     struct ERC4626Storage {
         string name;
         string symbol;
-        uint8 underlyingDecimals;
+        uint8 decimals;
         IERC20 asset;
-        // uint8 underlyingDecimals;
         uint256 totalSupply;
         mapping(address owner => uint256 balance) balanceOf;
         mapping(address owner => mapping(address spender => uint256 allowance)) allowances;
@@ -163,7 +162,7 @@ contract ERC4626Facet {
     /// @notice Returns the number of decimals used for token precision.
     /// @return The number of decimals.
     function decimals() external view returns (uint8) {
-        return getStorage().underlyingDecimals + _decimalsOffset();
+        return getStorage().decimals + _decimalsOffset();
     }
 
     /// @notice Returns the total supply of tokens.
@@ -196,7 +195,7 @@ contract ERC4626Facet {
     /// @param _value The number of tokens to approve.
     /// @return True if the approval was successful.
     function approve(address _spender, uint256 _value) external returns (bool) {
-        ERC20Storage storage s = getStorage();
+        ERC4626Storage storage s = getStorage();
         if (_spender == address(0)) {
             revert ERC20InvalidSpender(address(0));
         }
@@ -211,7 +210,7 @@ contract ERC4626Facet {
     /// @param _value The amount of tokens to transfer.
     /// @return True if the transfer was successful.
     function transfer(address _to, uint256 _value) external returns (bool) {
-        ERC20Storage storage s = getStorage();
+        ERC4626Storage storage s = getStorage();
         if (_to == address(0)) {
             revert ERC20InvalidReceiver(address(0));
         }
@@ -238,7 +237,7 @@ contract ERC4626Facet {
         address _to,
         uint256 _value
     ) external returns (bool) {
-        ERC20Storage storage s = getStorage();
+        ERC4626Storage storage s = getStorage();
         if (_from == address(0)) {
             revert ERC20InvalidSender(address(0));
         }
@@ -272,7 +271,7 @@ contract ERC4626Facet {
     /// @dev Emits a {Transfer} event to the zero address.
     /// @param _value The amount of tokens to burn.
     function burn(uint256 _value) external {
-        ERC20Storage storage s = getStorage();
+        ERC4626Storage storage s = getStorage();
         uint256 balance = s.balanceOf[msg.sender];
         if (balance < _value) {
             revert ERC20InsufficientBalance(msg.sender, balance, _value);
@@ -289,7 +288,7 @@ contract ERC4626Facet {
     /// @param _account The address whose tokens will be burned.
     /// @param _value The amount of tokens to burn.
     function burnFrom(address _account, uint256 _value) external {
-        ERC20Storage storage s = getStorage();
+        ERC4626Storage storage s = getStorage();
         uint256 currentAllowance = s.allowances[_account][msg.sender];
         if (currentAllowance < _value) {
             revert ERC20InsufficientAllowance(
@@ -373,7 +372,7 @@ contract ERC4626Facet {
             );
         }
 
-        ERC20Storage storage s = getStorage();
+        ERC4626Storage storage s = getStorage();
         uint256 currentNonce = s.nonces[_owner];
         bytes32 structHash = keccak256(
             abi.encode(
