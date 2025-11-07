@@ -13,7 +13,6 @@ import {CollisionMapDiamondLoupeFacet} from "./loupeImplementations/CollisionMap
 import "./Utils.sol";
 
 contract LoupeBenchmarkScript is Utils {
-
     struct Config {
         uint16 facets;
         uint16 selectors;
@@ -29,18 +28,16 @@ contract LoupeBenchmarkScript is Utils {
 
     string constant CSV_FILE = "./benchmark.csv";
 
-    function _run(
-        bool huge_config
-    ) internal {
+    function _run(bool huge_config) internal {
         vm.startBroadcast();
 
         // Init CSV file
-        vm.writeLine(CSV_FILE,"Implementation,Function,Facets,Selectors,GasUsed");
+        vm.writeLine(CSV_FILE, "Implementation,Function,Facets,Selectors,GasUsed");
 
         _init_implentations();
         _init_configs(huge_config);
-        
-        for(uint256 j=0; j < impls.length; j++) {
+
+        for (uint256 j = 0; j < impls.length; j++) {
             for (uint256 i = 0; i < configs.length; i++) {
                 Config memory cfg = configs[i];
                 Impl memory impl = impls[j];
@@ -68,7 +65,7 @@ contract LoupeBenchmarkScript is Utils {
     }
 
     function _init_configs(bool huge_config) internal {
-        // Test cases 
+        // Test cases
         configs.push(Config(0, 0));
         configs.push(Config(2, 1));
         configs.push(Config(4, 2));
@@ -85,52 +82,44 @@ contract LoupeBenchmarkScript is Utils {
         configs.push(Config(500, 167));
         configs.push(Config(1000, 84));
         configs.push(Config(1000, 334));
-        if(huge_config) {
+        if (huge_config) {
             configs.push(Config(10000, 834));
             configs.push(Config(40000, 5000));
         }
     }
 
-    function _run_test(address loupe,string memory name, uint256 nFacet, uint256 perFacet) internal {
+    function _run_test(address loupe, string memory name, uint256 nFacet, uint256 perFacet) internal {
         MinimalDiamond diamond = _createTest(loupe, nFacet, perFacet);
 
         uint256 gasStart = gasleft();
         (bool ok1,) = address(diamond).call(abi.encodeWithSelector(SELECTOR_FACETS));
         uint256 gasUsed1 = gasStart - gasleft();
         string memory gasUsed1s;
-        if(ok1) {
+        if (ok1) {
             gasUsed1s = vm.toString(gasUsed1);
         } else {
             gasUsed1s = "out of gas";
         }
-        vm.writeLine(CSV_FILE,string.concat(
-                    name, ",facets(),",
-                    vm.toString(nFacet), ",",
-                    vm.toString(perFacet), ",",
-                    gasUsed1s
-                ));
+        vm.writeLine(
+            CSV_FILE, string.concat(name, ",facets(),", vm.toString(nFacet), ",", vm.toString(perFacet), ",", gasUsed1s)
+        );
 
         gasStart = gasleft();
         (bool ok2,) = address(diamond).call(abi.encodeWithSelector(SELECTOR_FACET_ADDRESSES));
         uint256 gasUsed2 = gasStart - gasleft();
         string memory gasUsed2s;
-        if(ok2) {
+        if (ok2) {
             gasUsed2s = vm.toString(gasUsed2);
         } else {
             gasUsed2s = "out of gas";
         }
-        vm.writeLine(CSV_FILE,string.concat(
-                    name, ",facetAddresses(),",
-                    vm.toString(nFacet), ",",
-                    vm.toString(perFacet), ",",
-                    gasUsed2s
-                ));
+        vm.writeLine(
+            CSV_FILE,
+            string.concat(name, ",facetAddresses(),", vm.toString(nFacet), ",", vm.toString(perFacet), ",", gasUsed2s)
+        );
     }
 
-    function _createTest(address loupe, uint256 nFacet, uint256 perFacet)
-        internal
-        returns (MinimalDiamond diamond)
-    {
+    function _createTest(address loupe, uint256 nFacet, uint256 perFacet) internal returns (MinimalDiamond diamond) {
         diamond = new MinimalDiamond();
 
         bytes4[] memory loupeSelectors = new bytes4[](NUM_LOUPE_SELECTORS);
@@ -141,19 +130,17 @@ contract LoupeBenchmarkScript is Utils {
 
         LibDiamond.FacetCut[] memory dc = new LibDiamond.FacetCut[](1);
 
-        LibDiamond.FacetCut ;
+        LibDiamond.FacetCut;
         dc[0] = LibDiamond.FacetCut({
             facetAddress: loupe,
             action: LibDiamond.FacetCutAction.Add,
             functionSelectors: loupeSelectors
         });
 
-        MinimalDiamond.DiamondArgs memory args =
-            MinimalDiamond.DiamondArgs({init: address(0), initCalldata: ""});
+        MinimalDiamond.DiamondArgs memory args = MinimalDiamond.DiamondArgs({init: address(0), initCalldata: ""});
 
         diamond.initialize(dc, args);
 
         _buildDiamond(address(diamond), nFacet, perFacet);
     }
-
 }

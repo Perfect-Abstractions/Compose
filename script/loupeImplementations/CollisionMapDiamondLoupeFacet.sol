@@ -171,4 +171,3 @@ contract CollisionMapDiamondLoupeFacet {
         }
     }
 }
-

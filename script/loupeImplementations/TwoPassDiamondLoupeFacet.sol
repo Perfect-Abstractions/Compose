@@ -139,4 +139,3 @@ contract TwoPassDiamondLoupeFacet {
         }
     }
 }
-
