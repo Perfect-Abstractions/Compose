@@ -21,6 +21,7 @@ docs/build
 # Generated files
 docs/.docusaurus
 docs/.cache-loader
+benchmark.csv
 
 # Misc
 docs/.DS_Store
