@@ -22,4 +22,6 @@ interface IERC173 {
     /// @dev Set _newOwner to address(0) to renounce any ownership.
     /// @param _newOwner The address of the new owner of the contract
     function transferOwnership(address _newOwner) external;
+
+    function test() external view returns (string memory);
 }
