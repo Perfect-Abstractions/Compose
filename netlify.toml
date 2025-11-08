@@ -9,7 +9,7 @@
   publish = "build"
   
   # Skip Netlify builds if there are no changes in the website/ directory
-  # Uses a script that handles both PRs (compares against base branch) and regular commits
-  # See https://docs.netlify.com/build/configure-builds/ignore-builds/
-  ignore = "git diff --quiet $COMMIT_REF $CACHED_COMMIT_REF -- website/"
+  # Based on official Netlify documentation: https://docs.netlify.com/configure-builds/ignore-builds/
+  # Works for both regular PRs and forked PRs
+  ignore = "./netlify-ignore.sh"
 
