@@ -5,10 +5,11 @@
   # Build command (if not set in Netlify UI)
   command = "npm run build"
   
-  # Publish directory (where Docusaurus outputs the built site)
-  publish = "website/build"
+  # Publish directory (relative to base directory)
+  publish = "build"
   
   # Skip Netlify builds if there are no changes in the website/ directory
+  # Uses a script that handles both PRs (compares against base branch) and regular commits
   # See https://docs.netlify.com/build/configure-builds/ignore-builds/
-  ignore = "git diff --quiet $CACHED_COMMIT_REF $COMMIT_REF -- 'website/'"
+  ignore = "git diff --quiet $COMMIT_REF $CACHED_COMMIT_REF -- website/"
 
