@@ -15,6 +15,7 @@ out = "out"
 libs = ["lib"]
 optimizer = true
 optimizer_runs = 20_000
+evm_version = "prague"
 # Coverage settings
 fuzz = { runs = 1000 }
 invariant = { runs = 1000 }
