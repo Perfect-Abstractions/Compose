@@ -18,32 +18,26 @@ const rl = readline.createInterface({
 });
 
 const results = [];
-let currentResult = null;
 
 rl.on('line', (line) => {
     const trimmed = line.trim();
-    // Look for Implementation line to start a new result
-    if (trimmed.includes('Implementation:')) {
-        if (currentResult && currentResult.implementation) {
-            results.push(currentResult);
+    if (trimmed.startsWith('BENCHMARK_RESULT')) {
+        const parts = trimmed.split(',');
+        if (parts.length >= 8) {
+            results.push({
+                implementation: parts[1],
+                selectors: parseInt(parts[2], 10),
+                facets: parseInt(parts[3], 10),
+                facetsSuccess: parts[4] === '1',
+                facetsGas: parseInt(parts[5], 10),
+                facetAddressesSuccess: parts[6] === '1',
+                facetAddressesGas: parseInt(parts[7], 10)
+            });
         }
-        currentResult = {};
-        currentResult.implementation = trimmed.split(':')[1].trim();
-    } else if (currentResult && trimmed.includes('Selectors:')) {
-        currentResult.selectors = parseInt(trimmed.split(':')[1].trim());
-    } else if (currentResult && trimmed.includes('Facets:')) {
-        currentResult.facets = parseInt(trimmed.split(':')[1].trim());
-    } else if (currentResult && trimmed.includes('facets() gas:')) {
-        currentResult.facetsGas = parseInt(trimmed.split(':')[1].trim());
-    } else if (currentResult && trimmed.includes('facetAddresses() gas:')) {
-        currentResult.facetAddressesGas = parseInt(trimmed.split(':')[1].trim());
     }
 });
 
 rl.on('close', () => {
-    if (currentResult) {
-        results.push(currentResult);
-    }
     generateReport();
 });
 
@@ -59,125 +53,129 @@ function generateReport() {
     console.log('- viaIR: Disabled\n');
     console.log('---\n');
 
-    // Group results by implementation
-    const grouped = {
-        Original: [],
-        Current: [],
-        TwoPass: [],
-        CollisionMap: []
-    };
-
-    results.forEach(result => {
-        if (grouped[result.implementation]) {
-            grouped[result.implementation].push(result);
+    const implementationMeta = [
+        {
+            key: 'Original',
+            label: 'Original (Mudgen, 2018)',
+            link: 'https://github.com/Perfect-Abstractions/Compose/blob/bea3dfb6d2e48d88bed1b9f1c34104a16b7ebc84/src/diamond/DiamondLoupeFacet.sol'
+        },
+        {
+            key: 'ComposeReference',
+            label: 'Compose Reference (Mudgen, 2025)',
+            link: 'https://github.com/Perfect-Abstractions/Compose/blob/main/src/diamond/DiamondLoupeFacet.sol'
+        },
+        {
+            key: 'TwoPassBaseline',
+            label: 'Two-Pass Benchmark (Compose)',
+            link: 'test/benchmark/implementations/TwoPassDiamondLoupeFacet.sol'
+        },
+        {
+            key: 'CollisionMap',
+            label: 'Collision Map Benchmark (Compose)',
+            link: 'test/benchmark/implementations/CollisionMapDiamondLoupeFacet.sol'
+        },
+        {
+            key: 'JackieXu',
+            label: 'Jackie Xu Optimised Loupe',
+            link: 'https://github.com/JackieXu/Compose/blob/fa4103dc76a73fbab4e9c3cebcd98dcac1783295/src/diamond/DiamondLoupeFacet.sol'
+        },
+        {
+            key: 'KitetsuDinesh',
+            label: '0xkitetsu-dinesh Bucketed Loupe',
+            link: 'https://github.com/mudgen/diamond-2/pull/155'
+        },
+        {
+            key: 'Dawid919',
+            label: 'Dawid919 Registry Loupe',
+            link: 'https://github.com/mudgen/diamond-2/pull/155'
         }
-    });
-
-    // Sort by selectors, then facets
-    Object.keys(grouped).forEach(impl => {
-        grouped[impl].sort((a, b) => {
-            if (a.selectors !== b.selectors) return a.selectors - b.selectors;
-            return a.facets - b.facets;
-        });
-    });
-
-    // Generate table for facets() function
-    console.log('## facets() Function Gas Costs\n');
-    console.log('| Selectors/Facets | Original | Current | TwoPass | CollisionMap |');
-    console.log('|------------------|----------|---------|---------|--------------|');
-
-    const configs = [
-        { selectors: 0, facets: 0 },
-        { selectors: 2, facets: 1 },
-        { selectors: 4, facets: 2 },
-        { selectors: 6, facets: 3 },
-        { selectors: 40, facets: 10 },
-        { selectors: 40, facets: 20 },
-        { selectors: 64, facets: 16 },
-        { selectors: 64, facets: 32 },
-        { selectors: 64, facets: 64 },
-        { selectors: 504, facets: 42 }
     ];
 
-    configs.forEach(config => {
-        const original = grouped.Original.find(r => r.selectors === config.selectors && r.facets === config.facets);
-        const current = grouped.Current.find(r => r.selectors === config.selectors && r.facets === config.facets);
-        const twoPass = grouped.TwoPass.find(r => r.selectors === config.selectors && r.facets === config.facets);
-        const collisionMap = grouped.CollisionMap.find(r => r.selectors === config.selectors && r.facets === config.facets);
+    const configGroups = {
+        issue155: [
+            { selectors: 0, facets: 0 },
+            { selectors: 2, facets: 1 },
+            { selectors: 4, facets: 2 },
+            { selectors: 6, facets: 3 },
+            { selectors: 40, facets: 10 },
+            { selectors: 40, facets: 20 },
+            { selectors: 64, facets: 16 },
+            { selectors: 64, facets: 32 },
+            { selectors: 64, facets: 64 },
+            { selectors: 504, facets: 42 }
+        ],
+        extended: [
+            { selectors: 1000, facets: 84 },
+            { selectors: 10000, facets: 834 },
+            { selectors: 12000, facets: 1200 }
+        ],
+        additional: [
+            { selectors: 20, facets: 7 },
+            { selectors: 50, facets: 17 },
+            { selectors: 100, facets: 34 },
+            { selectors: 500, facets: 167 },
+            { selectors: 1000, facets: 334 }
+        ]
+    };
 
-        const originalStr = original ? formatNumber(original.facetsGas) : 'N/A';
-        const currentStr = current ? formatNumber(current.facetsGas) : 'N/A';
-        const twoPassStr = twoPass ? formatNumber(twoPass.facetsGas) : 'N/A';
-        const collisionMapStr = collisionMap ? formatNumber(collisionMap.facetsGas) : 'N/A';
+    const resultIndex = new Map();
+    results.forEach(result => {
+        const key = `${result.selectors}:${result.facets}:${result.implementation}`;
+        resultIndex.set(key, result);
+    });
 
-        console.log(`| ${config.selectors}/${config.facets} | ${originalStr} | ${currentStr} | ${twoPassStr} | ${collisionMapStr} |`);
+    console.log('---\n');
+    console.log('## Implementations Covered\n');
+    implementationMeta.forEach(meta => {
+        console.log(`- [${meta.label}](${meta.link}) \`(${meta.key})\``);
     });
 
     console.log('\n---\n');
+    console.log('## facets() Function Gas Costs\n');
+    renderTable(configGroups.issue155, implementationMeta, resultIndex, 'facets');
+
+    console.log('\n---\n');
     console.log('## facetAddresses() Function Gas Costs\n');
-    console.log('| Selectors/Facets | Original | Current | TwoPass | CollisionMap |');
-    console.log('|------------------|----------|---------|---------|--------------|');
+    renderTable(configGroups.issue155, implementationMeta, resultIndex, 'facetAddresses');
+
+    if (configGroups.extended.length) {
+        console.log('\n---\n');
+        console.log('## Extended Configurations (Large Diamonds)\n');
+        console.log('### facets() Function\n');
+        renderTable(configGroups.extended, implementationMeta, resultIndex, 'facets');
+        console.log('\n### facetAddresses() Function\n');
+        renderTable(configGroups.extended, implementationMeta, resultIndex, 'facetAddresses');
+    }
+
+    if (configGroups.additional.length) {
+        console.log('\n---\n');
+        console.log('## Additional Configurations (Issue #155 follow-up)\n');
+        console.log('### facets() Function\n');
+        renderTable(configGroups.additional, implementationMeta, resultIndex, 'facets');
+        console.log('\n### facetAddresses() Function\n');
+        renderTable(configGroups.additional, implementationMeta, resultIndex, 'facetAddresses');
+    }
+}
+
+function renderTable(configs, implementationMeta, index, metric) {
+    const headerCells = implementationMeta.map(meta => meta.key);
+    console.log(`| Selectors/Facets | ${headerCells.join(' | ')} |`);
+    console.log(`|------------------|${implementationMeta.map(() => '----------').join('|')}|`);
 
     configs.forEach(config => {
-        const original = grouped.Original.find(r => r.selectors === config.selectors && r.facets === config.facets);
-        const current = grouped.Current.find(r => r.selectors === config.selectors && r.facets === config.facets);
-        const twoPass = grouped.TwoPass.find(r => r.selectors === config.selectors && r.facets === config.facets);
-        const collisionMap = grouped.CollisionMap.find(r => r.selectors === config.selectors && r.facets === config.facets);
-
-        const originalStr = original ? formatNumber(original.facetAddressesGas) : 'N/A';
-        const currentStr = current ? formatNumber(current.facetAddressesGas) : 'N/A';
-        const twoPassStr = twoPass ? formatNumber(twoPass.facetAddressesGas) : 'N/A';
-        const collisionMapStr = collisionMap ? formatNumber(collisionMap.facetAddressesGas) : 'N/A';
-
-        console.log(`| ${config.selectors}/${config.facets} | ${originalStr} | ${currentStr} | ${twoPassStr} | ${collisionMapStr} |`);
+        const rowValues = implementationMeta.map(meta => {
+            const entry = index.get(`${config.selectors}:${config.facets}:${meta.key}`);
+            if (!entry) return 'N/A';
+            if (metric === 'facets') {
+                if (!entry.facetsSuccess && entry.facetsGas === 0) return 'SKIP';
+                if (!entry.facetsSuccess) return 'FAIL';
+                return formatNumber(entry.facetsGas);
+            } else {
+                if (!entry.facetAddressesSuccess && entry.facetAddressesGas === 0) return 'SKIP';
+                if (!entry.facetAddressesSuccess) return 'FAIL';
+                return formatNumber(entry.facetAddressesGas);
+            }
+        });
+        console.log(`| ${config.selectors}/${config.facets} | ${rowValues.join(' | ')} |`);
     });
-
-    // Additional configurations
-    const additionalConfigs = [
-        { selectors: 20, facets: 7 },
-        { selectors: 50, facets: 17 },
-        { selectors: 100, facets: 34 },
-        { selectors: 500, facets: 167 },
-        { selectors: 1000, facets: 334 }
-    ];
-
-    if (grouped.Original.some(r => r.selectors >= 20)) {
-        console.log('\n---\n');
-        console.log('## Additional Configurations\n');
-        console.log('### facets() Function\n');
-        console.log('| Selectors/Facets | Original | Current | TwoPass | CollisionMap |');
-        console.log('|------------------|----------|---------|---------|--------------|');
-
-        additionalConfigs.forEach(config => {
-            const original = grouped.Original.find(r => r.selectors === config.selectors && r.facets === config.facets);
-            const current = grouped.Current.find(r => r.selectors === config.selectors && r.facets === config.facets);
-            const twoPass = grouped.TwoPass.find(r => r.selectors === config.selectors && r.facets === config.facets);
-            const collisionMap = grouped.CollisionMap.find(r => r.selectors === config.selectors && r.facets === config.facets);
-
-            const originalStr = original ? formatNumber(original.facetsGas) : 'N/A';
-            const currentStr = current ? formatNumber(current.facetsGas) : 'N/A';
-            const twoPassStr = twoPass ? formatNumber(twoPass.facetsGas) : 'N/A';
-            const collisionMapStr = collisionMap ? formatNumber(collisionMap.facetsGas) : 'N/A';
-
-            console.log(`| ${config.selectors}/${config.facets} | ${originalStr} | ${currentStr} | ${twoPassStr} | ${collisionMapStr} |`);
-        });
-
-        console.log('\n### facetAddresses() Function\n');
-        console.log('| Selectors/Facets | Original | Current | TwoPass | CollisionMap |');
-        console.log('|------------------|----------|---------|---------|--------------|');
-
-        additionalConfigs.forEach(config => {
-            const original = grouped.Original.find(r => r.selectors === config.selectors && r.facets === config.facets);
-            const current = grouped.Current.find(r => r.selectors === config.selectors && r.facets === config.facets);
-            const twoPass = grouped.TwoPass.find(r => r.selectors === config.selectors && r.facets === config.facets);
-            const collisionMap = grouped.CollisionMap.find(r => r.selectors === config.selectors && r.facets === config.facets);
-
-            const originalStr = original ? formatNumber(original.facetAddressesGas) : 'N/A';
-            const currentStr = current ? formatNumber(current.facetAddressesGas) : 'N/A';
-            const twoPassStr = twoPass ? formatNumber(twoPass.facetAddressesGas) : 'N/A';
-            const collisionMapStr = collisionMap ? formatNumber(collisionMap.facetAddressesGas) : 'N/A';
-
-            console.log(`| ${config.selectors}/${config.facets} | ${originalStr} | ${currentStr} | ${twoPassStr} | ${collisionMapStr} |`);
-        });
-    }
 }

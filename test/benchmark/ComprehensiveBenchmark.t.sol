@@ -9,6 +9,9 @@ import {DiamondLoupeFacet} from "../../src/diamond/DiamondLoupeFacet.sol";
 import {OriginalDiamondLoupeFacet} from "./implementations/OriginalDiamondLoupeFacet.sol";
 import {TwoPassDiamondLoupeFacet} from "./implementations/TwoPassDiamondLoupeFacet.sol";
 import {CollisionMapDiamondLoupeFacet} from "./implementations/CollisionMapDiamondLoupeFacet.sol";
+import {JackieXuDiamondLoupeFacet} from "./implementations/JackieXuDiamondLoupeFacet.sol";
+import {KitetsuDineshDiamondLoupeFacet} from "./implementations/KitetsuDineshDiamondLoupeFacet.sol";
+import {Dawid919DiamondLoupeFacet} from "./implementations/Dawid919DiamondLoupeFacet.sol";
 
 /// @title Comprehensive Diamond Loupe Gas Benchmark
 /// @notice Tests multiple implementations with various selector/facet configurations
@@ -23,17 +26,140 @@ contract ComprehensiveLoupeBenchmark is Utils {
         uint256 numFacets;
         uint256 facetsGas;
         uint256 facetAddressesGas;
+        bool facetsSuccess;
+        bool facetAddressesSuccess;
     }
 
     Result[] internal results;
+    bool internal constant VERBOSE_LOGS = false;
 
     event BenchmarkResult(
         string indexed implementation,
         uint256 numSelectors,
         uint256 numFacets,
         uint256 facetsGas,
-        uint256 facetAddressesGas
+        uint256 facetAddressesGas,
+        bool facetsSuccess,
+        bool facetAddressesSuccess
     );
+
+    struct CallOutcome {
+        bool success;
+        uint256 gasUsed;
+    }
+
+    struct ImplementationConfig {
+        string name;
+        address loupe;
+        bool supportsLargeConfigurations;
+    }
+
+    uint256 internal constant CALL_GAS_BUFFER = 200_000;
+    uint256 internal constant MAX_BENCHMARK_CALL_GAS = 250_000_000;
+    uint256 internal constant LARGE_CONFIG_THRESHOLD = 2_000;
+
+    function _boolToString(bool value) internal pure returns (string memory) {
+        return value ? "1" : "0";
+    }
+
+    function _logResult(
+        string memory implName,
+        uint256 numSelectors,
+        uint256 numFacets,
+        bool facetsSuccess,
+        uint256 facetsGas,
+        bool facetAddressesSuccess,
+        uint256 facetAddressesGas
+    ) internal {
+        console2.log(
+            string(
+                abi.encodePacked(
+                    "BENCHMARK_RESULT,",
+                    implName,
+                    ",",
+                    vm.toString(numSelectors),
+                    ",",
+                    vm.toString(numFacets),
+                    ",",
+                    _boolToString(facetsSuccess),
+                    ",",
+                    vm.toString(facetsGas),
+                    ",",
+                    _boolToString(facetAddressesSuccess),
+                    ",",
+                    vm.toString(facetAddressesGas)
+                )
+            )
+        );
+    }
+
+    function _executeLoupeCall(bytes4 selector) internal returns (CallOutcome memory outcome) {
+        uint256 startGas = gasleft();
+        uint256 buffer = CALL_GAS_BUFFER;
+        if (startGas <= buffer) {
+            buffer = startGas / 10;
+        }
+        uint256 gasToAllocate = startGas - buffer;
+        if (gasToAllocate > MAX_BENCHMARK_CALL_GAS) {
+            gasToAllocate = MAX_BENCHMARK_CALL_GAS;
+        }
+        (bool success,) = address(diamond).call{gas: gasToAllocate}(abi.encodeWithSelector(selector));
+        uint256 gasUsed = startGas - gasleft();
+        outcome = CallOutcome({success: success, gasUsed: gasUsed});
+    }
+
+    function _recordSkip(string memory implName, uint256 numSelectors, uint256 numFacets) internal {
+        emit BenchmarkResult(implName, numSelectors, numFacets, 0, 0, false, false);
+
+        _logResult(implName, numSelectors, numFacets, false, 0, false, 0);
+
+        if (VERBOSE_LOGS) {
+            console2.log("BENCHMARK_RESULT:");
+            console2.log("  Implementation: %s", implName);
+            console2.log("  Selectors: %s", vm.toString(numSelectors));
+            console2.log("  Facets: %s", vm.toString(numFacets));
+            console2.log("  SKIPPED: configuration exceeds supported size");
+            console2.log("");
+        }
+
+        results.push(
+            Result({
+                implementation: implName,
+                numSelectors: numSelectors,
+                numFacets: numFacets,
+                facetsGas: 0,
+                facetAddressesGas: 0,
+                facetsSuccess: false,
+                facetAddressesSuccess: false
+            })
+        );
+    }
+
+    function _runImplementationSet(
+        ImplementationConfig[] memory implementations,
+        uint256 numSelectors,
+        uint256 numFacets
+    ) internal {
+        for (uint256 implIndex; implIndex < implementations.length; implIndex++) {
+            ImplementationConfig memory config = implementations[implIndex];
+            if (numSelectors > LARGE_CONFIG_THRESHOLD && !config.supportsLargeConfigurations) {
+                _recordSkip(config.name, numSelectors, numFacets);
+                continue;
+            }
+            _benchmarkImplementation(config.name, config.loupe, numSelectors, numFacets);
+        }
+    }
+
+    function _defaultImplementations() internal returns (ImplementationConfig[] memory implementations) {
+        implementations = new ImplementationConfig[](7);
+        implementations[0] = ImplementationConfig("Original", address(new OriginalDiamondLoupeFacet()), false);
+        implementations[1] = ImplementationConfig("ComposeReference", address(new DiamondLoupeFacet()), true);
+        implementations[2] = ImplementationConfig("TwoPassBaseline", address(new TwoPassDiamondLoupeFacet()), false);
+        implementations[3] = ImplementationConfig("CollisionMap", address(new CollisionMapDiamondLoupeFacet()), false);
+        implementations[4] = ImplementationConfig("JackieXu", address(new JackieXuDiamondLoupeFacet()), true);
+        implementations[5] = ImplementationConfig("KitetsuDinesh", address(new KitetsuDineshDiamondLoupeFacet()), false);
+        implementations[6] = ImplementationConfig("Dawid919", address(new Dawid919DiamondLoupeFacet()), false);
+    }
 
     function _setupDiamond(address loupeAddress, uint256 numFacets, uint256 selectorsPerFacet) internal {
         diamond = new MinimalDiamond();
@@ -72,143 +198,131 @@ contract ComprehensiveLoupeBenchmark is Utils {
 
         _setupDiamond(loupeAddress, numFacets, selectorsPerFacet);
 
-        // Benchmark facets()
-        uint256 startGas = gasleft();
-        (bool success, bytes memory data) = address(diamond).call(abi.encodeWithSelector(SELECTOR_FACETS));
-        uint256 facetsGas = startGas - gasleft();
-        require(success, "facets() call failed");
+        CallOutcome memory facetsOutcome = _executeLoupeCall(SELECTOR_FACETS);
+        CallOutcome memory facetAddressesOutcome = _executeLoupeCall(SELECTOR_FACET_ADDRESSES);
 
-        // Benchmark facetAddresses()
-        startGas = gasleft();
-        (success, data) = address(diamond).call(abi.encodeWithSelector(SELECTOR_FACET_ADDRESSES));
-        uint256 facetAddressesGas = startGas - gasleft();
-        require(success, "facetAddresses() call failed");
+        emit BenchmarkResult(
+            implName,
+            numSelectors,
+            numFacets,
+            facetsOutcome.gasUsed,
+            facetAddressesOutcome.gasUsed,
+            facetsOutcome.success,
+            facetAddressesOutcome.success
+        );
 
-        emit BenchmarkResult(implName, numSelectors, numFacets, facetsGas, facetAddressesGas);
+        _logResult(
+            implName,
+            numSelectors,
+            numFacets,
+            facetsOutcome.success,
+            facetsOutcome.gasUsed,
+            facetAddressesOutcome.success,
+            facetAddressesOutcome.gasUsed
+        );
 
-        // Output results in parseable format
-        console2.log("BENCHMARK_RESULT:");
-        console2.log("  Implementation: %s", implName);
-        console2.log("  Selectors: %s", vm.toString(numSelectors));
-        console2.log("  Facets: %s", vm.toString(numFacets));
-        console2.log("  facets() gas: %s", vm.toString(facetsGas));
-        console2.log("  facetAddresses() gas: %s", vm.toString(facetAddressesGas));
-        console2.log("");
+        if (VERBOSE_LOGS) {
+            console2.log("BENCHMARK_RESULT:");
+            console2.log("  Implementation: %s", implName);
+            console2.log("  Selectors: %s", vm.toString(numSelectors));
+            console2.log("  Facets: %s", vm.toString(numFacets));
+            if (facetsOutcome.success) {
+                console2.log("  facets() gas: %s", vm.toString(facetsOutcome.gasUsed));
+            } else {
+                console2.log("  facets() FAILED");
+            }
+            if (facetAddressesOutcome.success) {
+                console2.log("  facetAddresses() gas: %s", vm.toString(facetAddressesOutcome.gasUsed));
+            } else {
+                console2.log("  facetAddresses() FAILED");
+            }
+            console2.log("");
+        }
 
         results.push(
             Result({
                 implementation: implName,
                 numSelectors: numSelectors,
                 numFacets: numFacets,
-                facetsGas: facetsGas,
-                facetAddressesGas: facetAddressesGas
+                facetsGas: facetsOutcome.gasUsed,
+                facetAddressesGas: facetAddressesOutcome.gasUsed,
+                facetsSuccess: facetsOutcome.success,
+                facetAddressesSuccess: facetAddressesOutcome.success
             })
         );
     }
 
-    // Test configurations from issue #155
-    function test_Original_AllConfigurations() public {
-        address originalLoupe = address(new OriginalDiamondLoupeFacet());
+    function _runIssue155Configurations(uint256 start, uint256 end) internal {
+        ImplementationConfig[] memory implementations = _defaultImplementations();
 
-        _benchmarkImplementation("Original", originalLoupe, 0, 0);
-        _benchmarkImplementation("Original", originalLoupe, 2, 1);
-        _benchmarkImplementation("Original", originalLoupe, 4, 2);
-        _benchmarkImplementation("Original", originalLoupe, 6, 3);
-        _benchmarkImplementation("Original", originalLoupe, 40, 10);
-        _benchmarkImplementation("Original", originalLoupe, 40, 20);
-        _benchmarkImplementation("Original", originalLoupe, 64, 16);
-        _benchmarkImplementation("Original", originalLoupe, 64, 32);
-        _benchmarkImplementation("Original", originalLoupe, 64, 64);
-        _benchmarkImplementation("Original", originalLoupe, 504, 42);
+        uint256[10] memory selectorOptions = [uint256(0), 2, 4, 6, 40, 40, 64, 64, 64, 504];
+        uint256[10] memory facetOptions = [uint256(0), 1, 2, 3, 10, 20, 16, 32, 64, 42];
+
+        for (uint256 i = start; i < end; i++) {
+            _runImplementationSet(implementations, selectorOptions[i], facetOptions[i]);
+        }
     }
 
-    function test_Current_AllConfigurations() public {
-        address currentLoupe = address(new DiamondLoupeFacet());
-
-        _benchmarkImplementation("Current", currentLoupe, 0, 0);
-        _benchmarkImplementation("Current", currentLoupe, 2, 1);
-        _benchmarkImplementation("Current", currentLoupe, 4, 2);
-        _benchmarkImplementation("Current", currentLoupe, 6, 3);
-        _benchmarkImplementation("Current", currentLoupe, 40, 10);
-        _benchmarkImplementation("Current", currentLoupe, 40, 20);
-        _benchmarkImplementation("Current", currentLoupe, 64, 16);
-        _benchmarkImplementation("Current", currentLoupe, 64, 32);
-        _benchmarkImplementation("Current", currentLoupe, 64, 64);
-        _benchmarkImplementation("Current", currentLoupe, 504, 42);
+    // Test configurations from issue #155 (first half)
+    function test_Issue155Configurations_Part1() public {
+        _runIssue155Configurations(0, 5);
     }
 
-    function test_CollisionMap_AllConfigurations() public {
-        address collisionMapLoupe = address(new CollisionMapDiamondLoupeFacet());
-
-        _benchmarkImplementation("CollisionMap", collisionMapLoupe, 0, 0);
-        _benchmarkImplementation("CollisionMap", collisionMapLoupe, 2, 1);
-        _benchmarkImplementation("CollisionMap", collisionMapLoupe, 4, 2);
-        _benchmarkImplementation("CollisionMap", collisionMapLoupe, 6, 3);
-        _benchmarkImplementation("CollisionMap", collisionMapLoupe, 40, 10);
-        _benchmarkImplementation("CollisionMap", collisionMapLoupe, 40, 20);
-        _benchmarkImplementation("CollisionMap", collisionMapLoupe, 64, 16);
-        _benchmarkImplementation("CollisionMap", collisionMapLoupe, 64, 32);
-        _benchmarkImplementation("CollisionMap", collisionMapLoupe, 64, 64);
-        _benchmarkImplementation("CollisionMap", collisionMapLoupe, 504, 42);
+    // Test configurations from issue #155 (second half)
+    function test_Issue155Configurations_Part2A() public {
+        _runIssue155Configurations(5, 8);
     }
 
-    function test_TwoPass_AllConfigurations() public {
-        address twoPassLoupe = address(new TwoPassDiamondLoupeFacet());
+    function test_Issue155Configurations_Part2B() public {
+        _runIssue155Configurations(8, 10);
+    }
 
-        _benchmarkImplementation("TwoPass", twoPassLoupe, 0, 0);
-        _benchmarkImplementation("TwoPass", twoPassLoupe, 2, 1);
-        _benchmarkImplementation("TwoPass", twoPassLoupe, 4, 2);
-        _benchmarkImplementation("TwoPass", twoPassLoupe, 6, 3);
-        _benchmarkImplementation("TwoPass", twoPassLoupe, 40, 10);
-        _benchmarkImplementation("TwoPass", twoPassLoupe, 40, 20);
-        _benchmarkImplementation("TwoPass", twoPassLoupe, 64, 16);
-        _benchmarkImplementation("TwoPass", twoPassLoupe, 64, 32);
-        _benchmarkImplementation("TwoPass", twoPassLoupe, 64, 64);
-        _benchmarkImplementation("TwoPass", twoPassLoupe, 504, 42);
+    function _runExtendedConfigurations(uint256 index) internal {
+        ImplementationConfig[] memory implementations = _defaultImplementations();
+        uint256[3] memory selectors = [uint256(1000), uint256(10000), uint256(12000)];
+        uint256[3] memory facets = [uint256(84), uint256(834), uint256(1200)];
+        _runImplementationSet(implementations, selectors[index], facets[index]);
     }
 
     // Extended configurations for comprehensive testing
-    function test_ExtendedConfigurations() public {
-        address originalLoupe = address(new OriginalDiamondLoupeFacet());
-        address currentLoupe = address(new DiamondLoupeFacet());
-        address twoPassLoupe = address(new TwoPassDiamondLoupeFacet());
-        address collisionMapLoupe = address(new CollisionMapDiamondLoupeFacet());
+    function test_ExtendedConfigurations_Tier1() public {
+        _runExtendedConfigurations(0);
+    }
 
-        uint256[3][2] memory configs =
-            [[uint256(1000), uint256(10000), uint256(40000)], [uint256(84), uint256(834), uint256(5000)]];
+    function test_ExtendedConfigurations_Tier2() public {
+        _runExtendedConfigurations(1);
+    }
 
-        for (uint256 i; i < 3; i++) {
-            uint256 numSelectors = configs[0][i];
-            uint256 numFacets = configs[1][i];
-
-            _benchmarkImplementation("Original", originalLoupe, numSelectors, numFacets);
-            _benchmarkImplementation("Current", currentLoupe, numSelectors, numFacets);
-            _benchmarkImplementation("TwoPass", twoPassLoupe, numSelectors, numFacets);
-            _benchmarkImplementation("CollisionMap", collisionMapLoupe, numSelectors, numFacets);
-        }
+    function test_ExtendedConfigurations_Tier3() public {
+        _runExtendedConfigurations(2);
     }
 
     // Additional configurations mentioned in issue #155
-    function test_AdditionalConfigurations() public {
-        address originalLoupe = address(new OriginalDiamondLoupeFacet());
-        address currentLoupe = address(new DiamondLoupeFacet());
-        address twoPassLoupe = address(new TwoPassDiamondLoupeFacet());
-        address collisionMapLoupe = address(new CollisionMapDiamondLoupeFacet());
+    function _runAdditionalConfiguration(uint256 index) internal {
+        ImplementationConfig[] memory implementations = _defaultImplementations();
+        uint256[5] memory selectors = [uint256(20), uint256(50), uint256(100), uint256(500), uint256(1000)];
+        uint256[5] memory facets = [uint256(7), uint256(17), uint256(34), uint256(167), uint256(334)];
+        _runImplementationSet(implementations, selectors[index], facets[index]);
+    }
 
-        uint256[5][2] memory configs = [
-            [uint256(20), uint256(50), uint256(100), uint256(500), uint256(1000)],
-            [uint256(7), uint256(17), uint256(34), uint256(167), uint256(334)]
-        ];
+    function test_AdditionalConfigurations_Tier1() public {
+        _runAdditionalConfiguration(0);
+    }
 
-        for (uint256 i; i < 5; i++) {
-            uint256 numSelectors = configs[0][i];
-            uint256 numFacets = configs[1][i];
+    function test_AdditionalConfigurations_Tier2() public {
+        _runAdditionalConfiguration(1);
+    }
 
-            _benchmarkImplementation("Original", originalLoupe, numSelectors, numFacets);
-            _benchmarkImplementation("Current", currentLoupe, numSelectors, numFacets);
-            _benchmarkImplementation("TwoPass", twoPassLoupe, numSelectors, numFacets);
-            _benchmarkImplementation("CollisionMap", collisionMapLoupe, numSelectors, numFacets);
-        }
+    function test_AdditionalConfigurations_Tier3() public {
+        _runAdditionalConfiguration(2);
+    }
+
+    function test_AdditionalConfigurations_Tier4() public {
+        _runAdditionalConfiguration(3);
+    }
+
+    function test_AdditionalConfigurations_Tier5() public {
+        _runAdditionalConfiguration(4);
     }
 }
 

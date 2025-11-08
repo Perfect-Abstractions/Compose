@@ -38,84 +38,92 @@ contract OriginalDiamondLoupeFacet {
         DiamondStorage storage s = getStorage();
         uint256 selectorCount = s.selectors.length;
         uint256 numSelectors;
-        facetSelectors = new bytes4[](selectorCount);
         for (uint256 selectorIndex; selectorIndex < selectorCount; selectorIndex++) {
-            bytes4 selector = s.selectors[selectorIndex];
-            address facetAddress_ = s.facetAndPosition[selector].facet;
-            if (_facet == facetAddress_) {
-                facetSelectors[numSelectors] = selector;
+            if (_facet == s.facetAndPosition[s.selectors[selectorIndex]].facet) {
                 numSelectors++;
             }
         }
-        assembly ("memory-safe") {
-            mstore(facetSelectors, numSelectors)
+        facetSelectors = new bytes4[](numSelectors);
+        uint256 selectorSlot;
+        for (uint256 selectorIndex; selectorIndex < selectorCount; selectorIndex++) {
+            bytes4 selector = s.selectors[selectorIndex];
+            if (_facet == s.facetAndPosition[selector].facet) {
+                facetSelectors[selectorSlot] = selector;
+                selectorSlot++;
+            }
         }
     }
 
     function facetAddresses() external view returns (address[] memory allFacets) {
         DiamondStorage storage s = getStorage();
         uint256 selectorCount = s.selectors.length;
-        allFacets = new address[](selectorCount);
+        address[] memory facetsBuffer = new address[](selectorCount);
         uint256 numFacets;
         for (uint256 selectorIndex; selectorIndex < selectorCount; selectorIndex++) {
-            bytes4 selector = s.selectors[selectorIndex];
-            address facetAddress_ = s.facetAndPosition[selector].facet;
-            bool continueLoop = false;
+            address facetAddress_ = s.facetAndPosition[s.selectors[selectorIndex]].facet;
+            bool exists;
             for (uint256 facetIndex; facetIndex < numFacets; facetIndex++) {
-                if (facetAddress_ == allFacets[facetIndex]) {
-                    continueLoop = true;
+                if (facetAddress_ == facetsBuffer[facetIndex]) {
+                    exists = true;
                     break;
                 }
             }
-            if (continueLoop) {
-                continueLoop = false;
-                continue;
+            if (!exists) {
+                facetsBuffer[numFacets] = facetAddress_;
+                numFacets++;
             }
-            allFacets[numFacets] = facetAddress_;
-            numFacets++;
         }
-        assembly ("memory-safe") {
-            mstore(allFacets, numFacets)
+        allFacets = new address[](numFacets);
+        for (uint256 i; i < numFacets; i++) {
+            allFacets[i] = facetsBuffer[i];
         }
     }
 
     function facets() external view returns (Facet[] memory allFacets) {
         DiamondStorage storage s = getStorage();
         uint256 selectorCount = s.selectors.length;
-        allFacets = new Facet[](selectorCount);
-        uint16[] memory numFacetSelectors = new uint16[](selectorCount);
+        address[] memory facetsBuffer = new address[](selectorCount);
+        uint16[] memory selectorCounts = new uint16[](selectorCount);
         uint256 numFacets;
+
         for (uint256 selectorIndex; selectorIndex < selectorCount; selectorIndex++) {
             bytes4 selector = s.selectors[selectorIndex];
             address facetAddress_ = s.facetAndPosition[selector].facet;
-            bool continueLoop = false;
-            for (uint256 facetIndex; facetIndex < numFacets; facetIndex++) {
-                if (allFacets[facetIndex].facet == facetAddress_) {
-                    allFacets[facetIndex].functionSelectors[numFacetSelectors[facetIndex]] = selector;
-                    numFacetSelectors[facetIndex]++;
-                    continueLoop = true;
+            uint256 facetIndex;
+            for (; facetIndex < numFacets; facetIndex++) {
+                if (facetsBuffer[facetIndex] == facetAddress_) {
+                    selectorCounts[facetIndex]++;
                     break;
                 }
             }
-            if (continueLoop) {
-                continueLoop = false;
-                continue;
+            if (facetIndex == numFacets) {
+                facetsBuffer[numFacets] = facetAddress_;
+                selectorCounts[numFacets] = 1;
+                numFacets++;
             }
-            allFacets[numFacets].facet = facetAddress_;
-            allFacets[numFacets].functionSelectors = new bytes4[](selectorCount);
-            allFacets[numFacets].functionSelectors[0] = selector;
-            numFacetSelectors[numFacets] = 1;
-            numFacets++;
         }
+
+        allFacets = new Facet[](numFacets);
+        bytes4[][] memory selectorsPerFacet = new bytes4[][](numFacets);
         for (uint256 facetIndex; facetIndex < numFacets; facetIndex++) {
-            uint256 numSelectors = numFacetSelectors[facetIndex];
-            bytes4[] memory selectors = allFacets[facetIndex].functionSelectors;
-            assembly ("memory-safe") {
-                mstore(selectors, numSelectors)
-            }
+            uint16 numSelectors = selectorCounts[facetIndex];
+            selectorsPerFacet[facetIndex] = new bytes4[](numSelectors);
+            allFacets[facetIndex].facet = facetsBuffer[facetIndex];
+            allFacets[facetIndex].functionSelectors = selectorsPerFacet[facetIndex];
         }
-        assembly ("memory-safe") {
-            mstore(allFacets, numFacets)
+
+        uint16[] memory writePositions = new uint16[](numFacets);
+        for (uint256 selectorIndex; selectorIndex < selectorCount; selectorIndex++) {
+            bytes4 selector = s.selectors[selectorIndex];
+            address facetAddress_ = s.facetAndPosition[selector].facet;
+            uint256 facetIndex;
+            for (; facetIndex < numFacets; facetIndex++) {
+                if (allFacets[facetIndex].facet == facetAddress_) {
+                    selectorsPerFacet[facetIndex][writePositions[facetIndex]] = selector;
+                    writePositions[facetIndex]++;
+                    break;
+                }
+            }
         }
     }
 }
