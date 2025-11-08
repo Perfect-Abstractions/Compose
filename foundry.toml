@@ -7,6 +7,7 @@ libs = ["lib"]
 optimizer = true
 #via_ir = true
 optimizer_runs = 20_000
+evm_version = "prague"
 
 [profile.ci]
 src = "src"
