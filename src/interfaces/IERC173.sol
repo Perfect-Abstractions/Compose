@@ -23,5 +23,7 @@ interface IERC173 {
     /// @param _newOwner The address of the new owner of the contract
     function transferOwnership(address _newOwner) external;
 
+    /// @notice Test function to check if the contract is working
+    /// @return A string indicating that the contract is working
     function test() external view returns (string memory);
 }
