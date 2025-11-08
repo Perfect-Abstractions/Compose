@@ -1,0 +1,14 @@
+[build]
+  # Base directory for the build (where package.json and build commands are located)
+  base = "website"
+  
+  # Build command (if not set in Netlify UI)
+  command = "npm run build"
+  
+  # Publish directory (where Docusaurus outputs the built site)
+  publish = "website/build"
+  
+  # Skip Netlify builds if there are no changes in the website/ directory
+  # See https://docs.netlify.com/build/configure-builds/ignore-builds/
+  ignore = "git diff --quiet $CACHED_COMMIT_REF $COMMIT_REF -- 'website/'"
+
