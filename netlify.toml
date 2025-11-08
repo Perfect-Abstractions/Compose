@@ -13,3 +13,6 @@
   # Works for both regular PRs and forked PRs
   ignore = "./netlify-ignore.sh"
 
+[build.environment]
+  # Disable git submodules - they are not needed for the website build
+  GIT_SUBMODULES = "false"
