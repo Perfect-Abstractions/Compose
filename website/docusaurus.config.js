@@ -24,7 +24,7 @@ const config = {
 
   // Set the production url of your site here
   //url: 'https://compose.diamonds/',
-  url: 'https://compose-diamonds.netlify.app',
+  url: 'https://preview.compose.diamonds/',
   // Set the /<baseUrl>/ pathname under which your site is served
   // For GitHub pages deployment, it is often '/<projectName>/'
   baseUrl: '/',
@@ -32,9 +32,11 @@ const config = {
 
   // Broken link handling
   onBrokenLinks: 'throw',
+  themes: ['@docusaurus/theme-mermaid'],
 
   // Docusaurus v4-compatible location for broken Markdown links
   markdown: {
+    mermaid: true,
     hooks: {
       onBrokenMarkdownLinks: 'throw',
     },

@@ -1,7 +1,7 @@
 ---
-sidebar_position: 1
+sidebar_position: 2
 slug: /
-title: "Introduction"
+title: "Introduction Another"
 ---
 
 import DocHero from '@site/src/components/docs/DocHero';
@@ -9,69 +9,13 @@ import DocCard, { DocCardGrid } from '@site/src/components/docs/DocCard';
 import Callout from '@site/src/components/ui/Callout';
 import FeatureGrid, { FeatureGridItem } from '@site/src/components/features/FeatureGrid';
 
-Compose is a general purpose smart contract library. It helps you create smart contract systems.
 
-Compose is also an open source community of smart contract developers. We are improving and maintaining the software and technology that consists of Compose.
-
-Past smart contract libraries gave you source code and expected you to extend or modify it and then deploy it to one or more blockchains. 
-
-Compose is different. We **don't** expect you to do that. We take a different approach.
-
-Compose gives you a set of reusable smart contracts that already exist on blockchains. You don't have to deploy Compose source code. It's already been done. The smart contracts are already deployed for your use.
-
-For your new project, instead of deploying new contracts, use the existing onchain smart contracts provided by Compose.
-
-So Compose is a general purpose **onchain** smart contract library. 
-
-:::info[In Development]
-  We haven't actually deployed smart contracts yet because we are in early development. We are building. If this is exciting to you, come join us.
-:::
-
-
-## Reusable Smart Contracts
-
-If you want to create a new project you might wonder how to do that without deploying new smart contracts. How does Compose enable people
-to create new smart contract systems without deploying contracts?
-
-This is where Compose's smart contract architecture comes in. Compose uses [diamond contracts](https://eips.ethereum.org/EIPS/eip-2535) 
-to organize smart contracts and make them reusable. 
-
-A diamond contract is a simple, small contract that uses the code of other onchain contracts.
-
-A diamond contract creates and maintains its own storage data using code from other contracts. These other "contracts" are called facets. 
-```mermaid
-flowchart TD
-  
-  A{"Diamond Contract"} --> B[Facet 1]
-  A --> C[Facet 2]
-  A --> D[Facet N]  
-```
-<br />
-Let's look at a simple example of how this works. Let's say that you want to create a new ERC20 token that uses the gasless "permit" function and can be bridged to other blockchains.
-
-1. Use Compose to deploy a 
-2. The diamond contract does nothing.
-3. 
-
-
-
-
-
-
-
-
-
-
-
-
-{/*
 <DocHero
   title="Build with the Compose Library"
   subtitle="Compose is a smart contract library that helps developers create smart contract systems using ERC-2535 Diamonds."
   variant="gradient"
   height="medium"
 />
-*/}
 
 ## Foundations
 
