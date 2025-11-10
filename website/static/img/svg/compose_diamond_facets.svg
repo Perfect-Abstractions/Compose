@@ -1,0 +1,69 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="900" height="720" viewBox="0 0 900 720" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="diamondGradient" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#e8f1ff"/>
+      <stop offset="100%" stop-color="#c8dcff"/>
+    </linearGradient>
+    <linearGradient id="facetGradient" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#f5f8ff"/>
+      <stop offset="100%" stop-color="#e1e9ff"/>
+    </linearGradient>
+    <linearGradient id="innerBoxGradient" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#f8fbff"/>
+      <stop offset="100%" stop-color="#edf4ff"/>
+    </linearGradient>
+    <style>
+      .title { font: bold 20px sans-serif; fill: #0d2a6b; }
+      .bold { font: bold 18px sans-serif; fill: #0d2a6b; }
+      .label { font: 16px sans-serif; fill: #0d2a6b; }
+      .small { font: 14px sans-serif; fill: #0d2a6b; }
+      .diamond { fill: url(#diamondGradient); stroke: #5578dd; stroke-width: 2.5; }
+      .inner { fill: url(#innerBoxGradient); stroke: #8ab4f8; stroke-width: 2; }
+      .facet { fill: url(#facetGradient); stroke: #5578dd; stroke-width: 2; }
+      .facet-code { fill: url(#innerBoxGradient); stroke: #8ab4f8; stroke-width: 1.5; }
+      .arrow { fill: none; stroke: #2563eb; stroke-width: 2.5;
+               stroke-linecap: round; stroke-linejoin: round;
+               stroke-opacity: 0.9; marker-end: url(#arrowhead); }
+    </style>
+    <marker id="arrowhead" markerWidth="10" markerHeight="7" refX="10" refY="3.5" orient="auto">
+      <polygon points="0 0, 10 3.5, 0 7" fill="#2563eb" />
+    </marker>
+  </defs>
+
+  <!-- Diamond -->
+  <polygon class="diamond" points="450,60 630,240 450,420 270,240" />
+  <text class="title" x="450" y="180" text-anchor="middle">Diamond Contract</text>
+  <rect class="inner" x="360" y="220" width="180" height="50" rx="6" ry="6"/>
+  <text class="label" x="450" y="250" text-anchor="middle">Storage data</text>
+  <rect class="inner" x="390" y="300" width="120" height="40" rx="6" ry="6"/>
+  <text class="label" x="450" y="325" text-anchor="middle">code</text>
+
+  <!-- Facets (code boxes above text) -->
+  <g>
+    <rect class="facet" x="160" y="500" width="170" height="120" rx="8" ry="8"/>
+    <rect class="facet-code" x="195" y="515" width="110" height="45" rx="6" ry="6"/>
+    <text class="small" x="250" y="542" text-anchor="middle">code</text>
+    <text class="bold" x="245" y="590" text-anchor="middle">Facet A</text>
+  </g>
+
+  <g>
+    <rect class="facet" x="365" y="500" width="170" height="120" rx="8" ry="8"/>
+    <rect class="facet-code" x="400" y="515" width="110" height="45" rx="6" ry="6"/>
+    <text class="small" x="455" y="542" text-anchor="middle">code</text>
+    <text class="bold" x="450" y="590" text-anchor="middle">Facet B</text>
+  </g>
+
+  <g>
+    <rect class="facet" x="570" y="500" width="170" height="120" rx="8" ry="8"/>
+    <rect class="facet-code" x="605" y="515" width="110" height="45" rx="6" ry="6"/>
+    <text class="small" x="660" y="542" text-anchor="middle">code</text>
+    <text class="bold" x="655" y="590" text-anchor="middle">Facet N</text>
+  </g>
+
+  <!-- Straight arrows (from facet code boxes to diamond code box) -->
+  <line class="arrow" x1="250" y1="515" x2="450" y2="340" />
+  <line class="arrow" x1="455" y1="515" x2="450" y2="340" />
+  <line class="arrow" x1="660" y1="515" x2="450" y2="340" />
+
+</svg>

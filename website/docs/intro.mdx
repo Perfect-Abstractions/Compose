@@ -8,6 +8,7 @@ import DocHero from '@site/src/components/docs/DocHero';
 import DocCard, { DocCardGrid } from '@site/src/components/docs/DocCard';
 import Callout from '@site/src/components/ui/Callout';
 import FeatureGrid, { FeatureGridItem } from '@site/src/components/features/FeatureGrid';
+import DiamondFacetsSVG from '@site/static/img/svg/compose_diamond_facets.svg'
 
 Compose is a general purpose smart contract library. It helps you create smart contract systems.
 
@@ -30,8 +31,7 @@ So Compose is a general purpose **onchain** smart contract library.
 
 ## Reusable Smart Contracts
 
-If you want to create a new project you might wonder how to do that without deploying new smart contracts. How does Compose enable people
-to create new smart contract systems without deploying contracts?
+If you want to create a new project you might wonder how to do that without deploying new smart contracts. How does Compose enable people to create new smart contract systems using existing onchain contracts?
 
 This is where Compose's smart contract architecture comes in. Compose uses [diamond contracts](https://eips.ethereum.org/EIPS/eip-2535) 
 to organize smart contracts and make them reusable. 
@@ -39,19 +39,21 @@ to organize smart contracts and make them reusable.
 A diamond contract is a simple, small contract that uses the code of other onchain contracts.
 
 A diamond contract creates and maintains its own storage data using code from other contracts. These other "contracts" are called facets. 
-```mermaid
-flowchart TD
-  
-  A{"Diamond Contract"} --> B[Facet 1]
-  A --> C[Facet 2]
-  A --> D[Facet N]  
-```
-<br />
-Let's look at a simple example of how this works. Let's say that you want to create a new ERC20 token that uses the gasless "permit" function and can be bridged to other blockchains.
 
-1. Use Compose to deploy a 
-2. The diamond contract does nothing.
-3. 
+<DiamondFacetsSVG style={{ width: '800', height: 'auto' }} />
+
+Using Compose you do actually deploy new contracts. Specifically you deploy a small diamond contract that uses existing onchain facets.
+
+Let's look at a simple example of how this works. Let's say that you want to create a new ERC20 token that uses the gasless "permit" function and can be bridged to other blockchains. Use Compose to:
+
+1. Choose the onchain facets you need. In this case you need `ERC20Facet`, `ERC20PermitFacet` and `ERC20BridgableFacet`.
+2. Setup initialization information such as the name of your ERC20 token, its total supply, etc.
+3. Deploy a diamond which initializes your ERC20 token and uses the onchain facets in step 1.
+
+## Composable Contracts
+
+The word "composable" means capable of being combined with other parts or elements to form a whole. As much as possible Compose facets are designed to be composable. Facets are designed to work with other facets. Facets are the building blocks of Compose.
+
 
 
 
