@@ -22,7 +22,9 @@ Compose gives you a set of reusable smart contracts that already exist on blockc
 
 For your new project, instead of deploying new contracts, use the existing onchain smart contracts provided by Compose.
 
-So Compose is a general purpose **onchain** smart contract library. 
+:::tip[Key Insight]
+Compose is a general purpose **onchain** smart contract library. 
+:::
 
 :::info[In Development]
   We haven't actually deployed smart contracts yet because we are in early development. We are building. If this is exciting to you, come join us.
@@ -31,28 +33,46 @@ So Compose is a general purpose **onchain** smart contract library.
 
 ## Reusable Smart Contracts
 
-If you want to create a new project you might wonder how to do that without deploying new smart contracts. How does Compose enable people to create new smart contract systems using existing onchain contracts?
+You might wonder how to create a new project without deploying new smart contracts. How does Compose enable people to create new smart contract systems using existing onchain contracts?
 
 This is where Compose's smart contract architecture comes in. Compose uses [diamond contracts](https://eips.ethereum.org/EIPS/eip-2535) 
 to organize smart contracts and make them reusable. 
 
 A diamond contract is a simple, small contract that uses the code of other onchain contracts.
 
-A diamond contract creates and maintains its own storage data using code from other contracts. These other "contracts" are called facets. 
+A diamond contract creates and maintains its own storage data using code from other contracts. These "other contracts" are called facets. Here is a diagram of a diamond that shows it gets its code from facets.
 
 <DiamondFacetsSVG style={{ width: '800', height: 'auto' }} />
 
 Using Compose you do actually deploy new contracts. Specifically you deploy a small diamond contract that uses existing onchain facets.
 
-Let's look at a simple example of how this works. Let's say that you want to create a new ERC20 token that uses the gasless "permit" function and can be bridged to other blockchains. Use Compose to:
+Let's look at a simple example of how this works. Let's say that you want to create a new ERC20 token that uses the gasless "permit" function and can be bridged to other blockchains. **Use Compose to:**
 
-1. Choose the onchain facets you need. In this case you need `ERC20Facet`, `ERC20PermitFacet` and `ERC20BridgableFacet`.
+1. Find and choose onchain facets you need. In this case `ERC20Facet`, `ERC20PermitFacet` and `ERC20BridgableFacet`.
 2. Setup initialization information such as the name of your ERC20 token, its total supply, etc.
 3. Deploy a diamond which initializes your ERC20 token and uses the onchain facets in step 1.
 
+:::tip[Key Insight]
+Many diamond contracts are deployed that reuse the same onchain facets.
+:::
+
 ## Composable Contracts
 
-The word "composable" means capable of being combined with other parts or elements to form a whole. As much as possible Compose facets are designed to be composable. Facets are designed to work with other facets. Facets are the building blocks of Compose.
+The word "composable" means capable of being combined with other parts or elements to form a whole. As much as possible Compose facets are designed to be composable. Facets are designed to work with other facets in the same diamond. 
+
+:::tip[Key Insight]
+Onchain facets are the building blocks of Compose.
+:::
+
+**Examples of composition:**
+1. Facets `ERC20Facet`, `ERC20PermitFacet` and `ERC20BridgableFacet` work together in the same diamond.
+2. Facets `ERC721Facet`, `ERC721MetadataFacet`, `ERC721RoyaltyFacet` work together in the same diamond.
+
+In the past, smart contract libraries extended existing functionality by using inheritance at the source code level. For example `contract ERC20Permit is ERC20` etc. Such inheritance is unnecessary with Compose since we are composing facets on the blockchain. 
+
+## Custom Functionality: Composing with Compose
+
+We recognize that many projects want to create their own unique functionality. And we want to help them do that
 
 
 

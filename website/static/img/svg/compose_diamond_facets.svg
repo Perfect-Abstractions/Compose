@@ -44,14 +44,14 @@
     <rect class="facet" x="160" y="500" width="170" height="120" rx="8" ry="8"/>
     <rect class="facet-code" x="195" y="515" width="110" height="45" rx="6" ry="6"/>
     <text class="small" x="250" y="542" text-anchor="middle">code</text>
-    <text class="bold" x="245" y="590" text-anchor="middle">Facet A</text>
+    <text class="bold" x="245" y="590" text-anchor="middle">Facet 1</text>
   </g>
 
   <g>
     <rect class="facet" x="365" y="500" width="170" height="120" rx="8" ry="8"/>
     <rect class="facet-code" x="400" y="515" width="110" height="45" rx="6" ry="6"/>
     <text class="small" x="455" y="542" text-anchor="middle">code</text>
-    <text class="bold" x="450" y="590" text-anchor="middle">Facet B</text>
+    <text class="bold" x="450" y="590" text-anchor="middle">Facet 2</text>
   </g>
 
   <g>
