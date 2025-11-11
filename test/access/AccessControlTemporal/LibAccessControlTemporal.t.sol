@@ -92,7 +92,7 @@ contract LibAccessControlTemporalTest is Test {
         vm.warp(expiry);
 
         // At exact expiry time, role should be expired
-        assertTrue(harness.isRoleExpired(MINTER_ROLE, ALICE));                                                                                                                                       
+        assertTrue(harness.isRoleExpired(MINTER_ROLE, ALICE));
     }
 
     // ============================================
@@ -245,9 +245,7 @@ contract LibAccessControlTemporalTest is Test {
     // Fuzz Tests
     // ============================================
 
-    function testFuzz_GrantRoleWithExpiry_AlwaysSetsExpiry(address account, bytes32 role, uint256 expiryOffset)
-        public
-    {
+    function testFuzz_GrantRoleWithExpiry_AlwaysSetsExpiry(address account, bytes32 role, uint256 expiryOffset) public {
         vm.assume(account != address(0));
         vm.assume(expiryOffset > 0); // Must be in the future
         vm.assume(expiryOffset <= 365 days); // Reasonable expiry window
