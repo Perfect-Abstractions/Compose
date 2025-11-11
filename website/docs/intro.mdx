@@ -72,25 +72,48 @@ Many diamond contracts can be deployed that **reuse the same onchain facets**.
 
 ## Composable Contracts
 
-The word "composable" means capable of being combined with other parts or elements to form a whole. As much as possible Compose facets are designed to be composable. Facets are designed to work with other facets in the same diamond. 
+The word **"composable"** means *able to be combined with other parts to form a whole*. 
+
+In **Compose**, facets are designed to be **composable** — they're built to interoperate seamlessly with other facets inside the same diamond.
+
+Composable design makes it possible to **mix, match, and reuse** smart contract logic across many projects — without modifying or redeploying source code. It turns smart contracts into reusable building blocks.
 
 :::tip[Key Insight]
-Onchain facets are the building blocks of Compose.
+Onchain facets are the **building blocks** of Compose.
 :::
 
 **Examples of composition:**
-1. Facets `ERC20Facet`, `ERC20PermitFacet` and `ERC20BridgableFacet` work together in the same diamond.
-2. Facets `ERC721Facet`, `ERC721MetadataFacet`, `ERC721RoyaltyFacet` work together in the same diamond.
+1. `ERC20Facet`, `ERC20PermitFacet` and `ERC20BridgableFacet`can be combined in a single diamond to create a fully featured ERC-20 token.
+2. Facets `ERC721Facet`, `ERC721MetadataFacet`, `ERC721RoyaltyFacet` can be composed to build an ERC-721 NFT contract.
 
-In the past, smart contract libraries extended existing functionality by using inheritance at the source code level. For example `contract ERC20Permit is ERC20` etc. Such inheritance is unnecessary with Compose since we are composing facets on the blockchain. 
+### Why This Matters
 
-## Custom Functionality: Compose Your Facets with Compose
+Traditional smart contract libraries extend functionality through **inheritance at the source-code level**, for example:
 
-We recognize that many projects want to create their own unique functionality. We want to help you integrate custom facets with Compose facets.
+```Solidity
+contract ERC20Permit is ERC20 { ... }
+```
 
-Compose provides Solidity libraries to access and use the same storage data and functionality that Compose facets use.
+This approach tightly couples code and forces every variant to be redeployed as a new contract.
 
-For example, let's say that you want to make an onchain game and are going to add the ERC721Facet to your diamond. You want to add some of your own functionality to the diamond so you develop your own `GameFacet`. You can use the `LibERC721` library from Compose to access ERC721 data and functionality. Here is a simple example:
+**Compose changes that.**
+
+Instead of inheritance, it uses **onchain composition** — combining existing deployed facets inside a diamond.
+
+This reduces duplication, improves upgradeability, and makes smart contract systems more flexible and maintainable.
+
+
+## Custom Functionality: Compose Your Own Facets
+
+Many projects need custom functionality beyond the standard facets.  
+Compose is designed for this — you can build and integrate your own facets that work seamlessly alongside existing Compose facets.
+
+Compose provides Solidity libraries that expose the same storage layouts and internal logic used by its onchain facets. This lets your custom facets share data and interact directly with Compose's reusable facets.
+
+**Example: Adding Game Logic to ERC-721**
+
+Suppose you're building an onchain game and want to include the `ERC721Facet` in your diamond.
+You can add your own `GameNFTFacet` that extends functionality while still sharing the same ERC-721 storage through `LibERC721`:
 
 ```Solidity
 // Your custom facet integrates with Compose using libraries
@@ -112,24 +135,30 @@ contract GameNFTFacet {
 }
 ```
 :::tip[Key Insight]
-Both your `GameFacet` and the standard `ERC721Facet` work with the **same storage** in your diamond. This is the power of Compose's shared storage architecture.
+Your custom `GameNFTFacet` and the standard `ERC721Facet` both operate on the **same storage** within your diamond. This shared-storage architecture is what makes Compose composable.
 :::
 
 
 :::warning[Early State Development]
-Compose is currently in development and only available to contributors. It is **NOT production ready**. Use at your own risk in development environments only.
+Compose is still in early development and currently available only to contributors.
+It is not **production-ready** — use it in test or development environments only.
 :::
 
 
 ## What is Compose?
 
-**Compose** is a smart contract library that helps developers create smart contract systems using the [ERC-2535 Diamond](https://eips.ethereum.org/EIPS/eip-2535) standard. It's designed from the ground up to prioritize code readability and onchain composability.
+**Compose** is a smart contract library that helps developers build modular, upgradeable systems using the [ERC-2535 Diamond](https://eips.ethereum.org/EIPS/eip-2535) standard.
+
+It's designed from the ground up for **code clarity**, **reusability**, and **onchain composability**.
 
 ### The Vision
 
-Imagine a verified, standard library of onchain smart contract components you combine like LEGO blocks. Deployed once and reused across projects. That's Compose.
+Imagine a verified, standard library of **onchain smart contract components** —
+each one small, self-contained, and reusable like LEGO blocks.
 
-Isolated, small, simply written onchain components that are composed with your unique functionality. That's your smart contract system.
+Deployed once, trusted by all, and combined in endless ways to create new systems.
+
+That's **Compose** — where your unique value and functionality connects seamlessly with simple, transparent, onchain building blocks.
 
 ## Key Features
 
