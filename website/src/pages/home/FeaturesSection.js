@@ -12,7 +12,7 @@ export default function FeaturesSection() {
     {
       icon: 'diamond-native',
       title: 'Diamond-Native',
-      description: 'Built specifically for ERC-2535 Diamonds. Deploy facets once, reuse them across multiple diamonds on-chain.',
+      description: 'Built specifically for ERC-2535 Diamonds. Deploy facets once, reuse them across multiple diamonds onchain.',
     },
     {
       icon: 'composition',
@@ -26,8 +26,8 @@ export default function FeaturesSection() {
     },
     {
       icon: 'library',
-      title: 'On-Chain Standard Library',
-      description: 'Access verified, audited facets deployed on multiple blockchains. ERC-20, ERC-721, access control, and more.',
+      title: 'Onchain Standard Library',
+      description: '(In the future) Access verified, audited facets deployed on multiple blockchains.',
     },
     {
       icon: 'community',
