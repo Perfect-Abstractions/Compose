@@ -4,6 +4,7 @@
  */
 
 /* Admonitions base */
+
 .admonition {
   border-radius: var(--ifm-global-radius);
   border-left-width: 4px;
@@ -11,12 +12,15 @@
 }
 
 /* Light mode admonitions */
+/*
 .alert {
   background: #f8fafc;
   border-left-width: 4px;
 }
+*/
 
 /* Dark mode admonitions */
+/*
 [data-theme='dark'] .alert {
   background: #1e293b;
   border-left-color: #60a5fa;
@@ -38,3 +42,4 @@
 [data-theme='dark'] .alert--success {
   border-left-color: #10b981;
 }
+*/

@@ -20,7 +20,7 @@ Compose is different. We **don't** expect you to do that. We take a different ap
 
 Compose gives you a set of reusable smart contracts that already exist on blockchains. You don't have to deploy Compose source code. It's already been done. The smart contracts are already deployed for your use.
 
-For your new project, instead of deploying new contracts, use the existing onchain smart contracts provided by Compose.
+For your new project, instead of deploying new contracts, use existing onchain smart contracts provided by Compose.
 
 :::tip[Key Insight]
 Compose is a general purpose **onchain** smart contract library. 
@@ -70,75 +70,50 @@ Onchain facets are the building blocks of Compose.
 
 In the past, smart contract libraries extended existing functionality by using inheritance at the source code level. For example `contract ERC20Permit is ERC20` etc. Such inheritance is unnecessary with Compose since we are composing facets on the blockchain. 
 
-## Custom Functionality: Composing with Compose
+## Custom Functionality: Compose Your Facets with Compose
 
-We recognize that many projects want to create their own unique functionality. And we want to help them do that
+We recognize that many projects want to create their own unique functionality. We want to help you integrate custom facets with Compose facets.
+
+Compose provides Solidity libraries to access and use the same storage data and functionality that Compose facets use.
+
+For example, let's say that you want to make an onchain game and are going to add the ERC721Facet to your diamond. You want to add some of your own functionality to the diamond so you develop your own `GameFacet`. You can use the `LibERC721` library from Compose to access ERC721 data and functionality. Here is a simple example:
+
+```Solidity
+// Your custom facet integrates with Compose using libraries
+import {LibERC721} from "compose/LibERC721.sol";
+
+contract GameNFTFacet {
+    function mintWithGameLogic(address player, uint256 tokenId) external {
+        // Your custom game logic
+        require(playerHasEnoughPoints(player), "Not enough points");
+        
+        // Use LibERC721 to mint - this modifies the SAME storage
+        // that ERC721Facet uses for balanceOf(), ownerOf(), etc.
+        LibERC721.mint(player, tokenId);
+        
+        // Now the player owns this NFT and can use standard
+        // ERC721Facet.transferFrom() to transfer it!
+        updatePlayerStats(player);
+    }
+}
+```
+:::tip[Key Insight]
+Both your `GameFacet` and the standard `ERC721Facet` work with the **same storage** in your diamond. This is the power of Compose's shared storage architecture.
+:::
 
 
-
-
-
-
-
-
-
-
-
-
-
-{/*
-<DocHero
-  title="Build with the Compose Library"
-  subtitle="Compose is a smart contract library that helps developers create smart contract systems using ERC-2535 Diamonds."
-  variant="gradient"
-  height="medium"
-/>
-*/}
-
-## Foundations
-
-<p style={{fontSize: '1.125rem', color: 'var(--ifm-color-emphasis-700)', marginBottom: '2rem'}}>
-  The building blocks of the Compose platform.
-</p>
-
-<DocCardGrid columns={2}>
-  <DocCard
-    title="AUTHENTICATION"
-    description="Access control and permission management for your diamond contracts. Implement role-based access control with composable facets."
-    icon={<Icon name="lock" size={28} />}
-    href="/docs/foundations/authentication"
-  />
-  <DocCard
-    title="FACETS & LIBRARIES"
-    description="Understanding the core architecture: how facets and libraries work together through shared storage to build powerful systems."
-    icon={<Icon name="geometric-diamond" size={28} />}
-    href="/docs/foundations/facets-and-libraries"
-  />
-  <DocCard
-    title="DIAMOND STANDARD"
-    description="Learn about ERC-2535 Diamonds and how Compose leverages this standard for upgradeable, modular smart contracts."
-    icon={<Icon name="diamond" size={28} />}
-    href="/docs/"
-  />
-  <DocCard
-    title="STORAGE PATTERNS"
-    description="Master the shared storage architecture that enables seamless integration between standard facets and your custom logic."
-    icon={<Icon name="cube-detailed" size={28} />}
-    href="/docs/"
-  />
-</DocCardGrid>
-
-<Callout type="warning" title="Early Stage Development">
+:::warning[Early State Development]
 Compose is currently in development and only available to contributors. It is **NOT production ready**. Use at your own risk in development environments only.
-</Callout>
+:::
+
 
 ## What is Compose?
 
-**Compose** is a revolutionary smart contract library that helps developers create sophisticated smart contract systems using the **ERC-2535 Diamond** standard. It's designed from the ground up to prioritize code readability, on-chain composability, and developer understanding.
+**Compose** is a smart contract library that helps developers create smart contract systems using the [ERC-2535 Diamond](https://eips.ethereum.org/EIPS/eip-2535) standard. It's designed from the ground up to prioritize code readability and onchain composability.
 
 ### The Vision
 
-Imagine having access to a comprehensive, verified standard library of smart contract components that you can combine like LEGO blocks to build complex systems—all deployed once on-chain and reused across your projects. That's Compose.
+Imagine having access to a comprehensive, verified standard library of smart contract components that you can combine like LEGO blocks to build smart contract systems—all deployed once onchain and reused across your projects. That's Compose.
 
 ## Key Features
 
@@ -151,7 +126,7 @@ Imagine having access to a comprehensive, verified standard library of smart con
   <FeatureGridItem
     icon={<Icon name="compose" size={32} />}
     title="Composable Architecture"
-    description="Mix and match facets and libraries to build exactly what you need without inheritance conflicts."
+    description="Mix and match facets and libraries to build exactly what you need."
   />
   <FeatureGridItem
     icon={<Icon name="book" size={32} />}
@@ -175,45 +150,17 @@ Imagine having access to a comprehensive, verified standard library of smart con
   />
 </FeatureGrid>
 
-## How It Works
-
-Compose uses a **shared storage architecture** where both standard facets and your custom facets access the same data:
-
-```solidity
-// Your custom facet integrates with Compose using libraries
-import {LibERC721} from "compose/LibERC721.sol";
-
-contract GameNFTFacet {
-    function mintWithGameLogic(address player, uint256 tokenId) external {
-        // Your custom game logic
-        require(playerHasEnoughPoints(player), "Not enough points");
-        
-        // Use LibERC721 to mint - this modifies the SAME storage
-        // that ERC721Facet uses for balanceOf(), ownerOf(), etc.
-        LibERC721.mint(player, tokenId);
-        
-        // Now the player owns this NFT and can use standard
-        // ERC721Facet.transferFrom() to transfer it!
-        updatePlayerStats(player);
-    }
-}
-```
-
-<Callout type="tip" title="Key Insight">
-Both your `GameNFTFacet` and the standard `ERC721Facet` work with the **same storage** in your diamond. This is the power of Compose's shared storage architecture.
-</Callout>
-
 ## Why Choose Compose?
 
 ### Our value
 - **Readability**: Code that's easy to understand and audit
-- **Reusability**: Deploy once, use everywhere
+- **Reusability**: Deployed once, use everywhere
 - **Standards**: Battle-tested, community-reviewed implementations
 - **Upgradability**: Full power of ERC-2535 Diamonds
-- **Composability**: Mix and match functionality without conflicts
+- **Composability**: Mix and match functionality
 
 ### Perfect For:
-- Building complex DeFi protocols
+- Building DeFi protocols
 - Creating NFT platforms with custom logic
 - Developing DAO governance systems
 - Projects requiring upgradeable smart contracts
@@ -240,10 +187,10 @@ Both your `GameNFTFacet` and the standard `ERC721Facet` work with the **same sto
   <FeatureGridItem
     icon={<Icon name="sparkles" size={32} />}
     title="Intentional Simplicity"
-    description="Banned features lead to clearer code. Less magic, more understanding."
+    description="Simple code. Less magic, more understanding."
   />
 </FeatureGrid>
-
+{/*
 ## Next Steps
 
 <DocCardGrid columns={2}>
@@ -262,6 +209,7 @@ Both your `GameNFTFacet` and the standard `ERC721Facet` work with the **same sto
     size="large"
   />
 </DocCardGrid>
+*/}
 
 ## Community & Support
 
