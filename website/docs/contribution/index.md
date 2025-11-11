@@ -14,7 +14,7 @@ We welcome contributions from the community. Here are some ways you can help:
 
 ### Reporting Issues
 
-If you find a bug or have a feature request, please open an issue on our repository.
+If you find a bug or have a feature request, please [open an issue](https://github.com/Perfect-Abstractions/Compose/issues) on our repository.
 
 ### Pull Requests
 
@@ -38,8 +38,8 @@ Help us improve our documentation by:
 ## Getting Help
 
 If you need help or have questions, feel free to reach out through:
-- GitHub Issues
-- Community discussions
+- [GitHub Issues](https://github.com/Perfect-Abstractions/Compose/issues)
+- [Community discussions](https://github.com/Perfect-Abstractions/Compose/discussions)
 
 We appreciate your contributions!
 

@@ -29,7 +29,7 @@ export default function HomepageHeader() {
             {siteConfig.tagline}
           </p>
           <p className={styles.heroDescription}>
-            A smart contract library for building diamond-based systems with an on-chain 
+            A smart contract library for building diamond-based systems with an onchain 
             standard library of facets. Write code that's designed to be understood, 
             maintained, and scaled.
           </p>
@@ -42,7 +42,7 @@ export default function HomepageHeader() {
             </Link>
             <Link
               className={clsx(styles.ctaButton, styles.ctaSecondary)}
-              to="/">
+              to="/docs">
               <span>Learn Core Concepts</span>
             </Link>
           </div>

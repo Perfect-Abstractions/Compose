@@ -141,7 +141,7 @@ const config = {
   themeConfig:
     /** @type {import('@docusaurus/preset-classic').ThemeConfig} */
     ({
-      image: 'img/social-card-compose.png',
+      image: 'img/socialcard-compose.png',
       colorMode: {
         defaultMode: 'light',
         disableSwitch: false,
@@ -212,10 +212,12 @@ const config = {
                 label: 'Installation',
                 to: '/docs/getting-started/installation',
               },
+              /*
               {
                 label: 'Quick Start',
                 to: '/docs/getting-started/quick-start',
               },
+              */
             ],
           },
           {

@@ -20,9 +20,11 @@ export default function CtaSection() {
               <span>Get Started</span>
               <Icon name="arrow-right" size={20} />
             </Link>
+            {/*
             <Link to="/docs/getting-started/quick-start" className={clsx(styles.ctaButton, styles.ctaSecondaryLight)}>
               <span>View Quick Start</span>
             </Link>
+            */}
           </div>
         </div>
       </div>
