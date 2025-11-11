@@ -212,10 +212,12 @@ const config = {
                 label: 'Installation',
                 to: '/docs/getting-started/installation',
               },
+              /*
               {
                 label: 'Quick Start',
                 to: '/docs/getting-started/quick-start',
               },
+              */
             ],
           },
           {
