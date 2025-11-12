@@ -5,6 +5,11 @@ description: How the Compose library is designed.
 draft: true
 ---
 
+import Callout from '@site/src/components/ui/Callout';
+import FeatureGrid, { FeatureGridItem } from '@site/src/components/features/FeatureGrid';
+import Accordion, {AccordionGroup} from '@site/src/components/ui/Accordion';
+
+
 # Compose Design
 
 This document contains the guidelines and rules for developing new facets and Solidity libraries in **Compose**.
@@ -15,9 +20,15 @@ We focus on building small, independent, and easy-to-understand facets. Each fac
 
 The primary design principle of Compose is clarity. Code should be easy to read and understand. This document provides guidelines and rules that promote readability and consistency throughout the codebase.
 
+Though many people may contribute to the Compose standard library of facets and libraries, it should look like it was written by one person.
+
+***
+
 ### Facets are read from top to bottom
 
 Compose facets and libraries are written to be read naturally from top to bottom. Definitions appear before their use, so readers don't need to jump around the file to understand the code.
+
+***
 
 ### Facets are self-contained
 
@@ -25,13 +36,211 @@ Each facet is a complete, standalone unit. Its source file contains all the code
 
 Likewise, each Solidity library is also self-contained, with no external imports or dependencies.
 
+***
+
+### Repeat yourself
+
+The DRY principle — *Don't Repeat Yourself* — is a well-known rule in software development. We **intentionally** break that rule.
+
+In traditional software, DRY reduces duplication and makes it easier to update multiple parts of a program by changing one section of code. But the source code of deployed smart contracts is small and **doesn't change**. 
+
+DRY can actually reduce clarity. Every internal function adds another indirection that developers must trace through, and those functions sometimes introduce extra logic for different cases. 
+
+Repetition can make smart contracts easier to read and reason about. Instead of using an internal function for a bit of code, just use the bit of code. Even if it is used in multiple places.
+
+However, DRY still has its place. For example, when a large block of code performs a complete, self-contained action and is used identically in multiple locations, moving it into an internal function can improve readability. For example, Compose's ERC-721 implementation uses an `internalTransferFrom` function to eliminate duplication while keeping the code easy to read and understand.
+
+**Guideline:** Repeat yourself when it makes your code easier to read and understand. Use DRY sparingly and only to make code more readable.
+
+***
+
+### Restricted Solidity Feature Set
+
+The following Solidity language features are **banned** from Compose facets and libraries.
+
+Compose restricts certain Solidity features to keep facet and library code **simpler**, **more consistent**, and **easier to reason about**.
+
+Because of Compose's architecture, many of these features are either unnecessary or less helpful.
+
+:::note
+These restrictions **do not** apply to tests, and developers using Compose in their own projects are free to use these features as they wish.
+:::
+
+***
+
+
+<AccordionGroup >
+  <Accordion title="Inheritance is banned">  
+Facets may **not inherit** from any contract or interface.
+
+```Solidity title="🚫 Not allowed"
+contract MyContract is OtherContract {
+    ...
+} 
+// or 
+contract MyContract is IMyInterface {
+    ...
+}
+```
+
+:::tip
+If you find yourself wanting inheritance, your facet might be too large. Break it into smaller facets. Compose replaces inheritance with **onchain facet composition**.
+:::
+  
+  </Accordion>
+  
+  <Accordion title="">
+  
+  </Accordion>
+  
+  <Accordion title="">
+  
+  </Accordion>
+  <Accordion title="">
+  
+  </Accordion>
+  
+  <Accordion title="">
+  
+  </Accordion>
+  <Accordion title="">
+  
+  </Accordion>
+  
+  <Accordion title="">
+  
+  </Accordion>
+  <Accordion title="">
+  
+  </Accordion>
+  
+  <Accordion title="">
+  
+  </Accordion>
+  <Accordion title="">
+  
+  </Accordion>
+  
+  <Accordion title="">
+  
+  </Accordion>
+  <Accordion title="">
+  
+  </Accordion>
+  
+  <Accordion title="">
+  
+  </Accordion>
+  <Accordion title="">
+  
+  </Accordion>
+  
+  <Accordion title="">
+  
+  </Accordion>
+</AccordionGroup> 
 
 
 
 
+#### 2. No constructors
+
+Facets may **not define constructors**.
 
 
+```Solidity title="🚫 Not allowed"
+constructor() {
+    owner = msg.sender;
+    ...
+}
+```
 
+***
+
+#### 3. No modifiers
+
+Facets may **not define or use modifiers**.
+
+
+```Solidity title="🚫 Not allowed"
+modifier onlyOwner() {
+    require(msg.sender == owner, "Caller is not the owner");
+    _; 
+}
+```
+***
+
+#### 4. No public/private/internal storage variables
+
+Storage variables may **not include visibility specifiers**.
+
+
+```Solidity title="🚫 Not allowed"
+uint256 public counter;
+```
+
+Visibility labels are unnecessary because Compose uses [ERC-8042 Diamond Storage](https://eips.ethereum.org/EIPS/eip-8042) across all facets. This rule **does not apply** to `constant` or `immutable` variables, which may be declared `internal`.
+
+***
+
+#### 5. No private/public functions in facets
+
+All facet functions must be declared as `internal` or `external`.
+
+
+```Solidity title="🚫 Not allowed"
+function approve(address _spender, uint256 _value) public {
+    ... 
+}
+```
+
+***
+
+#### 6. No external functions in Solidity libraries
+All Solidity library functions must be declared `internal`.
+
+```Solidity title="🚫 Not allowed"
+function transfer() external {
+    ...
+} 
+```
+
+***
+
+#### 7. No `using` directives in libraries:
+
+
+```Solidity title="🚫 Not allowed"
+using LibSomething for uint256.
+```
+
+***
+
+#### 8. No ternary operator
+
+The ternary operator (`condition ? valueIfTrue : valueIfFalse`), may **not** be used.
+
+
+```Solidity title="🚫 Not allowed"
+string memory status = balance >= cost ? "Paid" : "Insufficient funds";
+```
+
+***
+
+#### 9. No single if statement without braces
+
+Always use braces {} around `if` and `else` bodies.
+
+
+```Solidity title="🚫 Not allowed"
+if (x < 10) count++;
+```
+
+```Solidity title="✅ Required"
+if (x < 10) {
+    count++;
+}
+```
 
 
 
