@@ -137,7 +137,7 @@ library LibERC1155 {
      * @param _id The token type to mint.
      * @param _value The amount of tokens to mint.
      */
-    function mint(address _to, uint256 _id, uint256 _value) internal {
+    function mint(address _to, uint256 _id, uint256 _value, bytes memory _data) internal {
         if (_to == address(0)) {
             revert ERC1155InvalidReceiver(address(0));
         }
@@ -148,7 +148,7 @@ library LibERC1155 {
         emit TransferSingle(msg.sender, address(0), _to, _id, _value);
 
         if (_to.code.length > 0) {
-            try IERC1155Receiver(_to).onERC1155Received(msg.sender, address(0), _id, _value, "") returns (
+            try IERC1155Receiver(_to).onERC1155Received(msg.sender, address(0), _id, _value, _data) returns (
                 bytes4 response
             ) {
                 if (response != IERC1155Receiver.onERC1155Received.selector) {
@@ -174,7 +174,7 @@ library LibERC1155 {
      * @param _ids The token types to mint.
      * @param _values The amounts of tokens to mint for each type.
      */
-    function mintBatch(address _to, uint256[] memory _ids, uint256[] memory _values) internal {
+    function mintBatch(address _to, uint256[] memory _ids, uint256[] memory _values, bytes memory _data) internal {
         if (_to == address(0)) {
             revert ERC1155InvalidReceiver(address(0));
         }
@@ -191,7 +191,7 @@ library LibERC1155 {
         emit TransferBatch(msg.sender, address(0), _to, _ids, _values);
 
         if (_to.code.length > 0) {
-            try IERC1155Receiver(_to).onERC1155BatchReceived(msg.sender, address(0), _ids, _values, "") returns (
+            try IERC1155Receiver(_to).onERC1155BatchReceived(msg.sender, address(0), _ids, _values, _data) returns (
                 bytes4 response
             ) {
                 if (response != IERC1155Receiver.onERC1155BatchReceived.selector) {
