@@ -4,6 +4,10 @@ pragma solidity >=0.8.30;
 import {BaseBenchmark} from "./Base.t.sol";
 import {DiamondLoupeFacet} from "../../src/diamond/DiamondLoupeFacet.sol";
 
+/// @notice Simple benchmark for the current DiamondLoupeFacet implementation
+/// @dev For comprehensive benchmarking across multiple implementations with various configurations,
+/// see ComprehensiveBenchmark.t.sol which tests Original, Current, TwoPass, and CollisionMap
+/// implementations and generates detailed gas reports.
 contract LoupeGasBenchmarkTest is BaseBenchmark {
     /*//////////////////////////////////////////////////////////////
                                OVERRIDES

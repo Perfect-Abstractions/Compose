@@ -7,6 +7,9 @@ import {MinimalDiamond} from "./MinimalDiamond.sol";
 import {LibDiamond} from "../../src/diamond/LibDiamond.sol";
 import {DiamondLoupeFacet} from "../../src/diamond/DiamondLoupeFacet.sol";
 
+/// @notice Base contract for simple diamond loupe benchmarks
+/// @dev This is used by Benchmark.t.sol and Optimised.t.sol for simple single-implementation testing.
+/// For comprehensive benchmarking across multiple implementations, see ComprehensiveBenchmark.t.sol
 abstract contract BaseBenchmark is Utils {
     MinimalDiamond internal diamond;
     address internal loupe;

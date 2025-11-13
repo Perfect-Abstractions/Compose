@@ -6,6 +6,7 @@ out = "out"
 libs = ["lib"]
 optimizer = true
 optimizer_runs = 20_000
+gas_limit = 1_250_000_000
 evm_version = "prague"
 
 [profile.ci]
@@ -14,6 +15,7 @@ out = "out"
 libs = ["lib"]
 optimizer = true
 optimizer_runs = 20_000
+gas_limit = 1_250_000_000
 evm_version = "prague"
 # Coverage settings
 fuzz = { runs = 1000 }
