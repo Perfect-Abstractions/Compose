@@ -1,5 +1,5 @@
 ---
-sidebar_position: 1
+sidebar_position: 2
 title: How to Contribute
 description: Learn how to contribute to Compose
 ---

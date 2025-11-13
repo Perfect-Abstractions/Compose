@@ -46,10 +46,11 @@ export default function CodeShowcase() {
                 </div>
               </div>
             </div>
-            <Link to="/docs/foundations/facets-and-libraries" className={styles.showcaseLink}>
+            
+            {/* <Link to="/docs/foundations/facets-and-libraries" className={styles.showcaseLink}>
               Learn More
               <Icon name="arrow-right" size={20} />
-            </Link>
+            </Link> */}
           </div>
           <div className={styles.showcaseCode}>
             <div className={styles.codeWindow}>
