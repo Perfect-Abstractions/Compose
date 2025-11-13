@@ -1,10 +1,6 @@
 {
   "label": "Compose Design",
-  "position": 1,
-  "link": {
-    "type": "generated-index",
-    "description": "How Compose is designed."
-  },
+  "position": 1,  
   "collapsible": true,
   "collapsed": false
 }

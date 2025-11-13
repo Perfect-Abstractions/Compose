@@ -167,25 +167,25 @@ const config = {
             position: 'left',
             activeBaseRegex: '/blog',
           },
-          {
-            type: 'dropdown',
-            label: 'Resources',
-            position: 'left',
-            items: [
-              {
-                label: 'Getting Started',
-                to: '/docs/getting-started/installation',
-              },
-              {
-                label: 'Examples',
-                to: '/',
-              },
-              {
-                label: 'API Reference',
-                to: '/',
-              },
-            ],
-          },
+          // {
+          //   type: 'dropdown',
+          //   label: 'Resources',
+          //   position: 'left',
+          //   items: [
+          //     {
+          //       label: 'Getting Started',
+          //       to: '/docs/getting-started/installation',
+          //     },
+          //     {
+          //       label: 'Examples',
+          //       to: '/',
+          //     },
+          //     {
+          //       label: 'API Reference',
+          //       to: '/',
+          //     },
+          //   ],
+          // },
           {
             href: 'https://discord.gg/DCBD2UKbxc',
             label: 'Discord',
