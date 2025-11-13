@@ -142,13 +142,17 @@ contract AccessControlTemporalFacet {
 
         // Revoke the role
         bool _hasRole = acs.hasRole[_account][_role];
-        if (_hasRole) {
-            acs.hasRole[_account][_role] = false;
-        }
 
-        // Clear expiry timestamp
-        s.roleExpiry[_account][_role] = 0;
-        emit TemporalRoleRevoked(_role, _account, msg.sender);
+        // Only revoke if the role is currently granted
+        if (_hasRole) {
+            // Revoke the role from AccessControl storage
+            acs.hasRole[_account][_role] = false;
+
+            // Clear expiry timestamp
+            s.roleExpiry[_account][_role] = 0;
+
+            emit TemporalRoleRevoked(_role, _account, msg.sender);
+        }
     }
 
     /// @notice Checks if an account has a valid (non-expired) role.

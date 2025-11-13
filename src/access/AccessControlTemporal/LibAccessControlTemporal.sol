@@ -122,21 +122,14 @@ library LibAccessControlTemporal {
         AccessControlStorage storage acs = getAccessControlStorage();
         AccessControlTemporalStorage storage s = getStorage();
 
-        // Check if there's anything to revoke
         bool _hasRole = acs.hasRole[_account][_role];
-        uint256 _expiry = s.roleExpiry[_account][_role];
-
-        // If no role and no expiry, nothing to revoke
-        if (!_hasRole && _expiry == 0) {
+        if (!_hasRole) {
             return false;
         }
 
-        // Revoke the role if it exists
-        if (_hasRole) {
-            acs.hasRole[_account][_role] = false;
-        }
+        acs.hasRole[_account][_role] = false;
 
-        // Clear expiry timestamp
+        // Clear expiry timestamp only when the role existed
         s.roleExpiry[_account][_role] = 0;
 
         emit TemporalRoleRevoked(_role, _account, msg.sender);

@@ -190,6 +190,15 @@ contract AccessControlTemporalFacetTest is Test {
         assertEq(temporalFacet.getRoleExpiry(MINTER_ROLE, ALICE), 0);
     }
 
+    function test_RevokeTemporalRole_NoExistingRole_DoesNothing() public {
+        vm.prank(ADMIN);
+        temporalFacet.revokeTemporalRole(MINTER_ROLE, ALICE);
+
+        // Ensure no state changes
+        assertFalse(accessControl.hasRole(MINTER_ROLE, ALICE));
+        assertEq(temporalFacet.getRoleExpiry(MINTER_ROLE, ALICE), 0);
+    }
+
     function test_RevertWhen_RevokeTemporalRole_CallerIsNotAdmin() public {
         uint256 expiry = block.timestamp + 7 days;
 
