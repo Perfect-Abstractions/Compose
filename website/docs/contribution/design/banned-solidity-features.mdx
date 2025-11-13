@@ -1,0 +1,141 @@
+---
+sidebar_position: 6
+title: Banned Solidity Features
+description: Solidity language features that are banned from Compose facets and libraries.
+---
+
+The following Solidity language features are **banned** from Compose facets and libraries.
+
+Compose restricts certain Solidity features to keep facet and library code **simpler**, **more consistent**, and **easier to reason about**.
+
+Because of Compose's architecture, many of these features are either unnecessary or less helpful.
+
+:::note
+These restrictions **do not** apply to tests, and developers using Compose in their own projects are free to use these features as they wish.
+:::
+
+#### Banned Solidity Features
+
+<AccordionGroup>
+
+  <Accordion title="Inheritance is banned">
+
+Facets may **not inherit** from any contract or interface.
+
+```solidity title="🚫 Not allowed"
+contract MyContract is OtherContract {
+    ...
+}
+
+// or
+
+contract MyContract is IMyInterface {
+    ...
+}
+```
+
+:::tip
+If you want inheritance, your facet is probably too large. Split it into smaller facets. Compose replaces inheritance with **on-chain facet composition**.
+:::
+
+  </Accordion>
+
+  <Accordion title="No constructors">
+
+Facets may **not define constructors**.
+
+```solidity title="🚫 Not allowed"
+constructor() {
+    owner = msg.sender;
+    ...
+}
+```
+
+  </Accordion>
+
+  <Accordion title="No modifiers">
+
+Facets may **not define or use modifiers**.
+
+```solidity title="🚫 Not allowed"
+modifier onlyOwner() {
+    require(msg.sender == owner, "Caller is not the owner");
+    _;
+}
+```
+
+  </Accordion>
+
+  <Accordion title="No public/private/internal storage variables">
+
+Storage variables may **not include visibility specifiers**.
+
+```solidity title="🚫 Not allowed"
+uint256 public counter;
+```
+
+Visibility labels are unnecessary because Compose uses
+[ERC-8042 Diamond Storage](https://eips.ethereum.org/EIPS/eip-8042) across all facets.  
+This rule **does not apply** to `constant` or `immutable` variables, which may be declared `internal`.
+
+  </Accordion>
+
+  <Accordion title="No public or private functions in facets">
+
+All facet functions must be declared as `internal` or `external`.
+
+```solidity title="🚫 Not allowed"
+function approve(address _spender, uint256 _value) public {
+    ...
+}
+```
+
+  </Accordion>
+
+  <Accordion title="No external functions in Solidity libraries">
+
+All Solidity library functions must be declared `internal`.
+
+```solidity title="🚫 Not allowed"
+function transfer() external {
+    ...
+}
+```
+
+  </Accordion>
+
+  <Accordion title="No `using` directives in libraries">
+
+```solidity title="🚫 Not allowed"
+using LibSomething for uint256;
+```
+
+  </Accordion>
+
+  <Accordion title="No ternary operator">
+
+The ternary operator (`condition ? valueIfTrue : valueIfFalse`) may **not** be used.
+
+```solidity title="🚫 Not allowed"
+string memory status = balance >= cost ? "Paid" : "Insufficient funds";
+```
+
+  </Accordion>
+
+  <Accordion title="No single if statements without braces">
+
+Always use braces `{}` around `if` and `else` bodies.
+
+```solidity title="🚫 Not allowed"
+if (x < 10) count++;
+```
+
+```solidity title="✅ Required"
+if (x < 10) {
+    count++;
+}
+```
+
+  </Accordion>
+
+</AccordionGroup>

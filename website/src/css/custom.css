@@ -98,3 +98,15 @@
   border-radius: var(--ifm-code-border-radius, 6px);
   box-shadow: 0 0 0 1px var(--ifm-color-emphasis-200);
 } */
+
+
+/* Remove italics from Prism code highlighting (especially in dark mode) */
+.token.keyword,
+.token.function,
+.token.builtin,
+.token.selector,
+.token.class-name,
+.token.constant,
+.token.important {
+  font-style: normal !important;
+}
