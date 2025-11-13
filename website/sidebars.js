@@ -39,7 +39,8 @@ const sidebars = {
         },
       ],
     },
-    
+   
+    /*
     {
       type: 'category',
       label: 'Facets',
@@ -51,6 +52,7 @@ const sidebars = {
         },
       ],
     },
+    */
     {
       type: 'category',
       label: 'Contribution',
