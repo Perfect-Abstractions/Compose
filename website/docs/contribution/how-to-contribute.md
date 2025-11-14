@@ -8,7 +8,12 @@ description: Learn how to contribute to Compose
 
 Thank you for your interest in contributing to Compose!
 
+Compose is a community developed project. We welcome you.
+
 ## How to Contribute
+
+Before getting started it is important to familiarize yourself with the design of Compose and how we develop it. 
+
 
 We welcome contributions from the community. Here are some ways you can help:
 
