@@ -26,7 +26,7 @@ Look at the [ERC20 and ERC721 implementations](https://github.com/Perfect-Abstra
 
 There are many ways to contribute to Compose. Here are some ways:
 
-1. Look over the existing codebase and see if you can find any bugs, errors or security vulnerabilities. Create an issue about anything you find. This is also a great way to get familiar with the codebase.
+1. Look over the existing codebase and see if you can find any bugs, errors or security vulnerabilities. [Create an issue](https://github.com/Perfect-Abstractions/Compose/issues/) about anything you find. This is also a great way to get familiar with the codebase.
 
 2. Look at the code comments in the codebase. See if you can improve them or add more comments to make the code easier to understand.
 
@@ -43,6 +43,108 @@ There are many ways to contribute to Compose. Here are some ways:
 8. Look over the existing tests and see if you can add more tests or improve existing tests. Open an issue to describe what you want to do.
 
 9. Have other ideas about how to contribute? Please let us know!
+
+## Development Setup
+
+### Prerequisites
+- [Solidity](https://soliditylang.org/) (version 0.8.30 or higher)
+- [Foundry](https://book.getfoundry.sh/getting-started/installation) (version 1.4.3-stable or higher)
+- Git
+
+### Setup Steps
+1. Fork the repository
+2. Clone your fork:
+   ```bash
+   git clone https://github.com/YOUR_USERNAME/Compose.git
+   cd Compose
+   ```
+3. Install dependencies:
+   ```bash
+   forge install
+   ```
+4. Build the project:
+   ```bash
+   forge build
+   ```
+5. Run tests:
+   ```bash
+   forge test
+   ```
+
+## Development Workflow
+
+Once you are assigned to an issue:
+1. Fork the repository
+2. Create a new branch for your work
+3. Implement your changes
+4. Make sure your changes follow the [design of Compose](/docs/contribution/design).
+5. Format your code: `forge fmt`
+6. Run tests to ensure everything works
+7. Submit a pull request
+8. We will review it and merge it and/or give you feedback on the work
+
+You can also make new issues to suggest new functionality or work.
+
+### Ideas & Discussions
+
+**We use GitHub Discussions for ideas, debates, and brainstorming!** 
+
+- **Issues** are for actionable items that need to be implemented or fixed
+- **Discussions** are for general communication, talking about possibilities, ideas, and exploring concepts
+
+Have an idea for a new feature? Want to discuss project direction? Curious about implementation approaches? Start a discussion in our [GitHub Discussions](https://github.com/Perfect-Abstractions/Compose/discussions) forum. 
+
+This is the perfect place to:
+- Share ideas and get community feedback
+- Debate different approaches and solutions
+- Brainstorm new functionality
+- Discuss project direction and philosophy
+- Ask "what if" questions
+- Explore possibilities before committing to implementation
+
+Once you have a clear idea of what you want to do, [create an issue](https://github.com/Perfect-Abstractions/Compose/issues/new). Provide as much data as you can and we will give you the go ahead to start or give more feedback about it.
+
+## Code Style Guide
+
+Follow [Compose's design principles](/docs/contribution/design) when contributing code.
+
+Follow the [Solidity feature ban](/docs/contribution/design/banned-solidity-features).
+
+### Naming Conventions
+
+- **Parameter Names:** All parameters for events, errors, and functions must be preceded with an underscore (`_`).
+  - Example:
+    ```solidity
+    event Transfer(address indexed _from, address indexed _to, uint256 indexed _tokenId);
+    error ERC20InvalidSender(address _sender);
+    function transfer(address _to, uint256 _amount) external {}
+    ```
+- **Camel Case:** Use camelCase for variable, function, contract, and library names, except for standard uppercase abbreviations (e.g., ERC).
+  - Example: `totalSupply`, `LibERC20`, `ERC721Facet`
+
+- **Facets:** Internal function names in facets should be prefixed with `internal` if they otherwise have the same name as an external function in the same facet. Usually, there should be few or no internal functions in facets; repeat code if it improves readability.
+- **Libraries:** All functions in libraries use the `internal` visibility specifier. 
+
+### Value Resetting
+- Use `delete` to set a value to zero.
+  - Example:
+    ```solidity
+    delete balances[_owner];
+    ```
+
+### Avoid Assembly
+ - Avoid using assembly if you can. If you can't and you access memory, do it [safely](https://docs.soliditylang.org/en/latest/assembly.html#memory-safety), and use `assembly ("memory-safe")`.
+   `"memory safe"` tells the Solidity compiler that memory is being used safely so it should not disable optimizations.
+   - Example:
+     ```solidity
+     assembly ("memory-safe") {
+         revert(add(reason, 0x20), mload(reason))
+     }
+     ```
+
+### Formatting
+- Format code using the default settings of `forge fmt`. Run `forge fmt` before submitting code.
+
 
 
 

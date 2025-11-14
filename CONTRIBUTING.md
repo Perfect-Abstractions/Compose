@@ -6,158 +6,16 @@ This guide will help you get started with contributing to our smart contract lib
 
 Please take the time to read this guide and explore the codebase to get a sense of the project and how it works.
 
-## Table of Contents
-
-- [Project Status](#project-status)
-- [Getting Started](#getting-started)
-- [Development Setup](#development-setup)
-- [Development Workflow](#development-workflow)
-- [Code Standards](#code-standards)
-- [Testing](#testing)
-- [Issue Guidelines](#issue-guidelines)
-- [Pull Request Guidelines](#pull-request-guidelines)
-- [Commit Guidelines](#commit-guidelines)
-- [Code of Conduct](#code-of-conduct)
-- [Getting Help](#getting-help)
-- [License](#license)
-
 ## Project Status
 
 **⚠️ IMPORTANT**: Compose is at a very early stage and is currently only available to contributors for building the library. It is **NOT production ready**.
-
-The Solidity feature ban only applies to the library itself. It does not apply to tests. It does not apply to the users of the library -- the people who will use this library to make their diamonds. 
-
-***It is our job to help users do what they want to do.***
-
-## Getting Started
-
-New contributors are welcome. Choose the [issues](https://github.com/Perfect-Abstractions/Compose/issues) you want to work on and leave comments describing what you want to do and how you want to do it.
-
-We'll answer you and assign you to issues so you can start.
-
-**Browse our [issues](https://github.com/Perfect-Abstractions/Compose/issues) and [discussions](https://github.com/Perfect-Abstractions/Compose/discussions) to get familiar with the project and find ways to contribute.**
-
-Look at the [ERC20 and ERC721 implementations](./src/) to see examples of how things are written in this library.
-
-## Development Setup
-
-### Prerequisites
-- [Solidity](https://soliditylang.org/) (version 0.8.30 or higher)
-- [Foundry](https://book.getfoundry.sh/getting-started/installation) (forge, anvil, cast)
-- Git
-
-### Setup Steps
-1. Fork the repository
-2. Clone your fork:
-   ```bash
-   git clone https://github.com/YOUR_USERNAME/Compose.git
-   cd Compose
-   ```
-3. Install dependencies:
-   ```bash
-   forge install
-   ```
-4. Build the project:
-   ```bash
-   forge build
-   ```
-5. Run tests:
-   ```bash
-   forge test
-   ```
-
-## Development Workflow
-
-Once you are assigned to an issue:
-1. Fork the repository
-2. Create a new branch for your work
-3. Implement your changes
-4. Format your code: `forge fmt`
-5. Run tests to ensure everything works
-6. Submit a pull request
-7. We will review it and merge it and/or give you feedback on the work
-
-You can also make new issues to suggest new functionality or work.
-
-### Ideas & Discussions
-
-**We use GitHub Discussions for ideas, debates, and brainstorming!** 
-
-- **Issues** are for actionable items that need to be implemented or fixed
-- **Discussions** are for general communication, talking about possibilities, ideas, and exploring concepts
-
-Have an idea for a new feature? Want to discuss project direction? Curious about implementation approaches? Start a discussion in our [GitHub Discussions](https://github.com/Perfect-Abstractions/Compose/discussions) forum. 
-
-This is the perfect place to:
-- Share ideas and get community feedback
-- Debate different approaches and solutions
-- Brainstorm new functionality
-- Discuss project direction and philosophy
-- Ask "what if" questions
-- Explore possibilities before committing to implementation
-
-Once you have a clear idea of what you want to do, [create an issue](https://github.com/Perfect-Abstractions/Compose/issues/new). Provide as much data as you can and we will give you the go ahead to start or give more feedback about it.
 
 ## Code Standards
 
 ### Coding Style Guide
 All code must follow the Compose coding style guide. See [STYLE.md](STYLE.md) for required conventions, rules, and examples.
 
-### Solidity Feature Ban
 
-**IMPORTANT**: This library has strict rules about which Solidity features can be used. Anyone submitting a pull request that uses any of the banned features will be fined **$100 USDC**.
-
-[Endless discussion](https://discord.gg/DCBD2UKbxc) about what and why Solidity features should or shouldn't be allowed in this library is *encouraged*.
-
-It isn't that any of these features are bad, that isn't the point. It is that we are writing the best software we can, and part of that is using a limited feature set. This is the "less is more" idea or keep it simple stupid (KISS).
-
-If this feature ban breaks your mind, just realize that this smart contract library is different than what you have encountered before -- it has different importances, different design principles and it has different ways of doing things. Open your mind and be willing to look at smart contracts a different way.
-
-The following Solidity features are **banned**:
-
-### 1. Inheritance is banned:
- No contract may inherit any other contract or interface
-   
-   For example `MyContract is OtherContract` or `MyContract is IMyInterface` etc. is not allowed. [Onchain composition is favored over inheritance](#favor-onchain-composition-over-inheritance).
-
-### 2. No constructor functions:
- No contracts other than diamond contracts may have constructors
-   
-   For example: `constructor() {owner = msg.sender; }` etc.
-
-### 3. No modifiers:
- No contract may use modifiers
-   
-   For example: `modifier onlyOwner() { require(msg.sender == owner, "Caller is not the owner"); _; }` etc.
-
-### 4. No public/private/internal variables:
- No storage variables with visibility labels
-   
-   For example: `uint256 public counter;`. These visibility labels are not needed because the library uses ERC-8042 Diamond Storage throughout. This restriction does not apply to constants or immutable variables, which may be declared `internal`.
-
-### 5. No private/public functions:
- All functions must be `internal` or `external`
-   
-   For example: `function approve(address _spender, uint256 _value) private { ...`. This means all functions in contracts must be declared `internal` or `external`.
-
-### 6. No external functions in Solidity libraries:
- All library functions must be `internal`
-   
-   For example: `function name() external view returns (string memory)`. All functions in Solidity libraries must be declared `internal`.
-
-### 7. No `using for` in Solidity libraries:
- No `using` directive allowed
-   
-   For example: `using LibSomething for uint`.
-
-### 8. No `selfdestruct`:
- No contract or library may use `selfdestruct`
-   
-   For example: `selfdestruct(address(0))`.
-
-Other Solidity features will likely be added to this ban list.
-
-**Note** that the feature ban applies to the smart contracts and libraries within Compose. It does not apply to tests or scripts. It does not apply to the users that use Compose. Users can do what they want to do and it is our job to help them.
 
 ### Design Principles
 

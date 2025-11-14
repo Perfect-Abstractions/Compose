@@ -139,5 +139,11 @@ if (x < 10) {
 ```
 
   </Accordion>
+  <Accordion title="No selfdestruct">
+  No contract or library may use `selfdestruct`
+  ```solidity title="🚫 Not allowed"
+  selfdestruct(owner);  
+  ```
+  </Accordion>
 
 </AccordionGroup>

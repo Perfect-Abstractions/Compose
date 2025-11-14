@@ -1,5 +1,5 @@
 ---
-sidebar_position: 3
+sidebar_position: 4
 title: Reusable Smart Contracts
 description: Compose smart contracts are reusable onchain facets
 ---
@@ -10,13 +10,9 @@ You might be wondering: **How can I create a new project without deploying new s
 
 How does Compose make it possible to build new systems from existing onchain contracts?
 
-The answer lies in Compose's smart contract architecture, which is based on [diamond contracts](https://eips.ethereum.org/EIPS/eip-2535).
+The answer lies in Compose's smart contract architecture, which is based on [diamond contracts](/docs/foundations/diamond-contracts).
 
 A diamond contract is a simple, tiny contract that **uses the code of other onchain contracts** called **facets**. Each diamond uses the code of other contracts (facets) to create and maintain its storage data.
-
-Below is a diagram showing a diamond connected to multiple facets that provide its functionality.
-
-<DiamondFacetsSVG style={{ maxWidth: '100%', height: 'auto' }} />
 
 When you use Compose, you *do* deploy new contracts—but only the small diamond contract that ties together existing onchain facets.
 
