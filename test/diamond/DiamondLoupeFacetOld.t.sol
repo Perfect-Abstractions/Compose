@@ -7,6 +7,8 @@ import {DiamondLoupeFacet} from "../../src/diamond/DiamondLoupeFacetOld.sol";
 // import {DiamondLoupeFacet} from "../../src/diamond/DiamondLoupeFacet2.sol";
 import {DiamondLoupeFacetHarness} from "./harnesses/DiamondLoupeFacetOldHarness.sol";
 
+// forge test --gas-report --match-path test/diamond/DiamondLoupeFacetOld.t.sol -vv
+
 import {console} from "forge-std/console.sol";
 
 contract DiamondLoupeFacetTest is Test {

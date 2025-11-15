@@ -68,8 +68,13 @@ contract DiamondLoupeFacet {
         bytes4 selector;
         uint256 selectorsCount = selectors.length;
 
-        // Allocate the largest possible number of facet addresses
-        allFacets = new address[](selectorsCount);
+        // Reuse the selectors array to hold unique facet addresses        
+        // As we loop through the selectors, we overwrite earlier slots with facet addresses.
+        // The selectors array and the allFacets array point to the same
+        // location in memory and use the same memory slots.
+        assembly ("memory-safe") {
+            allFacets := selectors
+        }        
 
         // Memory-based "hash map" that groups facet addresses by the last byte of their address.
         // Each entry is a dynamically sized array of addresses
@@ -149,9 +154,15 @@ contract DiamondLoupeFacet {
         uint256 selectorsCount = selectors.length;
         bytes4 selector;
 
-        // Allocates enough space for pointers to Facet structs in memory.
-        // Each used space will hold an address to a Facet struct in memory.
-        uint256[] memory facetPointers = new uint256[](selectorsCount);
+        // Reuse the selectors array to hold pointers to Facet structs in memory.
+        // Each pointer is a memory address to a Facet struct in memory.
+        // As we loop through the selectors, we overwrite earlier slots with pointers.
+        // The selectors array and the facetPointers array point to the same
+        // location in memory and use the same memory slots.
+        uint256[] memory facetPointers;
+        assembly ("memory-safe") {
+            facetPointers := selectors
+        }
 
         // Holds a memory address to a Facet struct.
         uint256 facetPointer;
