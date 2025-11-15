@@ -38,8 +38,27 @@ contract DiamondLoupeFacet {
     }
 
     /// @notice Gets all the function selectors supported by a specific facet.
-    /// @param _facet The facet address.
-    /// @return facetSelectors The function selectors associated with a facet address.
+    /// @dev Returns the set of selectors that this diamond currently routes to the
+    ///      given facet address.
+    ///
+    ///      How it works:
+    ///      1. Iterates through the diamond’s global selector list (s.selectors) — i.e.,
+    ///         the selectors that have been added to this diamond.
+    ///      2. For each selector, reads its facet address from diamond storage
+    ///         (s.facetAndPosition[selector].facet) and compares it to `_facet`.
+    ///      3. When it matches, writes the selector into a preallocated memory array and
+    ///         increments a running count.
+    ///      4. After the scan, updates the logical length of the result array with
+    ///         assembly to the exact number of matches.
+    ///
+    ///      Why this approach:
+    ///      - Single-pass O(n) scan over all selectors keeps the logic simple and predictable.
+    ///      - Preallocating to the maximum possible size (total selector count) avoids
+    ///        repeated reallocations while building the result.
+    ///      - Trimming the array length at the end yields an exactly sized return value.
+    ///
+    /// @param _facet The facet address to filter by.
+    /// @return facetSelectors The function selectors implemented by `_facet`.
     function facetFunctionSelectors(address _facet) external view returns (bytes4[] memory facetSelectors) {
         DiamondStorage storage s = getStorage();
         uint256 selectorCount = s.selectors.length;
@@ -62,7 +81,36 @@ contract DiamondLoupeFacet {
     }
 
     /// @notice Get all the facet addresses used by a diamond.
-    /// @return allFacets The facet addresses.
+    /// @dev This function returns the unique set of facet addresses that provide functionality
+    ///      to the diamond.
+    ///
+    ///      **How it works:**
+    ///      1. Uses a memory-based hash map to group facet addresses by the last byte of the address,
+    ///         reducing linear search costs from O(n²) to approximately O(n) for most cases.
+    ///      2. Reuses the selectors array memory space to store the unique facet addresses,
+    ///         avoiding an extra memory allocation for the intermediate array. The selectors
+    ///         array is overwritten with facet addresses as we iterate.
+    ///      3. For each selector, looks up its facet address and checks if we've seen this
+    ///         address before by searching the appropriate hash map bucket.
+    ///      4. If the facet is new (not found in the bucket), expands the bucket by 4 slots
+    ///         if it's full or empty, then adds the facet to both the bucket and the return array.
+    ///      5. If the facet was already seen, skips it to maintain uniqueness.
+    ///      6. Finally, sets the correct length of the return array to match the number
+    ///         of unique facets found.
+    ///
+    ///      **Why this approach:**
+    ///      - Hash mapping by last address byte provides O(1) average-case bucket lookup
+    ///        instead of scanning all previously-found facets linearly for each selector.
+    ///      - Growing in fixed-size chunks (4 for buckets) keeps reallocations infrequent
+    ///        and prevents over-allocation, while keeping bucket sizes small for sparse key distributions.
+    ///      - Reusing the selectors array memory eliminates one memory allocation and reduces
+    ///        total memory usage, which saves gas.
+    ///      - This design is optimized for diamonds with many selectors across many facets,
+    ///        where the original O(n²) nested loop approach becomes prohibitively expensive.
+    ///      - The 256-bucket hash map trades a small fixed memory cost for dramatic algorithmic
+    ///        improvement in worst-case scenarios.
+    ///
+    /// @return allFacets Array of unique facet addresses used by this diamond.
     function facetAddresses() external view returns (address[] memory allFacets) {
         DiamondStorage storage s = getStorage();
         bytes4[] memory selectors = s.selectors;
@@ -148,7 +196,34 @@ contract DiamondLoupeFacet {
     }
 
     /// @notice Gets all facets and their selectors.
-    /// @return facetsAndSelectors Facet
+    /// @dev Returns each unique facet address currently used by the diamond and the
+    ///      list of function selectors that the diamond maps to that facet.
+    ///
+    ///      **How it works:**
+    ///      1. Uses a memory-based hash map to group facets by the last byte of their address,
+    ///         reducing linear search costs from O(n²) to approximately O(n) for most cases.
+    ///      2. Reuses the selectors array memory space to store pointers to Facet structs,
+    ///         avoiding an extra memory allocation for the intermediate array.
+    ///      3. For each selector, looks up its facet address and checks if we've seen this
+    ///         facet before by searching the appropriate hash map bucket.
+    ///      4. If the facet is new, expands the bucket by 4 slots if it's full or empty,
+    ///         creates a Facet struct with a 16-slot selector array, and stores a pointer
+    ///         to it in both the bucket and the facet pointers array.
+    ///      5. If the facet exists, expands its selector array by 16 slots if full, then
+    ///         appends the selector to the array.
+    ///      6. Finally, copies all Facet structs from their pointers into a properly-sized
+    ///         return array.
+    ///
+    ///      **Why this approach:**
+    ///      - Hash mapping by last address byte provides O(1) average-case bucket lookup
+    ///        instead of scanning all previously-found facets linearly.
+    ///      - Growing in fixed-size chunks (4 for buckets, 16 for selector arrays)
+    ///        keeps reallocations infrequent and prevents over-allocation.
+    ///      - Reusing the selectors array memory reduces total memory usage and allocation.
+    ///      - This design is optimized for diamonds with many facets and many selectors,
+    ///        where the original O(n²) nested loop approach becomes prohibitively expensive.
+    ///
+    /// @return facetsAndSelectors Array of Facet structs, each containing a facet address
     function facets() external view returns (Facet[] memory facetsAndSelectors) {
         DiamondStorage storage s = getStorage();
         bytes4[] memory selectors = s.selectors;
