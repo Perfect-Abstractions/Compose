@@ -69,7 +69,7 @@ contract DiamondLoupeFacet {
         bytes4 selector;
         uint256 selectorsCount = selectors.length;
 
-        // Reuse the selectors array to hold unique facet addresses.
+        // Reuse the selectors array to hold unique facet addresses
         // As we loop through the selectors, we overwrite earlier slots with facet addresses.
         // The selectors array and the allFacets array point to the same
         // location in memory and use the same memory slots.
