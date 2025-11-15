@@ -106,76 +106,168 @@ Once you have a clear idea of what you want to do, [create an issue](https://git
 
 ## Code Style Guide
 
-Follow [Compose's design principles](/docs/contribution/design) when contributing code.
+Follow the [Code Style Guide](/docs/contribution/design/code-style-guide) when contributing code.
 
-Follow the [Solidity feature ban](/docs/contribution/design/banned-solidity-features).
-
-### Naming Conventions
-
-- **Parameter Names:** All parameters for events, errors, and functions must be preceded with an underscore (`_`).
-  - Example:
-    ```solidity
-    event Transfer(address indexed _from, address indexed _to, uint256 indexed _tokenId);
-    error ERC20InvalidSender(address _sender);
-    function transfer(address _to, uint256 _amount) external {}
-    ```
-- **Camel Case:** Use camelCase for variable, function, contract, and library names, except for standard uppercase abbreviations (e.g., ERC).
-  - Example: `totalSupply`, `LibERC20`, `ERC721Facet`
-
-- **Facets:** Internal function names in facets should be prefixed with `internal` if they otherwise have the same name as an external function in the same facet. Usually, there should be few or no internal functions in facets; repeat code if it improves readability.
-- **Libraries:** All functions in libraries use the `internal` visibility specifier. 
-
-### Value Resetting
-- Use `delete` to set a value to zero.
-  - Example:
-    ```solidity
-    delete balances[_owner];
-    ```
-
-### Avoid Assembly
- - Avoid using assembly if you can. If you can't and you access memory, do it [safely](https://docs.soliditylang.org/en/latest/assembly.html#memory-safety), and use `assembly ("memory-safe")`.
-   `"memory safe"` tells the Solidity compiler that memory is being used safely so it should not disable optimizations.
-   - Example:
-     ```solidity
-     assembly ("memory-safe") {
-         revert(add(reason, 0x20), mload(reason))
-     }
-     ```
-
-### Formatting
-- Format code using the default settings of `forge fmt`. Run `forge fmt` before submitting code.
+### Development Considerations
+- Make sure that you understand all code that you use or write
+- Gas efficiency is important but how easy the code is to read is more important
+- Write secure code
+- Write bug free code
+- Consider edge cases and potential attack vectors
 
 
+## Testing
 
+### Required
+Before submitting a pull request:
+- Format your code: `forge fmt`
+- Run all tests: `forge test`
+- Update gas snapshots: `forge snapshot`
+- Ensure your code follows the [design of Compose](/docs/contribution/design).
+- Ensure your code follows the [banned features list](/docs/contribution/design/banned-features).
+- Ensure your code follows the coding style in the existing code base.
 
-### Reporting Issues
+## Recommended
+- Write tests for new functionality 
+- Test your changes thoroughly
+- Ensure test coverage is maintained or improved
 
-If you find a bug or have a feature request, please [open an issue](https://github.com/Perfect-Abstractions/Compose/issues) on our repository.
+If you make changes to existing functionality, please make sure that the existing tests still work for that functionality and write new tests as necessary that cover the changes you made.
 
-### Pull Requests
+Please note that you can submit a pull request for new functionality **without tests**. Another person can write tests for new functionality.
 
-1. Fork the repository
-2. Create a new branch for your feature or bugfix
-3. Make your changes
-4. Submit a pull request
+### When writing tests
+- Write comprehensive tests for all functionality
+- Test edge cases and error conditions
+- Use descriptive test names
+- Follow the existing test patterns in the codebase
+- Include gas optimization tests where relevant
 
-### Code Style
+### Running Tests
+```bash
+# Run all tests
+forge test
 
-Please follow the existing code style and conventions used in the project.
+# Run tests with verbose output
+forge test -vvv
 
-### Documentation
+# Run specific test file
+forge test --match-path test/ERC20.sol
 
-Help us improve our documentation by:
-- Fixing typos
-- Adding examples
-- Clarifying existing content
-- Adding new guides
+# Run tests with gas reporting
+forge test --gas-report
+```
+
+### Test Structure
+
+Tests in Compose follow a specific organizational pattern:
+
+- **Facet Tests** (`test/[Feature]/[Feature]Facet.t.sol`): Test external functions of facets
+- **Library Tests** (`test/[Feature]/Lib[Feature].t.sol`): Test internal library functions
+- **Test Harnesses** (`test/[Feature]/harnesses/`): Special contracts that expose internal functions for testing
+  - Facet harnesses add initialization and helper functions
+  - Library harnesses expose internal functions as external
+
+Example structure:
+```
+test/
+├── ERC20/
+│   ├── ERC20Facet.t.sol          # Tests for facet external functions
+│   ├── LibERC20.t.sol             # Tests for library internal functions
+│   └── harnesses/
+│       ├── ERC20FacetHarness.sol  # Adds mint() and initialize()
+│       └── LibERC20Harness.sol    # Exposes internal functions
+```
+
+See [test/README.md](https://github.com/Perfect-Abstractions/Compose/blob/main/test/README.md) for detailed testing documentation and patterns.
+
+## Available Commands
+
+### Build
+
+```bash
+forge build
+```
+
+### Test
+
+```bash
+# Run all tests
+forge test
+
+# Run tests with verbose output
+forge test -vvv
+
+# Run specific test file
+forge test --match-path test/ERC20.sol
+
+# Run tests with gas reporting
+forge test --gas-report
+```
+
+### Format
+
+```bash
+forge fmt
+```
+
+### Gas Snapshots
+
+```bash
+forge snapshot
+```
+
+### Local Development
+
+```bash
+# Start local node
+anvil
+
+# Interact with contracts
+cast <subcommand>
+```
+
+### Help
+
+```bash
+# Get help for any command
+forge --help
+anvil --help
+cast --help
+```
+
+## Code of Conduct
+
+### Our Pledge
+We are committed to providing a welcoming and inspiring community for all. We pledge to make participation in our project a harassment-free experience for everyone.
+
+### Our Standards
+Examples of behavior that contributes to creating a positive environment include:
+- Being respectful of differing viewpoints and experiences
+- Gracefully accepting constructive criticism
+- Focusing on what is best for the community & Compose itself.
+- Showing empathy towards other community members.
+
 
 ## Getting Help
 
 If you need help or have questions, feel free to reach out through:
+
 - [GitHub Issues](https://github.com/Perfect-Abstractions/Compose/issues)
 - [Community discussions](https://github.com/Perfect-Abstractions/Compose/discussions)
+- [Discord](https://discord.gg/DCBD2UKbxc)
 
-We appreciate your contributions!
+
+## License
+
+By contributing to Compose, you agree that your contributions will be licensed under the same license as the project (see [LICENSE.md](https://github.com/Perfect-Abstractions/Compose/blob/main/LICENSE.md)).
+
+---
+
+This is the beginning and we are still working out how this will all work. We are glad you are interested in this project and want to make something great with you. - Nick
+
+
+
+
+
 
