@@ -42,10 +42,11 @@ contract DiamondLoupeFacet {
     /// @return facetSelectors The function selectors associated with a facet address.
     function facetFunctionSelectors(address _facet) external view returns (bytes4[] memory facetSelectors) {
         DiamondStorage storage s = getStorage();
-        bytes4[] memory selectors = s.selectors;
-        uint256 selectorCount = selectors.length;
+        uint256 selectorCount = s.selectors.length;
         uint256 numSelectors;
+
         facetSelectors = new bytes4[](selectorCount);
+
         // loop through function selectors
         for (uint256 selectorIndex; selectorIndex < selectorCount; selectorIndex++) {
             bytes4 selector = s.selectors[selectorIndex];
@@ -68,13 +69,13 @@ contract DiamondLoupeFacet {
         bytes4 selector;
         uint256 selectorsCount = selectors.length;
 
-        // Reuse the selectors array to hold unique facet addresses        
+        // Reuse the selectors array to hold unique facet addresses
         // As we loop through the selectors, we overwrite earlier slots with facet addresses.
         // The selectors array and the allFacets array point to the same
         // location in memory and use the same memory slots.
         assembly ("memory-safe") {
             allFacets := selectors
-        }        
+        }
 
         // Memory-based "hash map" that groups facet addresses by the last byte of their address.
         // Each entry is a dynamically sized array of addresses
@@ -212,11 +213,11 @@ contract DiamondLoupeFacet {
                         bytes4[] memory newFunctionSelectors = new bytes4[](selectorsLength + 16);
                         for (uint256 k; k < selectorsLength; k++) {
                             newFunctionSelectors[k] = functionSelectors[k];
-                        }                        
+                        }
                         functionSelectors = newFunctionSelectors;
                         facetAndSelectors.functionSelectors = functionSelectors;
                     }
-                    // Increment the logical selector array length.                    
+                    // Increment the logical selector array length.
                     assembly ("memory-safe") {
                         mstore(functionSelectors, add(selectorsLength, 1))
                     }

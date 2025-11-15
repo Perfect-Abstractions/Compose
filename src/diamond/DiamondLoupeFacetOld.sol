@@ -346,11 +346,11 @@ contract DiamondLoupeFacet {
                         bytes4[] memory newFunctionSelectors = new bytes4[](selectorsLength + 16);
                         for (uint256 k; k < selectorsLength; k++) {
                             newFunctionSelectors[k] = functionSelectors[k];
-                        }                        
+                        }
                         functionSelectors = newFunctionSelectors;
                         facetAndSelectors.functionSelectors = functionSelectors;
                     }
-                    // Increment the logical selector array length.                    
+                    // Increment the logical selector array length.
                     assembly ("memory-safe") {
                         mstore(functionSelectors, add(selectorsLength, 1))
                     }
@@ -419,7 +419,7 @@ contract DiamondLoupeFacet {
     }
 
     function facets141() external view returns (Facet[] memory facetsAndSelectors) {
-         DiamondStorage storage s = getStorage();
+        DiamondStorage storage s = getStorage();
         bytes4[] memory selectors = s.selectors;
         uint256 selectorsCount = selectors.length;
         bytes4 selector;
@@ -476,11 +476,11 @@ contract DiamondLoupeFacet {
                         bytes4[] memory newFunctionSelectors = new bytes4[](selectorsLength + 16);
                         for (uint256 k; k < selectorsLength; k++) {
                             newFunctionSelectors[k] = functionSelectors[k];
-                        }                        
+                        }
                         functionSelectors = newFunctionSelectors;
                         facetAndSelectors.functionSelectors = functionSelectors;
                     }
-                    // Increment the logical selector array length.                    
+                    // Increment the logical selector array length.
                     assembly ("memory-safe") {
                         mstore(functionSelectors, add(selectorsLength, 1))
                     }
@@ -545,9 +545,8 @@ contract DiamondLoupeFacet {
             }
             facetsAndSelectors[i].facet = facetAndSelectors.facet;
             facetsAndSelectors[i].functionSelectors = facetAndSelectors.functionSelectors;
-        }    
+        }
     }
-    
 
     function facets14() external view returns (Facet[] memory facetsAndSelectors) {
         DiamondStorage storage s = getStorage();
