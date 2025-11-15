@@ -104,6 +104,16 @@ This is the perfect place to:
 
 Once you have a clear idea of what you want to do, [create an issue](https://github.com/Perfect-Abstractions/Compose/issues/new). Provide as much data as you can and we will give you the go ahead to start or give more feedback about it.
 
+### Required
+Before submitting a pull request:
+- Format your code: `forge fmt`
+- Run all tests: `forge test`
+- Update gas snapshots: `forge snapshot`
+- Ensure your code follows the [design of Compose](/docs/contribution/design).
+- Ensure your code doesn't use any [banned language features](/docs/contribution/design/banned-solidity-features).
+- Ensure your code follows the coding style in the existing code base.
+
+
 ## Code Style Guide
 
 Follow the [Code Style Guide](/docs/contribution/design/code-style-guide) when contributing code.
@@ -115,126 +125,8 @@ Follow the [Code Style Guide](/docs/contribution/design/code-style-guide) when c
 - Write bug free code
 - Consider edge cases and potential attack vectors
 
-
 ## Testing
-
-### Required
-Before submitting a pull request:
-- Format your code: `forge fmt`
-- Run all tests: `forge test`
-- Update gas snapshots: `forge snapshot`
-- Ensure your code follows the [design of Compose](/docs/contribution/design).
-- Ensure your code doesn't use any [banned language features](/docs/contribution/design/banned-solidity-features).
-- Ensure your code follows the coding style in the existing code base.
-
-## Recommended
-- Write tests for new functionality 
-- Test your changes thoroughly
-- Ensure test coverage is maintained or improved
-
-If you make changes to existing functionality, please make sure that the existing tests still work for that functionality and write new tests as necessary that cover the changes you made.
-
-Please note that you can submit a pull request for new functionality **without tests**. Another person can write tests for new functionality.
-
-### When writing tests
-- Write comprehensive tests for all functionality
-- Test edge cases and error conditions
-- Use descriptive test names
-- Follow the existing test patterns in the codebase
-- Include gas optimization tests where relevant
-
-### Running Tests
-```bash
-# Run all tests
-forge test
-
-# Run tests with verbose output
-forge test -vvv
-
-# Run specific test file
-forge test --match-path test/ERC20.sol
-
-# Run tests with gas reporting
-forge test --gas-report
-```
-
-### Test Structure
-
-Tests in Compose follow a specific organizational pattern:
-
-- **Facet Tests** (`test/[Feature]/[Feature]Facet.t.sol`): Test external functions of facets
-- **Library Tests** (`test/[Feature]/Lib[Feature].t.sol`): Test internal library functions
-- **Test Harnesses** (`test/[Feature]/harnesses/`): Special contracts that expose internal functions for testing
-  - Facet harnesses add initialization and helper functions
-  - Library harnesses expose internal functions as external
-
-Example structure:
-```
-test/
-├── ERC20/
-│   ├── ERC20Facet.t.sol          # Tests for facet external functions
-│   ├── LibERC20.t.sol             # Tests for library internal functions
-│   └── harnesses/
-│       ├── ERC20FacetHarness.sol  # Adds mint() and initialize()
-│       └── LibERC20Harness.sol    # Exposes internal functions
-```
-
-See [test/README.md](https://github.com/Perfect-Abstractions/Compose/blob/main/test/README.md) for detailed testing documentation and patterns.
-
-## Available Commands
-
-### Build
-
-```bash
-forge build
-```
-
-### Test
-
-```bash
-# Run all tests
-forge test
-
-# Run tests with verbose output
-forge test -vvv
-
-# Run specific test file
-forge test --match-path test/ERC20.sol
-
-# Run tests with gas reporting
-forge test --gas-report
-```
-
-### Format
-
-```bash
-forge fmt
-```
-
-### Gas Snapshots
-
-```bash
-forge snapshot
-```
-
-### Local Development
-
-```bash
-# Start local node
-anvil
-
-# Interact with contracts
-cast <subcommand>
-```
-
-### Help
-
-```bash
-# Get help for any command
-forge --help
-anvil --help
-cast --help
-```
+Follow the [Testing Guidelines](/docs/contribution/design/testing) when writing tests for your code.
 
 ## Code of Conduct
 
