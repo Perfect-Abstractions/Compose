@@ -24,7 +24,7 @@ Before submitting this PR, please ensure:
 
 - [ ] **Documentation updated** - If applicable, update relevant documentation
 
-Make sure to follow the [CONTRIBUTING.md](https://github.com/Perfect-Abstractions/Compose/blob/main/CONTRIBUTING.md) guidelines.
+Make sure to follow the [contributing](https://compose.diamonds/docs/contribution/how-to-contribute) guidelines.
 
 ## Additional Notes
 <!-- Any additional information, concerns, or questions for reviewers -->

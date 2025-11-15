@@ -57,7 +57,7 @@ Please see our [documentation website](https://compose.diamonds/docs/) for full 
 
 We welcome contributions from everyone! Compose grows through community involvement.
 
-Please see the [documentation for contributing](https://compose.diamonds/docs/contribution/design/). 
+Please see the [documentation for contributing](https://compose.diamonds/docs/contribution/how-to-contribute). 
 
 ---
 
