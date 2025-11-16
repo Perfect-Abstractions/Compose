@@ -2,7 +2,7 @@
 pragma solidity >=0.8.30;
 
 //import {DiamondLoupeFacet} from "../../../src/diamond/DiamondLoupeFacet.sol";
-import {DiamondLoupeFacet} from "../../../src/diamond/DiamondLoupeFacetOld.sol";
+import {DiamondLoupeFacet} from "../../../src/diamond/DiamondLoupeFacet2.sol";
 // import {DiamondLoupeFacet} from "../../../src/diamond/DiamondLoupeFacet2.sol";
 import {console} from "forge-std/console.sol";
 
@@ -13,7 +13,7 @@ contract DiamondLoupeFacetHarness is DiamondLoupeFacet {
         DiamondStorage storage s = getStorage();
         uint256 facetCount = 0;
         address a = 0x71C7656EC7ab88b098defB751B7401B5f6d8976F;
-        for (uint256 i = 1; i < 1001; i++) {
+        for (uint256 i = 1; i < 501; i++) {
             bytes4 selector = bytes4(uint32(i));
             s.selectors.push(selector);
             s.facetAndPosition[selector] = FacetAndPosition(a, 0);

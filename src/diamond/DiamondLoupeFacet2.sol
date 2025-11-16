@@ -28,135 +28,6 @@ contract DiamondLoupeFacet {
         }
     }
 
-    /// @notice Struct to hold facet address and its function selectors
-    struct Facet {
-        address facet;
-        bytes4[] functionSelectors;
-    }
-
-    function facets() external view returns (Facet[] memory allFacets) {
-        DiamondStorage storage s = getStorage();
-        uint256 selectorCount = s.selectors.length;
-
-        // First pass: count unique facets
-        uint256 numFacets;
-        address[] memory uniqueFacets = new address[](selectorCount);
-        uint256[] memory selectorsByFacet = new uint256[](selectorCount);
-
-        // Count unique facets and their selectors
-        for (uint256 i; i < selectorCount; i++) {
-            address facet = s.facetAndPosition[s.selectors[i]].facet;
-
-            // Look for existing facet
-            uint256 facetIndex;
-            for (; facetIndex < numFacets; facetIndex++) {
-                if (uniqueFacets[facetIndex] == facet) {
-                    selectorsByFacet[facetIndex]++;
-                    break;
-                }
-            }
-
-            // If facet not found, add it
-            if (facetIndex == numFacets) {
-                uniqueFacets[numFacets] = facet;
-                selectorsByFacet[numFacets] = 1;
-                numFacets++;
-            }
-        }
-
-        // Allocate return array with exact size
-        allFacets = new Facet[](numFacets);
-
-        // Initialize facet arrays with correct sizes
-        for (uint256 i; i < numFacets; i++) {
-            allFacets[i].facet = uniqueFacets[i];
-            allFacets[i].functionSelectors = new bytes4[](selectorsByFacet[i]);
-        }
-
-        // // Reset selector counts for use as indices
-        // for (uint256 i; i < numFacets; i++) {
-        //     selectorsByFacet[i] = 0;
-        // }
-
-        // Second pass: populate selector arrays
-        for (uint256 i; i < selectorCount; i++) {
-            bytes4 selector = s.selectors[i];
-            address facet = s.facetAndPosition[selector].facet;
-
-            // Find the facet index
-            for (uint256 facetIndex; facetIndex < numFacets; facetIndex++) {
-                if (allFacets[facetIndex].facet == facet) {
-                    allFacets[facetIndex].functionSelectors[--selectorsByFacet[facetIndex]] = selector;
-                    break;
-                }
-            }
-        }
-    }
-
-    /// @notice Gets all the function selectors supported by a specific facet.
-    /// @param _facet The facet address.
-    /// @return facetSelectors The function selectors associated with a facet address.
-    function facetFunctionSelectors(address _facet) external view returns (bytes4[] memory facetSelectors) {
-        DiamondStorage storage s = getStorage();
-        bytes4[] memory selectors = s.selectors;
-        uint256 selectorCount = selectors.length;
-        uint256 numSelectors;
-        facetSelectors = new bytes4[](0);
-        // loop through function selectors
-        for (uint256 selectorIndex; selectorIndex < selectorCount; selectorIndex++) {
-            bytes4 selector = selectors[selectorIndex];
-            address facetAddress_ = s.facetAndPosition[selector].facet;
-            if (_facet == facetAddress_) {
-                numSelectors++;
-                assembly ("memory-safe") {
-                    // Store selector in the next position in the facetSelectors array
-                    mstore(add(facetSelectors, mul(numSelectors, 0x20)), selector)
-                }
-            }
-        }
-        assembly ("memory-safe") {
-            // Set the total number of selectors in the array
-            mstore(facetSelectors, numSelectors)
-            // Properly allocate memory by setting memory pointer after facetSelectors array
-            mstore(0x40, add(0x20, add(facetSelectors, mul(numSelectors, 0x20))))
-        }
-    }
-
-    /// @notice Get all the facet addresses used by a diamond.
-    /// @return allFacets The facet addresses.
-    function facetAddresses() external view returns (address[] memory allFacets) {
-        DiamondStorage storage s = getStorage();
-        uint256 selectorCount = s.selectors.length;
-        // create an array set to the maximum size possible
-        allFacets = new address[](selectorCount);
-        uint256 numFacets;
-        // loop through function selectors
-        for (uint256 selectorIndex; selectorIndex < selectorCount; selectorIndex++) {
-            bytes4 selector = s.selectors[selectorIndex];
-            address facetAddress_ = s.facetAndPosition[selector].facet;
-            bool continueLoop = false;
-            // see if we have collected the address already and break out of loop if we have
-            for (uint256 facetIndex; facetIndex < numFacets; facetIndex++) {
-                if (facetAddress_ == allFacets[facetIndex]) {
-                    continueLoop = true;
-                    break;
-                }
-            }
-            // continue loop if we already have the address
-            if (continueLoop) {
-                continueLoop = false;
-                continue;
-            }
-            // include address
-            allFacets[numFacets] = facetAddress_;
-            numFacets++;
-        }
-        // Set the number of facet addresses in the array
-        assembly ("memory-safe") {
-            mstore(allFacets, numFacets)
-        }
-    }
-
     /// @notice Gets the facet address that supports the given selector.
     /// @dev If facet is not found return address(0).
     /// @param _functionSelector The function selector.
@@ -164,5 +35,458 @@ contract DiamondLoupeFacet {
     function facetAddress(bytes4 _functionSelector) external view returns (address facet) {
         DiamondStorage storage s = getStorage();
         facet = s.facetAndPosition[_functionSelector].facet;
+    }
+
+    /// @notice Gets all the function selectors supported by a specific facet.
+    /// @dev Returns the set of selectors that this diamond currently routes to the
+    ///      given facet address.
+    ///
+    ///      How it works:
+    ///      1. Iterates through the diamond’s global selector list (s.selectors) — i.e.,
+    ///         the selectors that have been added to this diamond.
+    ///      2. For each selector, reads its facet address from diamond storage
+    ///         (s.facetAndPosition[selector].facet) and compares it to `_facet`.
+    ///      3. When it matches, writes the selector into a preallocated memory array and
+    ///         increments a running count.
+    ///      4. After the scan, updates the logical length of the result array with
+    ///         assembly to the exact number of matches.
+    ///
+    ///      Why this approach:
+    ///      - Single-pass O(n) scan over all selectors keeps the logic simple and predictable.
+    ///      - Preallocating to the maximum possible size (total selector count) avoids
+    ///        repeated reallocations while building the result.
+    ///      - Trimming the array length at the end yields an exactly sized return value.
+    ///
+    /// @param _facet The facet address to filter by.
+    /// @return facetSelectors The function selectors implemented by `_facet`.
+    function facetFunctionSelectors(address _facet) external view returns (bytes4[] memory facetSelectors) {
+        DiamondStorage storage s = getStorage();
+        uint256 selectorCount = s.selectors.length;
+        uint256 numSelectors;
+
+        facetSelectors = new bytes4[](selectorCount);
+
+        // loop through function selectors
+        for (uint256 selectorIndex; selectorIndex < selectorCount; selectorIndex++) {
+            bytes4 selector = s.selectors[selectorIndex];
+            if (_facet == s.facetAndPosition[selector].facet) {
+                facetSelectors[numSelectors] = selector;
+                numSelectors++;
+            }
+        }
+        // Set the number of selectors in the array
+        assembly ("memory-safe") {
+            mstore(facetSelectors, numSelectors)
+        }
+    }
+
+    /// @notice Get all the facet addresses used by a diamond.
+    /// @dev This function returns the unique set of facet addresses that provide functionality
+    ///      to the diamond.
+    ///
+    ///      **How it works:**
+    ///      1. Uses a memory-based hash map to group facet addresses by the last byte of the address,
+    ///         reducing linear search costs from O(n²) to approximately O(n) for most cases.
+    ///      2. Reuses the selectors array memory space to store the unique facet addresses,
+    ///         avoiding an extra memory allocation for the intermediate array. The selectors
+    ///         array is overwritten with facet addresses as we iterate.
+    ///      3. For each selector, looks up its facet address and checks if we've seen this
+    ///         address before by searching the appropriate hash map bucket.
+    ///      4. If the facet is new (not found in the bucket), expands the bucket by 4 slots
+    ///         if it's full or empty, then adds the facet to both the bucket and the return array.
+    ///      5. If the facet was already seen, skips it to maintain uniqueness.
+    ///      6. Finally, sets the correct length of the return array to match the number
+    ///         of unique facets found.
+    ///
+    ///      **Why this approach:**
+    ///      - Hash mapping by last address byte provides O(1) average-case bucket lookup
+    ///        instead of scanning all previously-found facets linearly for each selector.
+    ///      - Growing in fixed-size chunks (4 for buckets) keeps reallocations infrequent
+    ///        and prevents over-allocation, while keeping bucket sizes small for sparse key distributions.
+    ///      - Reusing the selectors array memory eliminates one memory allocation and reduces
+    ///        total memory usage, which saves gas.
+    ///      - This design is optimized for diamonds with many selectors across many facets,
+    ///        where the original O(n²) nested loop approach becomes prohibitively expensive.
+    ///      - The 256-bucket hash map trades a small fixed memory cost for dramatic algorithmic
+    ///        improvement in worst-case scenarios.
+    ///
+    /// @return allFacets Array of unique facet addresses used by this diamond.
+    function facetAddresses() external view returns (address[] memory allFacets) {
+        DiamondStorage storage s = getStorage();
+        bytes4[] memory selectors = s.selectors;
+        bytes4 selector;
+        uint256 selectorsCount = selectors.length;
+
+        // Reuse the selectors array to hold unique facet addresses
+        // As we loop through the selectors, we overwrite earlier slots with facet addresses.
+        // The selectors array and the allFacets array point to the same
+        // location in memory and use the same memory slots.
+        assembly ("memory-safe") {
+            allFacets := selectors
+        }
+
+        // Memory-based "hash map" that groups facet addresses by the last byte of their address.
+        // Each entry is a dynamically sized array of addresses
+        // Using only the last byte of the address (256 possible values) provides a simple
+        // bucketing mechanism to reduce linear search costs across unique facets.
+        address[][256] memory map;
+
+        // The last byte of a facet address, used as an index key into `map`.
+        uint256 key;
+
+        // Reference to the current bucket (a dynamic array of facet addresses) for this key.
+        address[] memory bucket;
+
+        // Counter for the total number of unique facets encountered.
+        uint256 numFacets;
+
+        for (uint256 i; i < selectorsCount; i++) {
+            selector = selectors[i];
+            address facet = s.facetAndPosition[selector].facet;
+            // Extract the last byte of the facet address to use as a bucket key.
+            key = uint160(facet) & 0xff;
+            // Retrieve all facet addresses that share the same last address byte.
+            bucket = map[key];
+            uint256 bucketIndex;
+            for (; bucketIndex < bucket.length; bucketIndex++) {
+                // If a facet address is not unique
+                if (bucket[bucketIndex] == facet) {
+                    break;
+                }
+            }
+            // If we didn't find this facet in the bucket (new facet address encountered).
+            // Either we looped through all the available slots in the bucket and found no match or
+            // the bucket size was 0 because the last address byte hasn't been seen before.
+            // Either way we found a new facet address!
+            if (bucketIndex == bucket.length) {
+                // Expand the bucket if it’s full or its length is zero.
+                // We expand the bucket after every 4 entries.
+                // bucketIndex % 4 == 0 check done via & 3 == 0.
+                if (bucketIndex & 3 == 0) {
+                    // Allocate a new bucket with 4 extra slots and copy the old contents, if any.
+                    address[] memory newBucket = new address[](bucketIndex + 4);
+                    for (uint256 k; k < bucketIndex; k++) {
+                        newBucket[k] = bucket[k];
+                    }
+                    bucket = newBucket;
+                    map[key] = bucket;
+                }
+                // Increase the bucket’s logical length by 1.
+                assembly ("memory-safe") {
+                    mstore(bucket, add(bucketIndex, 1))
+                }
+                // Add facet address to the current bucket and to the facet address array.
+                bucket[bucketIndex] = facet;
+                allFacets[numFacets] = facet;
+                unchecked {
+                    numFacets++;
+                }
+            }
+        }
+        // Set the correct length of the allFacets array
+        assembly ("memory-safe") {
+            mstore(allFacets, numFacets)
+        }
+    }
+
+    /// @notice Struct to hold facet address and its function selectors
+    struct Facet {
+        address facet;
+        bytes4[] functionSelectors;
+    }
+
+    /// @notice Gets all facets and their selectors.
+    /// @dev Returns each unique facet address currently used by the diamond and the
+    ///      list of function selectors that the diamond maps to that facet.
+    ///
+    ///      **How it works:**
+    ///      1. Uses a memory-based hash map to group facets by the last byte of their address,
+    ///         reducing linear search costs from O(n²) to approximately O(n) for most cases.
+    ///      2. Reuses the selectors array memory space to store pointers to Facet structs,
+    ///         avoiding an extra memory allocation for the intermediate array.
+    ///      3. For each selector, looks up its facet address and checks if we've seen this
+    ///         facet before by searching the appropriate hash map bucket.
+    ///      4. If the facet is new, expands the bucket by 4 slots if it's full or empty,
+    ///         creates a Facet struct with a 16-slot selector array, and stores a pointer
+    ///         to it in both the bucket and the facet pointers array.
+    ///      5. If the facet exists, expands its selector array by 16 slots if full, then
+    ///         appends the selector to the array.
+    ///      6. Finally, copies all Facet structs from their pointers into a properly-sized
+    ///         return array.
+    ///
+    ///      **Why this approach:**
+    ///      - Hash mapping by last address byte provides O(1) average-case bucket lookup
+    ///        instead of scanning all previously-found facets linearly.
+    ///      - Growing in fixed-size chunks (4 for buckets, 16 for selector arrays)
+    ///        keeps reallocations infrequent and prevents over-allocation.
+    ///      - Reusing the selectors array memory reduces total memory usage and allocation.
+    ///      - This design is optimized for diamonds with many facets and many selectors,
+    ///        where the original O(n²) nested loop approach becomes prohibitively expensive.
+    ///
+    /// @return facetsAndSelectors Array of Facet structs, each containing a facet address
+    function facets() external view returns (Facet[] memory facetsAndSelectors) {
+        DiamondStorage storage s = getStorage();
+        bytes4[] memory selectors = s.selectors;
+        uint256 selectorsCount = selectors.length;
+        bytes4 selector;
+
+        // Reuse the selectors array to hold pointers to Facet structs in memory.
+        // Each pointer is a memory address to a Facet struct in memory.
+        // As we loop through the selectors, we overwrite earlier slots with pointers.
+        // The selectors array and the facetPointers array point to the same
+        // location in memory and use the same memory slots.
+        uint256[] memory facetPointers;
+        assembly ("memory-safe") {
+            facetPointers := selectors
+        }
+
+        // Holds a memory address to a Facet struct.
+        uint256 facetPointer;
+
+        // Facet struct reference used to read/write Facet data at a memory pointer.
+        Facet memory facetAndSelectors;
+
+        // Memory-based "hash map" that groups facet pointers by the last byte of their address.
+        // Each entry is a dynamically sized array of uint256 pointers.
+        // Using only the last byte of the address (256 possible values) provides a simple
+        // bucketing mechanism to reduce linear search costs across unique facets.
+        uint256[][256] memory map;
+
+        // The last byte of a facet address, used as an index key into `map`.
+        uint256 key;
+
+        // Reference to the current bucket (a dynamic array of facet pointers) for this key.
+        uint256[] memory bucket;
+
+        // Counter for the total number of unique facets encountered.
+        uint256 numFacets;
+
+        for (uint256 i; i < selectorsCount; i++) {
+            selector = selectors[i];
+            address facet = s.facetAndPosition[selector].facet;
+            // Extract the last byte of the facet address to use as a bucket key.
+            key = uint160(facet) & 0xff;
+            // Retrieve all facet pointers that share the same last address byte.
+            bucket = map[key];
+            // Search this bucket for an existing Facet struct matching `facet`.
+            uint256 bucketIndex;
+            for (; bucketIndex < bucket.length; bucketIndex++) {
+                // Holds a memory address to a Facet struct
+                facetPointer = bucket[bucketIndex];
+                // Assign the pointer to the facetAndSelectors variable so we can access the Facet struct
+                assembly ("memory-safe") {
+                    facetAndSelectors := facetPointer
+                }
+                // If this facet was already found before, just append the selector.
+                if (facetAndSelectors.facet == facet) {
+                    bytes4[] memory functionSelectors = facetAndSelectors.functionSelectors;
+                    uint256 selectorsLength = functionSelectors.length;
+                    // If the selector array is full (multiple of 16), expand it by 16 slots.
+                    // This uses `& 15 == 0` as a cheaper modulus check (selectorsLength % 16 == 0).
+                    if (selectorsLength & 15 == 0) {
+                        // Allocate a new larger array and copy existing selectors into it.
+                        bytes4[] memory newFunctionSelectors = new bytes4[](selectorsLength + 16);
+                        for (uint256 k; k < selectorsLength; k++) {
+                            newFunctionSelectors[k] = functionSelectors[k];
+                        }
+                        functionSelectors = newFunctionSelectors;
+                        facetAndSelectors.functionSelectors = functionSelectors;
+                    }
+                    // Increment the logical selector array length.
+                    assembly ("memory-safe") {
+                        mstore(functionSelectors, add(selectorsLength, 1))
+                    }
+                    // Store the new selector.
+                    functionSelectors[selectorsLength] = selector;
+                    break;
+                }
+            }
+
+            // If we didn't find this facet in the bucket (new facet address encountered).
+            // Either we looped through all the available slots in the bucket and found no match or
+            // the bucket size was 0 because the last address byte hasn't been seen before.
+            // Either way we found a new facet address!
+            if (bucket.length == bucketIndex) {
+                // Expand the bucket if it’s full or its length is zero.
+                // We expand the bucket after every 4 entries.
+                // bucketIndex % 4 == 0 check done via & 3 == 0.
+                if (bucketIndex & 3 == 0) {
+                    // Allocate a new bucket with 4 extra slots and copy the old contents, if any.
+                    uint256[] memory newBucket = new uint256[](bucketIndex + 4);
+                    for (uint256 k; k < bucketIndex; k++) {
+                        newBucket[k] = bucket[k];
+                    }
+                    bucket = newBucket;
+                    map[key] = bucket;
+                }
+                // Increase the bucket’s logical length by 1.
+                assembly ("memory-safe") {
+                    mstore(bucket, add(bucketIndex, 1))
+                }
+                // Make selector slots
+                bytes4[] memory functionSelectors = new bytes4[](16);
+                // Set the its logical length to 1
+                assembly ("memory-safe") {
+                    mstore(functionSelectors, 1)
+                }
+                // Add the selector
+                functionSelectors[0] = selector;
+                // Create a new Facet struct for this facet address.
+                facetAndSelectors = Facet({facet: facet, functionSelectors: functionSelectors});
+                // Store a pointer to the new struct.
+                assembly ("memory-safe") {
+                    facetPointer := facetAndSelectors
+                }
+                // Add pointer to the current bucket and to the facet pointer array.
+                bucket[bucketIndex] = facetPointer;
+                facetPointers[numFacets] = facetPointer;
+                unchecked {
+                    numFacets++;
+                }
+            }
+        }
+
+        // Allocate the final return array with the exact number of unique facets found.
+        facetsAndSelectors = new Facet[](numFacets);
+
+        // Copy each Facet struct into the return array.
+        for (uint256 i; i < numFacets; i++) {
+            facetPointer = facetPointers[i];
+            assembly ("memory-safe") {
+                facetAndSelectors := facetPointer
+            }
+            facetsAndSelectors[i] = facetAndSelectors;
+        }
+    }
+
+    function facets2() external view returns (Facet[] memory facetsAndSelectors) {
+        DiamondStorage storage s = getStorage();
+        bytes4[] memory selectors = s.selectors;
+        uint256[] memory selectorsAndFacets;
+        assembly ("memory-safe") {
+            selectorsAndFacets := selectors
+        }
+        uint256 selectorsCount = selectors.length;
+        bytes4 selector;  
+        
+        // Facet struct reference used to read/write Facet data at a memory pointer.
+        // Facet memory facetAndSelectors;
+
+        // Memory-based "hash map" that groups facet pointers by the last byte of their address.
+        // Each entry is a dynamically sized array of uint256 pointers.
+        // Using only the last byte of the address (256 possible values) provides a simple
+        // bucketing mechanism to reduce linear search costs across unique facets.
+        uint256[][256] memory map;
+
+        // The last byte of a facet address, used as an index key into `map`.
+        // uint256 key;
+
+        // Reference to the current bucket (a dynamic array of facet pointers) for this key.
+        uint256[] memory bucket;
+
+        // Counter for the total number of unique facets encountered.
+        uint256 numFacets;
+
+        uint256 bucketValue;
+
+        for (uint256 i; i < selectorsCount; i++) {
+            selector = selectors[i];            
+            address facet = s.facetAndPosition[selector].facet;
+            selectorsAndFacets[i] = uint256(uint160(facet)) << 32 | uint32(selector);  
+            // Extract the last byte of the facet address to use as a bucket key.
+            uint256 key = uint160(facet) & 0xff;
+            // Retrieve all facet pointers that share the same last address byte.
+            bucket = map[key];
+            // Search this bucket for an existing Facet struct matching `facet`.
+            uint256 bucketIndex;
+            for (; bucketIndex < bucket.length; bucketIndex++) {                
+                bucketValue = bucket[bucketIndex];
+                // If this facet was already found before, just append the selector.
+                if (address(uint160(bucketValue)) == facet) {                    
+                    assembly {
+                        // Load the current selector count from the bucket entry
+                        let facetSelectorCount := add(shr(160, bucketValue), 1)
+                        bucketValue := or(shl(160, facetSelectorCount), facet)
+                    }                     
+                    bucket[bucketIndex] = bucketValue;
+                    break;
+                }
+            }
+
+            // If we didn't find this facet in the bucket (new facet address encountered).
+            // Either we looped through all the available slots in the bucket and found no match or
+            // the bucket size was 0 because the last address byte hasn't been seen before.
+            // Either way we found a new facet address!
+            if (bucket.length == bucketIndex) {
+                // Expand the bucket if it’s full or its length is zero.
+                // We expand the bucket after every 4 entries.
+                // bucketIndex % 4 == 0 check done via & 3 == 0.
+                if (bucketIndex & 3 == 0) {
+                    // Allocate a new bucket with 4 extra slots and copy the old contents, if any.
+                    uint256[] memory newBucket = new uint256[](bucketIndex + 4);
+                    for (uint256 k; k < bucketIndex; k++) {
+                        newBucket[k] = bucket[k];
+                    }
+                    bucket = newBucket;
+                    map[key] = bucket;
+                }                
+                assembly {
+                    // Initialize the new bucket entry with the facet address and a selector count of 1.
+                    bucketValue := or(or(shl(160, 1), facet), shl(192,numFacets))
+                }
+                // Increase the bucket’s logical length by 1.
+                assembly ("memory-safe") {
+                    mstore(bucket, add(bucketIndex, 1))
+                }
+                bucket[bucketIndex] = bucketValue;                                
+                unchecked {
+                    numFacets++;
+                }
+            }
+        }        
+
+        // Allocate the final return array with the exact number of unique facets found.
+        facetsAndSelectors = new Facet[](numFacets);        
+        for(uint256 i; i < selectorsCount; i++) {
+            //selector = selectors[i];
+            selector = bytes4(uint32(selectorsAndFacets[i]));
+            address facet = address(uint160(selectorsAndFacets[i] >> 32));
+            //address facet = s.facetAndPosition[selector].facet;
+            // Extract the last byte of the facet address to use as a bucket key.
+            {
+                uint256 key = uint160(facet) & 0xff;
+                // Retrieve all facet pointers that share the same last address byte.
+                bucket = map[key];
+            }
+            // Search this bucket for an existing Facet struct matching `facet`.
+            uint256 bucketIndex;
+            for (; bucketIndex < bucket.length; bucketIndex++) {
+                bucketValue = bucket[bucketIndex];
+                if (address(uint160(bucketValue)) == facet) {
+                    numFacets = (bucketValue >> 192);
+                    bytes4[] memory functionSelectors = facetsAndSelectors[numFacets].functionSelectors;
+                    uint256 selectorsLength = functionSelectors.length;
+                    if (selectorsLength == 0) {
+                        facetsAndSelectors[numFacets].facet = facet;
+                        functionSelectors = new bytes4[](uint32(bucketValue >> 160));  
+                        facetsAndSelectors[numFacets].functionSelectors = functionSelectors;                        
+                    }
+                    assembly ("memory-safe") {
+                        mstore(functionSelectors, add(selectorsLength, 1))
+                    }
+                    functionSelectors[selectorsLength] = selector;                    
+                    break;
+                }
+            }            
+        }
+
+        // Copy each Facet struct into the return array.
+        // for (uint256 i; i < numFacets; i++) {
+        //     facetPointer = facetPointers[i];
+        //     assembly ("memory-safe") {
+        //         facetAndSelectors := facetPointer
+        //     }
+        //     facetsAndSelectors[i] = facetAndSelectors;
+        // }
     }
 }

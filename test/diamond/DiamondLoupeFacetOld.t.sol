@@ -3,7 +3,7 @@ pragma solidity >=0.8.30;
 
 import {Test} from "forge-std/Test.sol";
 //import {DiamondLoupeFacet} from "../../src/diamond/DiamondLoupeFacet.sol";
-import {DiamondLoupeFacet} from "../../src/diamond/DiamondLoupeFacetOld.sol";
+import {DiamondLoupeFacet} from "../../src/diamond/DiamondLoupeFacet2.sol";
 // import {DiamondLoupeFacet} from "../../src/diamond/DiamondLoupeFacet2.sol";
 import {DiamondLoupeFacetHarness} from "./harnesses/DiamondLoupeFacetOldHarness.sol";
 
@@ -110,25 +110,25 @@ contract DiamondLoupeFacetTest is Test {
     //     }
     // }
 
-    function testFacetsJaaa() public view {
-        DiamondLoupeFacet.Facet[] memory facets = loupe.facets143();
-        console.log("facets length:", facets.length);
-        uint256 count;
+    // function testFacetsJaaa() public view {
+    //     DiamondLoupeFacet.Facet[] memory facets = loupe.facets143();
+    //     console.log("facets length:", facets.length);
+    //     uint256 count;
 
-        for (uint256 i; i < facets.length; i++) {
-            count += facets[i].functionSelectors.length;
+    //     for (uint256 i; i < facets.length; i++) {
+    //         count += facets[i].functionSelectors.length;
 
-            //console.log("Facet", i, "address:", facets[i].facet);
-            //console.log("Facet", i, "selectors length:", facets[i].functionSelectors.length);
-            // for (uint256 j; j < facets[i].functionSelectors.length; j++) {
-            //     console.logBytes4(facets[i].functionSelectors[j]);
-            // }
-        }
-        console.log("Total function:", count);
-    }
+    //         //console.log("Facet", i, "address:", facets[i].facet);
+    //         //console.log("Facet", i, "selectors length:", facets[i].functionSelectors.length);
+    //         // for (uint256 j; j < facets[i].functionSelectors.length; j++) {
+    //         //     console.logBytes4(facets[i].functionSelectors[j]);
+    //         // }
+    //     }
+    //     console.log("Total function:", count);
+    // }
 
     function testFacetsJaa() public view {
-        DiamondLoupeFacet.Facet[] memory facets = loupe.facets142();
+        DiamondLoupeFacet.Facet[] memory facets = loupe.facets();
         console.log("facets length:", facets.length);
         uint256 count;
 
@@ -145,7 +145,7 @@ contract DiamondLoupeFacetTest is Test {
     }
 
     function testFacetsJa() public view {
-        DiamondLoupeFacet.Facet[] memory facets = loupe.facets15();
+        DiamondLoupeFacet.Facet[] memory facets = loupe.facets2();
         console.log("facets length:", facets.length);
         uint256 count;
 
