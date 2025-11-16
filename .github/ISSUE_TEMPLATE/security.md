@@ -1,12 +1,12 @@
 ---
-name: Security Issue
-about: Report a security vulnerability
+name: Security
+about: Report a security vulnerability or concern
 title: '[SECURITY] '
 labels: ['security']
 assignees: ''
 ---
 
-Please look through our [documentation](https://compose.diamonds/docs/contribution/design/), [discussions](https://github.com/Perfect-Abstractions/Compose/discussions) and codebase to ensure your issue is well-researched and not already covered.
+Please look through our [documentation](https://compose.diamonds/docs/design/), [discussions](https://github.com/Perfect-Abstractions/Compose/discussions) and codebase to ensure your issue is well-researched and not already covered.
 
 ## Security Issue
 

@@ -1,12 +1,12 @@
 ---
-name: Documentation Issue
-about: Report documentation problems or suggest improvements
+name: Documentation
+about: Suggest documentation improvements or corrections
 title: '[DOCS] '
 labels: ['documentation']
 assignees: ''
 ---
 
-Please look through our [documentation](https://compose.diamonds/docs/contribution/design/), [discussions](https://github.com/Perfect-Abstractions/Compose/discussions) and codebase to ensure your issue is well-researched and not already covered.
+Please look through our [documentation](https://compose.diamonds/docs/design/), [discussions](https://github.com/Perfect-Abstractions/Compose/discussions) and codebase to ensure your issue is well-researched and not already covered.
 
 ## Documentation Issue
 

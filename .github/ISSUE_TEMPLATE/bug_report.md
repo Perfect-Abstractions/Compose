@@ -6,7 +6,7 @@ labels: ['bug']
 assignees: ''
 ---
 
-Please look through our [documentation](https://compose.diamonds/docs/contribution/design/), [discussions](https://github.com/Perfect-Abstractions/Compose/discussions) and codebase to ensure your issue is well-researched and not already covered.
+Please look through our [documentation](https://compose.diamonds/docs/design/), [discussions](https://github.com/Perfect-Abstractions/Compose/discussions) and codebase to ensure your issue is well-researched and not already covered.
 
 ## Bug Report
 

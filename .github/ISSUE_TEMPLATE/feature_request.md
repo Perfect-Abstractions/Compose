@@ -1,12 +1,12 @@
 ---
 name: Feature Request
-about: Suggest an idea for this project
-title: '[Feature]: '
-labels: ['new feature']
+about: Suggest a new feature or improvement
+title: '[FEATURE] '
+labels: ['enhancement']
 assignees: ''
 ---
 
-Please look through our [documentation](https://compose.diamonds/docs/contribution/design/), [discussions](https://github.com/Perfect-Abstractions/Compose/discussions) and codebase to ensure your issue is well-researched and not already covered.
+Please look through our [documentation](https://compose.diamonds/docs/design/), [discussions](https://github.com/Perfect-Abstractions/Compose/discussions) and codebase to ensure your issue is well-researched and not already covered.
 
 ## Feature Request
 

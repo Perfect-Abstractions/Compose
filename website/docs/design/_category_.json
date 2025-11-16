@@ -1,0 +1,10 @@
+{
+  "label": "Compose Design",
+  "position": 3,
+  "link": {
+    "type": "doc",
+    "id": "design/index"
+  },
+  "collapsible": true,
+  "collapsed": false
+}
