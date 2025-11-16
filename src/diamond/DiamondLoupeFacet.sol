@@ -6,9 +6,9 @@ pragma solidity >=0.8.30;
 contract DiamondLoupeFacet {
     bytes32 constant DIAMOND_STORAGE_POSITION = keccak256("compose.diamond");
 
-    /// @notice Data stored for each function selector
-    /// @dev Facet address of function selector
-    ///      Position of selector in the 'bytes4[] selectors' array
+    /// @notice Data stored for each function selector.
+    /// @dev Facet address of function selector.
+    ///      Position of selector in the 'bytes4[] selectors' array.
     struct FacetAndPosition {
         address facet;
         uint16 position;
@@ -17,7 +17,7 @@ contract DiamondLoupeFacet {
     /// @custom:storage-location erc8042:compose.diamond
     struct DiamondStorage {
         mapping(bytes4 functionSelector => FacetAndPosition) facetAndPosition;
-        // Array of all function selectors that can be called in the diamond
+        // Array of all function selectors that can be called in the diamond.
         bytes4[] selectors;
     }
 
@@ -66,7 +66,7 @@ contract DiamondLoupeFacet {
 
         facetSelectors = new bytes4[](selectorCount);
 
-        // loop through function selectors
+        // Loop through function selectors.
         for (uint256 selectorIndex; selectorIndex < selectorCount; selectorIndex++) {
             bytes4 selector = s.selectors[selectorIndex];
             if (_facet == s.facetAndPosition[selector].facet) {
@@ -74,7 +74,7 @@ contract DiamondLoupeFacet {
                 numSelectors++;
             }
         }
-        // Set the number of selectors in the array
+        // Set the number of selectors in the array.
         assembly ("memory-safe") {
             mstore(facetSelectors, numSelectors)
         }
@@ -117,7 +117,7 @@ contract DiamondLoupeFacet {
         bytes4 selector;
         uint256 selectorsCount = selectors.length;
 
-        // Reuse the selectors array to hold unique facet addresses
+        // Reuse the selectors array to hold unique facet addresses.
         // As we loop through the selectors, we overwrite earlier slots with facet addresses.
         // The selectors array and the allFacets array point to the same
         // location in memory and use the same memory slots.
@@ -126,7 +126,7 @@ contract DiamondLoupeFacet {
         }
 
         // Memory-based "hash map" that groups facet addresses by the last byte of their address.
-        // Each entry is a dynamically sized array of addresses
+        // Each entry is a dynamically sized array of addresses.
         // Using only the last byte of the address (256 possible values) provides a simple
         // bucketing mechanism to reduce linear search costs across unique facets.
         address[][256] memory map;
@@ -183,13 +183,13 @@ contract DiamondLoupeFacet {
                 }
             }
         }
-        // Set the correct length of the allFacets array
+        // Set the correct length of the allFacets array.
         assembly ("memory-safe") {
             mstore(allFacets, numFacets)
         }
     }
 
-    /// @notice Struct to hold facet address and its function selectors
+    /// @notice Struct to hold facet address and its function selectors.
     struct Facet {
         address facet;
         bytes4[] functionSelectors;
@@ -223,7 +223,7 @@ contract DiamondLoupeFacet {
     ///      - This design is optimized for diamonds with many facets and many selectors,
     ///        where the original O(n²) nested loop approach becomes prohibitively expensive.
     ///
-    /// @return facetsAndSelectors Array of Facet structs, each containing a facet address
+    /// @return facetsAndSelectors Array of Facet structs, each containing a facet address.
     function facets() external view returns (Facet[] memory facetsAndSelectors) {
         DiamondStorage storage s = getStorage();
         bytes4[] memory selectors = s.selectors;
@@ -273,7 +273,7 @@ contract DiamondLoupeFacet {
             for (; bucketIndex < bucket.length; bucketIndex++) {
                 // Holds a memory address to a Facet struct
                 facetPointer = bucket[bucketIndex];
-                // Assign the pointer to the facetAndSelectors variable so we can access the Facet struct
+                // Assign the pointer to the facetAndSelectors variable so we can access the Facet struct.
                 assembly ("memory-safe") {
                     facetAndSelectors := facetPointer
                 }
