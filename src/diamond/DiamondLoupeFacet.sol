@@ -355,8 +355,7 @@ contract DiamondLoupeFacet {
             assembly ("memory-safe") {
                 facetAndSelectors := facetPointer
             }
-            facetsAndSelectors[i].facet = facetAndSelectors.facet;
-            facetsAndSelectors[i].functionSelectors = facetAndSelectors.functionSelectors;
+            facetsAndSelectors[i]= facetAndSelectors;
         }
     }
 }
