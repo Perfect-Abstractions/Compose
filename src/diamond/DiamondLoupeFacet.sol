@@ -355,7 +355,7 @@ contract DiamondLoupeFacet {
             assembly ("memory-safe") {
                 facetAndSelectors := facetPointer
             }
-            facetsAndSelectors[i]= facetAndSelectors;
+            facetsAndSelectors[i] = facetAndSelectors;
         }
     }
 }
