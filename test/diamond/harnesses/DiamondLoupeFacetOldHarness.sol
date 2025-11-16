@@ -6,14 +6,14 @@ import {DiamondLoupeFacet} from "../../../src/diamond/DiamondLoupeFacetOld.sol";
 // import {DiamondLoupeFacet} from "../../../src/diamond/DiamondLoupeFacet2.sol";
 import {console} from "forge-std/console.sol";
 
-// forge test --gas-report --match-test <TestName>
+// forge test --gas-report --match-path test/diamond/DiamondLoupeFacetOld.t.sol
 
 contract DiamondLoupeFacetHarness is DiamondLoupeFacet {
     function initialize() external {
         DiamondStorage storage s = getStorage();
         uint256 facetCount = 0;
         address a = 0x71C7656EC7ab88b098defB751B7401B5f6d8976F;
-        for (uint256 i = 1; i < 40001; i++) {
+        for (uint256 i = 1; i < 1001; i++) {
             bytes4 selector = bytes4(uint32(i));
             s.selectors.push(selector);
             s.facetAndPosition[selector] = FacetAndPosition(a, 0);
