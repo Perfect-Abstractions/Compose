@@ -35,14 +35,22 @@ We focus on building **small, independent, and easy-to-read facets**. Each facet
 
 ## Extending Facets
 
+
 1. Every extension of a standard or facet should be implemented as a new facet.
 2. A facet should only be extended with a new facet that composes with it.
-3. When reusing structs or storage layouts from existing facets or libraries, reuse the original diamond-storage locations and structs, but only include the variables that the new facet actually needs if possible. Of course a reused struct must maintain the same storage layout as an originally defined struct. 
-4. Reusing a struct is done by copying it and removing unused variables.
+3. When reusing structs from existing facets or libraries, reuse the original diamond storage locations and structs, but only include the variables that the new facet actually needs if possible. Of course a reused struct must maintain the same order of variables as an originally defined struct. You **cannot** remove a variable from the beginning or middle of a struct. 
+4. Reusing a struct is done by copying it and removing unused variables at the end of it.
 5. Storage structs should be designed so that removable variables (unused by some facets) appear at the end of the struct.
 6. Storage structs should also be designed for packed storage (smaller sized variables using the same storage slot).
 7. Removing storage variables is done only from the end of a struct. If a variable cannot be removed without breaking layout, it must remain to preserve compatibility.
-8.A facet that adds new storage variables must define its own diamond-storage struct.
+8. A facet that adds new storage variables must define its own diamond storage struct.
+
+:::info Important
+Maintain the same order of variables in structs when reusing the same struct in different facets/libraries.
+
+It is important to maintain the same sequence of variables in structs when reusing the same struct in different facets/libraries. Variables can only be removed from the end of structs if they are not used by a facet or library.
+:::
+
 
 ### Exceptions
 
