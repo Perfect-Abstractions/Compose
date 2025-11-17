@@ -42,7 +42,7 @@ We focus on building **small, independent, and easy-to-read facets**. Each facet
 4. Reusing a struct is done by copying it and removing unused variables at the end of it.
 5. Storage structs should be designed so that removable variables (unused by some facets) appear at the end of the struct.
 6. Storage structs should also be designed for packed storage (smaller sized variables using the same storage slot).
-7. Removing storage variables is done only from the end of a struct. If a variable cannot be removed without breaking layout, it must remain to preserve compatibility.
+7. Removing storage variables is done only from the end of a struct. If a variable cannot be removed from the end of a struct, it must remain to preserve compatibility.
 8. A facet that adds new storage variables must define its own diamond storage struct.
 
 :::info Important
