@@ -46,6 +46,7 @@ library LibERC721 {
         string name;
         string symbol;
         string baseURI;
+        mapping(uint256 tokenId => string tokenURI) tokenURIOf;
         mapping(uint256 tokenId => address owner) ownerOf;
         mapping(address owner => uint256[] ownedTokens) ownedTokensOf;
         mapping(uint256 tokenId => uint256 ownedTokensIndex) ownedTokensIndexOf;
