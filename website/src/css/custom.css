@@ -83,3 +83,33 @@
 
 /* Import responsive breakpoints */
 @import url('./responsive.css');
+<<<<<<< HEAD
+=======
+
+
+
+/* Make accordion body white in both light and dark mode */
+[class^="accordionContent_"] {
+  background-color: var(--ifm-background-color) !important;
+}
+
+/* Keep code blocks using their normal theme background */
+/* [class^="accordionContent_"] pre,
+[class^="accordionContent_"] code {
+  background-color: var(--ifm-pre-background) !important;
+  border-radius: var(--ifm-code-border-radius, 6px);
+  box-shadow: 0 0 0 1px var(--ifm-color-emphasis-200);
+} */
+
+
+/* Remove italics from Prism code highlighting (especially in dark mode) */
+.token.keyword,
+.token.function,
+.token.builtin,
+.token.selector,
+.token.class-name,
+.token.constant,
+.token.important {
+  font-style: normal !important;
+}
+>>>>>>> mudge/main

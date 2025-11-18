@@ -1,0 +1,27 @@
+---
+title: Foundations
+description: Compose smart contracts are designed to be composable.
+sidebar_class_name: hidden
+---
+
+Compose is a new approach to smart contract development that changes how developers build and deploy blockchain applications. This section introduces the core concepts that make Compose unique.
+
+## Articles in this section
+
+- [Diamond Smart Contracts](./diamond-contracts) — A diamond contract is made up of multiple parts. It exists at one address and holds all storage, but uses separate smart contracts called facets to provide its functionality.
+
+- [Onchain Smart Contracts](./onchain-smart-contracts) — Compose provides reusable onchain contracts that already exist on blockchains—eliminating the need to deploy or manage them yourself.
+
+- [Reusable Smart Contracts](./resuable-smart-contracts) — Build new systems from existing onchain contracts through diamond-based architecture. Deploy only a small diamond that connects to existing facets.
+
+- [Composable Smart Contracts](./composable-smart-contracts) — Facets interoperate seamlessly inside the same diamond. Mix, match, and reuse logic across projects without modifying or redeploying code.
+
+- [Custom Functionality: Compose Your Own Facets](./custom-facets) — Build your own facets that work seamlessly with existing Compose facets using shared storage layouts and internal logic through Solidity libraries.
+
+- [Understanding Facets and Libraries](./facets-and-libraries) — Learn how facets and libraries work together through shared storage to build composable systems.
+
+
+:::warning[Early Development]
+Compose is still in early development and currently available only to contributors.
+It is not **production-ready** — use it in test or development environments only.
+:::

@@ -46,10 +46,18 @@ export default function CodeShowcase() {
                 </div>
               </div>
             </div>
+<<<<<<< HEAD
             <Link to="/docs/foundations/facets-and-libraries" className={styles.showcaseLink}>
               Learn More
               <Icon name="arrow-right" size={20} />
             </Link>
+=======
+            
+            {/* <Link to="/docs/foundations/facets-and-libraries" className={styles.showcaseLink}>
+              Learn More
+              <Icon name="arrow-right" size={20} />
+            </Link> */}
+>>>>>>> mudge/main
           </div>
           <div className={styles.showcaseCode}>
             <div className={styles.codeWindow}>

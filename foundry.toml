@@ -6,6 +6,10 @@ out = "out"
 libs = ["lib"]
 optimizer = true
 optimizer_runs = 20_000
+<<<<<<< HEAD
+=======
+evm_version = "prague"
+>>>>>>> mudge/main
 
 [profile.ci]
 src = "src"
@@ -13,6 +17,10 @@ out = "out"
 libs = ["lib"]
 optimizer = true
 optimizer_runs = 20_000
+<<<<<<< HEAD
+=======
+evm_version = "prague"
+>>>>>>> mudge/main
 # Coverage settings
 fuzz = { runs = 1000 }
 invariant = { runs = 1000 }

@@ -1,0 +1,163 @@
+---
+sidebar_position: 2
+title: How to Contribute
+description: Learn how to contribute to Compose
+---
+
+Thank you for your interest in contributing to Compose!
+
+Compose is a community developed project. We welcome you and want your help.
+
+## Before Starting
+
+Before contributing, it is important to familiarize yourself with the design of Compose and how it is developed. 
+
+Read the following documentation sections:
+1. [Foundations](/docs/foundations)
+2. [Compose Design](/docs/design)
+
+**Browse our [issues](https://github.com/Perfect-Abstractions/Compose/issues), [pull requests](https://github.com/Perfect-Abstractions/Compose/pulls) and [discussions](https://github.com/Perfect-Abstractions/Compose/discussions) to get familiar with the project and find ways to contribute.**
+
+Look at the [ERC20 and ERC721 implementations](https://github.com/Perfect-Abstractions/Compose/tree/main/src/token) to see examples of how things are written.
+
+## How to Contribute?
+
+There are many ways to contribute to Compose. Here are some ways:
+
+1. Look over the existing codebase and see if you can find any bugs, errors or security vulnerabilities. [Create an issue](https://github.com/Perfect-Abstractions/Compose/issues/) about anything you find. This is also a great way to get familiar with the codebase.
+
+2. Look at the code comments in the codebase. See if you can improve them or add more comments to make the code easier to understand.
+
+3. Improve the website documentation by fixing typos, adding examples, creating new content, or clarifying existing content. The documentation files are in the repository under [`website/docs`](https://github.com/Perfect-Abstractions/Compose/tree/main/website/docs).
+
+4. Look over the [open issues](https://github.com/Perfect-Abstractions/Compose/issues) and see if there are any you can do or help with. Leave comments describing what you want to do and how you want to do it. We'll answer you and assign you to issues so you can start.
+
+5. Look at the [open pull requests](https://github.com/Perfect-Abstractions/Compose/pulls) and see if you can help review them or improve them.
+
+6. Open [new issues](https://github.com/Perfect-Abstractions/Compose/issues) for new features or improvements.
+
+7. If you have general ideas or suggestions or things you want to discuss, please open a [discussion](https://github.com/Perfect-Abstractions/Compose/discussions).
+
+8. Look over the existing tests and see if you can add more tests or improve existing tests. Open an issue to describe what you want to do.
+
+9. Have other ideas about how to contribute? Please let us know!
+
+## Development Setup
+
+### Prerequisites
+- [Solidity](https://soliditylang.org/) (version 0.8.30 or higher)
+- [Foundry](https://book.getfoundry.sh/getting-started/installation) (version 1.4.3-stable or higher)
+- Git
+
+### Setup Steps
+1. Fork the repository
+2. Clone your fork:
+   ```bash
+   git clone https://github.com/YOUR_USERNAME/Compose.git
+   cd Compose
+   ```
+3. Install dependencies:
+   ```bash
+   forge install
+   ```
+4. Build the project:
+   ```bash
+   forge build
+   ```
+5. Run tests:
+   ```bash
+   forge test
+   ```
+
+## Development Workflow
+
+Once you are assigned to an issue:
+1. Fork the repository.
+2. Create a new branch for your work.
+3. Implement your changes.
+4. Make sure your changes follow the [design of Compose](/docs/design).
+5. Format your code: `forge fmt`.
+6. Run tests to ensure everything works.
+7. Submit a pull request.
+8. We will review it and merge it and/or give you feedback on the work.
+
+You can also make new issues to suggest new functionality or work.
+
+### Ideas & Discussions
+
+**We use GitHub Discussions for ideas, debates, and brainstorming!** 
+
+- **Issues** are for actionable items that need to be implemented or fixed
+- **Discussions** are for general communication, talking about possibilities, ideas, and exploring concepts
+
+Have an idea for a new feature? Want to discuss project direction? Curious about implementation approaches? Start a discussion in our [GitHub Discussions](https://github.com/Perfect-Abstractions/Compose/discussions) forum. 
+
+This is the perfect place to:
+- Share ideas and get community feedback.
+- Debate different approaches and solutions.
+- Brainstorm new functionality.
+- Discuss project direction and philosophy.
+- Ask "what if" questions.
+- Explore possibilities before committing to implementation.
+
+Once you have a clear idea of what you want to do, [create an issue](https://github.com/Perfect-Abstractions/Compose/issues/new). Provide as much data as you can and we will give you the go ahead to start or give more feedback about it.
+
+### Required
+Before submitting a pull request:
+- Format your code: `forge fmt`.
+- Run all tests: `forge test`.
+- Update gas snapshots: `forge snapshot`.
+- Ensure your code follows the [design of Compose](/docs/design).
+- Ensure your code doesn't use any [banned language features](/docs/design/banned-solidity-features).
+- Ensure your code follows the coding style in the existing code base.
+
+
+## Code Style Guide
+
+Follow the [Code Style Guide](/docs/contribution/code-style-guide) when contributing code.
+
+### Development Considerations
+- Make sure that you understand all code that you use or write.
+- Gas efficiency is important but how easy the code is to read is more important.
+- Write secure code.
+- Write bug free code.
+- Consider edge cases and potential attack vectors.
+
+## Testing
+Follow the [Testing Guidelines](/docs/contribution/testing) when writing tests.
+
+## Code of Conduct
+
+### Our Pledge
+We are committed to providing a welcoming and inspiring community for all. We pledge to make participation in our project a harassment-free experience for everyone.
+
+### Our Standards
+Examples of behavior that contributes to creating a positive environment include:
+- Being respectful of differing viewpoints and experiences.
+- Gracefully accepting constructive criticism.
+- Focusing on what is best for the community & Compose itself.
+- Showing empathy towards other community members.
+
+
+## Getting Help
+
+If you need help or have questions, feel free to reach out through:
+
+- [GitHub Issues](https://github.com/Perfect-Abstractions/Compose/issues)
+- [Community discussions](https://github.com/Perfect-Abstractions/Compose/discussions)
+- [Discord](https://discord.gg/DCBD2UKbxc)
+
+
+## License
+
+By contributing to Compose, you agree that your contributions will be licensed under the same license as the project (see [LICENSE.md](https://github.com/Perfect-Abstractions/Compose/blob/main/LICENSE.md)).
+
+---
+
+This is the beginning and we are still working out how this will all work. We are glad you are interested in this project and want to make something great with you. - Nick
+
+
+
+
+
+

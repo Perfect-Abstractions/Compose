@@ -11,7 +11,11 @@ export default function Home() {
   return (
     <Layout
       title={`${siteConfig.title} - Smart Contract Library`}
+<<<<<<< HEAD
       description="Compose is a smart contract library for ERC-2535 Diamonds. Build readable, composable smart contracts with on-chain standard library facets.">
+=======
+      description="Compose is a smart contract library for ERC-2535 Diamonds. Build readable, composable smart contracts with onchain standard library facets.">
+>>>>>>> mudge/main
       <HomepageHeader />
       <main>
         <FeaturesSection />

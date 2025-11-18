@@ -12,7 +12,11 @@ export default function FeaturesSection() {
     {
       icon: 'diamond-native',
       title: 'Diamond-Native',
+<<<<<<< HEAD
       description: 'Built specifically for ERC-2535 Diamonds. Deploy facets once, reuse them across multiple diamonds on-chain.',
+=======
+      description: 'Built specifically for ERC-2535 Diamonds. Deploy facets once, reuse them across multiple diamonds onchain.',
+>>>>>>> mudge/main
     },
     {
       icon: 'composition',
@@ -26,8 +30,13 @@ export default function FeaturesSection() {
     },
     {
       icon: 'library',
+<<<<<<< HEAD
       title: 'On-Chain Standard Library',
       description: 'Access verified, audited facets deployed on multiple blockchains. ERC-20, ERC-721, access control, and more.',
+=======
+      title: 'Onchain Standard Library',
+      description: '(In the future) Access verified, audited facets deployed on multiple blockchains.',
+>>>>>>> mudge/main
     },
     {
       icon: 'community',
@@ -48,6 +57,15 @@ export default function FeaturesSection() {
             Forget traditional smart contract design patterns. Compose takes a radically 
             different approach with Smart Contract Oriented Programming.
           </p>
+<<<<<<< HEAD
+=======
+          <br />
+<p className={styles.sectionSubtitle}>
+          We focus on building small, independent, and easy-to-understand smart contracts called <b>facets</b>. 
+          Each facet is designed to be deployed once, then reused and composed seamlessly with others to form 
+          complete smart contract systems.
+          </p>
+>>>>>>> mudge/main
         </div>
         <div className={styles.featuresGrid}>
           {features.map((feature) => (

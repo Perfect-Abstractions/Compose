@@ -2,6 +2,10 @@
 sidebar_position: 1
 slug: /
 title: "Introduction"
+<<<<<<< HEAD
+=======
+description: Compose is a smart contract library for building modular, upgradeable systems using the ERC-2535 Diamond standard.
+>>>>>>> mudge/main
 ---
 
 import DocHero from '@site/src/components/docs/DocHero';
@@ -9,6 +13,7 @@ import DocCard, { DocCardGrid } from '@site/src/components/docs/DocCard';
 import Callout from '@site/src/components/ui/Callout';
 import FeatureGrid, { FeatureGridItem } from '@site/src/components/features/FeatureGrid';
 
+<<<<<<< HEAD
 <DocHero
   title="Build with the Compose Library"
   subtitle="The Compose library gives developers access to a comprehensive standard library of smart contract facets. By using the library in combination with the ERC-2535 Diamond standard, you can build on-chain systems with maximum code reusability."
@@ -60,29 +65,73 @@ Compose is currently in development and only available to contributors. It is **
 ### The Vision
 
 Imagine having access to a comprehensive, verified standard library of smart contract components that you can combine like LEGO blocks to build complex systems—all deployed once on-chain and reused across your projects. That's Compose.
+=======
+{/*
+<DocHero
+  title="Build with the Compose"
+  subtitle="Compose is a general purpose smart contract library. It helps you create smart contract systems."
+  variant="gradient"
+  height="medium"
+/>
+*/}
+
+
+{/* **Compose** is a general-purpose smart contract library that helps you build smart contract systems. */}
+
+
+**Compose** is a smart contract library that helps developers build modular, upgradeable systems using the [ERC-2535 Diamond](https://eips.ethereum.org/EIPS/eip-2535) standard.
+
+It's designed from the ground up for **code clarity**, **reusability**, and **onchain composability**.
+
+### The Vision
+
+Imagine a verified, standard library of **onchain smart contract components** —
+each one small, self-contained, and reusable like LEGO blocks.
+
+Deployed once, trusted by all, and combined in endless ways to create new systems.
+
+That's **Compose** — where your unique value and functionality connects seamlessly with simple, transparent, onchain building blocks.
+>>>>>>> mudge/main
 
 ## Key Features
 
 <FeatureGrid columns={3}>
   <FeatureGridItem
     icon={<Icon name="package" size={32} />}
+<<<<<<< HEAD
     title="On-Chain Standard Library"
     description="Access verified, audited facets deployed once and reused across multiple diamonds on multiple blockchains."
+=======
+    title="Onchain Standard Library"
+    description="(Not yet, in the future) - Access verified, audited smart contracts deployed once and reused across multiple diamonds on multiple blockchains."
+>>>>>>> mudge/main
   />
   <FeatureGridItem
     icon={<Icon name="compose" size={32} />}
     title="Composable Architecture"
+<<<<<<< HEAD
     description="Mix and match facets and libraries to build exactly what you need without inheritance conflicts."
+=======
+    description="Mix and match onchain components to build exactly what you need."
+>>>>>>> mudge/main
   />
   <FeatureGridItem
     icon={<Icon name="book" size={32} />}
     title="Readability First"
+<<<<<<< HEAD
     description="Code designed to be understood. Smart Contract Oriented Programming prioritizes clarity over cleverness."
+=======
+    description="Code designed to be understood. Compose prioritizes clarity over cleverness."
+>>>>>>> mudge/main
   />
   <FeatureGridItem
     icon={<Icon name="cycle" size={32} />}
     title="Upgradeable by Design"
+<<<<<<< HEAD
     description="Full power of ERC-2535 Diamonds means your contracts can evolve without redeployment."
+=======
+    description="Full power of ERC-2535 Diamonds means your contracts can evolve without full redeployment."
+>>>>>>> mudge/main
   />
   <FeatureGridItem
     icon={<Icon name="shield" size={32} />}
@@ -96,6 +145,7 @@ Imagine having access to a comprehensive, verified standard library of smart con
   />
 </FeatureGrid>
 
+<<<<<<< HEAD
 ## How It Works
 
 Compose uses a **shared storage architecture** where both standard facets and your custom facets access the same data:
@@ -124,10 +174,13 @@ contract GameNFTFacet {
 Both your `GameNFTFacet` and the standard `ERC721Facet` work with the **same storage** in your diamond. This is the power of Compose's shared storage architecture.
 </Callout>
 
+=======
+>>>>>>> mudge/main
 ## Why Choose Compose?
 
 ### Our value
 - **Readability**: Code that's easy to understand and audit
+<<<<<<< HEAD
 - **Reusability**: Deploy once, use everywhere
 - **Standards**: Battle-tested, community-reviewed implementations
 - **Upgradability**: Full power of ERC-2535 Diamonds
@@ -135,12 +188,25 @@ Both your `GameNFTFacet` and the standard `ERC721Facet` work with the **same sto
 
 ### Perfect For:
 - Building complex DeFi protocols
+=======
+- **Reusability**: Deploy once, then reuse
+- **Standards**: Battle-tested, community-reviewed implementations
+- **Upgradability**: Full power of ERC-2535 Diamonds
+- **Composability**: Mix and match functionality
+
+### Perfect For:
+- Building DeFi protocols
+>>>>>>> mudge/main
 - Creating NFT platforms with custom logic
 - Developing DAO governance systems
 - Projects requiring upgradeable smart contracts
 - Teams that prioritize code quality and maintainability
 
+<<<<<<< HEAD
 ## Core Principles
+=======
+{/* ## Core Principles
+>>>>>>> mudge/main
 
 <FeatureGrid columns={2}>
   <FeatureGridItem
@@ -161,10 +227,17 @@ Both your `GameNFTFacet` and the standard `ERC721Facet` work with the **same sto
   <FeatureGridItem
     icon={<Icon name="sparkles" size={32} />}
     title="Intentional Simplicity"
+<<<<<<< HEAD
     description="Banned features lead to clearer code. Less magic, more understanding."
   />
 </FeatureGrid>
 
+=======
+    description="Simple code. Less magic, more understanding."
+  />
+</FeatureGrid> */}
+{/*
+>>>>>>> mudge/main
 ## Next Steps
 
 <DocCardGrid columns={2}>
@@ -183,8 +256,14 @@ Both your `GameNFTFacet` and the standard `ERC721Facet` work with the **same sto
     size="large"
   />
 </DocCardGrid>
+<<<<<<< HEAD
 
 ## Community & Support
+=======
+*/}
+
+{/* ## Community & Support
+>>>>>>> mudge/main
 
 Compose is built with 🩵 by a vibrant community of developers who care about code quality.
 
@@ -220,6 +299,7 @@ Compose is built with 🩵 by a vibrant community of developers who care about c
     href="/blog"
     size="small"
   />
+<<<<<<< HEAD
 </DocCardGrid>
 
 ---
@@ -227,4 +307,9 @@ Compose is built with 🩵 by a vibrant community of developers who care about c
 <div style={{textAlign: 'center', marginTop: '3rem', fontSize: '1.25rem', fontWeight: 600}}>
 Ready to revolutionize your smart contract development? Let's get started! 🚀
 </div>
+=======
+</DocCardGrid> */}
+
+
+>>>>>>> mudge/main
 

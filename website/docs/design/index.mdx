@@ -1,0 +1,22 @@
+---
+sidebar_position: 1
+title: Compose Design
+description: Overview for how Compose is designed
+sidebar_class_name: hidden
+---
+
+This section contains the guidelines and rules for developing new facets and Solidity libraries in **Compose**.
+
+We focus on building small, independent, and easy-to-understand facets. Each facet is designed to be deployed once, then reused and composed seamlessly with others to form complete smart contract systems.
+
+## Articles in this section
+
+- [Compose Is Written to Be Read](./written-to-be-read) — Emphasizes clarity first: keep facets and libraries self-contained, ordered top-to-bottom, and easy to read. Avoid clever abstractions that reduce readability.  
+
+- [Repeat Yourself](./repeat-yourself) — Prefer duplication over indirection when it improves clarity.
+  
+- [Banned Solidity Features](./banned-solidity-features) — Solidity Features we don't use in facets/libraries.
+
+- [Design for Composition](./design-for-composition) — Facets replace inheritance with onchain composition. Keep facets small and self-contained, pair each facet with a library, reuse storage layouts carefully, and extend behavior by adding new facets.
+
+- [Maintain Compatibility](./maintain-compatibility) — Build facets that work with existing standards, libraries, and systems and exhibit expected behavior.

@@ -1,6 +1,11 @@
 {
+<<<<<<< HEAD
   "label": "Foundation Concepts",
   "position": 3,
   "collapsible": true,
   "collapsed": true
+=======
+  "label": "Foundations",
+  "position": 2  
+>>>>>>> mudge/main
 }

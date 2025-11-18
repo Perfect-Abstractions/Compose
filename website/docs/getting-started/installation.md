@@ -71,6 +71,7 @@ Compose includes a pre-configured `foundry.toml`. If you're integrating Compose 
 src = "src"
 out = "out"
 libs = ["lib"]
+<<<<<<< HEAD
 solc_version = "0.8.24"
 optimizer = true
 optimizer_runs = 200
@@ -91,6 +92,32 @@ Add these remappings to your `remappings.txt` or `foundry.toml`:
 ```
 compose/=lib/Compose/src/
 forge-std/=lib/forge-std/src/
+=======
+optimizer = true
+optimizer_runs = 20_000
+evm_version = "prague"
+
+[profile.ci]
+src = "src"
+out = "out"
+libs = ["lib"]
+optimizer = true
+optimizer_runs = 20_000
+evm_version = "prague"
+# Coverage settings
+fuzz = { runs = 1000 }
+invariant = { runs = 1000 }
+
+[fmt]
+line_length = 120
+tab_width = 4
+bracket_spacing = false
+int_types = 'long'
+multiline_func_header = 'attributes_first'
+quote_style = 'double'
+number_underscore = 'preserve'
+single_line_statement_blocks = 'preserve'
+>>>>>>> mudge/main
 ```
 
 ## Verify Installation
@@ -103,13 +130,21 @@ forge test -vvv
 
 You should see output indicating all tests pass.
 
+<<<<<<< HEAD
 ## What's Next?
+=======
+<!-- ## What's Next?
+>>>>>>> mudge/main
 
 Now that you have Compose installed, let's understand the core concepts:
 
 - **[Core Concepts](/)** - Learn about facets, libraries, and shared storage
 - **[Quick Start Guide](/docs/getting-started/quick-start)** - Jump right in with a working example
+<<<<<<< HEAD
 - **[Your First Diamond](/docs/getting-started/your-first-diamond)** - Build a simple diamond with Compose facets
+=======
+- **[Your First Diamond](/docs/getting-started/your-first-diamond)** - Build a simple diamond with Compose facets -->
+>>>>>>> mudge/main
 
 ## Getting Help
 

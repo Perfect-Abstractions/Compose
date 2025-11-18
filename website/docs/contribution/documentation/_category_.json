@@ -1,6 +1,10 @@
 {
   "label": "Documentation",
+<<<<<<< HEAD
   "position": 2,
+=======
+  "position": 5,
+>>>>>>> mudge/main
   "collapsible": true,
   "collapsed": true
 }

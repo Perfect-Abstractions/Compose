@@ -1,5 +1,9 @@
 ---
 sidebar_position: 3
+<<<<<<< HEAD
+=======
+draft: true
+>>>>>>> mudge/main
 ---
 
 # Your First Diamond

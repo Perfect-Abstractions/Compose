@@ -1,6 +1,10 @@
 {
   "label": "Contribution",
+<<<<<<< HEAD
   "position": 4,
+=======
+  "position": 5,
+>>>>>>> mudge/main
   "link": {
     "type": "generated-index",
     "description": "Learn how to contribute to Compose"

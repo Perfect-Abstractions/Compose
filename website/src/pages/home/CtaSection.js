@@ -20,9 +20,17 @@ export default function CtaSection() {
               <span>Get Started</span>
               <Icon name="arrow-right" size={20} />
             </Link>
+<<<<<<< HEAD
             <Link to="/docs/getting-started/quick-start" className={clsx(styles.ctaButton, styles.ctaSecondaryLight)}>
               <span>View Quick Start</span>
             </Link>
+=======
+            {/*
+            <Link to="/docs/getting-started/quick-start" className={clsx(styles.ctaButton, styles.ctaSecondaryLight)}>
+              <span>View Quick Start</span>
+            </Link>
+            */}
+>>>>>>> mudge/main
           </div>
         </div>
       </div>

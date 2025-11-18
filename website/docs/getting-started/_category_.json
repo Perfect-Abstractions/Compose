@@ -1,11 +1,19 @@
 {
   "label": "Getting Started",
+<<<<<<< HEAD
   "position": 2,
+=======
+  "position": 3,
+>>>>>>> mudge/main
   "link": {
     "type": "generated-index",
     "description": "Learn how to install and configure Compose for your smart contract projects."
   },
   "collapsible": true,
+<<<<<<< HEAD
   "collapsed": false
+=======
+  "collapsed": true
+>>>>>>> mudge/main
 }
 

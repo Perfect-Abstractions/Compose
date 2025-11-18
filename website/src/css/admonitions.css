@@ -4,6 +4,10 @@
  */
 
 /* Admonitions base */
+<<<<<<< HEAD
+=======
+
+>>>>>>> mudge/main
 .admonition {
   border-radius: var(--ifm-global-radius);
   border-left-width: 4px;
@@ -11,12 +15,23 @@
 }
 
 /* Light mode admonitions */
+<<<<<<< HEAD
+=======
+/*
+>>>>>>> mudge/main
 .alert {
   background: #f8fafc;
   border-left-width: 4px;
 }
+<<<<<<< HEAD
 
 /* Dark mode admonitions */
+=======
+*/
+
+/* Dark mode admonitions */
+/*
+>>>>>>> mudge/main
 [data-theme='dark'] .alert {
   background: #1e293b;
   border-left-color: #60a5fa;
@@ -38,3 +53,7 @@
 [data-theme='dark'] .alert--success {
   border-left-color: #10b981;
 }
+<<<<<<< HEAD
+=======
+*/
+>>>>>>> mudge/main

@@ -24,7 +24,7 @@ const config = {
 
   // Set the production url of your site here
   //url: 'https://compose.diamonds/',
-  url: 'https://compose-diamonds.netlify.app',
+  url: 'https://compose.diamonds/',
   // Set the /<baseUrl>/ pathname under which your site is served
   // For GitHub pages deployment, it is often '/<projectName>/'
   baseUrl: '/',
@@ -32,9 +32,11 @@ const config = {
 
   // Broken link handling
   onBrokenLinks: 'throw',
+  themes: ['@docusaurus/theme-mermaid'],
 
   // Docusaurus v4-compatible location for broken Markdown links
   markdown: {
+    mermaid: true,
     hooks: {
       onBrokenMarkdownLinks: 'throw',
     },
@@ -139,7 +141,7 @@ const config = {
   themeConfig:
     /** @type {import('@docusaurus/preset-classic').ThemeConfig} */
     ({
-      image: 'img/social-card-compose.png',
+      image: 'img/socialcard-compose.png',
       colorMode: {
         defaultMode: 'light',
         disableSwitch: false,
@@ -165,25 +167,25 @@ const config = {
             position: 'left',
             activeBaseRegex: '/blog',
           },
-          {
-            type: 'dropdown',
-            label: 'Resources',
-            position: 'left',
-            items: [
-              {
-                label: 'Getting Started',
-                to: '/docs/getting-started/installation',
-              },
-              {
-                label: 'Examples',
-                to: '/',
-              },
-              {
-                label: 'API Reference',
-                to: '/',
-              },
-            ],
-          },
+          // {
+          //   type: 'dropdown',
+          //   label: 'Resources',
+          //   position: 'left',
+          //   items: [
+          //     {
+          //       label: 'Getting Started',
+          //       to: '/docs/getting-started/installation',
+          //     },
+          //     {
+          //       label: 'Examples',
+          //       to: '/',
+          //     },
+          //     {
+          //       label: 'API Reference',
+          //       to: '/',
+          //     },
+          //   ],
+          // },
           {
             href: 'https://discord.gg/DCBD2UKbxc',
             label: 'Discord',
@@ -210,10 +212,12 @@ const config = {
                 label: 'Installation',
                 to: '/docs/getting-started/installation',
               },
+              /*
               {
                 label: 'Quick Start',
                 to: '/docs/getting-started/quick-start',
               },
+              */
             ],
           },
           {
