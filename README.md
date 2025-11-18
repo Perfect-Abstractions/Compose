@@ -21,7 +21,7 @@ The project actively evolves based on community input—[tell us](https://github
 
 **Forget traditional smart contract design patterns**—Compose takes a radically different approach.
 
-We build high-quality smart contracts by **intentionally restricting Solidity features** and following conventions designed specifically for smart contracts. This is **Smart Contract Oriented Programming (SCOP)**.
+We build high-quality smart contracts by <a href="https://compose.diamonds/docs/design/banned-solidity-features">**intentionally restricting Solidity features**</a> and following conventions designed specifically for smart contracts. This is **Smart Contract Oriented Programming (SCOP)**.
 
 ### Core Philosophy
 
