@@ -1,5 +1,6 @@
 ---
 title: Markdown page example
+draft: true
 ---
 
 # Markdown page example
