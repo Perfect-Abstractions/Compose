@@ -57,7 +57,7 @@ contract ShardedDiamondLoupeFacet {
         uint256 selectorCount = selectors.length;
         uint256 numSelectors;
         facetSelectors = new bytes4[](selectorCount);
-        
+
         for (uint256 selectorIndex; selectorIndex < selectorCount; selectorIndex++) {
             bytes4 selector = s.selectors[selectorIndex];
             if (_facet == s.facetAndPosition[selector].facet) {
@@ -65,7 +65,7 @@ contract ShardedDiamondLoupeFacet {
                 numSelectors++;
             }
         }
-        
+
         assembly ("memory-safe") {
             mstore(facetSelectors, numSelectors)
         }
@@ -75,12 +75,12 @@ contract ShardedDiamondLoupeFacet {
     /// @return allFacets The facet addresses
     function facetAddresses() external view returns (address[] memory allFacets) {
         LibShardedLoupe.ShardedLoupeStorage storage sls = LibShardedLoupe.getStorage();
-        
+
         // Use sharded loupe if enabled
         if (sls.enabled && sls.categories.length > 0) {
             return _facetAddressesSharded();
         }
-        
+
         // Fall back to traditional loupe
         return _facetAddressesTraditional();
     }
@@ -89,12 +89,12 @@ contract ShardedDiamondLoupeFacet {
     function _facetAddressesSharded() internal view returns (address[] memory allFacets) {
         LibShardedLoupe.ShardedLoupeStorage storage sls = LibShardedLoupe.getStorage();
         bytes32[] memory cats = sls.categories;
-        
+
         uint256 total;
         for (uint256 i; i < cats.length; i++) {
             total += sls.shards[cats[i]].facetCount;
         }
-        
+
         allFacets = new address[](total);
         uint256 k;
         for (uint256 i; i < cats.length; i++) {
@@ -170,12 +170,12 @@ contract ShardedDiamondLoupeFacet {
     /// @return facetsAndSelectors Array of Facet structs
     function facets() external view returns (Facet[] memory facetsAndSelectors) {
         LibShardedLoupe.ShardedLoupeStorage storage sls = LibShardedLoupe.getStorage();
-        
+
         // Use sharded loupe if enabled
         if (sls.enabled && sls.categories.length > 0) {
             return _facetsSharded();
         }
-        
+
         // Fall back to traditional loupe
         return _facetsTraditional();
     }
@@ -184,12 +184,12 @@ contract ShardedDiamondLoupeFacet {
     function _facetsSharded() internal view returns (Facet[] memory facetsAndSelectors) {
         LibShardedLoupe.ShardedLoupeStorage storage sls = LibShardedLoupe.getStorage();
         bytes32[] memory cats = sls.categories;
-        
+
         uint256 total;
         for (uint256 i; i < cats.length; i++) {
             total += sls.shards[cats[i]].facetCount;
         }
-        
+
         facetsAndSelectors = new Facet[](total);
         uint256 k;
         for (uint256 i; i < cats.length; i++) {
@@ -205,7 +205,8 @@ contract ShardedDiamondLoupeFacet {
                     facetAddr := shr(96, mload(add(add(packed, 0x20), offset)))
                 }
                 offset += 20;
-                facetsAndSelectors[k] = Facet({facet: facetAddr, functionSelectors: LibShardedLoupe.getFacetSelectors(facetAddr)});
+                facetsAndSelectors[k] =
+                    Facet({facet: facetAddr, functionSelectors: LibShardedLoupe.getFacetSelectors(facetAddr)});
                 unchecked {
                     k++;
                 }

@@ -14,7 +14,7 @@ import {InitShardedLoupe} from "../../src/diamond/InitShardedLoupe.sol";
 contract ShardedLoupeBenchmark is Test {
     bytes32 constant DIAMOND_STORAGE_POSITION = keccak256("compose.diamond");
     bytes32 constant SHARDED_LOUPE_STORAGE_POSITION = keccak256("compose.sharded.loupe");
-    
+
     bytes4 constant SELECTOR_FACETS = bytes4(keccak256("facets()"));
     bytes4 constant SELECTOR_FACET_FUNCTION_SELECTORS = bytes4(keccak256("facetFunctionSelectors(address)"));
     bytes4 constant SELECTOR_FACET_ADDRESSES = bytes4(keccak256("facetAddresses()"));
@@ -99,8 +99,7 @@ contract ShardedLoupeBenchmark is Test {
         InitShardedLoupe initContract = new InitShardedLoupe();
         LibDiamond.FacetCut[] memory noCuts = new LibDiamond.FacetCut[](0);
         MinimalDiamond.DiamondArgs memory args = MinimalDiamond.DiamondArgs({
-            init: address(initContract),
-            initCalldata: abi.encodeCall(initContract.init, ())
+            init: address(initContract), initCalldata: abi.encodeCall(initContract.init, ())
         });
         MinimalDiamond(payable(diamond)).initialize(noCuts, args);
     }
@@ -115,10 +114,10 @@ contract ShardedLoupeBenchmark is Test {
         emit log_string(string.concat("Facets: ", vm.toString(config.numFacets)));
         emit log_string(string.concat("Selectors per facet: ", vm.toString(config.selectorsPerFacet)));
         emit log_string(string.concat("Total selectors: ", vm.toString(config.numFacets * config.selectorsPerFacet)));
-        
+
         MinimalDiamond diamond = new MinimalDiamond();
         address loupeAddr;
-        
+
         if (useSharded) {
             loupeAddr = address(new ShardedDiamondLoupeFacet());
         } else {
@@ -134,9 +133,7 @@ contract ShardedLoupeBenchmark is Test {
 
         LibDiamond.FacetCut[] memory dc = new LibDiamond.FacetCut[](1);
         dc[0] = LibDiamond.FacetCut({
-            facetAddress: loupeAddr,
-            action: LibDiamond.FacetCutAction.Add,
-            functionSelectors: loupeSelectors
+            facetAddress: loupeAddr, action: LibDiamond.FacetCutAction.Add, functionSelectors: loupeSelectors
         });
 
         MinimalDiamond.DiamondArgs memory args = MinimalDiamond.DiamondArgs({init: address(0), initCalldata: ""});
@@ -144,7 +141,7 @@ contract ShardedLoupeBenchmark is Test {
 
         // Build diamond storage
         _buildDiamond(address(diamond), config.numFacets, config.selectorsPerFacet);
-        
+
         if (useSharded) {
             _enableShardedLoupe(address(diamond));
         }

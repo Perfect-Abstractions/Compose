@@ -56,9 +56,8 @@ contract OptimisedLoupeBenchmarkTest is Utils {
         }
 
         startGas = gasleft();
-        (success, data) = address(benchDiamond).call(
-            abi.encodeWithSelector(SELECTOR_FACET_FUNCTION_SELECTORS, loupeAddr)
-        );
+        (success, data) =
+            address(benchDiamond).call(abi.encodeWithSelector(SELECTOR_FACET_FUNCTION_SELECTORS, loupeAddr));
         metrics.facetFunctionSelectors = startGas - gasleft();
         require(success, "facetFunctionSelectors() failed");
         bytes4[] memory facetSelectors = abi.decode(data, (bytes4[]));
@@ -72,9 +71,8 @@ contract OptimisedLoupeBenchmarkTest is Utils {
         assertEq(allFacetAddresses.length, NUM_FACETS + 1);
 
         startGas = gasleft();
-        (success, data) = address(benchDiamond).call(
-            abi.encodeWithSelector(SELECTOR_FACET_ADDRESS, SELECTOR_FACET_ADDRESSES)
-        );
+        (success, data) =
+            address(benchDiamond).call(abi.encodeWithSelector(SELECTOR_FACET_ADDRESS, SELECTOR_FACET_ADDRESSES));
         metrics.facetAddress = startGas - gasleft();
         require(success, "facetAddress() failed");
         address facetAddr = abi.decode(data, (address));
@@ -83,10 +81,7 @@ contract OptimisedLoupeBenchmarkTest is Utils {
         return metrics;
     }
 
-    function _setupDiamond(bool useSharded)
-        internal
-        returns (MinimalDiamond benchDiamond, address loupeAddr)
-    {
+    function _setupDiamond(bool useSharded) internal returns (MinimalDiamond benchDiamond, address loupeAddr) {
         benchDiamond = new MinimalDiamond();
         LibDiamond.FacetCut[] memory dc = new LibDiamond.FacetCut[](1);
 
@@ -99,9 +94,7 @@ contract OptimisedLoupeBenchmarkTest is Utils {
         loupeSelectors[3] = SELECTOR_FACET_ADDRESS;
 
         dc[0] = LibDiamond.FacetCut({
-            facetAddress: loupeAddr,
-            action: LibDiamond.FacetCutAction.Add,
-            functionSelectors: loupeSelectors
+            facetAddress: loupeAddr, action: LibDiamond.FacetCutAction.Add, functionSelectors: loupeSelectors
         });
 
         MinimalDiamond.DiamondArgs memory args = MinimalDiamond.DiamondArgs({init: address(0), initCalldata: ""});
@@ -118,8 +111,7 @@ contract OptimisedLoupeBenchmarkTest is Utils {
         InitShardedLoupe initContract = new InitShardedLoupe();
         LibDiamond.FacetCut[] memory noCuts = new LibDiamond.FacetCut[](0);
         MinimalDiamond.DiamondArgs memory args = MinimalDiamond.DiamondArgs({
-            init: address(initContract),
-            initCalldata: abi.encodeCall(InitShardedLoupe.init, ())
+            init: address(initContract), initCalldata: abi.encodeCall(InitShardedLoupe.init, ())
         });
         benchDiamond.initialize(noCuts, args);
     }

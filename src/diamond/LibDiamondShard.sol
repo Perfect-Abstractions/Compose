@@ -4,7 +4,6 @@ pragma solidity >=0.8.30;
 import {LibShardedLoupe} from "./LibShardedLoupe.sol";
 import {LibDiamondQuery} from "./LibDiamondQuery.sol";
 
-
 /// @title LibDiamondShard
 /// @notice Helper library for managing sharded loupe updates during diamond cuts
 library LibDiamondShard {
@@ -34,7 +33,7 @@ library LibDiamondShard {
     function rebuildDefaultShard() internal {
         DiamondStorage storage ds = getStorage();
         LibShardedLoupe.ShardedLoupeStorage storage sls = LibShardedLoupe.getStorage();
-        
+
         // Only rebuild if sharded loupe is enabled
         if (!sls.enabled) return;
 

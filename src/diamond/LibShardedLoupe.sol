@@ -117,7 +117,7 @@ library LibShardedLoupe {
         returns (uint256 nextIndex)
     {
         if (packed.length < 4) return startIndex;
-        
+
         uint32 count;
         assembly ("memory-safe") {
             count := shr(224, mload(add(packed, 0x20)))
@@ -277,5 +277,4 @@ library LibShardedLoupe {
         s.facetSelectorCount[facet] = uint32(selsLength);
         s.facetCategory[facet] = categoryId;
     }
-
 }

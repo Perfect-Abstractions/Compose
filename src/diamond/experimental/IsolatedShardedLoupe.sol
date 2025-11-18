@@ -66,12 +66,9 @@ contract IsolatedShardedLoupe {
         IsolatedStorage storage s = _getIsolatedStorage();
         address[] memory allFacets = s.allFacets;
         facetsAndSelectors = new Facet[](allFacets.length);
-        
+
         for (uint256 i; i < allFacets.length; i++) {
-            facetsAndSelectors[i] = Facet({
-                facet: allFacets[i],
-                functionSelectors: s.facetToSelectors[allFacets[i]]
-            });
+            facetsAndSelectors[i] = Facet({facet: allFacets[i], functionSelectors: s.facetToSelectors[allFacets[i]]});
         }
     }
 
@@ -79,13 +76,13 @@ contract IsolatedShardedLoupe {
     /// @dev This would be called after diamond cuts to update the isolated storage
     function _syncFromDiamond(address[] memory facets, bytes4[][] memory selectors) internal {
         IsolatedStorage storage s = _getIsolatedStorage();
-        
+
         // Clear old data
         for (uint256 i; i < s.allFacets.length; i++) {
             delete s.facetToSelectors[s.allFacets[i]];
         }
         delete s.allFacets;
-        
+
         // Store new data
         s.allFacets = facets;
         for (uint256 i; i < facets.length; i++) {

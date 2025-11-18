@@ -122,8 +122,7 @@ contract LoupeGasTableTest is Utils {
         string memory baselineAddresses = baselineOk ? vm.toString(baseline.facetAddresses) : baselineErr;
         string memory shardedAddresses = shardedOk ? vm.toString(sharded.facetAddresses) : shardedErr;
 
-        emit log_string(
-            string.concat(
+        emit log_string(string.concat(
                 "| ",
                 label,
                 " | ",
@@ -135,8 +134,7 @@ contract LoupeGasTableTest is Utils {
                 " | ",
                 shardedAddresses,
                 " |"
-            )
-        );
+            ));
 
         ok = baselineOk && shardedOk;
     }
@@ -212,9 +210,7 @@ contract LoupeGasTableTest is Utils {
         loupeSelectors[3] = SELECTOR_FACET_ADDRESS;
 
         cuts[0] = LibDiamond.FacetCut({
-            facetAddress: loupeAddr,
-            action: LibDiamond.FacetCutAction.Add,
-            functionSelectors: loupeSelectors
+            facetAddress: loupeAddr, action: LibDiamond.FacetCutAction.Add, functionSelectors: loupeSelectors
         });
 
         MinimalDiamond.DiamondArgs memory args = MinimalDiamond.DiamondArgs({init: address(0), initCalldata: ""});
@@ -265,8 +261,7 @@ contract LoupeGasTableTest is Utils {
         InitShardedLoupe initContract = new InitShardedLoupe();
         LibDiamond.FacetCut[] memory noCuts = new LibDiamond.FacetCut[](0);
         MinimalDiamond.DiamondArgs memory args = MinimalDiamond.DiamondArgs({
-            init: address(initContract),
-            initCalldata: abi.encodeCall(InitShardedLoupe.init, ())
+            init: address(initContract), initCalldata: abi.encodeCall(InitShardedLoupe.init, ())
         });
         benchDiamond.initialize(noCuts, args);
     }

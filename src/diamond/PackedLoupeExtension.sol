@@ -13,13 +13,13 @@ contract PackedLoupeExtension {
     /// @return packed Tightly packed facet addresses
     function facetAddressesPacked() external view returns (bytes memory packed) {
         LibShardedLoupe.ShardedLoupeStorage storage sls = LibShardedLoupe.getStorage();
-        
+
         if (!sls.enabled || sls.categories.length == 0) {
             return packed;
         }
-        
+
         bytes32[] memory cats = sls.categories;
-        
+
         // Read all blobs and concatenate
         for (uint256 i; i < cats.length; i++) {
             LibShardedLoupe.Shard storage shard = sls.shards[cats[i]];
@@ -59,13 +59,13 @@ contract PackedLoupeExtension {
     /// @return packed RLE-compressed facet and selector data
     function facetsPacked() external view returns (bytes memory packed) {
         LibShardedLoupe.ShardedLoupeStorage storage sls = LibShardedLoupe.getStorage();
-        
+
         if (!sls.enabled || sls.categories.length == 0) {
             return packed;
         }
-        
+
         bytes32[] memory cats = sls.categories;
-        
+
         for (uint256 i; i < cats.length; i++) {
             LibShardedLoupe.Shard storage shard = sls.shards[cats[i]];
             if (shard.facetsBlob == address(0) || shard.facetCount == 0) {
