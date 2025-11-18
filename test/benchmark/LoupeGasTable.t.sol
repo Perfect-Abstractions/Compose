@@ -15,21 +15,81 @@ contract LoupeGasTableTest is Utils {
         uint256 facetAddresses;
     }
 
-    struct Configuration {
-        uint256 selectors;
-        uint256 facets;
-    }
-
-    function testPrintLoupeGasTable() external {
-        Configuration[] memory configs = _configs();
-
+    function testTable00_Header() external {
         emit log_string("| selectors/facets | baseline facets() | sharded facets() | baseline facetAddresses() | sharded facetAddresses() |");
         emit log_string("| --- | ---: | ---: | ---: | ---: |");
+    }
 
-        for (uint256 i; i < configs.length; i++) {
-            Configuration memory cfg = configs[i];
-            _printRow(cfg.selectors, cfg.facets);
-        }
+    function testTable01_Row_0_0() external {
+        _runRow(0, 0, false);
+    }
+
+    function testTable02_Row_2_1() external {
+        _runRow(2, 1, false);
+    }
+
+    function testTable03_Row_4_2() external {
+        _runRow(4, 2, false);
+    }
+
+    function testTable04_Row_6_3() external {
+        _runRow(6, 3, false);
+    }
+
+    function testTable05_Row_20_7() external {
+        _runRow(20, 7, false);
+    }
+
+    function testTable06_Row_40_10() external {
+        _runRow(40, 10, false);
+    }
+
+    function testTable07_Row_40_20() external {
+        _runRow(40, 20, false);
+    }
+
+    function testTable08_Row_50_17() external {
+        _runRow(50, 17, false);
+    }
+
+    function testTable09_Row_64_16() external {
+        _runRow(64, 16, false);
+    }
+
+    function testTable10_Row_64_32() external {
+        _runRow(64, 32, false);
+    }
+
+    function testTable11_Row_64_64() external {
+        _runRow(64, 64, false);
+    }
+
+    function testTable12_Row_100_34() external {
+        _runRow(100, 34, false);
+    }
+
+    function testTable13_Row_500_167() external {
+        _runRow(500, 167, false);
+    }
+
+    function testTable14_Row_504_42() external {
+        _runRow(504, 42, false);
+    }
+
+    function testTable15_Row_1000_84() external {
+        _runRow(1000, 84, false);
+    }
+
+    function testTable16_Row_1000_334() external {
+        _runRow(1000, 334, false);
+    }
+
+    function testTable17_Row_10000_834() external {
+        _runRow(10000, 834, false);
+    }
+
+    function testTable18_Row_40000_5000() external {
+        _runRow(40000, 5000, false);
     }
 
     function testPrintCustomRow() external {
@@ -39,52 +99,91 @@ contract LoupeGasTableTest is Utils {
 
         uint256 selectors = vm.envOr("LOUPE_ROW_SELECTORS", uint256(0));
         uint256 facets = vm.envOr("LOUPE_ROW_FACETS", uint256(0));
-        _printRow(selectors, facets);
+        bool allowFailure = vm.envOr("LOUPE_ROW_ALLOW_FAILURE", false);
+
+        _runRow(selectors, facets, allowFailure);
     }
 
-    function _printRow(uint256 selectorCount, uint256 facetCount) internal {
+    function _runRow(uint256 selectorCount, uint256 facetCount, bool allowFailure) internal {
+        bool rowOk = _logRow(selectorCount, facetCount);
+        require(allowFailure || rowOk, "configuration failed; see logs");
+    }
+
+    function _logRow(uint256 selectorCount, uint256 facetCount) internal returns (bool ok) {
         string memory label = string.concat(vm.toString(selectorCount), "/", vm.toString(facetCount));
-        GasMetrics memory baseline = _measure(false, selectorCount, facetCount, label);
-        GasMetrics memory sharded = _measure(true, selectorCount, facetCount, label);
+
+        (GasMetrics memory baseline, bool baselineOk, string memory baselineErr) =
+            _tryMeasure(false, selectorCount, facetCount, label);
+        (GasMetrics memory sharded, bool shardedOk, string memory shardedErr) =
+            _tryMeasure(true, selectorCount, facetCount, label);
+
+        string memory baselineFacets = baselineOk ? vm.toString(baseline.facets) : baselineErr;
+        string memory shardedFacets = shardedOk ? vm.toString(sharded.facets) : shardedErr;
+        string memory baselineAddresses = baselineOk ? vm.toString(baseline.facetAddresses) : baselineErr;
+        string memory shardedAddresses = shardedOk ? vm.toString(sharded.facetAddresses) : shardedErr;
 
         emit log_string(
             string.concat(
                 "| ",
                 label,
                 " | ",
-                vm.toString(baseline.facets),
+                baselineFacets,
                 " | ",
-                vm.toString(sharded.facets),
+                shardedFacets,
                 " | ",
-                vm.toString(baseline.facetAddresses),
+                baselineAddresses,
                 " | ",
-                vm.toString(sharded.facetAddresses),
+                shardedAddresses,
                 " |"
             )
         );
+
+        ok = baselineOk && shardedOk;
     }
 
-    function _measure(bool useSharded, uint256 selectorCount, uint256 facetCount, string memory label)
+    function _tryMeasure(bool useSharded, uint256 selectorCount, uint256 facetCount, string memory label)
+        internal
+        returns (GasMetrics memory metrics, bool ok, string memory err)
+    {
+        try this.measureImplementation(useSharded, selectorCount, facetCount) returns (GasMetrics memory result) {
+            return (result, true, "");
+        } catch Error(string memory reason) {
+            err = bytes(reason).length == 0 ? "error" : reason;
+        } catch (bytes memory) {
+            err = "OOG";
+        }
+
+        metrics = GasMetrics({facets: 0, facetAddresses: 0});
+        ok = false;
+        emit log_string(string.concat("[warn] ", useSharded ? "sharded" : "baseline", " ", label, " failed: ", err));
+    }
+
+    function measureImplementation(bool useSharded, uint256 selectorCount, uint256 facetCount)
+        external
+        returns (GasMetrics memory metrics)
+    {
+        require(msg.sender == address(this), "internal use only");
+        return _measureUnsafe(useSharded, selectorCount, facetCount);
+    }
+
+    function _measureUnsafe(bool useSharded, uint256 selectorCount, uint256 facetCount)
         internal
         returns (GasMetrics memory metrics)
     {
         MinimalDiamond benchDiamond = _deployLoupe(useSharded);
+
         _populateSelectors(address(benchDiamond), selectorCount, facetCount);
 
         if (useSharded) {
             _enableShardedLoupe(benchDiamond);
         }
 
-        uint256 startGas;
-        bool success;
-        bytes memory data;
-        uint256 gasUsed;
-
-        startGas = gasleft();
-        (success, data) = address(benchDiamond).call(abi.encodeWithSelector(SELECTOR_FACETS));
-        gasUsed = startGas - gasleft();
+        string memory label = string.concat(vm.toString(selectorCount), "/", vm.toString(facetCount));
         string memory mode = useSharded ? "sharded" : "baseline";
 
+        uint256 startGas = gasleft();
+        (bool success, bytes memory data) = address(benchDiamond).call(abi.encodeWithSelector(SELECTOR_FACETS));
+        uint256 gasUsed = startGas - gasleft();
         require(success, string.concat("facets() failed for ", mode, " configuration ", label));
         metrics.facets = gasUsed;
         uint256 facetsLength = _decodeArrayLength(data);
@@ -106,16 +205,16 @@ contract LoupeGasTableTest is Utils {
         address loupeAddr = useSharded ? address(new ShardedDiamondLoupeFacet()) : address(new DiamondLoupeFacet());
 
         LibDiamond.FacetCut[] memory cuts = new LibDiamond.FacetCut[](1);
-        bytes4[] memory selectors = new bytes4[](NUM_LOUPE_SELECTORS);
-        selectors[0] = SELECTOR_FACETS;
-        selectors[1] = SELECTOR_FACET_FUNCTION_SELECTORS;
-        selectors[2] = SELECTOR_FACET_ADDRESSES;
-        selectors[3] = SELECTOR_FACET_ADDRESS;
+        bytes4[] memory loupeSelectors = new bytes4[](NUM_LOUPE_SELECTORS);
+        loupeSelectors[0] = SELECTOR_FACETS;
+        loupeSelectors[1] = SELECTOR_FACET_FUNCTION_SELECTORS;
+        loupeSelectors[2] = SELECTOR_FACET_ADDRESSES;
+        loupeSelectors[3] = SELECTOR_FACET_ADDRESS;
 
         cuts[0] = LibDiamond.FacetCut({
             facetAddress: loupeAddr,
             action: LibDiamond.FacetCutAction.Add,
-            functionSelectors: selectors
+            functionSelectors: loupeSelectors
         });
 
         MinimalDiamond.DiamondArgs memory args = MinimalDiamond.DiamondArgs({init: address(0), initCalldata: ""});
@@ -171,22 +270,4 @@ contract LoupeGasTableTest is Utils {
         });
         benchDiamond.initialize(noCuts, args);
     }
-
-    function _configs() internal pure returns (Configuration[] memory configs) {
-        configs = new Configuration[](13);
-        configs[0] = Configuration({selectors: 0, facets: 0});
-        configs[1] = Configuration({selectors: 2, facets: 1});
-        configs[2] = Configuration({selectors: 4, facets: 2});
-        configs[3] = Configuration({selectors: 6, facets: 3});
-        configs[4] = Configuration({selectors: 40, facets: 10});
-        configs[5] = Configuration({selectors: 40, facets: 20});
-        configs[6] = Configuration({selectors: 64, facets: 16});
-        configs[7] = Configuration({selectors: 64, facets: 32});
-        configs[8] = Configuration({selectors: 64, facets: 64});
-        configs[9] = Configuration({selectors: 504, facets: 42});
-        configs[10] = Configuration({selectors: 1000, facets: 84});
-        configs[11] = Configuration({selectors: 10000, facets: 834});
-        configs[12] = Configuration({selectors: 40000, facets: 5000});
-    }
-
 }
