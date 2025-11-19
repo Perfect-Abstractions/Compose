@@ -140,4 +140,193 @@ contract LibERC6909Test is Test {
 
         assertEq(harness.isOperator(owner, spender), approved);
     }
+
+    // ============================================
+    // Transfer Tests
+    // ============================================
+
+    function testFuzz_ShouldRevert_Transfer_ZeroByAddr_InsufficientBalance(address from, address to) external {
+        vm.expectRevert(stdError.arithmeticError);
+        harness.transfer(address(0), from, to, TOKEN_ID, AMOUNT);
+    }
+
+    function testFuzz_Transfer_ZeroByAddr(address from, address to, uint256 id, uint256 amount) external {
+        vm.assume(from != to);
+
+        harness.mint(from, id, amount);
+
+        vm.expectEmit();
+        emit LibERC6909.Transfer(address(0), from, to, id, amount);
+
+        harness.transfer(address(0), from, to, id, amount);
+
+        assertEq(harness.balanceOf(from, id), 0);
+        assertEq(harness.balanceOf(to, id), amount);
+    }
+
+    function testFuzz_Transfer_IsOperator(address by, address from, address to, uint256 id, uint256 amount) external {
+        vm.assume(by != address(0));
+        vm.assume(from != by);
+        vm.assume(from != to);
+
+        harness.mint(from, id, amount);
+        harness.setOperator(from, by, true);
+
+        vm.expectEmit();
+        emit LibERC6909.Transfer(by, from, to, id, amount);
+
+        harness.transfer(by, from, to, id, amount);
+
+        assertEq(harness.balanceOf(from, id), 0);
+        assertEq(harness.balanceOf(to, id), amount);
+    }
+
+    function testFuzz_Transfer_NonOperator_MaxAllowance(
+        address by,
+        address from,
+        address to,
+        uint256 id,
+        uint256 amount
+    ) external {
+        vm.assume(by != address(0));
+        vm.assume(from != by);
+        vm.assume(from != to);
+
+        harness.mint(from, id, amount);
+        harness.approve(from, by, id, type(uint256).max);
+
+        vm.expectEmit();
+        emit LibERC6909.Transfer(by, from, to, id, amount);
+
+        harness.transfer(by, from, to, id, amount);
+
+        assertEq(harness.balanceOf(from, id), 0);
+        assertEq(harness.balanceOf(to, id), amount);
+        assertEq(harness.allowance(from, by, id), type(uint256).max);
+    }
+
+    function testFuzz_Transfer_NonOperator_AllowanceLtMax(
+        address by,
+        address from,
+        address to,
+        uint256 id,
+        uint256 amount,
+        uint256 spend
+    ) external {
+        vm.assume(by != address(0));
+        vm.assume(from != by);
+        vm.assume(from != to);
+        amount = bound(amount, 1, type(uint256).max - 1);
+        spend = bound(spend, 1, amount);
+
+        harness.mint(from, id, amount);
+        harness.approve(from, by, id, amount);
+
+        vm.expectEmit();
+        emit LibERC6909.Transfer(by, from, to, id, spend);
+
+        harness.transfer(by, from, to, id, spend);
+
+        assertEq(harness.balanceOf(from, id), amount - spend);
+        assertEq(harness.balanceOf(to, id), spend);
+        assertEq(harness.allowance(from, by, id), amount - spend);
+    }
+
+    function testFuzz_ShouldRevert_NonOperator_AllowanceUnderflow(
+        address by,
+        address from,
+        address to,
+        uint256 id,
+        uint256 amount,
+        uint256 spend
+    ) external {
+        vm.assume(by != address(0));
+        vm.assume(from != by);
+        vm.assume(from != to);
+        amount = bound(amount, 1, type(uint256).max - 1);
+        vm.assume(spend > amount);
+
+        harness.mint(from, id, amount);
+        harness.approve(from, by, id, amount);
+
+        vm.expectRevert(stdError.arithmeticError);
+        harness.transfer(by, from, to, id, spend);
+    }
+
+    // Edge cases
+
+    function testFuzz_Transfer_SelfTransfer_NonOperator_FiniteAllowance(
+        address by,
+        address from,
+        uint256 id,
+        uint256 amount,
+        uint256 spend
+    ) external {
+        vm.assume(by != address(0));
+        vm.assume(from != address(0));
+        vm.assume(from != by);
+        amount = bound(amount, 1, type(uint256).max - 1);
+        spend = bound(spend, 1, amount);
+
+        harness.mint(from, id, amount);
+        harness.approve(from, by, id, amount);
+
+        vm.expectEmit();
+        emit LibERC6909.Transfer(by, from, from, id, spend);
+
+        harness.transfer(by, from, from, id, spend);
+
+        assertEq(harness.balanceOf(from, id), amount);
+        assertEq(harness.allowance(from, by, id), amount - spend);
+    }
+
+    function testFuzz_Transfer_ToZeroAddress_NonOperator_MaxAllowance(
+        address by,
+        address from,
+        uint256 id,
+        uint256 amount
+    ) external {
+        vm.assume(by != address(0));
+        vm.assume(from != address(0));
+        vm.assume(from != by);
+        amount = bound(amount, 1, type(uint256).max);
+
+        harness.mint(from, id, amount);
+        harness.approve(from, by, id, type(uint256).max);
+
+        vm.expectEmit();
+        emit LibERC6909.Transfer(by, from, address(0), id, amount);
+
+        harness.transfer(by, from, address(0), id, amount);
+
+        assertEq(harness.balanceOf(from, id), 0);
+        assertEq(harness.balanceOf(address(0), id), amount);
+        assertEq(harness.allowance(from, by, id), type(uint256).max);
+    }
+
+    function testFuzz_Transfer_ZeroAmount_NonOperator_FiniteAllowance(
+        address by,
+        address from,
+        address to,
+        uint256 id,
+        uint256 allowance
+    ) external {
+        vm.assume(by != address(0));
+        vm.assume(from != address(0));
+        vm.assume(from != by);
+        vm.assume(from != to);
+        allowance = bound(allowance, 1, type(uint256).max - 1);
+
+        harness.mint(from, id, allowance);
+        harness.approve(from, by, id, allowance);
+
+        vm.expectEmit();
+        emit LibERC6909.Transfer(by, from, to, id, 0);
+
+        harness.transfer(by, from, to, id, 0);
+
+        assertEq(harness.balanceOf(from, id), allowance);
+        assertEq(harness.balanceOf(to, id), 0);
+        assertEq(harness.allowance(from, by, id), allowance);
+    }
 }
