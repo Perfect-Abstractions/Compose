@@ -37,15 +37,6 @@ Start simple, add features as needed:
 Diamond MyToken {
   ERC20Facet          // Basic token functionality
 }
-
-// Week 2: Add gasless approvals
-MyToken.addFacet(ERC20PermitFacet)
-
-// Month 3: Add cross-chain support
-MyToken.addFacet(ERC20BridgableFacet)
-
-// Month 6: Add governance
-MyToken.addFacet(GovernanceFacet)
 ```
 
 Each addition requires zero changes to existing facets.
