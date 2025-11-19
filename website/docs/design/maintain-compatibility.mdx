@@ -1,0 +1,14 @@
+---
+sidebar_position: 7
+title: Maintain Compatibility
+description: Maintain compatibility with existing standards, libraries, and systems
+---
+
+Build for interoperability. Before implementing a facet or feature, identify existing standards and expected behaviors, and ensure your implementation behaves the same where it matters. Code style can differ; externally observable behavior should not.
+
+Implementation checklist:
+1. Standards: Check relevant [ERC standards](https://eips.ethereum.org/erc). Implement required and optional parts precisely (function signatures, return values, events, errors, and revert conditions).
+2. Established libraries: If a widely used library like [OpenZeppelin](https://github.com/OpenZeppelin/openzeppelin-contracts-upgradeable) implements the feature, match its externally visible behavior (event names and order, error messages or custom errors). Use judgment—only mirror behaviors that matter for compatibility.
+3. Ecosystem expectations: Marketplaces, wallets, indexers, DAOs, and voting systems often rely on specific interfaces and behaviors (for example ERC-165 detection, approvals, metadata). Match these expectations unless there is a strong reason not to.
+
+Avoid surprising users. If you must deviate, document the differences and rationale, and add tests to prove compatibility where applicable.

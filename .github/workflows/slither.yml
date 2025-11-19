@@ -1,0 +1,40 @@
+name: Slither
+
+
+on:
+  push:
+    branches: [main]
+    paths-ignore:
+      - '**.md'
+      - 'website/**'
+  pull_request:
+    paths-ignore:
+      - '**.md'
+      - 'website/**'
+  workflow_dispatch:
+
+env:
+  FOUNDRY_PROFILE: ci
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - name: Install Foundry
+        uses: foundry-rs/foundry-toolchain@v1
+
+      - name: Build contracts
+        run: forge build
+
+      - name: Install Slither
+        run: |
+          pip install slither-analyzer
+
+      # Slither analysis ONLY FOR REPORTING PURPOSES
+      - name: Run Slither analysis
+        run: |
+          slither . --exclude-dependencies --fail-none 

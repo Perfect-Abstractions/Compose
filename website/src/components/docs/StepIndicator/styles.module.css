@@ -1,0 +1,236 @@
+/* StepIndicator Component */
+.stepIndicator {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  margin: 2rem 0;
+}
+
+.stepIndicator--horizontal {
+  flex-direction: row;
+  align-items: flex-start;
+}
+
+/* Step Item */
+.stepItem {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
+.stepIndicator--horizontal .stepItem {
+  flex: 1;
+  align-items: center;
+}
+
+/* Connector Line */
+.stepConnector {
+  position: absolute;
+  left: 8px;
+  top: 32px;
+  bottom: -16px;
+  width: 2px;
+}
+
+.stepIndicator--horizontal .stepConnector {
+  position: relative;
+  left: auto;
+  top: auto;
+  bottom: auto;
+  width: 100%;
+  height: 2px;
+  margin: 0 0.5rem;
+  align-self: center;
+}
+
+.stepLine {
+  width: 100%;
+  height: 100%;
+  background: var(--ifm-color-emphasis-200);
+  transition: background 0.3s ease;
+}
+
+[data-theme='dark'] .stepLine {
+  background: #2a2a2a;
+}
+
+.stepLineCompleted {
+  background: var(--ifm-color-primary);
+}
+
+[data-theme='dark'] .stepLineCompleted {
+  background: #60a5fa;
+}
+
+.stepIndicator--horizontal .stepLine {
+  width: 100%;
+  height: 2px;
+}
+
+.stepIndicator--horizontal .stepConnector {
+  flex: 1;
+  min-width: 2rem;
+}
+
+/* Step Content */
+.stepContent {
+  display: flex;
+  gap: 1rem;
+  align-items: flex-start;
+  padding-bottom: 2rem;
+  position: relative;
+  z-index: 1;
+}
+
+.stepIndicator--horizontal .stepContent {
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  padding-bottom: 0;
+  padding-right: 0;
+}
+
+.stepItem:last-child .stepContent {
+  padding-bottom: 0;
+}
+
+.stepIndicator--horizontal .stepItem:last-child .stepConnector {
+  display: none;
+}
+
+/* Step Number */
+.stepNumber {
+  flex-shrink: 0;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 600;
+  font-size: 0.875rem;
+  background: var(--ifm-background-surface-color);
+  border: 2px solid var(--ifm-color-emphasis-300);
+  color: var(--ifm-color-emphasis-600);
+  transition: all 0.3s ease;
+}
+
+[data-theme='dark'] .stepNumber {
+  background: #0f0f0f;
+  border-color: #2a2a2a;
+  color: #909090;
+}
+
+.stepNumber--completed {
+  background: var(--ifm-color-primary);
+  border-color: var(--ifm-color-primary);
+  color: white;
+}
+
+.stepNumber--active {
+  background: var(--ifm-color-primary);
+  border-color: var(--ifm-color-primary);
+  color: white;
+  box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.2);
+}
+
+[data-theme='dark'] .stepNumber--active {
+  box-shadow: 0 0 0 4px rgba(96, 165, 250, 0.3);
+}
+
+.stepNumber--pending {
+  background: var(--ifm-background-surface-color);
+  border-color: var(--ifm-color-emphasis-300);
+  color: var(--ifm-color-emphasis-500);
+}
+
+/* Step Text */
+.stepText {
+  flex: 1;
+  padding-top: 0.25rem;
+}
+
+.stepIndicator--horizontal .stepText {
+  padding-top: 0.75rem;
+}
+
+.stepTitle {
+  font-weight: 600;
+  font-size: 1rem;
+  color: var(--ifm-heading-color);
+  margin-bottom: 0.25rem;
+  transition: color 0.3s ease;
+}
+
+.stepTitleActive {
+  color: var(--ifm-color-primary);
+}
+
+[data-theme='dark'] .stepTitleActive {
+  color: #60a5fa;
+}
+
+.stepDescription {
+  font-size: 0.875rem;
+  color: var(--ifm-color-emphasis-600);
+  line-height: 1.5;
+}
+
+[data-theme='dark'] .stepDescription {
+  color: #909090;
+}
+
+.stepNumber--completed .stepNumber,
+.stepNumber--active .stepNumber {
+  color: white;
+}
+
+/* Responsive */
+@media (max-width: 996px) {
+  .stepIndicator--horizontal {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .stepIndicator--horizontal .stepConnector {
+    position: absolute;
+    left: 8px;
+    top: 32px;
+    bottom: -16px;
+    width: 2px;
+    height: auto;
+    margin: 0;
+  }
+
+  .stepIndicator--horizontal .stepLine {
+    width: 2px;
+    height: 100%;
+  }
+
+  .stepIndicator--horizontal .stepContent {
+    flex-direction: row;
+    text-align: left;
+    padding-top: 0;
+    padding-bottom: 2rem;
+  }
+}
+
+@media (max-width: 768px) {
+  .stepContent {
+    gap: 0.75rem;
+  }
+
+  .stepTitle {
+    font-size: 0.95rem;
+  }
+
+  .stepDescription {
+    font-size: 0.8125rem;
+  }
+}
+
+
+
+
+

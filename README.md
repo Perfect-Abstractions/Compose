@@ -1,38 +1,49 @@
+# Compose 
+![Coverage](https://img.shields.io/badge/coverage-63%25-yellow) [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](https://opensource.org/licenses/MIT) [![Discord](https://img.shields.io/badge/Discord-Join%20Chat-blue.svg)](https://discord.gg/DCBD2UKbxc)
 
-**NOTE:** *Compose is at a very early stage and is currently only available to contributors for building the library. It is NOT production ready.* 
+> **⚠️ Early Stage**: Compose is currently in development and only available to contributors. It is **NOT production ready**.
 
-*The Solidity feature ban only applies to the library itself. It does not apply to the *users* of the library -- the people who will use this library to make their diamonds. It is our job to help users do what they want to do.*
+## What is Compose?
+
+Compose is a smart contract library that helps developers create smart contract systems using [ERC-2535 Diamonds](https://eips.ethereum.org/EIPS/eip-2535).
+
+**Compose provides:**
+
+- An on-chain standard library of facets (modular smart contracts)
+- Building blocks for diamond-based smart contract systems
+- Patterns and libraries to combine Compose facets with your custom logic
+
+The project actively evolves based on community input—[tell us](https://github.com/Perfect-Abstractions/Compose/discussions/108) what you'd like Compose to do for you.
 
 
-# Compose
+## Why Compose is Different
 
-Forget everything you know about designing and organizing smart contracts -- because Compose is different.
+**Forget traditional smart contract design patterns**—Compose takes a radically different approach.
 
-We are building a high quality smart contract library by banning Solidity functionality and consistently following conventions and design principles that are oriented to smart contracts.
+We build high-quality smart contracts by <a href="https://compose.diamonds/docs/design/banned-solidity-features">**intentionally restricting Solidity features**</a> and following conventions designed specifically for smart contracts. This is **Smart Contract Oriented Programming (SCOP)**.
 
-We are breaking existing software development rules in order to write good software specifically for smart contracts. This is smart contract oriented programming.
+### Core Philosophy
 
-## Banned Solidity Features
+- **Read First**: Code written to be understood, not just executed
+- **Diamond-Native**: Built specifically for ERC-2535 diamond contracts
+- **Composition Over Inheritance**: Combine facets instead of inheriting contracts
+- **Intentional Simplicity**: Banned features lead to clearer, safer code
 
-None of the following features in the Solidity programming language are allowed to be used in this smart contract library. Anyone submitting a pull request that uses any of these features will be fined **$100 USDC**.
+## Quick Start
 
-[Endless discussion](https://discord.gg/DCBD2UKbxc) about what and why Solidity features should or shouldn't be allowed in this library is *encouraged*.
+```bash
+# Clone the repository
+git clone https://github.com/Perfect-Abstractions/Compose.git
+cd Compose
 
-It isn't that any of these features are bad, that isn't the point. It is that we are writing the best software we can, and part of that is using a limited feature set. This is the "less is more" idea or keep it simple stupid (KISS).
+# Install dependencies
+forge install
 
-If this feature ban breaks your mind, just realize that this smart contract library is different than what you have encountered before -- it has different importances, different design principles and it has different ways of doing things. Open your mind and be willing to look at smart contracts a different way. Let the design section rewrite your brain.
+# Build the project
+forge build
 
-1. ### Inheritance is **banned**.
-   
-   No contract may inherit any other contract or interface. For example `MyContract is OtherContract` or `MyContract is IMyInterface` etc. is not allowed. [Onchain composition is favored over inheritance](#favor-onchain-composition-over-inheritance).
-
-2. ### No constructor functions
-
-   No contracts other than a diamond contract (proxy contract), may have a constructor function. For example: `constructor() {owner = msg.sender; }` etc.
-
-3. ### No modifiers
-
-   No contract may use modifiers. For example: `modifier onlyOwner() { require(msg.sender == owner, "Caller is not the owner"); _; }` etc.
+# Run tests
+forge test
 
 4. ### No public or private or internal variables
 
@@ -174,47 +185,31 @@ The design and implementation of Compose is based on the following design princi
 ```shell
 $ forge build
 ```
+## Documentation
 
-### Test
+Please see our [documentation website](https://compose.diamonds/docs/) for full documentation.
 
-```shell
-$ forge test
-```
 
-### Format
+## Contributing
 
-```shell
-$ forge fmt
-```
+We welcome contributions from everyone! Compose grows through community involvement.
 
-### Gas Snapshots
+Please see the [documentation for contributing](https://compose.diamonds/docs/contribution/how-to-contribute). 
 
-```shell
-$ forge snapshot
-```
+---
 
-### Anvil
+<br>
 
-```shell
-$ anvil
-```
+**Compose is evolving with your help. Join us in building the future of smart contract development.**
 
-### Deploy
+**-Nick & The Compose Community**
 
-```shell
-$ forge script script/Counter.s.sol:CounterScript --rpc-url <your_rpc_url> --private-key <your_private_key>
-```
+<!-- automd:contributors github="Perfect-Abstractions/Compose" license="MIT" -->
 
-### Cast
+### Made with 🩵 by the [Compose Community](https://github.com/Perfect-Abstractions/Compose/graphs/contributors)
 
-```shell
-$ cast <subcommand>
-```
+<a href="https://github.com/Perfect-Abstractions/Compose/graphs/contributors">
+<img src="https://contrib.rocks/image?repo=Perfect-Abstractions/Compose" />
+</a>
 
-### Help
-
-```shell
-$ forge --help
-$ anvil --help
-$ cast --help
-```
+<!-- /automd -->

@@ -1,0 +1,262 @@
+/* APIReference Component */
+.apiReference {
+  margin: 2rem 0;
+  border-radius: 0.75rem;
+  border: 1px solid var(--ifm-color-emphasis-200);
+  overflow: hidden;
+  background: var(--ifm-background-surface-color);
+}
+
+[data-theme='dark'] .apiReference {
+  background: #0f0f0f;
+  border-color: #2a2a2a;
+}
+
+/* Header */
+.apiHeader {
+  padding: 1.5rem;
+  background: var(--ifm-background-surface-color);
+  border-bottom: 1px solid var(--ifm-color-emphasis-200);
+}
+
+[data-theme='dark'] .apiHeader {
+  background: #141414;
+  border-bottom-color: #2a2a2a;
+}
+
+.apiMethodContainer {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 0.75rem;
+  flex-wrap: wrap;
+}
+
+.apiMethod {
+  display: inline-block;
+  padding: 0.375rem 0.75rem;
+  border-radius: 0.375rem;
+  font-size: 0.875rem;
+  font-weight: 700;
+  color: white;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.apiEndpoint {
+  font-size: 1.125rem;
+  font-weight: 600;
+  color: var(--ifm-font-color-base);
+  background: transparent;
+  border: none;
+  padding: 0;
+}
+
+[data-theme='dark'] .apiEndpoint {
+  color: #e0e0e0;
+}
+
+.apiDescription {
+  margin: 0;
+  color: var(--ifm-color-emphasis-700);
+  line-height: 1.6;
+}
+
+[data-theme='dark'] .apiDescription {
+  color: #a0a0a0;
+}
+
+/* Tabs */
+.apiTabs {
+  background: var(--ifm-background-color);
+}
+
+[data-theme='dark'] .apiTabs {
+  background: #0a0a0a;
+}
+
+.apiTabButtons {
+  display: flex;
+  gap: 0.5rem;
+  padding: 0 1.5rem;
+  border-bottom: 1px solid var(--ifm-color-emphasis-200);
+}
+
+[data-theme='dark'] .apiTabButtons {
+  border-bottom-color: #2a2a2a;
+}
+
+.apiTabButton {
+  padding: 0.875rem 1.25rem;
+  background: none;
+  border: none;
+  border-bottom: 2px solid transparent;
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: var(--ifm-color-emphasis-600);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  margin-bottom: -1px;
+}
+
+.apiTabButton:hover {
+  color: var(--ifm-color-primary);
+}
+
+.apiTabButtonActive {
+  color: var(--ifm-color-primary);
+  border-bottom-color: var(--ifm-color-primary);
+}
+
+[data-theme='dark'] .apiTabButton {
+  color: #909090;
+}
+
+[data-theme='dark'] .apiTabButtonActive {
+  color: #60a5fa;
+  border-bottom-color: #60a5fa;
+}
+
+/* Tab Content */
+.apiTabContent {
+  padding: 1.5rem;
+}
+
+/* Parameters */
+.apiParameters {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+.apiParameter {
+  padding-bottom: 1.25rem;
+  border-bottom: 1px solid var(--ifm-color-emphasis-200);
+}
+
+[data-theme='dark'] .apiParameter {
+  border-bottom-color: #2a2a2a;
+}
+
+.apiParameter:last-child {
+  border-bottom: none;
+  padding-bottom: 0;
+}
+
+.apiParameterHeader {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-bottom: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.apiParameterName {
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--ifm-color-primary);
+  background: transparent;
+  border: none;
+  padding: 0;
+}
+
+[data-theme='dark'] .apiParameterName {
+  color: #60a5fa;
+}
+
+.apiParameterType {
+  padding: 0.25rem 0.625rem;
+  background: var(--ifm-color-emphasis-100);
+  border-radius: 0.25rem;
+  font-size: 0.875rem;
+  font-family: var(--ifm-font-family-monospace);
+  color: var(--ifm-color-emphasis-700);
+}
+
+[data-theme='dark'] .apiParameterType {
+  background: #1a1a1a;
+  color: #a0a0a0;
+}
+
+.apiParameterRequired {
+  padding: 0.25rem 0.625rem;
+  background: #fef3c7;
+  color: #92400e;
+  border-radius: 0.25rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+[data-theme='dark'] .apiParameterRequired {
+  background: rgba(251, 191, 36, 0.2);
+  color: #fbbf24;
+}
+
+.apiParameterDescription {
+  margin: 0;
+  color: var(--ifm-color-emphasis-700);
+  line-height: 1.6;
+  font-size: 0.95rem;
+}
+
+[data-theme='dark'] .apiParameterDescription {
+  color: #909090;
+}
+
+/* Response */
+.apiResponse {
+  margin: 0;
+  padding: 1.25rem;
+  background: var(--ifm-code-background);
+  border-radius: 0.5rem;
+  border: 1px solid var(--ifm-color-emphasis-200);
+  overflow-x: auto;
+}
+
+[data-theme='dark'] .apiResponse {
+  background: #000000;
+  border-color: #2a2a2a;
+}
+
+.apiResponse code {
+  color: var(--ifm-font-color-base);
+  background: transparent;
+  border: none;
+  padding: 0;
+  font-size: 0.9rem;
+}
+
+[data-theme='dark'] .apiResponse code {
+  color: #d0d0d0;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .apiHeader,
+  .apiTabContent {
+    padding: 1.25rem;
+  }
+  
+  .apiMethodContainer {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.75rem;
+  }
+  
+  .apiEndpoint {
+    font-size: 1rem;
+    word-break: break-all;
+  }
+  
+  .apiTabButtons {
+    padding: 0 1.25rem;
+  }
+  
+  .apiTabButton {
+    padding: 0.75rem 1rem;
+    font-size: 0.875rem;
+  }
+}
+

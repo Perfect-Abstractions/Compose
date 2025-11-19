@@ -1,0 +1,44 @@
+/**
+ * Blog Card Styles
+ * Styles for blog post cards in the blog feed
+ */
+
+/* Remove any vertical lines/borders from blog article elements */
+article.article *,
+article a,
+article [class*="read"],
+article [class*="Read"],
+.theme-blog-wrapper article *,
+.theme-blog-wrapper article a,
+.theme-blog-wrapper article [class*="read"],
+.theme-blog-wrapper article [class*="Read"],
+.blog-wrapper article *,
+.blog-wrapper article a {
+  border-left: none !important;
+  border-right: none !important;
+}
+
+/* Remove any pseudo-element vertical lines */
+article.article *::before,
+article.article *::after,
+article a::before,
+article a::after,
+.theme-blog-wrapper article *::before,
+.theme-blog-wrapper article *::after,
+.theme-blog-wrapper article a::before,
+.theme-blog-wrapper article a::after,
+.blog-wrapper article *::before,
+.blog-wrapper article *::after {
+  border-left: none !important;
+  border-right: none !important;
+  background: none !important;
+}
+
+/* Specifically target any vertical separator elements */
+article.article [style*="border"],
+.theme-blog-wrapper article [style*="border"],
+.blog-wrapper article [style*="border"] {
+  border-left: none !important;
+  border-right: none !important;
+}
+

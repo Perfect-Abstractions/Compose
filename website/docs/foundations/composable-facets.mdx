@@ -1,0 +1,93 @@
+---
+sidebar_position: 5
+title: Composable Facets
+description: Mix and match facets to build complex systems from simple, interoperable building blocks.
+---
+
+The word **"composable"** means *able to be combined with other parts to form a whole*. 
+
+In **Compose**, facets are designed to be **composable**. They're built to interoperate seamlessly with other facets inside the same diamond.
+
+Composable design makes it possible to **mix, match, and extend** smart contract functionality across diverse use cases — without modifying or redeploying source code. It turns smart contracts into reusable building blocks.
+
+## What Makes Facets Composable?
+
+Smart Contract Composability isn't automatic. Compose facets are designed with specific patterns that enable seamless interaction:
+
+### 1. **Shared Storage Patterns**
+Facets use the **Diamond Storage** (<a href="https://eips.ethereum.org/EIPS/eip-8042">`ERC-8042`</a>) to avoid storage collisions. Each facet manages its own isolated storage namespace while being able to read shared state when needed.
+
+### 2. **Standard Interfaces**
+Facets expose predictable, standard-compliant function signatures (`ERC-20`, `ERC-721`, etc.) that work together naturally.
+
+### 3. **Minimal Dependencies**
+Each facet is self-contained but cooperative. They don't assume what other facets are present, but can enhance functionality when compatible facets are detected.
+
+### 4. **Modular Functionality**
+Complex features are broken into focused facets. Want pausability? Add `PausableFacet`. Need access control? Add `AccessControlFacet`.
+
+## Composition in Action
+
+### Example 1: Basic to Advanced Token
+
+Start simple, add features as needed:
+
+```solidity
+// Launch Day
+Diamond MyToken {
+  ERC20Facet          // Basic token functionality
+}
+```
+
+Each addition requires zero changes to existing facets.
+
+### Example 2: Access Control + Pausable Token
+
+Facets can depend on and enhance each other:
+
+```solidity
+Diamond GovernedToken {
+  ERC20Facet           // Basic token
+  AccessControlFacet   // Role-based permissions
+  ERC20PausableFacet   // Pause functionality
+}
+```
+
+Here's how they compose:
+- `ERC20PausableFacet` checks `AccessControlFacet` to verify the caller has the `PAUSER_ROLE`
+- `ERC20Facet` checks `ERC20PausableFacet` state to prevent transfers when paused
+- Each facet remains independent but works together seamlessly
+
+### Example 3: NFT with Royalties and Metadata
+
+```solidity
+Diamond ArtCollection {
+  ERC721Facet              // Core NFT functionality
+  ERC721MetadataFacet      // Token URI and metadata
+  ERC721RoyaltyFacet       // EIP-2981 royalty info
+  ERC721EnumerableFacet    // Token enumeration
+  AccessControlFacet       // Minter role management
+}
+```
+
+:::tip[Key Insight]
+On-chain facets are the **building blocks** of Compose. Like LEGO bricks, they're designed to snap together in different configurations to build exactly what you need.
+:::
+
+## Composability Benefits
+
+1. **Start Simple, then Scale**: Begin with core functionality, add features over time
+3. **Reduce Testing Burden**: Use pre-tested facets from the Compose library to build your project
+4. **Architectural Flexibility**: Same facets, infinite configurations based on your project needs
+
+### Composition vs. Inheritance
+
+Traditional smart contracts use **inheritance** to combine functionality:
+- Requires recompilation when features change
+- Creates large, monolithic contracts
+- Creates code duplication of the same base functionality across multiple projects
+
+Compose uses **composition** via facets:
+- No recompilation needed to add/remove features
+- Small, focused contracts that work together
+- Same facets work across unlimited projects

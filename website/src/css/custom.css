@@ -1,0 +1,112 @@
+/**
+ * Custom CSS for Compose Documentation
+ * Modern design for smart contract development
+ * 
+ * This is the main CSS file that imports all component-specific styles.
+ * Each component has its own file for better maintainability.
+ */
+
+/* ============================================
+   FOUNDATION & VARIABLES
+   ============================================ */
+
+/* Import CSS variables and global base styles */
+@import url('./variables.css');
+
+/* ============================================
+   COMPONENT STYLES
+   ============================================ */
+
+/* Import utilities */
+@import url('./utilities.css');
+
+/* Import custom utilities */
+@import url('./custom-utilities.css');
+
+/* Import documentation-specific styles */
+@import url('./documentation.css');
+
+/* Import navbar styles */
+@import url('./navbar.css');
+
+/* Import search modal styles */
+@import url('./search.css');
+
+/* Import button component styles */
+@import url('./buttons.css');
+
+/* Import card component styles */
+@import url('./cards.css');
+
+/* Import code block styles */
+@import url('./code-blocks.css');
+
+/* Import sidebar styles */
+@import url('./sidebar.css');
+
+/* Import footer styles */
+@import url('./footer.css');
+
+/* Import hero section styles */
+@import url('./hero.css');
+
+/* Import breadcrumb styles */
+@import url('./breadcrumbs.css');
+
+/* Import pagination styles */
+@import url('./pagination.css');
+
+/* Import tab component styles */
+@import url('./tabs.css');
+
+/* Import badge component styles */
+@import url('./badges.css');
+
+/* Import table styles */
+@import url('./tables.css');
+
+/* Import admonition styles */
+@import url('./admonitions.css');
+
+/* Import blog sidebar timeline styles */
+@import url('./blog-sidebar.css');
+
+/* Import blog card styles */
+@import url('./blog-cards.css');
+
+/* Import custom scrollbar styles */
+@import url('./scrollbar.css');
+
+/* ============================================
+   RESPONSIVE STYLES
+   ============================================ */
+
+/* Import responsive breakpoints */
+@import url('./responsive.css');
+
+
+
+/* Make accordion body white in both light and dark mode */
+[class^="accordionContent_"] {
+  background-color: var(--ifm-background-color) !important;
+}
+
+/* Keep code blocks using their normal theme background */
+/* [class^="accordionContent_"] pre,
+[class^="accordionContent_"] code {
+  background-color: var(--ifm-pre-background) !important;
+  border-radius: var(--ifm-code-border-radius, 6px);
+  box-shadow: 0 0 0 1px var(--ifm-color-emphasis-200);
+} */
+
+
+/* Remove italics from Prism code highlighting (especially in dark mode) */
+.token.keyword,
+.token.function,
+.token.builtin,
+.token.selector,
+.token.class-name,
+.token.constant,
+.token.important {
+  font-style: normal !important;
+}

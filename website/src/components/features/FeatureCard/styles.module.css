@@ -1,0 +1,108 @@
+.cardWrapper {
+  text-decoration: none;
+  color: inherit;
+  display: block;
+  height: 100%;
+}
+
+.featureCard {
+  background: var(--ifm-background-surface-color);
+  border-radius: 1rem;
+  padding: 2.5rem;
+  height: 100%;
+  border: 2px solid var(--ifm-color-emphasis-200);
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+  overflow: hidden;
+}
+
+.featureCard::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 4px;
+  background: linear-gradient(90deg, #3b82f6 0%, #1e40af 100%);
+  transform: scaleX(0);
+  transition: transform 0.4s ease;
+}
+
+.featureCard:hover {
+  transform: translateY(-8px);
+  box-shadow: 0 25px 50px -12px rgba(59, 130, 246, 0.25);
+  border-color: var(--ifm-color-primary);
+}
+
+.featureCard:hover::before {
+  transform: scaleX(1);
+}
+
+.cardIcon {
+  font-size: 3.5rem;
+  margin-bottom: 1.5rem;
+  background: linear-gradient(135deg, #3b82f6 0%, #0ea5e9 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  height: 70px;
+  display: flex;
+  align-items: center;
+}
+
+.cardTitle {
+  font-size: 1.5rem;
+  font-weight: 700;
+  margin-bottom: 1rem;
+  color: var(--ifm-color-emphasis-900);
+}
+
+.cardDescription {
+  font-size: 1rem;
+  line-height: 1.7;
+  color: var(--ifm-color-emphasis-700);
+  margin-bottom: 0;
+}
+
+.cardLink {
+  margin-top: 1.5rem;
+  color: var(--ifm-color-primary);
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  transition: gap 0.3s ease;
+}
+
+.featureCard:hover .cardLink {
+  gap: 1rem;
+}
+
+/* Gradient variations */
+.featureCard.gradientBlue::before {
+  background: linear-gradient(90deg, #60a5fa 0%, #2563eb 100%);
+}
+
+.featureCard.gradientCyan::before {
+  background: linear-gradient(90deg, #06b6d4 0%, #3b82f6 100%);
+}
+
+.featureCard.gradientGreen::before {
+  background: linear-gradient(90deg, #10b981 0%, #34d399 100%);
+}
+
+@media (max-width: 768px) {
+  .featureCard {
+    padding: 2rem;
+  }
+
+  .cardIcon {
+    font-size: 2.5rem;
+    height: 50px;
+  }
+
+  .cardTitle {
+    font-size: 1.25rem;
+  }
+}
+

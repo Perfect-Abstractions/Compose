@@ -1,0 +1,66 @@
+---
+sidebar_position: 7
+title: Design for Composition
+description: How to design Compose facets and libraries for composition.
+---
+
+Here are guidelines and rules to create composable facets.
+
+Compose replaces source-code inheritance with on-chain composition. Facets are the building blocks; diamonds wire them together.
+
+We focus on building **small, independent, and easy-to-read facets**. Each facet is deployed once, then reused and combined with other facets to form complete, modular smart contract systems.
+
+## Writing Facets
+
+1. A facet is set of external functions that represent a single unit of self-contained functionality.
+2. Each facet is a self-contained, conceptual unit.
+3. A facet is designed for all of its functions to be added, not just some of them.
+4. The facet is our smallest building block.
+5. The source code of a facet should only contain the code (including storage variables, if possible) that it actually uses.
+6. Facets are fully self-contained. They do not import anything.
+
+
+## Writing Facet Libraries
+
+1. Facet libraries are self-contained code units. They do not import anything.
+2. Each facet should have one corresponding facet library.
+3. Facet libraries are used to initialize facets on deployment and during upgrades. 
+4. Facet libraries are also used to integrate custom facets with Compose facets.
+5. Facet libraries have an initialize function which is used to initialize storage variables during deployment.
+
+## Facets & Libraries
+
+1. Facets and facet libraries should not contain owner/admin authorization checks unless absolutely required or fundamental to the functionality being implemented.
+
+
+## Extending Facets
+
+
+1. Every extension of a standard or facet should be implemented as a new facet.
+2. A facet should only be extended with a new facet that composes with it.
+3. When reusing structs from existing facets or libraries, reuse the original diamond storage locations and structs, but only include the variables that the new facet actually needs if possible. Of course a reused struct must maintain the same order of variables as an originally defined struct. You **cannot** remove a variable from the beginning or middle of a struct. 
+4. Reusing a struct is done by copying it and removing unused variables at the end of it.
+5. Storage structs should be designed so that removable variables (unused by some facets) appear at the end of the struct.
+6. Storage structs should also be designed for packed storage (smaller sized variables using the same storage slot).
+7. Removing storage variables is done only from the end of a struct. If a variable cannot be removed from the end of a struct, it must remain to preserve compatibility.
+8. A facet that adds new storage variables must define its own diamond storage struct.
+
+:::info Important
+Maintain the same order of variables in structs when reusing the same struct in different facets/libraries.
+
+It is important to maintain the same sequence of variables in structs when reusing the same struct in different facets/libraries. Variables can only be removed from the end of structs if they are not used by a facet or library.
+:::
+
+
+### Exceptions
+
+There may be reasonable exceptions to these rules. If you believe one applies, please discuss it on  
+**– Discord:** https://discord.gg/DCBD2UKbxc  
+**– GitHub Issues:** https://github.com/Perfect-Abstractions/Compose/issues  
+**– GitHub Discussions:** https://github.com/Perfect-Abstractions/Compose/discussions
+
+For example, `ERC721EnumerableFacet` does not extend `ERC721Facet` because enumeration requires re-implementing transfer and mint/burn logic, making it incompatible with `ERC721Facet`.
+
+*** 
+
+This level of composability strikes the right balance: it enables highly organized, modular, and understandable on-chain smart contract systems.

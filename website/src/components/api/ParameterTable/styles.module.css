@@ -1,0 +1,230 @@
+/* ParameterTable Component */
+.parameterTable {
+  margin: 1.5rem 0;
+}
+
+.tableTitle {
+  font-size: 1.25rem;
+  font-weight: 700;
+  margin-bottom: 1rem;
+  color: var(--ifm-heading-color);
+}
+
+.tableWrapper {
+  overflow-x: auto;
+}
+
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  background: var(--ifm-background-surface-color);
+}
+
+[data-theme='dark'] .table {
+  background: #0f0f0f;
+}
+
+.table thead {
+  background: var(--ifm-color-emphasis-100);
+}
+
+[data-theme='dark'] .table thead {
+  background: #1a1a1a;
+}
+
+.table th {
+  padding: 0.875rem 1rem;
+  text-align: left;
+  font-weight: 600;
+  font-size: 0.875rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--ifm-heading-color);
+  border-bottom: 2px solid var(--ifm-color-emphasis-200);
+}
+
+[data-theme='dark'] .table th {
+  border-bottom-color: #2a2a2a;
+  color: #ffffff;
+}
+
+.table td {
+  padding: 0.875rem 1rem;
+  border-bottom: 1px solid var(--ifm-color-emphasis-200);
+  color: var(--ifm-font-color-base);
+  font-size: 0.9375rem;
+}
+
+[data-theme='dark'] .table td {
+  border-bottom-color: #2a2a2a;
+}
+
+.table tbody tr:last-child td {
+  border-bottom: none;
+}
+
+.table tbody tr:hover {
+  background: var(--ifm-color-emphasis-100);
+}
+
+[data-theme='dark'] .table tbody tr:hover {
+  background: #1a1a1a;
+}
+
+/* Column widths */
+.nameColumn {
+  width: 20%;
+  min-width: 150px;
+}
+
+.typeColumn {
+  width: 15%;
+  min-width: 120px;
+}
+
+.requiredColumn {
+  width: 10%;
+  min-width: 100px;
+}
+
+.descriptionColumn {
+  width: auto;
+}
+
+.nameCell {
+  font-weight: 600;
+}
+
+.parameterName {
+  font-family: var(--ifm-font-family-monospace);
+  font-size: 0.875rem;
+  background: var(--ifm-code-background);
+  padding: 0.125rem 0.375rem;
+  border-radius: 0.25rem;
+  color: var(--ifm-color-primary-dark);
+  border: 1px solid var(--ifm-color-emphasis-200);
+}
+
+[data-theme='dark'] .parameterName {
+  background: #1a1a1a;
+  border-color: #2a2a2a;
+  color: #93c5fd;
+}
+
+.typeCell {
+  font-family: var(--ifm-font-family-monospace);
+}
+
+.typeValue {
+  font-size: 0.875rem;
+  color: var(--ifm-color-primary);
+  background: var(--ifm-code-background);
+  padding: 0.125rem 0.375rem;
+  border-radius: 0.25rem;
+  border: 1px solid var(--ifm-color-emphasis-200);
+}
+
+[data-theme='dark'] .typeValue {
+  color: #93c5fd;
+  background: #1a1a1a;
+  border-color: #2a2a2a;
+}
+
+.requiredCell {
+  text-align: center;
+}
+
+.requiredBadge {
+  display: inline-block;
+  font-size: 0.75rem;
+  padding: 0.125rem 0.5rem;
+  border-radius: 0.25rem;
+  background: rgba(239, 68, 68, 0.1);
+  color: #ef4444;
+  font-weight: 600;
+}
+
+[data-theme='dark'] .requiredBadge {
+  background: rgba(239, 68, 68, 0.2);
+  color: #f87171;
+}
+
+.optionalBadge {
+  display: inline-block;
+  font-size: 0.75rem;
+  padding: 0.125rem 0.5rem;
+  border-radius: 0.25rem;
+  background: rgba(100, 116, 139, 0.1);
+  color: #64748b;
+  font-weight: 600;
+}
+
+[data-theme='dark'] .optionalBadge {
+  background: rgba(100, 116, 139, 0.2);
+  color: #94a3b8;
+}
+
+.descriptionCell {
+  line-height: 1.6;
+}
+
+.defaultValue,
+.exampleValue {
+  margin-top: 0.5rem;
+  font-size: 0.8125rem;
+  color: var(--ifm-color-emphasis-600);
+}
+
+[data-theme='dark'] .defaultValue,
+[data-theme='dark'] .exampleValue {
+  color: #909090;
+}
+
+.defaultValue code,
+.exampleValue code {
+  font-family: var(--ifm-font-family-monospace);
+  font-size: 0.8125rem;
+  background: var(--ifm-code-background);
+  padding: 0.125rem 0.375rem;
+  border-radius: 0.25rem;
+  color: var(--ifm-color-primary-dark);
+  border: 1px solid var(--ifm-color-emphasis-200);
+}
+
+[data-theme='dark'] .defaultValue code,
+[data-theme='dark'] .exampleValue code {
+  background: #1a1a1a;
+  border-color: #2a2a2a;
+  color: #93c5fd;
+}
+
+/* Responsive */
+@media (max-width: 996px) {
+  .tableWrapper {
+    font-size: 0.875rem;
+  }
+
+  .table th,
+  .table td {
+    padding: 0.75rem 0.875rem;
+  }
+}
+
+@media (max-width: 768px) {
+  .nameColumn,
+  .typeColumn,
+  .requiredColumn {
+    width: auto;
+    min-width: auto;
+  }
+
+  .table {
+    font-size: 0.8125rem;
+  }
+
+  .table th,
+  .table td {
+    padding: 0.625rem 0.75rem;
+  }
+}
+

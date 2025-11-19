@@ -1,0 +1,8 @@
+User-agent: *
+Allow: /
+
+Disallow: /tags/
+
+# Update this to your final production domain when ready
+Sitemap: https://docusaurus-test-seven-sage.vercel.app/sitemap.xml
+

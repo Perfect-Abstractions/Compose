@@ -1,0 +1,403 @@
+---
+title: Component Showcase
+description: Explore all the custom visual components available in Compose docs
+draft: true
+---
+
+import FeatureCard from '@site/src/components/features/FeatureCard';
+import CodeShowcase from '@site/src/components/code/CodeShowcase';
+import GradientText from '@site/src/components/ui/GradientText';
+import Badge from '@site/src/components/ui/Badge';
+import CalloutBox from '@site/src/components/ui/CalloutBox';
+import MetricCard from '@site/src/components/data-display/MetricCard';
+import GlassCard from '@site/src/components/ui/GlassCard';
+import Timeline from '@site/src/components/data-display/Timeline';
+import ComparisonTable from '@site/src/components/data-display/ComparisonTable';
+import AnimatedCounter from '@site/src/components/animations/AnimatedCounter';
+import GradientButton from '@site/src/components/ui/GradientButton';
+import Icon from '@site/src/components/ui/Icon';
+
+# Component Showcase
+
+<p style={{fontSize: '1.25rem', color: 'var(--ifm-color-emphasis-700)'}}>
+  Explore all the stunning visual components available for building beautiful documentation with Compose.
+</p>
+
+---
+
+## Gradient Text
+
+Use <GradientText>GradientText</GradientText> to make text stand out with beautiful gradients.
+
+```jsx
+<GradientText>Beautiful Gradient Text</GradientText>
+<GradientText variant="secondary">Secondary Gradient</GradientText>
+<GradientText variant="accent">Accent Gradient</GradientText>
+```
+
+Variants: <GradientText variant="primary">primary</GradientText>, <GradientText variant="secondary">secondary</GradientText>, <GradientText variant="accent">accent</GradientText>, <GradientText variant="success">success</GradientText>
+
+---
+
+## Badges
+
+<div style={{display: 'flex', gap: '1rem', flexWrap: 'wrap', marginBottom: '2rem'}}>
+  <Badge variant="primary">Primary</Badge>
+  <Badge variant="secondary">Secondary</Badge>
+  <Badge variant="success">Success</Badge>
+  <Badge variant="warning">Warning</Badge>
+  <Badge variant="danger">Danger</Badge>
+  <Badge variant="info">Info</Badge>
+  <Badge variant="outline">Outline</Badge>
+  <Badge variant="glass">Glass</Badge>
+</div>
+
+Sizes:
+<div style={{display: 'flex', gap: '1rem', flexWrap: 'wrap', marginBottom: '2rem'}}>
+  <Badge size="small">Small</Badge>
+  <Badge size="medium">Medium</Badge>
+  <Badge size="large">Large</Badge>
+</div>
+
+```jsx
+<Badge variant="primary">Primary Badge</Badge>
+<Badge variant="success" size="large">Large Success</Badge>
+```
+
+---
+
+## Callout Boxes
+
+<CalloutBox type="info" title="Information">
+  This is an informational callout box. Use it to highlight important information.
+</CalloutBox>
+
+<CalloutBox type="tip" title="Pro Tip">
+  Tips help users understand best practices and recommendations.
+</CalloutBox>
+
+<CalloutBox type="warning" title="Warning">
+  Warnings alert users to potential issues or important considerations.
+</CalloutBox>
+
+<CalloutBox type="danger" title="Danger">
+  Danger callouts highlight critical information that could lead to errors.
+</CalloutBox>
+
+<CalloutBox type="success" title="Success">
+  Success callouts celebrate achievements or confirm correct actions.
+</CalloutBox>
+
+```jsx
+<CalloutBox type="info" title="Custom Title">
+  Your content here
+</CalloutBox>
+```
+
+---
+
+## Feature Cards
+
+<div className="row" style={{marginBottom: '2rem'}}>
+  <div className="col col--4">
+    <FeatureCard
+      icon={<Icon name="target" size={32} />}
+      title="Read First"
+      description="Code written to be understood first, not just executed."
+      gradient="gradientBlue"
+    />
+  </div>
+  <div className="col col--4">
+    <FeatureCard
+      icon={<Icon name="diamond" size={32} />}
+      title="Diamond-Native"
+      description="Built specifically for ERC-2535 Diamonds with on-chain composability."
+      gradient="gradientBlue"
+    />
+  </div>
+  <div className="col col--4">
+    <FeatureCard
+      icon={<Icon name="wrench" size={32} />}
+      title="Composable"
+      description="Combine facets instead of inheriting contracts for maximum flexibility."
+      gradient="gradientCyan"
+    />
+  </div>
+</div>
+
+```jsx
+<FeatureCard
+  icon={<Icon name="target" size={32} />}
+  title="Feature Title"
+  description="Feature description goes here"
+  gradient="gradientBlue"
+  link="/docs/path"
+/>
+```
+
+---
+
+## Metric Cards
+
+<div className="row" style={{marginBottom: '2rem'}}>
+  <div className="col col--3">
+    <MetricCard
+      value={<AnimatedCounter end={1000} suffix="+" />}
+      label="Users"
+      icon={<Icon name="users" size={24} />}
+      trend={{direction: 'up', value: '12%'}}
+    />
+  </div>
+  <div className="col col--3">
+    <MetricCard
+      value={<AnimatedCounter end={50} suffix="K" />}
+      label="Downloads"
+      icon={<Icon name="download" size={24} />}
+      trend={{direction: 'up', value: '25%'}}
+    />
+  </div>
+  <div className="col col--3">
+    <MetricCard
+      value="99.9%"
+      label="Uptime"
+      icon={<Icon name="lightning" size={24} />}
+    />
+  </div>
+  <div className="col col--3">
+    <MetricCard
+      value={<AnimatedCounter end={24} suffix="/7" />}
+      label="Support"
+      icon={<Icon name="chat" size={24} />}
+    />
+  </div>
+</div>
+
+```jsx
+<MetricCard
+  value="1000+"
+  label="Users"
+  icon={<Icon name="users" size={24} />}
+  trend={{direction: 'up', value: '12%'}}
+/>
+```
+
+---
+
+## Glass Cards
+
+<GlassCard>
+  <h3>Beautiful Glass Effect</h3>
+  <p>Glass cards use backdrop-filter blur for a modern, frosted glass appearance.</p>
+</GlassCard>
+
+```jsx
+<GlassCard hover={true}>
+  Your content here
+</GlassCard>
+```
+
+---
+
+## Code Showcase
+
+<CodeShowcase
+  title="Facet Examples"
+  description="Switch between different examples to see various implementations"
+  examples={[
+    {
+      label: 'ERC-20 Facet',
+      language: 'solidity',
+      description: 'Standard ERC-20 token implementation',
+      code: `// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.24;
+
+import {LibERC20} from "compose/LibERC20.sol";
+
+contract ERC20Facet {
+    function transfer(address to, uint256 amount) external returns (bool) {
+        LibERC20.transfer(msg.sender, to, amount);
+        return true;
+    }
+}`,
+    },
+    {
+      label: 'Custom Facet',
+      language: 'solidity',
+      description: 'Custom facet using Compose libraries',
+      code: `// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.24;
+
+import {LibERC721} from "compose/LibERC721.sol";
+
+contract GameNFTFacet {
+    function mintWithLogic(address player, uint256 tokenId) external {
+        require(playerHasPoints(player), "No points");
+        LibERC721.mint(player, tokenId);
+    }
+}`,
+    },
+  ]}
+/>
+
+---
+
+## Timeline
+
+<Timeline
+  items={[
+    {
+      icon: '🚀',
+      date: 'Q1 2024',
+      title: 'Project Launch',
+      description: 'Initial release with core facets and diamond infrastructure.',
+    },
+    {
+      icon: '💎',
+      date: 'Q2 2024',
+      title: 'Diamond Standard',
+      description: 'Full ERC-2535 implementation with upgradeable facets.',
+    },
+    {
+      icon: '🌟',
+      date: 'Q3 2024',
+      title: 'Community Growth',
+      description: 'Expanding library with community contributions.',
+    },
+    {
+      icon: '🎯',
+      date: 'Q4 2024',
+      title: 'Production Ready',
+      description: 'Audited, tested, and ready for production use.',
+    },
+  ]}
+/>
+
+```jsx
+<Timeline
+  items={[
+    {
+      icon: '🚀',
+      date: 'Date',
+      title: 'Title',
+      description: 'Description',
+    },
+  ]}
+/>
+```
+
+---
+
+## Comparison Table
+
+<ComparisonTable
+  columns={[
+    { name: 'Compose', highlight: true },
+    { name: 'Traditional' },
+    { name: 'Other Diamonds' },
+  ]}
+  features={[
+    {
+      name: 'On-Chain Composability',
+      description: 'Reuse deployed facets',
+      values: [true, false, true],
+    },
+    {
+      name: 'Read-First Design',
+      description: 'Optimized for understanding',
+      values: [true, false, false],
+    },
+    {
+      name: 'Standard Library',
+      description: 'Built-in verified facets',
+      values: [true, false, false],
+    },
+    {
+      name: 'Gas Efficiency',
+      values: ['Optimized', 'Standard', 'Variable'],
+    },
+  ]}
+/>
+
+```jsx
+<ComparisonTable
+  columns={[
+    { name: 'Option 1', highlight: true },
+    { name: 'Option 2' },
+  ]}
+  features={[
+    {
+      name: 'Feature',
+      description: 'Description',
+      values: [true, false],
+    },
+  ]}
+/>
+```
+
+---
+
+## Gradient Buttons
+
+<div style={{display: 'flex', gap: '1rem', flexWrap: 'wrap', marginBottom: '2rem'}}>
+  <GradientButton variant="primary" size="small">Small</GradientButton>
+  <GradientButton variant="primary" size="medium">Medium</GradientButton>
+  <GradientButton variant="primary" size="large">Large</GradientButton>
+</div>
+
+<div style={{display: 'flex', gap: '1rem', flexWrap: 'wrap', marginBottom: '2rem'}}>
+  <GradientButton variant="primary">Primary</GradientButton>
+  <GradientButton variant="secondary">Secondary</GradientButton>
+  <GradientButton variant="success">Success</GradientButton>
+  <GradientButton variant="outline">Outline</GradientButton>
+</div>
+
+```jsx
+<GradientButton to="/docs/" variant="primary" size="large">
+  Get Started
+</GradientButton>
+```
+
+---
+
+## Animated Counter
+
+<div style={{fontSize: '3rem', textAlign: 'center', marginBottom: '2rem'}}>
+  <AnimatedCounter end={1337} duration={3000} />
+</div>
+
+<div style={{display: 'flex', gap: '2rem', justifyContent: 'center', fontSize: '2rem'}}>
+  <div><AnimatedCounter end={99.9} decimals={1} suffix="%" /></div>
+  <div><AnimatedCounter end={1000} prefix="$" separator="," /></div>
+  <div><AnimatedCounter end={50} suffix="K+" /></div>
+</div>
+
+```jsx
+<AnimatedCounter 
+  end={1000} 
+  duration={2000}
+  prefix="$"
+  suffix="+"
+  separator=","
+  decimals={2}
+/>
+```
+
+---
+
+## Usage in Documentation
+
+All these components are available in your MDX files. Simply import them at the top of your document:
+
+```jsx
+import FeatureCard from '@site/src/components/features/FeatureCard';
+import Badge from '@site/src/components/ui/Badge';
+import GradientText from '@site/src/components/ui/GradientText';
+// ... other imports
+```
+
+Then use them anywhere in your content!
+
+<CalloutBox type="tip" title="Customization">
+  All components support custom styling through className props and can be further customized by modifying their CSS modules.
+</CalloutBox>
+

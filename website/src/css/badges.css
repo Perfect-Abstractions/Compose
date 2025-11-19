@@ -1,0 +1,18 @@
+/**
+ * Badge Component Styles
+ * Badge component styling
+ */
+
+/* Badges */
+.badge {
+  border-radius: 9999px;
+  padding: 0.25rem 0.75rem;
+  font-size: 0.875rem;
+  font-weight: 600;
+}
+
+.badge--primary {
+  background: linear-gradient(135deg, #3b82f6 0%, #1e40af 100%);
+  color: white;
+  border: none;
+}

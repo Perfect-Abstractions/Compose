@@ -1,8 +1,15 @@
-name: CI
+name: Test
 
 on:
   push:
+    branches: [main]
+    paths-ignore:
+      - '**.md'
+      - 'website/**'
   pull_request:
+    paths-ignore:
+      - '**.md'
+      - 'website/**'
   workflow_dispatch:
 
 env:
@@ -10,7 +17,6 @@ env:
 
 jobs:
   check:
-    name: Foundry project
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -24,10 +30,10 @@ jobs:
         run: |
           forge --version
 
-#      - name: Run Forge fmt
-#        run: |
-#          forge fmt --check
-#        id: fmt
+      - name: Run Forge fmt
+        run: |
+          forge fmt --check
+        id: fmt
 
       - name: Run Forge build
         run: |
