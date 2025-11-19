@@ -6,7 +6,7 @@ description: "Understand Diamonds from the ground up—facets, storage, delegati
 
 import DiamondFacetsSVG from '@site/static/img/svg/compose_diamond_facets.svg'
 
-A **diamond contract** \(<a href="https://eips.ethereum.org/EIPS/eip-2535">`ERC-2535`</a>\) is a smart contract that is made up of multiple parts instead of one large block of code. The diamond exists at **one address** and holds **all of the contract's storage**, but it uses separate smart contracts called **facets** to provide its functionality.
+A **diamond contract** is a smart contract that is made up of multiple parts instead of one large block of code. The diamond exists at **one address** and holds **all of the contract's storage**, but it uses separate smart contracts called **facets** to provide its functionality.
 
 Users interact only with the **diamond**, but the diamond's features come from its **facets**. Each facet provides a small, focused set of functions, and the diamond uses those functions to perform its actions. 
 

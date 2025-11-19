@@ -14,15 +14,19 @@ The answer lies in Compose's smart contract architecture, which is based on [dia
 
 A diamond contract is a simple, small proxy contract that **delegates to the code of other on-chain contracts** called **facets**. Each diamond uses the code of other contracts (facets) to execute logic and maintain its storage data.
 
-When you use Compose, you *do* deploy a new contract, this small contract is called a **diamond** 
+When you use Compose, you *do* deploy a new contract, this small contract is called a **diamond**.
 
 ## What You're NOT Deploying
 
 When you create a new diamond, you avoid redeploying:
 
-- The core token logic with the `ERC20Facet`
-- The permit functionality with the `ERC20PermitFacet`  
-- The bridging code with the `ERC20BridgableFacet`
+- Existing standard functionality such as 
+  - `ERC20Facet`
+  - `ERC20PermitFacet`
+  - `ERC721Facet`
+  - `OwnerFacet`
+  - `AccessControlFacet`
+  - etc.
 
 Instead, you deploy:
 
@@ -50,8 +54,14 @@ If 1,000 projects use the same `ERC20Facet`:
 - **1,000 projects** benefit from the same audited, battle-tested code
 
 :::tip[Key Insight]
-Many diamond contracts can be deployed that **reuse the same on-chain facets**. Each diamond manage its own storage and state, but shares the execution code with all other diamonds using the same facets.
+Many diamond contracts can be deployed that **reuse the same on-chain facets**. 
 :::
+
+:::tip[Key Insight]
+Each diamond manages **its own storage data** by using the code from facets.
+:::
+
+
 
 ## Benefits of Reusable Facets
 
