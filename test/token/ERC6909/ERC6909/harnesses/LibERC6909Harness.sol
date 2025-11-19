@@ -28,14 +28,14 @@ contract LibERC6909Harness {
     }
 
     function balanceOf(address _owner, uint256 _id) external view returns (uint256) {
-        LibERC6909.getStorage().balanceOf[_owner][_id];
+        return LibERC6909.getStorage().balanceOf[_owner][_id];
     }
 
     function allowance(address _owner, address _spender, uint256 _id) external view returns (uint256) {
-        LibERC6909.getStorage().allowance[_owner][_spender][_id];
+        return LibERC6909.getStorage().allowance[_owner][_spender][_id];
     }
 
     function isOperator(address _owner, address _spender) external view returns (bool) {
-        LibERC6909.getStorage().isOperator[_owner][_spender];
+        return LibERC6909.getStorage().isOperator[_owner][_spender];
     }
 }
