@@ -12,7 +12,7 @@ contract LibERC6909Test is Test {
     address internal alice;
 
     uint256 internal constant TOKEN_ID = 72;
-    uint256 internal constant MINT_AMOUNT = 1e24;
+    uint256 internal constant AMOUNT = 1e24;
 
     function setUp() public {
         alice = makeAddr("alice");
@@ -26,11 +26,11 @@ contract LibERC6909Test is Test {
 
     function test_Mint() external {
         vm.expectEmit();
-        emit LibERC6909.Transfer(address(this), address(0), alice, TOKEN_ID, MINT_AMOUNT);
+        emit LibERC6909.Transfer(address(this), address(0), alice, TOKEN_ID, AMOUNT);
 
-        harness.mint(alice, TOKEN_ID, MINT_AMOUNT);
+        harness.mint(alice, TOKEN_ID, AMOUNT);
 
-        assertEq(harness.balanceOf(alice, TOKEN_ID), MINT_AMOUNT);
+        assertEq(harness.balanceOf(alice, TOKEN_ID), AMOUNT);
     }
 
     function test_ShouldRevert_Mint_BalanceOf_Overflows() external {
@@ -47,5 +47,43 @@ contract LibERC6909Test is Test {
         harness.mint(to, id, amount);
 
         assertEq(harness.balanceOf(to, id), amount);
+    }
+
+    // ============================================
+    // Burn Tests
+    // ============================================
+
+    function test_ShouldRevert_Burn_Underflows() external {
+        vm.expectRevert(stdError.arithmeticError);
+        harness.burn(alice, TOKEN_ID, 1);
+    }
+
+    function test_Burn() external {
+        harness.mint(alice, TOKEN_ID, AMOUNT);
+
+        vm.expectEmit();
+        emit LibERC6909.Transfer(address(this), alice, address(0), TOKEN_ID, AMOUNT);
+
+        harness.burn(alice, TOKEN_ID, AMOUNT);
+
+        assertEq(harness.balanceOf(alice, TOKEN_ID), 0);
+    }
+
+    /// @dev First mints tokens and then burns a fraction of them.
+    function testFuzz_Burn(address caller, address from, uint256 id, uint256 amount, uint256 burnFrac) external {
+        // Set safe upper bound to avoid overflow in `burnAmount` calculation
+        amount = bound(amount, 1, type(uint256).max / 1e4);
+        burnFrac = bound(burnFrac, 1, 1e4); // 1e4 == 100% of amount burned
+        uint256 burnAmount = (amount * burnFrac) / 1e4;
+
+        harness.mint(from, id, amount);
+
+        vm.expectEmit();
+        emit LibERC6909.Transfer(caller, from, address(0), id, burnAmount);
+
+        vm.prank(caller);
+        harness.burn(from, id, burnAmount);
+
+        assertEq(harness.balanceOf(from, id), amount - burnAmount);
     }
 }
