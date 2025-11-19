@@ -1,4 +1,5 @@
-# Compose
+# Compose 
+![Coverage](https://img.shields.io/badge/coverage-63%25-yellow) [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](https://opensource.org/licenses/MIT) [![Discord](https://img.shields.io/badge/Discord-Join%20Chat-blue.svg)](https://discord.gg/DCBD2UKbxc)
 
 > **⚠️ Early Stage**: Compose is currently in development and only available to contributors. It is **NOT production ready**.
 
@@ -14,8 +15,6 @@ Compose is a smart contract library that helps developers create smart contract 
 
 The project actively evolves based on community input—[tell us](https://github.com/Perfect-Abstractions/Compose/discussions/108) what you'd like Compose to do for you.
 
-[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](https://opensource.org/licenses/MIT)
-[![Discord](https://img.shields.io/badge/Discord-Join%20Chat-blue.svg)](https://discord.gg/DCBD2UKbxc)
 
 ## Why Compose is Different
 
