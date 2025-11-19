@@ -86,4 +86,26 @@ contract LibERC6909Test is Test {
 
         assertEq(harness.balanceOf(from, id), amount - burnAmount);
     }
+
+    // ============================================
+    // Approve Tests
+    // ============================================
+
+    function test_approve() external {
+        vm.expectEmit();
+        emit LibERC6909.Approval(alice, address(this), TOKEN_ID, AMOUNT);
+
+        harness.approve(alice, address(this), TOKEN_ID, AMOUNT);
+
+        assertEq(harness.allowance(alice, address(this), TOKEN_ID), AMOUNT);
+    }
+
+    function testFuzz_approve(address owner, address spender, uint256 id, uint256 amount) external {
+        vm.expectEmit();
+        emit LibERC6909.Approval(owner, spender, id, amount);
+
+        harness.approve(owner, spender, id, amount);
+
+        assertEq(harness.allowance(owner, spender, id), amount);
+    }
 }
