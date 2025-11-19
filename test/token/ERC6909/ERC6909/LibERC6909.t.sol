@@ -108,4 +108,36 @@ contract LibERC6909Test is Test {
 
         assertEq(harness.allowance(owner, spender, id), amount);
     }
+
+    // ============================================
+    // Set Operator Tests
+    // ============================================
+
+    function test_SetOperator_IsApproved() external {
+        vm.expectEmit();
+        emit LibERC6909.OperatorSet(alice, address(this), true);
+
+        harness.setOperator(alice, address(this), true);
+        assertEq(harness.isOperator(alice, address(this)), true);
+    }
+
+    function test_SetOperator_RevokeOperator() external {
+        harness.setOperator(alice, address(this), true);
+
+        vm.expectEmit();
+        emit LibERC6909.OperatorSet(alice, address(this), false);
+
+        harness.setOperator(alice, address(this), false);
+
+        assertEq(harness.isOperator(alice, address(this)), false);
+    }
+
+    function testFuzz_SetOperator(address owner, address spender, bool approved) external {
+        vm.expectEmit();
+        emit LibERC6909.OperatorSet(owner, spender, approved);
+
+        harness.setOperator(owner, spender, approved);
+
+        assertEq(harness.isOperator(owner, spender), approved);
+    }
 }
