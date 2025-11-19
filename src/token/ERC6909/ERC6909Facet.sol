@@ -87,7 +87,9 @@ contract ERC6909Facet {
         ERC6909Storage storage s = getStorage();
         if (msg.sender != _sender && !s.isOperator[_sender][msg.sender]) {
             uint256 allowed = s.allowance[_sender][msg.sender][_id];
-            if (allowed != type(uint256).max) s.allowance[_sender][msg.sender][_id] = allowed - _amount;
+            if (allowed != type(uint256).max) {
+                s.allowance[_sender][msg.sender][_id] = allowed - _amount;
+            }
         }
 
         s.balanceOf[_sender][_id] -= _amount;

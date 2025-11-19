@@ -3,7 +3,7 @@ pragma solidity >=0.8.30;
 
 /// @title LibERC6909 — ERC-6909 Library
 /// @notice Provides internal functions and storage layout for ERC-6909 minimal multi-token logic.
-/// @dev Uses ERC-8042 for storage location standardization and ERC-6093 for error conventions.
+/// @dev Uses ERC-8042 for storage location standardization.
 ///      This library is intended to be used by custom facets to integrate with ERC-6909 functionality.
 /// @dev Adapted from: https://github.com/transmissions11/solmate/blob/main/src/tokens/ERC6909.sol
 library LibERC6909 {
@@ -75,7 +75,9 @@ library LibERC6909 {
 
         if (_by != address(0) && !s.isOperator[_from][_by]) {
             uint256 allowed = s.allowance[_from][_by][_id];
-            if (allowed != type(uint256).max) s.allowance[_from][_by][_id] = allowed - _amount;
+            if (allowed != type(uint256).max) {
+                s.allowance[_from][_by][_id] = allowed - _amount;
+            }
         }
 
         s.balanceOf[_from][_id] -= _amount;
