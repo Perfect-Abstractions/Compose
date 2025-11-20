@@ -22,10 +22,6 @@ library LibERC20Bridgeable {
     /// @param _caller is the invalid address.
     error ERC20InvalidCallerAddress(address _caller);
 
-    /// @notice Revert when the owner is invalid .
-    /// @param _bridge The invalid  address.
-    error ERC20InvalidOwner(address _bridge);
-
     error ERC20InsufficientBalance(address _from, uint256 _accountBalance, uint256 _value);
     /// @notice Emitted when tokens are minted via a cross-chain bridge.
     /// @param _to The recipient of minted tokens.
@@ -42,7 +38,7 @@ library LibERC20Bridgeable {
 
     /// @notice Storage slot for ERC-20 Bridgeable  using ERC8042 for storage location standardization
     /// @dev Storage position determined by the keccak256 hash of the diamond storage identifier.
-    bytes32 constant STORAGE_POSITION = keccak256("compose.erc20");
+    bytes32 constant ERC20_STORAGE_POSITION = keccak256("compose.erc20");
 
     /**
      * @dev ERC-8042 compliant storage struct for ERC20 token data.
@@ -61,43 +57,25 @@ library LibERC20Bridgeable {
      * @dev Uses inline assembly to set the storage slot reference.
      * @return s The ERC20 storage struct reference.
      */
-    function getStorage() internal pure returns (ERC20Storage storage s) {
-        bytes32 position = STORAGE_POSITION;
+    function erc20Storage() internal pure returns (ERC20Storage storage s) {
+        bytes32 position = ERC20_STORAGE_POSITION;
         assembly {
             s.slot := position
         }
     }
-
-  bytes32 constant STORAGE_POSITION1 = keccak256("compose.owner");
-
-    /// @custom:storage-location erc8042:compose.owner
-    struct OwnerStorage {
-        address owner;
-    }
-
-    /// @notice Returns a pointer to the ERC-173 storage struct.
-    /// @dev Uses inline assembly to access the storage slot defined by STORAGE_POSITION.
-    /// @return s1 The OwnerStorage struct in storage.
-    function getStorage1() internal pure returns (OwnerStorage storage s1) {
-        bytes32 position = STORAGE_POSITION1;
-        assembly {
-            s1.slot := position
-        }
-    }
-
     /// @notice Storage slot for ERC-20 Bridgeable using ERC8042 as template
 
-    bytes32 constant STORAGE_POSITION2 = keccak256("compose.erc20.bridgeable");
+    bytes32 constant BRIDGEABLE_STORAGE_POSITION = keccak256("compose.erc20.bridgeable");
 
     struct ERC20BridgeableStorage {
         mapping(address => bool) trustedBridges;
     }
 
-    function getStorage2() internal pure returns (ERC20BridgeableStorage storage s2) {
-        bytes32 position = STORAGE_POSITION2;
+    function bridgeStorage() internal pure returns (ERC20BridgeableStorage storage s) {
+        bytes32 position = BRIDGEABLE_STORAGE_POSITION;
 
         assembly {
-            s2.slot := position
+            s.slot := position
         }
     }
 
@@ -106,16 +84,19 @@ library LibERC20Bridgeable {
     /// @dev Increases totalSupply and recipient balance and emits CrosschainMint.
     /// @param _account The account to mint tokens to.
     /// @param _value The amount to mint.
-        function crosschainMint(address _account, uint256 _value) internal {
-        ERC20Storage storage s = getStorage();
-        ERC20BridgeableStorage storage s2 = getStorage2();
+    function crosschainMint(address _account, uint256 _value) internal {
+        ERC20Storage storage erc20 = erc20Storage();
+        ERC20BridgeableStorage storage bridge = bridgeStorage();
 
-        if (s2.trustedBridges[msg.sender] == false) revert ERC20InvalidBridgeAccount(msg.sender);
-        if (_account == address(0)) revert ERC20InvalidReciever(address(0));
-
+        if (bridge.trustedBridges[msg.sender] == false) {
+            revert ERC20InvalidBridgeAccount(msg.sender);
+        }
+        if (_account == address(0)) {
+            revert ERC20InvalidReciever(address(0));
+        }
         unchecked {
-            s.totalSupply += _value;
-            s.balanceOf[_account] += _value;
+            erc20.totalSupply += _value;
+            erc20.balanceOf[_account] += _value;
         }
 
         emit CrosschainMint(_account, _value, msg.sender);
@@ -126,32 +107,39 @@ library LibERC20Bridgeable {
     /// @param _from The account to burn tokens from.
     /// @param _value The amount to burn.
     function crosschainBurn(address _from, uint256 _value) internal {
-        ERC20Storage storage s = getStorage();
-        ERC20BridgeableStorage storage s2 = getStorage2();
-      
-        if (s2.trustedBridges[msg.sender] == false) revert ERC20InvalidBridgeAccount(msg.sender);
-        if (_from == address(0)) revert ERC20InvalidReciever(address(0));
+        ERC20Storage storage erc20 = erc20Storage();
+        ERC20BridgeableStorage storage bridge = bridgeStorage();
 
-        uint256 accountBalance = s.balanceOf[_from];
+        if (bridge.trustedBridges[msg.sender] == false) {
+            revert ERC20InvalidBridgeAccount(msg.sender);
+        }
+        if (_from == address(0)) {
+            revert ERC20InvalidReciever(address(0));
+        }
+        uint256 accountBalance = erc20.balanceOf[_from];
 
-        if (accountBalance < _value) revert ERC20InsufficientBalance(_from, accountBalance, _value);
-
+        if (accountBalance < _value) {
+            revert ERC20InsufficientBalance(_from, accountBalance, _value);
+        }
         unchecked {
-            s.totalSupply -= _value;
-            s.balanceOf[_from] -= _value;
+            erc20.totalSupply -= _value;
+            erc20.balanceOf[_from] -= _value;
         }
 
         emit CrosschainBurn(_from, _value, msg.sender);
     }
- /// @notice Internal check to check if the bridge is trusted.
+    /// @notice Internal check to check if the bridge is trusted.
     /// @dev Reverts if caller is zero or not in the trusted bridges mapping.
     /// @param _caller The address to validate
 
-   
-    function checkTokenBridge(address _caller) internal {
-        ERC20BridgeableStorage storage s2 = getStorage2();
+    function checkTokenBridge(address _caller) internal view {
+        ERC20BridgeableStorage storage bridge = bridgeStorage();
 
-        if (_caller == address(0)) revert ERC20InvalidBridgeAccount(address(0));
-        if (s2.trustedBridges[_caller] == false) revert ERC20InvalidBridgeAccount(_caller);
+        if (_caller == address(0)) {
+            revert ERC20InvalidBridgeAccount(address(0));
+        }
+        if (bridge.trustedBridges[_caller] == false) {
+            revert ERC20InvalidBridgeAccount(_caller);
+        }
     }
 }
