@@ -6,13 +6,19 @@ import Heading from '@theme/Heading';
 import Icon from '../../components/ui/Icon';
 import styles from './homepageHeader.module.css';
 import DiamondScene from '../../components/DiamondScene';
+import { useFacetBadges } from '../../components/DiamondScene/useFacetBadges';
+import { FacetBadge } from '../../components/DiamondScene/FacetBadge';
 
 export default function HomepageHeader() {
-  const {siteConfig} = useDocusaurusContext();
+  const { activeFacetName, handleHover } = useFacetBadges();
 
   return (
     <header className={styles.heroBanner}>
-      <DiamondScene className={styles.canvasContainer} />
+      <DiamondScene className={styles.canvasContainer} onHoverChange={handleHover} />
+      
+      {/* Floating Badge for Diamond Interaction */}
+      <FacetBadge name={activeFacetName} visible={!!activeFacetName} />
+
       <div className={styles.heroBackground}>
         <div className={styles.heroGradient}></div>
         <div className={styles.heroPattern}></div>
@@ -45,7 +51,7 @@ export default function HomepageHeader() {
             </Link>
             <Link className={clsx(styles.ctaButton, styles.ctaSecondary)} to="/docs/foundations">
               <span>Learn Core Concepts</span>
-            </Link>
+              </Link>
           </div>
           <div className={styles.heroLinks}>
             <a href="https://github.com/Perfect-Abstractions/Compose" target="_blank" rel="noopener noreferrer" className={styles.heroLink}>

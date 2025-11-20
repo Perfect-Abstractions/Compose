@@ -291,3 +291,68 @@ export const ParticleShader = {
   `
 };
 
+// HIGHLIGHT SHADER - For highlighting specific facets (Diamond Standard / EIP-2535 Visualization)
+export const FacetHighlightShader = {
+  uniforms: {
+    uTime: { value: 0 },
+    uColor: { value: new THREE.Color('#488FF8') }, // Blue-400 (Bright Blue)
+    uActiveFacetId: { value: -1.0 }, // ID of the facet group to highlight (-1 = none)
+    uHoverFacetId: { value: -1.0 } // ID of the facet currently hovered (optional)
+  },
+  vertexShader: `
+    attribute float aFacetId;
+    varying float vFacetId;
+    varying vec3 vNormal;
+    
+    void main() {
+      vFacetId = aFacetId;
+      vNormal = normalize(normalMatrix * normal);
+      vec4 mvPosition = modelViewMatrix * vec4(position, 1.0);
+      gl_Position = projectionMatrix * mvPosition;
+    }
+  `,
+  fragmentShader: `
+    uniform float uTime;
+    uniform vec3 uColor;
+    uniform float uActiveFacetId;
+    uniform float uHoverFacetId;
+    
+    varying float vFacetId;
+    varying vec3 vNormal;
+    varying vec3 vPosition; // Added for rim calculation
+
+    void main() {
+      // Check if this fragment belongs to the active facet group
+      float isActive = 1.0 - step(0.1, abs(vFacetId - uActiveFacetId));
+      float isHover = 1.0 - step(0.1, abs(vFacetId - uHoverFacetId));
+      
+      float totalActive = max(isActive, isHover);
+      
+      if (totalActive < 0.1) discard;
+      
+      // Clean, steady glow instead of frantic pulsing
+      // Small subtle breathe for life
+      float breathe = sin(uTime * 3.0) * 0.1 + 0.95; // Faster, brighter base
+      
+      // Add Rim Light for definition (Fresnel-like)
+      // View vector is roughly along Z in local space for this simple rim
+      float rim = 1.5 - abs(dot(normalize(vNormal), vec3(0.0, 0.0, 1.0)));
+      rim = pow(rim, 3.0);
+      
+      // Combine
+      vec3 finalColor = uColor * 1.4; // Boost base color brightness
+      
+      // Mix solid fill with extra bright rim
+      finalColor += vec3(0.6) * rim; // Brighter rim
+      
+      // Base alpha: steady and clean
+      // Increased opacity significantly for brighter appearance
+      float alpha = totalActive * breathe * 0.85; 
+      
+      // Boost alpha at rim for "glassy" edge
+      alpha += rim * 0.4;
+
+      gl_FragColor = vec4(finalColor, alpha);
+    }
+  `
+};
