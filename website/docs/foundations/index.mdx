@@ -4,22 +4,61 @@ description: Compose smart contracts are designed to be composable.
 sidebar_class_name: hidden
 ---
 
-Compose is a new approach to smart contract development that changes how developers build and deploy blockchain applications. This section introduces the core concepts that make Compose unique.
+import DocCard, { DocCardGrid } from '@site/src/components/docs/DocCard';
+import DocSubtitle from '@site/src/components/docs/DocSubtitle';
+import Icon from '@site/src/components/ui/Icon';
+import CalloutBox from '@site/src/components/ui/CalloutBox';
+
+<DocSubtitle>
+  Compose is a new approach to smart contract development that changes how developers build and deploy smart contract systems. This section introduces the core concepts that make Compose unique.
+</DocSubtitle>
 
 ## Articles in this section
 
-- [Diamond Smart Contracts](./diamond-contracts) — A diamond contract is made up of multiple parts. It exists at one address and holds all storage, but uses separate smart contracts called facets to provide its functionality.
-
-- [Onchain Smart Contracts](./onchain-smart-contracts) — Compose provides reusable onchain contracts that already exist on blockchains—eliminating the need to deploy or manage them yourself.
-
-- [Reusable Smart Contracts](./resuable-smart-contracts) — Build new systems from existing onchain contracts through diamond-based architecture. Deploy only a small diamond that connects to existing facets.
-
-- [Composable Smart Contracts](./composable-smart-contracts) — Facets interoperate seamlessly inside the same diamond. Mix, match, and reuse logic across projects without modifying or redeploying code.
-
-- [Custom Functionality: Compose Your Own Facets](./custom-facets) — Build your own facets that work seamlessly with existing Compose facets using shared storage layouts and internal logic through Solidity libraries.
-
-- [Understanding Facets and Libraries](./facets-and-libraries) — Learn how facets and libraries work together through shared storage to build composable systems.
-
+<DocCardGrid columns={2}>
+  <DocCard
+    title="Diamond Smart Contracts"
+    description="A diamond contract is made up of multiple parts. It exists at one address and holds all storage, but uses separate smart contracts called facets to provide its functionality."
+    href="./diamond-contracts"
+    icon={<Icon name="diamond" size={28} />}
+    size="medium"
+  />
+  <DocCard
+    title="On-chain Smart Contracts"
+    description="Compose provides reusable on-chain contracts that already exist on blockchains—eliminating the need to deploy or manage them yourself."
+    href="./onchain-contract-library"
+    icon={<Icon name="package" size={28} />}
+    size="medium"
+  />
+  <DocCard
+    title="Reusable Smart Contracts"
+    description="Build new systems from existing on-chain contracts through diamond-based architecture. Deploy only a small diamond that connects to existing facets."
+    href="./reusable-facet-logic"
+    icon={<Icon name="cycle" size={28} />}
+    size="medium"
+  />
+  <DocCard
+    title="Composable Smart Contracts"
+    description="Facets interoperate seamlessly inside the same diamond. Mix, match, and reuse logic across projects without modifying or redeploying code."
+    href="./composable-facets"
+    icon={<Icon name="compose" size={28} />}
+    size="medium"
+  />
+  <DocCard
+    title="Custom Functionality: Compose Your Own Facets"
+    description="Build your own facets that work seamlessly with existing Compose facets using shared storage layouts and internal logic through Solidity libraries."
+    href="./custom-facets"
+    icon={<Icon name="puzzle" size={28} />}
+    size="medium"
+  />
+  <DocCard
+    title="Understanding Facets and Libraries"
+    description="Learn how facets and libraries work together through shared storage to build composable systems."
+    href="./facets-and-libraries"
+    icon={<Icon name="book" size={28} />}
+    size="medium"
+  />
+</DocCardGrid>
 
 :::warning[Early Development]
 Compose is still in early development and currently available only to contributors.

@@ -42,7 +42,7 @@ export default function HomepageHeader() {
             </Link>
             <Link
               className={clsx(styles.ctaButton, styles.ctaSecondary)}
-              to="/docs">
+              to="/docs/foundations">
               <span>Learn Core Concepts</span>
             </Link>
           </div>
@@ -58,7 +58,7 @@ export default function HomepageHeader() {
               <Icon name="discord" size={20} />
               <span>Join Discord</span>
             </a>
-            <Link to="/docs/design" className={styles.heroLink}>
+            <Link to="/docs/contribution/how-to-contribute" className={styles.heroLink}>
               <Icon name="users" size={20} />
               <span>Contribute</span>
             </Link>

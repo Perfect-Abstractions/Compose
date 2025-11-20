@@ -1,0 +1,41 @@
+---
+sidebar_position: 3
+title: On-chain Library
+description: Compose provides a set of reusable on-chain contracts that already exist on blockchains
+---
+
+import DocSubtitle from '@site/src/components/docs/DocSubtitle';
+
+<DocSubtitle>
+**Compose takes a different approach.**
+
+Compose provides a set of **reusable on-chain contracts** that already exist on blockchains. You don't need to deploy or manage them yourself. The heavy lifting has been done for you.
+</DocSubtitle>
+
+## Why This Matters
+
+Traditionally, you would extend functionality through **inheritance at the source-code level**, for example:
+
+```Solidity
+contract ERC20Permit is ERC20 { ... }
+```
+
+This approach tightly couples code and forces every variant to be redeployed as a new contract, resulting in the same code being duplicated and deployed across countless projects. 
+
+**Compose changes that!**
+
+Instead of inheritance, it uses **on-chain composition** — combining existing deployed facets and your own custom facets inside a single diamond.
+
+This reduces duplication, improves upgradeability, and makes smart contract systems more flexible and maintainable. 
+
+For your next project, instead of deploying new contracts, simply **use the existing on-chain contracts** provided by Compose.
+
+
+:::tip[Key Insight]
+Compose is a general purpose **on-chain** smart contract library. 
+:::
+
+:::info[In Development]
+Compose is still in early development, and its smart contracts haven't been deployed yet.
+We're actively building—and if this vision excites you, we'd love for you to join us.
+:::

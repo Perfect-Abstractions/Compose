@@ -1,17 +1,17 @@
 ---
-sidebar_position: 6
+sidebar_position: 7
 title: "Custom Functionality: Compose Your Own Facets"
-description: Compose smart contracts are designed to be composable.
+description: "Build your own facets that work seamlessly with existing Compose Functionality."
 ---
 
 Many projects need custom functionality beyond the standard facets.  
 Compose is designed for this — you can build and integrate your own facets that work seamlessly alongside existing Compose facets.
 
-Compose provides Solidity libraries that expose the same storage layouts and internal logic used by its onchain facets. This lets your custom facets share data and interact directly with Compose's reusable facets.
+Compose provides Solidity libraries that expose the same storage layouts and internal logic used by its on-chain facets. This lets your custom facets share data and interact directly with Compose's reusable facets.
 
 **Example: Adding Game Logic to ERC-721**
 
-Suppose you're building an onchain game and want to include the `ERC721Facet` in your diamond.
+Suppose you're building an on-chain game and want to include the `ERC721Facet` in your diamond.
 You can add your own `GameNFTFacet` that extends functionality while still sharing the same ERC-721 storage through `LibERC721`:
 
 ```Solidity

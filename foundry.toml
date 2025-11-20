@@ -1,4 +1,4 @@
-# Forge Version: 1.4.3-stable
+# Forge Version: 1.4.4-stable
 
 [profile.default]
 src = "src"
@@ -7,6 +7,7 @@ libs = ["lib"]
 optimizer = true
 optimizer_runs = 20_000
 evm_version = "prague"
+
 
 [profile.ci]
 src = "src"
