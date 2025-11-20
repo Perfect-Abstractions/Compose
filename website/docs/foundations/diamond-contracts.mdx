@@ -4,7 +4,7 @@ title: Diamond Contracts
 description: "Understand Diamonds from the ground up—facets, storage, delegation, and how Compose uses them."
 ---
 
-import DiamondFacetsSVG from '@site/static/img/svg/compose_diamond_facets.svg'
+import SvgThemeRenderer from '@site/src/components/theme/SvgThemeRenderer';
 
 A **diamond contract** is a smart contract that is made up of multiple parts instead of one large block of code. The diamond exists at **one address** and holds **all of the contract's storage**, but it uses separate smart contracts called **facets** to provide its functionality.
 
@@ -23,7 +23,12 @@ A diamond has:
 
 Below is a diagram showing a diamond with multiple facets.
 
-<DiamondFacetsSVG style={{ maxWidth: '100%', height: 'auto' }} />
+<SvgThemeRenderer
+  lightSrc={"/img/svg/diamond-diagram-light.svg"}
+  darkSrc={"/img/svg/diamond-diagram-dark.svg"}
+  alt="Diagram showing how facets compose into a diamond contract"
+  style={{ maxWidth: '100%', height: 'auto' }}
+/>
 
 A Diamond lets you:
 

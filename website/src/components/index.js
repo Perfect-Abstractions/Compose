@@ -55,3 +55,6 @@ export { default as NavbarEnhancements } from './navigation/NavbarEnhancements';
 export { default as NavbarGradient } from './navigation/NavbarGradient';
 export { default as GitHubStarButton } from './navigation/GitHubStarButton';
 
+// Theme Components
+export { default as SvgThemeRenderer } from './theme/SvgThemeRenderer';
+
