@@ -70,6 +70,9 @@ Here's a complete example showing how to correctly extend `ERC20Facet` by creati
 pragma solidity >=0.8.30;
 
 contract ERC20StakingFacet {
+    /// @notice Standard ERC20 Transfer event.
+    event Transfer(address indexed _from, address indexed _to, uint256 _value);
+
     /// @notice Event emitted when tokens are staked.
     /// @param _account The account staking tokens.
     /// @param _amount The amount of tokens staked.
@@ -152,6 +155,9 @@ contract ERC20StakingFacet {
 
         // Transfer tokens from user's balance to staked balance
         erc20s.balanceOf[msg.sender] -= _amount;
+        erc20s.balanceOf[address(this)] += _amount;
+        emit Transfer(msg.sender, address(this), _amount);
+
         s.stakedBalances[msg.sender] += _amount;
 
         // Record staking start time if this is the first stake
@@ -175,7 +181,10 @@ contract ERC20StakingFacet {
 
         // Transfer tokens from staked balance back to user's balance
         s.stakedBalances[msg.sender] -= _amount;
+
+        erc20s.balanceOf[address(this)] -= _amount;
         erc20s.balanceOf[msg.sender] += _amount;
+        emit Transfer(address(this), msg.sender, _amount);
 
         // Clear staking start time if all tokens are unstaked
         if (s.stakedBalances[msg.sender] == 0) {
