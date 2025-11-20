@@ -61,6 +61,164 @@ There may be reasonable exceptions to these rules. If you believe one applies, p
 
 For example, `ERC721EnumerableFacet` does not extend `ERC721Facet` because enumeration requires re-implementing transfer and mint/burn logic, making it incompatible with `ERC721Facet`.
 
+### Example: Extending ERC20Facet with Staking Functionality
+
+Here's a complete example showing how to correctly extend `ERC20Facet` by creating a new `ERC20StakingFacet` that adds staking functionality:
+
+```solidity
+// SPDX-License-Identifier: MIT
+pragma solidity >=0.8.30;
+
+contract ERC20StakingFacet {
+    /// @notice Event emitted when tokens are staked.
+    /// @param _account The account staking tokens.
+    /// @param _amount The amount of tokens staked.
+    event TokensStaked(address indexed _account, uint256 _amount);
+
+    /// @notice Event emitted when tokens are unstaked.
+    /// @param _account The account unstaking tokens.
+    /// @param _amount The amount of tokens unstaked.
+    event TokensUnstaked(address indexed _account, uint256 _amount);
+
+    /// @notice Thrown when an account has insufficient balance for a stake operation.
+    /// @param _sender Address attempting to stake.
+    /// @param _balance Current balance of the sender.
+    /// @param _needed Amount required to complete the operation.
+    error ERC20InsufficientBalance(address _sender, uint256 _balance, uint256 _needed);
+
+    /// @notice Thrown when attempting to unstake more tokens than are staked.
+    /// @param _account The account attempting to unstake.
+    /// @param _requested The amount requested to unstake.
+    /// @param _staked The amount currently staked.
+    error InsufficientStakedBalance(address _account, uint256 _requested, uint256 _staked);
+
+    /// @notice Storage slot identifier for ERC20 (reused to access token data).
+    bytes32 constant ERC20_STORAGE_POSITION = keccak256("compose.erc20");
+
+    /// @notice Storage slot identifier for Staking functionality.
+    bytes32 constant STAKING_STORAGE_POSITION = keccak256("compose.erc20.staking");
+
+    /// @notice Storage struct for ERC20 (reused struct definition with unused variables removed).
+    /// @dev Must match the struct definition in ERC20Facet, but we remove `nonces`
+    ///      since this facet doesn't need permit functionality. The `nonces` mapping
+    ///      is at the end of the original struct, so it can be safely removed.
+    ///      Note: The order of variables must match the original struct.
+    /// @custom:storage-location erc8042:compose.erc20
+    struct ERC20Storage {
+        string name;
+        string symbol;
+        uint8 decimals;
+        uint256 totalSupply;
+        mapping(address owner => uint256 balance) balanceOf;
+        mapping(address owner => mapping(address spender => uint256 allowance)) allowances;
+        // Note: nonces mapping removed - not needed for staking functionality
+    }
+
+    /// @notice Storage struct for ERC20Staking.
+    /// @custom:storage-location erc8042:compose.erc20.staking
+    struct ERC20StakingStorage {
+        mapping(address account => uint256 stakedBalance) stakedBalances;
+        mapping(address account => uint256 stakingStartTime) stakingStartTimes;
+    }
+
+    /// @notice Returns the storage for ERC20.
+    /// @return s The ERC20 storage struct.
+    function getERC20Storage() internal pure returns (ERC20Storage storage s) {
+        bytes32 position = ERC20_STORAGE_POSITION;
+        assembly {
+            s.slot := position
+        }
+    }
+
+    /// @notice Returns the storage for ERC20Staking.
+    /// @return s The ERC20Staking storage struct.
+    function getStorage() internal pure returns (ERC20StakingStorage storage s) {
+        bytes32 position = STAKING_STORAGE_POSITION;
+        assembly {
+            s.slot := position
+        }
+    }
+
+    /// @notice Stakes tokens from the caller's balance.
+    /// @param _amount The amount of tokens to stake.
+    function stake(uint256 _amount) external {
+        ERC20Storage storage erc20s = getERC20Storage();
+        ERC20StakingStorage storage s = getStorage();
+
+        // Check sufficient balance
+        if (erc20s.balanceOf[msg.sender] < _amount) {
+            revert ERC20InsufficientBalance(msg.sender, erc20s.balanceOf[msg.sender], _amount);
+        }
+
+        // Transfer tokens from user's balance to staked balance
+        erc20s.balanceOf[msg.sender] -= _amount;
+        s.stakedBalances[msg.sender] += _amount;
+
+        // Record staking start time if this is the first stake
+        if (s.stakingStartTimes[msg.sender] == 0) {
+            s.stakingStartTimes[msg.sender] = block.timestamp;
+        }
+
+        emit TokensStaked(msg.sender, _amount);
+    }
+
+    /// @notice Unstakes tokens and returns them to the caller's balance.
+    /// @param _amount The amount of tokens to unstake.
+    function unstake(uint256 _amount) external {
+        ERC20Storage storage erc20s = getERC20Storage();
+        ERC20StakingStorage storage s = getStorage();
+
+        // Check sufficient staked balance
+        if (s.stakedBalances[msg.sender] < _amount) {
+            revert InsufficientStakedBalance(msg.sender, _amount, s.stakedBalances[msg.sender]);
+        }
+
+        // Transfer tokens from staked balance back to user's balance
+        s.stakedBalances[msg.sender] -= _amount;
+        erc20s.balanceOf[msg.sender] += _amount;
+
+        // Clear staking start time if all tokens are unstaked
+        if (s.stakedBalances[msg.sender] == 0) {
+            s.stakingStartTimes[msg.sender] = 0;
+        }
+
+        emit TokensUnstaked(msg.sender, _amount);
+    }
+
+    /// @notice Returns the staked balance for an account.
+    /// @param _account The account to check.
+    /// @return The amount of tokens staked by the account.
+    function getStakedBalance(address _account) external view returns (uint256) {
+        return getStorage().stakedBalances[_account];
+    }
+
+    /// @notice Returns the staking start time for an account.
+    /// @param _account The account to check.
+    /// @return The timestamp when the account first staked tokens.
+    function getStakingStartTime(address _account) external view returns (uint256) {
+        return getStorage().stakingStartTimes[_account];
+    }
+}
+```
+
+### Summary: How This Example Follows the Guide
+
+This example demonstrates proper facet extension by:
+
+- **Extending as a new facet**: `ERC20StakingFacet` is a separate, self-contained facet that composes with `ERC20Facet` rather than modifying it. This follows the principle that every extension should be implemented as a new facet.
+
+- **Reusing storage struct**: The `ERC20Storage` struct is copied from `ERC20Facet` and reused with the same storage slot (`keccak256("compose.erc20")`), ensuring both facets access the same token data. This demonstrates how facets can share storage through diamond storage patterns.
+
+- **Maintaining variable order**: All variables in the reused `ERC20Storage` struct maintain the same order as the original struct. Only the `nonces` mapping at the end is removed, following the rule that variables can only be removed from the end of a struct.
+
+- **Removing unused variables**: The `nonces` mapping (used for permit functionality) is removed from the end of the struct since staking doesn't require permit functionality. This follows the rule that storage structs should be designed so removable variables appear at the end, and removal is only done from the end of a struct.
+
+- **Adding custom storage**: A new `ERC20StakingStorage` struct is defined with its own storage slot (`keccak256("compose.erc20.staking")`) for staking-specific data. This follows the principle that a facet adding new storage variables must define its own diamond-storage struct.
+
+- **Self-contained design**: The facet contains all necessary code (events, errors, storage definitions, and functions) without imports, making it fully self-contained. This adheres to the rule that facets should only contain code they actually use.
+
+- **Composable functionality**: This facet can be deployed once and added to any diamond that includes `ERC20Facet`, demonstrating true onchain composition where facets work together without inheritance.
+
 *** 
 
 This level of composability strikes the right balance: it enables highly organized, modular, and understandable on-chain smart contract systems.
