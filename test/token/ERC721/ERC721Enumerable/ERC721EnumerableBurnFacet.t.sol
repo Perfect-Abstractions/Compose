@@ -3,7 +3,6 @@ pragma solidity >=0.8.30;
 
 import {Test} from "forge-std/Test.sol";
 import {ERC721EnumerableBurnFacet} from "../../../../src/token/ERC721/ERC721Enumerable/ERC721EnumerableBurnFacet.sol";
-import {LibERC721 as LibERC721Enumerable} from "../../../../src/token/ERC721/ERC721Enumerable/LibERC721Enumerable.sol";
 import {ERC721EnumerableBurnFacetHarness} from "./harnesses/ERC721EnumerableBurnFacetHarness.sol";
 
 contract ERC721EnumerableBurnFacetTest is Test {
@@ -37,7 +36,7 @@ contract ERC721EnumerableBurnFacetTest is Test {
         assertEq(token.balanceOf(alice), 1);
         assertEq(token.totalSupply(), 2);
 
-        vm.expectRevert(abi.encodeWithSelector(LibERC721Enumerable.ERC721NonexistentToken.selector, 1));
+        vm.expectRevert(abi.encodeWithSelector(ERC721EnumerableBurnFacet.ERC721NonexistentToken.selector, 1));
         token.ownerOf(1);
     }
 
@@ -66,13 +65,13 @@ contract ERC721EnumerableBurnFacetTest is Test {
     }
 
     function test_RevertWhen_BurnWithoutApproval() public {
-        vm.expectRevert(abi.encodeWithSelector(LibERC721Enumerable.ERC721InsufficientApproval.selector, charlie, 2));
+        vm.expectRevert(abi.encodeWithSelector(ERC721EnumerableBurnFacet.ERC721InsufficientApproval.selector, charlie, 2));
         vm.prank(charlie);
         token.burn(2);
     }
 
     function test_RevertWhen_BurnNonexistentToken() public {
-        vm.expectRevert(abi.encodeWithSelector(LibERC721Enumerable.ERC721NonexistentToken.selector, 99));
+        vm.expectRevert(abi.encodeWithSelector(ERC721EnumerableBurnFacet.ERC721NonexistentToken.selector, 99));
         vm.prank(alice);
         token.burn(99);
     }
