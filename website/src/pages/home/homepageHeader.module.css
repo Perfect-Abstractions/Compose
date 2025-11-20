@@ -14,6 +14,7 @@
   position: absolute;
   inset: 0;
   z-index: 0;
+  pointer-events: none;
 }
 
 .heroGradient {
@@ -35,21 +36,39 @@
   background-size: 64px 64px;
 }
 
-.heroContainer { position: relative; z-index: 1; }
-
-.heroContent {
-  max-width: 880px;
-  margin: 0 auto;
-  text-align: center;
+.heroContainer { 
+  position: relative; 
+  z-index: 1;
+  /* Removed grid to allow full overlay */
+  width: 100%;
 }
 
-.badgeWrapper { margin-bottom: 1.5rem; animation: fadeInDown var(--motion-duration-normal) var(--motion-ease-standard); }
+/* Canvas container is now absolute and full width to allow particles everywhere */
+.canvasContainer {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none; /* Pass clicks through to buttons */
+  z-index: 0; /* Behind content */
+}
+
+.heroContent {
+  position: relative;
+  z-index: 1;
+  text-align: left;
+  max-width: 640px;
+  /* margin-left: 0; */ /* Default is fine inside container */
+  margin-right: auto; /* Pushes content to the left side if container is flex, but block is fine */
+}
+
+.badgeWrapper { margin-bottom: 2rem; animation: fadeInDown var(--motion-duration-normal) var(--motion-ease-standard); }
 
 .badge {
   position: relative;
   display: inline-flex;
   align-items: center;
-  gap: 0.5rem;
+  gap: 0.625rem;
   padding: 0.75rem 1.5rem;
   background: rgba(255, 255, 255, 0.05);
   backdrop-filter: blur(16px);
@@ -63,58 +82,60 @@
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.15);
 }
 
-.badgePulse {
-  position: absolute;
-  left: 1.25rem;
-  width: 8px;
-  height: 8px;
-  background: #ef4444;
-  border-radius: 50%;
-  animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
-}
-
-@keyframes pulse {
-  0%, 100% { opacity: 1; transform: scale(1); }
-  50% { opacity: 0.5; transform: scale(1.2); }
-}
-
 .heroTitle {
-  font-size: clamp(3rem, 8vw, 5rem);
+  font-size: clamp(2.5rem, 5vw, 4rem); /* Reduced max size from 5rem to 4rem */
   font-weight: 900;
-  line-height: 1.1;
+  line-height: 1.2;
   letter-spacing: -0.04em;
   color: white;
-  margin-bottom: 1rem;
+  margin-bottom: 1.5rem;
   animation: fadeInUp var(--motion-duration-normal) var(--motion-ease-standard) 0.2s both;
+  text-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
 }
 
 .heroTitleGradient {
-  background: linear-gradient(135deg, #60a5fa 0%, var(--compose-primary-500) 50%, var(--compose-primary-600) 100%);
+  background: linear-gradient(135deg, #60a5fa 0%, #3b82f6 50%, #2563eb 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
   display: inline-block;
+  filter: drop-shadow(0 0 20px rgba(6, 37, 88, 0.6));
 }
 
-.heroSubtitle {
-  font-size: clamp(1.125rem, 2.5vw, 1.5rem);
-  color: rgba(255, 255, 255, 0.85);
-  font-weight: 500;
-  line-height: 1.6;
-  margin-bottom: 1rem;
+.heroDescriptionWrapper {
+  position: relative;
+  margin-bottom: 3rem;
+  max-width: 640px;
   animation: fadeInUp var(--motion-duration-normal) var(--motion-ease-standard) 0.3s both;
 }
 
-.heroDescription {
-  font-size: clamp(1rem, 2vw, 1.125rem);
-  color: rgba(255, 255, 255, 0.7);
-  line-height: 1.8;
-  max-width: 720px;
-  margin: 0 auto 2rem;
-  animation: fadeInUp var(--motion-duration-normal) var(--motion-ease-standard) 0.4s both;
+.heroSubtitle {
+  font-size: clamp(1rem, 4vw, 1.3rem);
+  color: #ffffff;
+  font-weight: 700;
+  line-height: 1.6;
+  margin-bottom: 0.75rem;
 }
 
-.heroCta { display: flex; align-items: center; justify-content: center; gap: 1rem; flex-wrap: wrap; margin-bottom: 2rem; animation: fadeInUp var(--motion-duration-normal) var(--motion-ease-standard) 0.5s both; }
+.heroDescription {
+  font-size: clamp(0.9375rem, 1.5vw, 1.0625rem);
+  color: rgba(255, 255, 255, 0.9);
+  font-weight: 500;
+  line-height: 1.6;
+  max-width: 100%;
+  margin: 0;
+  padding: 0;
+}
+
+.heroCta { 
+  display: flex; 
+  align-items: center; 
+  justify-content: flex-start;
+  gap: 1.25rem; 
+  flex-wrap: wrap; 
+  margin-bottom: 1.5rem; 
+  animation: fadeInUp var(--motion-duration-normal) var(--motion-ease-standard) 0.5s both; 
+}
 
 .ctaButton {
   display: inline-flex;
@@ -128,6 +149,7 @@
   transition: all var(--motion-duration-normal) var(--motion-ease-standard);
   border: 2px solid transparent;
   white-space: nowrap;
+  box-shadow: 0 4px 6px rgba(0,0,0,0.2);
 }
 
 .ctaPrimary {
@@ -139,7 +161,7 @@
 }
 .ctaPrimary:hover { transform: translateY(-2px); box-shadow: 0 8px 24px rgba(59,130,246,0.5), 0 4px 8px rgba(0,0,0,0.12); color: white; }
 
-.ctaSecondary { background: rgba(255,255,255,0.05); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); color: white; border: 2px solid rgba(255,255,255,0.15); }
+.ctaSecondary { background: rgba(15, 23, 42, 0.6); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); color: white; border: 2px solid rgba(255,255,255,0.15); }
 .ctaSecondary:hover { background: rgba(255,255,255,0.1); border-color: rgba(255,255,255,0.3); transform: translateY(-2px); color: white; }
 
 .ctaButton:focus-visible,
@@ -149,26 +171,31 @@
   border-radius: 8px;
 }
 
-.ctaButtonDisabled { opacity: 0.5; cursor: not-allowed; pointer-events: none; }
-.ctaButtonDisabled:hover { transform: none; background: inherit; border-color: inherit; }
-
-.heroLinks { display: flex; align-items: center; justify-content: center; gap: 1rem; flex-wrap: wrap; animation: fadeInUp var(--motion-duration-normal) var(--motion-ease-standard) 0.6s both; }
+.heroLinks { 
+  display: flex; 
+  align-items: center; 
+  justify-content: flex-start;
+  gap: 1rem; 
+  flex-wrap: wrap; 
+  animation: fadeInUp var(--motion-duration-normal) var(--motion-ease-standard) 0.6s both; 
+}
 
 .heroLink {
   display: inline-flex;
   align-items: center;
-  gap: 0.5rem;
+  gap: 0.625rem;
   padding: 0.75rem 1.25rem;
-  background: rgba(255, 255, 255, 0.03);
+  background: rgba(15, 23, 42, 0.6);
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
   border: 1px solid rgba(255, 255, 255, 0.08);
   border-radius: 0.625rem;
-  color: rgba(255, 255, 255, 0.85);
+  color: rgba(255, 255, 255, 0.9);
   font-size: 0.9375rem;
   font-weight: 500;
   text-decoration: none;
   transition: all 0.25s ease;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.2);
 }
 .heroLink:hover { background: rgba(255, 255, 255, 0.08); border-color: rgba(255, 255, 255, 0.15); color: white; transform: translateY(-1px); }
 .heroLink svg { flex-shrink: 0; opacity: 0.9; }
@@ -195,12 +222,54 @@
 /* Responsive */
 @media screen and (max-width: 1024px) {
   .heroBanner { padding: 8rem 0 10rem; min-height: 80vh; }
+  
+  /* Reset canvas container on mobile */
+  .canvasContainer {
+    /* Still absolute, but maybe we center diamond via JS */
+  }
+  
+  .heroContent {
+    text-align: center; /* Center text on mobile */
+    margin: 0 auto;
+    max-width: 100%;
+  }
+  
+  .heroDescriptionWrapper {
+    margin: 0 auto 1.5rem;
+    text-align: center;
+    background: rgba(15, 23, 42, 0.6);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 1rem;
+    padding: 1.5rem;
+    box-shadow: 0 4px 24px rgba(0, 0, 0, 0.2);
+  }
+
+  .heroSubtitle, .heroDescription {
+    margin-left: auto;
+    margin-right: auto;
+    color: #ffffff;
+  }
+  
+  .heroDescription {
+    /* Remove previous mobile-only styles since wrapper handles it */
+    background: none;
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+    padding: 0;
+    border: none;
+  }
+
+  .heroCta { justify-content: center; }
+  .heroLinks { justify-content: center; }
 }
+
 @media screen and (max-width: 768px) {
   .heroBanner { padding: 6rem 0 8rem; min-height: auto; }
   .heroTitle { font-size: 2.5rem; margin-bottom: 1rem; }
   .heroSubtitle { font-size: 1.125rem; margin-bottom: 1rem; }
-  .heroDescription { font-size: 1rem; margin-bottom: 2rem; }
+  .heroDescription { font-size: 1rem;}
   .heroCta { flex-direction: column; gap: 0.75rem; margin-bottom: 2rem; }
   .ctaButton { width: 100%; max-width: 320px; justify-content: center; }
   .heroLinks { flex-direction: column; gap: 0.75rem; }
@@ -213,9 +282,7 @@
   .badge { font-size: 0.8125rem; padding: 0.625rem 1.25rem; }
 }
 
-/* Theme-specific wave colors to match section below */
+/* Theme-specific wave colors */
 [data-theme='dark'] .heroWave { 
   color: var(--compose-bg-900); 
 }
-
-
