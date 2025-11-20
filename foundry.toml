@@ -9,13 +9,6 @@ optimizer_runs = 20_000
 evm_version = "prague"
 
 
-
-#[dependencies]
-#forge-std = "github:foundry-rs/forge-std@v1.11.0"
-#forge-std = { version = "1.11.0" }
-#forge-std = { source = "git", url = "https://github.com/foundry-rs/forge-std", rev = "v1.11.0" }
-
-
 [profile.ci]
 src = "src"
 out = "out"
@@ -36,8 +29,5 @@ multiline_func_header = 'attributes_first'
 quote_style = 'double'
 number_underscore = 'preserve'
 single_line_statement_blocks = 'preserve'
-
-
-
 
 # See more config options https://github.com/foundry-rs/foundry/blob/master/crates/config/README.md#all-options
