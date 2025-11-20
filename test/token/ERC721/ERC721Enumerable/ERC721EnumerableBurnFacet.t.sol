@@ -65,7 +65,9 @@ contract ERC721EnumerableBurnFacetTest is Test {
     }
 
     function test_RevertWhen_BurnWithoutApproval() public {
-        vm.expectRevert(abi.encodeWithSelector(ERC721EnumerableBurnFacet.ERC721InsufficientApproval.selector, charlie, 2));
+        vm.expectRevert(
+            abi.encodeWithSelector(ERC721EnumerableBurnFacet.ERC721InsufficientApproval.selector, charlie, 2)
+        );
         vm.prank(charlie);
         token.burn(2);
     }

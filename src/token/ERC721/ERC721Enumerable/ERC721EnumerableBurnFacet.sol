@@ -55,7 +55,7 @@ contract ERC721EnumerableBurnFacet {
         if (owner == address(0)) {
             revert ERC721NonexistentToken(_tokenId);
         }
-        
+
         address sender = msg.sender;
         if (sender != owner) {
             if (!s.isApprovedForAll[owner][sender] && sender != s.approved[_tokenId]) {
@@ -85,7 +85,7 @@ contract ERC721EnumerableBurnFacet {
             s.allTokensIndexOf[lastTokenId] = tokenIndex;
         }
         s.allTokens.pop();
-        
+
         emit Transfer(owner, address(0), _tokenId);
     }
 }
