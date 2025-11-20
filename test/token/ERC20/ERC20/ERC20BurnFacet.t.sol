@@ -2,7 +2,7 @@
 pragma solidity >=0.8.30;
 
 import {Test} from "forge-std/Test.sol";
-import {ERC20Facet} from "../../../../src/token/ERC20/ERC20/ERC20Facet.sol";
+import {ERC20BurnFacet} from "../../../../src/token/ERC20/ERC20/ERC20BurnFacet.sol";
 import {ERC20BurnFacetHarness} from "./harnesses/ERC20BurnFacetHarness.sol";
 
 contract ERC20BurnFacetTest is Test {
@@ -13,6 +13,7 @@ contract ERC20BurnFacetTest is Test {
     address public charlie;
 
     uint256 constant INITIAL_SUPPLY = 1000000e18;
+    uint256 constant TOTAL_SUPPLY = 1000000000e18;
 
     event Transfer(address indexed _from, address indexed _to, uint256 _value);
     event Approval(address indexed _owner, address indexed _spender, uint256 _value);
@@ -22,8 +23,8 @@ contract ERC20BurnFacetTest is Test {
         bob = makeAddr("bob");
         charlie = makeAddr("charlie");
 
-        token = new ERC20FacetHarness();
-        token.initialize();
+        token = new ERC20BurnFacetHarness();
+        token.initialize(TOTAL_SUPPLY);
         token.mint(alice, INITIAL_SUPPLY);
     }
 
@@ -62,14 +63,14 @@ contract ERC20BurnFacetTest is Test {
 
         vm.prank(alice);
         vm.expectRevert(
-            abi.encodeWithSelector(ERC20Facet.ERC20InsufficientBalance.selector, alice, INITIAL_SUPPLY, amount)
+            abi.encodeWithSelector(ERC20BurnFacet.ERC20InsufficientBalance.selector, alice, INITIAL_SUPPLY, amount)
         );
         token.burn(amount);
     }
 
     function test_RevertWhen_BurnFromZeroBalance() public {
         vm.prank(bob);
-        vm.expectRevert(abi.encodeWithSelector(ERC20Facet.ERC20InsufficientBalance.selector, bob, 0, 1));
+        vm.expectRevert(abi.encodeWithSelector(ERC20BurnFacet.ERC20InsufficientBalance.selector, bob, 0, 1));
         token.burn(1);
     }
 
@@ -178,7 +179,7 @@ contract ERC20BurnFacetTest is Test {
 
         vm.prank(bob);
         vm.expectRevert(
-            abi.encodeWithSelector(ERC20Facet.ERC20InsufficientAllowance.selector, bob, allowanceAmount, burnAmount)
+            abi.encodeWithSelector(ERC20BurnFacet.ERC20InsufficientAllowance.selector, bob, allowanceAmount, burnAmount)
         );
         token.burnFrom(alice, burnAmount);
     }
@@ -191,14 +192,14 @@ contract ERC20BurnFacetTest is Test {
 
         vm.prank(bob);
         vm.expectRevert(
-            abi.encodeWithSelector(ERC20Facet.ERC20InsufficientBalance.selector, alice, INITIAL_SUPPLY, amount)
+            abi.encodeWithSelector(ERC20BurnFacet.ERC20InsufficientBalance.selector, alice, INITIAL_SUPPLY, amount)
         );
         token.burnFrom(alice, amount);
     }
 
     function test_RevertWhen_BurnFromNoAllowance() public {
         vm.prank(bob);
-        vm.expectRevert(abi.encodeWithSelector(ERC20Facet.ERC20InsufficientAllowance.selector, bob, 0, 100e18));
+        vm.expectRevert(abi.encodeWithSelector(ERC20BurnFacet.ERC20InsufficientAllowance.selector, bob, 0, 100e18));
         token.burnFrom(alice, 100e18);
     }
 }

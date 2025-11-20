@@ -2,20 +2,19 @@
 pragma solidity >=0.8.30;
 
 import {Test} from "forge-std/Test.sol";
-import {ERC20Facet} from "../../../../src/token/ERC20/ERC20/ERC20Facet.sol";
-import {ERC20FacetHarness} from "./harnesses/ERC20FacetHarness.sol";
+import {ERC20PermitFacet} from "../../../../src/token/ERC20/ERC20/ERC20PermitFacet.sol";
+import {ERC20PermitFacetHarness} from "./harnesses/ERC20PermitFacetHarness.sol";
 
 contract ERC20BurnFacetTest is Test {
-    ERC20FacetHarness public token;
+    ERC20PermitFacetHarness public token;
 
     address public alice;
     address public bob;
     address public charlie;
 
     string constant TOKEN_NAME = "Test Token";
-    string constant TOKEN_SYMBOL = "TEST";
-    uint8 constant TOKEN_DECIMALS = 18;
     uint256 constant INITIAL_SUPPLY = 1000000e18;
+    uint256 constant TOTAL_SUPPLY = 1000000000e18;
 
     event Transfer(address indexed _from, address indexed _to, uint256 _value);
     event Approval(address indexed _owner, address indexed _spender, uint256 _value);
@@ -25,8 +24,8 @@ contract ERC20BurnFacetTest is Test {
         bob = makeAddr("bob");
         charlie = makeAddr("charlie");
 
-        token = new ERC20FacetHarness();
-        token.initialize(TOKEN_NAME, TOKEN_SYMBOL, TOKEN_DECIMALS);
+        token = new ERC20PermitFacetHarness();
+        token.initialize(TOKEN_NAME, TOTAL_SUPPLY);
         token.mint(alice, INITIAL_SUPPLY);
     }
 
@@ -162,7 +161,7 @@ contract ERC20BurnFacetTest is Test {
         (uint8 v, bytes32 r, bytes32 s) = vm.sign(ownerPrivateKey, hash);
 
         vm.expectRevert(
-            abi.encodeWithSelector(ERC20Facet.ERC2612InvalidSignature.selector, owner, bob, value, deadline, v, r, s)
+            abi.encodeWithSelector(ERC20PermitFacet.ERC2612InvalidSignature.selector, owner, bob, value, deadline, v, r, s)
         );
         token.permit(owner, bob, value, deadline, v, r, s);
     }
@@ -189,7 +188,7 @@ contract ERC20BurnFacetTest is Test {
         (uint8 v, bytes32 r, bytes32 s) = vm.sign(wrongPrivateKey, hash);
 
         vm.expectRevert(
-            abi.encodeWithSelector(ERC20Facet.ERC2612InvalidSignature.selector, owner, bob, value, deadline, v, r, s)
+            abi.encodeWithSelector(ERC20PermitFacet.ERC2612InvalidSignature.selector, owner, bob, value, deadline, v, r, s)
         );
         token.permit(owner, bob, value, deadline, v, r, s);
     }
@@ -217,7 +216,7 @@ contract ERC20BurnFacetTest is Test {
         token.permit(owner, bob, value, deadline, v, r, s);
 
         vm.expectRevert(
-            abi.encodeWithSelector(ERC20Facet.ERC2612InvalidSignature.selector, owner, bob, value, deadline, v, r, s)
+            abi.encodeWithSelector(ERC20PermitFacet.ERC2612InvalidSignature.selector, owner, bob, value, deadline, v, r, s)
         );
         token.permit(owner, bob, value, deadline, v, r, s);
     }
@@ -242,7 +241,7 @@ contract ERC20BurnFacetTest is Test {
         bytes32 hash = keccak256(abi.encodePacked("\x19\x01", token.DOMAIN_SEPARATOR(), structHash));
         (uint8 v, bytes32 r, bytes32 s) = vm.sign(ownerPrivateKey, hash);
 
-        vm.expectRevert(abi.encodeWithSelector(ERC20Facet.ERC20InvalidSpender.selector, address(0)));
+        vm.expectRevert(abi.encodeWithSelector(ERC20PermitFacet.ERC20InvalidSpender.selector, address(0)));
         token.permit(owner, address(0), value, deadline, v, r, s);
     }
 
@@ -329,7 +328,7 @@ contract ERC20BurnFacetTest is Test {
         (uint8 v, bytes32 r, bytes32 s) = vm.sign(ownerPrivateKey, hash);
 
         vm.expectRevert(
-            abi.encodeWithSelector(ERC20Facet.ERC2612InvalidSignature.selector, owner, bob, value, deadline, v, r, s)
+            abi.encodeWithSelector(ERC20PermitFacet.ERC2612InvalidSignature.selector, owner, bob, value, deadline, v, r, s)
         );
         token.permit(owner, bob, value, deadline, v, r, s);
     }
@@ -450,14 +449,14 @@ contract ERC20BurnFacetTest is Test {
 
         // Test with invalid v value (should be 27 or 28)
         vm.expectRevert(
-            abi.encodeWithSelector(ERC20Facet.ERC2612InvalidSignature.selector, owner, bob, value, deadline, 99, r, s)
+            abi.encodeWithSelector(ERC20PermitFacet.ERC2612InvalidSignature.selector, owner, bob, value, deadline, 99, r, s)
         );
         token.permit(owner, bob, value, deadline, 99, r, s);
 
         // Test with zero r value
         vm.expectRevert(
             abi.encodeWithSelector(
-                ERC20Facet.ERC2612InvalidSignature.selector, owner, bob, value, deadline, v, bytes32(0), s
+                ERC20PermitFacet.ERC2612InvalidSignature.selector, owner, bob, value, deadline, v, bytes32(0), s
             )
         );
         token.permit(owner, bob, value, deadline, v, bytes32(0), s);
@@ -465,7 +464,7 @@ contract ERC20BurnFacetTest is Test {
         // Test with zero s value
         vm.expectRevert(
             abi.encodeWithSelector(
-                ERC20Facet.ERC2612InvalidSignature.selector, owner, bob, value, deadline, v, r, bytes32(0)
+                ERC20PermitFacet.ERC2612InvalidSignature.selector, owner, bob, value, deadline, v, r, bytes32(0)
             )
         );
         token.permit(owner, bob, value, deadline, v, r, bytes32(0));
