@@ -25,9 +25,7 @@ abstract contract BaseBenchmark is Utils {
         LibDiamond.FacetCut[] memory dc = new LibDiamond.FacetCut[](1);
 
         dc[0] = LibDiamond.FacetCut({
-            facetAddress: loupe,
-            action: LibDiamond.FacetCutAction.Add,
-            functionSelectors: loupeSelectors
+            facetAddress: loupe, action: LibDiamond.FacetCutAction.Add, functionSelectors: loupeSelectors
         });
 
         MinimalDiamond.DiamondArgs memory args = MinimalDiamond.DiamondArgs({init: address(0), initCalldata: ""});
