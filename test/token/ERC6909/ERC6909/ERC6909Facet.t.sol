@@ -165,6 +165,8 @@ contract ERC6909FacetTest is Test {
     }
 
     function testFuzz_Transfer_ToZeroAddress(address caller, uint256 id, uint256 amount) external {
+        vm.assume(caller != address(0));
+
         facet.mint(caller, id, amount);
 
         vm.expectEmit();
@@ -382,6 +384,7 @@ contract ERC6909FacetTest is Test {
         uint256 id,
         uint256 amount
     ) external {
+        vm.assume(from != address(0));
         vm.assume(from != by);
 
         amount = bound(amount, 1, type(uint256).max);
