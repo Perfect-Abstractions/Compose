@@ -97,10 +97,7 @@ contract ERC20StakingFacet {
 
     /// @notice Storage slot identifier for ERC20 (reused to access token data).
     bytes32 constant ERC20_STORAGE_POSITION = keccak256("compose.erc20");
-
-    /// @notice Storage slot identifier for Staking functionality.
-    bytes32 constant STAKING_STORAGE_POSITION = keccak256("compose.erc20.staking");
-
+    
     /// @notice Storage struct for ERC20 (reused struct definition with unused variables removed).
     /// @dev Must match the struct definition in ERC20Facet, but we remove `nonces`
     ///      since this facet doesn't need permit functionality. The `nonces` mapping
@@ -117,13 +114,6 @@ contract ERC20StakingFacet {
         // Note: nonces mapping removed - not needed for staking functionality
     }
 
-    /// @notice Storage struct for ERC20Staking.
-    /// @custom:storage-location erc8042:compose.erc20.staking
-    struct ERC20StakingStorage {
-        mapping(address account => uint256 stakedBalance) stakedBalances;
-        mapping(address account => uint256 stakingStartTime) stakingStartTimes;
-    }
-
     /// @notice Returns the storage for ERC20.
     /// @return s The ERC20 storage struct.
     function getERC20Storage() internal pure returns (ERC20Storage storage s) {
@@ -131,6 +121,16 @@ contract ERC20StakingFacet {
         assembly {
             s.slot := position
         }
+    }
+
+    /// @notice Storage slot identifier for Staking functionality.
+    bytes32 constant STAKING_STORAGE_POSITION = keccak256("compose.erc20.staking");
+
+    /// @notice Storage struct for ERC20Staking.
+    /// @custom:storage-location erc8042:compose.erc20.staking
+    struct ERC20StakingStorage {
+        mapping(address account => uint256 stakedBalance) stakedBalances;
+        mapping(address account => uint256 stakingStartTime) stakingStartTimes;
     }
 
     /// @notice Returns the storage for ERC20Staking.
@@ -230,4 +230,7 @@ This example demonstrates proper facet extension by:
 
 *** 
 
-This level of composability strikes the right balance: it enables highly organized, modular, and understandable on-chain smart contract systems.
+:::info Conclusion
+
+This level of composability strikes the right balance: it enables organized, modular, and understandable on-chain smart contract systems.
+:::
