@@ -2,7 +2,6 @@
 pragma solidity >=0.8.30;
 
 contract ERC20BurnFacet {
-
     /// @notice Thrown when an account has insufficient balance for a transfer or burn.
     /// @param _sender Address attempting the transfer.
     /// @param _balance Current balance of the sender.
@@ -46,8 +45,8 @@ contract ERC20BurnFacet {
      * @dev ERC-8042 compliant storage struct for ERC20 token data.
      * @custom:storage-location erc8042:compose.erc20burn
      */
-     struct ERC20BurnStorage {        
-        mapping(address owner => uint256 balance) balanceOf;        
+    struct ERC20BurnStorage {
+        mapping(address owner => uint256 balance) balanceOf;
         mapping(address owner => mapping(address spender => uint256 allowance)) allowances;
         uint256 totalSupply;
     }

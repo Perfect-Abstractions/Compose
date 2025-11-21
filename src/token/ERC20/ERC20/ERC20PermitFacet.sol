@@ -2,7 +2,6 @@
 pragma solidity >=0.8.30;
 
 contract ERC20PermitFacet {
-
     /// @notice Thrown when a permit signature is invalid or expired.
     /// @param _owner The address that signed the permit.
     /// @param _spender The address that was approved.
@@ -63,7 +62,7 @@ contract ERC20PermitFacet {
         uint256 totalSupply;
         mapping(address owner => mapping(address spender => uint256 allowance)) allowances;
         mapping(address owner => uint256) nonces;
-        mapping(address owner => uint256 balance) balanceOf;        
+        mapping(address owner => uint256 balance) balanceOf;
     }
 
     /**
