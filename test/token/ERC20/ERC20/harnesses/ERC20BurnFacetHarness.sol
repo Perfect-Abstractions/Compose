@@ -9,7 +9,7 @@ contract ERC20BurnFacetHarness is ERC20BurnFacet {
     /// @notice Mint tokens to an address
     /// @dev Only used for testing - exposes internal mint functionality
     function mint(address _to, uint256 _value) external {
-        ERC20BurnStorage storage s = getStorage();
+        ERC20Storage storage s = getStorage();
         if (_to == address(0)) {
             revert ERC20InvalidReceiver(address(0));
         }

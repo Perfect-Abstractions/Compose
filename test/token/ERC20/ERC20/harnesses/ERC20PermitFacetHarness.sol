@@ -9,14 +9,14 @@ contract ERC20PermitFacetHarness is ERC20PermitFacet {
     /// @notice Initialize the ERC20 token storage
     /// @dev Only used for testing - production diamonds should initialize in constructor
     function initialize(string memory _name) external {
-        ERC20PermitStorage storage s = getStorage();
+        ERC20Storage storage s = getStorage();
         s.name = _name;
     }
 
     /// @notice Mint tokens to an address
     /// @dev Only used for testing - exposes internal mint functionality
     function mint(address _to, uint256 _value) external {
-        ERC20PermitStorage storage s = getStorage();
+        ERC20Storage storage s = getStorage();
         if (_to == address(0)) {
             revert ERC20InvalidReceiver(address(0));
         }

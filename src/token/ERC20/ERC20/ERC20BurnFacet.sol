@@ -39,13 +39,13 @@ contract ERC20BurnFacet {
     event Approval(address indexed _owner, address indexed _spender, uint256 _value);
 
     // @dev Storage position determined by the keccak256 hash of the diamond storage identifier.
-    bytes32 constant STORAGE_POSITION = keccak256("compose.erc20burn");
+    bytes32 constant STORAGE_POSITION = keccak256("compose.erc20");
 
     /**
      * @dev ERC-8042 compliant storage struct for ERC20 token data.
-     * @custom:storage-location erc8042:compose.erc20burn
+     * @custom:storage-location erc8042:compose.erc20
      */
-    struct ERC20BurnStorage {
+    struct ERC20Storage {
         mapping(address owner => uint256 balance) balanceOf;
         mapping(address owner => mapping(address spender => uint256 allowance)) allowances;
         uint256 totalSupply;
@@ -56,7 +56,7 @@ contract ERC20BurnFacet {
      * @dev Uses inline assembly to set the storage slot reference.
      * @return s The ERC20 storage struct reference.
      */
-    function getStorage() internal pure returns (ERC20BurnStorage storage s) {
+    function getStorage() internal pure returns (ERC20Storage storage s) {
         bytes32 position = STORAGE_POSITION;
         assembly {
             s.slot := position
@@ -98,7 +98,7 @@ contract ERC20BurnFacet {
      * @return True if the approval was successful.
      */
     function approve(address _spender, uint256 _value) external returns (bool) {
-        ERC20BurnStorage storage s = getStorage();
+        ERC20Storage storage s = getStorage();
         if (_spender == address(0)) {
             revert ERC20InvalidSpender(address(0));
         }
@@ -113,7 +113,7 @@ contract ERC20BurnFacet {
      * @param _value The amount of tokens to burn.
      */
     function burn(uint256 _value) external {
-        ERC20BurnStorage storage s = getStorage();
+        ERC20Storage storage s = getStorage();
         uint256 balance = s.balanceOf[msg.sender];
         if (balance < _value) {
             revert ERC20InsufficientBalance(msg.sender, balance, _value);
@@ -132,7 +132,7 @@ contract ERC20BurnFacet {
      * @param _value The amount of tokens to burn.
      */
     function burnFrom(address _account, uint256 _value) external {
-        ERC20BurnStorage storage s = getStorage();
+        ERC20Storage storage s = getStorage();
         uint256 currentAllowance = s.allowances[_account][msg.sender];
         if (currentAllowance < _value) {
             revert ERC20InsufficientAllowance(msg.sender, currentAllowance, _value);
