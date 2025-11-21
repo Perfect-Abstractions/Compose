@@ -73,7 +73,7 @@ library LibERC6909 {
     function transfer(address _by, address _from, address _to, uint256 _id, uint256 _amount) internal {
         ERC6909Storage storage s = getStorage();
 
-        if (_by != address(0) && !s.isOperator[_from][_by]) {
+        if (_by != _from && !s.isOperator[_from][_by]) {
             uint256 allowed = s.allowance[_from][_by][_id];
             if (allowed != type(uint256).max) {
                 s.allowance[_from][_by][_id] = allowed - _amount;

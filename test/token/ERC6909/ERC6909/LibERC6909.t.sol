@@ -145,27 +145,23 @@ contract LibERC6909Test is Test {
     // Transfer Tests
     // ============================================
 
-    function testFuzz_ShouldRevert_Transfer_ZeroByAddr_InsufficientBalance(address from, address to) external {
-        vm.expectRevert(stdError.arithmeticError);
-        harness.transfer(address(0), from, to, TOKEN_ID, AMOUNT);
-    }
-
-    function testFuzz_Transfer_ZeroByAddr(address from, address to, uint256 id, uint256 amount) external {
+    /// @dev Test to showcase use of LibERC6909.transfer with `transfer` behaviour
+    function testFuzz_Transfer(address from, address to, uint256 id, uint256 amount) external {
         vm.assume(from != to);
+        vm.assume(amount > 0);
 
         harness.mint(from, id, amount);
 
         vm.expectEmit();
-        emit LibERC6909.Transfer(address(0), from, to, id, amount);
+        emit LibERC6909.Transfer(from, from, to, id, amount);
 
-        harness.transfer(address(0), from, to, id, amount);
+        harness.transfer(from, from, to, id, amount);
 
         assertEq(harness.balanceOf(from, id), 0);
         assertEq(harness.balanceOf(to, id), amount);
     }
 
     function testFuzz_Transfer_IsOperator(address by, address from, address to, uint256 id, uint256 amount) external {
-        vm.assume(by != address(0));
         vm.assume(from != by);
         vm.assume(from != to);
 
@@ -188,7 +184,6 @@ contract LibERC6909Test is Test {
         uint256 id,
         uint256 amount
     ) external {
-        vm.assume(by != address(0));
         vm.assume(from != by);
         vm.assume(from != to);
 
@@ -213,7 +208,6 @@ contract LibERC6909Test is Test {
         uint256 amount,
         uint256 spend
     ) external {
-        vm.assume(by != address(0));
         vm.assume(from != by);
         vm.assume(from != to);
         amount = bound(amount, 1, type(uint256).max - 1);
@@ -232,6 +226,46 @@ contract LibERC6909Test is Test {
         assertEq(harness.allowance(from, by, id), amount - spend);
     }
 
+    function testFuzz_ShouldRevert_NonOperator_InsufficientBalance(
+        address by,
+        address from,
+        address to,
+        uint256 id,
+        uint256 amount,
+        uint256 balance
+    ) external {
+        vm.assume(from != by);
+        vm.assume(from != to);
+        balance = bound(balance, 1, type(uint256).max - 1);
+        amount = bound(amount, balance + 1, type(uint256).max);
+
+        harness.mint(from, id, balance);
+        harness.approve(from, by, id, amount);
+
+        vm.expectRevert(stdError.arithmeticError);
+        harness.transfer(by, from, to, id, amount);
+    }
+
+    function testFuzz_ShouldRevert_Operator_InsufficientBalance(
+        address by,
+        address from,
+        address to,
+        uint256 id,
+        uint256 amount,
+        uint256 balance
+    ) external {
+        vm.assume(from != by);
+        vm.assume(from != to);
+        balance = bound(balance, 1, type(uint256).max - 1);
+        amount = bound(amount, balance + 1, type(uint256).max);
+
+        harness.mint(from, id, balance);
+        harness.setOperator(from, by, true);
+
+        vm.expectRevert(stdError.arithmeticError);
+        harness.transfer(by, from, to, id, amount);
+    }
+
     function testFuzz_ShouldRevert_NonOperator_AllowanceUnderflow(
         address by,
         address from,
@@ -240,7 +274,6 @@ contract LibERC6909Test is Test {
         uint256 amount,
         uint256 spend
     ) external {
-        vm.assume(by != address(0));
         vm.assume(from != by);
         vm.assume(from != to);
         amount = bound(amount, 1, type(uint256).max - 1);
@@ -253,7 +286,22 @@ contract LibERC6909Test is Test {
         harness.transfer(by, from, to, id, spend);
     }
 
-    // Edge cases
+    function testFuzz_ShouldRevert_NonOperator_NoAllowance(
+        address by,
+        address from,
+        address to,
+        uint256 id,
+        uint256 amount
+    ) external {
+        vm.assume(from != by);
+        vm.assume(from != to);
+        amount = bound(amount, 1, type(uint256).max);
+
+        harness.mint(from, id, amount);
+
+        vm.expectRevert(stdError.arithmeticError);
+        harness.transfer(by, from, to, id, amount);
+    }
 
     function testFuzz_Transfer_SelfTransfer_NonOperator_FiniteAllowance(
         address by,
@@ -262,8 +310,6 @@ contract LibERC6909Test is Test {
         uint256 amount,
         uint256 spend
     ) external {
-        vm.assume(by != address(0));
-        vm.assume(from != address(0));
         vm.assume(from != by);
         amount = bound(amount, 1, type(uint256).max - 1);
         spend = bound(spend, 1, amount);
@@ -286,7 +332,6 @@ contract LibERC6909Test is Test {
         uint256 id,
         uint256 amount
     ) external {
-        vm.assume(by != address(0));
         vm.assume(from != address(0));
         vm.assume(from != by);
         amount = bound(amount, 1, type(uint256).max);
@@ -311,8 +356,6 @@ contract LibERC6909Test is Test {
         uint256 id,
         uint256 allowance
     ) external {
-        vm.assume(by != address(0));
-        vm.assume(from != address(0));
         vm.assume(from != by);
         vm.assume(from != to);
         allowance = bound(allowance, 1, type(uint256).max - 1);
