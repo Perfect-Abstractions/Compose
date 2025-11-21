@@ -14,6 +14,8 @@ Among Nick’s duties are defining the overall direction of the project, approvi
 
 Work on this as little or lot as you want to. Work on what you want to work on.
 
+After a period of in-activity a person may be removed as a maintainer. A person may be added back.
+
 # Activities
 
 - Answer people's questions
