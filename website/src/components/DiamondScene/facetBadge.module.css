@@ -1,0 +1,51 @@
+.badgeContainer {
+  position: absolute;
+  top: 70%; /* Position below the diamond roughly */
+  right: 15%; /* Align to the right side where diamond floats on desktop */
+  transform: translateY(20px);
+  opacity: 0;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  pointer-events: none;
+  z-index: 10;
+  text-align: center;
+  min-width: 180px;
+}
+
+.visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.badgeLabel {
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--ifm-color-primary-light);
+  margin-bottom: 0.25rem;
+  font-weight: 600;
+  text-shadow: 0 2px 4px rgba(0,0,0,0.5);
+}
+
+.badgeValue {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: #fff;
+  text-shadow: 0 0 20px rgba(59, 130, 246, 0.6);
+  background: linear-gradient(to right, #fff, #bfdbfe);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.badgeLine {
+  width: 40px;
+  height: 2px;
+  background: linear-gradient(90deg, transparent, var(--ifm-color-primary), transparent);
+  margin: 0.5rem auto 0;
+}
+
+/* Mobile Adjustment */
+@media (max-width: 1024px) {
+  .badgeContainer {
+    display: none;
+  }
+}
