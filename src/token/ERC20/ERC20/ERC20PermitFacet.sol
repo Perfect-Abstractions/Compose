@@ -78,22 +78,6 @@ contract ERC20PermitFacet {
     }
 
     /**
-     * @notice Returns the name of the token.
-     * @return The token name.
-     */
-    function name() external view returns (string memory) {
-        return getStorage().name;
-    }
-
-    /**
-     * @notice Returns the total supply of tokens.
-     * @return The total token supply.
-     */
-    function totalSupply() external view returns (uint256) {
-        return getStorage().totalSupply;
-    }
-
-    /**
      * @notice Returns the balance of a specific account.
      * @param _account The address of the account.
      * @return The account balance.

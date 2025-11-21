@@ -81,41 +81,6 @@ contract ERC20BurnFacet {
     }
 
     /**
-     * @notice Transfers tokens on behalf of another account, provided sufficient allowance exists.
-     * @dev Emits a {Transfer} event and decreases the spender's allowance.
-     * @param _from The address to transfer tokens from.
-     * @param _to The address to transfer tokens to.
-     * @param _value The amount of tokens to transfer.
-     * @return True if the transfer was successful.
-     */
-    function transferFrom(address _from, address _to, uint256 _value) external returns (bool) {
-        ERC20BurnStorage storage s = getStorage();
-        if (_from == address(0)) {
-            revert ERC20InvalidSender(address(0));
-        }
-        if (_to == address(0)) {
-            revert ERC20InvalidReceiver(address(0));
-        }
-        uint256 currentAllowance = s.allowances[_from][msg.sender];
-        if (currentAllowance < _value) {
-            revert ERC20InsufficientAllowance(msg.sender, currentAllowance, _value);
-        }
-        uint256 fromBalance = s.balanceOf[_from];
-        if (fromBalance < _value) {
-            revert ERC20InsufficientBalance(_from, fromBalance, _value);
-        }
-        unchecked {
-            if (currentAllowance != type(uint256).max) {
-                s.allowances[_from][msg.sender] = currentAllowance - _value;
-            }
-            s.balanceOf[_from] = fromBalance - _value;
-        }
-        s.balanceOf[_to] += _value;
-        emit Transfer(_from, _to, _value);
-        return true;
-    }
-
-    /**
      * @notice Returns the remaining number of tokens that a spender is allowed to spend on behalf of an owner.
      * @param _owner The address of the token owner.
      * @param _spender The address of the spender.
