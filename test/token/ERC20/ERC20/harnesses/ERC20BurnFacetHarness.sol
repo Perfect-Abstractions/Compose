@@ -6,13 +6,6 @@ import {ERC20BurnFacet} from "../../../../../src/token/ERC20/ERC20/ERC20BurnFace
 /// @title ERC20BurnFacetHarness
 /// @notice Test harness for ERC20BurnFacet that adds initialization and minting for testing
 contract ERC20BurnFacetHarness is ERC20BurnFacet {
-    /// @notice Initialize the ERC20 token storage
-    /// @dev Only used for testing - production diamonds should initialize in constructor
-    function initialize(uint256 _totalSupply) external {
-        ERC20BurnStorage storage s = getStorage();
-        s.totalSupply = _totalSupply;
-    }
-
     /// @notice Mint tokens to an address
     /// @dev Only used for testing - exposes internal mint functionality
     function mint(address _to, uint256 _value) external {

@@ -8,10 +8,9 @@ import {ERC20PermitFacet} from "../../../../../src/token/ERC20/ERC20/ERC20Permit
 contract ERC20PermitFacetHarness is ERC20PermitFacet {
     /// @notice Initialize the ERC20 token storage
     /// @dev Only used for testing - production diamonds should initialize in constructor
-    function initialize(string memory _name, uint256 _totalSupply) external {
+    function initialize(string memory _name) external {
         ERC20PermitStorage storage s = getStorage();
         s.name = _name;
-        s.totalSupply = _totalSupply;
     }
 
     /// @notice Mint tokens to an address

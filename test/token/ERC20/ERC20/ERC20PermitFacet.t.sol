@@ -14,7 +14,6 @@ contract ERC20BurnFacetTest is Test {
 
     string constant TOKEN_NAME = "Test Token";
     uint256 constant INITIAL_SUPPLY = 1000000e18;
-    uint256 constant TOTAL_SUPPLY = 1000000000e18;
 
     event Transfer(address indexed _from, address indexed _to, uint256 _value);
     event Approval(address indexed _owner, address indexed _spender, uint256 _value);
@@ -25,7 +24,7 @@ contract ERC20BurnFacetTest is Test {
         charlie = makeAddr("charlie");
 
         token = new ERC20PermitFacetHarness();
-        token.initialize(TOKEN_NAME, TOTAL_SUPPLY);
+        token.initialize(TOKEN_NAME);
         token.mint(alice, INITIAL_SUPPLY);
     }
 
