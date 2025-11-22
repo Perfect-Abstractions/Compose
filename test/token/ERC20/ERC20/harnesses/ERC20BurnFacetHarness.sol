@@ -18,14 +18,14 @@ contract ERC20BurnFacetHarness is ERC20BurnFacet {
     }
 
     function allowance(address _owner, address _spender) external view returns (uint256) {
-        return getStorage().allowances[_owner][_spender];
+        return getStorage().allowance[_owner][_spender];
     }
 
     /// @notice Minimal approve implementation for tests (writes into the same storage used by burnFrom)
     function approve(address _spender, uint256 _value) external returns (bool) {
         require(_spender != address(0), "ERC20: approve to zero address");
         ERC20Storage storage s = getStorage();
-        s.allowances[msg.sender][_spender] = _value;
+        s.allowance[msg.sender][_spender] = _value;
         emit Approval(msg.sender, _spender, _value);
         return true;
     }

@@ -30,7 +30,7 @@ contract ERC20BurnFacet {
     struct ERC20Storage {
         mapping(address owner => uint256 balance) balanceOf;
         uint256 totalSupply;
-        mapping(address owner => mapping(address spender => uint256 allowance)) allowances;
+        mapping(address owner => mapping(address spender => uint256 allowance)) allowance;
     }
 
     /**
@@ -71,7 +71,7 @@ contract ERC20BurnFacet {
      */
     function burnFrom(address _account, uint256 _value) external {
         ERC20Storage storage s = getStorage();
-        uint256 currentAllowance = s.allowances[_account][msg.sender];
+        uint256 currentAllowance = s.allowance[_account][msg.sender];
         if (currentAllowance < _value) {
             revert ERC20InsufficientAllowance(msg.sender, currentAllowance, _value);
         }
@@ -81,7 +81,7 @@ contract ERC20BurnFacet {
         }
         unchecked {
             if (currentAllowance != type(uint256).max) {
-                s.allowances[_account][msg.sender] = currentAllowance - _value;
+                s.allowance[_account][msg.sender] = currentAllowance - _value;
             }
             s.balanceOf[_account] = balance - _value;
             s.totalSupply -= _value;

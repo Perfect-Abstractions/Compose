@@ -212,7 +212,7 @@ contract ERC20StakingFacet {
         uint8 decimals;
         uint256 totalSupply;
         mapping(address owner => uint256 balance) balanceOf;
-        mapping(address owner => mapping(address spender => uint256 allowance)) allowances;
+        mapping(address owner => mapping(address spender => uint256 allowance)) allowance;
         // trailing mapping 'nonces' removed (unused in staking)
     }
 

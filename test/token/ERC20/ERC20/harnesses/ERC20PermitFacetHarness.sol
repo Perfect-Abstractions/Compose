@@ -37,14 +37,14 @@ contract ERC20PermitFacetHarness is ERC20PermitFacet {
     }
 
     function allowance(address _owner, address _spender) external view returns (uint256) {
-        return getERC20Storage().allowances[_owner][_spender];
+        return getERC20Storage().allowance[_owner][_spender];
     }
 
     /// @notice Minimal approve implementation for tests
     function approve(address _spender, uint256 _value) external returns (bool) {
         require(_spender != address(0), "ERC20: approve to zero address");
         ERC20Storage storage s = getERC20Storage();
-        s.allowances[msg.sender][_spender] = _value;
+        s.allowance[msg.sender][_spender] = _value;
         emit Approval(msg.sender, _spender, _value);
         return true;
     }
@@ -55,11 +55,11 @@ contract ERC20PermitFacetHarness is ERC20PermitFacet {
         require(_to != address(0), "ERC20: transfer to zero address");
         require(s.balanceOf[_from] >= _value, "ERC20: insufficient balance");
 
-        uint256 currentAllowance = s.allowances[_from][msg.sender];
+        uint256 currentAllowance = s.allowance[_from][msg.sender];
         require(currentAllowance >= _value, "ERC20: insufficient allowance");
 
         unchecked {
-            s.allowances[_from][msg.sender] = currentAllowance - _value;
+            s.allowance[_from][msg.sender] = currentAllowance - _value;
             s.balanceOf[_from] -= _value;
         }
         s.balanceOf[_to] += _value;

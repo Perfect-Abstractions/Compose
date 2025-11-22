@@ -63,6 +63,6 @@ contract LibERC20Harness {
     }
 
     function allowance(address _owner, address _spender) external view returns (uint256) {
-        return LibERC20.getStorage().allowances[_owner][_spender];
+        return LibERC20.getStorage().allowance[_owner][_spender];
     }
 }

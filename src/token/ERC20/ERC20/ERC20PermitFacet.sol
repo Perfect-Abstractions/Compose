@@ -26,7 +26,7 @@ contract ERC20PermitFacet {
 
     bytes32 constant ERC20_STORAGE_POSITION = keccak256("compose.erc20");
 
-    /// The `ERC20PermitFacet` only uses the `allowances` and `name` variables inside
+    /// The `ERC20PermitFacet` only uses the `allowance` and `name` variables inside
     /// the `ERC20Storage` struct from `ERC20Facet`.
     /// We cannot remove the `balanceOf`, `totalSupply`, and `decimals` variables from
     /// the struct even though they aren't used. This is because we must maintain the
@@ -37,7 +37,7 @@ contract ERC20PermitFacet {
     struct ERC20Storage {
         mapping(address owner => uint256 balance) balanceOf;
         uint256 totalSupply;
-        mapping(address owner => mapping(address spender => uint256 allowance)) allowances;
+        mapping(address owner => mapping(address spender => uint256 allowance)) allowance;
         uint8 decimals;
         string name;
     }
@@ -152,7 +152,7 @@ contract ERC20PermitFacet {
             revert ERC2612InvalidSignature(_owner, _spender, _value, _deadline, _v, _r, _s);
         }
 
-        sERC20.allowances[_owner][_spender] = _value;
+        sERC20.allowance[_owner][_spender] = _value;
         s.nonces[_owner] = currentNonce + 1;
         emit Approval(_owner, _spender, _value);
     }

@@ -48,7 +48,7 @@ contract ERC20Facet {
     struct ERC20Storage {
         mapping(address owner => uint256 balance) balanceOf;
         uint256 totalSupply;
-        mapping(address owner => mapping(address spender => uint256 allowance)) allowances;
+        mapping(address owner => mapping(address spender => uint256 allowance)) allowance;
         uint8 decimals;
         string name;
         string symbol;
@@ -114,7 +114,7 @@ contract ERC20Facet {
      * @return The remaining allowance.
      */
     function allowance(address _owner, address _spender) external view returns (uint256) {
-        return getStorage().allowances[_owner][_spender];
+        return getStorage().allowance[_owner][_spender];
     }
 
     /**
@@ -129,7 +129,7 @@ contract ERC20Facet {
         if (_spender == address(0)) {
             revert ERC20InvalidSpender(address(0));
         }
-        s.allowances[msg.sender][_spender] = _value;
+        s.allowance[msg.sender][_spender] = _value;
         emit Approval(msg.sender, _spender, _value);
         return true;
     }
@@ -174,7 +174,7 @@ contract ERC20Facet {
         if (_to == address(0)) {
             revert ERC20InvalidReceiver(address(0));
         }
-        uint256 currentAllowance = s.allowances[_from][msg.sender];
+        uint256 currentAllowance = s.allowance[_from][msg.sender];
         if (currentAllowance < _value) {
             revert ERC20InsufficientAllowance(msg.sender, currentAllowance, _value);
         }
@@ -184,7 +184,7 @@ contract ERC20Facet {
         }
         unchecked {
             if (currentAllowance != type(uint256).max) {
-                s.allowances[_from][msg.sender] = currentAllowance - _value;
+                s.allowance[_from][msg.sender] = currentAllowance - _value;
             }
             s.balanceOf[_from] = fromBalance - _value;
         }
