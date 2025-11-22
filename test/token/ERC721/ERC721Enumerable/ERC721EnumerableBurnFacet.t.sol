@@ -15,7 +15,7 @@ contract ERC721EnumerableBurnFacetTest is Test {
     event Transfer(address indexed _from, address indexed _to, uint256 indexed _tokenId);
 
     function setUp() public {
-        token = new ERC721EnumerableBurnFacetHarness();        
+        token = new ERC721EnumerableBurnFacetHarness();
 
         alice = makeAddr("alice");
         bob = makeAddr("bob");
