@@ -140,7 +140,7 @@ function getStorage() internal pure returns (ERC20PermitStorage storage s) {
 ```
 #### Summary: How This Example Follows the Guide
 
-- **Reusing storage struct**: The `ERC20Storage` struct is copied from `ERC20Facet` and reused at the same location in storage `keccak256("compose.erc20")`, ensuring both facets access the same ERC20 token data. This demonstrates how facets can share storage through diamond storage patterns.
+- **Reusing storage struct**: The `ERC20Storage` struct is copied from `ERC20Facet` and reused at the same location in storage `keccak256("compose.erc20")`, ensuring both facets access the same ERC20 token data. This demonstrates how facets can share storage.
 
 - **Maintaining variable order**: All variables in the reused `ERC20Storage` struct maintain the same order as the original struct.
 
@@ -298,7 +298,7 @@ This example demonstrates proper facet extension by:
 
 - **Extending as a new facet**: `ERC20StakingFacet` is a separate, self-contained facet that composes with `ERC20Facet`. This follows the principle that every extension should be implemented as a new facet.
 
-- **Reusing storage struct**: The `ERC20Storage` struct is copied from `ERC20Facet` and reused at the same storage location `keccak256("compose.erc20")`, ensuring both facets access the same token data. This demonstrates how facets can share storage through diamond storage patterns.
+- **Reusing storage struct**: The `ERC20Storage` struct is copied from `ERC20Facet` and reused at the same storage location `keccak256("compose.erc20")`, ensuring both facets access the same token data. This demonstrates how facets can share storage.
 
 - **Maintaining variable order**: The `balanceOf` variable remains in the first position of the reused `ERC20Storage` struct, exactly as it appears in the original struct, preserving the order of storage variables.
 
