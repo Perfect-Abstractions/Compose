@@ -4,7 +4,7 @@ title: Design for Composition
 description: How to design Compose facets and libraries for composition.
 ---
 
-Here are guidelines and rules to create composable facets.
+Here are the guidelines and rules for creating composable facets.
 
 Compose replaces source-code inheritance with on-chain composition. Facets are the building blocks; diamonds wire them together.
 
@@ -12,7 +12,7 @@ We focus on building **small, independent, and easy-to-read facets**. Each facet
 
 ## Writing Facets
 
-1. A facet is set of external functions that represent a single unit of self-contained functionality.
+1. A facet is a set of external functions that represent a single, self-contained unit of functionality.
 2. Each facet is a self-contained, conceptual unit.
 3. A facet is designed for all of its functions to be added, not just some of them.
 4. The facet is our smallest building block.
@@ -30,7 +30,7 @@ We focus on building **small, independent, and easy-to-read facets**. Each facet
 
 ## Facets & Libraries
 
-1. Facets and facet libraries should not contain owner/admin authorization checks unless absolutely required or fundamental to the functionality being implemented. Of it must have permission/authorization checks then it should integrate with `AccessControlFacet`.
+1. Facets and facet libraries should not contain owner/admin authorization checks unless absolutely required or fundamental to the functionality being implemented. If permission or authorization checks are required, the facet should integrate with `AccessControlFacet`.
 
 
 ## Extending Facets
@@ -38,17 +38,17 @@ We focus on building **small, independent, and easy-to-read facets**. Each facet
 
 1. Every extension of a standard or facet should be implemented as a new facet.
 2. A facet should only be extended with a new facet that composes with it.
-3. When reusing structs from existing facets or libraries, reuse the original diamond storage locations and structs, but only include the variables that the new facet actually needs if possible. Of course a reused struct must maintain the same order of variables as an originally defined struct. You **cannot** remove a variable from the beginning or middle of a struct. 
-4. Reusing a struct is done by copying it and removing unused variables at the end of it.
-5. Storage structs should be designed so that removable variables (unused by some facets) appear at the end of the struct.
-6. Storage structs should also be designed for packed storage (smaller sized variables using the same storage slot).
-7. Removing storage variables is done only from the end of a struct. If a variable cannot be removed from the end of a struct, it must remain to preserve compatibility.
-8. A facet that adds new storage variables must define its own diamond storage struct.
+3. Composition is done by facets sharing the same storage structs and containing complementary external functions.
+4. Two facets do not compose if they both expose one or more of the same external function signatures (function name and parameter types).
+5. When reusing a struct from an existing facet, store it at the original diamond storage location and remove unused variables from the end of it. Variables must never be removed from the beginning or middle, as this would break storage compatibility.
+6. Storage structs should be designed so that removable variables (unused by some facets) appear at the end of the struct.
+7. Storage structs should also be designed for packed storage (smaller sized variables using the same storage slot).
+8. If a variable cannot be removed from the end of a struct, it must remain to preserve compatibility.
+9. A facet that adds new storage variables must define its own diamond storage struct.
+10. Never add new variables to an existing struct.
 
 :::info Important
-Maintain the same order of variables in structs when reusing the same struct in different facets/libraries.
-
-It is important to maintain the same sequence of variables in structs when reusing the same struct in different facets/libraries. Variables can only be removed from the end of structs if they are not used by a facet or library.
+Maintain the same order of variables in structs when reusing them across facets or libraries. Unused variables may only be removed from the end of a struct.
 :::
 
 
@@ -60,6 +60,96 @@ There may be reasonable exceptions to these rules. If you believe one applies, p
 **– GitHub Discussions:** https://github.com/Perfect-Abstractions/Compose/discussions
 
 For example, `ERC721EnumerableFacet` does not extend `ERC721Facet` because enumeration requires re-implementing transfer and mint/burn logic, making it incompatible with `ERC721Facet`.
+
+***
+
+### Example: Implementing Storage in ERC20PermitFacet
+
+The `ERC20PermitFacet` extends `ERC20Facet` by adding permit functionality (gasless approvals).
+
+To do this, it must:
+
+1. Access existing ERC20 data.
+2. Add new storage for permit-specific data.
+
+This requires reusing the `ERC20Storage` struct from `ERC20Facet` and defining a separate struct for the `nonces` variable used by the permit function.
+
+Here is the full `ERC20Storage` struct from `ERC20Facet`:
+
+```solidity
+/// @notice Storage struct for ERC20.
+/// @custom:storage-location erc8042:compose.erc20
+struct ERC20Storage {
+    mapping(address owner => uint256 balance) balanceOf;
+    uint256 totalSupply; 
+    mapping(address owner => mapping(address spender => uint256 allowance)) allowances;
+    uint8 decimals;
+    string name;
+    string symbol;
+}
+```
+
+When reusing this struct in `ERC20PermitFacet`, the [Extending Facets](#extending-facets) rules require removing unused variables at the end of the struct.
+
+`ERC20PermitFacet` only uses the variables `allowances` and `name` from this struct. However, `balanceOf`, `totalSupply`, and `decimals` **cannot** be removed, even though they are unused, because they appear before the `name` variable, which is used. Removing them would shift the storage slot used by the `name` variable which would make it refer to something else.
+
+Only variables at the **end** of a struct may be safely removed. In this case, `symbol` is the only trailing variable that is unused by `ERC20PermitFacet`, so it is the only one removed.
+
+Here is the final struct storage code for `ERC20PermitFacet`:
+
+```solidity
+/// @notice Storage slot identifier for ERC20 (reused to access token data).
+bytes32 constant ERC20_STORAGE_POSITION = keccak256("compose.erc20");
+
+/// @notice Storage struct for ERC20 but with `symbol` removed.
+/// @dev Reused struct definition with unused variables at the end removed
+/// @custom:storage-location erc8042:compose.erc20
+struct ERC20Storage {
+    mapping(address owner => uint256 balance) balanceOf;
+    uint256 totalSupply; 
+    mapping(address owner => mapping(address spender => uint256 allowance)) allowances;
+    uint8 decimals;
+    string name; 
+}
+
+/// @notice Returns the storage for ERC20.
+/// @return s The ERC20 storage struct.
+function getERC20Storage() internal pure returns (ERC20Storage storage s) {
+    bytes32 position = ERC20_STORAGE_POSITION;
+    assembly {
+        s.slot := position
+    }
+}
+
+/// @notice Storage slot identifier for Permit functionality.
+bytes32 constant STORAGE_POSITION = keccak256("compose.erc20.permit");
+
+/// @notice Storage struct for ERC20Permit.
+/// @custom:storage-location erc8042:compose.erc20.permit
+struct ERC20PermitStorage {
+    mapping(address owner => uint256) nonces;
+}
+
+/// @notice Returns the storage for ERC20Permit.
+/// @return s The ERC20Permit storage struct.
+function getStorage() internal pure returns (ERC20PermitStorage storage s) {
+    bytes32 position = STORAGE_POSITION;
+    assembly {
+        s.slot := position
+    }
+}
+```
+#### Summary: How This Example Follows the Guide
+
+- **Reusing storage struct**: The `ERC20Storage` struct is copied from `ERC20Facet` and reused at the same location in storage `keccak256("compose.erc20")`, ensuring both facets access the same ERC20 token data. This demonstrates how facets can share storage through diamond storage patterns.
+
+- **Maintaining variable order**: All variables in the reused `ERC20Storage` struct maintain the same order as the original struct.
+
+- **Removing unused variables**:   The `symbol` variable is removed from the end of the struct since permit functionality doesn't use that variable. This follows the rule that unused storage variables at the end of a struct should be removed.
+
+- **Adding custom storage**: A new `ERC20PermitStorage` struct is defined with its own storage slot `keccak256("compose.erc20.permit")` for the `nonces` variable. This follows the principle that a facet adding new storage variables must define its own diamond storage struct.
+
+***
 
 ### Example: Extending ERC20Facet with Staking Functionality
 
@@ -98,21 +188,14 @@ contract ERC20StakingFacet {
     /// @notice Storage slot identifier for ERC20 (reused to access token data).
     bytes32 constant ERC20_STORAGE_POSITION = keccak256("compose.erc20");
     
-    /// @notice Storage struct for ERC20 (reused struct definition with unused variables removed).
-    /// @dev Must match the struct definition in ERC20Facet, but we remove `nonces`
-    ///      since this facet doesn't need permit functionality. The `nonces` mapping
-    ///      is at the end of the original struct, so it can be safely removed.
-    ///      Note: The order of variables must match the original struct.
+    /// @notice Storage struct for ERC20
+    /// @dev This struct is from ERC20Facet.
+    ///      `balanceOf` is the only variable used in this struct.
+    ///      All variables after it are removed.
     /// @custom:storage-location erc8042:compose.erc20
     struct ERC20Storage {
-        string name;
-        string symbol;
-        uint8 decimals;
-        uint256 totalSupply;
-        mapping(address owner => uint256 balance) balanceOf;
-        mapping(address owner => mapping(address spender => uint256 allowance)) allowances;
-        // Note: nonces mapping removed - not needed for staking functionality
-    }
+        mapping(address owner => uint256 balance) balanceOf;        
+    }    
 
     /// @notice Returns the storage for ERC20.
     /// @return s The ERC20 storage struct.
@@ -210,23 +293,23 @@ contract ERC20StakingFacet {
 }
 ```
 
-### Summary: How This Example Follows the Guide
+#### Summary: How This Example Follows the Guide
 
 This example demonstrates proper facet extension by:
 
-- **Extending as a new facet**: `ERC20StakingFacet` is a separate, self-contained facet that composes with `ERC20Facet` rather than modifying it. This follows the principle that every extension should be implemented as a new facet.
+- **Extending as a new facet**: `ERC20StakingFacet` is a separate, self-contained facet that composes with `ERC20Facet`. This follows the principle that every extension should be implemented as a new facet.
 
-- **Reusing storage struct**: The `ERC20Storage` struct is copied from `ERC20Facet` and reused with the same storage slot (`keccak256("compose.erc20")`), ensuring both facets access the same token data. This demonstrates how facets can share storage through diamond storage patterns.
+- **Reusing storage struct**: The `ERC20Storage` struct is copied from `ERC20Facet` and reused at the same storage location `keccak256("compose.erc20")`, ensuring both facets access the same token data. This demonstrates how facets can share storage through diamond storage patterns.
 
-- **Maintaining variable order**: All variables in the reused `ERC20Storage` struct maintain the same order as the original struct. Only the `nonces` mapping at the end is removed, following the rule that variables can only be removed from the end of a struct.
+- **Maintaining variable order**: The `balanceOf` variable remains in the first position of the reused `ERC20Storage` struct, exactly as it appears in the original struct, preserving the order of storage variables.
 
-- **Removing unused variables**: The `nonces` mapping (used for permit functionality) is removed from the end of the struct since staking doesn't require permit functionality. This follows the rule that storage structs should be designed so removable variables appear at the end, and removal is only done from the end of a struct.
+- **Removing unused variables**: All variables except `balanceOf` are removed from the reused `ERC20Storage` struct since they are unused by `ERC20StakingFacet`. This follows the rule that storage structs should be designed so removable variables appear at the end, and removal is only done from the end of a struct.
 
-- **Adding custom storage**: A new `ERC20StakingStorage` struct is defined with its own storage slot (`keccak256("compose.erc20.staking")`) for staking-specific data. This follows the principle that a facet adding new storage variables must define its own diamond-storage struct.
+- **Adding custom storage**: A new `ERC20StakingStorage` struct is defined with its own storage slot `keccak256("compose.erc20.staking")` for staking-specific data. This follows the principle that a facet adding new storage variables must define its own diamond storage struct.
 
-- **Self-contained design**: The facet contains all necessary code (events, errors, storage definitions, and functions) without imports, making it fully self-contained. This adheres to the rule that facets should only contain code they actually use.
+- **Self-contained design**: The facet contains all necessary code (events, errors, storage definitions, and functions) without imports, making it fully self-contained. 
 
-- **Composable functionality**: This facet can be deployed once and added to any diamond that includes `ERC20Facet`, demonstrating true onchain composition where facets work together without inheritance.
+- **Composable functionality**: This facet can be deployed once and added to any diamond that includes `ERC20Facet`, demonstrating true on-chain composition where facets work together without inheritance.
 
 *** 
 
