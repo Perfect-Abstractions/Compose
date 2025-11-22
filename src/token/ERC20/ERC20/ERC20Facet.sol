@@ -26,18 +26,6 @@ contract ERC20Facet {
     /// @param _spender Invalid spender address.
     error ERC20InvalidSpender(address _spender);
 
-    /// @notice Thrown when a permit signature is invalid or expired.
-    /// @param _owner The address that signed the permit.
-    /// @param _spender The address that was approved.
-    /// @param _value The amount that was approved.
-    /// @param _deadline The deadline for the permit.
-    /// @param _v The recovery byte of the signature.
-    /// @param _r The r value of the signature.
-    /// @param _s The s value of the signature.
-    error ERC2612InvalidSignature(
-        address _owner, address _spender, uint256 _value, uint256 _deadline, uint8 _v, bytes32 _r, bytes32 _s
-    );
-
     /// @notice Emitted when an approval is made for a spender by an owner.
     /// @param _owner The address granting the allowance.
     /// @param _spender The address receiving the allowance.
@@ -58,13 +46,12 @@ contract ERC20Facet {
      * @custom:storage-location erc8042:compose.erc20
      */
     struct ERC20Storage {
+        mapping(address owner => uint256 balance) balanceOf;
+        uint256 totalSupply;
+        mapping(address owner => mapping(address spender => uint256 allowance)) allowances;
+        uint8 decimals;
         string name;
         string symbol;
-        uint8 decimals;
-        uint256 totalSupply;
-        mapping(address owner => uint256 balance) balanceOf;
-        mapping(address owner => mapping(address spender => uint256 allowance)) allowances;
-        mapping(address owner => uint256) nonces;
     }
 
     /**
@@ -204,144 +191,5 @@ contract ERC20Facet {
         s.balanceOf[_to] += _value;
         emit Transfer(_from, _to, _value);
         return true;
-    }
-
-    /**
-     * @notice Burns (destroys) a specific amount of tokens from the caller's balance.
-     * @dev Emits a {Transfer} event to the zero address.
-     * @param _value The amount of tokens to burn.
-     */
-    function burn(uint256 _value) external {
-        ERC20Storage storage s = getStorage();
-        uint256 balance = s.balanceOf[msg.sender];
-        if (balance < _value) {
-            revert ERC20InsufficientBalance(msg.sender, balance, _value);
-        }
-        unchecked {
-            s.balanceOf[msg.sender] = balance - _value;
-            s.totalSupply -= _value;
-        }
-        emit Transfer(msg.sender, address(0), _value);
-    }
-
-    /**
-     * @notice Burns tokens from another account, deducting from the caller's allowance.
-     * @dev Emits a {Transfer} event to the zero address.
-     * @param _account The address whose tokens will be burned.
-     * @param _value The amount of tokens to burn.
-     */
-    function burnFrom(address _account, uint256 _value) external {
-        ERC20Storage storage s = getStorage();
-        uint256 currentAllowance = s.allowances[_account][msg.sender];
-        if (currentAllowance < _value) {
-            revert ERC20InsufficientAllowance(msg.sender, currentAllowance, _value);
-        }
-        uint256 balance = s.balanceOf[_account];
-        if (balance < _value) {
-            revert ERC20InsufficientBalance(_account, balance, _value);
-        }
-        unchecked {
-            if (currentAllowance != type(uint256).max) {
-                s.allowances[_account][msg.sender] = currentAllowance - _value;
-            }
-            s.balanceOf[_account] = balance - _value;
-            s.totalSupply -= _value;
-        }
-        emit Transfer(_account, address(0), _value);
-    }
-
-    // EIP-2612 Permit Extension
-
-    /**
-     * @notice Returns the current nonce for an owner.
-     * @dev This value changes each time a permit is used.
-     * @param _owner The address of the owner.
-     * @return The current nonce.
-     */
-    function nonces(address _owner) external view returns (uint256) {
-        return getStorage().nonces[_owner];
-    }
-
-    /**
-     * @notice Returns the domain separator used in the encoding of the signature for {permit}.
-     * @dev This value is unique to a contract and chain ID combination to prevent replay attacks.
-     * @return The domain separator.
-     */
-    function DOMAIN_SEPARATOR() external view returns (bytes32) {
-        return keccak256(
-            abi.encode(
-                keccak256("EIP712Domain(string name,string version,uint256 chainId,address verifyingContract)"),
-                keccak256(bytes(getStorage().name)),
-                keccak256("1"),
-                block.chainid,
-                address(this)
-            )
-        );
-    }
-
-    /**
-     * @notice Sets the allowance for a spender via a signature.
-     * @dev This function implements EIP-2612 permit functionality.
-     * @param _owner The address of the token owner.
-     * @param _spender The address of the spender.
-     * @param _value The amount of tokens to approve.
-     * @param _deadline The deadline for the permit (timestamp).
-     * @param _v The recovery byte of the signature.
-     * @param _r The r value of the signature.
-     * @param _s The s value of the signature.
-     */
-    function permit(
-        address _owner,
-        address _spender,
-        uint256 _value,
-        uint256 _deadline,
-        uint8 _v,
-        bytes32 _r,
-        bytes32 _s
-    ) external {
-        if (_spender == address(0)) {
-            revert ERC20InvalidSpender(address(0));
-        }
-        if (block.timestamp > _deadline) {
-            revert ERC2612InvalidSignature(_owner, _spender, _value, _deadline, _v, _r, _s);
-        }
-
-        ERC20Storage storage s = getStorage();
-        uint256 currentNonce = s.nonces[_owner];
-        bytes32 structHash = keccak256(
-            abi.encode(
-                keccak256("Permit(address owner,address spender,uint256 value,uint256 nonce,uint256 deadline)"),
-                _owner,
-                _spender,
-                _value,
-                currentNonce,
-                _deadline
-            )
-        );
-
-        bytes32 hash = keccak256(
-            abi.encodePacked(
-                "\x19\x01",
-                keccak256(
-                    abi.encode(
-                        keccak256("EIP712Domain(string name,string version,uint256 chainId,address verifyingContract)"),
-                        keccak256(bytes(s.name)),
-                        keccak256("1"),
-                        block.chainid,
-                        address(this)
-                    )
-                ),
-                structHash
-            )
-        );
-
-        address signer = ecrecover(hash, _v, _r, _s);
-        if (signer != _owner || signer == address(0)) {
-            revert ERC2612InvalidSignature(_owner, _spender, _value, _deadline, _v, _r, _s);
-        }
-
-        s.allowances[_owner][_spender] = _value;
-        s.nonces[_owner] = currentNonce + 1;
-        emit Approval(_owner, _spender, _value);
     }
 }
