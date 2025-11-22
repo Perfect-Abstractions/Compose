@@ -39,13 +39,12 @@ We focus on building **small, independent, and easy-to-read facets**. Each facet
 1. Every extension of a standard or facet should be implemented as a new facet.
 2. A facet should only be extended with a new facet that composes with it.
 3. Composition is done by facets sharing the same storage structs and containing complementary external functions.
-4. Two facets do not compose if they both expose one or more of the same external function signatures (function name and parameter types).
+4. Two facets do not compose if they both have one or more of the same external function signatures (function name and parameter types).
 5. When reusing a struct from an existing facet, store it at the original diamond storage location and remove unused variables from the end of it. Variables must never be removed from the beginning or middle, as this would break storage compatibility.
 6. Storage structs should be designed so that removable variables (unused by some facets) appear at the end of the struct.
-7. Storage structs should also be designed for packed storage (smaller sized variables using the same storage slot).
-8. If a variable cannot be removed from the end of a struct, it must remain to preserve compatibility.
-9. A facet that adds new storage variables must define its own diamond storage struct.
-10. Never add new variables to an existing struct.
+7. If an unused variable cannot be removed from the end of a struct, it must remain to preserve compatibility.
+8. A facet that adds new storage variables must define its own diamond storage struct.
+9. Never add new variables to an existing struct.
 
 :::info Important
 Maintain the same order of variables in structs when reusing them across facets or libraries. Unused variables may only be removed from the end of a struct.
@@ -93,7 +92,7 @@ When reusing this struct in `ERC20PermitFacet`, the [Extending Facets](#extendin
 
 `ERC20PermitFacet` only uses the variables `allowances` and `name` from this struct. However, `balanceOf`, `totalSupply`, and `decimals` **cannot** be removed, even though they are unused, because they appear before the `name` variable, which is used. Removing them would shift the storage slot used by the `name` variable which would make it refer to something else.
 
-Only variables at the **end** of a struct may be safely removed. In this case, `symbol` is the only trailing variable that is unused by `ERC20PermitFacet`, so it is the only one removed.
+Only unused variables at the **end** of a struct may be safely removed. In this case, `symbol` is the only trailing variable that is unused by `ERC20PermitFacet`, so it is the only one removed.
 
 Here is the final struct storage code for `ERC20PermitFacet`:
 
