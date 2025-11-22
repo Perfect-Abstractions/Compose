@@ -15,11 +15,7 @@ contract ERC20BurnFacetTest is Test {
     uint256 constant INITIAL_SUPPLY = 1000000e18;
 
     event Transfer(address indexed _from, address indexed _to, uint256 _value);
-    event Approval(
-        address indexed _owner,
-        address indexed _spender,
-        uint256 _value
-    );
+    event Approval(address indexed _owner, address indexed _spender, uint256 _value);
 
     function setUp() public {
         alice = makeAddr("alice");
@@ -65,26 +61,14 @@ contract ERC20BurnFacetTest is Test {
 
         vm.prank(alice);
         vm.expectRevert(
-            abi.encodeWithSelector(
-                ERC20BurnFacet.ERC20InsufficientBalance.selector,
-                alice,
-                INITIAL_SUPPLY,
-                amount
-            )
+            abi.encodeWithSelector(ERC20BurnFacet.ERC20InsufficientBalance.selector, alice, INITIAL_SUPPLY, amount)
         );
         token.burn(amount);
     }
 
     function test_RevertWhen_BurnFromZeroBalance() public {
         vm.prank(bob);
-        vm.expectRevert(
-            abi.encodeWithSelector(
-                ERC20BurnFacet.ERC20InsufficientBalance.selector,
-                bob,
-                0,
-                1
-            )
-        );
+        vm.expectRevert(abi.encodeWithSelector(ERC20BurnFacet.ERC20InsufficientBalance.selector, bob, 0, 1));
         token.burn(1);
     }
 
@@ -180,10 +164,7 @@ contract ERC20BurnFacetTest is Test {
         }
 
         // Verify final balances and total supply
-        assertEq(
-            token.balanceOf(alice),
-            INITIAL_SUPPLY - (burnAmount * numBurns)
-        );
+        assertEq(token.balanceOf(alice), INITIAL_SUPPLY - (burnAmount * numBurns));
         assertEq(token.totalSupply(), INITIAL_SUPPLY - (burnAmount * numBurns));
     }
 
@@ -196,12 +177,7 @@ contract ERC20BurnFacetTest is Test {
 
         vm.prank(bob);
         vm.expectRevert(
-            abi.encodeWithSelector(
-                ERC20BurnFacet.ERC20InsufficientAllowance.selector,
-                bob,
-                allowanceAmount,
-                burnAmount
-            )
+            abi.encodeWithSelector(ERC20BurnFacet.ERC20InsufficientAllowance.selector, bob, allowanceAmount, burnAmount)
         );
         token.burnFrom(alice, burnAmount);
     }
@@ -214,26 +190,14 @@ contract ERC20BurnFacetTest is Test {
 
         vm.prank(bob);
         vm.expectRevert(
-            abi.encodeWithSelector(
-                ERC20BurnFacet.ERC20InsufficientBalance.selector,
-                alice,
-                INITIAL_SUPPLY,
-                amount
-            )
+            abi.encodeWithSelector(ERC20BurnFacet.ERC20InsufficientBalance.selector, alice, INITIAL_SUPPLY, amount)
         );
         token.burnFrom(alice, amount);
     }
 
     function test_RevertWhen_BurnFromNoAllowance() public {
         vm.prank(bob);
-        vm.expectRevert(
-            abi.encodeWithSelector(
-                ERC20BurnFacet.ERC20InsufficientAllowance.selector,
-                bob,
-                0,
-                100e18
-            )
-        );
+        vm.expectRevert(abi.encodeWithSelector(ERC20BurnFacet.ERC20InsufficientAllowance.selector, bob, 0, 100e18));
         token.burnFrom(alice, 100e18);
     }
 }

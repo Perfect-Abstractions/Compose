@@ -6,11 +6,7 @@ import {ERC20BurnFacet} from "../../../../../src/token/ERC20/ERC20/ERC20BurnFace
 /// @title ERC20BurnFacetHarness
 /// @notice Test harness for ERC20BurnFacet that adds initialization and minting for testing
 contract ERC20BurnFacetHarness is ERC20BurnFacet {
-    event Approval(
-        address indexed _owner,
-        address indexed _spender,
-        uint256 _value
-    );
+    event Approval(address indexed _owner, address indexed _spender, uint256 _value);
 
     /// @notice ERC20 view helpers so tests can call the standard API
     function balanceOf(address _account) external view returns (uint256) {
@@ -21,10 +17,7 @@ contract ERC20BurnFacetHarness is ERC20BurnFacet {
         return getStorage().totalSupply;
     }
 
-    function allowance(
-        address _owner,
-        address _spender
-    ) external view returns (uint256) {
+    function allowance(address _owner, address _spender) external view returns (uint256) {
         return getStorage().allowances[_owner][_spender];
     }
 

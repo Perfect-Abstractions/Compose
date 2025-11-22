@@ -6,11 +6,7 @@ contract ERC20Facet {
     /// @param _sender Address attempting the transfer.
     /// @param _balance Current balance of the sender.
     /// @param _needed Amount required to complete the operation.
-    error ERC20InsufficientBalance(
-        address _sender,
-        uint256 _balance,
-        uint256 _needed
-    );
+    error ERC20InsufficientBalance(address _sender, uint256 _balance, uint256 _needed);
 
     /// @notice Thrown when the sender address is invalid (e.g., zero address).
     /// @param _sender Invalid sender address.
@@ -24,11 +20,7 @@ contract ERC20Facet {
     /// @param _spender Address attempting to spend.
     /// @param _allowance Current allowance for the spender.
     /// @param _needed Amount required to complete the operation.
-    error ERC20InsufficientAllowance(
-        address _spender,
-        uint256 _allowance,
-        uint256 _needed
-    );
+    error ERC20InsufficientAllowance(address _spender, uint256 _allowance, uint256 _needed);
 
     /// @notice Thrown when the spender address is invalid (e.g., zero address).
     /// @param _spender Invalid spender address.
@@ -38,11 +30,7 @@ contract ERC20Facet {
     /// @param _owner The address granting the allowance.
     /// @param _spender The address receiving the allowance.
     /// @param _value The amount approved.
-    event Approval(
-        address indexed _owner,
-        address indexed _spender,
-        uint256 _value
-    );
+    event Approval(address indexed _owner, address indexed _spender, uint256 _value);
 
     /// @notice Emitted when tokens are transferred between two addresses.
     /// @param _from Address sending the tokens.
@@ -125,10 +113,7 @@ contract ERC20Facet {
      * @param _spender The address of the spender.
      * @return The remaining allowance.
      */
-    function allowance(
-        address _owner,
-        address _spender
-    ) external view returns (uint256) {
+    function allowance(address _owner, address _spender) external view returns (uint256) {
         return getStorage().allowances[_owner][_spender];
     }
 
@@ -181,11 +166,7 @@ contract ERC20Facet {
      * @param _value The amount of tokens to transfer.
      * @return True if the transfer was successful.
      */
-    function transferFrom(
-        address _from,
-        address _to,
-        uint256 _value
-    ) external returns (bool) {
+    function transferFrom(address _from, address _to, uint256 _value) external returns (bool) {
         ERC20Storage storage s = getStorage();
         if (_from == address(0)) {
             revert ERC20InvalidSender(address(0));
@@ -195,11 +176,7 @@ contract ERC20Facet {
         }
         uint256 currentAllowance = s.allowances[_from][msg.sender];
         if (currentAllowance < _value) {
-            revert ERC20InsufficientAllowance(
-                msg.sender,
-                currentAllowance,
-                _value
-            );
+            revert ERC20InsufficientAllowance(msg.sender, currentAllowance, _value);
         }
         uint256 fromBalance = s.balanceOf[_from];
         if (fromBalance < _value) {

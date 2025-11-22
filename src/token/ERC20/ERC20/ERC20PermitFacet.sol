@@ -11,13 +11,7 @@ contract ERC20PermitFacet {
     /// @param _r The r value of the signature.
     /// @param _s The s value of the signature.
     error ERC2612InvalidSignature(
-        address _owner,
-        address _spender,
-        uint256 _value,
-        uint256 _deadline,
-        uint8 _v,
-        bytes32 _r,
-        bytes32 _s
+        address _owner, address _spender, uint256 _value, uint256 _deadline, uint8 _v, bytes32 _r, bytes32 _s
     );
 
     /// @notice Thrown when the spender address is invalid (e.g., zero address).
@@ -28,11 +22,7 @@ contract ERC20PermitFacet {
     /// @param _owner The address granting the allowance.
     /// @param _spender The address receiving the allowance.
     /// @param _value The amount approved.
-    event Approval(
-        address indexed _owner,
-        address indexed _spender,
-        uint256 _value
-    );
+    event Approval(address indexed _owner, address indexed _spender, uint256 _value);
 
     bytes32 constant ERC20_STORAGE_POSITION = keccak256("compose.erc20");
 
@@ -89,18 +79,15 @@ contract ERC20PermitFacet {
      * @return The domain separator.
      */
     function DOMAIN_SEPARATOR() external view returns (bytes32) {
-        return
-            keccak256(
-                abi.encode(
-                    keccak256(
-                        "EIP712Domain(string name,string version,uint256 chainId,address verifyingContract)"
-                    ),
-                    keccak256(bytes(getERC20Storage().name)),
-                    keccak256("1"),
-                    block.chainid,
-                    address(this)
-                )
-            );
+        return keccak256(
+            abi.encode(
+                keccak256("EIP712Domain(string name,string version,uint256 chainId,address verifyingContract)"),
+                keccak256(bytes(getERC20Storage().name)),
+                keccak256("1"),
+                block.chainid,
+                address(this)
+            )
+        );
     }
 
     /**
@@ -127,15 +114,7 @@ contract ERC20PermitFacet {
             revert ERC20InvalidSpender(address(0));
         }
         if (block.timestamp > _deadline) {
-            revert ERC2612InvalidSignature(
-                _owner,
-                _spender,
-                _value,
-                _deadline,
-                _v,
-                _r,
-                _s
-            );
+            revert ERC2612InvalidSignature(_owner, _spender, _value, _deadline, _v, _r, _s);
         }
 
         ERC20PermitStorage storage s = getStorage();
@@ -143,9 +122,7 @@ contract ERC20PermitFacet {
         uint256 currentNonce = s.nonces[_owner];
         bytes32 structHash = keccak256(
             abi.encode(
-                keccak256(
-                    "Permit(address owner,address spender,uint256 value,uint256 nonce,uint256 deadline)"
-                ),
+                keccak256("Permit(address owner,address spender,uint256 value,uint256 nonce,uint256 deadline)"),
                 _owner,
                 _spender,
                 _value,
@@ -159,9 +136,7 @@ contract ERC20PermitFacet {
                 "\x19\x01",
                 keccak256(
                     abi.encode(
-                        keccak256(
-                            "EIP712Domain(string name,string version,uint256 chainId,address verifyingContract)"
-                        ),
+                        keccak256("EIP712Domain(string name,string version,uint256 chainId,address verifyingContract)"),
                         keccak256(bytes(sERC20.name)),
                         keccak256("1"),
                         block.chainid,
@@ -174,15 +149,7 @@ contract ERC20PermitFacet {
 
         address signer = ecrecover(hash, _v, _r, _s);
         if (signer != _owner || signer == address(0)) {
-            revert ERC2612InvalidSignature(
-                _owner,
-                _spender,
-                _value,
-                _deadline,
-                _v,
-                _r,
-                _s
-            );
+            revert ERC2612InvalidSignature(_owner, _spender, _value, _deadline, _v, _r, _s);
         }
 
         sERC20.allowances[_owner][_spender] = _value;

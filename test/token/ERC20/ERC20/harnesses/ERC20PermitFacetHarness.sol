@@ -54,10 +54,10 @@ contract ERC20PermitFacetHarness is ERC20PermitFacet {
         ERC20Storage storage s = getERC20Storage();
         require(_to != address(0), "ERC20: transfer to zero address");
         require(s.balanceOf[_from] >= _value, "ERC20: insufficient balance");
-        
+
         uint256 currentAllowance = s.allowances[_from][msg.sender];
         require(currentAllowance >= _value, "ERC20: insufficient allowance");
-        
+
         unchecked {
             s.allowances[_from][msg.sender] = currentAllowance - _value;
             s.balanceOf[_from] -= _value;

@@ -6,21 +6,13 @@ contract ERC20BurnFacet {
     /// @param _sender Address attempting the transfer.
     /// @param _balance Current balance of the sender.
     /// @param _needed Amount required to complete the operation.
-    error ERC20InsufficientBalance(
-        address _sender,
-        uint256 _balance,
-        uint256 _needed
-    );
+    error ERC20InsufficientBalance(address _sender, uint256 _balance, uint256 _needed);
 
     /// @notice Thrown when a spender tries to use more than the approved allowance.
     /// @param _spender Address attempting to spend.
     /// @param _allowance Current allowance for the spender.
     /// @param _needed Amount required to complete the operation.
-    error ERC20InsufficientAllowance(
-        address _spender,
-        uint256 _allowance,
-        uint256 _needed
-    );
+    error ERC20InsufficientAllowance(address _spender, uint256 _allowance, uint256 _needed);
 
     /// @notice Emitted when tokens are transferred between two addresses.
     /// @param _from Address sending the tokens.
@@ -52,7 +44,7 @@ contract ERC20BurnFacet {
             s.slot := position
         }
     }
-    
+
     /**
      * @notice Burns (destroys) a specific amount of tokens from the caller's balance.
      * @dev Emits a {Transfer} event to the zero address.
@@ -81,11 +73,7 @@ contract ERC20BurnFacet {
         ERC20Storage storage s = getStorage();
         uint256 currentAllowance = s.allowances[_account][msg.sender];
         if (currentAllowance < _value) {
-            revert ERC20InsufficientAllowance(
-                msg.sender,
-                currentAllowance,
-                _value
-            );
+            revert ERC20InsufficientAllowance(msg.sender, currentAllowance, _value);
         }
         uint256 balance = s.balanceOf[_account];
         if (balance < _value) {
