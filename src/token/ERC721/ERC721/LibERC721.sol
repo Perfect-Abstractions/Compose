@@ -49,7 +49,7 @@ library LibERC721 {
         mapping(uint256 tokenId => address approved) approved;
         string name;
         string symbol;
-        string baseURI;                           
+        string baseURI;
     }
 
     /// @notice Returns the ERC-721 storage struct from its predefined slot.

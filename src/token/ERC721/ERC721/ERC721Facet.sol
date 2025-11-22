@@ -63,7 +63,7 @@ contract ERC721Facet {
         mapping(uint256 tokenId => address approved) approved;
         string name;
         string symbol;
-        string baseURI;                           
+        string baseURI;
     }
 
     /// @notice Returns a pointer to the ERC-721 storage struct.

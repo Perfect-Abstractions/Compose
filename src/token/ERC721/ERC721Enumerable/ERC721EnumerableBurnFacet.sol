@@ -25,17 +25,13 @@ contract ERC721EnumerableBurnFacet {
 
     /// @custom:storage-location erc8042:compose.erc721.enumerable
     struct ERC721EnumerableStorage {
-        string name;
-        string symbol;
-        string baseURI;
-        mapping(uint256 tokenId => string tokenURI) tokenURIOf;
         mapping(uint256 tokenId => address owner) ownerOf;
-        mapping(address owner => uint256[] ownedTokens) ownedTokensOf;
-        mapping(uint256 tokenId => uint256 ownedTokensIndex) ownedTokensIndexOf;
+        mapping(address owner => uint256[] ownerTokens) ownerTokens;
+        mapping(uint256 tokenId => uint256 ownerTokensIndex) ownerTokensIndex;
         uint256[] allTokens;
-        mapping(uint256 tokenId => uint256 allTokensIndex) allTokensIndexOf;
-        mapping(uint256 tokenId => address approved) approved;
+        mapping(uint256 tokenId => uint256 allTokensIndex) allTokensIndex;
         mapping(address owner => mapping(address operator => bool approved)) isApprovedForAll;
+        mapping(uint256 tokenId => address approved) approved;
     }
 
     /// @notice Returns the storage struct used by this facet.
@@ -67,22 +63,22 @@ contract ERC721EnumerableBurnFacet {
         delete s.approved[_tokenId];
 
         // Remove from owner's list
-        uint256 tokenIndex = s.ownedTokensIndexOf[_tokenId];
-        uint256 lastTokenIndex = s.ownedTokensOf[owner].length - 1;
+        uint256 tokenIndex = s.ownerTokensIndex[_tokenId];
+        uint256 lastTokenIndex = s.ownerTokens[owner].length - 1;
         if (tokenIndex != lastTokenIndex) {
-            uint256 lastTokenId = s.ownedTokensOf[owner][lastTokenIndex];
-            s.ownedTokensOf[owner][tokenIndex] = lastTokenId;
-            s.ownedTokensIndexOf[lastTokenId] = tokenIndex;
+            uint256 lastTokenId = s.ownerTokens[owner][lastTokenIndex];
+            s.ownerTokens[owner][tokenIndex] = lastTokenId;
+            s.ownerTokensIndex[lastTokenId] = tokenIndex;
         }
-        s.ownedTokensOf[owner].pop();
+        s.ownerTokens[owner].pop();
 
         // Remove from all tokens list
-        tokenIndex = s.allTokensIndexOf[_tokenId];
+        tokenIndex = s.allTokensIndex[_tokenId];
         lastTokenIndex = s.allTokens.length - 1;
         if (tokenIndex != lastTokenIndex) {
             uint256 lastTokenId = s.allTokens[lastTokenIndex];
             s.allTokens[tokenIndex] = lastTokenId;
-            s.allTokensIndexOf[lastTokenId] = tokenIndex;
+            s.allTokensIndex[lastTokenId] = tokenIndex;
         }
         s.allTokens.pop();
 
