@@ -191,7 +191,7 @@ contract ERC721Facet {
 
     /// @dev Internal function to transfer a token, checking for ownership and approval.
     /// @param _from The current owner of the token.
-    /// @param _to The address to receive the token.
+    /// @param _to The address to receive the token. 
     /// @param _tokenId The token ID to transfer.
     function internalTransferFrom(address _from, address _to, uint256 _tokenId) internal {
         ERC721Storage storage s = getStorage();

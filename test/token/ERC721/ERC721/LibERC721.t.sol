@@ -37,12 +37,12 @@ contract ERC721Test is Test {
         assertEq(harness.symbol(), TOKEN_SYMBOL);
     }
 
-    function test_BaseURI() public view {
+    function test_baseURI() public view {
         assertEq(harness.baseURI(), BASE_URI);
     }
 
     // ============================================
-    // Transfer Tests
+    // TransferFrom Tests
     // ============================================
 
     function test_TransferFrom() public {

@@ -43,7 +43,7 @@ contract ERC20Facet {
 
     /**
      * @dev ERC-8042 compliant storage struct for ERC20 token data.
-     * @custom:storage-location erc8042:compose.erc20
+     * @custom:storage-location erc8042:compose.erc20 
      */
     struct ERC20Storage {
         mapping(address owner => uint256 balance) balanceOf;
