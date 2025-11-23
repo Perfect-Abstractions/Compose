@@ -52,10 +52,9 @@ contract ERC721EnumerableBurnFacet {
             revert ERC721NonexistentToken(_tokenId);
         }
 
-        address sender = msg.sender;
-        if (sender != owner) {
-            if (!s.isApprovedForAll[owner][sender] && sender != s.approved[_tokenId]) {
-                revert ERC721InsufficientApproval(sender, _tokenId);
+        if (msg.sender != owner) {
+            if (!s.isApprovedForAll[owner][msg.sender] && msg.sender != s.approved[_tokenId]) {
+                revert ERC721InsufficientApproval(msg.sender, _tokenId);
             }
         }
 
