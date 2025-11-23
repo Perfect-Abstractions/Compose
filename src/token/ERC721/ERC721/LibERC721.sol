@@ -53,7 +53,7 @@ library LibERC721 {
     }
 
     /// @notice Returns the ERC-721 storage struct from its predefined slot.
-    /// @dev Uses inline assembly to access diamond storage location.
+    /// @dev Uses inline assembly to access diamond storage location. 
     /// @return s The storage reference for ERC-721 state variables.
     function getStorage() internal pure returns (ERC721Storage storage s) {
         bytes32 position = STORAGE_POSITION;

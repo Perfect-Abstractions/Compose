@@ -17,7 +17,7 @@ contract LibERC20Harness {
     }
 
     /// @notice Exposes LibERC20.mint as an external function
-    function mint(address _account, uint256 _value) external {
+    function mint(address _account, uint256 _value) external { 
         LibERC20.mint(_account, _value);
     }
 
