@@ -26,12 +26,12 @@ contract LibERC1155Harness {
 
     /// @notice Exposes LibERC1155.mint as an external function
     function mint(address _to, uint256 _id, uint256 _value) external {
-        LibERC1155.mint(_to, _id, _value);
+        LibERC1155.mint(_to, _id, _value, new bytes(0));
     }
 
     /// @notice Exposes LibERC1155.mintBatch as an external function
     function mintBatch(address _to, uint256[] memory _ids, uint256[] memory _values) external {
-        LibERC1155.mintBatch(_to, _ids, _values);
+        LibERC1155.mintBatch(_to, _ids, _values, new bytes(0));
     }
 
     /// @notice Exposes LibERC1155.burn as an external function
