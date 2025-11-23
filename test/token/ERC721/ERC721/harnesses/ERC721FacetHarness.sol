@@ -6,20 +6,16 @@ import {ERC721Facet} from "../../../../../src/token/ERC721/ERC721/ERC721Facet.so
 contract ERC721FacetHarness is ERC721Facet {
     /// @notice Initialize the ERC721 token storage
     /// @dev Only used for testing - production diamonds should initialize in constructor
-    function initialize(
-        string memory _name,
-        string memory _symbol,
-        string memory _baseURI
-    ) external {
+    function initialize(string memory _name, string memory _symbol, string memory _baseURI) external {
         ERC721Storage storage s = getStorage();
         s.name = _name;
         s.symbol = _symbol;
         s.baseURI = _baseURI;
     }
 
-    function baseURI() external view returns(string memory){
+    function baseURI() external view returns (string memory) {
         return ERC721Facet.getStorage().baseURI;
-    }   
+    }
 
     /// @notice Mints a new ERC-721 token to the specified address.
     /// @dev Reverts if the receiver address is zero or if the token already exists.

@@ -11,7 +11,7 @@ contract ERC20FacetHarness is ERC20Facet {
     function initialize(string memory _name, string memory _symbol, uint8 _decimals) external {
         ERC20Storage storage s = getStorage();
         s.name = _name;
-        s.symbol = _symbol; 
+        s.symbol = _symbol;
         s.decimals = _decimals;
     }
 

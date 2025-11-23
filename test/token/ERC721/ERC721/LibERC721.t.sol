@@ -67,11 +67,7 @@ contract ERC721Test is Test {
         assertEq(harness.ownerOf(tokenId), charlie);
     }
 
-    function test_TransferFuzz(
-        address from,
-        address to,
-        uint256 tokenId
-    ) public {
+    function test_TransferFuzz(address from, address to, uint256 tokenId) public {
         vm.assume(from != address(0));
         vm.assume(to != address(0));
         vm.assume(tokenId < type(uint256).max);
@@ -87,12 +83,7 @@ contract ERC721Test is Test {
     function test_TransferRevertWhenTransferFromNonExistentToken() public {
         uint256 tokenId = 999;
 
-        vm.expectRevert(
-            abi.encodeWithSelector(
-                LibERC721.ERC721NonexistentToken.selector,
-                tokenId
-            )
-        );
+        vm.expectRevert(abi.encodeWithSelector(LibERC721.ERC721NonexistentToken.selector, tokenId));
         harness.transferFrom(alice, bob, tokenId);
     }
 
@@ -103,13 +94,7 @@ contract ERC721Test is Test {
         assertEq(harness.ownerOf(tokenId), alice);
 
         vm.prank(bob);
-        vm.expectRevert(
-            abi.encodeWithSelector(
-                LibERC721.ERC721InsufficientApproval.selector,
-                bob,
-                tokenId
-            )
-        );
+        vm.expectRevert(abi.encodeWithSelector(LibERC721.ERC721InsufficientApproval.selector, bob, tokenId));
         harness.transferFrom(alice, charlie, tokenId);
     }
 
@@ -142,12 +127,7 @@ contract ERC721Test is Test {
     function test_MintRevertWhenInvalidReceiver() public {
         uint256 tokenId = 6;
 
-        vm.expectRevert(
-            abi.encodeWithSelector(
-                LibERC721.ERC721InvalidReceiver.selector,
-                address(0)
-            )
-        );
+        vm.expectRevert(abi.encodeWithSelector(LibERC721.ERC721InvalidReceiver.selector, address(0)));
         harness.mint(address(0), tokenId);
     }
 
@@ -179,12 +159,7 @@ contract ERC721Test is Test {
     function test_BurnRevertWhenNonExistentToken() public {
         uint256 tokenId = 888;
 
-        vm.expectRevert(
-            abi.encodeWithSelector(
-                LibERC721.ERC721NonexistentToken.selector,
-                tokenId
-            )
-        );
+        vm.expectRevert(abi.encodeWithSelector(LibERC721.ERC721NonexistentToken.selector, tokenId));
         harness.burn(tokenId);
     }
 }

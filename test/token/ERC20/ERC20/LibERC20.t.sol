@@ -5,7 +5,7 @@ import {Test} from "forge-std/Test.sol";
 import {LibERC20Harness} from "./harnesses/LibERC20Harness.sol";
 import {LibERC20} from "../../../../src/token/ERC20/ERC20/LibERC20.sol";
 
-contract LibERC20Test is Test { 
+contract LibERC20Test is Test {
     LibERC20Harness public harness;
 
     address public alice;

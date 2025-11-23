@@ -6,11 +6,7 @@ import {LibERC721} from "../../../../../src/token/ERC721/ERC721/LibERC721.sol";
 contract LibERC721Harness {
     /// @notice Initialize the ERC721 token storage
     /// @dev Only used for testing
-    function initialize(
-        string memory _name,
-        string memory _symbol,
-        string memory _baseURI
-    ) external {
+    function initialize(string memory _name, string memory _symbol, string memory _baseURI) external {
         LibERC721.ERC721Storage storage s = LibERC721.getStorage();
         s.name = _name;
         s.symbol = _symbol;
@@ -28,11 +24,7 @@ contract LibERC721Harness {
     }
 
     /// @notice Exposes LibERC721.transferFrom as an external function
-    function transferFrom(
-        address _from,
-        address _to,
-        uint256 _tokenId
-    ) external {
+    function transferFrom(address _from, address _to, uint256 _tokenId) external {
         LibERC721.transferFrom(_from, _to, _tokenId);
     }
 

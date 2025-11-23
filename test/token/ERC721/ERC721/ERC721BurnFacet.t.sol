@@ -50,12 +50,7 @@ contract ERC721BurnFacetTest is Test {
     function test_BurnRevertWhenNonExistentToken() public {
         uint256 tokenId = 888;
 
-        vm.expectRevert(
-            abi.encodeWithSelector(
-                ERC721BurnFacet.ERC721NonexistentToken.selector,
-                tokenId
-            )
-        );
+        vm.expectRevert(abi.encodeWithSelector(ERC721BurnFacet.ERC721NonexistentToken.selector, tokenId));
         harness.burn(tokenId);
     }
 }

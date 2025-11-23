@@ -51,15 +51,13 @@ contract ERC721FacetTest is Test {
 
         harness.mint(alice, tokenId);
 
-        string memory tokenURI = ERC721Facet(address(harness)).tokenURI(
-            tokenId
-        );
+        string memory tokenURI = ERC721Facet(address(harness)).tokenURI(tokenId);
         assertEq(tokenURI, expectedURI);
     }
 
     function test_tokenOwner() public {
         uint256 tokenId = 45;
-        
+
         harness.mint(alice, tokenId);
 
         assertEq(harness.ownerOf(tokenId), alice);
@@ -108,11 +106,7 @@ contract ERC721FacetTest is Test {
         assertEq(approved, address(0));
     }
 
-    function test_ApproveFuzz(
-        address owner,
-        address operator,
-        uint256 tokenId
-    ) public {
+    function test_ApproveFuzz(address owner, address operator, uint256 tokenId) public {
         vm.assume(owner != address(0));
         vm.assume(operator != address(0));
         vm.assume(owner != operator);
@@ -149,17 +143,11 @@ contract ERC721FacetTest is Test {
         vm.prank(alice);
         ERC721Facet(address(harness)).setApprovalForAll(bob, true);
 
-        bool isApproved = ERC721Facet(address(harness)).isApprovedForAll(
-            alice,
-            bob
-        );
+        bool isApproved = ERC721Facet(address(harness)).isApprovedForAll(alice, bob);
         assertTrue(isApproved);
     }
 
-    function test_SetApprovalForAllFuzz(
-        address owner,
-        address operator
-    ) public {
+    function test_SetApprovalForAllFuzz(address owner, address operator) public {
         vm.assume(owner != address(0));
         vm.assume(operator != address(0));
         vm.assume(owner != operator);
@@ -167,10 +155,7 @@ contract ERC721FacetTest is Test {
         vm.prank(owner);
         ERC721Facet(address(harness)).setApprovalForAll(operator, true);
 
-        bool isApproved = ERC721Facet(address(harness)).isApprovedForAll(
-            owner,
-            operator
-        );
+        bool isApproved = ERC721Facet(address(harness)).isApprovedForAll(owner, operator);
         assertTrue(isApproved);
     }
 
@@ -200,11 +185,7 @@ contract ERC721FacetTest is Test {
         assertEq(harness.ownerOf(tokenId), charlie);
     }
 
-    function test_transferFromFuzz(
-        address from,
-        address to,
-        uint256 tokenId
-    ) public {
+    function test_transferFromFuzz(address from, address to, uint256 tokenId) public {
         vm.assume(from != address(0));
         vm.assume(to != address(0));
         vm.assume(tokenId < type(uint256).max);
@@ -220,12 +201,7 @@ contract ERC721FacetTest is Test {
     function test_transferFromRevertWhenTransferFromNonExistentToken() public {
         uint256 tokenId = 999;
 
-        vm.expectRevert(
-            abi.encodeWithSelector(
-                ERC721Facet.ERC721NonexistentToken.selector,
-                tokenId
-            )
-        );
+        vm.expectRevert(abi.encodeWithSelector(ERC721Facet.ERC721NonexistentToken.selector, tokenId));
         harness.transferFrom(alice, bob, tokenId);
     }
 
@@ -255,11 +231,7 @@ contract ERC721FacetTest is Test {
         assertEq(harness.ownerOf(tokenId), charlie);
     }
 
-    function test_safeTransferFromFuzz(
-        address from,
-        address to,
-        uint256 tokenId
-    ) public {
+    function test_safeTransferFromFuzz(address from, address to, uint256 tokenId) public {
         vm.assume(from != address(0));
         vm.assume(to != address(0));
         vm.assume(tokenId < type(uint256).max);
@@ -272,11 +244,7 @@ contract ERC721FacetTest is Test {
         assertEq(harness.ownerOf(tokenId), to);
     }
 
-    function test_safeTransferFromFuzzWithData(
-        address from,
-        address to,
-        uint256 tokenId
-    ) public {
+    function test_safeTransferFromFuzzWithData(address from, address to, uint256 tokenId) public {
         vm.assume(from != address(0));
         vm.assume(to != address(0));
         vm.assume(tokenId < type(uint256).max);

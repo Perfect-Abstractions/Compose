@@ -14,7 +14,7 @@ contract ERC20FacetTest is Test {
 
     string constant TOKEN_NAME = "Test Token";
     string constant TOKEN_SYMBOL = "TEST";
-    uint8 constant TOKEN_DECIMALS = 18; 
+    uint8 constant TOKEN_DECIMALS = 18;
     uint256 constant INITIAL_SUPPLY = 1000000e18;
 
     event Transfer(address indexed _from, address indexed _to, uint256 _value);
