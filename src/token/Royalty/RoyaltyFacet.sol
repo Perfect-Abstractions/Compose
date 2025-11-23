@@ -7,33 +7,12 @@ pragma solidity >=0.8.30;
 ///      Supports both default and per-token royalty configurations using diamond storage.
 ///      This is an implementation of the ERC-2981 NFT Royalty Standard.
 contract RoyaltyFacet {
-    /// @notice Thrown when default royalty fee exceeds 100% (10000 basis points).
-    /// @param _numerator The fee numerator that exceeds the denominator.
-    /// @param _denominator The fee denominator (10000 basis points).
-    error ERC2981InvalidDefaultRoyalty(uint256 _numerator, uint256 _denominator);
-
-    /// @notice Thrown when default royalty receiver is the zero address.
-    /// @param _receiver The invalid receiver address.
-    error ERC2981InvalidDefaultRoyaltyReceiver(address _receiver);
-
-    /// @notice Thrown when token-specific royalty fee exceeds 100% (10000 basis points).
-    /// @param _tokenId The token ID with invalid royalty configuration.
-    /// @param _numerator The fee numerator that exceeds the denominator.
-    /// @param _denominator The fee denominator (10000 basis points).
-    error ERC2981InvalidTokenRoyalty(uint256 _tokenId, uint256 _numerator, uint256 _denominator);
-
-    /// @notice Thrown when token-specific royalty receiver is the zero address.
-    /// @param _tokenId The token ID with invalid royalty configuration.
-    /// @param _receiver The invalid receiver address.
-    error ERC2981InvalidTokenRoyaltyReceiver(uint256 _tokenId, address _receiver);
-
+    /// @notice Storage slot identifier for royalty storage.
     bytes32 constant STORAGE_POSITION = keccak256("compose.erc2981");
 
     /// @dev The denominator with which to interpret royalty fees as a percentage of sale price.
     ///      Expressed in basis points where 10000 = 100%. This value aligns with the ERC-2981
-    ///      specification and marketplace expectations. Implemented as a constant for gas efficiency
-    ///      rather than the virtual function pattern, as Compose does not support inheritance-based
-    ///      customization. To modify this value, deploy a custom facet implementation.
+    ///      specification and marketplace expectations. 
     uint96 constant FEE_DENOMINATOR = 10000;
 
     /// @notice Structure containing royalty information.
