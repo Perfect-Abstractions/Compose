@@ -275,6 +275,33 @@ contract LibOwnerTwoStepsTest is Test {
         harness.transferOwnership(ALICE);
     }
 
+    function test_RenounceOwnership_DirectCall_SetsOwnerToZero() public {
+        vm.prank(INITIAL_OWNER);
+        harness.renounceOwnership();
+
+        assertEq(harness.owner(), ZERO_ADDRESS);
+        assertEq(harness.pendingOwner(), ZERO_ADDRESS);
+    }
+
+    function test_RenounceOwnership_DirectCall_EmitsEvent() public {
+        vm.expectEmit(true, true, false, true);
+        emit OwnershipTransferred(INITIAL_OWNER, ZERO_ADDRESS);
+
+        vm.prank(INITIAL_OWNER);
+        harness.renounceOwnership();
+    }
+
+    function test_RequireOwner_SucceedsForOwner() public {
+        vm.prank(INITIAL_OWNER);
+        harness.requireOwner();
+    }
+
+    function test_RevertWhen_RequireOwner_CalledByNonOwner() public {
+        vm.expectRevert(LibOwnerTwoSteps.OwnerUnauthorizedAccount.selector);
+        vm.prank(ALICE);
+        harness.requireOwner();
+    }
+
     // ============================================
     // Sequential Transfer Tests
     // ============================================

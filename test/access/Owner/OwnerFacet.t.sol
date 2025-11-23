@@ -132,6 +132,31 @@ contract OwnerFacetTest is Test {
     }
 
     // ============================================
+    // Renounce Ownership Direct Call Tests
+    // ============================================
+
+    function test_RenounceOwnership_DirectCall_SetsOwnerToZero() public {
+        vm.prank(INITIAL_OWNER);
+        ownerFacet.renounceOwnership();
+
+        assertEq(ownerFacet.owner(), ZERO_ADDRESS);
+    }
+
+    function test_RenounceOwnership_DirectCall_EmitsEvent() public {
+        vm.expectEmit(true, true, false, true);
+        emit OwnershipTransferred(INITIAL_OWNER, ZERO_ADDRESS);
+
+        vm.prank(INITIAL_OWNER);
+        ownerFacet.renounceOwnership();
+    }
+
+    function test_RevertWhen_RenounceOwnership_CalledByNonOwner() public {
+        vm.expectRevert(OwnerFacet.OwnerUnauthorizedAccount.selector);
+        vm.prank(ALICE);
+        ownerFacet.renounceOwnership();
+    }
+
+    // ============================================
     // Edge Cases
     // ============================================
 
