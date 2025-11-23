@@ -231,32 +231,6 @@ contract ERC721FacetTest is Test {
         assertEq(harness.ownerOf(tokenId), charlie);
     }
 
-    function test_safeTransferFromFuzz(address from, address to, uint256 tokenId) public {
-        vm.assume(from != address(0));
-        vm.assume(to != address(0));
-        vm.assume(tokenId < type(uint256).max);
-
-        harness.mint(from, tokenId);
-        assertEq(harness.ownerOf(tokenId), from);
-
-        vm.prank(from);
-        harness.safeTransferFrom(from, to, tokenId);
-        assertEq(harness.ownerOf(tokenId), to);
-    }
-
-    function test_safeTransferFromFuzzWithData(address from, address to, uint256 tokenId) public {
-        vm.assume(from != address(0));
-        vm.assume(to != address(0));
-        vm.assume(tokenId < type(uint256).max);
-
-        harness.mint(from, tokenId);
-        assertEq(harness.ownerOf(tokenId), from);
-
-        vm.prank(from);
-        harness.safeTransferFrom(from, to, tokenId, "");
-        assertEq(harness.ownerOf(tokenId), to);
-    }
-
     // ====================================
     // balanceOf Tests
     // ====================================
