@@ -12,7 +12,7 @@ contract RoyaltyFacet {
 
     /// @dev The denominator with which to interpret royalty fees as a percentage of sale price.
     ///      Expressed in basis points where 10000 = 100%. This value aligns with the ERC-2981
-    ///      specification and marketplace expectations. 
+    ///      specification and marketplace expectations.
     uint96 constant FEE_DENOMINATOR = 10000;
 
     /// @notice Structure containing royalty information.
