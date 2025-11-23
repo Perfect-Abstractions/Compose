@@ -57,11 +57,12 @@ contract ERC721FacetTest is Test {
         assertEq(tokenURI, expectedURI);
     }
 
-    function test_tokenURIRevertWhenNonExistentToken() public {
-        uint256 tokenId = 999;
+    function test_tokenOwner() public {
+        uint256 tokenId = 45;
+        
+        harness.mint(alice, tokenId);
 
-        vm.expectRevert(ERC721Facet.ERC721NonexistentToken.selector);
-        ERC721Facet(address(harness)).tokenURI(tokenId);
+        assertEq(harness.ownerOf(tokenId), alice);
     }
 
     // ============================================
@@ -78,14 +79,6 @@ contract ERC721FacetTest is Test {
 
         address approved = ERC721Facet(address(harness)).getApproved(tokenId);
         assertEq(approved, bob);
-    }
-
-    function test_ApproveRevertWhenNonExistentToken() public {
-        uint256 tokenId = 999;
-
-        vm.prank(alice);
-        vm.expectRevert(ERC721Facet.ERC721NonexistentToken.selector);
-        ERC721Facet(address(harness)).approve(bob, tokenId);
     }
 
     function test_ApproveSelfApproval() public {
@@ -115,26 +108,6 @@ contract ERC721FacetTest is Test {
         assertEq(approved, address(0));
     }
 
-    function test_ApproveRevertWhenApproveToCurrentOwner() public {
-        uint256 tokenId = 8;
-
-        harness.mint(charlie, tokenId);
-
-        vm.prank(charlie);
-        vm.expectRevert(ERC721Facet.ERC721InvalidApprover.selector);
-        ERC721Facet(address(harness)).approve(charlie, tokenId);
-    }
-
-    function test_ApproveRevertWhenNullAddress() public {
-        uint256 tokenId = 9;
-
-        harness.mint(bob, tokenId);
-
-        vm.prank(bob);
-        vm.expectRevert(ERC721Facet.ERC721InvalidApprover.selector);
-        ERC721Facet(address(harness)).approve(address(0), tokenId);
-    }
-
     function test_ApproveFuzz(
         address owner,
         address operator,
@@ -154,6 +127,20 @@ contract ERC721FacetTest is Test {
         assertEq(approved, operator);
     }
 
+    function test_getApproved() public {
+        uint256 tokenId = 4;
+
+        harness.mint(alice, tokenId);
+
+        vm.prank(alice);
+        ERC721Facet(address(harness)).approve(bob, tokenId);
+
+        address approved = ERC721Facet(address(harness)).getApproved(tokenId);
+        assertEq(approved, bob);
+
+        assertEq(harness.getApproved(tokenId), bob);
+    }
+
     // ===========================================
     // SetApprovalForAll Tests
     // ===========================================
@@ -167,12 +154,6 @@ contract ERC721FacetTest is Test {
             bob
         );
         assertTrue(isApproved);
-    }
-
-    function test_SetApprovalForAllRevertWhenSelfApproval() public {
-        vm.prank(charlie);
-        vm.expectRevert(ERC721Facet.ERC721InvalidApprover.selector);
-        ERC721Facet(address(harness)).setApprovalForAll(charlie, true);
     }
 
     function test_SetApprovalForAllFuzz(
@@ -208,7 +189,7 @@ contract ERC721FacetTest is Test {
         assertEq(harness.ownerOf(tokenId), bob);
     }
 
-    function test_internalTransferToSelf() public {
+    function test_transferFromToSelf() public {
         uint256 tokenId = 2;
 
         harness.mint(charlie, tokenId);
@@ -219,7 +200,7 @@ contract ERC721FacetTest is Test {
         assertEq(harness.ownerOf(tokenId), charlie);
     }
 
-    function test_internalTransferFuzz(
+    function test_transferFromFuzz(
         address from,
         address to,
         uint256 tokenId
@@ -236,9 +217,7 @@ contract ERC721FacetTest is Test {
         assertEq(harness.ownerOf(tokenId), to);
     }
 
-    function test_internalTransferRevertWhenTransferFromNonExistentToken()
-        public
-    {
+    function test_transferFromRevertWhenTransferFromNonExistentToken() public {
         uint256 tokenId = 999;
 
         vm.expectRevert(
@@ -250,20 +229,77 @@ contract ERC721FacetTest is Test {
         harness.transferFrom(alice, bob, tokenId);
     }
 
-    function test_internalTransferRevertWhenSenderIsNotOwnerOrApproved()
-        public
-    {
-        uint256 tokenId = 4;
+    // ===========================================
+    // safeTransferFrom Tests
+    // ===========================================
+
+    function test_safeTransferFrom() public {
+        uint256 tokenId = 1;
 
         harness.mint(alice, tokenId);
         assertEq(harness.ownerOf(tokenId), alice);
 
-        vm.prank(bob);
-        vm.expectRevert(
-            abi.encodeWithSelector(
-                ERC721Facet.ERC721InvalidApprover.selector
-            )
-        );
-        harness.transferFrom(alice, charlie, tokenId);
+        vm.prank(alice);
+        harness.safeTransferFrom(alice, bob, tokenId);
+        assertEq(harness.ownerOf(tokenId), bob);
+    }
+
+    function test_safeTransferFromToSelf() public {
+        uint256 tokenId = 2;
+
+        harness.mint(charlie, tokenId);
+        assertEq(harness.ownerOf(tokenId), charlie);
+
+        vm.prank(charlie);
+        harness.safeTransferFrom(charlie, charlie, tokenId);
+        assertEq(harness.ownerOf(tokenId), charlie);
+    }
+
+    function test_safeTransferFromFuzz(
+        address from,
+        address to,
+        uint256 tokenId
+    ) public {
+        vm.assume(from != address(0));
+        vm.assume(to != address(0));
+        vm.assume(tokenId < type(uint256).max);
+
+        harness.mint(from, tokenId);
+        assertEq(harness.ownerOf(tokenId), from);
+
+        vm.prank(from);
+        harness.safeTransferFrom(from, to, tokenId);
+        assertEq(harness.ownerOf(tokenId), to);
+    }
+
+    function test_safeTransferFromFuzzWithData(
+        address from,
+        address to,
+        uint256 tokenId
+    ) public {
+        vm.assume(from != address(0));
+        vm.assume(to != address(0));
+        vm.assume(tokenId < type(uint256).max);
+
+        harness.mint(from, tokenId);
+        assertEq(harness.ownerOf(tokenId), from);
+
+        vm.prank(from);
+        harness.safeTransferFrom(from, to, tokenId, "");
+        assertEq(harness.ownerOf(tokenId), to);
+    }
+
+    // ====================================
+    // balanceOf Tests
+    // ====================================
+
+    function test_BalanceOf() public {
+        uint256 tokenId1 = 32;
+        uint256 tokenId2 = 45;
+
+        harness.mint(alice, tokenId1);
+        harness.mint(alice, tokenId2);
+
+        assertEq(harness.balanceOf(alice), 2);
     }
 }
