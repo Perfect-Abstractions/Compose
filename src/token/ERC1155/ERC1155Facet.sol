@@ -127,10 +127,10 @@ contract ERC1155Facet {
      * @custom:storage-location erc8042:compose.erc1155
      */
     struct ERC1155Storage {
-        string uri;
-        string baseURI;
         mapping(uint256 id => mapping(address account => uint256 balance)) balanceOf;
         mapping(address account => mapping(address operator => bool)) isApprovedForAll;
+        string uri;
+        string baseURI;        
         mapping(uint256 tokenId => string) tokenURIs;
     }
 
