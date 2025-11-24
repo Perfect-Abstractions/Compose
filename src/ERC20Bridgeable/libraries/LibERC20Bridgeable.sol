@@ -25,7 +25,7 @@ library LibERC20Bridgeable {
     /// @param _role The role that the account does not have.
     /// @param _account The account that does not have the role.
     error AccessControlUnauthorizedAccount(address _account, bytes32 _role);
-    
+
     error ERC20InsufficientBalance(address _from, uint256 _accountBalance, uint256 _value);
 
     /// @notice Emitted when tokens are minted via a cross-chain bridge.
@@ -59,18 +59,15 @@ library LibERC20Bridgeable {
      * @custom:storage-location erc8042:compose.erc20
      */
     struct ERC20Storage {
-        string name;
-        string symbol;
-        uint8 decimals;
-        uint256 totalSupply;
         mapping(address owner => uint256 balance) balanceOf;
+        uint256 totalSupply;
     }
-
     /**
      * @notice Returns the ERC20 storage struct from the predefined diamond storage slot.
      * @dev Uses inline assembly to set the storage slot reference.
      * @return s The ERC20 storage struct reference.
      */
+
     function getERC20Storage() internal pure returns (ERC20Storage storage s) {
         bytes32 position = ERC20_STORAGE_POSITION;
         assembly {
@@ -97,9 +94,6 @@ library LibERC20Bridgeable {
             s.slot := position
         }
     }
-    /// @notice role identifier for trusted bridge actors
-
-    bytes32 internal constant TRUSTED_BRIDGE_ROLE = keccak256("trusted-bridge");
 
     /// @notice Cross-chain mint — callable only by an address having the `trusted-bridge` role.
     /// @param _account The account to mint tokens to.
@@ -110,9 +104,9 @@ library LibERC20Bridgeable {
         AccessControlStorage storage acs = getAccessControlStorage();
 
         // authorize: caller must have the trusted-bridge role
-        if (!acs.hasRole[msg.sender][TRUSTED_BRIDGE_ROLE]) {
-    revert AccessControlUnauthorizedAccount(msg.sender, TRUSTED_BRIDGE_ROLE);
-}
+        if (!acs.hasRole[msg.sender]["trusted-bridge"]) {
+            revert AccessControlUnauthorizedAccount(msg.sender, "trusted-bridge");
+        }
 
         if (_account == address(0)) {
             revert ERC20InvalidReciever(address(0));
@@ -136,9 +130,9 @@ library LibERC20Bridgeable {
         AccessControlStorage storage acs = getAccessControlStorage();
 
         // authorize: caller must have the trusted-bridge role
-        if (!acs.hasRole[msg.sender][TRUSTED_BRIDGE_ROLE]) {
-    revert AccessControlUnauthorizedAccount(msg.sender, TRUSTED_BRIDGE_ROLE);
-}
+        if (!acs.hasRole[msg.sender]["trusted-bridge"]) {
+            revert AccessControlUnauthorizedAccount(msg.sender, "trusted-bridge");
+        }
 
         if (_from == address(0)) {
             revert ERC20InvalidReciever(address(0));
@@ -168,7 +162,7 @@ library LibERC20Bridgeable {
             revert ERC20InvalidBridgeAccount(address(0));
         }
 
-        if (!acs.hasRole[_caller][TRUSTED_BRIDGE_ROLE]) {
+        if (!acs.hasRole[_caller]["trusted-bridge"]) {
             revert ERC20InvalidBridgeAccount(_caller);
         }
     }
