@@ -268,8 +268,10 @@ const config = {
       "posthog-docusaurus",
       {
         apiKey: process.env.POSTHOG_API_KEY,
-        appUrl: process.env.POSTHOG_APP_URL || 'https://us.i.posthog.com',
+        appUrl: 'https://compose.diamonds/54Q17895d65',
+        uiHost: 'https://us.posthog.com',
         enableInDevelopment: false, 
+        capturePageLeave: true,
       },
     ]
   ],
