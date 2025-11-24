@@ -212,12 +212,6 @@ const config = {
                 label: 'Installation',
                 to: '/docs/getting-started/installation',
               },
-              /*
-              {
-                label: 'Quick Start',
-                to: '/docs/getting-started/quick-start',
-              },
-              */
             ],
           },
           {
@@ -269,6 +263,16 @@ const config = {
         },
       }),
     }),
+  plugins: [
+    [
+      "posthog-docusaurus",
+      {
+        apiKey: process.env.POSTHOG_API_KEY,
+        appUrl: process.env.POSTHOG_APP_URL || 'https://us.i.posthog.com',
+        enableInDevelopment: false, 
+      },
+    ]
+  ],
 };
 
 export default config;

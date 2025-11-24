@@ -1,5 +1,5 @@
 # Compose 
-![Coverage](https://img.shields.io/badge/coverage-63%25-yellow) [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](https://opensource.org/licenses/MIT) [![Discord](https://img.shields.io/badge/Discord-Join%20Chat-blue.svg)](https://discord.gg/DCBD2UKbxc)
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](https://opensource.org/licenses/MIT) [![Discord](https://img.shields.io/badge/Discord-Join%20Chat-blue.svg)](https://discord.gg/DCBD2UKbxc)
 
 > **⚠️ Early Stage**: Compose is currently in development and only available to contributors. It is **NOT production ready**.
 

@@ -39,4 +39,5 @@ jobs:
           ALGOLIA_APP_ID: ${{ secrets.ALGOLIA_APP_ID || 'dummy' }}
           ALGOLIA_API_KEY: ${{ secrets.ALGOLIA_API_KEY || 'dummy' }}
           ALGOLIA_INDEX_NAME: ${{ secrets.ALGOLIA_INDEX_NAME || 'compose' }}
+          POSTHOG_API_KEY: ${{ secrets.POSTHOG_API_KEY || 'dummy' }}
 
