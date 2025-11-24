@@ -5,7 +5,12 @@ src = "src"
 out = "out"
 libs = ["lib"]
 optimizer_runs = 20_000
-
+remappings = [
+    "@compose/=src/",
+    "@compose-script/=script/",
+    "@compose-test/=test/",
+    "@compose-benchmark/=test/benchmark/",
+]
 
 [profile.ci]
 src = "src"
