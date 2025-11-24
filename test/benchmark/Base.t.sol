@@ -4,15 +4,14 @@ pragma solidity >=0.8.30;
 import {Utils} from "./Utils.sol";
 
 import {MinimalDiamond} from "./MinimalDiamond.sol";
-import {LibDiamond} from "../../src/diamond/LibDiamond.sol";
-import {DiamondLoupeFacet} from "../../src/diamond/DiamondLoupeFacet.sol";
+import {Diamond} from "@compose/Diamond.sol";
+import {DiamondLoupeFacet} from "@compose/diamond/DiamondLoupeFacet.sol";
 
 abstract contract BaseBenchmark is Utils {
     MinimalDiamond internal diamond;
     address internal loupe;
 
     function setUp() public {
-        diamond = new MinimalDiamond();
         loupe = _deployLoupe();
 
         // Initialize minimal diamond with DiamondLoupeFacet address and selectors.
@@ -22,15 +21,13 @@ abstract contract BaseBenchmark is Utils {
         loupeSelectors[2] = SELECTOR_FACET_ADDRESSES;
         loupeSelectors[3] = SELECTOR_FACET_ADDRESS;
 
-        LibDiamond.FacetCut[] memory dc = new LibDiamond.FacetCut[](1);
+        Diamond.FacetCut[] memory dc = new Diamond.FacetCut[](1);
 
-        dc[0] = LibDiamond.FacetCut({
-            facetAddress: loupe, action: LibDiamond.FacetCutAction.Add, functionSelectors: loupeSelectors
+        dc[0] = Diamond.FacetCut({
+            facetAddress: loupe, action: Diamond.FacetCutAction.Add, functionSelectors: loupeSelectors
         });
 
-        MinimalDiamond.DiamondArgs memory args = MinimalDiamond.DiamondArgs({init: address(0), initCalldata: ""});
-
-        diamond.initialize(dc, args);
+        diamond = new MinimalDiamond(dc, address(0), "");
 
         // Initiatlise complex storage for minimal diamond
         _buildDiamond(address(diamond), NUM_FACETS, SELECTORS_PER_FACET);
