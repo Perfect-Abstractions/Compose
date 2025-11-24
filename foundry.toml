@@ -4,7 +4,6 @@
 src = "src"
 out = "out"
 libs = ["lib"]
-optimizer = true
 optimizer_runs = 20_000
 
 
@@ -12,7 +11,6 @@ optimizer_runs = 20_000
 src = "src"
 out = "out"
 libs = ["lib"]
-optimizer = true
 optimizer_runs = 20_000
 # Coverage settings
 fuzz = { runs = 1000 }
