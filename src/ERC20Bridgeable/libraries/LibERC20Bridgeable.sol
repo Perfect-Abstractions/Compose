@@ -21,9 +21,11 @@ library LibERC20Bridgeable {
     /// @param _caller is the invalid address.
     error ERC20InvalidCallerAddress(address _caller);
 
-    /// @notice Unauthorized sender error from AccessControl.
-    error AccessControlUnauthorized(address _sender, address _account);
-
+    /// @notice Thrown when the account does not have a specific role.
+    /// @param _role The role that the account does not have.
+    /// @param _account The account that does not have the role.
+    error AccessControlUnauthorizedAccount(address _account, bytes32 _role);
+    
     error ERC20InsufficientBalance(address _from, uint256 _accountBalance, uint256 _value);
 
     /// @notice Emitted when tokens are minted via a cross-chain bridge.
@@ -109,8 +111,8 @@ library LibERC20Bridgeable {
 
         // authorize: caller must have the trusted-bridge role
         if (!acs.hasRole[msg.sender][TRUSTED_BRIDGE_ROLE]) {
-            revert AccessControlUnauthorized(msg.sender, _account);
-        }
+    revert AccessControlUnauthorizedAccount(msg.sender, TRUSTED_BRIDGE_ROLE);
+}
 
         if (_account == address(0)) {
             revert ERC20InvalidReciever(address(0));
@@ -135,8 +137,8 @@ library LibERC20Bridgeable {
 
         // authorize: caller must have the trusted-bridge role
         if (!acs.hasRole[msg.sender][TRUSTED_BRIDGE_ROLE]) {
-            revert AccessControlUnauthorized(msg.sender, _from);
-        }
+    revert AccessControlUnauthorizedAccount(msg.sender, TRUSTED_BRIDGE_ROLE);
+}
 
         if (_from == address(0)) {
             revert ERC20InvalidReciever(address(0));
