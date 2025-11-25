@@ -362,9 +362,7 @@ contract LibDiamondHarnessTest is Test {
         });
 
         _cut[2] = LibDiamond.FacetCut({
-            facetAddress: ADDRESS_ZERO,
-            action: LibDiamond.FacetCutAction.Remove,
-            functionSelectors: _functionSelectors
+            facetAddress: ADDRESS_ZERO, action: LibDiamond.FacetCutAction.Remove, functionSelectors: _functionSelectors
         });
 
         address _init = ADDRESS_ZERO;
