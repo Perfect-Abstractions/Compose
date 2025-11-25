@@ -333,7 +333,9 @@ abstract contract Diamond {
     /// @return facet_ The implementation address for the current function call
     function facet() internal view virtual returns (address facet_) {
         facet_ = getDiamondStorage().facetAndPosition[msg.sig].facet;
-        if (facet_ == address(0)) revert FunctionDoesNotExist(msg.sig);
+        if (facet_ == address(0)) {
+            revert FunctionDoesNotExist(msg.sig);
+        }
     }
 
     /// @notice Internal function to perform a delegatecall to an implementation
