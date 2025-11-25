@@ -7,6 +7,24 @@ pragma solidity >=0.8.30;
 ///      This library is intended to be used by custom facets to integrate with ERC-6909 functionality.
 /// @dev Adapted from: https://github.com/transmissions11/solmate/blob/main/src/tokens/ERC6909.sol
 library LibERC6909 {
+    /// @notice Thrown when the sender has insufficient balance.
+    error ERC6909InsufficientBalance(address _sender, uint256 _balance, uint256 _needed, uint256 _id);
+
+    /// @notice Thrown when the spender has insufficient allowance.
+    error ERC6909InsufficientAllowance(address _spender, uint256 _allowance, uint256 _needed, uint256 _id);
+
+    /// @notice Thrown when the approver address is invalid.
+    error ERC6909InvalidApprover(address _approver);
+
+    /// @notice Thrown when the receiver address is invalid.
+    error ERC6909InvalidReceiver(address _receiver);
+
+    /// @notice Thrown when the sender address is invalid.
+    error ERC6909InvalidSender(address _sender);
+
+    /// @notice Thrown when the spender address is invalid.
+    error ERC6909InvalidSpender(address _spender);
+
     /// @notice Emitted when a transfer occurs.
     event Transfer(
         address _caller, address indexed _sender, address indexed _receiver, uint256 indexed _id, uint256 _amount
@@ -43,6 +61,10 @@ library LibERC6909 {
     /// @param _id The id of the token.
     /// @param _amount The amount of the token.
     function mint(address _to, uint256 _id, uint256 _amount) internal {
+        if (_to == address(0)) {
+            revert ERC6909InvalidReceiver(address(0));
+        }
+
         ERC6909Storage storage s = getStorage();
 
         s.balanceOf[_to][_id] += _amount;
@@ -55,9 +77,20 @@ library LibERC6909 {
     /// @param _id The id of the token.
     /// @param _amount The amount of the token.
     function burn(address _from, uint256 _id, uint256 _amount) internal {
+        if (_from == address(0)) {
+            revert ERC6909InvalidSender(address(0));
+        }
+
         ERC6909Storage storage s = getStorage();
 
-        s.balanceOf[_from][_id] -= _amount;
+        uint256 fromBalance = s.balanceOf[_from][_id];
+        if (fromBalance < _amount) {
+            revert ERC6909InsufficientBalance(_from, fromBalance, _amount, _id);
+        }
+
+        unchecked {
+            s.balanceOf[_from][_id] = fromBalance - _amount;
+        }
 
         emit Transfer(msg.sender, _from, address(0), _id, _amount);
     }
@@ -74,13 +107,33 @@ library LibERC6909 {
         ERC6909Storage storage s = getStorage();
 
         if (_by != _from && !s.isOperator[_from][_by]) {
-            uint256 allowed = s.allowance[_from][_by][_id];
-            if (allowed != type(uint256).max) {
-                s.allowance[_from][_by][_id] = allowed - _amount;
+            uint256 currentAllowance = s.allowance[_from][_by][_id];
+            if (currentAllowance < type(uint256).max) {
+                if (currentAllowance < _amount) {
+                    revert ERC6909InsufficientAllowance(_by, currentAllowance, _amount, _id);
+                }
+                unchecked {
+                    s.allowance[_from][_by][_id] = currentAllowance - _amount;
+                }
             }
         }
 
-        s.balanceOf[_from][_id] -= _amount;
+        if (_from == address(0)) {
+            revert ERC6909InvalidSender(address(0));
+        }
+
+        if (_to == address(0)) {
+            revert ERC6909InvalidReceiver(address(0));
+        }
+
+        uint256 fromBalance = s.balanceOf[_from][_id];
+        if (fromBalance < _amount) {
+            revert ERC6909InsufficientBalance(_from, fromBalance, _amount, _id);
+        }
+        unchecked {
+            s.balanceOf[_from][_id] = fromBalance - _amount;
+        }
+
         s.balanceOf[_to][_id] += _amount;
 
         emit Transfer(_by, _from, _to, _id, _amount);
@@ -92,6 +145,13 @@ library LibERC6909 {
     /// @param _id The id of the token.
     /// @param _amount The amount of the token.
     function approve(address _owner, address _spender, uint256 _id, uint256 _amount) internal {
+        if (_owner == address(0)) {
+            revert ERC6909InvalidApprover(address(0));
+        }
+        if (_spender == address(0)) {
+            revert ERC6909InvalidSpender(address(0));
+        }
+
         ERC6909Storage storage s = getStorage();
 
         s.allowance[_owner][_spender][_id] = _amount;
@@ -104,6 +164,13 @@ library LibERC6909 {
     /// @param _spender The address of the spender.
     /// @param _approved The approval status.
     function setOperator(address _owner, address _spender, bool _approved) internal {
+        if (_owner == address(0)) {
+            revert ERC6909InvalidApprover(address(0));
+        }
+        if (_spender == address(0)) {
+            revert ERC6909InvalidSpender(address(0));
+        }
+
         ERC6909Storage storage s = getStorage();
 
         s.isOperator[_owner][_spender] = _approved;
