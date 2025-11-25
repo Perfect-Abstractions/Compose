@@ -245,7 +245,9 @@ contract LibAccessControlTemporalTest is Test {
     // Fuzz Tests
     // ============================================
 
-    function testFuzz_GrantRoleWithExpiry_AlwaysSetsExpiry(address account, bytes32 role, uint256 expiryOffset) public {
+    function testFuzz_GrantRoleWithExpiry_AlwaysSetsExpiry(address account, bytes32 role, uint256 expiryOffset)
+        public
+    {
         vm.assume(account != address(0));
         vm.assume(expiryOffset > 0); // Must be in the future
         vm.assume(expiryOffset <= 365 days); // Reasonable expiry window

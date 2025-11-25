@@ -360,7 +360,9 @@ contract ERC721EnumerableFacetTest is Test {
         uint256 tokenId = 1;
         harness.mint(alice, tokenId);
 
-        vm.expectRevert(abi.encodeWithSelector(ERC721EnumerableFacet.ERC721IncorrectOwner.selector, bob, tokenId, alice));
+        vm.expectRevert(
+            abi.encodeWithSelector(ERC721EnumerableFacet.ERC721IncorrectOwner.selector, bob, tokenId, alice)
+        );
         vm.prank(alice);
         harness.transferFrom(bob, charlie, tokenId);
     }
