@@ -86,7 +86,7 @@ abstract contract Diamond {
         }
     }
 
-    /// @notice Returns the initializable storage.
+    /// @notice Checks if the contract is not in the process of being initialized.
     /// @param _s The initializable storage.
     /// @return isTopLevelCall_ True if the contract is not in the process of being initialized.
     function beforeInitializer(InitializableStorage storage _s) internal virtual returns (bool isTopLevelCall_) {
