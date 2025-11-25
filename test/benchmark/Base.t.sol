@@ -1,17 +1,17 @@
 // SPDX-License-Identifier: MIT
 pragma solidity >=0.8.30;
 
-import {Utils} from "./Utils.sol";
+import {Utils} from "@compose-benchmark/Utils.sol";
 
-import {MinimalDiamond} from "./MinimalDiamond.sol";
+import {MinimalDiamond} from "@compose-benchmark/MinimalDiamond.sol";
 import {Diamond} from "@compose/Diamond.sol";
-import {DiamondLoupeFacet} from "@compose/diamond/DiamondLoupeFacet.sol";
 
 abstract contract BaseBenchmark is Utils {
     MinimalDiamond internal diamond;
     address internal loupe;
 
     function setUp() public {
+        diamond = new MinimalDiamond();
         loupe = _deployLoupe();
 
         // Initialize minimal diamond with DiamondLoupeFacet address and selectors.
@@ -27,7 +27,7 @@ abstract contract BaseBenchmark is Utils {
             facetAddress: loupe, action: Diamond.FacetCutAction.Add, functionSelectors: loupeSelectors
         });
 
-        diamond = new MinimalDiamond(dc, address(0), "");
+        diamond.initialize(dc, address(0), "");
 
         // Initiatlise complex storage for minimal diamond
         _buildDiamond(address(diamond), NUM_FACETS, SELECTORS_PER_FACET);
