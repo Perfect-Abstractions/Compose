@@ -3,8 +3,22 @@ pragma solidity >=0.8.30;
 
 /// @title ERC-6909 Minimal Multi-Token Interface
 /// @notice A complete, dependency-free ERC-6909 implementation using the diamond storage pattern.
-/// @dev Adapted from: https://github.com/transmissions11/solmate/blob/main/src/tokens/ERC6909.sol
 contract ERC6909Facet {
+    /// @notice Thrown when the sender has insufficient balance.
+    error ERC6909InsufficientBalance(address _sender, uint256 _balance, uint256 _needed, uint256 _id);
+
+    /// @notice Thrown when the spender has insufficient allowance.
+    error ERC6909InsufficientAllowance(address _spender, uint256 _allowance, uint256 _needed, uint256 _id);
+
+    /// @notice Thrown when the receiver address is invalid.
+    error ERC6909InvalidReceiver(address _receiver);
+
+    /// @notice Thrown when the sender address is invalid.
+    error ERC6909InvalidSender(address _sender);
+
+    /// @notice Thrown when the spender address is invalid.
+    error ERC6909InvalidSpender(address _spender);
+
     /// @notice Emitted when a transfer occurs.
     event Transfer(
         address _caller, address indexed _sender, address indexed _receiver, uint256 indexed _id, uint256 _amount
@@ -67,9 +81,22 @@ contract ERC6909Facet {
     /// @param _amount The amount of the token.
     /// @return Whether the transfer succeeded.
     function transfer(address _receiver, uint256 _id, uint256 _amount) external returns (bool) {
+        if (_receiver == address(0)) {
+            revert ERC6909InvalidReceiver(address(0));
+        }
+
         ERC6909Storage storage s = getStorage();
 
-        s.balanceOf[msg.sender][_id] -= _amount;
+        uint256 fromBalance = s.balanceOf[msg.sender][_id];
+
+        if (fromBalance < _amount) {
+            revert ERC6909InsufficientBalance(msg.sender, fromBalance, _amount, _id);
+        }
+
+        unchecked {
+            s.balanceOf[msg.sender][_id] = fromBalance - _amount;
+        }
+
         s.balanceOf[_receiver][_id] += _amount;
 
         emit Transfer(msg.sender, msg.sender, _receiver, _id, _amount);
@@ -86,13 +113,33 @@ contract ERC6909Facet {
     function transferFrom(address _sender, address _receiver, uint256 _id, uint256 _amount) external returns (bool) {
         ERC6909Storage storage s = getStorage();
         if (msg.sender != _sender && !s.isOperator[_sender][msg.sender]) {
-            uint256 allowed = s.allowance[_sender][msg.sender][_id];
-            if (allowed != type(uint256).max) {
-                s.allowance[_sender][msg.sender][_id] = allowed - _amount;
+            uint256 currentAllowance = s.allowance[_sender][msg.sender][_id];
+            if (currentAllowance < type(uint256).max) {
+                if (currentAllowance < _amount) {
+                    revert ERC6909InsufficientAllowance(msg.sender, currentAllowance, _amount, _id);
+                }
+                unchecked {
+                    s.allowance[_sender][msg.sender][_id] = currentAllowance - _amount;
+                }
             }
         }
 
-        s.balanceOf[_sender][_id] -= _amount;
+        if (_sender == address(0)) {
+            revert ERC6909InvalidSender(address(0));
+        }
+
+        if (_receiver == address(0)) {
+            revert ERC6909InvalidReceiver(address(0));
+        }
+
+        uint256 fromBalance = s.balanceOf[_sender][_id];
+        if (fromBalance < _amount) {
+            revert ERC6909InsufficientBalance(_sender, fromBalance, _amount, _id);
+        }
+        unchecked {
+            s.balanceOf[_sender][_id] = fromBalance - _amount;
+        }
+
         s.balanceOf[_receiver][_id] += _amount;
 
         emit Transfer(msg.sender, _sender, _receiver, _id, _amount);
@@ -106,6 +153,10 @@ contract ERC6909Facet {
     /// @param _amount The amount of the token.
     /// @return Whether the approval succeeded.
     function approve(address _spender, uint256 _id, uint256 _amount) external returns (bool) {
+        if (_spender == address(0)) {
+            revert ERC6909InvalidSpender(address(0));
+        }
+
         ERC6909Storage storage s = getStorage();
 
         s.allowance[msg.sender][_spender][_id] = _amount;
@@ -120,6 +171,10 @@ contract ERC6909Facet {
     /// @param _approved The approval status.
     /// @return Whether the operator update succeeded.
     function setOperator(address _spender, bool _approved) external returns (bool) {
+        if (_spender == address(0)) {
+            revert ERC6909InvalidSpender(address(0));
+        }
+
         ERC6909Storage storage s = getStorage();
 
         s.isOperator[msg.sender][_spender] = _approved;

@@ -54,6 +54,11 @@ contract ERC6909FacetTest is Test {
     // Approve Tests
     // ============================================
 
+    function test_ShouldRevert_Approve_SpenderIsZero() external {
+        vm.expectRevert(abi.encodeWithSelector(ERC6909Facet.ERC6909InvalidSpender.selector, address(0)));
+        facet.approve(address(0), TOKEN_ID, AMOUNT);
+    }
+
     function test_Approve() external {
         vm.prank(alice);
 
@@ -66,6 +71,8 @@ contract ERC6909FacetTest is Test {
     }
 
     function testFuzz_Approve(address owner, address spender, uint256 id, uint256 amount) external {
+        vm.assume(spender != address(0));
+
         vm.expectEmit();
         emit ERC6909Facet.Approval(owner, spender, id, amount);
 
@@ -78,6 +85,11 @@ contract ERC6909FacetTest is Test {
     // ============================================
     // Set Operator Tests
     // ============================================
+
+    function test_ShouldRevert_SetOperator_SpenderIsZero() external {
+        vm.expectRevert(abi.encodeWithSelector(ERC6909Facet.ERC6909InvalidSpender.selector, address(0)));
+        facet.setOperator(address(0), true);
+    }
 
     function test_SetOperator_IsApproved() external {
         vm.prank(alice);
@@ -104,6 +116,8 @@ contract ERC6909FacetTest is Test {
     }
 
     function testFuzz_SetOperator(address owner, address spender, bool approved) external {
+        vm.assume(spender != address(0));
+
         vm.expectEmit();
         emit ERC6909Facet.OperatorSet(owner, spender, approved);
 
@@ -117,26 +131,42 @@ contract ERC6909FacetTest is Test {
     // Transfer Tests
     // ============================================
 
+    function test_ShouldRevert_Transfer_ReceiverIsZero() external {
+        vm.expectRevert(abi.encodeWithSelector(ERC6909Facet.ERC6909InvalidReceiver.selector, address(0)));
+        facet.transfer(address(0), TOKEN_ID, AMOUNT);
+    }
+
     function test_ShouldRevert_Transfer_InsufficientBalance() external {
-        vm.expectRevert(stdError.arithmeticError);
+        vm.prank(alice);
+        vm.expectRevert(
+            abi.encodeWithSelector(ERC6909Facet.ERC6909InsufficientBalance.selector, alice, 0, AMOUNT, TOKEN_ID)
+        );
         facet.transfer(alice, TOKEN_ID, AMOUNT);
     }
 
+    function test_ShouldRevert_Transfer_ReceiverBalanceOverflows() external {
+        facet.mint(alice, TOKEN_ID, 1);
+        facet.mint(address(this), TOKEN_ID, type(uint256).max);
+        vm.prank(alice);
+        vm.expectRevert(stdError.arithmeticError);
+        facet.transfer(address(this), TOKEN_ID, 1);
+    }
+
     function test_Transfer() external {
-        facet.mint(address(this), TOKEN_ID, AMOUNT);
-
+        facet.mint(alice, TOKEN_ID, AMOUNT);
+        vm.prank(alice);
         vm.expectEmit();
-        emit ERC6909Facet.Transfer(address(this), address(this), alice, TOKEN_ID, AMOUNT);
-
-        bool success = facet.transfer(alice, TOKEN_ID, AMOUNT);
-
+        emit ERC6909Facet.Transfer(alice, alice, address(this), TOKEN_ID, AMOUNT);
+        bool success = facet.transfer(address(this), TOKEN_ID, AMOUNT);
         assertTrue(success);
-        assertEq(facet.balanceOf(address(this), TOKEN_ID), 0);
-        assertEq(facet.balanceOf(alice, TOKEN_ID), AMOUNT);
+        assertEq(facet.balanceOf(alice, TOKEN_ID), 0);
+        assertEq(facet.balanceOf(address(this), TOKEN_ID), AMOUNT);
     }
 
     function testFuzz_Transfer(address caller, address receiver, uint256 id, uint256 amount) external {
         vm.assume(receiver != caller);
+        vm.assume(receiver != address(0));
+        vm.assume(caller != address(0));
 
         facet.mint(caller, id, amount);
 
@@ -152,6 +182,8 @@ contract ERC6909FacetTest is Test {
     }
 
     function testFuzz_Transfer_Self(address caller, uint256 id, uint256 amount) external {
+        vm.assume(caller != address(0));
+
         facet.mint(caller, id, amount);
 
         vm.expectEmit();
@@ -164,24 +196,20 @@ contract ERC6909FacetTest is Test {
         assertEq(facet.balanceOf(caller, id), amount);
     }
 
-    function testFuzz_Transfer_ToZeroAddress(address caller, uint256 id, uint256 amount) external {
+    function testFuzz_ShouldRevert_Transfer_ToZeroAddress(address caller, uint256 id, uint256 amount) external {
         vm.assume(caller != address(0));
 
         facet.mint(caller, id, amount);
 
-        vm.expectEmit();
-        emit ERC6909Facet.Transfer(caller, caller, address(0), id, amount);
-
         vm.prank(caller);
-        bool success = facet.transfer(address(0), id, amount);
-
-        assertTrue(success);
-        assertEq(facet.balanceOf(caller, id), 0);
-        assertEq(facet.balanceOf(address(0), id), amount);
+        vm.expectRevert(abi.encodeWithSelector(ERC6909Facet.ERC6909InvalidReceiver.selector, address(0)));
+        facet.transfer(address(0), id, amount);
     }
 
     function testFuzz_Transfer_ZeroAmount(address caller, address receiver, uint256 id, uint256 balance) external {
         vm.assume(receiver != caller);
+        vm.assume(receiver != address(0));
+        vm.assume(caller != address(0));
 
         balance = bound(balance, 1, type(uint256).max);
 
@@ -209,21 +237,24 @@ contract ERC6909FacetTest is Test {
         uint256 id,
         uint256 amount
     ) external {
-        vm.assume(by != from);
-        vm.assume(from != to);
         vm.assume(amount > 0);
+        vm.assume(from != address(0));
+        vm.assume(to != address(0));
+        vm.assume(by != address(0));
 
         vm.prank(from);
         facet.approve(by, id, type(uint256).max);
 
-        vm.expectRevert(stdError.arithmeticError);
-
         vm.prank(by);
+        vm.expectRevert(abi.encodeWithSelector(ERC6909Facet.ERC6909InsufficientBalance.selector, from, 0, amount, id));
         facet.transferFrom(from, to, id, amount);
     }
 
     function testFuzz_TransferFrom_BySender(address from, address to, uint256 id, uint256 amount) external {
         vm.assume(to != from);
+        vm.assume(from != address(0));
+        vm.assume(to != address(0));
+
         amount = bound(amount, 1, type(uint256).max);
 
         facet.mint(from, id, amount);
@@ -244,6 +275,9 @@ contract ERC6909FacetTest is Test {
     {
         vm.assume(from != by);
         vm.assume(from != to);
+        vm.assume(from != address(0));
+        vm.assume(to != address(0));
+        vm.assume(by != address(0));
 
         facet.mint(from, id, amount);
 
@@ -271,6 +305,9 @@ contract ERC6909FacetTest is Test {
     ) external {
         vm.assume(from != by);
         vm.assume(from != to);
+        vm.assume(from != address(0));
+        vm.assume(to != address(0));
+        vm.assume(by != address(0));
 
         amount = bound(amount, 1, type(uint256).max);
 
@@ -288,7 +325,6 @@ contract ERC6909FacetTest is Test {
         assertTrue(success);
         assertEq(facet.balanceOf(from, id), 0);
         assertEq(facet.balanceOf(to, id), amount);
-
         assertEq(facet.allowance(from, by, id), type(uint256).max);
     }
 
@@ -302,6 +338,9 @@ contract ERC6909FacetTest is Test {
     ) external {
         vm.assume(from != by);
         vm.assume(from != to);
+        vm.assume(from != address(0));
+        vm.assume(to != address(0));
+        vm.assume(by != address(0));
 
         amount = bound(amount, 1, type(uint256).max - 1);
         spend = bound(spend, 1, amount);
@@ -333,6 +372,9 @@ contract ERC6909FacetTest is Test {
     ) external {
         vm.assume(from != by);
         vm.assume(from != to);
+        vm.assume(from != address(0));
+        vm.assume(by != address(0));
+        vm.assume(to != address(0));
 
         amount = bound(amount, 1, type(uint256).max - 1);
         vm.assume(spend > amount);
@@ -342,13 +384,12 @@ contract ERC6909FacetTest is Test {
         vm.prank(from);
         facet.approve(by, id, amount);
 
-        vm.expectRevert(stdError.arithmeticError);
-
         vm.prank(by);
+        vm.expectRevert(
+            abi.encodeWithSelector(ERC6909Facet.ERC6909InsufficientAllowance.selector, by, amount, spend, id)
+        );
         facet.transferFrom(from, to, id, spend);
     }
-
-    // Edge cases
 
     function testFuzz_TransferFrom_SelfTransfer_NonOperator_FiniteAllowance(
         address by,
@@ -358,6 +399,8 @@ contract ERC6909FacetTest is Test {
         uint256 spend
     ) external {
         vm.assume(from != by);
+        vm.assume(from != address(0));
+        vm.assume(by != address(0));
 
         amount = bound(amount, 1, type(uint256).max - 1);
         spend = bound(spend, 1, amount);
@@ -386,6 +429,7 @@ contract ERC6909FacetTest is Test {
     ) external {
         vm.assume(from != address(0));
         vm.assume(from != by);
+        vm.assume(by != address(0));
 
         amount = bound(amount, 1, type(uint256).max);
 
@@ -394,16 +438,9 @@ contract ERC6909FacetTest is Test {
         vm.prank(from);
         facet.approve(by, id, type(uint256).max);
 
-        vm.expectEmit();
-        emit ERC6909Facet.Transfer(by, from, address(0), id, amount);
-
         vm.prank(by);
-        bool success = facet.transferFrom(from, address(0), id, amount);
-
-        assertTrue(success);
-        assertEq(facet.balanceOf(from, id), 0);
-        assertEq(facet.balanceOf(address(0), id), amount);
-        assertEq(facet.allowance(from, by, id), type(uint256).max);
+        vm.expectRevert(abi.encodeWithSelector(ERC6909Facet.ERC6909InvalidReceiver.selector, address(0)));
+        facet.transferFrom(from, address(0), id, amount);
     }
 
     function testFuzz_TransferFrom_ZeroAmount_NonOperator_FiniteAllowance(
@@ -415,6 +452,9 @@ contract ERC6909FacetTest is Test {
     ) external {
         vm.assume(from != by);
         vm.assume(from != to);
+        vm.assume(from != address(0));
+        vm.assume(to != address(0));
+        vm.assume(by != address(0));
 
         allowanceAmount = bound(allowanceAmount, 1, type(uint256).max - 1);
 
