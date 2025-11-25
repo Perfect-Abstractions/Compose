@@ -14,6 +14,8 @@ Among Nick’s duties are defining the overall direction of the project, approvi
 
 Work on this as little or lot as you want to. Work on what you want to work on.
 
+After a period of in-activity a person may be removed as a maintainer. A person may be added back.
+
 # Activities
 
 - Answer people's questions
@@ -39,7 +41,7 @@ A simple, easy question you know the answer to and is a short answer can be answ
 
 ### Compose design questions
 
-It is a good idea to answer people's questions related to the design of Compose by directing them with a quote and/or link to the part of the README or CONTRIBUTING file that answers their question or is related to their question.
+It is a good idea to answer people's questions related to the design of Compose by directing them with a quote and/or link to the part of the [documentation](https://compose.diamonds/docs) that answers their question or is related to their question.
 
 If there is no such documentation to point them to and their question is a sensible question, then fantastic, a gap in the documentation has been found and an issue should be created to address this so this documentation is created.
 

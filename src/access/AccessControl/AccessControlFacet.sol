@@ -79,6 +79,24 @@ contract AccessControlFacet {
         return s.adminRole[_role];
     }
 
+    /// @notice Sets the admin role for a role.
+    /// @param _role The role to set the admin for.
+    /// @param _adminRole The new admin role to set.
+    /// @dev Emits a {RoleAdminChanged} event.
+    /// @custom:error AccessControlUnauthorizedAccount If the caller is not the current admin of the role.
+    function setRoleAdmin(bytes32 _role, bytes32 _adminRole) external {
+        AccessControlStorage storage s = getStorage();
+        bytes32 previousAdminRole = s.adminRole[_role];
+
+        // Check if the caller is the current admin of the role.
+        if (!s.hasRole[msg.sender][previousAdminRole]) {
+            revert AccessControlUnauthorizedAccount(msg.sender, previousAdminRole);
+        }
+
+        s.adminRole[_role] = _adminRole;
+        emit RoleAdminChanged(_role, previousAdminRole, _adminRole);
+    }
+
     /// @notice Grants a role to an account.
     /// @param _role The role to grant.
     /// @param _account The account to grant the role to.
@@ -118,6 +136,56 @@ contract AccessControlFacet {
         if (_hasRole) {
             s.hasRole[_account][_role] = false;
             emit RoleRevoked(_role, _account, msg.sender);
+        }
+    }
+
+    /// @notice Grants a role to multiple accounts in a single transaction.
+    /// @param _role The role to grant.
+    /// @param _accounts The accounts to grant the role to.
+    /// @dev Emits a {RoleGranted} event for each newly granted account.
+    /// @custom:error AccessControlUnauthorizedAccount If the caller is not the admin of the role.
+    function grantRoleBatch(bytes32 _role, address[] calldata _accounts) external {
+        AccessControlStorage storage s = getStorage();
+        bytes32 adminRole = s.adminRole[_role];
+
+        // Check if the caller is the admin of the role.
+        if (!s.hasRole[msg.sender][adminRole]) {
+            revert AccessControlUnauthorizedAccount(msg.sender, adminRole);
+        }
+
+        uint256 length = _accounts.length;
+        for (uint256 i = 0; i < length; i++) {
+            address account = _accounts[i];
+            bool _hasRole = s.hasRole[account][_role];
+            if (!_hasRole) {
+                s.hasRole[account][_role] = true;
+                emit RoleGranted(_role, account, msg.sender);
+            }
+        }
+    }
+
+    /// @notice Revokes a role from multiple accounts in a single transaction.
+    /// @param _role The role to revoke.
+    /// @param _accounts The accounts to revoke the role from.
+    /// @dev Emits a {RoleRevoked} event for each account the role is revoked from.
+    /// @custom:error AccessControlUnauthorizedAccount If the caller is not the admin of the role.
+    function revokeRoleBatch(bytes32 _role, address[] calldata _accounts) external {
+        AccessControlStorage storage s = getStorage();
+        bytes32 adminRole = s.adminRole[_role];
+
+        // Check if the caller is the admin of the role.
+        if (!s.hasRole[msg.sender][adminRole]) {
+            revert AccessControlUnauthorizedAccount(msg.sender, adminRole);
+        }
+
+        uint256 length = _accounts.length;
+        for (uint256 i = 0; i < length; i++) {
+            address account = _accounts[i];
+            bool _hasRole = s.hasRole[account][_role];
+            if (_hasRole) {
+                s.hasRole[account][_role] = false;
+                emit RoleRevoked(_role, account, msg.sender);
+            }
         }
     }
 

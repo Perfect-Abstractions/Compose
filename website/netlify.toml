@@ -1,0 +1,32 @@
+[build]
+  # Base directory for the build (where package.json and build commands are located)
+  base = "website"
+  
+  # Build command (if not set in Netlify UI)
+  command = "npm run build"
+  
+  # Publish directory (relative to base directory)
+  publish = "build"
+  
+  # Skip Netlify builds if there are no changes in the website/ directory
+  # Based on official Netlify documentation: https://docs.netlify.com/configure-builds/ignore-builds/
+  # Works for both regular PRs and forked PRs
+  ignore = "./netlify-ignore.sh"
+
+[build.environment]
+  # Disable git submodules - they are not needed for the website build
+  GIT_SUBMODULES = "false"
+
+[[redirects]]
+  from = "/54Q17895d65/static/*"
+  to = "https://us-assets.i.posthog.com/static/:splat"
+  host = "us-assets.i.posthog.com"
+  status = 200
+  force = true
+
+[[redirects]]
+  from = "/54Q17895d65/*"
+  to = "https://us.i.posthog.com/:splat"
+  host = "us.i.posthog.com"
+  status = 200
+  force = true

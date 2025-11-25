@@ -3,9 +3,13 @@ name: Test
 on:
   push:
     branches: [main]
+    paths-ignore:
+      - '**.md'
+      - 'website/**'
   pull_request:
     paths-ignore:
       - '**.md'
+      - 'website/**'
   workflow_dispatch:
 
 env:

@@ -43,13 +43,13 @@ library LibERC721 {
     /// @notice Storage layout for ERC-721 token management.
     /// @dev Defines ownership, balances, approvals, and operator mappings per ERC-721 standard.
     struct ERC721Storage {
+        mapping(uint256 tokenId => address owner) ownerOf;
+        mapping(address owner => uint256 balance) balanceOf;
+        mapping(address owner => mapping(address operator => bool approved)) isApprovedForAll;
+        mapping(uint256 tokenId => address approved) approved;
         string name;
         string symbol;
         string baseURI;
-        mapping(uint256 tokenId => address owner) ownerOf;
-        mapping(address owner => uint256 balance) balanceOf;
-        mapping(uint256 tokenId => address approved) approved;
-        mapping(address owner => mapping(address operator => bool approved)) isApprovedForAll;
     }
 
     /// @notice Returns the ERC-721 storage struct from its predefined slot.

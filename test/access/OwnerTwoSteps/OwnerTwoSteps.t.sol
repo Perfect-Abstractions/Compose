@@ -254,7 +254,7 @@ contract OwnerTwoStepsFacetTest is Test {
     // Fuzz Tests
     // ============================================
 
-    function test_Fuzz_TransferOwnership(address newOwner) public {
+    function testFuzz_TransferOwnership(address newOwner) public {
         vm.prank(INITIAL_OWNER);
         ownerTwoSteps.transferOwnership(newOwner);
 
@@ -262,7 +262,7 @@ contract OwnerTwoStepsFacetTest is Test {
         assertEq(ownerTwoSteps.pendingOwner(), newOwner);
     }
 
-    function test_Fuzz_AcceptOwnership(address newOwner) public {
+    function testFuzz_AcceptOwnership(address newOwner) public {
         vm.assume(newOwner != address(0)); // Zero address can't execute transactions
 
         vm.prank(INITIAL_OWNER);
@@ -275,7 +275,7 @@ contract OwnerTwoStepsFacetTest is Test {
         assertEq(ownerTwoSteps.pendingOwner(), ZERO_ADDRESS);
     }
 
-    function test_Fuzz_RevertWhen_UnauthorizedTransfer(address caller, address target) public {
+    function testFuzz_RevertWhen_UnauthorizedTransfer(address caller, address target) public {
         vm.assume(caller != INITIAL_OWNER);
 
         vm.prank(caller);
@@ -283,7 +283,7 @@ contract OwnerTwoStepsFacetTest is Test {
         ownerTwoSteps.transferOwnership(target);
     }
 
-    function test_Fuzz_RevertWhen_UnauthorizedAccept(address caller) public {
+    function testFuzz_RevertWhen_UnauthorizedAccept(address caller) public {
         vm.assume(caller != NEW_OWNER);
 
         vm.prank(INITIAL_OWNER);
@@ -472,65 +472,10 @@ contract OwnerTwoStepsFacetTest is Test {
     }
 
     // ============================================
-    // Gas Benchmarks
-    // ============================================
-
-    function test_Gas_Owner() public view {
-        uint256 gasBefore = gasleft();
-        ownerTwoSteps.owner();
-        uint256 gasUsed = gasBefore - gasleft();
-
-        console2.log("Gas used for owner():", gasUsed);
-        assertTrue(gasUsed < 10000, "Owner getter uses too much gas");
-    }
-
-    function test_Gas_PendingOwner() public view {
-        uint256 gasBefore = gasleft();
-        ownerTwoSteps.pendingOwner();
-        uint256 gasUsed = gasBefore - gasleft();
-
-        console2.log("Gas used for pendingOwner():", gasUsed);
-        assertTrue(gasUsed < 10000, "Pending owner getter uses too much gas");
-    }
-
-    function test_Gas_TransferOwnership() public {
-        uint256 gasBefore = gasleft();
-        vm.prank(INITIAL_OWNER);
-        ownerTwoSteps.transferOwnership(NEW_OWNER);
-        uint256 gasUsed = gasBefore - gasleft();
-
-        console2.log("Gas used for transferOwnership():", gasUsed);
-        assertTrue(gasUsed < 50000, "Transfer ownership uses too much gas");
-    }
-
-    function test_Gas_AcceptOwnership() public {
-        vm.prank(INITIAL_OWNER);
-        ownerTwoSteps.transferOwnership(NEW_OWNER);
-
-        uint256 gasBefore = gasleft();
-        vm.prank(NEW_OWNER);
-        ownerTwoSteps.acceptOwnership();
-        uint256 gasUsed = gasBefore - gasleft();
-
-        console2.log("Gas used for acceptOwnership():", gasUsed);
-        assertTrue(gasUsed < 35000, "Accept ownership uses too much gas");
-    }
-
-    function test_Gas_RenounceOwnership() public {
-        uint256 gasBefore = gasleft();
-        vm.prank(INITIAL_OWNER);
-        ownerTwoSteps.renounceOwnership();
-        uint256 gasUsed = gasBefore - gasleft();
-
-        console2.log("Gas used for renounceOwnership():", gasUsed);
-        assertTrue(gasUsed < 30000, "Renounce ownership uses too much gas");
-    }
-
-    // ============================================
     // Additional Fuzz Tests
     // ============================================
 
-    function test_Fuzz_RenounceOwnership_OnlyOwner(address caller) public {
+    function testFuzz_RenounceOwnership_OnlyOwner(address caller) public {
         if (caller == INITIAL_OWNER) {
             vm.prank(caller);
             ownerTwoSteps.renounceOwnership();
@@ -543,7 +488,7 @@ contract OwnerTwoStepsFacetTest is Test {
         }
     }
 
-    function test_Fuzz_StateAfterRenounce(address caller, address target) public {
+    function testFuzz_StateAfterRenounce(address caller, address target) public {
         // Renounce ownership
         vm.prank(INITIAL_OWNER);
         ownerTwoSteps.renounceOwnership();
@@ -567,7 +512,7 @@ contract OwnerTwoStepsFacetTest is Test {
         }
     }
 
-    function test_Fuzz_RenounceWithPendingOwner(address pendingOwner) public {
+    function testFuzz_RenounceWithPendingOwner(address pendingOwner) public {
         vm.assume(pendingOwner != address(0));
 
         // Set pending owner

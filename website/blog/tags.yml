@@ -1,0 +1,4 @@
+hello:
+  label: Hello
+  permalink: /hello
+  description: Hello Compose World!

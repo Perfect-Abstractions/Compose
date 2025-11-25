@@ -1,0 +1,43 @@
+name: Documentation
+
+on:
+  pull_request:
+    paths:
+      - 'website/**'
+      - '.github/workflows/docs.yml'
+  push:
+    branches: [main]
+    paths:
+      - 'website/**'
+
+jobs:
+  lint-and-build:
+    name: Lint and Build Docs
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: website
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: website/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build documentation
+        run: npm run build
+        env:
+          # Prevent build failures from missing Algolia keys in PRs
+          ALGOLIA_APP_ID: ${{ secrets.ALGOLIA_APP_ID || 'dummy' }}
+          ALGOLIA_API_KEY: ${{ secrets.ALGOLIA_API_KEY || 'dummy' }}
+          ALGOLIA_INDEX_NAME: ${{ secrets.ALGOLIA_INDEX_NAME || 'compose' }}
+          POSTHOG_API_KEY: ${{ secrets.POSTHOG_API_KEY || 'dummy' }}
+

@@ -1,12 +1,12 @@
 ---
-name: Documentation Issue
-about: Report documentation problems or suggest improvements
+name: Documentation
+about: Suggest documentation improvements or corrections
 title: '[DOCS] '
 labels: ['documentation']
 assignees: ''
 ---
 
-Please look through our [CONTRIBUTING](https://github.com/Perfect-Abstractions/Compose/blob/main/CONTRIBUTING.md) guide, [discussions](https://github.com/Perfect-Abstractions/Compose/discussions) and codebase to ensure your issue is well-researched and not already covered.
+Please look through our [documentation](https://compose.diamonds/docs/design/), [discussions](https://github.com/Perfect-Abstractions/Compose/discussions) and codebase to ensure your issue is well-researched and not already covered.
 
 ## Documentation Issue
 
@@ -26,7 +26,7 @@ Please look through our [CONTRIBUTING](https://github.com/Perfect-Abstractions/C
 
 ## Helpful Information
 
-**Have a question?** Please check our [CONTRIBUTING](https://github.com/Perfect-Abstractions/Compose/blob/main/CONTRIBUTING.md) file first - your answer might already be there!
+**Have a question?** Please check our [contribution guide](https://compose.diamonds/docs/contribution/how-to-contribute) first - your answer might already be there!
 
 **Want to discuss something?** For general questions, ideas, or brainstorming, please browse our [discussions](https://github.com/Perfect-Abstractions/Compose/discussions) or start a new one. 
 

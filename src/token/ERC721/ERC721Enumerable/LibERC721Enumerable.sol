@@ -6,7 +6,7 @@ pragma solidity >=0.8.30;
 ///         This library is intended to be used by custom facets to integrate with ERC-721 functionality.
 /// @dev Implements ERC-721 operations with token enumeration support (tracking owned and global tokens).
 ///      Follows ERC-8042 for storage layout and ERC-6093 for standardized custom errors.
-library LibERC721 {
+library LibERC721Enumerable {
     /// @notice Thrown when attempting to interact with a non-existent token.
     /// @param _tokenId The ID of the token that does not exist.
     error ERC721NonexistentToken(uint256 _tokenId);
@@ -43,16 +43,16 @@ library LibERC721 {
     /// @notice Storage layout for ERC-721 enumerable tokens.
     /// @dev Includes mappings for ownership, approvals, operator permissions, and enumeration tracking.
     struct ERC721EnumerableStorage {
+        mapping(uint256 tokenId => address owner) ownerOf;
+        mapping(address owner => uint256[] ownerTokens) ownerTokens;
+        mapping(uint256 tokenId => uint256 ownerTokensIndex) ownerTokensIndex;
+        uint256[] allTokens;
+        mapping(uint256 tokenId => uint256 allTokensIndex) allTokensIndex;
+        mapping(address owner => mapping(address operator => bool approved)) isApprovedForAll;
+        mapping(uint256 tokenId => address approved) approved;
         string name;
         string symbol;
         string baseURI;
-        mapping(uint256 tokenId => address owner) ownerOf;
-        mapping(address owner => uint256[] ownedTokens) ownedTokensOf;
-        mapping(uint256 tokenId => uint256 ownedTokensIndex) ownedTokensIndexOf;
-        uint256[] allTokens;
-        mapping(uint256 tokenId => uint256 allTokensIndex) allTokensIndexOf;
-        mapping(uint256 tokenId => address approved) approved;
-        mapping(address owner => mapping(address operator => bool approved)) isApprovedForAll;
     }
 
     /// @notice Returns the ERC-721 enumerable storage struct from its predefined slot.
@@ -91,17 +91,17 @@ library LibERC721 {
 
         delete s.approved[_tokenId];
 
-        uint256 tokenIndex = s.ownedTokensIndexOf[_tokenId];
-        uint256 lastTokenIndex = s.ownedTokensOf[_from].length - 1;
+        uint256 tokenIndex = s.ownerTokensIndex[_tokenId];
+        uint256 lastTokenIndex = s.ownerTokens[_from].length - 1;
         if (tokenIndex != lastTokenIndex) {
-            uint256 lastTokenId = s.ownedTokensOf[_from][lastTokenIndex];
-            s.ownedTokensOf[_from][tokenIndex] = lastTokenId;
-            s.ownedTokensIndexOf[lastTokenId] = tokenIndex;
+            uint256 lastTokenId = s.ownerTokens[_from][lastTokenIndex];
+            s.ownerTokens[_from][tokenIndex] = lastTokenId;
+            s.ownerTokensIndex[lastTokenId] = tokenIndex;
         }
-        s.ownedTokensOf[_from].pop();
+        s.ownerTokens[_from].pop();
 
-        s.ownedTokensIndexOf[_tokenId] = s.ownedTokensOf[_to].length;
-        s.ownedTokensOf[_to].push(_tokenId);
+        s.ownerTokensIndex[_tokenId] = s.ownerTokens[_to].length;
+        s.ownerTokens[_to].push(_tokenId);
         s.ownerOf[_tokenId] = _to;
         emit Transfer(_from, _to, _tokenId);
     }
@@ -119,9 +119,10 @@ library LibERC721 {
             revert ERC721InvalidSender(address(0));
         }
 
-        s.ownedTokensIndexOf[_tokenId] = s.ownedTokensOf[_to].length;
-        s.ownedTokensOf[_to].push(_tokenId);
-        s.allTokensIndexOf[_tokenId] = s.allTokens.length;
+        s.ownerOf[_tokenId] = _to;
+        s.ownerTokensIndex[_tokenId] = s.ownerTokens[_to].length;
+        s.ownerTokens[_to].push(_tokenId);
+        s.allTokensIndex[_tokenId] = s.allTokens.length;
         s.allTokens.push(_tokenId);
         emit Transfer(address(0), _to, _tokenId);
     }
@@ -145,21 +146,21 @@ library LibERC721 {
         delete s.ownerOf[_tokenId];
         delete s.approved[_tokenId];
 
-        uint256 tokenIndex = s.ownedTokensIndexOf[_tokenId];
-        uint256 lastTokenIndex = s.ownedTokensOf[owner].length - 1;
+        uint256 tokenIndex = s.ownerTokensIndex[_tokenId];
+        uint256 lastTokenIndex = s.ownerTokens[owner].length - 1;
         if (tokenIndex != lastTokenIndex) {
-            uint256 lastTokenId = s.ownedTokensOf[owner][lastTokenIndex];
-            s.ownedTokensOf[owner][tokenIndex] = lastTokenId;
-            s.ownedTokensIndexOf[lastTokenId] = tokenIndex;
+            uint256 lastTokenId = s.ownerTokens[owner][lastTokenIndex];
+            s.ownerTokens[owner][tokenIndex] = lastTokenId;
+            s.ownerTokensIndex[lastTokenId] = tokenIndex;
         }
-        s.ownedTokensOf[owner].pop();
+        s.ownerTokens[owner].pop();
 
-        tokenIndex = s.allTokensIndexOf[_tokenId];
+        tokenIndex = s.allTokensIndex[_tokenId];
         lastTokenIndex = s.allTokens.length - 1;
         if (tokenIndex != lastTokenIndex) {
             uint256 lastTokenId = s.allTokens[lastTokenIndex];
             s.allTokens[tokenIndex] = lastTokenId;
-            s.allTokensIndexOf[lastTokenId] = tokenIndex;
+            s.allTokensIndex[lastTokenId] = tokenIndex;
         }
         s.allTokens.pop();
         emit Transfer(owner, address(0), _tokenId);

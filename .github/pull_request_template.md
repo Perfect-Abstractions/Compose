@@ -16,13 +16,15 @@ Before submitting this PR, please ensure:
 
 - [ ] **Code is formatted with `forge fmt`**
 
-- [ ] **Tests are included** - All new functionality has comprehensive tests
+- [ ] **Existing tests pass** - Run tests to be sure existing tests pass.
+
+- [ ] **New tests are optional** - If you don't provide tests for new functionality or changes then please [create a new issue](https://github.com/Perfect-Abstractions/Compose/issues/new/choose) so this can be assigned to someone.
 
 - [ ] **All tests pass** - Run `forge test` and ensure everything works
 
 - [ ] **Documentation updated** - If applicable, update relevant documentation
 
-Make sure to follow the [CONTRIBUTING.md](https://github.com/Perfect-Abstractions/Compose/blob/main/CONTRIBUTING.md) guidelines.
+Make sure to follow the [contributing](https://compose.diamonds/docs/contribution/how-to-contribute) guidelines.
 
 ## Additional Notes
 <!-- Any additional information, concerns, or questions for reviewers -->

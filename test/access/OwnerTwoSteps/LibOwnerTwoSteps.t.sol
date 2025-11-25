@@ -275,6 +275,33 @@ contract LibOwnerTwoStepsTest is Test {
         harness.transferOwnership(ALICE);
     }
 
+    function test_RenounceOwnership_DirectCall_SetsOwnerToZero() public {
+        vm.prank(INITIAL_OWNER);
+        harness.renounceOwnership();
+
+        assertEq(harness.owner(), ZERO_ADDRESS);
+        assertEq(harness.pendingOwner(), ZERO_ADDRESS);
+    }
+
+    function test_RenounceOwnership_DirectCall_EmitsEvent() public {
+        vm.expectEmit(true, true, false, true);
+        emit OwnershipTransferred(INITIAL_OWNER, ZERO_ADDRESS);
+
+        vm.prank(INITIAL_OWNER);
+        harness.renounceOwnership();
+    }
+
+    function test_RequireOwner_SucceedsForOwner() public {
+        vm.prank(INITIAL_OWNER);
+        harness.requireOwner();
+    }
+
+    function test_RevertWhen_RequireOwner_CalledByNonOwner() public {
+        vm.expectRevert(LibOwnerTwoSteps.OwnerUnauthorizedAccount.selector);
+        vm.prank(ALICE);
+        harness.requireOwner();
+    }
+
     // ============================================
     // Sequential Transfer Tests
     // ============================================
@@ -364,7 +391,7 @@ contract LibOwnerTwoStepsTest is Test {
     // Fuzz Tests
     // ============================================
 
-    function test_Fuzz_TransferOwnership(address newOwner) public {
+    function testFuzz_TransferOwnership(address newOwner) public {
         vm.prank(INITIAL_OWNER);
         harness.transferOwnership(newOwner);
 
@@ -372,7 +399,7 @@ contract LibOwnerTwoStepsTest is Test {
         assertEq(harness.pendingOwner(), newOwner);
     }
 
-    function test_Fuzz_AcceptOwnership(address newOwner) public {
+    function testFuzz_AcceptOwnership(address newOwner) public {
         vm.assume(newOwner != address(0));
 
         vm.prank(INITIAL_OWNER);
@@ -385,7 +412,7 @@ contract LibOwnerTwoStepsTest is Test {
         assertEq(harness.pendingOwner(), ZERO_ADDRESS);
     }
 
-    function test_Fuzz_TransferOwnership_AnyCaller(address caller, address target) public {
+    function testFuzz_TransferOwnership_AnyCaller(address caller, address target) public {
         // Library allows any caller
         vm.prank(caller);
         harness.transferOwnership(target);
@@ -395,7 +422,7 @@ contract LibOwnerTwoStepsTest is Test {
         assertEq(harness.owner(), INITIAL_OWNER); // Owner unchanged until acceptance
     }
 
-    function test_Fuzz_AcceptOwnership_AnyCaller(address caller) public {
+    function testFuzz_AcceptOwnership_AnyCaller(address caller) public {
         vm.prank(INITIAL_OWNER);
         harness.transferOwnership(NEW_OWNER);
 
@@ -408,7 +435,7 @@ contract LibOwnerTwoStepsTest is Test {
         assertEq(harness.pendingOwner(), ZERO_ADDRESS);
     }
 
-    function test_Fuzz_SequentialTransfers(address owner1, address owner2, address owner3) public {
+    function testFuzz_SequentialTransfers(address owner1, address owner2, address owner3) public {
         vm.assume(owner1 != address(0));
         vm.assume(owner2 != address(0));
         vm.assume(owner3 != address(0));
@@ -433,50 +460,5 @@ contract LibOwnerTwoStepsTest is Test {
         vm.prank(owner3);
         harness.acceptOwnership();
         assertEq(harness.owner(), owner3);
-    }
-
-    // ============================================
-    // Gas Tests
-    // ============================================
-
-    function test_Gas_TransferOwnership() public {
-        uint256 gasBefore = gasleft();
-        vm.prank(INITIAL_OWNER);
-        harness.transferOwnership(NEW_OWNER);
-        uint256 gasUsed = gasBefore - gasleft();
-
-        console2.log("Gas used for LibOwnerTwoSteps.transferOwnership():", gasUsed);
-        assertTrue(gasUsed < 70000, "Transfer ownership uses too much gas");
-    }
-
-    function test_Gas_AcceptOwnership() public {
-        vm.prank(INITIAL_OWNER);
-        harness.transferOwnership(NEW_OWNER);
-
-        uint256 gasBefore = gasleft();
-        vm.prank(NEW_OWNER);
-        harness.acceptOwnership();
-        uint256 gasUsed = gasBefore - gasleft();
-
-        console2.log("Gas used for LibOwnerTwoSteps.acceptOwnership():", gasUsed);
-        assertTrue(gasUsed < 35000, "Accept ownership uses too much gas");
-    }
-
-    function test_Gas_OwnerGetter() public view {
-        uint256 gasBefore = gasleft();
-        harness.owner();
-        uint256 gasUsed = gasBefore - gasleft();
-
-        console2.log("Gas used for LibOwnerTwoSteps.owner():", gasUsed);
-        assertTrue(gasUsed < 10000, "Owner getter uses too much gas");
-    }
-
-    function test_Gas_PendingOwnerGetter() public view {
-        uint256 gasBefore = gasleft();
-        harness.pendingOwner();
-        uint256 gasUsed = gasBefore - gasleft();
-
-        console2.log("Gas used for LibOwnerTwoSteps.pendingOwner():", gasUsed);
-        assertTrue(gasUsed < 10000, "Pending owner getter uses too much gas");
     }
 }

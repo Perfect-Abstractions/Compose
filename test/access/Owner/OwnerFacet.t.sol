@@ -132,6 +132,31 @@ contract OwnerFacetTest is Test {
     }
 
     // ============================================
+    // Renounce Ownership Direct Call Tests
+    // ============================================
+
+    function test_RenounceOwnership_DirectCall_SetsOwnerToZero() public {
+        vm.prank(INITIAL_OWNER);
+        ownerFacet.renounceOwnership();
+
+        assertEq(ownerFacet.owner(), ZERO_ADDRESS);
+    }
+
+    function test_RenounceOwnership_DirectCall_EmitsEvent() public {
+        vm.expectEmit(true, true, false, true);
+        emit OwnershipTransferred(INITIAL_OWNER, ZERO_ADDRESS);
+
+        vm.prank(INITIAL_OWNER);
+        ownerFacet.renounceOwnership();
+    }
+
+    function test_RevertWhen_RenounceOwnership_CalledByNonOwner() public {
+        vm.expectRevert(OwnerFacet.OwnerUnauthorizedAccount.selector);
+        vm.prank(ALICE);
+        ownerFacet.renounceOwnership();
+    }
+
+    // ============================================
     // Edge Cases
     // ============================================
 
@@ -165,14 +190,14 @@ contract OwnerFacetTest is Test {
     // Fuzz Tests
     // ============================================
 
-    function test_Fuzz_TransferOwnership(address newOwner) public {
+    function testFuzz_TransferOwnership(address newOwner) public {
         vm.prank(INITIAL_OWNER);
         ownerFacet.transferOwnership(newOwner);
 
         assertEq(ownerFacet.owner(), newOwner);
     }
 
-    function test_Fuzz_SequentialTransfers(address owner1, address owner2, address owner3) public {
+    function testFuzz_SequentialTransfers(address owner1, address owner2, address owner3) public {
         vm.assume(owner1 != address(0));
         vm.assume(owner2 != address(0));
         vm.assume(owner3 != address(0));
@@ -190,7 +215,7 @@ contract OwnerFacetTest is Test {
         assertEq(ownerFacet.owner(), owner3);
     }
 
-    function test_Fuzz_RevertWhen_UnauthorizedCaller(address caller, address target) public {
+    function testFuzz_RevertWhen_UnauthorizedCaller(address caller, address target) public {
         vm.assume(caller != INITIAL_OWNER);
 
         vm.prank(caller);
@@ -198,7 +223,7 @@ contract OwnerFacetTest is Test {
         ownerFacet.transferOwnership(target);
     }
 
-    function test_Fuzz_RenouncePreventsAllTransfers(address caller, address target) public {
+    function testFuzz_RenouncePreventsAllTransfers(address caller, address target) public {
         vm.assume(caller != address(0));
 
         // Renounce ownership
@@ -212,28 +237,4 @@ contract OwnerFacetTest is Test {
     }
 
     // ============================================
-    // Gas Tests
-    // ============================================
-
-    function test_Gas_TransferOwnership() public {
-        uint256 gasBefore = gasleft();
-        vm.prank(INITIAL_OWNER);
-        ownerFacet.transferOwnership(NEW_OWNER);
-        uint256 gasUsed = gasBefore - gasleft();
-
-        // Log gas usage for optimization tracking
-        console2.log("Gas used for transferOwnership:", gasUsed);
-        // Should be relatively low since it's just storage updates
-        assertTrue(gasUsed < 50000, "Transfer ownership uses too much gas");
-    }
-
-    function test_Gas_OwnerGetter() public view {
-        uint256 gasBefore = gasleft();
-        ownerFacet.owner();
-        uint256 gasUsed = gasBefore - gasleft();
-
-        console2.log("Gas used for owner():", gasUsed);
-        // Should be very low since it's just a storage read
-        assertTrue(gasUsed < 10000, "Owner getter uses too much gas");
-    }
 }

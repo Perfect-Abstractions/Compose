@@ -1,8 +1,6 @@
 // SPDX-License-Identifier: MIT
 pragma solidity >=0.8.30;
 
-import {LibUtils} from "../../../libraries/LibUtils.sol";
-
 /// @title ERC721 Receiver Interface
 /// @notice Interface for contracts that want to support safe ERC721 token transfers.
 /// @dev Implementers must return the function selector to confirm token receipt.
@@ -52,17 +50,16 @@ contract ERC721EnumerableFacet {
 
     /// @custom:storage-location erc8042:compose.erc721.enumerable
     struct ERC721EnumerableStorage {
+        mapping(uint256 tokenId => address owner) ownerOf;
+        mapping(address owner => uint256[] ownerTokens) ownerTokens;
+        mapping(uint256 tokenId => uint256 ownerTokensIndex) ownerTokensIndex;
+        uint256[] allTokens;
+        mapping(uint256 tokenId => uint256 allTokensIndex) allTokensIndex;
+        mapping(address owner => mapping(address operator => bool approved)) isApprovedForAll;
+        mapping(uint256 tokenId => address approved) approved;
         string name;
         string symbol;
         string baseURI;
-        mapping(uint256 tokenId => string tokenURI) tokenURIOf;
-        mapping(uint256 tokenId => address owner) ownerOf;
-        mapping(address owner => uint256[] ownedTokens) ownedTokensOf;
-        mapping(uint256 tokenId => uint256 ownedTokensIndex) ownedTokensIndexOf;
-        uint256[] allTokens;
-        mapping(uint256 tokenId => uint256 allTokensIndex) allTokensIndexOf;
-        mapping(uint256 tokenId => address approved) approved;
-        mapping(address owner => mapping(address operator => bool approved)) isApprovedForAll;
     }
 
     /// @notice Returns the storage struct used by this facet.
@@ -134,7 +131,7 @@ contract ERC721EnumerableFacet {
         if (_owner == address(0)) {
             revert ERC721InvalidOwner(_owner);
         }
-        return getStorage().ownedTokensOf[_owner].length;
+        return getStorage().ownerTokens[_owner].length;
     }
 
     /// @notice Returns the owner of a given token ID.
@@ -154,10 +151,10 @@ contract ERC721EnumerableFacet {
     /// @return The token ID owned by `_owner` at `_index`.
     function tokenOfOwnerByIndex(address _owner, uint256 _index) external view returns (uint256) {
         ERC721EnumerableStorage storage s = getStorage();
-        if (_index >= s.ownedTokensOf[_owner].length) {
+        if (_index >= s.ownerTokens[_owner].length) {
             revert ERC721OutOfBoundsIndex(_owner, _index);
         }
-        return s.ownedTokensOf[_owner][_index];
+        return s.ownerTokens[_owner][_index];
     }
 
     /// @notice Returns the approved address for a given token ID.
@@ -229,17 +226,17 @@ contract ERC721EnumerableFacet {
         }
         delete s.approved[_tokenId];
 
-        uint256 tokenIndex = s.ownedTokensIndexOf[_tokenId];
-        uint256 lastTokenIndex = s.ownedTokensOf[_from].length - 1;
+        uint256 tokenIndex = s.ownerTokensIndex[_tokenId];
+        uint256 lastTokenIndex = s.ownerTokens[_from].length - 1;
         if (tokenIndex != lastTokenIndex) {
-            uint256 lastTokenId = s.ownedTokensOf[_from][lastTokenIndex];
-            s.ownedTokensOf[_from][tokenIndex] = lastTokenId;
-            s.ownedTokensIndexOf[lastTokenId] = tokenIndex;
+            uint256 lastTokenId = s.ownerTokens[_from][lastTokenIndex];
+            s.ownerTokens[_from][tokenIndex] = lastTokenId;
+            s.ownerTokensIndex[lastTokenId] = tokenIndex;
         }
-        s.ownedTokensOf[_from].pop();
+        s.ownerTokens[_from].pop();
 
-        s.ownedTokensIndexOf[_tokenId] = s.ownedTokensOf[_to].length;
-        s.ownedTokensOf[_to].push(_tokenId);
+        s.ownerTokensIndex[_tokenId] = s.ownerTokens[_to].length;
+        s.ownerTokens[_to].push(_tokenId);
         s.ownerOf[_tokenId] = _to;
 
         emit Transfer(_from, _to, _tokenId);

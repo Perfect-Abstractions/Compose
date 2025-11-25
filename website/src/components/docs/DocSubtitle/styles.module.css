@@ -1,0 +1,19 @@
+.subtitle {
+  font-size: 1.25rem;
+  line-height: 1.7;
+  color: var(--ifm-color-emphasis-700);
+  margin: 0 0 1.5rem 0;
+  max-width: 900px;
+}
+
+.subtitle--left {
+  text-align: left;
+  margin-left: 0;
+  margin-right: auto;
+}
+
+[data-theme='dark'] .subtitle {
+  color: rgba(255, 255, 255, 0.85);
+}
+
+

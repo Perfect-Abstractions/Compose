@@ -57,13 +57,13 @@ contract ERC721Facet {
 
     /// @custom:storage-location erc8042:compose.erc721
     struct ERC721Storage {
+        mapping(uint256 tokenId => address owner) ownerOf;
+        mapping(address owner => uint256 balance) balanceOf;
+        mapping(address owner => mapping(address operator => bool approved)) isApprovedForAll;
+        mapping(uint256 tokenId => address approved) approved;
         string name;
         string symbol;
         string baseURI;
-        mapping(uint256 tokenId => address owner) ownerOf;
-        mapping(address owner => uint256 balance) balanceOf;
-        mapping(uint256 tokenId => address approved) approved;
-        mapping(address owner => mapping(address operator => bool approved)) isApprovedForAll;
     }
 
     /// @notice Returns a pointer to the ERC-721 storage struct.

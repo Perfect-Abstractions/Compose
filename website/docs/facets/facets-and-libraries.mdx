@@ -1,0 +1,337 @@
+---
+sidebar_position: 3
+title: Facets & Libraries
+description: Complete guide to all 30+ components with live examples, detailed documentation, and usage
+draft: true
+---
+
+import DocHero from '@site/src/components/docs/DocHero';
+import Callout from '@site/src/components/ui/Callout';
+import FeatureGrid, { FeatureGridItem } from '@site/src/components/features/FeatureGrid';
+import DocCard, { DocCardGrid } from '@site/src/components/docs/DocCard';
+
+<DocHero
+  title="Facets & Libraries"
+  subtitle="Understanding the core architecture: how facets and libraries work together through shared storage to build powerful, composable smart contract systems."
+  variant="gradient"
+  height="small"
+/>
+
+## Overview
+
+Compose uses a dual-component architecture where **facets** provide complete implementations and **libraries** provide reusable helper functions. Both work with the same shared storage, enabling seamless integration.
+
+<Callout type="info" title="Key Concept">
+Facets are complete implementations. Libraries are helper functions. Both access the **same storage**.
+</Callout>
+
+## Architecture Comparison
+
+<div style={{margin: '2rem 0'}}>
+
+| Component | Purpose | Use Case |
+|-----------|---------|----------|
+| **Facets** | Complete, self-contained implementations | Use as-is in your diamond for standard functionality |
+| **Libraries** | Helper functions for custom facets | Import into your custom facets to extend Compose |
+
+</div>
+
+## Facets: Complete Implementations
+
+Facets are fully functional smart contracts that can be added to your diamond:
+
+<FeatureGrid columns={3}>
+  <FeatureGridItem
+    icon={<Icon name="package" size={32} />}
+    title="Self-Contained"
+    description="Complete implementations ready to use out of the box."
+  />
+  <FeatureGridItem
+    icon={<Icon name="plug" size={32} />}
+    title="Plug & Play"
+    description="Add to your diamond via the diamond cut function."
+  />
+  <FeatureGridItem
+    icon={<Icon name="checkmark" size={32} />}
+    title="Verified"
+    description="(In the future) Audited, tested, and deployed on multiple chains."
+  />
+</FeatureGrid>
+
+### Example: ERC721Facet
+
+```solidity
+// ERC721Facet provides standard NFT functionality
+contract ERC721Facet {
+    function balanceOf(address owner) external view returns (uint256) {
+        return LibERC721.balanceOf(owner);
+    }
+    
+    function ownerOf(uint256 tokenId) external view returns (address) {
+        return LibERC721.ownerOf(tokenId);
+    }
+    
+    function transferFrom(
+        address from,
+        address to,
+        uint256 tokenId
+    ) external {
+        LibERC721.transferFrom(from, to, tokenId);
+    }
+    
+    // ... more standard ERC721 functions
+}
+```
+
+<Callout type="success" title="Ready to Use">
+You can add `ERC721Facet` to your diamond and immediately have full ERC721 functionality!
+</Callout>
+
+## Libraries: Helper Functions
+
+Libraries provide internal functions that your custom facets can use:
+
+<FeatureGrid columns={3}>
+  <FeatureGridItem
+    icon={<Icon name="wrench" size={32} />}
+    title="Building Blocks"
+    description="Reusable functions for your custom logic."
+  />
+  <FeatureGridItem
+    icon={<Icon name="save" size={32} />}
+    title="Shared Storage"
+    description="Access the same data as standard facets."
+  />
+  <FeatureGridItem
+    icon={<Icon name="palette" size={32} />}
+    title="Flexible"
+    description="Combine with your custom logic however you need."
+  />
+</FeatureGrid>
+
+### Example: LibERC721
+
+```solidity
+// LibERC721 provides helper functions for custom facets
+library LibERC721 {
+    function mint(address to, uint256 tokenId) internal {
+        // Modifies storage that ERC721Facet reads
+        ERC721Storage storage s = erc721Storage();
+        s.owners[tokenId] = to;
+        s.balances[to]++;
+        // ... emit events, etc.
+    }
+    
+    function burn(uint256 tokenId) internal {
+        // Modifies same storage
+        ERC721Storage storage s = erc721Storage();
+        address owner = s.owners[tokenId];
+        delete s.owners[tokenId];
+        s.balances[owner]--;
+        // ... emit events, etc.
+    }
+    
+    // ... more helper functions
+}
+```
+
+## The Magic: Shared Storage
+
+Both facets and libraries access the **same storage location** in your diamond:
+
+```solidity
+// Your custom facet
+import {LibERC721} from "compose/LibERC721.sol";
+
+contract GameNFTFacet {
+    function mintWithGameLogic(
+        address player,
+        uint256 tokenId
+    ) external {
+        // Your custom game logic
+        require(
+            playerHasEnoughPoints(player),
+            "Not enough points"
+        );
+        
+        // Use LibERC721 to mint
+        // This modifies the SAME storage that
+        // ERC721Facet uses!
+        LibERC721.mint(player, tokenId);
+        
+        // Now ERC721Facet.ownerOf(tokenId) 
+        // returns player!
+        updatePlayerStats(player);
+    }
+}
+```
+
+<Callout type="tip" title="The Power of Composition">
+You don't need to inherit from anything. You don't need to override functions. Just use the library functions and everything works together!
+</Callout>
+
+## Visual Diagram
+
+```
+┌─────────────────────────────────────────┐
+│           Diamond Contract              │
+├─────────────────────────────────────────┤
+│                                         │
+│  ┌──────────────┐    ┌───────────────┐ │
+│  │ ERC721Facet  │    │ GameNFTFacet  │ │
+│  │              │    │               │ │
+│  │ - balanceOf()│    │ - mint with   │ │
+│  │ - ownerOf()  │    │   game logic  │ │
+│  │ - transfer() │    │               │ │
+│  └──────┬───────┘    └───────┬───────┘ │
+│         │                    │         │
+│         │  ┌─────────────────┘         │
+│         ▼  ▼                           │
+│   ┌─────────────┐                      │
+│   │  LibERC721  │                      │
+│   └──────┬──────┘                      │
+│          │                             │
+│          ▼                             │
+│   ┌─────────────┐                      │
+│   │   Storage   │                      │
+│   │  (Shared)   │                      │
+│   └─────────────┘                      │
+│                                         │
+└─────────────────────────────────────────┘
+```
+
+## When to Use Each
+
+<DocCardGrid columns={2}>
+  <DocCard
+    icon={<Icon name="package" size={32} />}
+    title="Use Facets When..."
+    description="You want standard, complete functionality with no customization needed."
+  >
+    <ul style={{margin: 0, paddingLeft: '1.25rem'}}>
+      <li>Implementing standard token interfaces</li>
+      <li>Adding access control</li>
+      <li>Using governance systems</li>
+    </ul>
+  </DocCard>
+  <DocCard
+    icon={<Icon name="wrench" size={32} />}
+    title="Use Libraries When..."
+    description="You're building custom facets that need to integrate with Compose."
+  >
+    <ul style={{margin: 0, paddingLeft: '1.25rem'}}>
+      <li>Creating custom minting logic</li>
+      <li>Building game mechanics</li>
+      <li>Implementing custom rules</li>
+    </ul>
+  </DocCard>
+</DocCardGrid>
+
+## Real-World Example
+
+Let's build a game where players earn NFTs by completing quests:
+
+```solidity
+import {LibERC721} from "compose/LibERC721.sol";
+import {LibAccessControl} from "compose/LibAccessControl.sol";
+
+contract QuestRewardsFacet {
+    bytes32 public constant GAME_MASTER = keccak256("GAME_MASTER");
+    
+    mapping(uint256 => bool) public questCompleted;
+    
+    function completeQuest(
+        address player,
+        uint256 questId,
+        uint256 tokenId
+    ) external {
+        // Use LibAccessControl to check permissions
+        require(
+            LibAccessControl.hasRole(GAME_MASTER, msg.sender),
+            "Not authorized"
+        );
+        
+        // Your game logic
+        require(!questCompleted[questId], "Quest already claimed");
+        questCompleted[questId] = true;
+        
+        // Use LibERC721 to mint reward NFT
+        LibERC721.mint(player, tokenId);
+        
+        // The standard ERC721Facet.ownerOf(tokenId) now works!
+        // The player can transfer using ERC721Facet.transferFrom()!
+    }
+}
+```
+
+<Callout type="success" title="Seamless Integration">
+Your `QuestRewardsFacet` mints NFTs that work with all standard ERC721 functions. No inheritance, no complexity!
+</Callout>
+
+## Best Practices
+
+<FeatureGrid columns={2}>
+  <FeatureGridItem
+    icon={<Icon name="checkmark" size={32} />}
+    title="Do: Use Libraries in Custom Facets"
+    description="Import and use library functions to integrate with Compose functionality."
+  />
+  <FeatureGridItem
+    icon={<Icon name="checkmark" size={32} />}
+    title="Do: Add Standard Facets As-Is"
+    description="Use complete facets when you don't need customization."
+  />
+  <FeatureGridItem
+    icon={<Icon name="cross" size={32} />}
+    title="Don't: Modify Standard Facets"
+    description="Create custom facets instead. Keep standard facets unchanged."
+  />
+  <FeatureGridItem
+    icon={<Icon name="cross" size={32} />}
+    title="Don't: Call Facets from Facets"
+    description="Use libraries for facet-to-facet communication, not external calls."
+  />
+</FeatureGrid>
+
+## Available Facets & Libraries
+
+<DocCardGrid columns={2}>
+  <DocCard
+    icon={<Icon name="coin" size={32} />}
+    title="ERC20"
+    description="Fungible token standard with mint, burn, and transfer functionality."
+  />
+  <DocCard
+    icon={<Icon name="palette" size={32} />}
+    title="ERC721"
+    description="Non-fungible token (NFT) standard with full metadata support."
+  />
+  <DocCard
+    icon={<Icon name="diamond" size={32} />}
+    title="ERC1155"
+    description="Multi-token standard supporting both fungible and non-fungible tokens."
+  />
+  <DocCard
+    icon={<Icon name="lock" size={32} />}
+    title="Access Control"
+    description="Role-based permission system for managing contract access."
+  />
+</DocCardGrid>
+
+## Next Steps
+
+<FeatureGrid columns={2}>
+  <FeatureGridItem
+    icon={<Icon name="save" size={32} />}
+    title="Storage Patterns"
+    description="Deep dive into how shared storage works under the hood."
+    href="/docs/"
+  />
+  <FeatureGridItem
+    icon={<Icon name="rocket" size={32} />}
+    title="Quick Start"
+    description="Build your first diamond with facets and libraries."
+    href="/docs/getting-started/quick-start"
+  />
+</FeatureGrid>
+

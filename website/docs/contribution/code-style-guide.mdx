@@ -1,0 +1,47 @@
+---
+sidebar_position: 3
+title: Code Style Guide
+description: Code style guidelines for developing Compose facets and libraries
+---
+
+This section outlines the code style guidelines for developing new facets and Solidity libraries in **Compose**.
+
+Follow [Compose's design principles](/docs/design) when contributing code.
+
+Follow the [Solidity feature ban](/docs/design/banned-solidity-features).
+
+### Naming Conventions
+
+- **Parameter Names:** All parameters for events, errors, and functions must be preceded with an underscore (`_`).
+  - Example:
+    ```solidity
+    event Transfer(address indexed _from, address indexed _to, uint256 indexed _tokenId);
+    error ERC20InvalidSender(address _sender);
+    function transfer(address _to, uint256 _amount) external {}
+    ```
+- **Camel Case:** Use camelCase for variable, function, contract, and library names, except for standard uppercase abbreviations (e.g., ERC).
+  - Example: `totalSupply`, `LibERC20`, `ERC721Facet`
+
+- **Facets:** Internal function names in facets should be prefixed with `internal` if they otherwise have the same name as an external function in the same facet. Usually, there should be few or no internal functions in facets; repeat code if it improves readability.
+- **Libraries:** All functions in libraries use the `internal` visibility specifier. 
+
+### Value Resetting
+- Use `delete` to set a value to zero.
+  - Example:
+    ```solidity
+    delete balances[_owner];
+    ```
+
+### Avoid Assembly
+ - Avoid using assembly if you can. If you can't and you access memory, do it [safely](https://docs.soliditylang.org/en/latest/assembly.html#memory-safety), and use `assembly ("memory-safe")`.
+   `"memory safe"` tells the Solidity compiler that memory is being used safely so it should not disable optimizations.
+   - Example:
+     ```solidity
+     assembly ("memory-safe") {
+         revert(add(reason, 0x20), mload(reason))
+     }
+     ```
+
+### Formatting
+- Format code using the default settings of `forge fmt`. Run `forge fmt` before submitting code.
+

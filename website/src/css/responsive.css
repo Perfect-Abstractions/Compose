@@ -1,0 +1,65 @@
+/**
+ * Responsive Styles
+ * Media queries and responsive adjustments
+ */
+
+/* Feature card responsive adjustments */
+@media (max-width: 1200px) {
+  .feature-card {
+    padding: 2rem 1.5rem;
+  }
+}
+
+@media (max-width: 768px) {
+  .hero__title {
+    font-size: 2.5rem;
+  }
+  
+  .hero__subtitle {
+    font-size: 1.125rem;
+  }
+  
+  .feature-card {
+    padding: 2rem 1.5rem;
+  }
+  
+  .feature-icon {
+    font-size: 3rem;
+  }
+  
+  .feature-card h3 {
+    font-size: 1.125rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .feature-card {
+    padding: 1.5rem 1.25rem;
+  }
+  
+  .feature-icon {
+    font-size: 2.5rem;
+  }
+}
+
+/* Mobile navigation improvements */
+@media (max-width: 996px) {
+  /* Footer on mobile - make it more prominent */
+  .footer {
+    padding: 2rem 1rem;
+  }
+  
+  .footer__title {
+    font-size: 1rem;
+    margin-bottom: 1rem;
+  }
+  
+  .footer__item {
+    padding: 0.5rem 0;
+    font-size: 0.95rem;
+  }
+  
+  .footer__links {
+    margin-bottom: 2rem;
+  }
+}

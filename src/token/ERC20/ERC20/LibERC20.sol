@@ -52,7 +52,7 @@ library LibERC20 {
         uint8 decimals;
         uint256 totalSupply;
         mapping(address owner => uint256 balance) balanceOf;
-        mapping(address owner => mapping(address spender => uint256 allowance)) allowances;
+        mapping(address owner => mapping(address spender => uint256 allowance)) allowance;
         mapping(address owner => uint256) nonces;
     }
 
@@ -113,7 +113,7 @@ library LibERC20 {
         if (_to == address(0)) {
             revert ERC20InvalidReceiver(address(0));
         }
-        uint256 currentAllowance = s.allowances[_from][msg.sender];
+        uint256 currentAllowance = s.allowance[_from][msg.sender];
         if (currentAllowance < _value) {
             revert ERC20InsufficientAllowance(msg.sender, currentAllowance, _value);
         }
@@ -123,7 +123,7 @@ library LibERC20 {
         }
         unchecked {
             if (currentAllowance != type(uint256).max) {
-                s.allowances[_from][msg.sender] = currentAllowance - _value;
+                s.allowance[_from][msg.sender] = currentAllowance - _value;
             }
             s.balanceOf[_from] = fromBalance - _value;
         }
@@ -160,7 +160,7 @@ library LibERC20 {
             revert ERC20InvalidSpender(address(0));
         }
         ERC20Storage storage s = getStorage();
-        s.allowances[msg.sender][_spender] = _value;
+        s.allowance[msg.sender][_spender] = _value;
         emit Approval(msg.sender, _spender, _value);
     }
 }

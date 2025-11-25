@@ -7,8 +7,30 @@ out/
 /broadcast/*/31337/
 /broadcast/**/dry-run/
 
-# Docs
-docs/
-
 # Dotenv file
 .env
+.gas-snapshot
+
+# Docusaurus
+# Dependencies
+docs/node_modules
+
+# Production
+docs/build
+
+# Generated files
+docs/.docusaurus
+docs/.cache-loader
+
+# Misc
+docs/.DS_Store
+docs/.env
+docs/.env.local
+docs/.env.development.local
+docs/.env.test.local
+docs/.env.production.local
+
+docs/npm-debug.log*
+docs/yarn-debug.log*
+docs/yarn-error.log*
+
