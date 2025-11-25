@@ -54,9 +54,76 @@ abstract contract Diamond {
     error InitializationFunctionReverted(address _initializationContractAddress, bytes _calldata);
     /// @notice Error indicating the function does not exist.
     error FunctionDoesNotExist(bytes4 _selector);
+    /// @notice Error indicating the initialization function is invalid.
+    error InvalidInitialization();
 
     /// @notice Emitted when a facet is added, removed, or replaced.
     event DiamondCut(FacetCut[] _diamondCut, address _init, bytes _calldata);
+    /// @notice Emitted when the contract is initialized.
+    event Initialized(uint64 _version);
+
+    //*//////////////////////////////////////////////////////////////////////////
+    //                            INITIALIZABLE LOGIC
+    //////////////////////////////////////////////////////////////////////////*//
+
+    /// @notice Initializable storage.
+    /// @custom:storage-location erc8042:compose.initializable
+    struct InitializableStorage {
+        /// @dev Indicates that the contract has been initialized.
+        uint64 initialized;
+        /// @dev Indicates that the contract is in the process of being initialized.
+        bool initializing;
+    }
+
+    /// @notice Initializable storage position.
+    bytes32 constant INITIALIZABLE_STORAGE_POSITION = keccak256("compose.initializable");
+
+    /// @notice Returns the initializable storage.
+    function getInitializableStorage() internal pure virtual returns (InitializableStorage storage s) {
+        bytes32 position = INITIALIZABLE_STORAGE_POSITION;
+        assembly {
+            s.slot := position
+        }
+    }
+
+    /// @notice Returns the initializable storage.
+    /// @param _s The initializable storage.
+    /// @return isTopLevelCall_ True if the contract is not in the process of being initialized.
+    function beforeInitializer(InitializableStorage storage _s) internal virtual returns (bool isTopLevelCall_) {
+        // Cache values to avoid duplicated sloads
+        isTopLevelCall_ = !_s.initializing;
+        uint64 initialized = _s.initialized;
+
+        // Allowed calls:
+        // - initialSetup: the contract is not in the initializing state and no previous version was
+        //                 initialized
+        // - construction: the contract is initialized at version 1 (no reinitialization) and the
+        //                 current contract is just being deployed
+        bool initialSetup = initialized == 0 && isTopLevelCall_;
+        bool construction = initialized == 1 && address(this).code.length == 0;
+
+        if (!initialSetup && !construction) {
+            revert InvalidInitialization();
+        }
+        _s.initialized = 1;
+        if (isTopLevelCall_) {
+            _s.initializing = true;
+        }
+    }
+
+    /// @notice Sets the initializable storage.
+    /// @param _s The initializable storage.
+    /// @param _isTopLevelCall True if the contract is not in the process of being initialized.
+    function afterInitializer(InitializableStorage storage _s, bool _isTopLevelCall) internal virtual {
+        if (_isTopLevelCall) {
+            _s.initializing = false;
+            emit Initialized(1);
+        }
+    }
+
+    //*//////////////////////////////////////////////////////////////////////////
+    //                               DIAMOND LOGIC
+    //////////////////////////////////////////////////////////////////////////*//
 
     /// @notice Data stored for each function selector
     struct FacetAndPosition {
@@ -79,7 +146,6 @@ abstract contract Diamond {
     bytes32 private constant DIAMOND_STORAGE_POSITION = keccak256("compose.diamond");
 
     /// @notice Returns the diamond storage.
-    /// @return s The diamond storage.
     function getStorage() internal pure virtual returns (DiamondStorage storage s) {
         bytes32 position = DIAMOND_STORAGE_POSITION;
         assembly {
@@ -100,7 +166,7 @@ abstract contract Diamond {
     /// @param _s Diamond storage to add functions to.
     /// @param _facet The address of the facet to add functions from.
     /// @param _functionSelectors The selectors of the functions to add.
-    function addFunctions(DiamondStorage storage _s, address _facet, bytes4[] memory _functionSelectors)
+    function addFunctions(DiamondStorage storage _s, address _facet, bytes4[] calldata _functionSelectors)
         internal
         virtual
     {
@@ -124,7 +190,7 @@ abstract contract Diamond {
     /// @param _s Diamond storage to replace functions in.
     /// @param _facet The address of the facet to replace functions from.
     /// @param _functionSelectors The selectors of the functions to replace.
-    function replaceFunctions(DiamondStorage storage _s, address _facet, bytes4[] memory _functionSelectors)
+    function replaceFunctions(DiamondStorage storage _s, address _facet, bytes4[] calldata _functionSelectors)
         internal
         virtual
     {
@@ -152,7 +218,7 @@ abstract contract Diamond {
     /// @param _s Diamond storage to remove functions from.
     /// @param _facet The address of the facet to remove functions from.
     /// @param _functionSelectors The selectors of the functions to remove.
-    function removeFunctions(DiamondStorage storage _s, address _facet, bytes4[] memory _functionSelectors)
+    function removeFunctions(DiamondStorage storage _s, address _facet, bytes4[] calldata _functionSelectors)
         internal
         virtual
     {
@@ -208,11 +274,11 @@ abstract contract Diamond {
     /// @param _init The address of the contract or facet to execute _calldata
     /// @param _calldata A function call, including function selector and arguments
     ///                  _calldata is executed with delegatecall on _init
-    function diamondCut(FacetCut[] memory _diamondCut, address _init, bytes memory _calldata) internal virtual {
+    function diamondCut(FacetCut[] calldata _diamondCut, address _init, bytes calldata _calldata) internal virtual {
         DiamondStorage storage s = getStorage();
         uint256 diamondCutLength = _diamondCut.length;
         for (uint256 facetIndex; facetIndex < diamondCutLength; ++facetIndex) {
-            bytes4[] memory functionSelectors = _diamondCut[facetIndex].functionSelectors;
+            bytes4[] calldata functionSelectors = _diamondCut[facetIndex].functionSelectors;
             address facetAddress = _diamondCut[facetIndex].facetAddress;
             if (functionSelectors.length == 0) {
                 revert NoSelectorsProvidedForFacet(facetAddress);
@@ -248,15 +314,18 @@ abstract contract Diamond {
     }
 
     //*//////////////////////////////////////////////////////////////////////////
-    //                                CONSTRUCTOR
+    //                                INITIALIZER
     //////////////////////////////////////////////////////////////////////////*//
 
     /// @notice Initializes the Diamond proxy with the provided facets and initialization parameters
     /// @param _diamondCut The diamond cut to apply.
     /// @param _init The address of the initialization contract.
     /// @param _calldata The calldata to pass to the initialization contract.
-    constructor(FacetCut[] memory _diamondCut, address _init, bytes memory _calldata) payable {
+    function initialize(FacetCut[] calldata _diamondCut, address _init, bytes calldata _calldata) external payable {
+        InitializableStorage storage s = getInitializableStorage();
+        bool isTopLevelCall = beforeInitializer(s);
         diamondCut(_diamondCut, _init, _calldata);
+        afterInitializer(s, isTopLevelCall);
     }
 
     /// @notice Retrieves the implementation address for the current function call
@@ -300,4 +369,6 @@ abstract contract Diamond {
     fallback() external payable virtual {
         delegate(facet());
     }
+
+    receive() external payable virtual {}
 }
