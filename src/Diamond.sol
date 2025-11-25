@@ -146,7 +146,7 @@ abstract contract Diamond {
     bytes32 private constant DIAMOND_STORAGE_POSITION = keccak256("compose.diamond");
 
     /// @notice Returns the diamond storage.
-    function getStorage() internal pure virtual returns (DiamondStorage storage s) {
+    function getDiamondStorage() internal pure virtual returns (DiamondStorage storage s) {
         bytes32 position = DIAMOND_STORAGE_POSITION;
         assembly {
             s.slot := position
@@ -275,7 +275,7 @@ abstract contract Diamond {
     /// @param _calldata A function call, including function selector and arguments
     ///                  _calldata is executed with delegatecall on _init
     function diamondCut(FacetCut[] calldata _diamondCut, address _init, bytes calldata _calldata) internal virtual {
-        DiamondStorage storage s = getStorage();
+        DiamondStorage storage s = getDiamondStorage();
         uint256 diamondCutLength = _diamondCut.length;
         for (uint256 facetIndex; facetIndex < diamondCutLength; ++facetIndex) {
             bytes4[] calldata functionSelectors = _diamondCut[facetIndex].functionSelectors;
@@ -332,7 +332,7 @@ abstract contract Diamond {
     /// @dev A Facet is one of many implementations in a Diamond Proxy
     /// @return facet_ The implementation address for the current function call
     function facet() internal view virtual returns (address facet_) {
-        facet_ = getStorage().facetAndPosition[msg.sig].facet;
+        facet_ = getDiamondStorage().facetAndPosition[msg.sig].facet;
         if (facet_ == address(0)) revert FunctionDoesNotExist(msg.sig);
     }
 
