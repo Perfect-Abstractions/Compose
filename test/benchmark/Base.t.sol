@@ -1,11 +1,10 @@
 // SPDX-License-Identifier: MIT
 pragma solidity >=0.8.30;
 
-import {Utils} from "./Utils.sol";
+import {Utils} from "@compose-benchmark/Utils.sol";
 
-import {MinimalDiamond} from "./MinimalDiamond.sol";
-import {LibDiamond} from "../../src/diamond/LibDiamond.sol";
-import {DiamondLoupeFacet} from "../../src/diamond/DiamondLoupeFacet.sol";
+import {MinimalDiamond} from "@compose-benchmark/MinimalDiamond.sol";
+import {Diamond} from "@compose/Diamond.sol";
 
 abstract contract BaseBenchmark is Utils {
     MinimalDiamond internal diamond;
@@ -22,15 +21,13 @@ abstract contract BaseBenchmark is Utils {
         loupeSelectors[2] = SELECTOR_FACET_ADDRESSES;
         loupeSelectors[3] = SELECTOR_FACET_ADDRESS;
 
-        LibDiamond.FacetCut[] memory dc = new LibDiamond.FacetCut[](1);
+        Diamond.FacetCut[] memory dc = new Diamond.FacetCut[](1);
 
-        dc[0] = LibDiamond.FacetCut({
-            facetAddress: loupe, action: LibDiamond.FacetCutAction.Add, functionSelectors: loupeSelectors
+        dc[0] = Diamond.FacetCut({
+            facetAddress: loupe, action: Diamond.FacetCutAction.Add, functionSelectors: loupeSelectors
         });
 
-        MinimalDiamond.DiamondArgs memory args = MinimalDiamond.DiamondArgs({init: address(0), initCalldata: ""});
-
-        diamond.initialize(dc, args);
+        diamond.initialize(dc, address(0), "");
 
         // Initiatlise complex storage for minimal diamond
         _buildDiamond(address(diamond), NUM_FACETS, SELECTORS_PER_FACET);
