@@ -111,7 +111,16 @@ contract ERC6909Facet {
     /// @param _amount The amount of the token.
     /// @return Whether the transfer succeeded.
     function transferFrom(address _sender, address _receiver, uint256 _id, uint256 _amount) external returns (bool) {
+        if (_sender == address(0)) {
+            revert ERC6909InvalidSender(address(0));
+        }
+
+        if (_receiver == address(0)) {
+            revert ERC6909InvalidReceiver(address(0));
+        }
+
         ERC6909Storage storage s = getStorage();
+
         if (msg.sender != _sender && !s.isOperator[_sender][msg.sender]) {
             uint256 currentAllowance = s.allowance[_sender][msg.sender][_id];
             if (currentAllowance < type(uint256).max) {
@@ -122,14 +131,6 @@ contract ERC6909Facet {
                     s.allowance[_sender][msg.sender][_id] = currentAllowance - _amount;
                 }
             }
-        }
-
-        if (_sender == address(0)) {
-            revert ERC6909InvalidSender(address(0));
-        }
-
-        if (_receiver == address(0)) {
-            revert ERC6909InvalidReceiver(address(0));
         }
 
         uint256 fromBalance = s.balanceOf[_sender][_id];

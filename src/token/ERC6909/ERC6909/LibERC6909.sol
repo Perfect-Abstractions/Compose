@@ -104,6 +104,14 @@ library LibERC6909 {
     /// @param _id The id of the token.
     /// @param _amount The amount of the token.
     function transfer(address _by, address _from, address _to, uint256 _id, uint256 _amount) internal {
+        if (_from == address(0)) {
+            revert ERC6909InvalidSender(address(0));
+        }
+
+        if (_to == address(0)) {
+            revert ERC6909InvalidReceiver(address(0));
+        }
+
         ERC6909Storage storage s = getStorage();
 
         if (_by != _from && !s.isOperator[_from][_by]) {
@@ -116,14 +124,6 @@ library LibERC6909 {
                     s.allowance[_from][_by][_id] = currentAllowance - _amount;
                 }
             }
-        }
-
-        if (_from == address(0)) {
-            revert ERC6909InvalidSender(address(0));
-        }
-
-        if (_to == address(0)) {
-            revert ERC6909InvalidReceiver(address(0));
         }
 
         uint256 fromBalance = s.balanceOf[_from][_id];

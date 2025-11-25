@@ -342,6 +342,7 @@ contract LibERC6909Test is Test {
         vm.assume(from != by);
         vm.assume(from != address(0));
         vm.assume(by != address(0));
+        vm.assume(to != address(0));
 
         amount = bound(amount, 1, type(uint256).max - 1);
         vm.assume(spend > amount);
@@ -362,6 +363,8 @@ contract LibERC6909Test is Test {
     ) external {
         vm.assume(from != by);
         vm.assume(from != address(0));
+        vm.assume(by != address(0));
+        vm.assume(to != address(0));
 
         amount = bound(amount, 1, type(uint256).max);
 
@@ -425,6 +428,7 @@ contract LibERC6909Test is Test {
         vm.assume(from != address(0));
         vm.assume(to != address(0));
         vm.assume(by != address(0));
+        vm.assume(from != to);
 
         allowance = bound(allowance, 1, type(uint256).max - 1);
 
