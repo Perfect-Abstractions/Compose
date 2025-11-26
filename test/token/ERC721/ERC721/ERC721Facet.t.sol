@@ -3,7 +3,7 @@ pragma solidity >=0.8.30;
 
 import {Test} from "forge-std/Test.sol";
 import {ERC721FacetHarness} from "./harnesses/ERC721FacetHarness.sol";
-import {ERC721Facet} from "../../../../../src/token/ERC721/ERC721/ERC721Facet.sol";
+import {ERC721Facet} from "../../../../src/token/ERC721/ERC721/ERC721Facet.sol";
 
 contract ERC721FacetTest is Test {
     ERC721FacetHarness public harness;
