@@ -2,10 +2,10 @@
 pragma solidity >=0.8.30;
 
 import {Test} from "forge-std/Test.sol";
-import {LibERC721} from "../../../../../src/token/ERC721/ERC721/LibERC721.sol";
 import {LibERC721Harness} from "./harnesses/LibERC721Harness.sol";
+import {LibERC721} from "../../../../src/token/ERC721/ERC721/LibERC721.sol";
 
-contract ERC721Test is Test {
+contract LibERC721Test is Test {
     LibERC721Harness public harness;
 
     address public alice;
