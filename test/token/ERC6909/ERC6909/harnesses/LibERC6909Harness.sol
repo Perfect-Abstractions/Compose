@@ -3,7 +3,6 @@ pragma solidity >=0.8.30;
 
 import {LibERC6909} from "../../../../../src/token/ERC6909/ERC6909/LibERC6909.sol";
 
-/// @title LibERC6909Harness
 /// @notice Test harness that exposes LibERC6909's internal functions as external
 /// @dev Required for testing since LibERC6909 only has internal functions
 contract LibERC6909Harness {

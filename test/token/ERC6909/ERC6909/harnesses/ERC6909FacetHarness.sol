@@ -3,7 +3,6 @@ pragma solidity >=0.8.30;
 
 import {ERC6909Facet} from "../../../../../src/token/ERC6909/ERC6909/ERC6909Facet.sol";
 
-/// @title ERC6909FacetHarness
 /// @notice Test harness for ERC6909Facet that adds initialization and minting for testing
 error ERC6909InvalidReceiver(address _receiver);
 
