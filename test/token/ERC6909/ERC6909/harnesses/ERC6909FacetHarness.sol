@@ -6,6 +6,7 @@ import {ERC6909Facet} from "../../../../../src/token/ERC6909/ERC6909/ERC6909Face
 /// @title ERC6909FacetHarness
 /// @notice Test harness for ERC6909Facet that adds initialization and minting for testing
 error ERC6909InvalidReceiver(address _receiver);
+
 contract ERC6909FacetHarness is ERC6909Facet {
     function mint(address _to, uint256 _id, uint256 _amount) external {
         if (_to == address(0)) {
