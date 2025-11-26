@@ -32,7 +32,9 @@ library LibNonReentrancy {
         bytes32 position = NON_REENTRANT_SLOT;
         assembly ("memory-safe") {
             if tload(position) {
-                mstore(0x00, 0x43a0d067)
+                // Store the selector for "Reentrancy()" (0xab143c06) at the beginning of memory.
+                // We shift left by 224 bits (256 - 32) to left-align the 4-byte selector in the 32-byte slot.
+                mstore(0x00, shl(224, 0xab143c06))
                 revert(0x00, 0x04)
             }
             tstore(position, 1)
