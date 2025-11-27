@@ -27,35 +27,6 @@ When generating code, PRs, or issue actions:
 
 ---
 
-## 0.1. Quick Orientation for AI Agents
-
-**What is Compose?**
-- Smart contract library for building ERC-2535 Diamond-based systems
-- Provides reusable facets (modular contracts) and libraries following strict design principles
-
-**Architecture at a glance:**
-- `src/diamond/` - Core diamond implementation (Diamond.sol, LibDiamond.sol, DiamondCutFacet.sol, DiamondLoupeFacet.sol)
-- `src/token/` - Token standards organized by type (ERC20/, ERC721/, ERC1155/, ERC6909/, Royalty/)
-- `src/access/` - Access control patterns (Owner/, AccessControl/, etc.)
-- `test/` - Mirror structure of `src/` with matching test files + harnesses
-- Each feature lives in its own directory: `src/token/ERC20/ERC20/` contains `ERC20Facet.sol` and `LibERC20.sol`
-
-**Key patterns to recognize:**
-- Facets = deployable contracts with `external` functions (entry points into diamond)
-- Libraries = internal helper functions with `internal` visibility
-- Diamond storage: Each facet/library uses `getStorage()` with assembly to access unique keccak256 slot
-- No imports in facets/libraries - everything is self-contained in one file
-- Test harnesses inherit from facets to add `initialize()` and test utilities
-
-**Immediate productivity checklist:**
-1. Read section 0 (banned features) before writing any code
-2. Use `forge test --match-path test/token/ERC20/ERC20/ERC20Facet.t.sol` to run specific tests
-3. Run `forge fmt` before committing
-4. Check `test/README.md` for test harness pattern details
-5. Reference existing facets (ERC20Facet.sol, ERC721Facet.sol) as templates
-
----
-
 ## 1. Purpose
 
 - Provide concise guidance to assistants, automation, and contributors.
@@ -125,7 +96,7 @@ Guideline: Repeat yourself when it helps understanding; apply DRY only if it imp
 
 Purpose: Keep deployed on-chain logic minimal, explicit, and consistent.
 
-Exceptions: Tests, scripts, or external consumer projects may use these features. Test harnesses in `test/**/harnesses/` routinely inherit from facets to add initialization and helper functions for testing.
+Exceptions: Tests, scripts, or external consumer projects may use these features.
 
 Rules & Rationale:
 
@@ -178,22 +149,6 @@ Storage reuse:
 - Never remove variables from middle or beginning.
 - Design new structs with removable trailing fields in mind.
 - Implement new storage with a unique slot if adding new state.
-
-Diamond Storage Pattern (ERC-8042):
-- Each facet/library defines a storage struct at a unique keccak256 slot.
-- Use `bytes32 constant STORAGE_POSITION = keccak256("compose.<feature>")`.
-- Add `@custom:storage-location erc8042:compose.<feature>` annotation to struct.
-- Implement `getStorage()` internal function using assembly to access the slot:
-  ```solidity
-  function getStorage() internal pure returns (FeatureStorage storage s) {
-      bytes32 position = STORAGE_POSITION;
-      assembly {
-          s.slot := position
-      }
-  }
-  ```
-- Storage variables in facets have NO visibility specifier (not public/private/internal).
-- Exception: `immutable` and `constant` variables may be declared `internal`.
 
 Authorization:
 - Minimize owner/admin checks; only include if fundamental to functionality.
@@ -390,20 +345,6 @@ Test patterns:
 - Library tests: `test/[Feature]/Lib[Feature].t.sol`
 - Harnesses: `test/[Feature]/harnesses/` (expose internal logic safely)
 
-Test Harness Pattern:
-- Harnesses are wrapper contracts that make production code testable.
-- They inherit from facets/wrap libraries to add test-only functionality.
-- Common harness methods: `initialize()` (set up storage), `mint()` (create test state).
-- Harnesses CAN use banned features (inheritance, public functions) - they're test code.
-- Example: `ERC20FacetHarness is ERC20Facet` adds `initialize()` and `mint()`.
-- Tests import harnesses, not production facets directly.
-
-Project Structure:
-- Production code: `src/token/ERC20/ERC20/ERC20Facet.sol`, `src/token/ERC20/ERC20/LibERC20.sol`
-- Test code: `test/token/ERC20/ERC20/ERC20Facet.t.sol`, `test/token/ERC20/ERC20/LibERC20.t.sol`
-- Harnesses: `test/token/ERC20/ERC20/harnesses/ERC20FacetHarness.sol`
-- Test naming: `test_FunctionName()`, `test_FunctionName_EdgeCase()`, `testFuzz_FunctionName()`
-
 Recommended commands:
 ```bash
 forge build
@@ -430,19 +371,12 @@ Gas considerations:
 | Build             | `forge build`                      |
 | Test (all)        | `forge test`                       |
 | Test (verbose)    | `forge test -vvv`                  |
-| Test (single)     | `forge test --match-path test/token/ERC20/ERC20/ERC20Facet.t.sol` |
-| Test (specific)   | `forge test --match-test test_Transfer` |
+| Test (single)     | `forge test --match-path test/X.sol` |
 | Gas report        | `forge test --gas-report`          |
 | Snapshot          | `forge snapshot`                   |
 | Format            | `forge fmt`                        |
 | Local node        | `anvil`                            |
 | Cast utilities    | `cast --help`                      |
-
-Configuration:
-- Solidity version: `>=0.8.30`
-- EVM version: `prague` (see `foundry.toml`)
-- Optimizer: enabled with 20,000 runs
-- Line length: 120 characters (formatting)
 
 ---
 
@@ -480,7 +414,7 @@ Update this file:
 - Reference a changelog section (consider adding `CHANGELOG.md` or release notes).
 
 Include version tag here (update manually):
-- File version: `v1.1.0` (updated November 27, 2025 - added AI agent quick orientation, enhanced diamond storage pattern documentation, expanded test harness details)
+- File version: `v1.0.0` (update as needed)
 
 ---
 
