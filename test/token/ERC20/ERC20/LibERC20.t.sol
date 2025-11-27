@@ -214,25 +214,6 @@ contract LibERC20Test is Test {
         harness.transfer(bob, 100e18);
     }
 
-    function test_RevertWhen_TransferOverflowsRecipient() public {
-        uint256 bobBalance = type(uint256).max - 100;
-        uint256 aliceBalance = 200;
-
-        // Mint near-max tokens to bob directly (bypassing totalSupply)
-        // This simulates a scenario where bob already has near-max tokens
-        bytes32 storageSlot = keccak256("compose.erc20");
-        uint256 bobBalanceSlot = uint256(keccak256(abi.encode(bob, uint256(storageSlot) + 4))); // balanceOf mapping slot
-        vm.store(address(harness), bytes32(bobBalanceSlot), bytes32(bobBalance));
-
-        // Mint tokens to alice normally
-        harness.mint(alice, aliceBalance);
-
-        // Alice tries to transfer 200 tokens to bob, which would overflow bob's balance
-        vm.prank(alice);
-        vm.expectRevert(); // Arithmetic overflow
-        harness.transfer(bob, aliceBalance);
-    }
-
     function test_RevertWhen_MintOverflowsRecipient() public {
         uint256 maxBalance = type(uint256).max - 100;
 

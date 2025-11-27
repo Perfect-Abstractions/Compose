@@ -47,13 +47,12 @@ library LibERC20 {
     /// @notice ERC-20 storage layout using the ERC-8042 standard.
     /// @custom:storage-location erc8042:compose.erc20
     struct ERC20Storage {
+        mapping(address owner => uint256 balance) balanceOf;
+        uint256 totalSupply;
+        mapping(address owner => mapping(address spender => uint256 allowance)) allowance;
+        uint8 decimals;
         string name;
         string symbol;
-        uint8 decimals;
-        uint256 totalSupply;
-        mapping(address owner => uint256 balance) balanceOf;
-        mapping(address owner => mapping(address spender => uint256 allowance)) allowance;
-        mapping(address owner => uint256) nonces;
     }
 
     /// @notice Returns a pointer to the ERC-20 storage struct.
