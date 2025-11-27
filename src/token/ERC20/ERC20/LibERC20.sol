@@ -53,7 +53,6 @@ library LibERC20 {
         uint8 decimals;
         string name;
         string symbol;
-        mapping(address owner => uint256) nonces;
     }
 
     /// @notice Returns a pointer to the ERC-20 storage struct.
