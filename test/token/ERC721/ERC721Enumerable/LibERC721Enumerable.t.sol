@@ -421,5 +421,4 @@ contract LibERC721EnumerableTest is Test {
 
         assertEq(harness.ownerOf(tokenId), to);
     }
-
 }
