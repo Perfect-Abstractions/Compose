@@ -264,7 +264,7 @@ const config = {
       }),
     }),
   plugins: [
-    [
+    process.env.POSTHOG_API_KEY && [
       "posthog-docusaurus",
       {
         apiKey: process.env.POSTHOG_API_KEY,
@@ -273,8 +273,8 @@ const config = {
         enableInDevelopment: false, 
         capturePageLeave: true,
       },
-    ]
-  ],
+    ],
+  ].filter(Boolean),
 };
 
 export default config;
