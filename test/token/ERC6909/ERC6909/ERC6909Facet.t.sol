@@ -41,6 +41,7 @@ contract ERC6909FacetTest is Test {
     }
 
     function testFuzz_Mint(address caller, address to, uint256 id, uint256 amount) external {
+        vm.assume(to != address(0));
         vm.expectEmit();
         emit ERC6909Facet.Transfer(caller, address(0), to, id, amount);
 
