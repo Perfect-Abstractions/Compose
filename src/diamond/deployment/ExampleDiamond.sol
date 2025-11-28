@@ -14,14 +14,15 @@ contract ExampleDiamond is ComposeDiamond {
     ///    address facetAddress;
     ///    FacetCutAction action; // Add=0, Replace=1, Remove=2
     ///    bytes4[] functionSelectors;
-    /// }
+    ///}
+
     /// @notice Initializes the diamond contract with facets, owner and other data.
     /// @dev Adds all provided facets to the diamond's function selector mapping and sets the contract owner.
     ///      Each facet in the array will have its function selectors registered to enable delegatecall routing.
     /// @param _facets Array of facet addresses and their corresponding function selectors to add to the diamond.
     /// @param _diamondOwner Address that will be set as the owner of the diamond contract.
-    constructor(FacetCut[] memory _facets, address _diamondOwner) {
-        addFacets(_facets);
+    constructor(ComposeDiamond.FacetCut[] memory _facets, address _diamondOwner) {
+        ComposeDiamond.addFacets(_facets);
 
         // Initialize storage variables
         //////////////////////////////////////////////////////

@@ -223,14 +223,14 @@ contract DiamondLoupeFacet {
     ///      - This design is optimized for diamonds with many facets and many selectors,
     ///        where the original O(n²) nested loop approach becomes prohibitively expensive.
     ///
-    /// @return facetsAndSelectors Array of Facet structs, each containing a facet address.
+    /// @return facetsAndSelectors Array of Facet structs, each containing a facet address and function selectors.
     function facets() external view returns (Facet[] memory facetsAndSelectors) {
         DiamondStorage storage s = getStorage();
         bytes4[] memory selectors = s.selectors;
         uint256 selectorsCount = selectors.length;
         bytes4 selector;
 
-        // Reuse the selectors array to hold pointers to Facet structs in memory.
+        // Reuse the selectors memory array to hold pointers to Facet structs in memory.
         // Each pointer is a memory address to a Facet struct in memory.
         // As we loop through the selectors, we overwrite earlier slots with pointers.
         // The selectors array and the facetPointers array point to the same
@@ -250,6 +250,7 @@ contract DiamondLoupeFacet {
         // Each entry is a dynamically sized array of uint256 pointers.
         // Using only the last byte of the address (256 possible values) provides a simple
         // bucketing mechanism to reduce linear search costs across unique facets.
+        // Each entry in the map is called a "bucket".
         uint256[][256] memory map;
 
         // The last byte of a facet address, used as an index key into `map`.
