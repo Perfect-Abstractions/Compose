@@ -16,7 +16,7 @@ contract ExampleDiamond is ComposeDiamond {
     //     bytes4[] functionSelectors;
     // }
 
-    /// @notice Initializes the diamond contract with facets and owner.
+    /// @notice Initializes the diamond contract with facets, owner and other data.
     /// @dev Adds all provided facets to the diamond's function selector mapping and sets the contract owner.
     ///      Each facet in the array will have its function selectors registered to enable delegatecall routing.
     /// @param _facets Array of facet addresses and their corresponding function selectors to add to the diamond.
