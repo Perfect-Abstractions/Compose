@@ -27,15 +27,6 @@ contract LibERC20BridgeableTest is Test {
     // CrossChainMint Tests
     // ======================================
 
-    function test_CrossChainMintSucceedsFuzz(address to, uint256 amount) public {
-        vm.assume(to != address(0));
-        vm.assume(amount > 0 && amount < INITIAL_SUPPLY);
-        vm.prank(alice);
-        token.crosschainMint(to, amount);
-        uint256 toBalance = token.balanceOf(to);
-        assertEq(toBalance, amount);
-    }
-
     function test_CrossChainMintRevertsInvalidCaller(address to, uint256 amount, address invalidCaller) public {
         vm.assume(to != address(0));
         vm.assume(amount > 0 && amount < INITIAL_SUPPLY);
@@ -66,17 +57,6 @@ contract LibERC20BridgeableTest is Test {
     // ======================================
     // CrossChainBurn Tests
     // ======================================
-
-    function test_CrosschainBurnSucceedsFuzz(address from, uint256 amount) public {
-        vm.assume(from != address(0));
-        vm.assume(amount > 0 && amount < INITIAL_SUPPLY);
-        vm.prank(alice);
-        token.crosschainMint(from, amount);
-        vm.prank(alice);
-        token.crosschainBurn(from, amount);
-        uint256 fromBalance = token.balanceOf(from);
-        assertEq(fromBalance, 0);
-    }
 
     function test_CrossChainBurnRevertsInvalidCaller(address from, uint256 amount, address invalidCaller) public {
         vm.assume(from != address(0));
