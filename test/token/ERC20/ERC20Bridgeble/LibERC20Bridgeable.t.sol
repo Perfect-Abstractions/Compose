@@ -21,7 +21,6 @@ contract LibERC20BridgeableTest is Test {
         token.setRole(alice, "trusted-bridge", true);
         vm.prank(alice);
         token.crosschainMint(alice, INITIAL_SUPPLY);
-
     }
 
     // ======================================
@@ -42,8 +41,12 @@ contract LibERC20BridgeableTest is Test {
         vm.assume(amount > 0 && amount < INITIAL_SUPPLY);
         vm.assume(invalidCaller != alice);
         vm.prank(invalidCaller);
-        vm.expectRevert(abi.encodeWithSelector(LibERC20Bridgeable.AccessControlUnauthorizedAccount.selector, invalidCaller, bytes32("trusted-bridge")));
-        token.crosschainMint(to, amount);       
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                LibERC20Bridgeable.AccessControlUnauthorizedAccount.selector, invalidCaller, bytes32("trusted-bridge")
+            )
+        );
+        token.crosschainMint(to, amount);
     }
 
     function test_CrossChainMintRevertsInvalidReceiver(uint256 amount) public {
@@ -51,9 +54,9 @@ contract LibERC20BridgeableTest is Test {
         vm.assume(amount > 0 && amount < INITIAL_SUPPLY);
         vm.expectRevert(abi.encodeWithSelector(LibERC20Bridgeable.ERC20InvalidReciever.selector, to));
         vm.prank(alice);
-        token.crosschainMint(to, amount);       
-    }           
-    
+        token.crosschainMint(to, amount);
+    }
+
     function test_CrossChainMint() public {
         vm.prank(alice);
         token.crosschainMint(bob, 500e18);
@@ -82,7 +85,11 @@ contract LibERC20BridgeableTest is Test {
         vm.prank(alice);
         token.crosschainMint(from, amount);
         vm.prank(invalidCaller);
-        vm.expectRevert(abi.encodeWithSelector(LibERC20Bridgeable.AccessControlUnauthorizedAccount.selector, invalidCaller, bytes32("trusted-bridge")));
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                LibERC20Bridgeable.AccessControlUnauthorizedAccount.selector, invalidCaller, bytes32("trusted-bridge")
+            )
+        );
         token.crosschainBurn(from, amount);
     }
 
@@ -91,8 +98,8 @@ contract LibERC20BridgeableTest is Test {
         vm.assume(amount > 0 && amount < INITIAL_SUPPLY);
         vm.prank(alice);
         vm.expectRevert(abi.encodeWithSelector(LibERC20Bridgeable.ERC20InvalidReciever.selector, from));
-        token.crosschainBurn(from, amount);       
-    }       
+        token.crosschainBurn(from, amount);
+    }
 
     function test_CrossChainBurn() public {
         vm.prank(alice);
@@ -102,7 +109,7 @@ contract LibERC20BridgeableTest is Test {
         vm.prank(alice);
         token.crosschainBurn(bob, 200e18);
         assertEq(token.balanceOf(bob), 300e18);
-    }   
+    }
 
     // ======================================
     // checkTokenBridge Tests

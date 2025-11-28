@@ -158,7 +158,7 @@ library LibERC20Bridgeable {
     function checkTokenBridge(address _caller) internal view {
         AccessControlStorage storage acs = getAccessControlStorage();
 
-        if (_caller == address(0)) { 
+        if (_caller == address(0)) {
             revert ERC20InvalidBridgeAccount(address(0));
         }
 

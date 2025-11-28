@@ -27,10 +27,7 @@ contract ERC20BridgeableFacetTest is Test {
     // CrossChainMint Tests
     // ======================================
 
-    function test_CrossChainMintSucceedsFuzz(
-        address to,
-        uint256 amount
-    ) public {
+    function test_CrossChainMintSucceedsFuzz(address to, uint256 amount) public {
         vm.assume(to != address(0));
         vm.assume(amount > 0 && amount < INITIAL_SUPPLY);
         vm.prank(alice);
@@ -39,20 +36,14 @@ contract ERC20BridgeableFacetTest is Test {
         assertEq(toBalance, amount);
     }
 
-    function test_CrossChainMintRevertsInvalidCaller(
-        address to,
-        uint256 amount,
-        address invalidCaller
-    ) public {
+    function test_CrossChainMintRevertsInvalidCaller(address to, uint256 amount, address invalidCaller) public {
         vm.assume(to != address(0));
         vm.assume(amount > 0 && amount < INITIAL_SUPPLY);
         vm.assume(invalidCaller != alice);
         vm.prank(invalidCaller);
         vm.expectRevert(
             abi.encodeWithSelector(
-                ERC20BridgeableFacet.AccessControlUnauthorizedAccount.selector,
-                invalidCaller,
-                bytes32("trusted-bridge")
+                ERC20BridgeableFacet.AccessControlUnauthorizedAccount.selector, invalidCaller, bytes32("trusted-bridge")
             )
         );
         token.crosschainMint(to, amount);
@@ -61,12 +52,7 @@ contract ERC20BridgeableFacetTest is Test {
     function test_CrossChainMintRevertsInvalidReceiver(uint256 amount) public {
         address to = address(0);
         vm.assume(amount > 0 && amount < INITIAL_SUPPLY);
-        vm.expectRevert(
-            abi.encodeWithSelector(
-                ERC20BridgeableFacet.ERC20InvalidReciever.selector,
-                to
-            )
-        );
+        vm.expectRevert(abi.encodeWithSelector(ERC20BridgeableFacet.ERC20InvalidReciever.selector, to));
         vm.prank(alice);
         token.crosschainMint(to, amount);
     }
@@ -92,12 +78,7 @@ contract ERC20BridgeableFacetTest is Test {
         assertEq(fromBalance, 0);
     }
 
-
-    function test_CrossChainBurnRevertsInvalidCaller(
-        address from,
-        uint256 amount,
-        address invalidCaller
-    ) public {
+    function test_CrossChainBurnRevertsInvalidCaller(address from, uint256 amount, address invalidCaller) public {
         vm.assume(from != address(0));
         vm.assume(amount > 0 && amount < INITIAL_SUPPLY);
         vm.assume(invalidCaller != alice);
@@ -106,9 +87,7 @@ contract ERC20BridgeableFacetTest is Test {
         vm.prank(invalidCaller);
         vm.expectRevert(
             abi.encodeWithSelector(
-                ERC20BridgeableFacet.AccessControlUnauthorizedAccount.selector,
-                invalidCaller,
-                bytes32("trusted-bridge")
+                ERC20BridgeableFacet.AccessControlUnauthorizedAccount.selector, invalidCaller, bytes32("trusted-bridge")
             )
         );
         token.crosschainBurn(from, amount);
@@ -118,12 +97,7 @@ contract ERC20BridgeableFacetTest is Test {
         address from = address(0);
         vm.assume(amount > 0 && amount < INITIAL_SUPPLY);
         vm.prank(alice);
-        vm.expectRevert(
-            abi.encodeWithSelector(
-                ERC20BridgeableFacet.ERC20InvalidReciever.selector,
-                from
-            )
-        );
+        vm.expectRevert(abi.encodeWithSelector(ERC20BridgeableFacet.ERC20InvalidReciever.selector, from));
         token.crosschainBurn(from, amount);
     }
 
@@ -148,36 +122,21 @@ contract ERC20BridgeableFacetTest is Test {
     function test_CheckTokenBridgeReverts(address invalidCaller) public {
         vm.assume(invalidCaller != alice);
         vm.prank(invalidCaller);
-        vm.expectRevert(
-            abi.encodeWithSelector(
-                ERC20BridgeableFacet.ERC20InvalidBridgeAccount.selector,
-                invalidCaller
-            )
-        );
+        vm.expectRevert(abi.encodeWithSelector(ERC20BridgeableFacet.ERC20InvalidBridgeAccount.selector, invalidCaller));
         token.checkTokenBridge(invalidCaller);
     }
 
     function test_CheckTokenBridgeRevertsZeroAddress() public {
         address invalidCaller = address(0);
         vm.prank(invalidCaller);
-        vm.expectRevert(
-            abi.encodeWithSelector(
-                ERC20BridgeableFacet.ERC20InvalidBridgeAccount.selector,
-                invalidCaller
-            )
-        );
+        vm.expectRevert(abi.encodeWithSelector(ERC20BridgeableFacet.ERC20InvalidBridgeAccount.selector, invalidCaller));
         token.checkTokenBridge(invalidCaller);
     }
 
     function test_CheckTokenBridgeSucceedsAfterRevokingRole() public {
         token.setRole(alice, "trusted-bridge", false);
         vm.prank(alice);
-        vm.expectRevert(
-            abi.encodeWithSelector(
-                ERC20BridgeableFacet.ERC20InvalidBridgeAccount.selector,
-                alice
-            )
-        );
+        vm.expectRevert(abi.encodeWithSelector(ERC20BridgeableFacet.ERC20InvalidBridgeAccount.selector, alice));
         token.checkTokenBridge(alice);
     }
 }

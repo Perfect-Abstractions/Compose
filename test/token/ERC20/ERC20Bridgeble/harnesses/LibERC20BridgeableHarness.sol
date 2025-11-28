@@ -9,8 +9,7 @@ contract LibERC20BridgeableHarness {
     }
 
     function balanceOf(address _account) external view returns (uint256) {
-        LibERC20Bridgeable.ERC20Storage storage s = LibERC20Bridgeable
-            .getERC20Storage();
+        LibERC20Bridgeable.ERC20Storage storage s = LibERC20Bridgeable.getERC20Storage();
         return s.balanceOf[_account];
     }
 
@@ -23,8 +22,7 @@ contract LibERC20BridgeableHarness {
     }
 
     function setRole(address account, bytes32 role, bool value) external {
-        LibERC20Bridgeable.AccessControlStorage storage acs = LibERC20Bridgeable
-            .getAccessControlStorage();
+        LibERC20Bridgeable.AccessControlStorage storage acs = LibERC20Bridgeable.getAccessControlStorage();
         acs.hasRole[account][role] = value;
     }
 }
