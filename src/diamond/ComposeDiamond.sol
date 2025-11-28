@@ -7,7 +7,7 @@ contract ComposeDiamond {
     /**
      * @notice Data stored for each function selector.
      * @dev Facet address of function selector.
-     *      Position of selector in the 'bytes4[] selectors' array.
+     *      Position of selector in the `bytes4[] selectors` array.
      */
     struct FacetAndPosition {
         address facet;
@@ -20,7 +20,7 @@ contract ComposeDiamond {
     struct DiamondStorage {
         mapping(bytes4 functionSelector => FacetAndPosition) facetAndPosition;
         /**
-         * Array of all function selectors that can be called in the diamond
+         * `selectors` contains all function selectors that can be called in the diamond.
          */
         bytes4[] selectors;
     }
