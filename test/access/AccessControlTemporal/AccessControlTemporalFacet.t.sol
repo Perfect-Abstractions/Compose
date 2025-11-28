@@ -1,4 +1,6 @@
-// SPDX-License-Identifier: MIT
+/**
+ *  SPDX-License-Identifier: MIT
+ */
 pragma solidity >=0.8.30;
 
 import {Test, console2} from "forge-std/Test.sol";
@@ -11,34 +13,46 @@ contract AccessControlTemporalFacetTest is Test {
     AccessControlTemporalFacetHarness public temporalFacet;
     AccessControlFacetHarness public accessControl;
 
-    // Test addresses
+    /**
+     * Test addresses
+     */
     address ADMIN = makeAddr("admin");
     address ALICE = makeAddr("alice");
     address BOB = makeAddr("bob");
 
-    // Test roles
+    /**
+     * Test roles
+     */
     bytes32 constant DEFAULT_ADMIN_ROLE = 0x00;
     bytes32 constant MINTER_ROLE = keccak256("MINTER_ROLE");
 
-    // Events
+    /**
+     * Events
+     */
     event RoleGrantedWithExpiry(
         bytes32 indexed role, address indexed account, uint256 expiresAt, address indexed sender
     );
     event TemporalRoleRevoked(bytes32 indexed role, address indexed account, address indexed sender);
 
     function setUp() public {
-        // Initialize AccessControl first (shared storage)
+        /**
+         * Initialize AccessControl first (shared storage)
+         */
         accessControl = new AccessControlFacetHarness();
         accessControl.initialize(ADMIN);
 
-        // Initialize TemporalFacet (uses same AccessControl storage)
+        /**
+         * Initialize TemporalFacet (uses same AccessControl storage)
+         */
         temporalFacet = new AccessControlTemporalFacetHarness();
         temporalFacet.initialize(ADMIN);
     }
 
-    // ============================================
-    // GetRoleExpiry Tests
-    // ============================================
+    /**
+     * ============================================
+     * GetRoleExpiry Tests
+     * ============================================
+     */
 
     function test_GetRoleExpiry_ReturnsZeroForNonExistentRole() public view {
         assertEq(temporalFacet.getRoleExpiry(MINTER_ROLE, ALICE), 0);
@@ -54,9 +68,11 @@ contract AccessControlTemporalFacetTest is Test {
         assertEq(temporalFacet.getStorageExpiry(ALICE, MINTER_ROLE), expiry);
     }
 
-    // ============================================
-    // IsRoleExpired Tests
-    // ============================================
+    /**
+     * ============================================
+     * IsRoleExpired Tests
+     * ============================================
+     */
 
     function test_IsRoleExpired_ReturnsTrueForNoRole() public view {
         assertTrue(temporalFacet.isRoleExpired(MINTER_ROLE, ALICE));
@@ -77,7 +93,9 @@ contract AccessControlTemporalFacetTest is Test {
         vm.prank(ADMIN);
         temporalFacet.grantRoleWithExpiry(MINTER_ROLE, ALICE, expiry);
 
-        // Fast forward past expiry
+        /**
+         * Fast forward past expiry
+         */
         vm.warp(expiry + 1);
 
         assertTrue(temporalFacet.isRoleExpired(MINTER_ROLE, ALICE));
@@ -89,16 +107,22 @@ contract AccessControlTemporalFacetTest is Test {
         vm.prank(ADMIN);
         temporalFacet.grantRoleWithExpiry(MINTER_ROLE, ALICE, expiry);
 
-        // Set time to exactly expiry
+        /**
+         * Set time to exactly expiry
+         */
         vm.warp(expiry);
 
-        // At exact expiry time, role should be expired
+        /**
+         * At exact expiry time, role should be expired
+         */
         assertTrue(temporalFacet.isRoleExpired(MINTER_ROLE, ALICE));
     }
 
-    // ============================================
-    // GrantRoleWithExpiry Tests
-    // ============================================
+    /**
+     * ============================================
+     * GrantRoleWithExpiry Tests
+     * ============================================
+     */
 
     function test_GrantRoleWithExpiry_SucceedsWithFutureExpiry() public {
         uint256 expiry = block.timestamp + 7 days;
@@ -157,9 +181,11 @@ contract AccessControlTemporalFacetTest is Test {
         temporalFacet.grantRoleWithExpiry(MINTER_ROLE, BOB, expiry);
     }
 
-    // ============================================
-    // RevokeTemporalRole Tests
-    // ============================================
+    /**
+     * ============================================
+     * RevokeTemporalRole Tests
+     * ============================================
+     */
 
     function test_RevokeTemporalRole_Succeeds() public {
         uint256 expiry = block.timestamp + 7 days;
@@ -194,7 +220,9 @@ contract AccessControlTemporalFacetTest is Test {
         vm.prank(ADMIN);
         temporalFacet.revokeTemporalRole(MINTER_ROLE, ALICE);
 
-        // Ensure no state changes
+        /**
+         * Ensure no state changes
+         */
         assertFalse(accessControl.hasRole(MINTER_ROLE, ALICE));
         assertEq(temporalFacet.getRoleExpiry(MINTER_ROLE, ALICE), 0);
     }
@@ -214,9 +242,11 @@ contract AccessControlTemporalFacetTest is Test {
         temporalFacet.revokeTemporalRole(MINTER_ROLE, ALICE);
     }
 
-    // ============================================
-    // RequireValidRole Tests
-    // ============================================
+    /**
+     * ============================================
+     * RequireValidRole Tests
+     * ============================================
+     */
 
     function test_RequireValidRole_PassesWithValidExpiry() public {
         uint256 expiry = block.timestamp + 7 days;
@@ -224,15 +254,21 @@ contract AccessControlTemporalFacetTest is Test {
         vm.prank(ADMIN);
         temporalFacet.grantRoleWithExpiry(MINTER_ROLE, ALICE, expiry);
 
-        // Should not revert
+        /**
+         * Should not revert
+         */
         temporalFacet.requireValidRole(MINTER_ROLE, ALICE);
     }
 
     function test_RequireValidRole_PassesWithoutExpiry() public {
-        // Grant role without expiry using harness (direct storage manipulation)
+        /**
+         * Grant role without expiry using harness (direct storage manipulation)
+         */
         temporalFacet.forceGrantRole(MINTER_ROLE, ALICE);
 
-        // Should not revert (no expiry set means valid)
+        /**
+         * Should not revert (no expiry set means valid)
+         */
         temporalFacet.requireValidRole(MINTER_ROLE, ALICE);
     }
 
@@ -242,7 +278,9 @@ contract AccessControlTemporalFacetTest is Test {
         vm.prank(ADMIN);
         temporalFacet.grantRoleWithExpiry(MINTER_ROLE, ALICE, expiry);
 
-        // Fast forward past expiry
+        /**
+         * Fast forward past expiry
+         */
         vm.warp(expiry + 1);
 
         vm.expectRevert(
@@ -276,24 +314,34 @@ contract AccessControlTemporalFacetTest is Test {
         temporalFacet.requireValidRole(MINTER_ROLE, ALICE);
     }
 
-    // ============================================
-    // Scenario Tests
-    // ============================================
+    /**
+     * ============================================
+     * Scenario Tests
+     * ============================================
+     */
 
     function test_Scenario_TemporaryContractorAccess() public {
         uint256 contractEnd = block.timestamp + 30 days;
 
-        // Grant contractor role that expires in 30 days
+        /**
+         * Grant contractor role that expires in 30 days
+         */
         vm.prank(ADMIN);
         temporalFacet.grantRoleWithExpiry(MINTER_ROLE, ALICE, contractEnd);
 
-        // Verify access works now
+        /**
+         * Verify access works now
+         */
         temporalFacet.requireValidRole(MINTER_ROLE, ALICE);
 
-        // Fast forward past contract end
+        /**
+         * Fast forward past contract end
+         */
         vm.warp(contractEnd + 1);
 
-        // Access should be denied
+        /**
+         * Access should be denied
+         */
         vm.expectRevert(
             abi.encodeWithSelector(AccessControlTemporalFacet.AccessControlRoleExpired.selector, MINTER_ROLE, ALICE)
         );
@@ -308,12 +356,16 @@ contract AccessControlTemporalFacetTest is Test {
         temporalFacet.grantRoleWithExpiry(MINTER_ROLE, ALICE, initialExpiry);
         assertEq(temporalFacet.getRoleExpiry(MINTER_ROLE, ALICE), initialExpiry);
 
-        // Extend before expiration
+        /**
+         * Extend before expiration
+         */
         temporalFacet.grantRoleWithExpiry(MINTER_ROLE, ALICE, newExpiry);
         assertEq(temporalFacet.getRoleExpiry(MINTER_ROLE, ALICE), newExpiry);
         vm.stopPrank();
 
-        // Access should still work
+        /**
+         * Access should still work
+         */
         temporalFacet.requireValidRole(MINTER_ROLE, ALICE);
     }
 }

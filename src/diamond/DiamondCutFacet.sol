@@ -1,20 +1,28 @@
-// SPDX-License-Identifier: MIT
+/**
+ *  SPDX-License-Identifier: MIT
+ */
 pragma solidity >=0.8.30;
 
 contract DiamondCutFacet {
-    /// @notice Thrown when a non-owner attempts an action restricted to owner.
+    /**
+     * @notice Thrown when a non-owner attempts an action restricted to owner.
+     */
     error OwnerUnauthorizedAccount();
 
     bytes32 constant OWNER_STORAGE_POSITION = keccak256("compose.owner");
 
-    /// @custom:storage-location erc8042:compose.owner
+    /**
+     * @custom:storage-location erc8042:compose.owner
+     */
     struct OwnerStorage {
         address owner;
     }
 
-    /// @notice Returns a pointer to the owner storage struct.
-    /// @dev Uses inline assembly to access the storage slot defined by STORAGE_POSITION.
-    /// @return s The OwnerStorage struct in storage.
+    /**
+     * @notice Returns a pointer to the owner storage struct.
+     * @dev Uses inline assembly to access the storage slot defined by STORAGE_POSITION.
+     * @return s The OwnerStorage struct in storage.
+     */
     function getOwnerStorage() internal pure returns (OwnerStorage storage s) {
         bytes32 position = OWNER_STORAGE_POSITION;
         assembly {
@@ -36,18 +44,24 @@ contract DiamondCutFacet {
 
     bytes32 constant DIAMOND_STORAGE_POSITION = keccak256("compose.diamond");
 
-    /// @notice Data stored for each function selector
-    /// @dev Facet address of function selector
-    ///      Position of selector in the 'bytes4[] selectors' array
+    /**
+     * @notice Data stored for each function selector
+     * @dev Facet address of function selector
+     *      Position of selector in the 'bytes4[] selectors' array
+     */
     struct FacetAndPosition {
         address facet;
         uint32 position;
     }
 
-    /// @custom:storage-location erc8042:compose.diamond
+    /**
+     * @custom:storage-location erc8042:compose.diamond
+     */
     struct DiamondStorage {
         mapping(bytes4 functionSelector => FacetAndPosition) facetAndPosition;
-        // Array of all function selectors that can be called in the diamond
+        /**
+         * Array of all function selectors that can be called in the diamond
+         */
         bytes4[] selectors;
     }
 
@@ -63,7 +77,9 @@ contract DiamondCutFacet {
         if (_facet.code.length == 0) {
             revert NoBytecodeAtAddress(_facet, "DiamondCutFacet: Add facet has no code");
         }
-        // The position to store the next selector in the selectors array
+        /**
+         * The position to store the next selector in the selectors array
+         */
         uint32 selectorPosition = uint32(s.selectors.length);
         for (uint256 selectorIndex; selectorIndex < _functionSelectors.length; selectorIndex++) {
             bytes4 selector = _functionSelectors[selectorIndex];
@@ -85,7 +101,9 @@ contract DiamondCutFacet {
         for (uint256 selectorIndex; selectorIndex < _functionSelectors.length; selectorIndex++) {
             bytes4 selector = _functionSelectors[selectorIndex];
             address oldFacet = s.facetAndPosition[selector].facet;
-            // can't replace immutable functions -- functions defined directly in the diamond in this case
+            /**
+             * can't replace immutable functions -- functions defined directly in the diamond in this case
+             */
             if (oldFacet == address(this)) {
                 revert CannotReplaceImmutableFunction(selector);
             }
@@ -95,7 +113,9 @@ contract DiamondCutFacet {
             if (oldFacet == address(0)) {
                 revert CannotReplaceFunctionThatDoesNotExists(selector);
             }
-            // replace old facet address
+            /**
+             * replace old facet address
+             */
             s.facetAndPosition[selector].facet = _facet;
         }
     }
@@ -112,34 +132,44 @@ contract DiamondCutFacet {
             if (oldFacetAndPosition.facet == address(0)) {
                 revert CannotRemoveFunctionThatDoesNotExist(selector);
             }
-            // can't remove immutable functions -- functions defined directly in the diamond
+            /**
+             * can't remove immutable functions -- functions defined directly in the diamond
+             */
             if (oldFacetAndPosition.facet == address(this)) {
                 revert CannotRemoveImmutableFunction(selector);
             }
-            // replace selector with last selector
+            /**
+             * replace selector with last selector
+             */
             selectorCount--;
             if (oldFacetAndPosition.position != selectorCount) {
                 bytes4 lastSelector = s.selectors[selectorCount];
                 s.selectors[oldFacetAndPosition.position] = lastSelector;
                 s.facetAndPosition[lastSelector].position = oldFacetAndPosition.position;
             }
-            // delete last selector
+            /**
+             * delete last selector
+             */
             s.selectors.pop();
             delete s.facetAndPosition[selector];
         }
     }
 
-    /// @dev Add=0, Replace=1, Remove=2
+    /**
+     * @dev Add=0, Replace=1, Remove=2
+     */
     enum FacetCutAction {
         Add,
         Replace,
         Remove
     }
 
-    /// @notice Change in diamond
-    /// @dev facetAddress, the address of the facet containing the function selectors
-    ///      action, the type of action to perform on the functions (Add/Replace/Remove)
-    ///      functionSelectors, the selectors of the functions to add/replace/remove
+    /**
+     * @notice Change in diamond
+     * @dev facetAddress, the address of the facet containing the function selectors
+     *      action, the type of action to perform on the functions (Add/Replace/Remove)
+     *      functionSelectors, the selectors of the functions to add/replace/remove
+     */
     struct FacetCut {
         address facetAddress;
         FacetCutAction action;
@@ -148,12 +178,14 @@ contract DiamondCutFacet {
 
     event DiamondCut(FacetCut[] _diamondCut, address _init, bytes _calldata);
 
-    /// @notice Add/replace/remove any number of functions and optionally execute
-    ///         a function with delegatecall
-    /// @param _diamondCut Contains the facet addresses and function selectors
-    /// @param _init The address of the contract or facet to execute _calldata
-    /// @param _calldata A function call, including function selector and arguments
-    ///                  _calldata is executed with delegatecall on _init
+    /**
+     * @notice Add/replace/remove any number of functions and optionally execute
+     *         a function with delegatecall
+     * @param _diamondCut Contains the facet addresses and function selectors
+     * @param _init The address of the contract or facet to execute _calldata
+     * @param _calldata A function call, including function selector and arguments
+     *                  _calldata is executed with delegatecall on _init
+     */
     function diamondCut(FacetCut[] calldata _diamondCut, address _init, bytes calldata _calldata) external {
         if (getOwnerStorage().owner != msg.sender) {
             revert OwnerUnauthorizedAccount();
@@ -177,7 +209,9 @@ contract DiamondCutFacet {
         }
         emit DiamondCut(_diamondCut, _init, _calldata);
 
-        // Initialize the diamond cut
+        /**
+         * Initialize the diamond cut
+         */
         if (_init == address(0)) {
             return;
         }
@@ -187,7 +221,9 @@ contract DiamondCutFacet {
         (bool success, bytes memory error) = _init.delegatecall(_calldata);
         if (!success) {
             if (error.length > 0) {
-                // bubble up error
+                /**
+                 * bubble up error
+                 */
                 assembly ("memory-safe") {
                     revert(add(error, 0x20), mload(error))
                 }

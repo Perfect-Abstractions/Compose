@@ -1,4 +1,6 @@
-// SPDX-License-Identifier: MIT
+/**
+ *  SPDX-License-Identifier: MIT
+ */
 pragma solidity >=0.8.30;
 
 import {Test} from "forge-std/Test.sol";
@@ -27,9 +29,11 @@ contract LibERC721EnumerableTest is Test {
         harness.initialize(TOKEN_NAME, TOKEN_SYMBOL, BASE_URI);
     }
 
-    // ============================================
-    // Metadata Tests
-    // ============================================
+    /**
+     * ============================================
+     * Metadata Tests
+     * ============================================
+     */
 
     function test_Name() public view {
         assertEq(harness.name(), TOKEN_NAME);
@@ -43,9 +47,11 @@ contract LibERC721EnumerableTest is Test {
         assertEq(harness.baseURI(), BASE_URI);
     }
 
-    // ============================================
-    // Mint Tests
-    // ============================================
+    /**
+     * ============================================
+     * Mint Tests
+     * ============================================
+     */
 
     function test_Mint() public {
         uint256 tokenId = 1;
@@ -101,7 +107,9 @@ contract LibERC721EnumerableTest is Test {
         harness.mint(alice, 1);
         harness.mint(alice, 2);
 
-        // Verify tokens are at correct indices
+        /**
+         * Verify tokens are at correct indices
+         */
         assertEq(harness.tokenOfOwnerByIndex(alice, 0), 1);
         assertEq(harness.tokenOfOwnerByIndex(alice, 1), 2);
     }
@@ -154,9 +162,11 @@ contract LibERC721EnumerableTest is Test {
         harness.mint(bob, tokenId);
     }
 
-    // ============================================
-    // Transfer Tests
-    // ============================================
+    /**
+     * ============================================
+     * Transfer Tests
+     * ============================================
+     */
 
     function test_TransferFrom() public {
         uint256 tokenId = 1;
@@ -243,12 +253,16 @@ contract LibERC721EnumerableTest is Test {
         vm.prank(alice);
         harness.transferFrom(alice, bob, 2);
 
-        // Alice should have tokens 1 and 3
+        /**
+         * Alice should have tokens 1 and 3
+         */
         assertEq(harness.balanceOf(alice), 2);
         assertEq(harness.tokenOfOwnerByIndex(alice, 0), 1);
         assertEq(harness.tokenOfOwnerByIndex(alice, 1), 3);
 
-        // Bob should have token 2
+        /**
+         * Bob should have token 2
+         */
         assertEq(harness.balanceOf(bob), 1);
         assertEq(harness.tokenOfOwnerByIndex(bob, 0), 2);
     }
@@ -261,7 +275,9 @@ contract LibERC721EnumerableTest is Test {
         vm.prank(alice);
         harness.transferFrom(alice, bob, 1);
 
-        // Verify indices are correct after transfer
+        /**
+         * Verify indices are correct after transfer
+         */
         assertEq(harness.tokenOfOwnerByIndex(alice, 0), 3);
         assertEq(harness.tokenOfOwnerByIndex(alice, 1), 2);
         assertEq(harness.tokenOfOwnerByIndex(bob, 0), 1);
@@ -332,9 +348,11 @@ contract LibERC721EnumerableTest is Test {
         harness.transferFrom(alice, charlie, tokenId);
     }
 
-    // ============================================
-    // Enumeration Tests
-    // ============================================
+    /**
+     * ============================================
+     * Enumeration Tests
+     * ============================================
+     */
 
     function test_EnumerationAfterMultipleMints() public {
         harness.mint(alice, 1);
@@ -372,7 +390,9 @@ contract LibERC721EnumerableTest is Test {
     }
 
     function test_EnumerationComplexScenario() public {
-        // Mint tokens
+        /**
+         * Mint tokens
+         */
         harness.mint(alice, 1);
         harness.mint(alice, 2);
         harness.mint(bob, 3);
@@ -380,23 +400,29 @@ contract LibERC721EnumerableTest is Test {
 
         assertEq(harness.totalSupply(), 4);
 
-        // Transfer token
+        /**
+         * Transfer token
+         */
         vm.prank(alice);
         harness.transferFrom(alice, bob, 1);
 
         assertEq(harness.balanceOf(alice), 1);
         assertEq(harness.balanceOf(bob), 2);
 
-        // Verify final state
+        /**
+         * Verify final state
+         */
         assertEq(harness.tokenOfOwnerByIndex(alice, 0), 2);
         assertEq(harness.tokenOfOwnerByIndex(bob, 0), 3);
         assertEq(harness.tokenOfOwnerByIndex(bob, 1), 1);
         assertEq(harness.tokenOfOwnerByIndex(charlie, 0), 4);
     }
 
-    // ============================================
-    // Fuzz Tests
-    // ============================================
+    /**
+     * ============================================
+     * Fuzz Tests
+     * ============================================
+     */
 
     function test_MintFuzz(address to, uint256 tokenId) public {
         vm.assume(to != address(0));

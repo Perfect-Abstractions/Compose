@@ -1,4 +1,6 @@
-// SPDX-License-Identifier: MIT
+/**
+ *  SPDX-License-Identifier: MIT
+ */
 pragma solidity >=0.8.30;
 
 import {Test} from "forge-std/Test.sol";
@@ -59,7 +61,9 @@ contract ERC721EnumerableBurnFacetTest is Test {
         uint256 remainingToken = token.tokenOfOwnerByIndex(alice, 0);
         assertEq(remainingToken, 2);
 
-        // Ensure global enumeration shrinks
+        /**
+         * Ensure global enumeration shrinks
+         */
         assertEq(token.totalSupply(), 2);
     }
 

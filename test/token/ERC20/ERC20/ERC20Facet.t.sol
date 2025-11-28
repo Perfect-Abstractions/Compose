@@ -1,4 +1,6 @@
-// SPDX-License-Identifier: MIT
+/**
+ *  SPDX-License-Identifier: MIT
+ */
 pragma solidity >=0.8.30;
 
 import {Test} from "forge-std/Test.sol";
@@ -30,9 +32,11 @@ contract ERC20FacetTest is Test {
         token.mint(alice, INITIAL_SUPPLY);
     }
 
-    // ============================================
-    // Metadata Tests
-    // ============================================
+    /**
+     * ============================================
+     * Metadata Tests
+     * ============================================
+     */
 
     function test_Name() public view {
         assertEq(token.name(), TOKEN_NAME);
@@ -55,9 +59,11 @@ contract ERC20FacetTest is Test {
         assertEq(token.balanceOf(bob), 0);
     }
 
-    // ============================================
-    // Transfer Tests
-    // ============================================
+    /**
+     * ============================================
+     * Transfer Tests
+     * ============================================
+     */
 
     function test_Transfer() public {
         uint256 amount = 100e18;
@@ -146,18 +152,24 @@ contract ERC20FacetTest is Test {
     function test_RevertWhen_TransferOverflowsRecipient() public {
         uint256 maxBalance = type(uint256).max - 100;
 
-        // Mint near-max tokens to bob
+        /**
+         * Mint near-max tokens to bob
+         */
         token.mint(bob, maxBalance);
 
-        // Alice tries to transfer 200 tokens to bob, which would overflow
+        /**
+         * Alice tries to transfer 200 tokens to bob, which would overflow
+         */
         vm.prank(alice);
         vm.expectRevert(); // Arithmetic overflow
         token.transfer(bob, 200);
     }
 
-    // ============================================
-    // Approval Tests
-    // ============================================
+    /**
+     * ============================================
+     * Approval Tests
+     * ============================================
+     */
 
     function test_Approve() public {
         uint256 amount = 100e18;
@@ -213,9 +225,11 @@ contract ERC20FacetTest is Test {
         token.approve(address(0), 100e18);
     }
 
-    // ============================================
-    // TransferFrom Tests
-    // ============================================
+    /**
+     * ============================================
+     * TransferFrom Tests
+     * ============================================
+     */
 
     function test_TransferFrom() public {
         uint256 amount = 100e18;
@@ -280,24 +294,34 @@ contract ERC20FacetTest is Test {
         uint256 amount = 100e18;
         uint256 maxAllowance = type(uint256).max;
 
-        // Set unlimited allowance
+        /**
+         * Set unlimited allowance
+         */
         vm.prank(alice);
         token.approve(bob, maxAllowance);
 
-        // Perform first transfer
+        /**
+         * Perform first transfer
+         */
         vm.prank(bob);
         token.transferFrom(alice, charlie, amount);
 
-        // Check that allowance remains unchanged (unlimited)
+        /**
+         * Check that allowance remains unchanged (unlimited)
+         */
         assertEq(token.allowance(alice, bob), maxAllowance);
         assertEq(token.balanceOf(alice), INITIAL_SUPPLY - amount);
         assertEq(token.balanceOf(charlie), amount);
 
-        // Perform second transfer to verify allowance is still unlimited
+        /**
+         * Perform second transfer to verify allowance is still unlimited
+         */
         vm.prank(bob);
         token.transferFrom(alice, charlie, amount);
 
-        // Check that allowance is still unchanged (unlimited)
+        /**
+         * Check that allowance is still unchanged (unlimited)
+         */
         assertEq(token.allowance(alice, bob), maxAllowance);
         assertEq(token.balanceOf(alice), INITIAL_SUPPLY - 2 * amount);
         assertEq(token.balanceOf(charlie), 2 * amount);
@@ -308,20 +332,28 @@ contract ERC20FacetTest is Test {
         uint256 transferAmount = 50e18;
         uint256 numTransfers = 10;
 
-        // Set unlimited allowance
+        /**
+         * Set unlimited allowance
+         */
         vm.prank(alice);
         token.approve(bob, maxAllowance);
 
-        // Perform multiple transfers
+        /**
+         * Perform multiple transfers
+         */
         for (uint256 i = 0; i < numTransfers; i++) {
             vm.prank(bob);
             token.transferFrom(alice, charlie, transferAmount);
 
-            // Verify allowance remains unlimited after each transfer
+            /**
+             * Verify allowance remains unlimited after each transfer
+             */
             assertEq(token.allowance(alice, bob), maxAllowance);
         }
 
-        // Verify final balances
+        /**
+         * Verify final balances
+         */
         assertEq(token.balanceOf(alice), INITIAL_SUPPLY - (transferAmount * numTransfers));
         assertEq(token.balanceOf(charlie), transferAmount * numTransfers);
     }

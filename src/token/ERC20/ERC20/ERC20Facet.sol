@@ -1,44 +1,62 @@
-// SPDX-License-Identifier: MIT
+/**
+ *  SPDX-License-Identifier: MIT
+ */
 pragma solidity >=0.8.30;
 
 contract ERC20Facet {
-    /// @notice Thrown when an account has insufficient balance for a transfer or burn.
-    /// @param _sender Address attempting the transfer.
-    /// @param _balance Current balance of the sender.
-    /// @param _needed Amount required to complete the operation.
+    /**
+     * @notice Thrown when an account has insufficient balance for a transfer or burn.
+     * @param _sender Address attempting the transfer.
+     * @param _balance Current balance of the sender.
+     * @param _needed Amount required to complete the operation.
+     */
     error ERC20InsufficientBalance(address _sender, uint256 _balance, uint256 _needed);
 
-    /// @notice Thrown when the sender address is invalid (e.g., zero address).
-    /// @param _sender Invalid sender address.
+    /**
+     * @notice Thrown when the sender address is invalid (e.g., zero address).
+     * @param _sender Invalid sender address.
+     */
     error ERC20InvalidSender(address _sender);
 
-    /// @notice Thrown when the receiver address is invalid (e.g., zero address).
-    /// @param _receiver Invalid receiver address.
+    /**
+     * @notice Thrown when the receiver address is invalid (e.g., zero address).
+     * @param _receiver Invalid receiver address.
+     */
     error ERC20InvalidReceiver(address _receiver);
 
-    /// @notice Thrown when a spender tries to use more than the approved allowance.
-    /// @param _spender Address attempting to spend.
-    /// @param _allowance Current allowance for the spender.
-    /// @param _needed Amount required to complete the operation.
+    /**
+     * @notice Thrown when a spender tries to use more than the approved allowance.
+     * @param _spender Address attempting to spend.
+     * @param _allowance Current allowance for the spender.
+     * @param _needed Amount required to complete the operation.
+     */
     error ERC20InsufficientAllowance(address _spender, uint256 _allowance, uint256 _needed);
 
-    /// @notice Thrown when the spender address is invalid (e.g., zero address).
-    /// @param _spender Invalid spender address.
+    /**
+     * @notice Thrown when the spender address is invalid (e.g., zero address).
+     * @param _spender Invalid spender address.
+     */
     error ERC20InvalidSpender(address _spender);
 
-    /// @notice Emitted when an approval is made for a spender by an owner.
-    /// @param _owner The address granting the allowance.
-    /// @param _spender The address receiving the allowance.
-    /// @param _value The amount approved.
+    /**
+     * @notice Emitted when an approval is made for a spender by an owner.
+     * @param _owner The address granting the allowance.
+     * @param _spender The address receiving the allowance.
+     * @param _value The amount approved.
+     */
     event Approval(address indexed _owner, address indexed _spender, uint256 _value);
 
-    /// @notice Emitted when tokens are transferred between two addresses.
-    /// @param _from Address sending the tokens.
-    /// @param _to Address receiving the tokens.
-    /// @param _value Amount of tokens transferred.
+    /**
+     * @notice Emitted when tokens are transferred between two addresses.
+     * @param _from Address sending the tokens.
+     * @param _to Address receiving the tokens.
+     * @param _value Amount of tokens transferred.
+     */
     event Transfer(address indexed _from, address indexed _to, uint256 _value);
 
-    /// @dev Storage position determined by the keccak256 hash of the diamond storage identifier.
+    /**
+     * @dev Storage position determined by the keccak256 hash of the diamond storage identifier.
+     */
     bytes32 constant STORAGE_POSITION = keccak256("compose.erc20");
 
     /**

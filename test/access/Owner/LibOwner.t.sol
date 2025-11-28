@@ -1,4 +1,6 @@
-// SPDX-License-Identifier: MIT
+/**
+ *  SPDX-License-Identifier: MIT
+ */
 pragma solidity >=0.8.30;
 
 import {Test, console2} from "forge-std/Test.sol";
@@ -14,7 +16,9 @@ contract LibOwnerTest is Test {
     address BOB = makeAddr("bob");
     address ZERO_ADDRESS = address(0);
 
-    // Events
+    /**
+     * Events
+     */
     event OwnershipTransferred(address indexed previousOwner, address indexed newOwner);
 
     function setUp() public {
@@ -22,9 +26,11 @@ contract LibOwnerTest is Test {
         harness.initialize(INITIAL_OWNER);
     }
 
-    // ============================================
-    // Storage Tests
-    // ============================================
+    /**
+     * ============================================
+     * Storage Tests
+     * ============================================
+     */
 
     function test_GetStorage_ReturnsCorrectOwner() public view {
         assertEq(harness.owner(), INITIAL_OWNER);
@@ -34,11 +40,15 @@ contract LibOwnerTest is Test {
     function test_StorageSlot_UsesCorrectPosition() public {
         bytes32 expectedSlot = keccak256("compose.owner");
 
-        // Change owner
+        /**
+         * Change owner
+         */
         vm.prank(INITIAL_OWNER);
         harness.transferOwnership(NEW_OWNER);
 
-        // Read directly from storage
+        /**
+         * Read directly from storage
+         */
         bytes32 storedValue = vm.load(address(harness), expectedSlot);
         address storedOwner = address(uint160(uint256(storedValue)));
 
@@ -46,9 +56,11 @@ contract LibOwnerTest is Test {
         assertEq(harness.owner(), NEW_OWNER);
     }
 
-    // ============================================
-    // Owner Getter Tests
-    // ============================================
+    /**
+     * ============================================
+     * Owner Getter Tests
+     * ============================================
+     */
 
     function test_Owner_ReturnsCurrentOwner() public {
         assertEq(harness.owner(), INITIAL_OWNER);
@@ -64,9 +76,11 @@ contract LibOwnerTest is Test {
         assertEq(harness.owner(), ZERO_ADDRESS);
     }
 
-    // ============================================
-    // Transfer Ownership Tests
-    // ============================================
+    /**
+     * ============================================
+     * Transfer Ownership Tests
+     * ============================================
+     */
 
     function test_TransferOwnership_UpdatesOwner() public {
         vm.prank(INITIAL_OWNER);
@@ -95,39 +109,53 @@ contract LibOwnerTest is Test {
     }
 
     function test_RevertWhen_TransferOwnership_FromRenouncedOwner() public {
-        // Force renounce
+        /**
+         * Force renounce
+         */
         harness.forceRenounce();
         assertEq(harness.owner(), ZERO_ADDRESS);
 
-        // Should revert with OwnerAlreadyRenounced error
+        /**
+         * Should revert with OwnerAlreadyRenounced error
+         */
         vm.expectRevert(LibOwner.OwnerAlreadyRenounced.selector);
         harness.transferOwnership(NEW_OWNER);
     }
 
-    // ============================================
-    // Sequential Transfer Tests
-    // ============================================
+    /**
+     * ============================================
+     * Sequential Transfer Tests
+     * ============================================
+     */
 
     function test_MultipleTransfers() public {
-        // First transfer
+        /**
+         * First transfer
+         */
         vm.prank(INITIAL_OWNER);
         harness.transferOwnership(ALICE);
         assertEq(harness.owner(), ALICE);
 
-        // Second transfer
+        /**
+         * Second transfer
+         */
         vm.prank(ALICE);
         harness.transferOwnership(BOB);
         assertEq(harness.owner(), BOB);
 
-        // Third transfer
+        /**
+         * Third transfer
+         */
         vm.prank(BOB);
         harness.transferOwnership(NEW_OWNER);
         assertEq(harness.owner(), NEW_OWNER);
     }
 
-    // ============================================
-    // Event Tests
-    // ============================================
+    /**
+     * ============================================
+     * Event Tests
+     * ============================================
+     */
 
     function test_Events_CorrectPreviousOwner() public {
         vm.expectEmit(true, true, false, true);
@@ -151,37 +179,49 @@ contract LibOwnerTest is Test {
         harness.transferOwnership(ZERO_ADDRESS);
     }
 
-    // ============================================
-    // Edge Cases
-    // ============================================
+    /**
+     * ============================================
+     * Edge Cases
+     * ============================================
+     */
 
     function test_RenounceOwnership_PermanentlyDisablesTransfers() public {
-        // Renounce ownership
+        /**
+         * Renounce ownership
+         */
         vm.prank(INITIAL_OWNER);
         harness.transferOwnership(ZERO_ADDRESS);
         assertEq(harness.owner(), ZERO_ADDRESS);
 
-        // Should revert with OwnerAlreadyRenounced error
+        /**
+         * Should revert with OwnerAlreadyRenounced error
+         */
         vm.expectRevert(LibOwner.OwnerAlreadyRenounced.selector);
         harness.transferOwnership(ALICE);
     }
 
     function test_LibraryDoesNotCheckMsgSender() public {
-        // The library doesn't check msg.sender - that's the facet's responsibility
-        // This test verifies the library works regardless of caller
-        // (In production, the facet should check permissions before calling the library)
+        /**
+         * The library doesn't check msg.sender - that's the facet's responsibility
+         * This test verifies the library works regardless of caller
+         * (In production, the facet should check permissions before calling the library)
+         */
 
         vm.prank(ALICE); // Not the owner
         harness.transferOwnership(BOB);
         assertEq(harness.owner(), BOB);
 
-        // This shows the library itself doesn't enforce access control
-        // Access control should be implemented in the facet that uses the library
+        /**
+         * This shows the library itself doesn't enforce access control
+         * Access control should be implemented in the facet that uses the library
+         */
     }
 
-    // ============================================
-    // Fuzz Tests
-    // ============================================
+    /**
+     * ============================================
+     * Fuzz Tests
+     * ============================================
+     */
 
     function testFuzz_TransferOwnership(address newOwner) public {
         vm.prank(INITIAL_OWNER);
@@ -209,39 +249,55 @@ contract LibOwnerTest is Test {
     function testFuzz_RevertWhen_RenouncedOwnerTransfers(address target) public {
         vm.assume(target != address(0));
 
-        // Renounce
+        /**
+         * Renounce
+         */
         vm.prank(INITIAL_OWNER);
         harness.transferOwnership(ZERO_ADDRESS);
         assertEq(harness.owner(), ZERO_ADDRESS);
 
-        // Should revert with OwnerAlreadyRenounced error
+        /**
+         * Should revert with OwnerAlreadyRenounced error
+         */
         vm.expectRevert(LibOwner.OwnerAlreadyRenounced.selector);
         harness.transferOwnership(target);
     }
 
-    // ============================================
-    // Renounce Ownership Tests (Function not implemented in LibOwner)
-    // ============================================
+    /**
+     * ============================================
+     * Renounce Ownership Tests (Function not implemented in LibOwner)
+     * ============================================
+     */
 
-    // function test_RenounceOwnership_SetsOwnerToZero() public {
-    //     // Use the new renounceOwnership function
-    //     harness.renounceOwnership();
-    //     assertEq(harness.owner(), ZERO_ADDRESS);
-    // }
+    /**
+     * function test_RenounceOwnership_SetsOwnerToZero() public {
+     * // Use the new renounceOwnership function
+     * harness.renounceOwnership();
+     * assertEq(harness.owner(), ZERO_ADDRESS);
+     * }
+     */
 
-    // function test_RenounceOwnership_EmitsCorrectEvent() public {
-    //     vm.expectEmit(true, true, false, true);
-    //     emit OwnershipTransferred(INITIAL_OWNER, ZERO_ADDRESS);
+    /**
+     * function test_RenounceOwnership_EmitsCorrectEvent() public {
+     * vm.expectEmit(true, true, false, true);
+     * emit OwnershipTransferred(INITIAL_OWNER, ZERO_ADDRESS);
+     */
 
-    //     harness.renounceOwnership();
-    // }
+    /**
+     * harness.renounceOwnership();
+     * }
+     */
 
-    // ============================================
-    // Require Owner Tests (New Function)
-    // ============================================
+    /**
+     * ============================================
+     * Require Owner Tests (New Function)
+     * ============================================
+     */
 
     function test_RequireOwner_PassesForOwner() public {
-        // Should not revert when called by owner
+        /**
+         * Should not revert when called by owner
+         */
         vm.prank(INITIAL_OWNER);
         harness.requireOwner();
     }
@@ -254,11 +310,15 @@ contract LibOwnerTest is Test {
 
     function testFuzz_RequireOwner(address caller) public {
         if (caller == INITIAL_OWNER) {
-            // Should not revert for owner
+            /**
+             * Should not revert for owner
+             */
             vm.prank(caller);
             harness.requireOwner();
         } else {
-            // Should revert for non-owner
+            /**
+             * Should revert for non-owner
+             */
             vm.expectRevert(LibOwner.OwnerUnauthorizedAccount.selector);
             vm.prank(caller);
             harness.requireOwner();

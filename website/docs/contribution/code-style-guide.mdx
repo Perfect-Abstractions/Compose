@@ -45,3 +45,14 @@ Follow the [Solidity feature ban](/docs/design/banned-solidity-features).
 ### Formatting
 - Format code using the default settings of `forge fmt`. Run `forge fmt` before submitting code.
 
+### Comments 
+- Use comments where they will be helpful. Use comments for all external functions, events, and errors. **Use only /\*\* \*/ style comments.** Do not use /// or // style comments.
+  - Example:
+    ```solidity
+    /**
+     * @notice Returns the balance of a specific account.
+     * @param _account The address of the account.
+     * @return The account balance.
+     */
+    function balanceOf(address _account) external view returns (uint256);
+    ```

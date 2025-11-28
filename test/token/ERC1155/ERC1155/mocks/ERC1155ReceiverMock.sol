@@ -1,4 +1,6 @@
-// SPDX-License-Identifier: MIT
+/**
+ *  SPDX-License-Identifier: MIT
+ */
 pragma solidity >=0.8.30;
 
 import {IERC1155Receiver} from "../../../../../src/interfaces/IERC1155Receiver.sol";

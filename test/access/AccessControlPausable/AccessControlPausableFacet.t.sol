@@ -1,4 +1,6 @@
-// SPDX-License-Identifier: MIT
+/**
+ *  SPDX-License-Identifier: MIT
+ */
 pragma solidity >=0.8.30;
 
 import {Test, console2} from "forge-std/Test.sol";
@@ -11,55 +13,73 @@ contract AccessControlPausableFacetTest is Test {
     AccessControlPausableFacetHarness public pausableFacet;
     AccessControlFacetHarness public accessControl;
 
-    // Test addresses
+    /**
+     * Test addresses
+     */
     address ADMIN = makeAddr("admin");
     address ALICE = makeAddr("alice");
     address BOB = makeAddr("bob");
     address CHARLIE = makeAddr("charlie");
 
-    // Test roles
+    /**
+     * Test roles
+     */
     bytes32 constant DEFAULT_ADMIN_ROLE = 0x00;
     bytes32 constant MINTER_ROLE = keccak256("MINTER_ROLE");
     bytes32 constant PAUSER_ROLE = keccak256("PAUSER_ROLE");
 
-    // Events
+    /**
+     * Events
+     */
     event RolePaused(bytes32 indexed role, address indexed account);
     event RoleUnpaused(bytes32 indexed role, address indexed account);
     event RoleGranted(bytes32 indexed role, address indexed account, address indexed sender);
 
     function setUp() public {
-        // Initialize AccessControl first (shared storage)
+        /**
+         * Initialize AccessControl first (shared storage)
+         */
         accessControl = new AccessControlFacetHarness();
         accessControl.initialize(ADMIN);
 
-        // Initialize PausableFacet (uses same AccessControl storage)
+        /**
+         * Initialize PausableFacet (uses same AccessControl storage)
+         */
         pausableFacet = new AccessControlPausableFacetHarness();
         pausableFacet.initialize(ADMIN);
     }
 
-    // ============================================
-    // IsRolePaused Tests
-    // ============================================
+    /**
+     * ============================================
+     * IsRolePaused Tests
+     * ============================================
+     */
 
     function test_IsRolePaused_ReturnsFalseByDefault() public view {
         assertFalse(pausableFacet.isRolePaused(MINTER_ROLE));
     }
 
     function test_IsRolePaused_ReturnsTrueWhenPaused() public {
-        // Grant role first
+        /**
+         * Grant role first
+         */
         vm.prank(ADMIN);
         accessControl.grantRole(MINTER_ROLE, ALICE);
 
-        // Pause the role
+        /**
+         * Pause the role
+         */
         vm.prank(ADMIN);
         pausableFacet.pauseRole(MINTER_ROLE);
 
         assertTrue(pausableFacet.isRolePaused(MINTER_ROLE));
     }
 
-    // ============================================
-    // PauseRole Tests
-    // ============================================
+    /**
+     * ============================================
+     * PauseRole Tests
+     * ============================================
+     */
 
     function test_PauseRole_SucceedsWhenCallerIsAdmin() public {
         vm.expectEmit(true, true, false, true);
@@ -102,17 +122,23 @@ contract AccessControlPausableFacetTest is Test {
         assertTrue(pausableFacet.isRolePaused(PAUSER_ROLE));
     }
 
-    // ============================================
-    // UnpauseRole Tests
-    // ============================================
+    /**
+     * ============================================
+     * UnpauseRole Tests
+     * ============================================
+     */
 
     function test_UnpauseRole_SucceedsWhenCallerIsAdmin() public {
-        // First pause
+        /**
+         * First pause
+         */
         vm.prank(ADMIN);
         pausableFacet.pauseRole(MINTER_ROLE);
         assertTrue(pausableFacet.isRolePaused(MINTER_ROLE));
 
-        // Then unpause
+        /**
+         * Then unpause
+         */
         vm.expectEmit(true, true, false, true);
         emit RoleUnpaused(MINTER_ROLE, ADMIN);
 
@@ -136,11 +162,15 @@ contract AccessControlPausableFacetTest is Test {
     }
 
     function test_RevertWhen_UnpauseRole_CallerIsNotAdmin() public {
-        // First pause with admin
+        /**
+         * First pause with admin
+         */
         vm.prank(ADMIN);
         pausableFacet.pauseRole(MINTER_ROLE);
 
-        // Then try to unpause without admin role
+        /**
+         * Then try to unpause without admin role
+         */
         vm.expectRevert(
             abi.encodeWithSelector(
                 AccessControlPausableFacet.AccessControlUnauthorizedAccount.selector, ALICE, DEFAULT_ADMIN_ROLE
@@ -153,14 +183,18 @@ contract AccessControlPausableFacetTest is Test {
     function test_PauseUnpauseCycle_MultipleCycles() public {
         vm.startPrank(ADMIN);
 
-        // First cycle
+        /**
+         * First cycle
+         */
         pausableFacet.pauseRole(MINTER_ROLE);
         assertTrue(pausableFacet.isRolePaused(MINTER_ROLE));
 
         pausableFacet.unpauseRole(MINTER_ROLE);
         assertFalse(pausableFacet.isRolePaused(MINTER_ROLE));
 
-        // Second cycle
+        /**
+         * Second cycle
+         */
         pausableFacet.pauseRole(MINTER_ROLE);
         assertTrue(pausableFacet.isRolePaused(MINTER_ROLE));
 
@@ -170,27 +204,39 @@ contract AccessControlPausableFacetTest is Test {
         vm.stopPrank();
     }
 
-    // ============================================
-    // RequireRoleNotPaused Tests
-    // ============================================
+    /**
+     * ============================================
+     * RequireRoleNotPaused Tests
+     * ============================================
+     */
 
     function test_RequireRoleNotPaused_PassesWhenRoleNotPaused() public {
-        // Grant role to Alice using harness (direct storage manipulation)
+        /**
+         * Grant role to Alice using harness (direct storage manipulation)
+         */
         pausableFacet.forceGrantRole(MINTER_ROLE, ALICE);
 
-        // Should pass (role exists and not paused)
+        /**
+         * Should pass (role exists and not paused)
+         */
         pausableFacet.requireRoleNotPaused(MINTER_ROLE, ALICE);
     }
 
     function test_RevertWhen_RequireRoleNotPaused_RoleIsPaused() public {
-        // Grant role to Alice using harness
+        /**
+         * Grant role to Alice using harness
+         */
         pausableFacet.forceGrantRole(MINTER_ROLE, ALICE);
 
-        // Pause the role
+        /**
+         * Pause the role
+         */
         vm.prank(ADMIN);
         pausableFacet.pauseRole(MINTER_ROLE);
 
-        // Should revert
+        /**
+         * Should revert
+         */
         vm.expectRevert(
             abi.encodeWithSelector(AccessControlPausableFacet.AccessControlRolePaused.selector, MINTER_ROLE)
         );
@@ -207,31 +253,45 @@ contract AccessControlPausableFacetTest is Test {
     }
 
     function test_RequireRoleNotPaused_AfterUnpause() public {
-        // Grant role to Alice using harness
+        /**
+         * Grant role to Alice using harness
+         */
         pausableFacet.forceGrantRole(MINTER_ROLE, ALICE);
 
-        // Pause
+        /**
+         * Pause
+         */
         vm.prank(ADMIN);
         pausableFacet.pauseRole(MINTER_ROLE);
 
-        // Unpause
+        /**
+         * Unpause
+         */
         vm.prank(ADMIN);
         pausableFacet.unpauseRole(MINTER_ROLE);
 
-        // Should pass now
+        /**
+         * Should pass now
+         */
         pausableFacet.requireRoleNotPaused(MINTER_ROLE, ALICE);
     }
 
-    // ============================================
-    // Custom Admin Role Tests
-    // ============================================
+    /**
+     * ============================================
+     * Custom Admin Role Tests
+     * ============================================
+     */
 
     function test_PauseRole_WithCustomRoleAdmin() public {
-        // Set up custom admin using harness
+        /**
+         * Set up custom admin using harness
+         */
         pausableFacet.forceGrantRole(PAUSER_ROLE, BOB);
         pausableFacet.forceSetRoleAdmin(MINTER_ROLE, PAUSER_ROLE);
 
-        // Bob can pause MINTER_ROLE
+        /**
+         * Bob can pause MINTER_ROLE
+         */
         vm.expectEmit(true, true, false, true);
         emit RolePaused(MINTER_ROLE, BOB);
 
@@ -242,15 +302,21 @@ contract AccessControlPausableFacetTest is Test {
     }
 
     function test_UnpauseRole_WithCustomRoleAdmin() public {
-        // Set up custom admin using harness
+        /**
+         * Set up custom admin using harness
+         */
         pausableFacet.forceGrantRole(PAUSER_ROLE, BOB);
         pausableFacet.forceSetRoleAdmin(MINTER_ROLE, PAUSER_ROLE);
 
-        // Pause with Bob
+        /**
+         * Pause with Bob
+         */
         vm.prank(BOB);
         pausableFacet.pauseRole(MINTER_ROLE);
 
-        // Unpause with Bob
+        /**
+         * Unpause with Bob
+         */
         vm.expectEmit(true, true, false, true);
         emit RoleUnpaused(MINTER_ROLE, BOB);
 

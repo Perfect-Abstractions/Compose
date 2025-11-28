@@ -1,4 +1,6 @@
-// SPDX-License-Identifier: MIT
+/**
+ *  SPDX-License-Identifier: MIT
+ */
 pragma solidity >=0.8.30;
 
 import {Test} from "forge-std/Test.sol";
@@ -28,9 +30,11 @@ contract LibERC20Test is Test {
         harness.initialize(TOKEN_NAME, TOKEN_SYMBOL, TOKEN_DECIMALS);
     }
 
-    // ============================================
-    // Metadata Tests
-    // ============================================
+    /**
+     * ============================================
+     * Metadata Tests
+     * ============================================
+     */
 
     function test_Name() public view {
         assertEq(harness.name(), TOKEN_NAME);
@@ -48,9 +52,11 @@ contract LibERC20Test is Test {
         assertEq(harness.totalSupply(), 0);
     }
 
-    // ============================================
-    // Mint Tests
-    // ============================================
+    /**
+     * ============================================
+     * Mint Tests
+     * ============================================
+     */
 
     function test_Mint() public {
         uint256 amount = 100e18;
@@ -88,9 +94,11 @@ contract LibERC20Test is Test {
         harness.mint(address(0), 100e18);
     }
 
-    // ============================================
-    // Burn Tests
-    // ============================================
+    /**
+     * ============================================
+     * Burn Tests
+     * ============================================
+     */
 
     function test_Burn() public {
         uint256 mintAmount = 100e18;
@@ -146,9 +154,11 @@ contract LibERC20Test is Test {
         harness.burn(alice, 1);
     }
 
-    // ============================================
-    // Transfer Tests
-    // ============================================
+    /**
+     * ============================================
+     * Transfer Tests
+     * ============================================
+     */
 
     function test_Transfer() public {
         uint256 amount = 100e18;
@@ -217,17 +227,23 @@ contract LibERC20Test is Test {
     function test_RevertWhen_MintOverflowsRecipient() public {
         uint256 maxBalance = type(uint256).max - 100;
 
-        // Mint near-max tokens to alice
+        /**
+         * Mint near-max tokens to alice
+         */
         harness.mint(alice, maxBalance);
 
-        // Try to mint more, which would overflow
+        /**
+         * Try to mint more, which would overflow
+         */
         vm.expectRevert(); // Arithmetic overflow
         harness.mint(alice, 200);
     }
 
-    // ============================================
-    // Approve Tests
-    // ============================================
+    /**
+     * ============================================
+     * Approve Tests
+     * ============================================
+     */
 
     function test_Approve() public {
         uint256 amount = 100e18;
@@ -273,9 +289,11 @@ contract LibERC20Test is Test {
         harness.approve(address(0), 100e18);
     }
 
-    // ============================================
-    // TransferFrom Tests
-    // ============================================
+    /**
+     * ============================================
+     * TransferFrom Tests
+     * ============================================
+     */
 
     function test_TransferFrom() public {
         uint256 amount = 100e18;
@@ -384,9 +402,11 @@ contract LibERC20Test is Test {
         harness.transferFrom(alice, charlie, 100e18);
     }
 
-    // ============================================
-    // Integration Tests
-    // ============================================
+    /**
+     * ============================================
+     * Integration Tests
+     * ============================================
+     */
 
     function test_MintTransferBurn_Flow() public {
         harness.mint(alice, 1000e18);

@@ -1,35 +1,47 @@
-// SPDX-License-Identifier: MIT
+/**
+ *  SPDX-License-Identifier: MIT
+ */
 pragma solidity >=0.8.30;
 
-/// @title   LibERC20Permit — Library for ERC-2612 Permit Logic
-/// @notice  Library for self-contained ERC-2612 permit and domain separator logic and storage
-/// @dev     Does not import anything. Designed to be used by facets handling ERC20 permit functionality.
+/**
+ * @title   LibERC20Permit — Library for ERC-2612 Permit Logic
+ * @notice  Library for self-contained ERC-2612 permit and domain separator logic and storage
+ * @dev     Does not import anything. Designed to be used by facets handling ERC20 permit functionality.
+ */
 library LibERC20Permit {
-    /// @notice Thrown when a permit signature is invalid or expired.
-    /// @param _owner The address that signed the permit.
-    /// @param _spender The address that was approved.
-    /// @param _value The amount that was approved.
-    /// @param _deadline The deadline for the permit.
-    /// @param _v The recovery byte of the signature.
-    /// @param _r The r value of the signature.
-    /// @param _s The s value of the signature.
+    /**
+     * @notice Thrown when a permit signature is invalid or expired.
+     * @param _owner The address that signed the permit.
+     * @param _spender The address that was approved.
+     * @param _value The amount that was approved.
+     * @param _deadline The deadline for the permit.
+     * @param _v The recovery byte of the signature.
+     * @param _r The r value of the signature.
+     * @param _s The s value of the signature.
+     */
     error ERC2612InvalidSignature(
         address _owner, address _spender, uint256 _value, uint256 _deadline, uint8 _v, bytes32 _r, bytes32 _s
     );
 
-    /// @notice Thrown when the spender address is invalid (e.g., zero address).
-    /// @param _spender Invalid spender address.
+    /**
+     * @notice Thrown when the spender address is invalid (e.g., zero address).
+     * @param _spender Invalid spender address.
+     */
     error ERC20InvalidSpender(address _spender);
 
-    /// @notice Emitted when an approval is made for a spender by an owner.
-    /// @param _owner The address granting the allowance.
-    /// @param _spender The address receiving the allowance.
-    /// @param _value The amount approved.
+    /**
+     * @notice Emitted when an approval is made for a spender by an owner.
+     * @param _owner The address granting the allowance.
+     * @param _spender The address receiving the allowance.
+     * @param _value The amount approved.
+     */
     event Approval(address indexed _owner, address indexed _spender, uint256 _value);
 
     bytes32 constant ERC20_STORAGE_POSITION = keccak256("compose.erc20");
 
-    /// @custom:storage-location erc8042:compose.erc20
+    /**
+     * @custom:storage-location erc8042:compose.erc20
+     */
     struct ERC20Storage {
         mapping(address owner => uint256 balance) balanceOf;
         uint256 totalSupply;
@@ -47,7 +59,9 @@ library LibERC20Permit {
 
     bytes32 constant STORAGE_POSITION = keccak256("compose.erc20.permit");
 
-    /// @custom:storage-location erc8042:compose.erc20.permit
+    /**
+     * @custom:storage-location erc8042:compose.erc20.permit
+     */
     struct ERC20PermitStorage {
         mapping(address owner => uint256) nonces;
     }

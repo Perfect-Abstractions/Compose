@@ -1,4 +1,6 @@
-// SPDX-License-Identifier: MIT
+/**
+ *  SPDX-License-Identifier: MIT
+ */
 pragma solidity >=0.8.30;
 
 import {Test} from "forge-std/Test.sol";
@@ -29,9 +31,11 @@ contract ERC721EnumerableFacetTest is Test {
         harness.initialize(TOKEN_NAME, TOKEN_SYMBOL, BASE_URI);
     }
 
-    // ============================================
-    // Metadata Tests
-    // ============================================
+    /**
+     * ============================================
+     * Metadata Tests
+     * ============================================
+     */
 
     function test_Name() public view {
         assertEq(harness.name(), TOKEN_NAME);
@@ -68,9 +72,11 @@ contract ERC721EnumerableFacetTest is Test {
         harness.tokenURI(tokenId);
     }
 
-    // ============================================
-    // Balance and Ownership Tests
-    // ============================================
+    /**
+     * ============================================
+     * Balance and Ownership Tests
+     * ============================================
+     */
 
     function test_BalanceOf() public {
         harness.mint(alice, 1);
@@ -101,9 +107,11 @@ contract ERC721EnumerableFacetTest is Test {
         harness.ownerOf(tokenId);
     }
 
-    // ============================================
-    // Enumeration Tests
-    // ============================================
+    /**
+     * ============================================
+     * Enumeration Tests
+     * ============================================
+     */
 
     function test_TotalSupply() public {
         assertEq(harness.totalSupply(), 0);
@@ -147,9 +155,11 @@ contract ERC721EnumerableFacetTest is Test {
         harness.tokenOfOwnerByIndex(alice, 1);
     }
 
-    // ============================================
-    // Approval Tests
-    // ============================================
+    /**
+     * ============================================
+     * Approval Tests
+     * ============================================
+     */
 
     function test_Approve() public {
         uint256 tokenId = 1;
@@ -257,9 +267,11 @@ contract ERC721EnumerableFacetTest is Test {
         assertTrue(harness.isApprovedForAll(alice, bob));
     }
 
-    // ============================================
-    // Transfer Tests
-    // ============================================
+    /**
+     * ============================================
+     * Transfer Tests
+     * ============================================
+     */
 
     function test_TransferFrom() public {
         uint256 tokenId = 1;
@@ -320,12 +332,16 @@ contract ERC721EnumerableFacetTest is Test {
         vm.prank(alice);
         harness.transferFrom(alice, bob, 2);
 
-        // Alice should have tokens 1 and 3
+        /**
+         * Alice should have tokens 1 and 3
+         */
         assertEq(harness.balanceOf(alice), 2);
         assertEq(harness.tokenOfOwnerByIndex(alice, 0), 1);
         assertEq(harness.tokenOfOwnerByIndex(alice, 1), 3);
 
-        // Bob should have token 2
+        /**
+         * Bob should have token 2
+         */
         assertEq(harness.balanceOf(bob), 1);
         assertEq(harness.tokenOfOwnerByIndex(bob, 0), 2);
     }
@@ -397,9 +413,11 @@ contract ERC721EnumerableFacetTest is Test {
         assertEq(harness.ownerOf(tokenId), bob);
     }
 
-    // ============================================
-    // Fuzz Tests
-    // ============================================
+    /**
+     * ============================================
+     * Fuzz Tests
+     * ============================================
+     */
 
     function test_ApproveFuzz(address owner, address operator, uint256 tokenId) public {
         vm.assume(owner != address(0));

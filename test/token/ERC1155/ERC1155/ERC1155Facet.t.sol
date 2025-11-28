@@ -1,4 +1,6 @@
-// SPDX-License-Identifier: MIT
+/**
+ *  SPDX-License-Identifier: MIT
+ */
 pragma solidity >=0.8.30;
 
 import {Test} from "forge-std/Test.sol";
@@ -42,9 +44,11 @@ contract ERC1155FacetTest is Test {
         facet.initialize(DEFAULT_URI);
     }
 
-    // ============================================
-    // URI Tests
-    // ============================================
+    /**
+     * ============================================
+     * URI Tests
+     * ============================================
+     */
 
     function test_Uri_DefaultUri() public view {
         assertEq(facet.uri(TOKEN_ID_1), DEFAULT_URI);
@@ -62,9 +66,11 @@ contract ERC1155FacetTest is Test {
         facet.setTokenURI(TOKEN_ID_1, TOKEN_URI);
     }
 
-    // ============================================
-    // BalanceOf Tests
-    // ============================================
+    /**
+     * ============================================
+     * BalanceOf Tests
+     * ============================================
+     */
 
     function test_BalanceOf_AfterMint() public {
         facet.mint(alice, TOKEN_ID_1, 100);
@@ -83,9 +89,11 @@ contract ERC1155FacetTest is Test {
         assertEq(facet.balanceOf(address(0), TOKEN_ID_1), 0);
     }
 
-    // ============================================
-    // BalanceOfBatch Tests
-    // ============================================
+    /**
+     * ============================================
+     * BalanceOfBatch Tests
+     * ============================================
+     */
 
     function test_BalanceOfBatch() public {
         facet.mint(alice, TOKEN_ID_1, 100);
@@ -183,9 +191,11 @@ contract ERC1155FacetTest is Test {
         assertEq(balances[2], 300);
     }
 
-    // ============================================
-    // SetApprovalForAll Tests
-    // ============================================
+    /**
+     * ============================================
+     * SetApprovalForAll Tests
+     * ============================================
+     */
 
     function test_SetApprovalForAll() public {
         vm.expectEmit(true, true, true, true);
@@ -232,9 +242,11 @@ contract ERC1155FacetTest is Test {
         assertEq(facet.isApprovedForAll(owner, operator), approved);
     }
 
-    // ============================================
-    // SafeTransferFrom Tests
-    // ============================================
+    /**
+     * ============================================
+     * SafeTransferFrom Tests
+     * ============================================
+     */
 
     function test_SafeTransferFrom_ByOwner() public {
         facet.mint(alice, TOKEN_ID_1, 100);
@@ -356,17 +368,23 @@ contract ERC1155FacetTest is Test {
     function test_RevertWhen_MintOverflowsRecipient() public {
         uint256 nearMaxBalance = type(uint256).max - 100;
 
-        // Mint near-max tokens to alice
+        /**
+         * Mint near-max tokens to alice
+         */
         facet.mint(alice, TOKEN_ID_1, nearMaxBalance);
 
-        // Try to mint more, which would overflow
+        /**
+         * Try to mint more, which would overflow
+         */
         vm.expectRevert(); // Arithmetic overflow
         facet.mint(alice, TOKEN_ID_1, 200);
     }
 
-    // ============================================
-    // SafeBatchTransferFrom Tests
-    // ============================================
+    /**
+     * ============================================
+     * SafeBatchTransferFrom Tests
+     * ============================================
+     */
 
     function test_SafeBatchTransferFrom_ByOwner() public {
         uint256[] memory ids = new uint256[](2);
@@ -496,9 +514,11 @@ contract ERC1155FacetTest is Test {
         facet.safeBatchTransferFrom(alice, bob, ids, transferAmounts, "");
     }
 
-    // ============================================
-    // Mint Tests (via Harness)
-    // ============================================
+    /**
+     * ============================================
+     * Mint Tests (via Harness)
+     * ============================================
+     */
 
     function test_Mint() public {
         uint256 amount = 100;
@@ -525,9 +545,11 @@ contract ERC1155FacetTest is Test {
         facet.mint(address(0), TOKEN_ID_1, 100);
     }
 
-    // ============================================
-    // MintBatch Tests (via Harness)
-    // ============================================
+    /**
+     * ============================================
+     * MintBatch Tests (via Harness)
+     * ============================================
+     */
 
     function test_MintBatch() public {
         uint256[] memory ids = new uint256[](3);
@@ -576,12 +598,16 @@ contract ERC1155FacetTest is Test {
         uint256[] memory amounts = new uint256[](0);
 
         facet.mintBatch(alice, ids, amounts);
-        // Should not revert
+        /**
+         * Should not revert
+         */
     }
 
-    // ============================================
-    // Burn Tests (via Harness)
-    // ============================================
+    /**
+     * ============================================
+     * Burn Tests (via Harness)
+     * ============================================
+     */
 
     function test_Burn() public {
         facet.mint(alice, TOKEN_ID_1, 100);
@@ -622,9 +648,11 @@ contract ERC1155FacetTest is Test {
         facet.burn(alice, TOKEN_ID_1, 1);
     }
 
-    // ============================================
-    // BurnBatch Tests (via Harness)
-    // ============================================
+    /**
+     * ============================================
+     * BurnBatch Tests (via Harness)
+     * ============================================
+     */
 
     function test_BurnBatch() public {
         uint256[] memory ids = new uint256[](3);
@@ -698,9 +726,11 @@ contract ERC1155FacetTest is Test {
         facet.burnBatch(alice, ids, burnAmounts);
     }
 
-    // ============================================
-    // Receiver Hook Tests
-    // ============================================
+    /**
+     * ============================================
+     * Receiver Hook Tests
+     * ============================================
+     */
 
     function test_SafeTransferFrom_ToContractWithAcceptance() public {
         ERC1155ReceiverMock receiver = new ERC1155ReceiverMock(
@@ -943,7 +973,9 @@ contract ERC1155FacetTest is Test {
 
         vm.prank(alice);
         facet.safeBatchTransferFrom(alice, bob, ids, amounts, "");
-        // Should not revert
+        /**
+         * Should not revert
+         */
     }
 
     function test_SafeBatchTransferFrom_WithZeroAmounts() public {
@@ -993,27 +1025,39 @@ contract ERC1155FacetTest is Test {
         assertEq(facet.balanceOf(bob, TOKEN_ID_1), 30);
     }
 
-    // ============================================
-    // Integration Tests
-    // ============================================
+    /**
+     * ============================================
+     * Integration Tests
+     * ============================================
+     */
 
     function test_MintTransferBurn_Flow() public {
-        // Mint to alice
+        /**
+         * Mint to alice
+         */
         facet.mint(alice, TOKEN_ID_1, 1000);
         facet.mint(alice, TOKEN_ID_2, 500);
 
-        // Alice transfers some to bob
+        /**
+         * Alice transfers some to bob
+         */
         vm.prank(alice);
         facet.safeTransferFrom(alice, bob, TOKEN_ID_1, 300, "");
 
-        // Bob transfers some to charlie
+        /**
+         * Bob transfers some to charlie
+         */
         vm.prank(bob);
         facet.safeTransferFrom(bob, charlie, TOKEN_ID_1, 100, "");
 
-        // Burn from alice
+        /**
+         * Burn from alice
+         */
         facet.burn(alice, TOKEN_ID_1, 200);
 
-        // Verify final balances
+        /**
+         * Verify final balances
+         */
         assertEq(facet.balanceOf(alice, TOKEN_ID_1), 500);
         assertEq(facet.balanceOf(alice, TOKEN_ID_2), 500);
         assertEq(facet.balanceOf(bob, TOKEN_ID_1), 200);
@@ -1031,10 +1075,14 @@ contract ERC1155FacetTest is Test {
         mintAmounts[1] = 2000;
         mintAmounts[2] = 3000;
 
-        // Mint batch to alice
+        /**
+         * Mint batch to alice
+         */
         facet.mintBatch(alice, ids, mintAmounts);
 
-        // Alice transfers batch to bob
+        /**
+         * Alice transfers batch to bob
+         */
         uint256[] memory transferAmounts = new uint256[](3);
         transferAmounts[0] = 300;
         transferAmounts[1] = 400;
@@ -1043,7 +1091,9 @@ contract ERC1155FacetTest is Test {
         vm.prank(alice);
         facet.safeBatchTransferFrom(alice, bob, ids, transferAmounts, "");
 
-        // Burn batch from alice
+        /**
+         * Burn batch from alice
+         */
         uint256[] memory burnAmounts = new uint256[](3);
         burnAmounts[0] = 200;
         burnAmounts[1] = 300;
@@ -1051,7 +1101,9 @@ contract ERC1155FacetTest is Test {
 
         facet.burnBatch(alice, ids, burnAmounts);
 
-        // Verify final balances
+        /**
+         * Verify final balances
+         */
         assertEq(facet.balanceOf(alice, TOKEN_ID_1), 500);
         assertEq(facet.balanceOf(alice, TOKEN_ID_2), 1300);
         assertEq(facet.balanceOf(alice, TOKEN_ID_3), 2100);
@@ -1063,22 +1115,30 @@ contract ERC1155FacetTest is Test {
     function test_ApprovalAndTransfer_Flow() public {
         facet.mint(alice, TOKEN_ID_1, 1000);
 
-        // Alice approves bob
+        /**
+         * Alice approves bob
+         */
         vm.prank(alice);
         facet.setApprovalForAll(bob, true);
 
-        // Bob transfers on behalf of alice
+        /**
+         * Bob transfers on behalf of alice
+         */
         vm.prank(bob);
         facet.safeTransferFrom(alice, charlie, TOKEN_ID_1, 300, "");
 
         assertEq(facet.balanceOf(alice, TOKEN_ID_1), 700);
         assertEq(facet.balanceOf(charlie, TOKEN_ID_1), 300);
 
-        // Alice revokes approval
+        /**
+         * Alice revokes approval
+         */
         vm.prank(alice);
         facet.setApprovalForAll(bob, false);
 
-        // Bob can no longer transfer
+        /**
+         * Bob can no longer transfer
+         */
         vm.prank(bob);
         vm.expectRevert(abi.encodeWithSelector(ERC1155Facet.ERC1155MissingApprovalForAll.selector, bob, alice));
         facet.safeTransferFrom(alice, charlie, TOKEN_ID_1, 100, "");

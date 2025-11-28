@@ -1,4 +1,6 @@
-// SPDX-License-Identifier: MIT
+/**
+ *  SPDX-License-Identifier: MIT
+ */
 pragma solidity >=0.8.30;
 
 import {Test, console2} from "forge-std/Test.sol";
@@ -11,33 +13,45 @@ contract LibAccessControlPausableTest is Test {
     LibAccessControlPausableHarness public harness;
     LibAccessControlHarness public accessControl;
 
-    // Test addresses
+    /**
+     * Test addresses
+     */
     address ADMIN = makeAddr("admin");
     address ALICE = makeAddr("alice");
     address BOB = makeAddr("bob");
 
-    // Test roles
+    /**
+     * Test roles
+     */
     bytes32 constant DEFAULT_ADMIN_ROLE = 0x00;
     bytes32 constant MINTER_ROLE = keccak256("MINTER_ROLE");
     bytes32 constant PAUSER_ROLE = keccak256("PAUSER_ROLE");
 
-    // Events
+    /**
+     * Events
+     */
     event RolePaused(bytes32 indexed role, address indexed account);
     event RoleUnpaused(bytes32 indexed role, address indexed account);
 
     function setUp() public {
-        // Initialize AccessControl first (shared storage)
+        /**
+         * Initialize AccessControl first (shared storage)
+         */
         accessControl = new LibAccessControlHarness();
         accessControl.initialize(ADMIN);
 
-        // Initialize Pausable harness (uses same AccessControl storage)
+        /**
+         * Initialize Pausable harness (uses same AccessControl storage)
+         */
         harness = new LibAccessControlPausableHarness();
         harness.initialize(ADMIN);
     }
 
-    // ============================================
-    // IsRolePaused Tests
-    // ============================================
+    /**
+     * ============================================
+     * IsRolePaused Tests
+     * ============================================
+     */
 
     function test_IsRolePaused_ReturnsFalseByDefault() public view {
         assertFalse(harness.isRolePaused(MINTER_ROLE));
@@ -51,9 +65,11 @@ contract LibAccessControlPausableTest is Test {
         assertTrue(harness.getStoragePaused(MINTER_ROLE));
     }
 
-    // ============================================
-    // PauseRole Tests
-    // ============================================
+    /**
+     * ============================================
+     * PauseRole Tests
+     * ============================================
+     */
 
     function test_PauseRole_EmitsRolePausedEvent() public {
         vm.expectEmit(true, true, false, true);
@@ -73,9 +89,11 @@ contract LibAccessControlPausableTest is Test {
         assertTrue(harness.isRolePaused(MINTER_ROLE));
     }
 
-    // ============================================
-    // UnpauseRole Tests
-    // ============================================
+    /**
+     * ============================================
+     * UnpauseRole Tests
+     * ============================================
+     */
 
     function test_UnpauseRole_EmitsRoleUnpausedEvent() public {
         vm.prank(address(harness));
@@ -104,14 +122,18 @@ contract LibAccessControlPausableTest is Test {
     function test_PauseUnpauseCycle_MultipleCycles() public {
         vm.startPrank(address(harness));
 
-        // First cycle
+        /**
+         * First cycle
+         */
         harness.pauseRole(MINTER_ROLE);
         assertTrue(harness.isRolePaused(MINTER_ROLE));
 
         harness.unpauseRole(MINTER_ROLE);
         assertFalse(harness.isRolePaused(MINTER_ROLE));
 
-        // Second cycle
+        /**
+         * Second cycle
+         */
         harness.pauseRole(MINTER_ROLE);
         assertTrue(harness.isRolePaused(MINTER_ROLE));
 
@@ -121,27 +143,39 @@ contract LibAccessControlPausableTest is Test {
         vm.stopPrank();
     }
 
-    // ============================================
-    // RequireRoleNotPaused Tests
-    // ============================================
+    /**
+     * ============================================
+     * RequireRoleNotPaused Tests
+     * ============================================
+     */
 
     function test_RequireRoleNotPaused_PassesWhenRoleNotPaused() public {
-        // Grant role to Alice
+        /**
+         * Grant role to Alice
+         */
         harness.forceGrantRole(MINTER_ROLE, ALICE);
 
-        // Should pass (role exists and not paused)
+        /**
+         * Should pass (role exists and not paused)
+         */
         harness.requireRoleNotPaused(MINTER_ROLE, ALICE);
     }
 
     function test_RevertWhen_RequireRoleNotPaused_RoleIsPaused() public {
-        // Grant role to Alice
+        /**
+         * Grant role to Alice
+         */
         harness.forceGrantRole(MINTER_ROLE, ALICE);
 
-        // Pause the role
+        /**
+         * Pause the role
+         */
         vm.prank(address(harness));
         harness.pauseRole(MINTER_ROLE);
 
-        // Should revert
+        /**
+         * Should revert
+         */
         vm.expectRevert(abi.encodeWithSelector(LibAccessControlPausable.AccessControlRolePaused.selector, MINTER_ROLE));
         harness.requireRoleNotPaused(MINTER_ROLE, ALICE);
     }
@@ -156,18 +190,26 @@ contract LibAccessControlPausableTest is Test {
     }
 
     function test_RequireRoleNotPaused_AfterUnpause() public {
-        // Grant role to Alice
+        /**
+         * Grant role to Alice
+         */
         harness.forceGrantRole(MINTER_ROLE, ALICE);
 
-        // Pause
+        /**
+         * Pause
+         */
         vm.prank(address(harness));
         harness.pauseRole(MINTER_ROLE);
 
-        // Unpause
+        /**
+         * Unpause
+         */
         vm.prank(address(harness));
         harness.unpauseRole(MINTER_ROLE);
 
-        // Should pass now
+        /**
+         * Should pass now
+         */
         harness.requireRoleNotPaused(MINTER_ROLE, ALICE);
     }
 
@@ -181,9 +223,11 @@ contract LibAccessControlPausableTest is Test {
         assertTrue(harness.isRolePaused(PAUSER_ROLE));
     }
 
-    // ============================================
-    // Storage Consistency Tests
-    // ============================================
+    /**
+     * ============================================
+     * Storage Consistency Tests
+     * ============================================
+     */
 
     function test_StorageConsistency_PauseRole() public {
         vm.prank(address(harness));
@@ -203,18 +247,24 @@ contract LibAccessControlPausableTest is Test {
         vm.stopPrank();
     }
 
-    // ============================================
-    // Fuzz Tests
-    // ============================================
+    /**
+     * ============================================
+     * Fuzz Tests
+     * ============================================
+     */
 
     function testFuzz_PauseUnpauseCycle_ConsistentState(bytes32 role) public {
         vm.startPrank(address(harness));
 
-        // Pause
+        /**
+         * Pause
+         */
         harness.pauseRole(role);
         assertTrue(harness.isRolePaused(role));
 
-        // Unpause
+        /**
+         * Unpause
+         */
         harness.unpauseRole(role);
         assertFalse(harness.isRolePaused(role));
 

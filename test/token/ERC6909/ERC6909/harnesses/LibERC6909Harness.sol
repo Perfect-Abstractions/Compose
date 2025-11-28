@@ -1,10 +1,14 @@
-// SPDX-License-Identifier: MIT
+/**
+ *  SPDX-License-Identifier: MIT
+ */
 pragma solidity >=0.8.30;
 
 import {LibERC6909} from "../../../../../src/token/ERC6909/ERC6909/LibERC6909.sol";
 
-/// @notice Test harness that exposes LibERC6909's internal functions as external
-/// @dev Required for testing since LibERC6909 only has internal functions
+/**
+ * @notice Test harness that exposes LibERC6909's internal functions as external
+ * @dev Required for testing since LibERC6909 only has internal functions
+ */
 contract LibERC6909Harness {
     function mint(address _to, uint256 _id, uint256 _amount) external {
         LibERC6909.mint(_to, _id, _amount);

@@ -1,4 +1,6 @@
-// SPDX-License-Identifier: MIT
+/**
+ *  SPDX-License-Identifier: MIT
+ */
 pragma solidity >=0.8.30;
 
 import {Test, console2} from "forge-std/Test.sol";
@@ -8,14 +10,18 @@ import {AccessControlFacetHarness} from "./harnesses/AccessControlFacetHarness.s
 contract AccessControlFacetTest is Test {
     AccessControlFacetHarness public accessControl;
 
-    // Test addresses
+    /**
+     * Test addresses
+     */
     address ADMIN = makeAddr("admin");
     address ALICE = makeAddr("alice");
     address BOB = makeAddr("bob");
     address CHARLIE = makeAddr("charlie");
     address ZERO_ADDRESS = address(0);
 
-    // Test roles
+    /**
+     * Test roles
+     */
     bytes32 constant DEFAULT_ADMIN_ROLE = 0x00;
     bytes32 constant MINTER_ROLE = keccak256("MINTER_ROLE");
     bytes32 constant PAUSER_ROLE = keccak256("PAUSER_ROLE");
@@ -23,7 +29,9 @@ contract AccessControlFacetTest is Test {
     bytes32 constant MODERATOR_ROLE = keccak256("MODERATOR_ROLE");
     bytes32 constant USER_ROLE = keccak256("USER_ROLE");
 
-    // Events
+    /**
+     * Events
+     */
     event RoleAdminChanged(bytes32 indexed role, bytes32 indexed previousAdminRole, bytes32 indexed newAdminRole);
     event RoleGranted(bytes32 indexed role, address indexed account, address indexed sender);
     event RoleRevoked(bytes32 indexed role, address indexed account, address indexed sender);
@@ -33,9 +41,11 @@ contract AccessControlFacetTest is Test {
         accessControl.initialize(ADMIN);
     }
 
-    // ============================================
-    // HasRole Tests
-    // ============================================
+    /**
+     * ============================================
+     * HasRole Tests
+     * ============================================
+     */
 
     function test_HasRole_ReturnsCorrectInitialState() public view {
         assertTrue(accessControl.hasRole(DEFAULT_ADMIN_ROLE, ADMIN));
@@ -78,16 +88,20 @@ contract AccessControlFacetTest is Test {
         assertTrue(accessControl.hasRole(MINTER_ROLE, CHARLIE));
     }
 
-    // ============================================
-    // RequireRole Tests
-    // ============================================
+    /**
+     * ============================================
+     * RequireRole Tests
+     * ============================================
+     */
 
     function test_RequireRole_PassesWhenAccountHasRole() public {
         vm.prank(ADMIN);
         accessControl.grantRole(MINTER_ROLE, ALICE);
 
         accessControl.requireRole(MINTER_ROLE, ALICE);
-        // No revert means success
+        /**
+         * No revert means success
+         */
     }
 
     function test_RevertWhen_RequireRole_AccountDoesNotHaveRole() public {
@@ -106,26 +120,34 @@ contract AccessControlFacetTest is Test {
         accessControl.requireRole(DEFAULT_ADMIN_ROLE, ZERO_ADDRESS);
     }
 
-    // ============================================
-    // GetRoleAdmin Tests
-    // ============================================
+    /**
+     * ============================================
+     * GetRoleAdmin Tests
+     * ============================================
+     */
 
     function test_GetRoleAdmin_ReturnsDefaultAdminForNewRole() public view {
         assertEq(accessControl.getRoleAdmin(MINTER_ROLE), DEFAULT_ADMIN_ROLE);
     }
 
     function test_GetRoleAdmin_ReturnsCorrectAdminAfterChange() public {
-        // Set up role hierarchy
+        /**
+         * Set up role hierarchy
+         */
         accessControl.forceSetRoleAdmin(MINTER_ROLE, PAUSER_ROLE);
         assertEq(accessControl.getRoleAdmin(MINTER_ROLE), PAUSER_ROLE);
     }
 
-    // ============================================
-    // setRoleAdmin Tests (external)
-    // ============================================
+    /**
+     * ============================================
+     * setRoleAdmin Tests (external)
+     * ============================================
+     */
 
     function test_SetRoleAdmin_SucceedsWhenCallerIsCurrentAdmin() public {
-        // DEFAULT_ADMIN_ROLE is current admin for new roles
+        /**
+         * DEFAULT_ADMIN_ROLE is current admin for new roles
+         */
         vm.expectEmit(true, true, true, true);
         emit RoleAdminChanged(MINTER_ROLE, DEFAULT_ADMIN_ROLE, PAUSER_ROLE);
 
@@ -136,10 +158,14 @@ contract AccessControlFacetTest is Test {
     }
 
     function test_RevertWhen_SetRoleAdmin_CallerIsNotCurrentAdmin() public {
-        // Set current admin to PAUSER_ROLE
+        /**
+         * Set current admin to PAUSER_ROLE
+         */
         accessControl.forceSetRoleAdmin(MINTER_ROLE, PAUSER_ROLE);
 
-        // ADMIN has DEFAULT_ADMIN_ROLE but not PAUSER_ROLE
+        /**
+         * ADMIN has DEFAULT_ADMIN_ROLE but not PAUSER_ROLE
+         */
         vm.expectRevert(
             abi.encodeWithSelector(AccessControlFacet.AccessControlUnauthorizedAccount.selector, ADMIN, PAUSER_ROLE)
         );
@@ -147,9 +173,11 @@ contract AccessControlFacetTest is Test {
         accessControl.setRoleAdmin(MINTER_ROLE, UPGRADER_ROLE);
     }
 
-    // ============================================
-    // Batch Grant/Revoke Tests
-    // ============================================
+    /**
+     * ============================================
+     * Batch Grant/Revoke Tests
+     * ============================================
+     */
 
     function test_GrantRoleBatch_SucceedsAndEmitsPerNewGrant() public {
         address[] memory accounts = new address[](3);
@@ -158,7 +186,9 @@ contract AccessControlFacetTest is Test {
         accounts[2] = CHARLIE;
 
         vm.startPrank(ADMIN);
-        // Expect three RoleGranted events
+        /**
+         * Expect three RoleGranted events
+         */
         vm.expectEmit(true, true, true, true);
         emit RoleGranted(MINTER_ROLE, ALICE, ADMIN);
         vm.expectEmit(true, true, true, true);
@@ -174,7 +204,9 @@ contract AccessControlFacetTest is Test {
     }
 
     function test_GrantRoleBatch_SkipsAlreadyGrantedWithoutExtraEvents() public {
-        // Pre-grant ALICE
+        /**
+         * Pre-grant ALICE
+         */
         vm.prank(ADMIN);
         accessControl.grantRole(MINTER_ROLE, ALICE);
 
@@ -184,7 +216,9 @@ contract AccessControlFacetTest is Test {
         accounts[2] = CHARLIE;
 
         vm.startPrank(ADMIN);
-        // Expect only two events for new grants
+        /**
+         * Expect only two events for new grants
+         */
         vm.expectEmit(true, true, true, true);
         emit RoleGranted(MINTER_ROLE, BOB, ADMIN);
         vm.expectEmit(true, true, true, true);
@@ -212,7 +246,9 @@ contract AccessControlFacetTest is Test {
     }
 
     function test_RevokeRoleBatch_SucceedsAndEmitsPerRevocation() public {
-        // Setup grants
+        /**
+         * Setup grants
+         */
         vm.startPrank(ADMIN);
         accessControl.grantRole(MINTER_ROLE, ALICE);
         accessControl.grantRole(MINTER_ROLE, BOB);
@@ -240,7 +276,9 @@ contract AccessControlFacetTest is Test {
     }
 
     function test_RevokeRoleBatch_SkipsNotGrantedWithoutExtraEvents() public {
-        // Only ALICE has the role
+        /**
+         * Only ALICE has the role
+         */
         vm.prank(ADMIN);
         accessControl.grantRole(MINTER_ROLE, ALICE);
 
@@ -261,7 +299,9 @@ contract AccessControlFacetTest is Test {
     }
 
     function test_RevertWhen_RevokeRoleBatch_CallerIsNotAdmin() public {
-        // Setup grants
+        /**
+         * Setup grants
+         */
         vm.prank(ADMIN);
         accessControl.grantRole(MINTER_ROLE, ALICE);
 
@@ -280,7 +320,9 @@ contract AccessControlFacetTest is Test {
     function test_GrantRoleBatch_SucceedsWithEmptyArray() public {
         address[] memory accounts = new address[](0);
 
-        // Should just succeed with no reverts and no events
+        /**
+         * Should just succeed with no reverts and no events
+         */
         vm.prank(ADMIN);
         accessControl.grantRoleBatch(MINTER_ROLE, accounts);
     }
@@ -288,32 +330,42 @@ contract AccessControlFacetTest is Test {
     function test_RevokeRoleBatch_SucceedsWithEmptyArray() public {
         address[] memory accounts = new address[](0);
 
-        // Should just succeed with no reverts and no events
+        /**
+         * Should just succeed with no reverts and no events
+         */
         vm.prank(ADMIN);
         accessControl.revokeRoleBatch(MINTER_ROLE, accounts);
     }
 
     function test_DelegatedAdminCanExerciseAdminPowers() public {
-        // === Arrange ===
+        /**
+         * === Arrange ===
+         */
         vm.startPrank(ADMIN);
         accessControl.grantRole(MINTER_ROLE, BOB);
         accessControl.grantRole(PAUSER_ROLE, ALICE);
         accessControl.setRoleAdmin(MINTER_ROLE, PAUSER_ROLE);
         vm.stopPrank();
 
-        // Assert the setup is correct before acting
+        /**
+         * Assert the setup is correct before acting
+         */
         assertTrue(accessControl.hasRole(MINTER_ROLE, BOB));
         assertTrue(accessControl.hasRole(PAUSER_ROLE, ALICE));
 
-        // === Act ===
-        // Expect the event to be emitted
+        /**
+         * === Act ===
+         * Expect the event to be emitted
+         */
         vm.expectEmit(true, true, true, true);
         emit RoleRevoked(MINTER_ROLE, BOB, ALICE);
 
         vm.prank(ALICE);
         accessControl.revokeRole(MINTER_ROLE, BOB);
 
-        // === Assert ===
+        /**
+         * === Assert ===
+         */
         assertFalse(accessControl.hasRole(MINTER_ROLE, BOB));
     }
 
@@ -321,9 +373,11 @@ contract AccessControlFacetTest is Test {
         assertEq(accessControl.getRoleAdmin(DEFAULT_ADMIN_ROLE), DEFAULT_ADMIN_ROLE);
     }
 
-    // ============================================
-    // GrantRole Tests
-    // ============================================
+    /**
+     * ============================================
+     * GrantRole Tests
+     * ============================================
+     */
 
     function test_GrantRole_SucceedsWithDefaultAdmin() public {
         vm.expectEmit(true, true, true, true);
@@ -336,7 +390,9 @@ contract AccessControlFacetTest is Test {
     }
 
     function test_GrantRole_SucceedsWithCustomRoleAdmin() public {
-        // Set up custom admin for MINTER_ROLE
+        /**
+         * Set up custom admin for MINTER_ROLE
+         */
         accessControl.forceSetRoleAdmin(MINTER_ROLE, PAUSER_ROLE);
         accessControl.forceGrantRole(PAUSER_ROLE, BOB);
 
@@ -353,13 +409,17 @@ contract AccessControlFacetTest is Test {
         vm.prank(ADMIN);
         accessControl.grantRole(MINTER_ROLE, ALICE);
 
-        // Second grant should not emit an event
-        // The AccessControlFacet doesn't return a bool, but we can verify
-        // that the role is still granted and no duplicate event is emitted
+        /**
+         * Second grant should not emit an event
+         * The AccessControlFacet doesn't return a bool, but we can verify
+         * that the role is still granted and no duplicate event is emitted
+         */
         vm.prank(ADMIN);
         accessControl.grantRole(MINTER_ROLE, ALICE); // Should silently succeed
 
-        // Verify the role is still granted
+        /**
+         * Verify the role is still granted
+         */
         assertTrue(accessControl.hasRole(MINTER_ROLE, ALICE));
     }
 
@@ -374,10 +434,14 @@ contract AccessControlFacetTest is Test {
     }
 
     function test_RevertWhen_GrantRole_CallerIsNotCustomAdmin() public {
-        // Set up custom admin for MINTER_ROLE
+        /**
+         * Set up custom admin for MINTER_ROLE
+         */
         accessControl.forceSetRoleAdmin(MINTER_ROLE, PAUSER_ROLE);
 
-        // ADMIN has DEFAULT_ADMIN_ROLE but not PAUSER_ROLE
+        /**
+         * ADMIN has DEFAULT_ADMIN_ROLE but not PAUSER_ROLE
+         */
         vm.expectRevert(
             abi.encodeWithSelector(AccessControlFacet.AccessControlUnauthorizedAccount.selector, ADMIN, PAUSER_ROLE)
         );
@@ -399,17 +463,23 @@ contract AccessControlFacetTest is Test {
         assertTrue(accessControl.hasRole(MINTER_ROLE, ADMIN));
     }
 
-    // ============================================
-    // RevokeRole Tests
-    // ============================================
+    /**
+     * ============================================
+     * RevokeRole Tests
+     * ============================================
+     */
 
     function test_RevokeRole_SucceedsWithDefaultAdmin() public {
-        // Setup
+        /**
+         * Setup
+         */
         vm.prank(ADMIN);
         accessControl.grantRole(MINTER_ROLE, ALICE);
         assertTrue(accessControl.hasRole(MINTER_ROLE, ALICE));
 
-        // Revoke
+        /**
+         * Revoke
+         */
         vm.expectEmit(true, true, true, true);
         emit RoleRevoked(MINTER_ROLE, ALICE, ADMIN);
 
@@ -420,7 +490,9 @@ contract AccessControlFacetTest is Test {
     }
 
     function test_RevokeRole_SucceedsWithCustomRoleAdmin() public {
-        // Set up custom admin for MINTER_ROLE
+        /**
+         * Set up custom admin for MINTER_ROLE
+         */
         accessControl.forceSetRoleAdmin(MINTER_ROLE, PAUSER_ROLE);
         accessControl.forceGrantRole(PAUSER_ROLE, BOB);
         accessControl.forceGrantRole(MINTER_ROLE, ALICE);
@@ -435,11 +507,15 @@ contract AccessControlFacetTest is Test {
     }
 
     function test_RevokeRole_DoesNotEmitEventWhenNotGranted() public {
-        // Revoking a role that's not granted should succeed silently
+        /**
+         * Revoking a role that's not granted should succeed silently
+         */
         vm.prank(ADMIN);
         accessControl.revokeRole(MINTER_ROLE, ALICE);
 
-        // Verify the role is still not granted
+        /**
+         * Verify the role is still not granted
+         */
         assertFalse(accessControl.hasRole(MINTER_ROLE, ALICE));
     }
 
@@ -456,11 +532,15 @@ contract AccessControlFacetTest is Test {
     }
 
     function test_RevertWhen_RevokeRole_CallerIsNotCustomAdmin() public {
-        // Set up custom admin for MINTER_ROLE
+        /**
+         * Set up custom admin for MINTER_ROLE
+         */
         accessControl.forceSetRoleAdmin(MINTER_ROLE, PAUSER_ROLE);
         accessControl.forceGrantRole(MINTER_ROLE, ALICE);
 
-        // ADMIN has DEFAULT_ADMIN_ROLE but not PAUSER_ROLE
+        /**
+         * ADMIN has DEFAULT_ADMIN_ROLE but not PAUSER_ROLE
+         */
         vm.expectRevert(
             abi.encodeWithSelector(AccessControlFacet.AccessControlUnauthorizedAccount.selector, ADMIN, PAUSER_ROLE)
         );
@@ -469,29 +549,39 @@ contract AccessControlFacetTest is Test {
     }
 
     function test_RevokeRole_CanRevokeFromZeroAddress() public {
-        // Setup
+        /**
+         * Setup
+         */
         vm.prank(ADMIN);
         accessControl.grantRole(MINTER_ROLE, ZERO_ADDRESS);
         assertTrue(accessControl.hasRole(MINTER_ROLE, ZERO_ADDRESS));
 
-        // Revoke
+        /**
+         * Revoke
+         */
         vm.prank(ADMIN);
         accessControl.revokeRole(MINTER_ROLE, ZERO_ADDRESS);
 
         assertFalse(accessControl.hasRole(MINTER_ROLE, ZERO_ADDRESS));
     }
 
-    // ============================================
-    // RenounceRole Tests
-    // ============================================
+    /**
+     * ============================================
+     * RenounceRole Tests
+     * ============================================
+     */
 
     function test_RenounceRole_SucceedsForOwnRole() public {
-        // Setup
+        /**
+         * Setup
+         */
         vm.prank(ADMIN);
         accessControl.grantRole(MINTER_ROLE, ALICE);
         assertTrue(accessControl.hasRole(MINTER_ROLE, ALICE));
 
-        // Renounce
+        /**
+         * Renounce
+         */
         vm.expectEmit(true, true, true, true);
         emit RoleRevoked(MINTER_ROLE, ALICE, ALICE);
 
@@ -502,11 +592,15 @@ contract AccessControlFacetTest is Test {
     }
 
     function test_RenounceRole_DoesNotEmitEventWhenNotGranted() public {
-        // Renouncing a role that's not granted should succeed silently
+        /**
+         * Renouncing a role that's not granted should succeed silently
+         */
         vm.prank(ALICE);
         accessControl.renounceRole(MINTER_ROLE, ALICE);
 
-        // Verify the role is still not granted
+        /**
+         * Verify the role is still not granted
+         */
         assertFalse(accessControl.hasRole(MINTER_ROLE, ALICE));
     }
 
@@ -530,14 +624,18 @@ contract AccessControlFacetTest is Test {
     }
 
     function test_RenounceRole_CanRenounceMultipleRoles() public {
-        // Setup
+        /**
+         * Setup
+         */
         vm.startPrank(ADMIN);
         accessControl.grantRole(MINTER_ROLE, ALICE);
         accessControl.grantRole(PAUSER_ROLE, ALICE);
         accessControl.grantRole(UPGRADER_ROLE, ALICE);
         vm.stopPrank();
 
-        // Renounce roles one by one
+        /**
+         * Renounce roles one by one
+         */
         vm.startPrank(ALICE);
         accessControl.renounceRole(MINTER_ROLE, ALICE);
         assertFalse(accessControl.hasRole(MINTER_ROLE, ALICE));
@@ -562,9 +660,11 @@ contract AccessControlFacetTest is Test {
         assertFalse(accessControl.hasRole(DEFAULT_ADMIN_ROLE, ADMIN));
     }
 
-    // ============================================
-    // Complex Role Hierarchy Tests
-    // ============================================
+    /**
+     * ============================================
+     * Complex Role Hierarchy Tests
+     * ============================================
+     */
 
     function test_ComplexRoleHierarchy_Setup() public {
         accessControl.setupComplexRoleHierarchy();
@@ -585,15 +685,21 @@ contract AccessControlFacetTest is Test {
         bytes32 MODERATOR_ROLE_LOCAL = keccak256("MODERATOR_ROLE");
         bytes32 USER_ROLE_LOCAL = keccak256("USER_ROLE");
 
-        // Grant ADMIN_ROLE (only DEFAULT_ADMIN can do this)
+        /**
+         * Grant ADMIN_ROLE (only DEFAULT_ADMIN can do this)
+         */
         vm.prank(ADMIN);
         accessControl.grantRole(ADMIN_ROLE, ALICE);
 
-        // Grant MODERATOR_ROLE (only ADMIN_ROLE can do this)
+        /**
+         * Grant MODERATOR_ROLE (only ADMIN_ROLE can do this)
+         */
         vm.prank(ALICE);
         accessControl.grantRole(MODERATOR_ROLE_LOCAL, BOB);
 
-        // Grant USER_ROLE (only MODERATOR_ROLE can do this)
+        /**
+         * Grant USER_ROLE (only MODERATOR_ROLE can do this)
+         */
         vm.prank(BOB);
         accessControl.grantRole(USER_ROLE_LOCAL, CHARLIE);
 
@@ -608,7 +714,9 @@ contract AccessControlFacetTest is Test {
         bytes32 ADMIN_ROLE = keccak256("ADMIN_ROLE");
         bytes32 MODERATOR_ROLE_LOCAL = keccak256("MODERATOR_ROLE");
 
-        // ALICE doesn't have ADMIN_ROLE, so can't grant MODERATOR_ROLE
+        /**
+         * ALICE doesn't have ADMIN_ROLE, so can't grant MODERATOR_ROLE
+         */
         vm.expectRevert(
             abi.encodeWithSelector(AccessControlFacet.AccessControlUnauthorizedAccount.selector, ALICE, ADMIN_ROLE)
         );
@@ -616,15 +724,19 @@ contract AccessControlFacetTest is Test {
         accessControl.grantRole(MODERATOR_ROLE_LOCAL, BOB);
     }
 
-    // ============================================
-    // Edge Cases Tests
-    // ============================================
+    /**
+     * ============================================
+     * Edge Cases Tests
+     * ============================================
+     */
 
     function test_EdgeCase_RoleAdminOfItself() public {
         accessControl.forceSetRoleAdmin(MINTER_ROLE, MINTER_ROLE);
         accessControl.forceGrantRole(MINTER_ROLE, ALICE);
 
-        // ALICE has MINTER_ROLE and MINTER_ROLE is its own admin
+        /**
+         * ALICE has MINTER_ROLE and MINTER_ROLE is its own admin
+         */
         vm.prank(ALICE);
         accessControl.grantRole(MINTER_ROLE, BOB);
 
@@ -636,7 +748,9 @@ contract AccessControlFacetTest is Test {
         accessControl.forceSetRoleAdmin(PAUSER_ROLE, UPGRADER_ROLE);
         accessControl.forceSetRoleAdmin(UPGRADER_ROLE, MINTER_ROLE);
 
-        // Grant MINTER_ROLE to ALICE (requires PAUSER_ROLE)
+        /**
+         * Grant MINTER_ROLE to ALICE (requires PAUSER_ROLE)
+         */
         accessControl.forceGrantRole(PAUSER_ROLE, BOB);
         vm.prank(BOB);
         accessControl.grantRole(MINTER_ROLE, ALICE);
@@ -656,17 +770,23 @@ contract AccessControlFacetTest is Test {
     function test_EdgeCase_MultipleOperationsOnSameRole() public {
         vm.startPrank(ADMIN);
 
-        // Grant to multiple accounts
+        /**
+         * Grant to multiple accounts
+         */
         accessControl.grantRole(MINTER_ROLE, ALICE);
         accessControl.grantRole(MINTER_ROLE, BOB);
         accessControl.grantRole(MINTER_ROLE, CHARLIE);
 
-        // Revoke from one
+        /**
+         * Revoke from one
+         */
         accessControl.revokeRole(MINTER_ROLE, BOB);
 
         vm.stopPrank();
 
-        // BOB renounces (should have no effect since already revoked)
+        /**
+         * BOB renounces (should have no effect since already revoked)
+         */
         vm.prank(BOB);
         accessControl.renounceRole(MINTER_ROLE, BOB);
 
@@ -675,9 +795,11 @@ contract AccessControlFacetTest is Test {
         assertTrue(accessControl.hasRole(MINTER_ROLE, CHARLIE));
     }
 
-    // ============================================
-    // Storage Consistency Tests
-    // ============================================
+    /**
+     * ============================================
+     * Storage Consistency Tests
+     * ============================================
+     */
 
     function test_StorageConsistency_HasRoleMatchesStorage() public {
         vm.prank(ADMIN);
@@ -699,9 +821,11 @@ contract AccessControlFacetTest is Test {
         assertEq(accessControl.getStoragePosition(), expectedSlot);
     }
 
-    // ============================================
-    // Fuzz Tests
-    // ============================================
+    /**
+     * ============================================
+     * Fuzz Tests
+     * ============================================
+     */
 
     function testFuzz_GrantRole_OnlyAdminCanGrant(address caller, address account) public {
         vm.assume(caller != ADMIN);
@@ -749,26 +873,34 @@ contract AccessControlFacetTest is Test {
             roles[i] = keccak256(abi.encodePacked("ROLE_", i));
         }
 
-        // Grant all roles
+        /**
+         * Grant all roles
+         */
         vm.startPrank(ADMIN);
         for (uint256 i = 0; i < roles.length; i++) {
             accessControl.grantRole(roles[i], account);
         }
         vm.stopPrank();
 
-        // Verify all roles
+        /**
+         * Verify all roles
+         */
         for (uint256 i = 0; i < roles.length; i++) {
             assertTrue(accessControl.hasRole(roles[i], account));
         }
 
-        // Revoke half the roles
+        /**
+         * Revoke half the roles
+         */
         vm.startPrank(ADMIN);
         for (uint256 i = 0; i < roles.length; i += 2) {
             accessControl.revokeRole(roles[i], account);
         }
         vm.stopPrank();
 
-        // Verify correct roles are revoked
+        /**
+         * Verify correct roles are revoked
+         */
         for (uint256 i = 0; i < roles.length; i++) {
             if (i % 2 == 0) {
                 assertFalse(accessControl.hasRole(roles[i], account));
@@ -781,7 +913,9 @@ contract AccessControlFacetTest is Test {
     function testFuzz_RoleAdminHierarchy(bytes32 role1, bytes32 role2, bytes32 role3) public {
         vm.assume(role1 != role2 && role2 != role3 && role1 != role3);
 
-        // Create hierarchy: role1 -> role2 -> role3
+        /**
+         * Create hierarchy: role1 -> role2 -> role3
+         */
         accessControl.forceSetRoleAdmin(role1, DEFAULT_ADMIN_ROLE);
         accessControl.forceSetRoleAdmin(role2, role1);
         accessControl.forceSetRoleAdmin(role3, role2);
@@ -790,7 +924,9 @@ contract AccessControlFacetTest is Test {
         assertEq(accessControl.getRoleAdmin(role2), role1);
         assertEq(accessControl.getRoleAdmin(role3), role2);
 
-        // Grant roles in hierarchy
+        /**
+         * Grant roles in hierarchy
+         */
         vm.prank(ADMIN);
         accessControl.grantRole(role1, ALICE);
 

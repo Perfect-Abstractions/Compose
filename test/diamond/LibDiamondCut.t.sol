@@ -1,4 +1,6 @@
-// SPDX-License-Identifier: MIT
+/**
+ *  SPDX-License-Identifier: MIT
+ */
 pragma solidity >=0.8.30;
 
 import {Vm} from "forge-std/Vm.sol";
@@ -24,9 +26,11 @@ contract LibDiamondHarnessTest is Test {
         facet.initialize(TOKEN_NAME, TOKEN_SYMBOL, TOKEN_DECIMALS);
     }
 
-    // ============================================
-    // Helpers
-    // ============================================
+    /**
+     * ============================================
+     * Helpers
+     * ============================================
+     */
 
     modifier addFunctionSetup() {
         bytes4[] memory _functionSelectors = new bytes4[](1);
@@ -37,9 +41,11 @@ contract LibDiamondHarnessTest is Test {
         _;
     }
 
-    // ============================================
-    // Core Functionality Tests
-    // ============================================
+    /**
+     * ============================================
+     * Core Functionality Tests
+     * ============================================
+     */
 
     function test_addFunctions() public {
         bytes4[] memory _functionSelectors = new bytes4[](1);
@@ -125,9 +131,11 @@ contract LibDiamondHarnessTest is Test {
         assertEq(saveSelectors.length, _functionSelectors.length);
     }
 
-    // ============================================
-    // Error Condition Tests
-    // ============================================
+    /**
+     * ============================================
+     * Error Condition Tests
+     * ============================================
+     */
 
     function test_addFunctions_FacetWithZeroCode() public {
         bytes4[] memory _functionSelectors = new bytes4[](1);
@@ -318,9 +326,11 @@ contract LibDiamondHarnessTest is Test {
         harness.diamondCut(_cut, _init, _wrongCalldata);
     }
 
-    // ============================================
-    // Multiple Functions Tests
-    // ============================================
+    /**
+     * ============================================
+     * Multiple Functions Tests
+     * ============================================
+     */
 
     function test_removeFunctions_RemovingFunctionFromMultipleFunctions() public {
         bytes4[] memory _functionSelectors = new bytes4[](2);
@@ -341,15 +351,19 @@ contract LibDiamondHarnessTest is Test {
         assertEq(positionOfSelectorBeforeRemoval - positionOfFunctionSelectorAfterRemoval, 1);
     }
 
-    /// This test multiple actions in a single call.
-    /// 1. Add the function to a facet.
-    /// 2. Replace the function with another facet.
-    /// 3. Remove the function.
+    /**
+     * This test multiple actions in a single call.
+     * 1. Add the function to a facet.
+     * 2. Replace the function with another facet.
+     * 3. Remove the function.
+     */
     function test_diamondCut_MultipleActions() public {
         bytes4[] memory _functionSelectors = new bytes4[](1);
         _functionSelectors[0] = bytes4(keccak256("decimals()"));
 
-        // New ERC20 Facet
+        /**
+         * New ERC20 Facet
+         */
         ERC20FacetHarness newFacet = new ERC20FacetHarness();
 
         LibDiamondCut.FacetCut[] memory _cut = new LibDiamondCut.FacetCut[](3);
