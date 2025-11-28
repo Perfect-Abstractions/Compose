@@ -1,6 +1,4 @@
-/**
- *  SPDX-License-Identifier: MIT
- */
+// SPDX-License-Identifier: MIT
 pragma solidity >=0.8.30;
 /**
  * @title ERC20Bridgeable — ERC-7802 Implementation Facet

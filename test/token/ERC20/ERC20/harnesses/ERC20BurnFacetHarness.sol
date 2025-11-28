@@ -1,6 +1,4 @@
-/**
- *  SPDX-License-Identifier: MIT
- */
+// SPDX-License-Identifier: MIT
 pragma solidity >=0.8.30;
 
 import {ERC20BurnFacet} from "../../../../../src/token/ERC20/ERC20/ERC20BurnFacet.sol";

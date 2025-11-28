@@ -1,6 +1,4 @@
-/**
- *  SPDX-License-Identifier: MIT
- */
+// SPDX-License-Identifier: MIT
 pragma solidity >=0.8.30;
 
 import {ERC6909Facet} from "../../../../../src/token/ERC6909/ERC6909/ERC6909Facet.sol";

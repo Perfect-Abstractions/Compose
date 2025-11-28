@@ -1,6 +1,4 @@
-/**
- *  SPDX-License-Identifier: MIT
- */
+// SPDX-License-Identifier: MIT
 pragma solidity >=0.8.30;
 
 import {ERC20Facet} from "../../../src/token/ERC20/ERC20/ERC20Facet.sol";

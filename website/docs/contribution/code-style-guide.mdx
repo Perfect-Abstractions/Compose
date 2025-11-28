@@ -56,3 +56,9 @@ Follow the [Solidity feature ban](/docs/design/banned-solidity-features).
      */
     function balanceOf(address _account) external view returns (uint256);
     ```
+  The only **exception** is to use "//" for `SPDX-License-Identifier: MIT` at the top of files.
+  - Example:
+    ```solidity
+    // SPDX-License-Identifier: MIT
+    pragma solidity >=0.8.30;
+    ```

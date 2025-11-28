@@ -1,6 +1,4 @@
-/**
- *  SPDX-License-Identifier: MIT
- */
+// SPDX-License-Identifier: MIT
 pragma solidity >=0.8.30;
 
 import {ComposeDiamond} from "../ComposeDiamond.sol";
@@ -29,10 +27,9 @@ contract ExampleDiamond is ComposeDiamond {
     constructor(ComposeDiamond.FacetCut[] memory _facets, address _diamondOwner) {
         ComposeDiamond.addFacets(_facets);
 
-        /**
-         * Initialize storage variables
-         * ///////////////////////////////////////////////////
-         */
+        /*************************************
+         * Initialize storage variables         
+         ************************************/
 
         /**
          * Setting the contract owner

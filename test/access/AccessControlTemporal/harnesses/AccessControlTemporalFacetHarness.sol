@@ -1,6 +1,4 @@
-/**
- *  SPDX-License-Identifier: MIT
- */
+// SPDX-License-Identifier: MIT
 pragma solidity >=0.8.30;
 
 import {AccessControlTemporalFacet} from "../../../../src/access/AccessControlTemporal/AccessControlTemporalFacet.sol";
