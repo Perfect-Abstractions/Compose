@@ -26,11 +26,11 @@ We focus on building **small, independent, and easy-to-read facets**. Each facet
 2. Each facet should have one corresponding facet library.
 3. Facet libraries are used to initialize facets on deployment and during upgrades. 
 4. Facet libraries are also used to integrate custom facets with Compose facets.
-5. Facet libraries have an initialize function which is used to initialize storage variables during deployment.
+5. Facet libraries have one or more functions which are used to initialize storage variables during deployment.
 
 ## Facets & Libraries
 
-1. Facets and facet libraries should not contain owner/admin authorization checks unless absolutely required or fundamental to the functionality being implemented. If permission or authorization checks are required, the facet should integrate with `AccessControlFacet`.
+1. Facets and facet libraries should not contain owner/admin authorization checks unless absolutely required or fundamental to the functionality being implemented. If permission or authorization checks are required, the facet should integrate with `OwnerFacet` or `AccessControlFacet`.
 
 
 ## Extending Facets

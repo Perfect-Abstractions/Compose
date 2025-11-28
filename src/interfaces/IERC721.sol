@@ -4,6 +4,7 @@ pragma solidity >=0.8.30;
 /// @title ERC-721 Token Standard Interface
 /// @notice Interface for ERC-721 token contracts with custom errors
 /// @dev This interface includes all custom errors used by ERC-721 implementations
+///  Note: the ERC-165 identifier for this interface is 0x80ac58cd.
 interface IERC721 {
     /// @notice Error indicating the queried owner address is invalid (zero address).
     error ERC721InvalidOwner(address _owner);
@@ -37,14 +38,6 @@ interface IERC721 {
 
     /// @notice Emitted when an operator is enabled or disabled for an owner.
     event ApprovalForAll(address indexed _owner, address indexed _operator, bool _approved);
-
-    /// @notice Returns the token collection name.
-    /// @return The name of the token collection.
-    function name() external view returns (string memory);
-
-    /// @notice Returns the token collection symbol.
-    /// @return The symbol of the token collection.
-    function symbol() external view returns (string memory);
 
     /// @notice Returns the number of tokens owned by a given address.
     /// @param _owner The address to query the balance of.
@@ -95,9 +88,4 @@ interface IERC721 {
     /// @param _tokenId The token ID to transfer.
     /// @param _data Additional data with no specified format.
     function safeTransferFrom(address _from, address _to, uint256 _tokenId, bytes calldata _data) external;
-
-    /// @notice Provide the metadata URI for a given token ID.
-    /// @param _tokenId tokenID of the NFT to query the metadata from
-    /// @return the URI providing the detailed metadata of the specified tokenID
-    function tokenURI(uint256 _tokenId) external view returns (string memory);
 }

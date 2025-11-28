@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity >=0.8.30;
 
-library LibDiamond {
+library LibDiamondCut {
     error NoSelectorsProvidedForFacet(address _facet);
     error NoBytecodeAtAddress(address _contractAddress, string _message);
     error RemoveFacetAddressMustBeZeroAddress(address _facet);
@@ -21,7 +21,7 @@ library LibDiamond {
     ///      Position of selector in the 'bytes4[] selectors' array
     struct FacetAndPosition {
         address facet;
-        uint16 position;
+        uint32 position;
     }
 
     /// @custom:storage-location erc8042:compose.diamond
@@ -44,7 +44,7 @@ library LibDiamond {
             revert NoBytecodeAtAddress(_facet, "LibDiamond: Add facet has no code");
         }
         // The position to store the next selector in the selectors array
-        uint16 selectorPosition = uint16(s.selectors.length);
+        uint32 selectorPosition = uint32(s.selectors.length);
         for (uint256 selectorIndex; selectorIndex < _functionSelectors.length; selectorIndex++) {
             bytes4 selector = _functionSelectors[selectorIndex];
             address oldFacet = s.facetAndPosition[selector].facet;

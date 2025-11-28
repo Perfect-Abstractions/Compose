@@ -11,7 +11,7 @@ contract DiamondLoupeFacet {
     ///      Position of selector in the 'bytes4[] selectors' array.
     struct FacetAndPosition {
         address facet;
-        uint16 position;
+        uint32 position;
     }
 
     /// @custom:storage-location erc8042:compose.diamond
