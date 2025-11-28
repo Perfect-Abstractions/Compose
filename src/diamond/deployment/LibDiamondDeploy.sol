@@ -35,7 +35,7 @@ library LibDiamondDeploy {
     error NoBytecodeAtAddress(address _contractAddress, string _message);
     error CannotAddFunctionToDiamondThatAlreadyExists(bytes4 _selector);
 
-    function addFunctions(Facet[] memory _facets) internal {
+    function addFacets(Facet[] memory _facets) internal {
         DiamondStorage storage s = getStorage();
         uint32 selectorPosition = uint32(s.selectors.length);
         for (uint256 i; i < _facets.length; i++) {

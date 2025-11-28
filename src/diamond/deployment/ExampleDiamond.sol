@@ -22,7 +22,7 @@ contract ExampleDiamond is ComposeDiamond {
     /// @param _facets Array of facet addresses and their corresponding function selectors to add to the diamond.
     /// @param _diamondOwner Address that will be set as the owner of the diamond contract.
     constructor(Facet[] memory _facets, address _diamondOwner) {
-        LibDiamondDeploy.addFunctions(_facets);
+        LibDiamondDeploy.addFacets(_facets);
 
         // Initialize storage variables
         //////////////////////////////////////////////////////
