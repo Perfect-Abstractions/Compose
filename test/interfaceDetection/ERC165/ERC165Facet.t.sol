@@ -229,7 +229,7 @@ contract ERC165FacetTest is Test {
 
     function testFuzz_RegisterInterface(bytes4 interfaceId) public {
         erc165Facet.registerInterface(interfaceId);
-        
+
         if (interfaceId == IERC165_INTERFACE_ID) {
             // ERC165 is always supported
             assertTrue(erc165Facet.supportsInterface(interfaceId));
@@ -283,10 +283,7 @@ contract ERC165FacetTest is Test {
             erc165Facet.unregisterInterface(interfaceId);
         }
 
-        assertEq(
-            erc165Facet.supportsInterface(interfaceId),
-            erc165Facet.getStorageValue(interfaceId)
-        );
+        assertEq(erc165Facet.supportsInterface(interfaceId), erc165Facet.getStorageValue(interfaceId));
     }
 
     // ============================================
@@ -298,17 +295,17 @@ contract ERC165FacetTest is Test {
         uint256 gasBefore = gasleft();
         erc165Facet.supportsInterface(IERC165_INTERFACE_ID);
         uint256 gasUsed = gasBefore - gasleft();
-        
+
         assertLt(gasUsed, 30000, "supportsInterface should use less than 30,000 gas");
     }
 
     function test_Gas_SupportsInterface_RegisteredInterface() public {
         erc165Facet.registerInterface(IERC721_INTERFACE_ID);
-        
+
         uint256 gasBefore = gasleft();
         erc165Facet.supportsInterface(IERC721_INTERFACE_ID);
         uint256 gasUsed = gasBefore - gasleft();
-        
+
         assertLt(gasUsed, 30000, "supportsInterface should use less than 30,000 gas");
     }
 
@@ -316,7 +313,7 @@ contract ERC165FacetTest is Test {
         uint256 gasBefore = gasleft();
         erc165Facet.supportsInterface(CUSTOM_INTERFACE_ID);
         uint256 gasUsed = gasBefore - gasleft();
-        
+
         assertLt(gasUsed, 30000, "supportsInterface should use less than 30,000 gas");
     }
 }

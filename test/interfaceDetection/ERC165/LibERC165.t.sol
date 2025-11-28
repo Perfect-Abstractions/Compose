@@ -251,10 +251,7 @@ contract LibERC165Test is Test {
     function test_StorageConsistency_AfterRegistration() public {
         harness.registerInterface(IERC721_INTERFACE_ID);
 
-        assertEq(
-            harness.supportsInterface(IERC721_INTERFACE_ID),
-            harness.getStorageValue(IERC721_INTERFACE_ID)
-        );
+        assertEq(harness.supportsInterface(IERC721_INTERFACE_ID), harness.getStorageValue(IERC721_INTERFACE_ID));
     }
 
     function test_StorageConsistency_AfterMultipleRegistrations() public {
@@ -262,28 +259,16 @@ contract LibERC165Test is Test {
         harness.registerInterface(IERC20_INTERFACE_ID);
         harness.registerInterface(IERC1155_INTERFACE_ID);
 
-        assertEq(
-            harness.supportsInterface(IERC721_INTERFACE_ID),
-            harness.getStorageValue(IERC721_INTERFACE_ID)
-        );
-        assertEq(
-            harness.supportsInterface(IERC20_INTERFACE_ID),
-            harness.getStorageValue(IERC20_INTERFACE_ID)
-        );
-        assertEq(
-            harness.supportsInterface(IERC1155_INTERFACE_ID),
-            harness.getStorageValue(IERC1155_INTERFACE_ID)
-        );
+        assertEq(harness.supportsInterface(IERC721_INTERFACE_ID), harness.getStorageValue(IERC721_INTERFACE_ID));
+        assertEq(harness.supportsInterface(IERC20_INTERFACE_ID), harness.getStorageValue(IERC20_INTERFACE_ID));
+        assertEq(harness.supportsInterface(IERC1155_INTERFACE_ID), harness.getStorageValue(IERC1155_INTERFACE_ID));
     }
 
     function test_StorageConsistency_AfterUnregistration() public {
         harness.registerInterface(IERC721_INTERFACE_ID);
         harness.forceSetInterface(IERC721_INTERFACE_ID, false);
 
-        assertEq(
-            harness.supportsInterface(IERC721_INTERFACE_ID),
-            harness.getStorageValue(IERC721_INTERFACE_ID)
-        );
+        assertEq(harness.supportsInterface(IERC721_INTERFACE_ID), harness.getStorageValue(IERC721_INTERFACE_ID));
     }
 
     // ============================================
@@ -339,10 +324,7 @@ contract LibERC165Test is Test {
     function testFuzz_StorageConsistency(bytes4 interfaceId, bool shouldSupport) public {
         harness.forceSetInterface(interfaceId, shouldSupport);
 
-        assertEq(
-            harness.supportsInterface(interfaceId),
-            harness.getStorageValue(interfaceId)
-        );
+        assertEq(harness.supportsInterface(interfaceId), harness.getStorageValue(interfaceId));
         assertEq(harness.supportsInterface(interfaceId), shouldSupport);
     }
 
@@ -357,11 +339,7 @@ contract LibERC165Test is Test {
         }
     }
 
-    function testFuzz_MixedOperations(
-        bytes4 interfaceId1,
-        bytes4 interfaceId2,
-        bytes4 interfaceId3
-    ) public {
+    function testFuzz_MixedOperations(bytes4 interfaceId1, bytes4 interfaceId2, bytes4 interfaceId3) public {
         // Ensure unique interface IDs for this test
         vm.assume(interfaceId1 != interfaceId2);
         vm.assume(interfaceId1 != interfaceId3);
@@ -414,18 +392,18 @@ contract LibERC165Test is Test {
         uint256 gasBefore = gasleft();
         harness.registerInterface(IERC721_INTERFACE_ID);
         uint256 gasUsed = gasBefore - gasleft();
-        
+
         // Log gas usage for reference
         console2.log("Gas used for registerInterface:", gasUsed);
     }
 
     function test_Gas_SupportsInterface() public {
         harness.registerInterface(IERC721_INTERFACE_ID);
-        
+
         uint256 gasBefore = gasleft();
         harness.supportsInterface(IERC721_INTERFACE_ID);
         uint256 gasUsed = gasBefore - gasleft();
-        
+
         // Log gas usage for reference
         console2.log("Gas used for supportsInterface:", gasUsed);
     }
@@ -439,7 +417,7 @@ contract LibERC165Test is Test {
         uint256 gasBefore = gasleft();
         harness.registerMultipleInterfaces(interfaceIds);
         uint256 gasUsed = gasBefore - gasleft();
-        
+
         // Log gas usage for reference
         console2.log("Gas used for registerMultipleInterfaces (10 interfaces):", gasUsed);
     }
