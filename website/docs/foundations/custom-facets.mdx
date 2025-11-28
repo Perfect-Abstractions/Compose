@@ -15,20 +15,28 @@ Suppose you're building an on-chain game and want to include the `ERC721Facet` i
 You can add your own `GameNFTFacet` that extends functionality while still sharing the same ERC-721 storage through `LibERC721`:
 
 ```Solidity
-// Your custom facet integrates with Compose using libraries
+/**
+ * Your custom facet integrates with Compose using libraries
+ */
 import {LibERC721} from "compose/LibERC721.sol";
 
 contract GameNFTFacet {
     function mintWithGameLogic(address player, uint256 tokenId) external {
-        // Your custom game logic
+        /**
+         * Your custom game logic
+         */
         require(playerHasEnoughPoints(player), "Not enough points");
         
-        // Use LibERC721 to mint - this modifies the SAME storage
-        // that ERC721Facet uses for balanceOf(), ownerOf(), etc.
+        /**
+         * Use LibERC721 to mint - this modifies the SAME storage
+         * that ERC721Facet uses for balanceOf(), ownerOf(), etc.
+         */
         LibERC721.mint(player, tokenId);
         
-        // Now the player owns this NFT and can use standard
-        // ERC721Facet.transferFrom() to transfer it!
+        /**
+         * Now the player owns this NFT and can use standard
+         * ERC721Facet.transferFrom() to transfer it!
+         */
         updatePlayerStats(player);
     }
 }

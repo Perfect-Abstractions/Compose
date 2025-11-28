@@ -7,7 +7,9 @@
     "solidity.compileUsingRemoteVersion": "v0.8.30",
     
     // Enable GitHub Copilot
-    "github.copilot.enable": true,
+    "github.copilot.enable": {
+        "*": true
+    },
     "github.copilot.inlineSuggest.enable": true,
     "editor.inlineSuggest.enabled": true,
     
