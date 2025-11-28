@@ -2,7 +2,6 @@
 pragma solidity >=0.8.30;
 
 import {ComposeDiamond} from "../ComposeDiamond.sol";
-import {LibDiamondDeploy, Facet} from "./LibDiamondDeploy.sol";
 import {LibOwner} from "../../access/Owner/LibOwner.sol";
 import {LibERC721} from "../../token/ERC721/ERC721/LibERC721.sol";
 import {LibERC165} from "../../interfaceDetection/ERC165/LibERC165.sol";
@@ -21,8 +20,8 @@ contract ExampleDiamond is ComposeDiamond {
     ///      Each facet in the array will have its function selectors registered to enable delegatecall routing.
     /// @param _facets Array of facet addresses and their corresponding function selectors to add to the diamond.
     /// @param _diamondOwner Address that will be set as the owner of the diamond contract.
-    constructor(Facet[] memory _facets, address _diamondOwner) {
-        LibDiamondDeploy.addFacets(_facets);
+    constructor(FacetCut[] memory _facets, address _diamondOwner) {
+        addFacets(_facets);
 
         // Initialize storage variables
         //////////////////////////////////////////////////////
