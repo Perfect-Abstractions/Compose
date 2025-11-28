@@ -29,6 +29,12 @@ library LibOwner {
         }
     }
 
+    function setContractOwner(address _initialOwner) internal {
+        OwnerStorage storage s = getStorage();
+        s.owner = _initialOwner;
+        emit OwnershipTransferred(address(0), _initialOwner);
+    }
+
     /// @notice Get the address of the owner
     /// @return The address of the owner.
     function owner() internal view returns (address) {
@@ -53,14 +59,5 @@ library LibOwner {
         }
         s.owner = _newOwner;
         emit OwnershipTransferred(previousOwner, _newOwner);
-    }
-
-    /// @notice Renounce ownership of the contract
-    /// @dev Sets the owner to address(0), disabling all functions restricted to the owner.
-    function renounceOwnership() internal {
-        OwnerStorage storage s = getStorage();
-        address previousOwner = s.owner;
-        s.owner = address(0);
-        emit OwnershipTransferred(previousOwner, address(0));
     }
 }

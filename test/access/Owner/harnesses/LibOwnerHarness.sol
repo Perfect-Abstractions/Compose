@@ -22,11 +22,6 @@ contract LibOwnerHarness {
         LibOwner.transferOwnership(_newOwner);
     }
 
-    /// @notice Renounce ownership (new function added by maintainer)
-    function renounceOwnership() external {
-        LibOwner.renounceOwnership();
-    }
-
     /// @notice Check if caller is owner (new function added by maintainer)
     function requireOwner() external view {
         LibOwner.requireOwner();

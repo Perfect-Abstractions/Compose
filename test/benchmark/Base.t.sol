@@ -4,7 +4,7 @@ pragma solidity >=0.8.30;
 import {Utils} from "./Utils.sol";
 
 import {MinimalDiamond} from "./MinimalDiamond.sol";
-import {LibDiamond} from "../../src/diamond/LibDiamond.sol";
+import {LibDiamondCut} from "../../src/diamond/LibDiamondCut.sol";
 import {DiamondLoupeFacet} from "../../src/diamond/DiamondLoupeFacet.sol";
 
 abstract contract BaseBenchmark is Utils {
@@ -22,10 +22,10 @@ abstract contract BaseBenchmark is Utils {
         loupeSelectors[2] = SELECTOR_FACET_ADDRESSES;
         loupeSelectors[3] = SELECTOR_FACET_ADDRESS;
 
-        LibDiamond.FacetCut[] memory dc = new LibDiamond.FacetCut[](1);
+        LibDiamondCut.FacetCut[] memory dc = new LibDiamondCut.FacetCut[](1);
 
-        dc[0] = LibDiamond.FacetCut({
-            facetAddress: loupe, action: LibDiamond.FacetCutAction.Add, functionSelectors: loupeSelectors
+        dc[0] = LibDiamondCut.FacetCut({
+            facetAddress: loupe, action: LibDiamondCut.FacetCutAction.Add, functionSelectors: loupeSelectors
         });
 
         MinimalDiamond.DiamondArgs memory args = MinimalDiamond.DiamondArgs({init: address(0), initCalldata: ""});

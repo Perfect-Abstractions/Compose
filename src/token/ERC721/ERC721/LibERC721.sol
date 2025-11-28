@@ -62,6 +62,13 @@ library LibERC721 {
         }
     }
 
+    function setMetadata(string memory _name, string memory _symbol, string memory _baseURI) internal {
+        ERC721Storage storage s = getStorage();
+        s.name = _name;
+        s.symbol = _symbol;
+        s.baseURI = _baseURI;
+    }
+
     /// @notice Transfers ownership of a token ID from one address to another.
     /// @dev Validates ownership, approval, and receiver address before updating state.
     /// @param _from The current owner of the token.
