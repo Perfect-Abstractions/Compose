@@ -28,7 +28,7 @@ contract ExampleDiamond is ComposeDiamond {
         ComposeDiamond.addFacets(_facets);
 
         /*************************************
-         * Initialize storage variables         
+         * Initialize storage variables
          ************************************/
 
         /**
