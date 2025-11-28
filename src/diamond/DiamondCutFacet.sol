@@ -64,7 +64,7 @@ contract DiamondCutFacet {
             revert NoBytecodeAtAddress(_facet, "DiamondCutFacet: Add facet has no code");
         }
         // The position to store the next selector in the selectors array
-        uint16 selectorPosition = uint16(s.selectors.length);
+        uint32 selectorPosition = uint32(s.selectors.length);
         for (uint256 selectorIndex; selectorIndex < _functionSelectors.length; selectorIndex++) {
             bytes4 selector = _functionSelectors[selectorIndex];
             address oldFacet = s.facetAndPosition[selector].facet;

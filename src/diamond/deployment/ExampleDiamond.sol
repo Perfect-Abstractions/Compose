@@ -10,11 +10,11 @@ import {IERC721Metadata} from "../../interfaces/IERC721Metadata.sol";
 
 contract ExampleDiamond is ComposeDiamond {
     /// @notice Struct to hold facet address and its function selectors.
-    //  struct Facet {
-    //     address facet;
-    //     bytes4[] functionSelectors;
-    // }
-
+    /// struct FacetCut {
+    ///    address facetAddress;
+    ///    FacetCutAction action; // Add=0, Replace=1, Remove=2
+    ///    bytes4[] functionSelectors;
+    /// }
     /// @notice Initializes the diamond contract with facets, owner and other data.
     /// @dev Adds all provided facets to the diamond's function selector mapping and sets the contract owner.
     ///      Each facet in the array will have its function selectors registered to enable delegatecall routing.
@@ -29,7 +29,7 @@ contract ExampleDiamond is ComposeDiamond {
         // Setting the contract owner
         LibOwner.setContractOwner(_diamondOwner);
         // Setting ERC721 token details
-        LibERC721.setMetadata("ExampleDiamondNFT", "EDN", "https://example.com/metadata/");
+        LibERC721.setMetadata({_name: "ExampleDiamondNFT", _symbol: "EDN", _baseURI: "https://example.com/metadata/"});
         // Registering ERC165 interfaces
         LibERC165.registerInterface(type(IERC721).interfaceId);
         LibERC165.registerInterface(type(IERC721Metadata).interfaceId);
