@@ -1,0 +1,26 @@
+name: Enforce Solidity comment style
+on:
+  push:
+    branches:
+      - '**'
+  pull_request:
+    types: [opened, synchronize, reopened, edited]
+
+jobs:
+  check-sol-comments:
+    name: Check Solidity comment style
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Make check script executable
+        run: chmod +x .github/scripts/check-solidity-comments.sh
+
+      - name: Run Solidity comment-style check
+        env:
+          # Only Solidity files
+          CHECK_GLOBS: "*.sol"
+        run: .github/scripts/check-solidity-comments.sh
