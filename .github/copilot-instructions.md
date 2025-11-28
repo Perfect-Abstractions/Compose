@@ -323,7 +323,12 @@ Follow overarching design principles.
    * Second line of comment.
    */
   ```
-- Single-line comments also use block style: `/** Single line comment. */`
+- Single-line comments also use block style: 
+  ```Solidity
+  /** 
+   * Single line comment. 
+   */
+  ```
 - Use NatSpec tags (`@title`,`@custom:`,`@notice`, `@dev`, `@param`, `@return`) for documentation.
 
 ### Resetting Values
