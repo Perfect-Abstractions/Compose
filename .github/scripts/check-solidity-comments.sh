@@ -6,8 +6,9 @@ set -euo pipefail
 # Allowed exceptions:
 #  - Any occurrence of SPDX-License-Identifier: (regardless of comment delimiters)
 #  - URLs containing http:// or https:// (to avoid flagging links)
+#  - Inline comments after code (e.g., `uint x = 1; // comment`)
 # Disallowed:
-#  - Any single-line '//' comments (including '///'), except SPDX or URLs
+#  - Lines starting with '//' comments (including '///'), except SPDX or URLs
 #  - Block comments '/*' that are not documentation comments starting with '/**'
 
 IFS=',' read -r -a GLOBS <<< "${CHECK_GLOBS:-*.sol}"
@@ -41,7 +42,8 @@ for f in "${files[@]}"; do
   # AWK script:
   # - Allow any line that contains SPDX-License-Identifier: (in any comment form)
   # - Allow lines that contain http:// or https:// (common links)
-  # - Flag lines with '//' (single-line comments) otherwise
+  # - Allow inline comments after code (// not at start of line)
+  # - Flag lines starting with '//' (single-line comments)
   # - Flag occurrences of '/*' that are not '/**'
   if ! awk '
   BEGIN { bad=0 }
@@ -50,9 +52,10 @@ for f in "${files[@]}"; do
     if ($0 ~ /SPDX-License-Identifier:/) { next }
     # Allow URLs containing http:// or https:// to avoid flagging links
     if ($0 ~ /https?:\/\//) { next }
-    # Detect single-line comments: // (this also catches ///)
-    if ($0 ~ /\/\//) {
-      print FILENAME ":" NR ": contains \"//\" (single-line comments are disallowed in Solidity per style guide)."
+    # Detect single-line comments that start the line (with optional leading whitespace)
+    # This allows inline comments after code like: uint x = 1; // comment
+    if ($0 ~ /^[[:space:]]*\/\//) {
+      print FILENAME ":" NR ": contains \"//\" at start of line (single-line comments are disallowed in Solidity per style guide)."
       bad=1
     }
     # Detect block comment starts /* that are not /**
