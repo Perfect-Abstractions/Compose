@@ -3,13 +3,13 @@ set -euo pipefail
 
 # Script: check-solidity-comments.sh
 # Only checks tracked .sol files for forbidden comment styles.
-# Allowed exceptions:
+# Allowed:
 #  - Any occurrence of SPDX-License-Identifier: (regardless of comment delimiters)
 #  - URLs containing http:// or https:// (to avoid flagging links)
 #  - Inline comments after code (e.g., `uint x = 1; // comment`)
+#  - Block comments '/* */' and '/** */' (both styles allowed)
 # Disallowed:
 #  - Lines starting with '//' comments (including '///'), except SPDX or URLs
-#  - Block comments '/*' that are not documentation comments starting with '/**'
 
 IFS=',' read -r -a GLOBS <<< "${CHECK_GLOBS:-*.sol}"
 
@@ -43,8 +43,8 @@ for f in "${files[@]}"; do
   # - Allow any line that contains SPDX-License-Identifier: (in any comment form)
   # - Allow lines that contain http:// or https:// (common links)
   # - Allow inline comments after code (// not at start of line)
+  # - Allow block comments (/* */ and /** */ are both allowed)
   # - Flag lines starting with '//' (single-line comments)
-  # - Flag occurrences of '/*' that are not '/**'
   if ! awk '
   BEGIN { bad=0 }
   {
@@ -58,11 +58,6 @@ for f in "${files[@]}"; do
       print FILENAME ":" NR ": contains \"//\" at start of line (single-line comments are disallowed in Solidity per style guide)."
       bad=1
     }
-    # Detect block comment starts /* that are not /**
-    if ($0 ~ /\/\*/ && $0 !~ /\/\*\*/) {
-      print FILENAME ":" NR ": contains \"/*\" (non-documentation block comments are disallowed)."
-      bad=1
-    }
   }
   END { if (bad) exit 1 }
   ' "$f"; then
@@ -72,9 +67,9 @@ done
 
 if [ "$has_error" -ne 0 ]; then
   echo
-  echo "Solidity comment style check failed: only documentation block comments starting with /** ... */ are allowed." 
-  echo "Allowed exceptions: SPDX identifier (SPDX-License-Identifier:) anywhere and URLs (http:// or https://)."
-  echo "Please replace single-line // comments and non-/** block comments with /** ... */ documentation comments."
+  echo "Solidity comment style check failed: only block comments (/* */ or /** */) are allowed." 
+  echo "Allowed exceptions: SPDX identifier (SPDX-License-Identifier:) anywhere, URLs (http:// or https://), and inline comments after code."
+  echo "Please replace single-line // comments at the start of lines with /* */ or /** */ block comments."
   exit 1
 fi
 
