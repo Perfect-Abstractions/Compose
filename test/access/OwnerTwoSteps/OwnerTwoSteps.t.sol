@@ -2,7 +2,7 @@
 pragma solidity >=0.8.30;
 
 import {Test, console2} from "forge-std/Test.sol";
-import {OwnerTwoStepsFacet} from "../../../src/access/OwnerTwoSteps/OwnerTwoSteps.sol";
+import {OwnerTwoStepsFacet} from "../../../src/access/OwnerTwoSteps/OwnerTwoStepsFacet.sol";
 import {OwnerTwoStepsFacetHarness} from "./harnesses/OwnerTwoStepsFacetHarness.sol";
 
 contract OwnerTwoStepsFacetTest is Test {
