@@ -8,8 +8,9 @@ set -euo pipefail
 #  - URLs containing http:// or https:// (to avoid flagging links)
 #  - Inline comments after code (e.g., `uint x = 1; // comment`)
 #  - Block comments '/* */' and '/** */' (both styles allowed)
+#  - Lines inside block comments (e.g., /*//...//*/  style section headers)
 # Disallowed:
-#  - Lines starting with '//' comments (including '///'), except SPDX or URLs
+#  - Lines starting with '//' comments (including '///'), except SPDX, URLs, or inside block comments
 
 IFS=',' read -r -a GLOBS <<< "${CHECK_GLOBS:-*.sol}"
 
@@ -40,21 +41,36 @@ for f in "${files[@]}"; do
   fi
 
   # AWK script:
+  # - Track whether we are inside a block comment
   # - Allow any line that contains SPDX-License-Identifier: (in any comment form)
   # - Allow lines that contain http:// or https:// (common links)
   # - Allow inline comments after code (// not at start of line)
   # - Allow block comments (/* */ and /** */ are both allowed)
-  # - Flag lines starting with '//' (single-line comments)
+  # - Allow lines inside block comments (for /*//...//*/  style section headers)
+  # - Flag lines starting with '//' (single-line comments) only if not inside block comment
   if ! awk '
-  BEGIN { bad=0 }
+  BEGIN { bad=0; in_block=0 }
   {
+    line = $0
+    # Track block comment state
+    # Check for block comment start (/* or /**)
+    if (line ~ /\/\*/) {
+      in_block = 1
+    }
+    # Check for block comment end
+    if (line ~ /\*\//) {
+      in_block = 0
+      next  # This line ends a block comment, skip further checks
+    }
+    # If we are inside a block comment, skip all checks for this line
+    if (in_block) { next }
     # If the line contains SPDX-License-Identifier: allow it (regardless of comment delimiters)
-    if ($0 ~ /SPDX-License-Identifier:/) { next }
+    if (line ~ /SPDX-License-Identifier:/) { next }
     # Allow URLs containing http:// or https:// to avoid flagging links
-    if ($0 ~ /https?:\/\//) { next }
+    if (line ~ /https?:\/\//) { next }
     # Detect single-line comments that start the line (with optional leading whitespace)
     # This allows inline comments after code like: uint x = 1; // comment
-    if ($0 ~ /^[[:space:]]*\/\//) {
+    if (line ~ /^[[:space:]]*\/\//) {
       print FILENAME ":" NR ": contains \"//\" at start of line (single-line comments are disallowed in Solidity per style guide)."
       bad=1
     }
