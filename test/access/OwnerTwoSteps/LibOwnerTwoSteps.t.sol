@@ -44,51 +44,55 @@ contract LibOwnerTwoStepsTest is Test {
     }
 
     function test_StorageSlot_UsesCorrectPosition() public {
-        bytes32 expectedSlot = keccak256("compose.owner");
+        bytes32 ownerSlot = keccak256("compose.owner");
+        bytes32 pendingOwnerSlot = keccak256("compose.owner.pending");
 
         // Change pending owner
         vm.prank(INITIAL_OWNER);
         harness.transferOwnership(NEW_OWNER);
 
-        // Read owner from storage (slot + 0)
-        bytes32 ownerValue = vm.load(address(harness), expectedSlot);
+        // Read owner from storage
+        bytes32 ownerValue = vm.load(address(harness), ownerSlot);
         address storedOwner = address(uint160(uint256(ownerValue)));
         assertEq(storedOwner, INITIAL_OWNER);
 
-        // Read pending owner from storage (slot + 1)
-        bytes32 pendingSlot = bytes32(uint256(expectedSlot) + 1);
-        bytes32 pendingValue = vm.load(address(harness), pendingSlot);
+        // Read pending owner from its separate storage location
+        bytes32 pendingValue = vm.load(address(harness), pendingOwnerSlot);
         address storedPendingOwner = address(uint160(uint256(pendingValue)));
         assertEq(storedPendingOwner, NEW_OWNER);
     }
 
-    function test_StorageSlot_CurrentlyCollides() public pure {
-        // This test documents that LibOwnerTwoSteps CURRENTLY uses the same slot as LibOwner
-        // This is a known issue but kept for backwards compatibility
+    function test_StorageSlot_NoLongerCollides() public pure {
+        // This test verifies that LibOwnerTwoSteps now uses separate storage locations
+        // Owner uses the same slot as LibOwner for compatibility
         bytes32 ownerSlot = keccak256("compose.owner");
-        bytes32 ownerTwoStepsSlot = keccak256("compose.owner");
+        bytes32 pendingOwnerSlot = keccak256("compose.owner.pending");
 
-        // They currently collide (this is the bug we're documenting)
-        assertEq(ownerSlot, ownerTwoStepsSlot, "Storage slots currently collide");
+        // They no longer collide - pendingOwner has its own slot
+        assertTrue(ownerSlot != pendingOwnerSlot, "Storage slots should not collide");
 
-        // Both use the same slot
+        // Owner uses the standard slot
         assertEq(ownerSlot, keccak256("compose.owner"), "LibOwner slot");
-        assertEq(ownerTwoStepsSlot, keccak256("compose.owner"), "LibOwnerTwoSteps slot");
+        // PendingOwner uses its own slot
+        assertEq(pendingOwnerSlot, keccak256("compose.owner.pending"), "PendingOwner slot");
     }
 
-    function test_StorageCollision_DocumentedBug() public pure {
-        // This test documents the storage collision bug that exists
-        // Both libraries use keccak256("compose.owner")
-        // This will cause issues if both are used in the same diamond
+    function test_StorageCollision_Fixed() public pure {
+        // This test verifies that the storage collision bug has been fixed
+        // Owner uses keccak256("compose.owner") for compatibility with LibOwner
+        // PendingOwner uses keccak256("compose.owner.pending") for its own data
 
-        bytes32 currentSlot = keccak256("compose.owner");
-        bytes32 shouldBeSlot = keccak256("compose.owner.twosteps");
+        bytes32 ownerSlot = keccak256("compose.owner");
+        bytes32 pendingOwnerSlot = keccak256("compose.owner.pending");
 
-        // Document that we're using the colliding slot
-        assertEq(currentSlot, keccak256("compose.owner"), "Using colliding slot");
+        // Verify owner uses the standard slot for compatibility
+        assertEq(ownerSlot, keccak256("compose.owner"), "Owner uses standard slot");
 
-        // Document what it should be to avoid collision
-        assertTrue(currentSlot != shouldBeSlot, "Not using the unique slot that would avoid collision");
+        // Verify pendingOwner uses its own separate slot
+        assertEq(pendingOwnerSlot, keccak256("compose.owner.pending"), "PendingOwner uses separate slot");
+
+        // Verify they don't collide
+        assertTrue(ownerSlot != pendingOwnerSlot, "Slots should not collide");
     }
 
     // ============================================
