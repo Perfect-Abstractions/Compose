@@ -86,8 +86,7 @@ contract OwnerTwoStepsFacet {
         if (msg.sender != ownerStorage.owner) {
             revert OwnerUnauthorizedAccount();
         }
-        PendingOwnerStorage storage pendingStorage = getPendingOwnerStorage();
-        pendingStorage.pendingOwner = _newOwner;
+        getPendingOwnerStorage().pendingOwner = _newOwner;
         emit OwnershipTransferStarted(ownerStorage.owner, _newOwner);
     }
 
