@@ -2,7 +2,7 @@
 pragma solidity >=0.8.30;
 
 import {Test, console2} from "forge-std/Test.sol";
-import {OwnerTwoStepsFacet} from "../../../src/access/OwnerTwoSteps/OwnerTwoSteps.sol";
+import {OwnerTwoStepsFacet} from "../../../src/access/OwnerTwoSteps/OwnerTwoStepsFacet.sol";
 import {OwnerTwoStepsFacetHarness} from "./harnesses/OwnerTwoStepsFacetHarness.sol";
 
 contract OwnerTwoStepsFacetTest is Test {
@@ -484,16 +484,13 @@ contract OwnerTwoStepsFacetTest is Test {
     }
 
     function test_StorageSlot_PendingOwner() public {
-        bytes32 expectedSlot = keccak256("compose.owner");
-        bytes32 pendingSlot = bytes32(uint256(expectedSlot) + 1);
+        bytes32 pendingOwnerSlot = keccak256("compose.owner.pending");
 
         vm.prank(INITIAL_OWNER);
         ownerTwoSteps.transferOwnership(ALICE);
 
-        /**
-         * Read pending owner from storage
-         */
-        bytes32 pendingValue = vm.load(address(ownerTwoSteps), pendingSlot);
+        // Read pending owner from its separate storage location
+        bytes32 pendingValue = vm.load(address(ownerTwoSteps), pendingOwnerSlot);
         address storedPendingOwner = address(uint160(uint256(pendingValue)));
 
         assertEq(storedPendingOwner, ALICE);

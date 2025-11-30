@@ -2,16 +2,16 @@
 pragma solidity >=0.8.30;
 
 /**
- * @title ERC-173 Two-Step Contract Ownership Library
- * @notice Provides two-step ownership transfer logic for facets or modular contracts.
+ * @title ERC-173 Two-Step Contract Ownership
  */
-library LibOwnerTwoSteps {
+contract OwnerTwoStepsFacet {
     /**
-     * @dev Emitted when ownership transfer is initiated (pending owner set).
+     * @dev This emits when ownership of a contract started transferring to the new owner for accepting the ownership.
      */
     event OwnershipTransferStarted(address indexed _previousOwner, address indexed _newOwner);
+
     /**
-     * @dev Emitted when ownership transfer is finalized.
+     * @dev This emits when ownership of a contract changes.
      */
     event OwnershipTransferred(address indexed _previousOwner, address indexed _newOwner);
 
@@ -19,18 +19,22 @@ library LibOwnerTwoSteps {
      * @notice Thrown when a non-owner attempts an action restricted to owner.
      */
     error OwnerUnauthorizedAccount();
-    /**
-     * @notice Thrown when attempting to transfer ownership from a renounced state.
-     */
-    error OwnerAlreadyRenounced();
 
     bytes32 constant OWNER_STORAGE_POSITION = keccak256("compose.owner");
+    bytes32 constant PENDING_OWNER_STORAGE_POSITION = keccak256("compose.owner.pending");
 
     /**
      * @custom:storage-location erc8042:compose.owner
      */
     struct OwnerStorage {
         address owner;
+    }
+
+    /**
+     * @custom:storage-location erc8042:compose.owner.pending
+     */
+    struct PendingOwnerStorage {
+        address pendingOwner;
     }
 
     /**
@@ -43,15 +47,6 @@ library LibOwnerTwoSteps {
         assembly {
             s.slot := position
         }
-    }
-
-    bytes32 constant PENDING_OWNER_STORAGE_POSITION = keccak256("compose.owner.pending");
-
-    /**
-     * @custom:storage-location erc8042:compose.owner.pending
-     */
-    struct PendingOwnerStorage {
-        address pendingOwner;
     }
 
     /**
@@ -67,48 +62,45 @@ library LibOwnerTwoSteps {
     }
 
     /**
-     * @notice Returns the current owner.
+     * @notice Get the address of the owner
+     * @return The address of the owner.
      */
-    function owner() internal view returns (address) {
+    function owner() external view returns (address) {
         return getOwnerStorage().owner;
     }
 
     /**
-     * @notice Returns the pending owner (if any).
+     * @notice Get the address of the pending owner
+     * @return The address of the pending owner.
      */
-    function pendingOwner() internal view returns (address) {
+    function pendingOwner() external view returns (address) {
         return getPendingOwnerStorage().pendingOwner;
     }
 
     /**
-     * @notice Reverts if the caller is not the owner.
-     */
-    function requireOwner() internal view {
-        if (getOwnerStorage().owner != msg.sender) {
-            revert OwnerUnauthorizedAccount();
-        }
-    }
-
-    /**
-     * @notice Initiates a two-step ownership transfer.
+     * @notice Set the address of the new owner of the contract
      * @param _newOwner The address of the new owner of the contract
      */
-    function transferOwnership(address _newOwner) internal {
+    function transferOwnership(address _newOwner) external {
         OwnerStorage storage ownerStorage = getOwnerStorage();
-        address previousOwner = ownerStorage.owner;
-        if (previousOwner == address(0)) {
-            revert OwnerAlreadyRenounced();
+        if (msg.sender != ownerStorage.owner) {
+            revert OwnerUnauthorizedAccount();
         }
-        getPendingOwnerStorage().pendingOwner = _newOwner;
-        emit OwnershipTransferStarted(previousOwner, _newOwner);
+        PendingOwnerStorage storage pendingStorage = getPendingOwnerStorage();
+        pendingStorage.pendingOwner = _newOwner;
+        emit OwnershipTransferStarted(ownerStorage.owner, _newOwner);
     }
 
     /**
-     * @notice Finalizes ownership transfer; must be called by the pending owner.
+     * @notice Accept the ownership of the contract
+     * @dev Only the pending owner can call this function.
      */
-    function acceptOwnership() internal {
+    function acceptOwnership() external {
         OwnerStorage storage ownerStorage = getOwnerStorage();
         PendingOwnerStorage storage pendingStorage = getPendingOwnerStorage();
+        if (msg.sender != pendingStorage.pendingOwner) {
+            revert OwnerUnauthorizedAccount();
+        }
         address oldOwner = ownerStorage.owner;
         ownerStorage.owner = pendingStorage.pendingOwner;
         pendingStorage.pendingOwner = address(0);
@@ -119,9 +111,12 @@ library LibOwnerTwoSteps {
      * @notice Renounce ownership of the contract
      * @dev Sets the owner to address(0), disabling all functions restricted to the owner.
      */
-    function renounceOwnership() internal {
+    function renounceOwnership() external {
         OwnerStorage storage ownerStorage = getOwnerStorage();
         PendingOwnerStorage storage pendingStorage = getPendingOwnerStorage();
+        if (msg.sender != ownerStorage.owner) {
+            revert OwnerUnauthorizedAccount();
+        }
         address previousOwner = ownerStorage.owner;
         ownerStorage.owner = address(0);
         pendingStorage.pendingOwner = address(0);
