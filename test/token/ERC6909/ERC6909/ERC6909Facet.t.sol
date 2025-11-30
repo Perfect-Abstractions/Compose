@@ -20,9 +20,11 @@ contract ERC6909FacetTest is Test {
         facet = new ERC6909FacetHarness();
     }
 
-    // ============================================
-    // Mint Tests
-    // ============================================
+    /**
+     * ============================================
+     * Mint Tests
+     * ============================================
+     */
 
     function test_Mint() external {
         vm.expectEmit();
@@ -51,9 +53,11 @@ contract ERC6909FacetTest is Test {
         assertEq(facet.balanceOf(to, id), amount);
     }
 
-    // ============================================
-    // Approve Tests
-    // ============================================
+    /**
+     * ============================================
+     * Approve Tests
+     * ============================================
+     */
 
     function test_ShouldRevert_Approve_SpenderIsZero() external {
         vm.expectRevert(abi.encodeWithSelector(ERC6909Facet.ERC6909InvalidSpender.selector, address(0)));
@@ -83,9 +87,11 @@ contract ERC6909FacetTest is Test {
         assertEq(facet.allowance(owner, spender, id), amount);
     }
 
-    // ============================================
-    // Set Operator Tests
-    // ============================================
+    /**
+     * ============================================
+     * Set Operator Tests
+     * ============================================
+     */
 
     function test_ShouldRevert_SetOperator_SpenderIsZero() external {
         vm.expectRevert(abi.encodeWithSelector(ERC6909Facet.ERC6909InvalidSpender.selector, address(0)));
@@ -128,9 +134,11 @@ contract ERC6909FacetTest is Test {
         assertEq(facet.isOperator(owner, spender), approved);
     }
 
-    // ============================================
-    // Transfer Tests
-    // ============================================
+    /**
+     * ============================================
+     * Transfer Tests
+     * ============================================
+     */
 
     function test_ShouldRevert_Transfer_ReceiverIsZero() external {
         vm.expectRevert(abi.encodeWithSelector(ERC6909Facet.ERC6909InvalidReceiver.selector, address(0)));
@@ -227,9 +235,11 @@ contract ERC6909FacetTest is Test {
         assertEq(facet.balanceOf(receiver, id), 0);
     }
 
-    // ============================================
-    // Transfer From Tests
-    // ============================================
+    /**
+     * ============================================
+     * Transfer From Tests
+     * ============================================
+     */
 
     function testFuzz_ShouldRevert_TransferFrom_InsufficientBalance(
         address by,

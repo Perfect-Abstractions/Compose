@@ -20,9 +20,11 @@ contract LibERC6909Test is Test {
         harness = new LibERC6909Harness();
     }
 
-    // ============================================
-    // Mint Tests
-    // ============================================
+    /**
+     * ============================================
+     * Mint Tests
+     * ============================================
+     */
 
     function test_ShouldRevert_Mint_ToIsZero() external {
         vm.expectRevert(abi.encodeWithSelector(LibERC6909.ERC6909InvalidReceiver.selector, address(0)));
@@ -56,9 +58,11 @@ contract LibERC6909Test is Test {
         assertEq(harness.balanceOf(to, id), amount);
     }
 
-    // ============================================
-    // Burn Tests
-    // ============================================
+    /**
+     * ============================================
+     * Burn Tests
+     * ============================================
+     */
 
     function test_ShouldRevert_Burn_InsufficientBalance() external {
         vm.expectRevert(abi.encodeWithSelector(LibERC6909.ERC6909InsufficientBalance.selector, alice, 0, 1, TOKEN_ID));
@@ -81,7 +85,9 @@ contract LibERC6909Test is Test {
         assertEq(harness.balanceOf(alice, TOKEN_ID), 0);
     }
 
-    /// @dev First mints tokens and then burns a fraction of them.
+    /**
+     * @dev First mints tokens and then burns a fraction of them.
+     */
     function testFuzz_Burn(address caller, address from, uint256 id, uint256 amount, uint256 burnFrac) external {
         vm.assume(from != address(0));
         amount = bound(amount, 1, type(uint256).max / 1e4);
@@ -99,9 +105,11 @@ contract LibERC6909Test is Test {
         assertEq(harness.balanceOf(from, id), amount - burnAmount);
     }
 
-    // ============================================
-    // Approve Tests
-    // ============================================
+    /**
+     * ============================================
+     * Approve Tests
+     * ============================================
+     */
 
     function test_ShouldRevert_Approve_OwnerIsZero() external {
         vm.expectRevert(abi.encodeWithSelector(LibERC6909.ERC6909InvalidApprover.selector, address(0)));
@@ -134,9 +142,11 @@ contract LibERC6909Test is Test {
         assertEq(harness.allowance(owner, spender, id), amount);
     }
 
-    // ============================================
-    // Set Operator Tests
-    // ============================================
+    /**
+     * ============================================
+     * Set Operator Tests
+     * ============================================
+     */
 
     function test_ShouldRevert_SetOperator_OwnerIsZero() external {
         vm.expectRevert(abi.encodeWithSelector(LibERC6909.ERC6909InvalidApprover.selector, address(0)));
@@ -179,9 +189,11 @@ contract LibERC6909Test is Test {
         assertEq(harness.isOperator(owner, spender), approved);
     }
 
-    // ============================================
-    // Transfer Tests
-    // ============================================
+    /**
+     * ============================================
+     * Transfer Tests
+     * ============================================
+     */
 
     function testFuzz_Transfer(address from, address to, uint256 id, uint256 amount) external {
         vm.assume(from != to);

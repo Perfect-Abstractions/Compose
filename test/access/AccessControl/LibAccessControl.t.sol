@@ -8,21 +8,27 @@ import {LibAccessControlHarness} from "./harnesses/LibAccessControlHarness.sol";
 contract LibAccessControlTest is Test {
     LibAccessControlHarness public harness;
 
-    // Test addresses
+    /**
+     * Test addresses
+     */
     address ADMIN = makeAddr("admin");
     address ALICE = makeAddr("alice");
     address BOB = makeAddr("bob");
     address CHARLIE = makeAddr("charlie");
     address ZERO_ADDRESS = address(0);
 
-    // Test roles
+    /**
+     * Test roles
+     */
     bytes32 constant DEFAULT_ADMIN_ROLE = 0x00;
     bytes32 constant MINTER_ROLE = keccak256("MINTER_ROLE");
     bytes32 constant PAUSER_ROLE = keccak256("PAUSER_ROLE");
     bytes32 constant UPGRADER_ROLE = keccak256("UPGRADER_ROLE");
     bytes32 constant MODERATOR_ROLE = keccak256("MODERATOR_ROLE");
 
-    // Events
+    /**
+     * Events
+     */
     event RoleAdminChanged(bytes32 indexed role, bytes32 indexed previousAdminRole, bytes32 indexed newAdminRole);
     event RoleGranted(bytes32 indexed role, address indexed account, address indexed sender);
     event RoleRevoked(bytes32 indexed role, address indexed account, address indexed sender);
@@ -32,9 +38,11 @@ contract LibAccessControlTest is Test {
         harness.initialize(ADMIN);
     }
 
-    // ============================================
-    // Storage Tests
-    // ============================================
+    /**
+     * ============================================
+     * Storage Tests
+     * ============================================
+     */
 
     function test_GetStorage_ReturnsCorrectInitialState() public view {
         assertEq(harness.hasRole(DEFAULT_ADMIN_ROLE, ADMIN), true);
@@ -44,16 +52,22 @@ contract LibAccessControlTest is Test {
     function test_StorageSlot_UsesCorrectPosition() public {
         bytes32 expectedSlot = keccak256("compose.accesscontrol");
 
-        // Grant a role
+        /**
+         * Grant a role
+         */
         vm.prank(address(harness));
         harness.grantRole(MINTER_ROLE, ALICE);
 
-        // The actual storage slot for hasRole[ALICE][MINTER_ROLE] is computed as:
-        // keccak256(abi.encode(MINTER_ROLE, keccak256(abi.encode(ALICE, expectedSlot))))
+        /**
+         * The actual storage slot for hasRole[ALICE][MINTER_ROLE] is computed as:
+         * keccak256(abi.encode(MINTER_ROLE, keccak256(abi.encode(ALICE, expectedSlot))))
+         */
         bytes32 accountSlot = keccak256(abi.encode(ALICE, expectedSlot));
         bytes32 roleSlot = keccak256(abi.encode(MINTER_ROLE, accountSlot));
 
-        // Read directly from storage
+        /**
+         * Read directly from storage
+         */
         bytes32 storedValue = vm.load(address(harness), roleSlot);
         bool hasRole = storedValue != bytes32(0);
 
@@ -65,9 +79,11 @@ contract LibAccessControlTest is Test {
         assertEq(harness.getDefaultAdminRole(), bytes32(0));
     }
 
-    // ============================================
-    // HasRole Tests
-    // ============================================
+    /**
+     * ============================================
+     * HasRole Tests
+     * ============================================
+     */
 
     function test_HasRole_ReturnsTrueForGrantedRole() public {
         harness.forceGrantRole(MINTER_ROLE, ALICE);
@@ -103,14 +119,18 @@ contract LibAccessControlTest is Test {
         assertTrue(harness.hasRole(MINTER_ROLE, CHARLIE));
     }
 
-    // ============================================
-    // RequireRole Tests
-    // ============================================
+    /**
+     * ============================================
+     * RequireRole Tests
+     * ============================================
+     */
 
     function test_RequireRole_PassesWhenAccountHasRole() public {
         harness.forceGrantRole(MINTER_ROLE, ALICE);
         harness.requireRole(MINTER_ROLE, ALICE);
-        // No revert means success
+        /**
+         * No revert means success
+         */
     }
 
     function test_RevertWhen_RequireRole_AccountDoesNotHaveRole() public {
@@ -129,9 +149,11 @@ contract LibAccessControlTest is Test {
         harness.requireRole(DEFAULT_ADMIN_ROLE, ZERO_ADDRESS);
     }
 
-    // ============================================
-    // SetRoleAdmin Tests
-    // ============================================
+    /**
+     * ============================================
+     * SetRoleAdmin Tests
+     * ============================================
+     */
 
     function test_SetRoleAdmin_UpdatesAdminRole() public {
         harness.setRoleAdmin(MINTER_ROLE, PAUSER_ROLE);
@@ -156,22 +178,30 @@ contract LibAccessControlTest is Test {
     }
 
     function test_SetRoleAdmin_MultipleChanges() public {
-        // First change
+        /**
+         * First change
+         */
         harness.setRoleAdmin(MINTER_ROLE, PAUSER_ROLE);
         assertEq(harness.getRoleAdmin(MINTER_ROLE), PAUSER_ROLE);
 
-        // Second change
+        /**
+         * Second change
+         */
         harness.setRoleAdmin(MINTER_ROLE, UPGRADER_ROLE);
         assertEq(harness.getRoleAdmin(MINTER_ROLE), UPGRADER_ROLE);
 
-        // Back to default
+        /**
+         * Back to default
+         */
         harness.setRoleAdmin(MINTER_ROLE, DEFAULT_ADMIN_ROLE);
         assertEq(harness.getRoleAdmin(MINTER_ROLE), DEFAULT_ADMIN_ROLE);
     }
 
-    // ============================================
-    // GrantRole Tests
-    // ============================================
+    /**
+     * ============================================
+     * GrantRole Tests
+     * ============================================
+     */
 
     function test_GrantRole_GrantsRoleToAccount() public {
         vm.prank(address(harness));
@@ -204,12 +234,16 @@ contract LibAccessControlTest is Test {
         vm.prank(address(harness));
         harness.grantRole(MINTER_ROLE, ALICE);
 
-        // Should not emit event on second grant
-        // We check this by testing that no RoleGranted event is emitted
+        /**
+         * Should not emit event on second grant
+         * We check this by testing that no RoleGranted event is emitted
+         */
         vm.prank(address(harness));
         bool granted = harness.grantRole(MINTER_ROLE, ALICE);
 
-        // The function should return false when role is already granted
+        /**
+         * The function should return false when role is already granted
+         */
         assertFalse(granted, "Should return false when role already granted");
     }
 
@@ -249,9 +283,11 @@ contract LibAccessControlTest is Test {
         assertTrue(harness.hasRole(MINTER_ROLE, CHARLIE));
     }
 
-    // ============================================
-    // RevokeRole Tests
-    // ============================================
+    /**
+     * ============================================
+     * RevokeRole Tests
+     * ============================================
+     */
 
     function test_RevokeRole_RevokesRoleFromAccount() public {
         harness.forceGrantRole(MINTER_ROLE, ALICE);
@@ -283,11 +319,15 @@ contract LibAccessControlTest is Test {
     }
 
     function test_RevokeRole_DoesNotEmitEventWhenNotGranted() public {
-        // We check this by testing that the function returns false when no role to revoke
+        /**
+         * We check this by testing that the function returns false when no role to revoke
+         */
         vm.prank(address(harness));
         bool revoked = harness.revokeRole(MINTER_ROLE, ALICE);
 
-        // The function should return false when role is not granted
+        /**
+         * The function should return false when role is not granted
+         */
         assertFalse(revoked, "Should return false when role not granted");
     }
 
@@ -317,26 +357,36 @@ contract LibAccessControlTest is Test {
         assertTrue(harness.hasRole(MINTER_ROLE, CHARLIE));
     }
 
-    // ============================================
-    // Edge Cases Tests
-    // ============================================
+    /**
+     * ============================================
+     * Edge Cases Tests
+     * ============================================
+     */
 
     function test_EdgeCase_GrantAndRevokeMultipleTimes() public {
         vm.startPrank(address(harness));
 
-        // Grant
+        /**
+         * Grant
+         */
         assertTrue(harness.grantRole(MINTER_ROLE, ALICE));
         assertTrue(harness.hasRole(MINTER_ROLE, ALICE));
 
-        // Revoke
+        /**
+         * Revoke
+         */
         assertTrue(harness.revokeRole(MINTER_ROLE, ALICE));
         assertFalse(harness.hasRole(MINTER_ROLE, ALICE));
 
-        // Grant again
+        /**
+         * Grant again
+         */
         assertTrue(harness.grantRole(MINTER_ROLE, ALICE));
         assertTrue(harness.hasRole(MINTER_ROLE, ALICE));
 
-        // Revoke again
+        /**
+         * Revoke again
+         */
         assertTrue(harness.revokeRole(MINTER_ROLE, ALICE));
         assertFalse(harness.hasRole(MINTER_ROLE, ALICE));
 
@@ -358,9 +408,11 @@ contract LibAccessControlTest is Test {
         assertEq(harness.getRoleAdmin(UPGRADER_ROLE), MINTER_ROLE);
     }
 
-    // ============================================
-    // Fuzz Tests
-    // ============================================
+    /**
+     * ============================================
+     * Fuzz Tests
+     * ============================================
+     */
 
     function testFuzz_HasRole_ConsistentWithStorage(address account, bytes32 role, bool hasRole) public {
         if (hasRole) {
@@ -374,12 +426,16 @@ contract LibAccessControlTest is Test {
     function testFuzz_GrantRole_AlwaysReturnsCorrectBool(address account, bytes32 role) public {
         vm.startPrank(address(harness));
 
-        // First grant should return true
+        /**
+         * First grant should return true
+         */
         bool firstGrant = harness.grantRole(role, account);
         assertTrue(firstGrant);
         assertTrue(harness.hasRole(role, account));
 
-        // Second grant should return false
+        /**
+         * Second grant should return false
+         */
         bool secondGrant = harness.grantRole(role, account);
         assertFalse(secondGrant);
         assertTrue(harness.hasRole(role, account));
@@ -390,16 +446,22 @@ contract LibAccessControlTest is Test {
     function testFuzz_RevokeRole_AlwaysReturnsCorrectBool(address account, bytes32 role) public {
         vm.startPrank(address(harness));
 
-        // First revoke (no role) should return false
+        /**
+         * First revoke (no role) should return false
+         */
         bool firstRevoke = harness.revokeRole(role, account);
         assertFalse(firstRevoke);
         assertFalse(harness.hasRole(role, account));
 
-        // Grant role
+        /**
+         * Grant role
+         */
         harness.grantRole(role, account);
         assertTrue(harness.hasRole(role, account));
 
-        // Second revoke (has role) should return true
+        /**
+         * Second revoke (has role) should return true
+         */
         bool secondRevoke = harness.revokeRole(role, account);
         assertTrue(secondRevoke);
         assertFalse(harness.hasRole(role, account));
@@ -424,22 +486,30 @@ contract LibAccessControlTest is Test {
 
         vm.startPrank(address(harness));
 
-        // Grant all roles
+        /**
+         * Grant all roles
+         */
         for (uint256 i = 0; i < roles.length; i++) {
             harness.grantRole(roles[i], account);
         }
 
-        // Verify all roles are granted
+        /**
+         * Verify all roles are granted
+         */
         for (uint256 i = 0; i < roles.length; i++) {
             assertTrue(harness.hasRole(roles[i], account));
         }
 
-        // Revoke some roles (even indices)
+        /**
+         * Revoke some roles (even indices)
+         */
         for (uint256 i = 0; i < roles.length; i += 2) {
             harness.revokeRole(roles[i], account);
         }
 
-        // Verify correct roles are revoked/kept
+        /**
+         * Verify correct roles are revoked/kept
+         */
         for (uint256 i = 0; i < roles.length; i++) {
             if (i % 2 == 0) {
                 assertFalse(harness.hasRole(roles[i], account));

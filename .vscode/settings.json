@@ -1,0 +1,29 @@
+{
+    // Solidity extension settings for import resolution
+    "solidity.remappings": [
+        "forge-std/=lib/forge-std/src/"
+    ],
+    "solidity.packageDefaultDependenciesDirectory": "lib",
+    "solidity.compileUsingRemoteVersion": "v0.8.30",
+    
+    // Enable GitHub Copilot
+    "github.copilot.enable": {
+        "*": true
+    },
+    "github.copilot.inlineSuggest.enable": true,
+    "editor.inlineSuggest.enabled": true,
+    
+    // File associations
+    "files.associations": {
+        "*.sol": "solidity"
+    },
+    
+    // Editor suggestions
+    "editor.quickSuggestions": {
+        "other": true,
+        "comments": false,
+        "strings": true
+    },
+    "editor.suggestOnTriggerCharacters": true,
+    "editor.suggestSelection": "first"
+}

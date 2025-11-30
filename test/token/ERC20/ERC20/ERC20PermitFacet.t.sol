@@ -2,7 +2,7 @@
 pragma solidity >=0.8.30;
 
 import {Test} from "forge-std/Test.sol";
-import {ERC20PermitFacet} from "../../../../src/token/ERC20/ERC20/ERC20PermitFacet.sol";
+import {ERC20PermitFacet} from "../../../../src/token/ERC20/ERC20Permit/ERC20PermitFacet.sol";
 import {ERC20PermitFacetHarness} from "./harnesses/ERC20PermitFacetHarness.sol";
 
 contract ERC20BurnFacetTest is Test {
@@ -47,30 +47,44 @@ contract ERC20BurnFacetTest is Test {
     }
 
     function test_DOMAIN_SEPARATOR_ConsistentWithinSameChain() public view {
-        // First call - computes domain separator
+        /**
+         * First call - computes domain separator
+         */
         bytes32 separator1 = token.DOMAIN_SEPARATOR();
 
-        // Second call - recomputes and should return same value for same chain ID
+        /**
+         * Second call - recomputes and should return same value for same chain ID
+         */
         bytes32 separator2 = token.DOMAIN_SEPARATOR();
 
         assertEq(separator1, separator2);
     }
 
     function test_DOMAIN_SEPARATOR_RecalculatesAfterFork() public {
-        // Get initial domain separator on chain 1
+        /**
+         * Get initial domain separator on chain 1
+         */
         uint256 originalChainId = block.chainid;
         bytes32 separator1 = token.DOMAIN_SEPARATOR();
 
-        // Simulate chain fork (chain ID changes)
+        /**
+         * Simulate chain fork (chain ID changes)
+         */
         vm.chainId(originalChainId + 1);
 
-        // Domain separator should recalculate with new chain ID
+        /**
+         * Domain separator should recalculate with new chain ID
+         */
         bytes32 separator2 = token.DOMAIN_SEPARATOR();
 
-        // Separators should be different
+        /**
+         * Separators should be different
+         */
         assertTrue(separator1 != separator2);
 
-        // New separator should match expected value for new chain ID
+        /**
+         * New separator should match expected value for new chain ID
+         */
         bytes32 expectedSeparator = keccak256(
             abi.encode(
                 keccak256("EIP712Domain(string name,string version,uint256 chainId,address verifyingContract)"),
@@ -454,7 +468,9 @@ contract ERC20BurnFacetTest is Test {
         bytes32 hash = keccak256(abi.encodePacked("\x19\x01", token.DOMAIN_SEPARATOR(), structHash));
         (uint8 v, bytes32 r, bytes32 s) = vm.sign(ownerPrivateKey, hash);
 
-        // Test with invalid v value (should be 27 or 28)
+        /**
+         * Test with invalid v value (should be 27 or 28)
+         */
         vm.expectRevert(
             abi.encodeWithSelector(
                 ERC20PermitFacet.ERC2612InvalidSignature.selector, owner, bob, value, deadline, 99, r, s
@@ -462,7 +478,9 @@ contract ERC20BurnFacetTest is Test {
         );
         token.permit(owner, bob, value, deadline, 99, r, s);
 
-        // Test with zero r value
+        /**
+         * Test with zero r value
+         */
         vm.expectRevert(
             abi.encodeWithSelector(
                 ERC20PermitFacet.ERC2612InvalidSignature.selector, owner, bob, value, deadline, v, bytes32(0), s
@@ -470,7 +488,9 @@ contract ERC20BurnFacetTest is Test {
         );
         token.permit(owner, bob, value, deadline, v, bytes32(0), s);
 
-        // Test with zero s value
+        /**
+         * Test with zero s value
+         */
         vm.expectRevert(
             abi.encodeWithSelector(
                 ERC20PermitFacet.ERC2612InvalidSignature.selector, owner, bob, value, deadline, v, r, bytes32(0)

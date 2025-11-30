@@ -4,13 +4,17 @@ pragma solidity >=0.8.30;
 import {BaseBenchmark} from "./Base.t.sol";
 import {DiamondLoupeFacet} from "../../src/diamond/DiamondLoupeFacet.sol";
 
-/// @dev Please override `_deployLoupe` with the deployment of your optimised contract.
+/**
+ *  @dev Please override `_deployLoupe` with the deployment of your optimised contract.
+ */
 contract OptimisedLoupeBenchmarkTest is BaseBenchmark {
     /*//////////////////////////////////////////////////////////////
                                OVERRIDES
     //////////////////////////////////////////////////////////////*/
 
-    /// @dev Override with a deployment of your optimised diamond loupe contract.
+    /**
+     * @dev Override with a deployment of your optimised diamond loupe contract.
+     */
     function _deployLoupe() internal override returns (address) {
         return address(new DiamondLoupeFacet());
     }

@@ -17,7 +17,9 @@ contract LoupeGasBenchmarkTest is BaseBenchmark {
                              GAS BENCHMARKS
     //////////////////////////////////////////////////////////////*/
 
-    // Estimated gas: 370_049_638
+    /**
+     * Estimated gas: 370_049_638
+     */
     function testGas_Loupe_Facets() external {
         uint256 startGas = gasleft();
         (bool success, bytes memory data) = address(diamond).call(abi.encodeWithSelector(SELECTOR_FACETS));
@@ -27,7 +29,9 @@ contract LoupeGasBenchmarkTest is BaseBenchmark {
         assertEq(allFacets.length, NUM_FACETS + 1); // plus Loupe
     }
 
-    // Estimated gas: 5_889_500
+    /**
+     * Estimated gas: 5_889_500
+     */
     function testGas_Loupe_FacetFunctionSelectors() external {
         uint256 startGas = gasleft();
         (bool success, bytes memory data) =
@@ -38,7 +42,9 @@ contract LoupeGasBenchmarkTest is BaseBenchmark {
         assertEq(facetSelectors.length, NUM_LOUPE_SELECTORS);
     }
 
-    // Estimated gas: 31_606_629
+    /**
+     * Estimated gas: 31_606_629
+     */
     function testGas_Loupe_FacetAddresses() external {
         uint256 startGas = gasleft();
         (bool success, bytes memory data) = address(diamond).call(abi.encodeWithSelector(SELECTOR_FACET_ADDRESSES));
@@ -48,7 +54,9 @@ contract LoupeGasBenchmarkTest is BaseBenchmark {
         assertEq(allFacets.length, NUM_FACETS + 1); // plus Loupe
     }
 
-    // Estimated gas: 12_672
+    /**
+     * Estimated gas: 12_672
+     */
     function testGas_Loupe_FacetAddress() external {
         uint256 startGas = gasleft();
         (bool success, bytes memory data) =

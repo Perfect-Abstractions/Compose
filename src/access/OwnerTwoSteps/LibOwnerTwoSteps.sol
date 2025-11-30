@@ -10,7 +10,6 @@ library LibOwnerTwoSteps {
      * @dev Emitted when ownership transfer is initiated (pending owner set).
      */
     event OwnershipTransferStarted(address indexed _previousOwner, address indexed _newOwner);
-
     /**
      * @dev Emitted when ownership transfer is finalized.
      */
@@ -20,7 +19,6 @@ library LibOwnerTwoSteps {
      * @notice Thrown when a non-owner attempts an action restricted to owner.
      */
     error OwnerUnauthorizedAccount();
-
     /**
      * @notice Thrown when attempting to transfer ownership from a renounced state.
      */

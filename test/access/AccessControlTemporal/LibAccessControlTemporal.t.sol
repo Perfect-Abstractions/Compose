@@ -11,33 +11,45 @@ contract LibAccessControlTemporalTest is Test {
     LibAccessControlTemporalHarness public harness;
     LibAccessControlHarness public accessControl;
 
-    // Test addresses
+    /**
+     * Test addresses
+     */
     address ADMIN = makeAddr("admin");
     address ALICE = makeAddr("alice");
     address BOB = makeAddr("bob");
 
-    // Test roles
+    /**
+     * Test roles
+     */
     bytes32 constant DEFAULT_ADMIN_ROLE = 0x00;
     bytes32 constant MINTER_ROLE = keccak256("MINTER_ROLE");
 
-    // Events
+    /**
+     * Events
+     */
     event RoleGrantedWithExpiry(
         bytes32 indexed role, address indexed account, uint256 expiresAt, address indexed sender
     );
 
     function setUp() public {
-        // Initialize AccessControl first (shared storage)
+        /**
+         * Initialize AccessControl first (shared storage)
+         */
         accessControl = new LibAccessControlHarness();
         accessControl.initialize(ADMIN);
 
-        // Initialize Temporal harness (uses same AccessControl storage)
+        /**
+         * Initialize Temporal harness (uses same AccessControl storage)
+         */
         harness = new LibAccessControlTemporalHarness();
         harness.initialize(ADMIN);
     }
 
-    // ============================================
-    // GetRoleExpiry Tests
-    // ============================================
+    /**
+     * ============================================
+     * GetRoleExpiry Tests
+     * ============================================
+     */
 
     function test_GetRoleExpiry_ReturnsZeroForNonExistentRole() public view {
         assertEq(harness.getRoleExpiry(MINTER_ROLE, ALICE), 0);
@@ -53,9 +65,11 @@ contract LibAccessControlTemporalTest is Test {
         assertEq(harness.getStorageExpiry(ALICE, MINTER_ROLE), expiry);
     }
 
-    // ============================================
-    // IsRoleExpired Tests
-    // ============================================
+    /**
+     * ============================================
+     * IsRoleExpired Tests
+     * ============================================
+     */
 
     function test_IsRoleExpired_ReturnsTrueForNoRole() public view {
         assertTrue(harness.isRoleExpired(MINTER_ROLE, ALICE));
@@ -76,7 +90,9 @@ contract LibAccessControlTemporalTest is Test {
         vm.prank(address(harness));
         harness.grantRoleWithExpiry(MINTER_ROLE, ALICE, expiry);
 
-        // Fast forward past expiry
+        /**
+         * Fast forward past expiry
+         */
         vm.warp(expiry + 1);
 
         assertTrue(harness.isRoleExpired(MINTER_ROLE, ALICE));
@@ -88,16 +104,22 @@ contract LibAccessControlTemporalTest is Test {
         vm.prank(address(harness));
         harness.grantRoleWithExpiry(MINTER_ROLE, ALICE, expiry);
 
-        // Set time to exactly expiry
+        /**
+         * Set time to exactly expiry
+         */
         vm.warp(expiry);
 
-        // At exact expiry time, role should be expired
+        /**
+         * At exact expiry time, role should be expired
+         */
         assertTrue(harness.isRoleExpired(MINTER_ROLE, ALICE));
     }
 
-    // ============================================
-    // GrantRoleWithExpiry Tests
-    // ============================================
+    /**
+     * ============================================
+     * GrantRoleWithExpiry Tests
+     * ============================================
+     */
 
     function test_GrantRoleWithExpiry_GrantsRoleAndSetsExpiry() public {
         uint256 expiry = block.timestamp + 7 days;
@@ -125,9 +147,11 @@ contract LibAccessControlTemporalTest is Test {
         vm.stopPrank();
     }
 
-    // ============================================
-    // RevokeTemporalRole Tests
-    // ============================================
+    /**
+     * ============================================
+     * RevokeTemporalRole Tests
+     * ============================================
+     */
 
     function test_RevokeTemporalRole_RevokesRoleAndClearsExpiry() public {
         uint256 expiry = block.timestamp + 7 days;
@@ -153,9 +177,11 @@ contract LibAccessControlTemporalTest is Test {
         assertEq(harness.getRoleExpiry(MINTER_ROLE, ALICE), 0);
     }
 
-    // ============================================
-    // RequireValidRole Tests
-    // ============================================
+    /**
+     * ============================================
+     * RequireValidRole Tests
+     * ============================================
+     */
 
     function test_RequireValidRole_PassesWithValidExpiry() public {
         uint256 expiry = block.timestamp + 7 days;
@@ -163,15 +189,21 @@ contract LibAccessControlTemporalTest is Test {
         vm.prank(address(harness));
         harness.grantRoleWithExpiry(MINTER_ROLE, ALICE, expiry);
 
-        // Should not revert
+        /**
+         * Should not revert
+         */
         harness.requireValidRole(MINTER_ROLE, ALICE);
     }
 
     function test_RequireValidRole_PassesWithoutExpiry() public {
-        // Grant role without expiry
+        /**
+         * Grant role without expiry
+         */
         harness.forceGrantRole(MINTER_ROLE, ALICE);
 
-        // Should not revert (no expiry set means valid)
+        /**
+         * Should not revert (no expiry set means valid)
+         */
         harness.requireValidRole(MINTER_ROLE, ALICE);
     }
 
@@ -181,7 +213,9 @@ contract LibAccessControlTemporalTest is Test {
         vm.prank(address(harness));
         harness.grantRoleWithExpiry(MINTER_ROLE, ALICE, expiry);
 
-        // Fast forward past expiry
+        /**
+         * Fast forward past expiry
+         */
         vm.warp(expiry + 1);
 
         vm.expectRevert(
@@ -215,9 +249,11 @@ contract LibAccessControlTemporalTest is Test {
         harness.requireValidRole(MINTER_ROLE, ALICE);
     }
 
-    // ============================================
-    // Storage Consistency Tests
-    // ============================================
+    /**
+     * ============================================
+     * Storage Consistency Tests
+     * ============================================
+     */
 
     function test_StorageConsistency_GrantRoleWithExpiry() public {
         uint256 expiry = block.timestamp + 7 days;
@@ -241,9 +277,11 @@ contract LibAccessControlTemporalTest is Test {
         vm.stopPrank();
     }
 
-    // ============================================
-    // Fuzz Tests
-    // ============================================
+    /**
+     * ============================================
+     * Fuzz Tests
+     * ============================================
+     */
 
     function testFuzz_GrantRoleWithExpiry_AlwaysSetsExpiry(address account, bytes32 role, uint256 expiryOffset) public {
         vm.assume(account != address(0));
@@ -266,10 +304,14 @@ contract LibAccessControlTemporalTest is Test {
         vm.prank(address(harness));
         harness.grantRoleWithExpiry(role, account, expiry);
 
-        // Before expiry
+        /**
+         * Before expiry
+         */
         assertFalse(harness.isRoleExpired(role, account));
 
-        // After expiry
+        /**
+         * After expiry
+         */
         vm.warp(expiry + 1);
         assertTrue(harness.isRoleExpired(role, account));
     }

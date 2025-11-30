@@ -1,39 +1,45 @@
 // SPDX-License-Identifier: MIT
 pragma solidity >=0.8.30;
 
-contract ERC20PermitFacet {
-    /// @notice Thrown when a permit signature is invalid or expired.
-    /// @param _owner The address that signed the permit.
-    /// @param _spender The address that was approved.
-    /// @param _value The amount that was approved.
-    /// @param _deadline The deadline for the permit.
-    /// @param _v The recovery byte of the signature.
-    /// @param _r The r value of the signature.
-    /// @param _s The s value of the signature.
+/**
+ * @title   LibERC20Permit — Library for ERC-2612 Permit Logic
+ * @notice  Library for self-contained ERC-2612 permit and domain separator logic and storage
+ * @dev     Does not import anything. Designed to be used by facets handling ERC20 permit functionality.
+ */
+library LibERC20Permit {
+    /**
+     * @notice Thrown when a permit signature is invalid or expired.
+     * @param _owner The address that signed the permit.
+     * @param _spender The address that was approved.
+     * @param _value The amount that was approved.
+     * @param _deadline The deadline for the permit.
+     * @param _v The recovery byte of the signature.
+     * @param _r The r value of the signature.
+     * @param _s The s value of the signature.
+     */
     error ERC2612InvalidSignature(
         address _owner, address _spender, uint256 _value, uint256 _deadline, uint8 _v, bytes32 _r, bytes32 _s
     );
 
-    /// @notice Thrown when the spender address is invalid (e.g., zero address).
-    /// @param _spender Invalid spender address.
+    /**
+     * @notice Thrown when the spender address is invalid (e.g., zero address).
+     * @param _spender Invalid spender address.
+     */
     error ERC20InvalidSpender(address _spender);
 
-    /// @notice Emitted when an approval is made for a spender by an owner.
-    /// @param _owner The address granting the allowance.
-    /// @param _spender The address receiving the allowance.
-    /// @param _value The amount approved.
+    /**
+     * @notice Emitted when an approval is made for a spender by an owner.
+     * @param _owner The address granting the allowance.
+     * @param _spender The address receiving the allowance.
+     * @param _value The amount approved.
+     */
     event Approval(address indexed _owner, address indexed _spender, uint256 _value);
 
     bytes32 constant ERC20_STORAGE_POSITION = keccak256("compose.erc20");
 
-    /// The `ERC20PermitFacet` only uses the `allowance` and `name` variables inside
-    /// the `ERC20Storage` struct from `ERC20Facet`.
-    /// We cannot remove the `balanceOf`, `totalSupply`, and `decimals` variables from
-    /// the struct even though they aren't used. This is because we must maintain the
-    /// order of variables defined in structs. Only variables at the end of structs can be
-    /// removed. In this case there is only one variable at the end that isn't used and that
-    /// is the `symbol` variable so that is removed from the struct below.
-    /// @custom:storage-location erc8042:compose.erc20
+    /**
+     * @custom:storage-location erc8042:compose.erc20
+     */
     struct ERC20Storage {
         mapping(address owner => uint256 balance) balanceOf;
         uint256 totalSupply;
@@ -51,12 +57,14 @@ contract ERC20PermitFacet {
 
     bytes32 constant STORAGE_POSITION = keccak256("compose.erc20.permit");
 
-    /// @custom:storage-location erc8042:compose.erc20.permit
+    /**
+     * @custom:storage-location erc8042:compose.erc20.permit
+     */
     struct ERC20PermitStorage {
         mapping(address owner => uint256) nonces;
     }
 
-    function getStorage() internal pure returns (ERC20PermitStorage storage s) {
+    function getPermitStorage() internal pure returns (ERC20PermitStorage storage s) {
         bytes32 position = STORAGE_POSITION;
         assembly {
             s.slot := position
@@ -64,21 +72,11 @@ contract ERC20PermitFacet {
     }
 
     /**
-     * @notice Returns the current nonce for an owner.
-     * @dev This value changes each time a permit is used.
-     * @param _owner The address of the owner.
-     * @return The current nonce.
-     */
-    function nonces(address _owner) external view returns (uint256) {
-        return getStorage().nonces[_owner];
-    }
-
-    /**
      * @notice Returns the domain separator used in the encoding of the signature for {permit}.
      * @dev This value is unique to a contract and chain ID combination to prevent replay attacks.
      * @return The domain separator.
      */
-    function DOMAIN_SEPARATOR() external view returns (bytes32) {
+    function DOMAIN_SEPARATOR() internal view returns (bytes32) {
         return keccak256(
             abi.encode(
                 keccak256("EIP712Domain(string name,string version,uint256 chainId,address verifyingContract)"),
@@ -91,15 +89,13 @@ contract ERC20PermitFacet {
     }
 
     /**
-     * @notice Sets the allowance for a spender via a signature.
-     * @dev This function implements EIP-2612 permit functionality.
-     * @param _owner The address of the token owner.
-     * @param _spender The address of the spender.
-     * @param _value The amount of tokens to approve.
-     * @param _deadline The deadline for the permit (timestamp).
-     * @param _v The recovery byte of the signature.
-     * @param _r The r value of the signature.
-     * @param _s The s value of the signature.
+     * @notice         Validates a permit signature and sets allowance.
+     * @dev            Emits Approval event; must be emitted by the calling facet/contract.
+     * @param _owner   Token owner.
+     * @param _spender Token spender.
+     * @param _value   Allowance value.
+     * @param _deadline Permit's time deadline.
+     * @param _v, _r, _s   Signature fields.
      */
     function permit(
         address _owner,
@@ -109,7 +105,7 @@ contract ERC20PermitFacet {
         uint8 _v,
         bytes32 _r,
         bytes32 _s
-    ) external {
+    ) internal {
         if (_spender == address(0)) {
             revert ERC20InvalidSpender(address(0));
         }
@@ -117,7 +113,7 @@ contract ERC20PermitFacet {
             revert ERC2612InvalidSignature(_owner, _spender, _value, _deadline, _v, _r, _s);
         }
 
-        ERC20PermitStorage storage s = getStorage();
+        ERC20PermitStorage storage s = getPermitStorage();
         ERC20Storage storage sERC20 = getERC20Storage();
         uint256 currentNonce = s.nonces[_owner];
         bytes32 structHash = keccak256(

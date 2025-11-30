@@ -25,9 +25,11 @@ contract ERC721FacetTest is Test {
         harness.initialize(TOKEN_NAME, TOKEN_SYMBOL, BASE_URI);
     }
 
-    // ============================================
-    // Metadata Tests
-    // ============================================
+    /**
+     * ============================================
+     * Metadata Tests
+     * ============================================
+     */
 
     function test_name() public view {
         assertEq(harness.name(), TOKEN_NAME);
@@ -41,9 +43,11 @@ contract ERC721FacetTest is Test {
         assertEq(harness.baseURI(), BASE_URI);
     }
 
-    // ============================================
-    // TokenURI Tests
-    // ============================================
+    /**
+     * ============================================
+     * TokenURI Tests
+     * ============================================
+     */
 
     function test_tokenURI() public {
         uint256 tokenId = 1;
@@ -63,9 +67,11 @@ contract ERC721FacetTest is Test {
         assertEq(harness.ownerOf(tokenId), alice);
     }
 
-    // ============================================
-    // Approve Tests
-    // ============================================
+    /**
+     * ============================================
+     * Approve Tests
+     * ============================================
+     */
 
     function test_Approve() public {
         uint256 tokenId = 4;
@@ -135,9 +141,11 @@ contract ERC721FacetTest is Test {
         assertEq(harness.getApproved(tokenId), bob);
     }
 
-    // ===========================================
-    // SetApprovalForAll Tests
-    // ===========================================
+    /**
+     * ===========================================
+     * SetApprovalForAll Tests
+     * ===========================================
+     */
 
     function test_SetApprovalForAll() public {
         vm.prank(alice);
@@ -159,9 +167,11 @@ contract ERC721FacetTest is Test {
         assertTrue(isApproved);
     }
 
-    // ============================================
-    // transferFrom tests
-    // ============================================
+    /**
+     * ============================================
+     * transferFrom tests
+     * ============================================
+     */
 
     function test_transferFrom() public {
         uint256 tokenId = 1;
@@ -205,9 +215,11 @@ contract ERC721FacetTest is Test {
         harness.transferFrom(alice, bob, tokenId);
     }
 
-    // ===========================================
-    // safeTransferFrom Tests
-    // ===========================================
+    /**
+     * ===========================================
+     * safeTransferFrom Tests
+     * ===========================================
+     */
 
     function test_safeTransferFrom() public {
         uint256 tokenId = 1;
@@ -231,9 +243,11 @@ contract ERC721FacetTest is Test {
         assertEq(harness.ownerOf(tokenId), charlie);
     }
 
-    // ====================================
-    // balanceOf Tests
-    // ====================================
+    /**
+     * ====================================
+     * balanceOf Tests
+     * ====================================
+     */
 
     function test_BalanceOf() public {
         uint256 tokenId1 = 32;

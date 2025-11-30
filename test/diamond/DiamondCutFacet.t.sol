@@ -30,9 +30,11 @@ contract DiamondCutFacetTest is Test {
         token.initialize(TOKEN_NAME, TOKEN_SYMBOL, TOKEN_DECIMALS);
     }
 
-    // ============================================
-    // Helpers
-    // ============================================
+    /**
+     * ============================================
+     * Helpers
+     * ============================================
+     */
 
     function _basicAction()
         internal
@@ -62,9 +64,11 @@ contract DiamondCutFacetTest is Test {
         _;
     }
 
-    // ============================================
-    // Core Functionality Tests
-    // ============================================
+    /**
+     * ============================================
+     * Core Functionality Tests
+     * ============================================
+     */
 
     function test_DiamondCut_addAction() public {
         (DiamondCutFacet.FacetCut[] memory _cut, address _init, bytes memory _calldata) = _basicAction();
@@ -141,7 +145,9 @@ contract DiamondCutFacetTest is Test {
     }
 
     function test_DiamondCut_replaceAction() public addActionSetup {
-        // New ERC20 Facet
+        /**
+         * New ERC20 Facet
+         */
         ERC20FacetHarness newFacet = new ERC20FacetHarness();
         newFacet.initialize(TOKEN_NAME, TOKEN_SYMBOL, TOKEN_DECIMALS);
 
@@ -170,15 +176,19 @@ contract DiamondCutFacetTest is Test {
         assertEq(entries[0].data, data);
     }
 
-    /// This test multiple actions in a single call.
-    /// 1. Add the function to a facet.
-    /// 2. Replace the function with another facet.
-    /// 3. Remove the function.
+    /**
+     * This test multiple actions in a single call.
+     * 1. Add the function to a facet.
+     * 2. Replace the function with another facet.
+     * 3. Remove the function.
+     */
     function test_DiamondCut_multipleActions() public {
         bytes4[] memory functionSelectors = new bytes4[](1);
         functionSelectors[0] = bytes4(keccak256("decimals()"));
 
-        // New ERC20 Facet
+        /**
+         * New ERC20 Facet
+         */
         ERC20FacetHarness newFacet = new ERC20FacetHarness();
         newFacet.initialize(TOKEN_NAME, TOKEN_SYMBOL, TOKEN_DECIMALS);
 
@@ -239,9 +249,11 @@ contract DiamondCutFacetTest is Test {
         assertEq(ERC20FacetHarness(address(facet)).decimals(), TOKEN_DECIMALS);
     }
 
-    // ============================================
-    // Error Condition Tests
-    // ============================================
+    /**
+     * ============================================
+     * Error Condition Tests
+     * ============================================
+     */
 
     function test_DiamondCut_wrongOwner() public {
         (DiamondCutFacet.FacetCut[] memory _cut, address _init, bytes memory _calldata) = _basicAction();
@@ -267,22 +279,30 @@ contract DiamondCutFacetTest is Test {
         facet.diamondCut(_cut, _init, _calldata);
     }
 
-    // function test_DiamondCut_incorrectFacetCutAction() public {
-    //     (, address _init, bytes memory _calldata) = _basicAction();
+    /**
+     * function test_DiamondCut_incorrectFacetCutAction() public {
+     * (, address _init, bytes memory _calldata) = _basicAction();
+     */
 
-    //     bytes4[] memory functionSelectors = new bytes4[](0);
+    /**
+     *  bytes4[] memory functionSelectors = new bytes4[](0);
+     */
 
-    //     DiamondCutFacet.FacetCut[] memory _cut = new DiamondCutFacet.FacetCut[](1);
-    //     _cut[0] = DiamondCutFacet.FacetCut({
-    //         facetAddress: address(token),
-    //         action: DiamondCutFacet.FacetCutAction(uint8(5)),
-    //         functionSelectors: functionSelectors
-    //     });
+    /**
+     * DiamondCutFacet.FacetCut[] memory _cut = new DiamondCutFacet.FacetCut[](1);
+     * _cut[0] = DiamondCutFacet.FacetCut({
+     * facetAddress: address(token),
+     * action: DiamondCutFacet.FacetCutAction(uint8(5)),
+     * functionSelectors: functionSelectors
+     * });
+     */
 
-    //     vm.prank(owner);
-    //     vm.expectRevert(abi.encodeWithSelector(DiamondCutFacet.IncorrectFacetCutAction.selector, 5));
-    //     facet.diamondCut(_cut, _init, _calldata);
-    // }
+    /**
+     * vm.prank(owner);
+     * vm.expectRevert(abi.encodeWithSelector(DiamondCutFacet.IncorrectFacetCutAction.selector, 5));
+     * facet.diamondCut(_cut, _init, _calldata);
+     * }
+     */
 
     function test_DiamondCut_addActionWithZeroFacetCode() public {
         (, address _init, bytes memory _calldata) = _basicAction();
@@ -321,7 +341,9 @@ contract DiamondCutFacetTest is Test {
                 DiamondCutFacet.CannotAddFunctionToDiamondThatAlreadyExists.selector, functionSelector
             )
         );
-        // vm.expectRevert();
+        /**
+         * vm.expectRevert();
+         */
         facet.diamondCut(_cut, _init, _calldata);
     }
 

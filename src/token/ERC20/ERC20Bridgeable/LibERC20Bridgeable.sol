@@ -1,57 +1,85 @@
 // SPDX-License-Identifier: MIT
 pragma solidity >=0.8.30;
 
-// /// @title LibERC20Bridgeable — ERC-7802 Library
-// /// @notice Provides internal functions and storage layout for ERC-7802 token logic.
-// /// @dev Uses ERC-8042 for storage location standardization and ERC-6093 for error conventions
+/**
+ *  /// @title LibERC20Bridgeable — ERC-7802 Library
+ */
+/**
+ *  /// @notice Provides internal functions and storage layout for ERC-7802 token logic.
+ */
+/**
+ *  /// @dev Uses ERC-8042 for storage location standardization and ERC-6093 for error conventions
+ */
 library LibERC20Bridgeable {
-    /// @notice Revert when a provided receiver is invalid(e.g,zero address) .
-    /// @param _receiver The invalid reciever address.
+    /**
+     * @notice Revert when a provided receiver is invalid(e.g,zero address) .
+     * @param _receiver The invalid reciever address.
+     */
     error ERC20InvalidReciever(address _receiver);
 
-    /// @notice Thrown when the sender address is invalid (e.g., zero address).
-    /// @param _sender The invalid sender address.
+    /**
+     * @notice Thrown when the sender address is invalid (e.g., zero address).
+     * @param _sender The invalid sender address.
+     */
     error ERC20InvalidSender(address _sender);
 
-    /// @notice Revert when caller is not a trusted bridge.
-    /// @param _caller The unauthorized caller.
+    /**
+     * @notice Revert when caller is not a trusted bridge.
+     * @param _caller The unauthorized caller.
+     */
     error ERC20InvalidBridgeAccount(address _caller);
 
-    // @notice Revert when caller address is invalid.
-    /// @param _caller is the invalid address.
+    /**
+     * @notice Revert when caller address is invalid.
+     */
+    /**
+     * @param _caller is the invalid address.
+     */
     error ERC20InvalidCallerAddress(address _caller);
 
-    /// @notice Thrown when the account does not have a specific role.
-    /// @param _role The role that the account does not have.
-    /// @param _account The account that does not have the role.
+    /**
+     * @notice Thrown when the account does not have a specific role.
+     * @param _role The role that the account does not have.
+     * @param _account The account that does not have the role.
+     */
     error AccessControlUnauthorizedAccount(address _account, bytes32 _role);
 
     error ERC20InsufficientBalance(address _from, uint256 _accountBalance, uint256 _value);
 
-    /// @notice Emitted when tokens are minted via a cross-chain bridge.
-    /// @param _to The recipient of minted tokens.
-    /// @param _amount The amount minted.
-    /// @param _sender The bridge account that triggered the mint (msg.sender).
+    /**
+     * @notice Emitted when tokens are minted via a cross-chain bridge.
+     * @param _to The recipient of minted tokens.
+     * @param _amount The amount minted.
+     * @param _sender The bridge account that triggered the mint (msg.sender).
+     */
     event CrosschainMint(address indexed _to, uint256 _amount, address indexed _sender);
 
-    /// @notice Emitted when a crosschain transfer burns tokens.
-    /// @param _from     Address of the account tokens are being burned from.
-    /// @param _amount   Amount of tokens burned.
-    /// @param _sender   Address of the caller (msg.sender) who invoked crosschainBurn.
+    /**
+     * @notice Emitted when a crosschain transfer burns tokens.
+     * @param _from     Address of the account tokens are being burned from.
+     * @param _amount   Amount of tokens burned.
+     * @param _sender   Address of the caller (msg.sender) who invoked crosschainBurn.
+     */
     event CrosschainBurn(address indexed _from, uint256 _amount, address indexed _sender);
 
-    /// @notice Emitted when tokens are transferred between two addresses.
-    /// @param _from Address sending the tokens.
-    /// @param _to Address receiving the tokens.
-    /// @param _value Amount of tokens transferred.
+    /**
+     * @notice Emitted when tokens are transferred between two addresses.
+     * @param _from Address sending the tokens.
+     * @param _to Address receiving the tokens.
+     * @param _value Amount of tokens transferred.
+     */
     event Transfer(address indexed _from, address indexed _to, uint256 _value);
 
-    /// -----------------------------------------------------------------------
-    /// ERC20 integration (re-uses ERC20Facet storage layout)
-    /// -----------------------------------------------------------------------
+    /**
+     * -----------------------------------------------------------------------
+     * ERC20 integration (re-uses ERC20Facet storage layout)
+     * -----------------------------------------------------------------------
+     */
 
-    /// @notice Storage slot for ERC-20 token using ERC8042 for storage location standardization
-    /// @dev Storage position determined by the keccak256 hash of the diamond storage identifier.
+    /**
+     * @notice Storage slot for ERC-20 token using ERC8042 for storage location standardization
+     * @dev Storage position determined by the keccak256 hash of the diamond storage identifier.
+     */
     bytes32 constant ERC20_STORAGE_POSITION = keccak256("compose.erc20");
 
     /**
@@ -75,19 +103,27 @@ library LibERC20Bridgeable {
         }
     }
 
-    /// -----------------------------------------------------------------------
-    /// AccessControl integration (re-uses AccessControlFacet storage layout)
-    /// -----------------------------------------------------------------------
+    /**
+     * -----------------------------------------------------------------------
+     * AccessControl integration (re-uses AccessControlFacet storage layout)
+     * -----------------------------------------------------------------------
+     */
 
-    /// @notice Storage slot identifier.
+    /**
+     * @notice Storage slot identifier.
+     */
     bytes32 constant ACCESS_STORAGE_POSITION = keccak256("compose.accesscontrol");
 
-    /// @notice storage struct for the AccessControl.
+    /**
+     * @notice storage struct for the AccessControl.
+     */
     struct AccessControlStorage {
         mapping(address account => mapping(bytes32 role => bool hasRole)) hasRole;
     }
 
-    /// @notice helper to return AccessControlStorage at its diamond slot
+    /**
+     * @notice helper to return AccessControlStorage at its diamond slot
+     */
     function getAccessControlStorage() internal pure returns (AccessControlStorage storage s) {
         bytes32 position = ACCESS_STORAGE_POSITION;
         assembly {
@@ -95,15 +131,19 @@ library LibERC20Bridgeable {
         }
     }
 
-    /// @notice Cross-chain mint — callable only by an address having the `trusted-bridge` role.
-    /// @param _account The account to mint tokens to.
-    /// @param _value The amount to mint.
+    /**
+     * @notice Cross-chain mint — callable only by an address having the `trusted-bridge` role.
+     * @param _account The account to mint tokens to.
+     * @param _value The amount to mint.
+     */
     function crosschainMint(address _account, uint256 _value) internal {
         ERC20Storage storage erc20 = getERC20Storage();
 
         AccessControlStorage storage acs = getAccessControlStorage();
 
-        // authorize: caller must have the trusted-bridge role
+        /**
+         * authorize: caller must have the trusted-bridge role
+         */
         if (!acs.hasRole[msg.sender]["trusted-bridge"]) {
             revert AccessControlUnauthorizedAccount(msg.sender, "trusted-bridge");
         }
@@ -121,15 +161,19 @@ library LibERC20Bridgeable {
         emit CrosschainMint(_account, _value, msg.sender);
     }
 
-    /// @notice Cross-chain burn — callable only by an address having the `trusted-bridge` role.
-    /// @param _from The account to burn tokens from.
-    /// @param _value The amount to burn.
+    /**
+     * @notice Cross-chain burn — callable only by an address having the `trusted-bridge` role.
+     * @param _from The account to burn tokens from.
+     * @param _value The amount to burn.
+     */
     function crosschainBurn(address _from, uint256 _value) internal {
         ERC20Storage storage erc20 = getERC20Storage();
 
         AccessControlStorage storage acs = getAccessControlStorage();
 
-        // authorize: caller must have the trusted-bridge role
+        /**
+         * authorize: caller must have the trusted-bridge role
+         */
         if (!acs.hasRole[msg.sender]["trusted-bridge"]) {
             revert AccessControlUnauthorizedAccount(msg.sender, "trusted-bridge");
         }
@@ -152,9 +196,11 @@ library LibERC20Bridgeable {
         emit CrosschainBurn(_from, _value, msg.sender);
     }
 
-    /// @notice Internal check to check if the bridge (caller) is trusted.
-    /// @dev Reverts if caller is zero or not in the AccessControl `trusted-bridge` role.
-    /// @param _caller The address to validate
+    /**
+     * @notice Internal check to check if the bridge (caller) is trusted.
+     * @dev Reverts if caller is zero or not in the AccessControl `trusted-bridge` role.
+     * @param _caller The address to validate
+     */
     function checkTokenBridge(address _caller) internal view {
         AccessControlStorage storage acs = getAccessControlStorage();
 

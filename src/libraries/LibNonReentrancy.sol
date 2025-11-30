@@ -1,15 +1,21 @@
 // SPDX-License-Identifier: MIT
 pragma solidity >=0.8.30;
 
-/// @title LibNonReentrancy - Non-Reentrancy Library
-/// @notice Provides common non-reentrant functions for Solidity contracts.
+/**
+ * @title LibNonReentrancy - Non-Reentrancy Library
+ * @notice Provides common non-reentrant functions for Solidity contracts.
+ */
 library LibNonReentrancy {
     bytes32 constant NON_REENTRANT_SLOT = keccak256("compose.nonreentrant");
 
-    // Function selector - 0x43a0d067
+    /**
+     * Function selector - 0x43a0d067
+     */
     error Reentrancy();
 
-    /// @dev How to use as a library in user facets
+    /**
+     * @dev How to use as a library in user facets
+     */
     /*
     function someFunction() external {
         LibNonReentrancy.enter();
@@ -18,7 +24,9 @@ library LibNonReentrancy {
     }
     */
 
-    /// @dev How to use as a modifier in user facets
+    /**
+     * @dev How to use as a modifier in user facets
+     */
     /*
     modifier nonReentrant {
         LibNonReentrancy.enter();
@@ -27,13 +35,17 @@ library LibNonReentrancy {
     }
     */
 
-    /// @dev This unlocks the entry into a function
+    /**
+     * @dev This unlocks the entry into a function
+     */
     function enter() internal {
         bytes32 position = NON_REENTRANT_SLOT;
         assembly ("memory-safe") {
             if tload(position) {
-                // Store the selector for "Reentrancy()" (0xab143c06) at the beginning of memory.
-                // We shift left by 224 bits (256 - 32) to left-align the 4-byte selector in the 32-byte slot.
+                /**
+                 * Store the selector for "Reentrancy()" (0xab143c06) at the beginning of memory.
+                 * We shift left by 224 bits (256 - 32) to left-align the 4-byte selector in the 32-byte slot.
+                 */
                 mstore(0x00, shl(224, 0xab143c06))
                 revert(0x00, 0x04)
             }
@@ -41,7 +53,9 @@ library LibNonReentrancy {
         }
     }
 
-    /// @dev This locks the entry into a function
+    /**
+     * @dev This locks the entry into a function
+     */
     function exit() internal {
         bytes32 position = NON_REENTRANT_SLOT;
         assembly {

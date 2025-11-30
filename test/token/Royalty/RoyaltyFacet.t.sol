@@ -24,23 +24,31 @@ contract RoyaltyFacetTest is Test {
         facet = new RoyaltyFacetHarness();
     }
 
-    // ============================================
-    // Helper Functions
-    // ============================================
+    /**
+     * ============================================
+     * Helper Functions
+     * ============================================
+     */
 
-    /// @notice Helper to set default royalty
+    /**
+     * @notice Helper to set default royalty
+     */
     function _setDefaultRoyalty(address _receiver, uint96 _feeNumerator) internal {
         facet.setDefaultRoyalty(_receiver, _feeNumerator);
     }
 
-    /// @notice Helper to set token royalty
+    /**
+     * @notice Helper to set token royalty
+     */
     function _setTokenRoyalty(uint256 _tokenId, address _receiver, uint96 _feeNumerator) internal {
         facet.setTokenRoyalty(_tokenId, _receiver, _feeNumerator);
     }
 
-    // ============================================
-    // royaltyInfo Tests
-    // ============================================
+    /**
+     * ============================================
+     * royaltyInfo Tests
+     * ============================================
+     */
 
     function test_RoyaltyInfo_NoRoyaltySet() public view {
         uint256 tokenId = 1;
@@ -320,27 +328,35 @@ contract RoyaltyFacetTest is Test {
     }
 
     function test_RoyaltyInfo_ZeroAddressReceiverReturnsZero() public view {
-        // Set up a token royalty with non-zero fee but zero address
-        // This simulates the edge case
+        /**
+         * Set up a token royalty with non-zero fee but zero address
+         * This simulates the edge case
+         */
         uint256 tokenId = 5;
         uint256 salePrice = 100 ether;
 
-        // No royalty set - should return zero
+        /**
+         * No royalty set - should return zero
+         */
         (address receiver, uint256 royaltyAmount) = facet.royaltyInfo(tokenId, salePrice);
         assertEq(receiver, address(0));
         assertEq(royaltyAmount, 0);
     }
 
-    // ============================================
-    // Storage Consistency Tests
-    // ============================================
+    /**
+     * ============================================
+     * Storage Consistency Tests
+     * ============================================
+     */
 
     function test_StorageSlot_Consistency() public {
         uint96 feeNumerator = 500; // 5%
 
         facet.setDefaultRoyalty(royaltyReceiver, feeNumerator);
 
-        // Read back through facet function to verify
+        /**
+         * Read back through facet function to verify
+         */
         (address receiver, uint256 royaltyAmount) = facet.royaltyInfo(999, 100 ether);
         assertEq(receiver, royaltyReceiver);
         assertEq(royaltyAmount, 5 ether);
@@ -352,15 +368,19 @@ contract RoyaltyFacetTest is Test {
 
         facet.setTokenRoyalty(tokenId, bob, feeNumerator);
 
-        // Read back through facet function to verify
+        /**
+         * Read back through facet function to verify
+         */
         (address receiver, uint256 royaltyAmount) = facet.royaltyInfo(tokenId, 100 ether);
         assertEq(receiver, bob);
         assertEq(royaltyAmount, 10 ether);
     }
 
-    // ============================================
-    // Edge Cases
-    // ============================================
+    /**
+     * ============================================
+     * Edge Cases
+     * ============================================
+     */
 
     function test_RoyaltyInfo_WithMaximumValues() public {
         uint96 maxFee = 10000; // 100%
@@ -410,7 +430,9 @@ contract RoyaltyFacetTest is Test {
     }
 
     function test_ComplexScenario_MultipleTokensAndDefaults() public {
-        // Set up complex royalty structure
+        /**
+         * Set up complex royalty structure
+         */
         _setDefaultRoyalty(alice, 500); // 5% default
 
         _setTokenRoyalty(1, bob, 1000); // Token 1: 10%
@@ -418,17 +440,23 @@ contract RoyaltyFacetTest is Test {
 
         uint256 salePrice = 100 ether;
 
-        // Token 1 should use token-specific
+        /**
+         * Token 1 should use token-specific
+         */
         (address receiver1, uint256 royalty1) = facet.royaltyInfo(1, salePrice);
         assertEq(receiver1, bob);
         assertEq(royalty1, 10 ether);
 
-        // Token 2 should use token-specific
+        /**
+         * Token 2 should use token-specific
+         */
         (address receiver2, uint256 royalty2) = facet.royaltyInfo(2, salePrice);
         assertEq(receiver2, charlie);
         assertEq(royalty2, 2.5 ether);
 
-        // Token 999 should use default
+        /**
+         * Token 999 should use default
+         */
         (address receiver3, uint256 royalty3) = facet.royaltyInfo(999, salePrice);
         assertEq(receiver3, alice);
         assertEq(royalty3, 5 ether);
