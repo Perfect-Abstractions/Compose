@@ -25,22 +25,14 @@ library LibOwnerTwoSteps {
     error OwnerAlreadyRenounced();
 
     bytes32 constant OWNER_STORAGE_POSITION = keccak256("compose.owner");
-    bytes32 constant PENDING_OWNER_STORAGE_POSITION = keccak256("compose.owner.pending");
-
+    
     /**
      * @custom:storage-location erc8042:compose.owner
      */
     struct OwnerStorage {
         address owner;
     }
-
-    /**
-     * @custom:storage-location erc8042:compose.owner.pending
-     */
-    struct PendingOwnerStorage {
-        address pendingOwner;
-    }
-
+    
     /**
      * @notice Returns a pointer to the Owner storage struct.
      * @dev Uses inline assembly to access the storage slot defined by OWNER_STORAGE_POSITION.
@@ -51,6 +43,15 @@ library LibOwnerTwoSteps {
         assembly {
             s.slot := position
         }
+    }
+
+    bytes32 constant PENDING_OWNER_STORAGE_POSITION = keccak256("compose.owner.pending");
+
+    /**
+     * @custom:storage-location erc8042:compose.owner.pending
+     */
+    struct PendingOwnerStorage {
+        address pendingOwner;
     }
 
     /**
@@ -97,9 +98,8 @@ library LibOwnerTwoSteps {
         address previousOwner = ownerStorage.owner;
         if (previousOwner == address(0)) {
             revert OwnerAlreadyRenounced();
-        }
-        PendingOwnerStorage storage pendingStorage = getPendingOwnerStorage();
-        pendingStorage.pendingOwner = _newOwner;
+        }        
+        getPendingOwnerStorage().pendingOwner = _newOwner;
         emit OwnershipTransferStarted(previousOwner, _newOwner);
     }
 
