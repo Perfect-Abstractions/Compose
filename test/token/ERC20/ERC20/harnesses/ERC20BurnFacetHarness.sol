@@ -3,12 +3,16 @@ pragma solidity >=0.8.30;
 
 import {ERC20BurnFacet} from "../../../../../src/token/ERC20/ERC20/ERC20BurnFacet.sol";
 
-/// @title ERC20BurnFacetHarness
-/// @notice Test harness for ERC20BurnFacet that adds initialization and minting for testing
+/**
+ * @title ERC20BurnFacetHarness
+ * @notice Test harness for ERC20BurnFacet that adds initialization and minting for testing
+ */
 contract ERC20BurnFacetHarness is ERC20BurnFacet {
     event Approval(address indexed _owner, address indexed _spender, uint256 _value);
 
-    /// @notice ERC20 view helpers so tests can call the standard API
+    /**
+     * @notice ERC20 view helpers so tests can call the standard API
+     */
     function balanceOf(address _account) external view returns (uint256) {
         return getStorage().balanceOf[_account];
     }
@@ -21,7 +25,9 @@ contract ERC20BurnFacetHarness is ERC20BurnFacet {
         return getStorage().allowance[_owner][_spender];
     }
 
-    /// @notice Minimal approve implementation for tests (writes into the same storage used by burnFrom)
+    /**
+     * @notice Minimal approve implementation for tests (writes into the same storage used by burnFrom)
+     */
     function approve(address _spender, uint256 _value) external returns (bool) {
         require(_spender != address(0), "ERC20: approve to zero address");
         ERC20Storage storage s = getStorage();
@@ -30,8 +36,10 @@ contract ERC20BurnFacetHarness is ERC20BurnFacet {
         return true;
     }
 
-    /// @notice Mint tokens to an address
-    /// @dev Only used for testing - exposes internal mint functionality
+    /**
+     * @notice Mint tokens to an address
+     * @dev Only used for testing - exposes internal mint functionality
+     */
     function mint(address _to, uint256 _value) external {
         ERC20Storage storage s = getStorage();
         require(_to != address(0), "ERC20: mint to zero address");

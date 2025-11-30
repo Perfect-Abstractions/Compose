@@ -193,7 +193,9 @@ Example exception: `ERC721EnumerableFacet` reimplements logic rather than layeri
 (Inline example retained for clarity. Consider relocating to docs/examples and linking if file size becomes a concern.)
 
 ```solidity
-// SPDX-License-Identifier: MIT
+/**
+ * SPDX-License-Identifier: MIT
+ */
 pragma solidity >=0.8.30;
 
 contract ERC20StakingFacet {
@@ -207,13 +209,7 @@ contract ERC20StakingFacet {
     bytes32 constant ERC20_STORAGE_POSITION = keccak256("compose.erc20");
 
     struct ERC20Storage {
-        string name;
-        string symbol;
-        uint8 decimals;
-        uint256 totalSupply;
         mapping(address owner => uint256 balance) balanceOf;
-        mapping(address owner => mapping(address spender => uint256 allowance)) allowance;
-        // trailing mapping 'nonces' removed (unused in staking)
     }
 
     function getERC20Storage() internal pure returns (ERC20Storage storage s) {
@@ -317,6 +313,23 @@ Follow overarching design principles.
 - Parameters: prefix with `_` in events, errors, functions.
 - camelCase identifiers (except standardized uppercase acronyms like `ERC`).
 - Facet internal helpers may optionally prefix `internal` if name collision risk exists (keep internal helper usage minimal).
+
+### Comments
+- Use `/** */` block comment style for all documentation and inline comments.
+- For multiline comments, use proper block format with `*` on each line:
+  ```solidity
+  /**
+   * First line of comment.
+   * Second line of comment.
+   */
+  ```
+- Single-line comments also use block style: 
+  ```Solidity
+  /** 
+   * Single line comment. 
+   */
+  ```
+- Use NatSpec tags (`@title`,`@custom:`,`@notice`, `@dev`, `@param`, `@return`) for documentation.
 
 ### Resetting Values
 - Use `delete` for zeroing mappings/variables.

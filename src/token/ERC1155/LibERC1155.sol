@@ -1,8 +1,10 @@
 // SPDX-License-Identifier: MIT
 pragma solidity >=0.8.30;
 
-/// @title ERC-1155 Token Receiver Interface
-/// @notice Interface for contracts that want to handle safe transfers of ERC-1155 tokens.
+/**
+ * @title ERC-1155 Token Receiver Interface
+ * @notice Interface for contracts that want to handle safe transfers of ERC-1155 tokens.
+ */
 interface IERC1155Receiver {
     /**
      * @notice Handles the receipt of a single ERC-1155 token type.
@@ -47,62 +49,82 @@ interface IERC1155Receiver {
     ) external returns (bytes4);
 }
 
-/// @title LibERC1155 — ERC-1155 Library
-/// @notice Provides internal functions and storage layout for ERC-1155 multi-token logic.
-/// @dev Uses ERC-8042 for storage location standardization and ERC-6093 for error conventions.
-///      This library is intended to be used by custom facets to integrate with ERC-1155 functionality.
+/**
+ * @title LibERC1155 — ERC-1155 Library
+ * @notice Provides internal functions and storage layout for ERC-1155 multi-token logic.
+ * @dev Uses ERC-8042 for storage location standardization and ERC-6093 for error conventions.
+ *      This library is intended to be used by custom facets to integrate with ERC-1155 functionality.
+ */
 library LibERC1155 {
-    /// @notice Thrown when insufficient balance for a transfer or burn operation.
-    /// @param _sender Address attempting the operation.
-    /// @param _balance Current balance of the sender.
-    /// @param _needed Amount required to complete the operation.
-    /// @param _tokenId The token ID involved.
+    /**
+     * @notice Thrown when insufficient balance for a transfer or burn operation.
+     * @param _sender Address attempting the operation.
+     * @param _balance Current balance of the sender.
+     * @param _needed Amount required to complete the operation.
+     * @param _tokenId The token ID involved.
+     */
     error ERC1155InsufficientBalance(address _sender, uint256 _balance, uint256 _needed, uint256 _tokenId);
 
-    /// @notice Thrown when the sender address is invalid.
-    /// @param _sender Invalid sender address.
+    /**
+     * @notice Thrown when the sender address is invalid.
+     * @param _sender Invalid sender address.
+     */
     error ERC1155InvalidSender(address _sender);
 
-    /// @notice Thrown when the receiver address is invalid.
-    /// @param _receiver Invalid receiver address.
+    /**
+     * @notice Thrown when the receiver address is invalid.
+     * @param _receiver Invalid receiver address.
+     */
     error ERC1155InvalidReceiver(address _receiver);
 
-    /// @notice Thrown when array lengths don't match in batch operations.
-    /// @param _idsLength Length of the ids array.
-    /// @param _valuesLength Length of the values array.
+    /**
+     * @notice Thrown when array lengths don't match in batch operations.
+     * @param _idsLength Length of the ids array.
+     * @param _valuesLength Length of the values array.
+     */
     error ERC1155InvalidArrayLength(uint256 _idsLength, uint256 _valuesLength);
 
-    /// @notice Thrown when missing approval for an operator.
-    /// @param _operator Address attempting the operation.
-    /// @param _owner The token owner.
+    /**
+     * @notice Thrown when missing approval for an operator.
+     * @param _operator Address attempting the operation.
+     * @param _owner The token owner.
+     */
     error ERC1155MissingApprovalForAll(address _operator, address _owner);
 
-    /// @notice Emitted when a single token type is transferred.
-    /// @param _operator The address which initiated the transfer.
-    /// @param _from The address which previously owned the token.
-    /// @param _to The address which now owns the token.
-    /// @param _id The token type being transferred.
-    /// @param _value The amount of tokens transferred.
+    /**
+     * @notice Emitted when a single token type is transferred.
+     * @param _operator The address which initiated the transfer.
+     * @param _from The address which previously owned the token.
+     * @param _to The address which now owns the token.
+     * @param _id The token type being transferred.
+     * @param _value The amount of tokens transferred.
+     */
     event TransferSingle(
         address indexed _operator, address indexed _from, address indexed _to, uint256 _id, uint256 _value
     );
 
-    /// @notice Emitted when multiple token types are transferred.
-    /// @param _operator The address which initiated the batch transfer.
-    /// @param _from The address which previously owned the tokens.
-    /// @param _to The address which now owns the tokens.
-    /// @param _ids The token types being transferred.
-    /// @param _values The amounts of tokens transferred.
+    /**
+     * @notice Emitted when multiple token types are transferred.
+     * @param _operator The address which initiated the batch transfer.
+     * @param _from The address which previously owned the tokens.
+     * @param _to The address which now owns the tokens.
+     * @param _ids The token types being transferred.
+     * @param _values The amounts of tokens transferred.
+     */
     event TransferBatch(
         address indexed _operator, address indexed _from, address indexed _to, uint256[] _ids, uint256[] _values
     );
 
-    /// @notice Emitted when the URI for token type `_id` changes to `_value`.
-    /// @param _value The new URI for the token type.
-    /// @param _id The token type whose URI changed.
+    /**
+     * @notice Emitted when the URI for token type `_id` changes to `_value`.
+     * @param _value The new URI for the token type.
+     * @param _id The token type whose URI changed.
+     */
     event URI(string _value, uint256 indexed _id);
 
-    /// @dev Storage position determined by the keccak256 hash of the diamond storage identifier.
+    /**
+     * @dev Storage position determined by the keccak256 hash of the diamond storage identifier.
+     */
     bytes32 constant STORAGE_POSITION = keccak256("compose.erc1155");
 
     /**
@@ -292,7 +314,9 @@ library LibERC1155 {
 
         ERC1155Storage storage s = getStorage();
 
-        // Check authorization
+        /**
+         * Check authorization
+         */
         if (_from != _operator && !s.isApprovedForAll[_from][_operator]) {
             revert ERC1155MissingApprovalForAll(_operator, _from);
         }
@@ -357,7 +381,9 @@ library LibERC1155 {
 
         ERC1155Storage storage s = getStorage();
 
-        // Check authorization
+        /**
+         * Check authorization
+         */
         if (_from != _operator && !s.isApprovedForAll[_from][_operator]) {
             revert ERC1155MissingApprovalForAll(_operator, _from);
         }

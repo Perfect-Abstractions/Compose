@@ -42,9 +42,11 @@ contract LibERC1155Test is Test {
         harness.initialize(DEFAULT_URI);
     }
 
-    // ============================================
-    // URI Tests
-    // ============================================
+    /**
+     * ============================================
+     * URI Tests
+     * ============================================
+     */
 
     function test_Uri_DefaultUri() public view {
         assertEq(harness.uri(TOKEN_ID_1), DEFAULT_URI);
@@ -62,9 +64,11 @@ contract LibERC1155Test is Test {
         harness.setTokenURI(TOKEN_ID_1, TOKEN_URI);
     }
 
-    // ============================================
-    // Mint Tests
-    // ============================================
+    /**
+     * ============================================
+     * Mint Tests
+     * ============================================
+     */
 
     function test_Mint() public {
         uint256 amount = 100;
@@ -108,9 +112,11 @@ contract LibERC1155Test is Test {
         harness.mint(address(0), TOKEN_ID_1, 100);
     }
 
-    // ============================================
-    // MintBatch Tests
-    // ============================================
+    /**
+     * ============================================
+     * MintBatch Tests
+     * ============================================
+     */
 
     function test_MintBatch() public {
         uint256[] memory ids = new uint256[](3);
@@ -159,7 +165,9 @@ contract LibERC1155Test is Test {
         uint256[] memory amounts = new uint256[](0);
 
         harness.mintBatch(alice, ids, amounts);
-        // Should not revert
+        /**
+         * Should not revert
+         */
     }
 
     function test_Mint_ToReceiverContract() public {
@@ -220,9 +228,11 @@ contract LibERC1155Test is Test {
         harness.mintBatch(address(receiver), ids, amounts);
     }
 
-    // ============================================
-    // Burn Tests
-    // ============================================
+    /**
+     * ============================================
+     * Burn Tests
+     * ============================================
+     */
 
     function test_Burn() public {
         harness.mint(alice, TOKEN_ID_1, 100);
@@ -273,9 +283,11 @@ contract LibERC1155Test is Test {
         harness.burn(alice, TOKEN_ID_1, 1);
     }
 
-    // ============================================
-    // BurnBatch Tests
-    // ============================================
+    /**
+     * ============================================
+     * BurnBatch Tests
+     * ============================================
+     */
 
     function test_BurnBatch() public {
         uint256[] memory ids = new uint256[](3);
@@ -349,9 +361,11 @@ contract LibERC1155Test is Test {
         harness.burnBatch(alice, ids, burnAmounts);
     }
 
-    // ============================================
-    // SafeTransferFrom Tests
-    // ============================================
+    /**
+     * ============================================
+     * SafeTransferFrom Tests
+     * ============================================
+     */
 
     function test_SafeTransferFrom_ByOwner() public {
         harness.mint(alice, TOKEN_ID_1, 100);
@@ -411,7 +425,9 @@ contract LibERC1155Test is Test {
         harness.safeTransferFrom(from, to, id, amount);
 
         if (from == to) {
-            // Self-transfer is a no-op; balance remains unchanged
+            /**
+             * Self-transfer is a no-op; balance remains unchanged
+             */
             assertEq(harness.balanceOf(from, id), amount);
         } else {
             assertEq(harness.balanceOf(from, id), 0);
@@ -460,17 +476,23 @@ contract LibERC1155Test is Test {
     function test_RevertWhen_MintOverflowsRecipient() public {
         uint256 nearMaxBalance = type(uint256).max - 100;
 
-        // Mint near-max tokens to alice
+        /**
+         * Mint near-max tokens to alice
+         */
         harness.mint(alice, TOKEN_ID_1, nearMaxBalance);
 
-        // Try to mint more, which would overflow
+        /**
+         * Try to mint more, which would overflow
+         */
         vm.expectRevert(); // Arithmetic overflow
         harness.mint(alice, TOKEN_ID_1, 200);
     }
 
-    // ============================================
-    // SafeBatchTransferFrom Tests
-    // ============================================
+    /**
+     * ============================================
+     * SafeBatchTransferFrom Tests
+     * ============================================
+     */
 
     function test_SafeBatchTransferFrom_ByOwner() public {
         uint256[] memory ids = new uint256[](2);
@@ -600,9 +622,11 @@ contract LibERC1155Test is Test {
         harness.safeBatchTransferFrom(alice, bob, ids, transferAmounts);
     }
 
-    // ============================================
-    // BalanceOf Tests
-    // ============================================
+    /**
+     * ============================================
+     * BalanceOf Tests
+     * ============================================
+     */
 
     function test_BalanceOf_AfterMint() public {
         harness.mint(alice, TOKEN_ID_1, 100);
@@ -621,9 +645,11 @@ contract LibERC1155Test is Test {
         assertEq(harness.balanceOf(address(0), TOKEN_ID_1), 0);
     }
 
-    // ============================================
-    // BalanceOfBatch Tests
-    // ============================================
+    /**
+     * ============================================
+     * BalanceOfBatch Tests
+     * ============================================
+     */
 
     function test_BalanceOfBatch() public {
         harness.mint(alice, TOKEN_ID_1, 100);
@@ -709,9 +735,11 @@ contract LibERC1155Test is Test {
         assertEq(balances[2], 300);
     }
 
-    // ============================================
-    // Approval Tests
-    // ============================================
+    /**
+     * ============================================
+     * Approval Tests
+     * ============================================
+     */
 
     function test_SetApprovalForAll() public {
         vm.prank(alice);
@@ -746,9 +774,11 @@ contract LibERC1155Test is Test {
         assertEq(harness.isApprovedForAll(owner, operator), approved);
     }
 
-    // ============================================
-    // Receiver Hook Tests
-    // ============================================
+    /**
+     * ============================================
+     * Receiver Hook Tests
+     * ============================================
+     */
 
     function test_SafeTransferFrom_ToContractWithAcceptance() public {
         ERC1155ReceiverMock receiver = new ERC1155ReceiverMock(
@@ -953,7 +983,9 @@ contract LibERC1155Test is Test {
 
         vm.prank(alice);
         harness.safeBatchTransferFrom(alice, bob, ids, amounts);
-        // Should not revert
+        /**
+         * Should not revert
+         */
     }
 
     function test_SafeBatchTransferFrom_WithZeroAmounts() public {
@@ -1003,27 +1035,39 @@ contract LibERC1155Test is Test {
         assertEq(harness.balanceOf(bob, TOKEN_ID_1), 30);
     }
 
-    // ============================================
-    // Integration Tests
-    // ============================================
+    /**
+     * ============================================
+     * Integration Tests
+     * ============================================
+     */
 
     function test_MintTransferBurn_Flow() public {
-        // Mint to alice
+        /**
+         * Mint to alice
+         */
         harness.mint(alice, TOKEN_ID_1, 1000);
         harness.mint(alice, TOKEN_ID_2, 500);
 
-        // Alice transfers some to bob
+        /**
+         * Alice transfers some to bob
+         */
         vm.prank(alice);
         harness.safeTransferFrom(alice, bob, TOKEN_ID_1, 300);
 
-        // Bob transfers some to charlie
+        /**
+         * Bob transfers some to charlie
+         */
         vm.prank(bob);
         harness.safeTransferFrom(bob, charlie, TOKEN_ID_1, 100);
 
-        // Burn from alice
+        /**
+         * Burn from alice
+         */
         harness.burn(alice, TOKEN_ID_1, 200);
 
-        // Verify final balances
+        /**
+         * Verify final balances
+         */
         assertEq(harness.balanceOf(alice, TOKEN_ID_1), 500);
         assertEq(harness.balanceOf(alice, TOKEN_ID_2), 500);
         assertEq(harness.balanceOf(bob, TOKEN_ID_1), 200);
@@ -1041,10 +1085,14 @@ contract LibERC1155Test is Test {
         mintAmounts[1] = 2000;
         mintAmounts[2] = 3000;
 
-        // Mint batch to alice
+        /**
+         * Mint batch to alice
+         */
         harness.mintBatch(alice, ids, mintAmounts);
 
-        // Alice transfers batch to bob
+        /**
+         * Alice transfers batch to bob
+         */
         uint256[] memory transferAmounts = new uint256[](3);
         transferAmounts[0] = 300;
         transferAmounts[1] = 400;
@@ -1053,7 +1101,9 @@ contract LibERC1155Test is Test {
         vm.prank(alice);
         harness.safeBatchTransferFrom(alice, bob, ids, transferAmounts);
 
-        // Burn batch from alice
+        /**
+         * Burn batch from alice
+         */
         uint256[] memory burnAmounts = new uint256[](3);
         burnAmounts[0] = 200;
         burnAmounts[1] = 300;
@@ -1061,7 +1111,9 @@ contract LibERC1155Test is Test {
 
         harness.burnBatch(alice, ids, burnAmounts);
 
-        // Verify final balances
+        /**
+         * Verify final balances
+         */
         assertEq(harness.balanceOf(alice, TOKEN_ID_1), 500);
         assertEq(harness.balanceOf(alice, TOKEN_ID_2), 1300);
         assertEq(harness.balanceOf(alice, TOKEN_ID_3), 2100);
@@ -1073,22 +1125,30 @@ contract LibERC1155Test is Test {
     function test_ApprovalAndTransfer_Flow() public {
         harness.mint(alice, TOKEN_ID_1, 1000);
 
-        // Alice approves bob
+        /**
+         * Alice approves bob
+         */
         vm.prank(alice);
         harness.setApprovalForAll(bob, true);
 
-        // Bob transfers on behalf of alice
+        /**
+         * Bob transfers on behalf of alice
+         */
         vm.prank(bob);
         harness.safeTransferFrom(alice, charlie, TOKEN_ID_1, 300);
 
         assertEq(harness.balanceOf(alice, TOKEN_ID_1), 700);
         assertEq(harness.balanceOf(charlie, TOKEN_ID_1), 300);
 
-        // Alice revokes approval
+        /**
+         * Alice revokes approval
+         */
         vm.prank(alice);
         harness.setApprovalForAll(bob, false);
 
-        // Bob can no longer transfer
+        /**
+         * Bob can no longer transfer
+         */
         vm.prank(bob);
         vm.expectRevert(abi.encodeWithSelector(LibERC1155.ERC1155MissingApprovalForAll.selector, bob, alice));
         harness.safeTransferFrom(alice, charlie, TOKEN_ID_1, 100);

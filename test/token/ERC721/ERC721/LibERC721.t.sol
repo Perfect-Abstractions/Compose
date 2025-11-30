@@ -2,10 +2,10 @@
 pragma solidity >=0.8.30;
 
 import {Test} from "forge-std/Test.sol";
-import {LibERC721} from "../../../../../src/token/ERC721/ERC721/LibERC721.sol";
 import {LibERC721Harness} from "./harnesses/LibERC721Harness.sol";
+import {LibERC721} from "../../../../src/token/ERC721/ERC721/LibERC721.sol";
 
-contract ERC721Test is Test {
+contract LibERC721Test is Test {
     LibERC721Harness public harness;
 
     address public alice;
@@ -25,9 +25,11 @@ contract ERC721Test is Test {
         harness.initialize(TOKEN_NAME, TOKEN_SYMBOL, BASE_URI);
     }
 
-    // ============================================
-    // Metadata Tests
-    // ============================================
+    /**
+     * ============================================
+     * Metadata Tests
+     * ============================================
+     */
 
     function test_Name() public view {
         assertEq(harness.name(), TOKEN_NAME);
@@ -41,9 +43,11 @@ contract ERC721Test is Test {
         assertEq(harness.baseURI(), BASE_URI);
     }
 
-    // ============================================
-    // TransferFrom Tests
-    // ============================================
+    /**
+     * ============================================
+     * TransferFrom Tests
+     * ============================================
+     */
 
     function test_TransferFrom() public {
         uint256 tokenId = 1;
@@ -98,9 +102,11 @@ contract ERC721Test is Test {
         harness.transferFrom(alice, charlie, tokenId);
     }
 
-    // ============================================
-    // Mint Tests
-    // ============================================
+    /**
+     * ============================================
+     * Mint Tests
+     * ============================================
+     */
 
     function test_Mint() public {
         uint256 tokenId = 5;
@@ -131,9 +137,11 @@ contract ERC721Test is Test {
         harness.mint(address(0), tokenId);
     }
 
-    // ============================================
-    // Burn Tests
-    // ============================================
+    /**
+     * ============================================
+     * Burn Tests
+     * ============================================
+     */
 
     function test_Burn() public {
         uint256 tokenId = 7;

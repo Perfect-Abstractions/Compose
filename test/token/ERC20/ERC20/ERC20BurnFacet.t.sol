@@ -122,24 +122,34 @@ contract ERC20BurnFacetTest is Test {
         uint256 amount = 100e18;
         uint256 maxAllowance = type(uint256).max;
 
-        // Set unlimited allowance
+        /**
+         * Set unlimited allowance
+         */
         vm.prank(alice);
         token.approve(bob, maxAllowance);
 
-        // Perform first burn
+        /**
+         * Perform first burn
+         */
         vm.prank(bob);
         token.burnFrom(alice, amount);
 
-        // Check that allowance remains unchanged (unlimited)
+        /**
+         * Check that allowance remains unchanged (unlimited)
+         */
         assertEq(token.allowance(alice, bob), maxAllowance);
         assertEq(token.balanceOf(alice), INITIAL_SUPPLY - amount);
         assertEq(token.totalSupply(), INITIAL_SUPPLY - amount);
 
-        // Perform second burn to verify allowance is still unlimited
+        /**
+         * Perform second burn to verify allowance is still unlimited
+         */
         vm.prank(bob);
         token.burnFrom(alice, amount);
 
-        // Check that allowance is still unchanged (unlimited)
+        /**
+         * Check that allowance is still unchanged (unlimited)
+         */
         assertEq(token.allowance(alice, bob), maxAllowance);
         assertEq(token.balanceOf(alice), INITIAL_SUPPLY - 2 * amount);
         assertEq(token.totalSupply(), INITIAL_SUPPLY - 2 * amount);
@@ -150,20 +160,28 @@ contract ERC20BurnFacetTest is Test {
         uint256 burnAmount = 50e18;
         uint256 numBurns = 10;
 
-        // Set unlimited allowance
+        /**
+         * Set unlimited allowance
+         */
         vm.prank(alice);
         token.approve(bob, maxAllowance);
 
-        // Perform multiple burns
+        /**
+         * Perform multiple burns
+         */
         for (uint256 i = 0; i < numBurns; i++) {
             vm.prank(bob);
             token.burnFrom(alice, burnAmount);
 
-            // Verify allowance remains unlimited after each burn
+            /**
+             * Verify allowance remains unlimited after each burn
+             */
             assertEq(token.allowance(alice, bob), maxAllowance);
         }
 
-        // Verify final balances and total supply
+        /**
+         * Verify final balances and total supply
+         */
         assertEq(token.balanceOf(alice), INITIAL_SUPPLY - (burnAmount * numBurns));
         assertEq(token.totalSupply(), INITIAL_SUPPLY - (burnAmount * numBurns));
     }

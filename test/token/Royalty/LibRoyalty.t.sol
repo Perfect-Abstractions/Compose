@@ -24,9 +24,11 @@ contract LibRoyaltyTest is Test {
         harness = new LibRoyaltyHarness();
     }
 
-    // ============================================
-    // royaltyInfo Tests
-    // ============================================
+    /**
+     * ============================================
+     * royaltyInfo Tests
+     * ============================================
+     */
 
     function test_RoyaltyInfo_NoRoyaltySet() public view {
         uint256 tokenId = 1;
@@ -55,7 +57,9 @@ contract LibRoyaltyTest is Test {
         uint256 tokenId = 1;
         uint96 feeNumerator = 500; // 5%
         uint256 salePrice = 100 ether;
-        // Calculation: (100 ether * 500) / 10000 = 5 ether
+        /**
+         * 500) / 10000 = 5 ether
+         */
         uint256 expectedRoyalty = 5 ether;
 
         harness.setDefaultRoyalty(royaltyReceiver, feeNumerator);
@@ -69,7 +73,9 @@ contract LibRoyaltyTest is Test {
     function test_RoyaltyInfo_10PercentRoyalty() public {
         uint96 feeNumerator = 1000; // 10%
         uint256 salePrice = 50 ether;
-        // Calculation: (50 ether * 1000) / 10000 = 5 ether
+        /**
+         * 1000) / 10000 = 5 ether
+         */
         uint256 expectedRoyalty = 5 ether;
 
         harness.setDefaultRoyalty(royaltyReceiver, feeNumerator);
@@ -83,7 +89,9 @@ contract LibRoyaltyTest is Test {
     function test_RoyaltyInfo_50PercentRoyalty() public {
         uint96 feeNumerator = 5000; // 50%
         uint256 salePrice = 10 ether;
-        // Calculation: (10 ether * 5000) / 10000 = 5 ether
+        /**
+         * 5000) / 10000 = 5 ether
+         */
         uint256 expectedRoyalty = 5 ether;
 
         harness.setDefaultRoyalty(royaltyReceiver, feeNumerator);
@@ -97,7 +105,9 @@ contract LibRoyaltyTest is Test {
     function test_RoyaltyInfo_100PercentRoyalty() public {
         uint96 feeNumerator = 10000; // 100%
         uint256 salePrice = 1 ether;
-        // Calculation: (1 ether * 10000) / 10000 = 1 ether
+        /**
+         * 10000) / 10000 = 1 ether
+         */
         uint256 expectedRoyalty = 1 ether;
 
         harness.setDefaultRoyalty(royaltyReceiver, feeNumerator);
@@ -120,7 +130,9 @@ contract LibRoyaltyTest is Test {
         (address receiver, uint256 royaltyAmount) = harness.royaltyInfo(tokenId, salePrice);
 
         assertEq(receiver, bob);
-        // Calculation: (100 ether * 750) / 10000 = 7.5 ether
+        /**
+         * 750) / 10000 = 7.5 ether
+         */
         assertEq(royaltyAmount, 7.5 ether);
     }
 
@@ -136,7 +148,9 @@ contract LibRoyaltyTest is Test {
         (address receiver, uint256 royaltyAmount) = harness.royaltyInfo(tokenId, salePrice);
 
         assertEq(receiver, bob);
-        // Calculation: (100 ether * 250) / 10000 = 2.5 ether
+        /**
+         * 250) / 10000 = 2.5 ether
+         */
         assertEq(royaltyAmount, 2.5 ether);
     }
 
@@ -232,9 +246,11 @@ contract LibRoyaltyTest is Test {
         assertEq(royalty2, 5 ether);
     }
 
-    // ============================================
-    // setDefaultRoyalty Tests
-    // ============================================
+    /**
+     * ============================================
+     * setDefaultRoyalty Tests
+     * ============================================
+     */
 
     function test_SetDefaultRoyalty() public {
         uint96 feeNumerator = 500; // 5%
@@ -293,9 +309,11 @@ contract LibRoyaltyTest is Test {
         harness.setDefaultRoyalty(address(0), 500);
     }
 
-    // ============================================
-    // deleteDefaultRoyalty Tests
-    // ============================================
+    /**
+     * ============================================
+     * deleteDefaultRoyalty Tests
+     * ============================================
+     */
 
     function test_DeleteDefaultRoyalty() public {
         harness.setDefaultRoyalty(royaltyReceiver, 500);
@@ -328,9 +346,11 @@ contract LibRoyaltyTest is Test {
         assertEq(royaltyAmount, 0);
     }
 
-    // ============================================
-    // setTokenRoyalty Tests
-    // ============================================
+    /**
+     * ============================================
+     * setTokenRoyalty Tests
+     * ============================================
+     */
 
     function test_SetTokenRoyalty() public {
         uint256 tokenId = 1;
@@ -415,9 +435,11 @@ contract LibRoyaltyTest is Test {
         harness.setTokenRoyalty(tokenId, address(0), 500);
     }
 
-    // ============================================
-    // resetTokenRoyalty Tests
-    // ============================================
+    /**
+     * ============================================
+     * resetTokenRoyalty Tests
+     * ============================================
+     */
 
     function test_ResetTokenRoyalty() public {
         uint256 tokenId = 1;
@@ -467,9 +489,11 @@ contract LibRoyaltyTest is Test {
         assertEq(harness.getTokenRoyaltyFraction(tokenId), 0);
     }
 
-    // ============================================
-    // Integration Tests
-    // ============================================
+    /**
+     * ============================================
+     * Integration Tests
+     * ============================================
+     */
 
     function test_SetDefaultThenTokenThenReset() public {
         uint256 tokenId = 5;

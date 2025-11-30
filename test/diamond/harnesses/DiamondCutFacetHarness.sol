@@ -3,14 +3,18 @@ pragma solidity >=0.8.30;
 
 import {DiamondCutFacet} from "../../../src/diamond/DiamondCutFacet.sol";
 
-/// @title DiamondCutFacetHarness
-/// @notice Test harness for DiamondCutFacet that adds initializaton
+/**
+ * @title DiamondCutFacetHarness
+ * @notice Test harness for DiamondCutFacet that adds initializaton
+ */
 contract DiamondCutFacetHarness is DiamondCutFacet {
     error FunctionNotFound(bytes4 selector);
 
-    /// @notice Initialize DiamondCutFacet owner storage
-    /// @dev Only used for testing - production diamonds should initialize in constructor
-    /// @param _owner Address of the Facet owner
+    /**
+     * @notice Initialize DiamondCutFacet owner storage
+     * @dev Only used for testing - production diamonds should initialize in constructor
+     * @param _owner Address of the Facet owner
+     */
     function initialize(address _owner) external {
         OwnerStorage storage s = getOwnerStorage();
 

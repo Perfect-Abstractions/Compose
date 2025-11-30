@@ -14,7 +14,9 @@ abstract contract BaseBenchmark is Utils {
         diamond = new MinimalDiamond();
         loupe = _deployLoupe();
 
-        // Initialize minimal diamond with DiamondLoupeFacet address and selectors.
+        /**
+         * Initialize minimal diamond with DiamondLoupeFacet address and selectors.
+         */
         bytes4[] memory loupeSelectors = new bytes4[](NUM_LOUPE_SELECTORS);
         loupeSelectors[0] = SELECTOR_FACETS;
         loupeSelectors[1] = SELECTOR_FACET_FUNCTION_SELECTORS;
@@ -29,7 +31,9 @@ abstract contract BaseBenchmark is Utils {
 
         diamond.initialize(dc, address(0), "");
 
-        // Initiatlise complex storage for minimal diamond
+        /**
+         * Initiatlise complex storage for minimal diamond
+         */
         _buildDiamond(address(diamond), NUM_FACETS, SELECTORS_PER_FACET);
     }
 

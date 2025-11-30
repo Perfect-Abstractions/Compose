@@ -1,4 +1,4 @@
-//SPDX-License-Identifier: MIT
+// SPDX-License-Identifier: MIT
 pragma solidity >=0.8.30;
 
 import {Test} from "forge-std/Test.sol";
@@ -20,9 +20,11 @@ contract ERC721BurnFacetTest is Test {
         harness = new ERC721BurnFacetHarness();
     }
 
-    // ============================================
-    // Burn Tests
-    // ============================================
+    /**
+     * ============================================
+     * Burn Tests
+     * ============================================
+     */
 
     function test_Burn() public {
         uint256 tokenId = 7;

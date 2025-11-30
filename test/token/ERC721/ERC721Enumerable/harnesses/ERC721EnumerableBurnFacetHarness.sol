@@ -6,18 +6,25 @@ import {
 } from "../../../../../src/token/ERC721/ERC721Enumerable/ERC721EnumerableBurnFacet.sol";
 import {LibERC721Enumerable} from "../../../../../src/token/ERC721/ERC721Enumerable/LibERC721Enumerable.sol";
 
-/// @title ERC721EnumerableBurnFacetHarness
-/// @notice Lightweight harness combining read/transfer functionality with burn entrypoint for testing.
+/**
+ * @title ERC721EnumerableBurnFacetHarness
+ * @notice Lightweight harness combining read/transfer functionality with burn entrypoint for testing.
+ */
 contract ERC721EnumerableBurnFacetHarness is ERC721EnumerableBurnFacet {
-    /// @notice Initialize collection metadata for tests.
-    // function initialize(string memory _name, string memory _symbol, string memory _baseURI) external {
-    //     ERC721EnumerableStorage storage s = getStorage();
-    //     s.name = _name;
-    //     s.symbol = _symbol;
-    //     s.baseURI = _baseURI;
-    // }
-
-    /// @notice Mint helper for tests (not part of production facet surface).
+    /**
+     * @notice Initialize collection metadata for tests.
+     */
+    /**
+     * function initialize(string memory _name, string memory _symbol, string memory _baseURI) external {
+     * ERC721EnumerableStorage storage s = getStorage();
+     * s.name = _name;
+     * s.symbol = _symbol;
+     * s.baseURI = _baseURI;
+     * }
+     */
+    /**
+     * @notice Mint helper for tests (not part of production facet surface).
+     */
     function mint(address _to, uint256 _tokenId) external {
         LibERC721Enumerable.mint(_to, _tokenId);
     }
@@ -41,11 +48,13 @@ contract ERC721EnumerableBurnFacetHarness is ERC721EnumerableBurnFacet {
     function tokenOfOwnerByIndex(address _owner, uint256 _index) external view returns (uint256) {
         ERC721EnumerableStorage storage s = getStorage();
         if (_index >= s.ownerTokens[_owner].length) {
-            // We don't have the error defined in this facet, so we revert with generic or define it?
-            // The test expects ERC721OutOfBoundsIndex?
-            // Wait, the test `test_Burn_UpdatesEnumerationOrdering` calls `tokenOfOwnerByIndex`.
-            // If I don't implement it correctly, it fails.
-            // The test doesn't check for revert on this function, it checks return value.
+            /**
+             * We don't have the error defined in this facet, so we revert with generic or define it?
+             * The test expects ERC721OutOfBoundsIndex?
+             * Wait, the test `test_Burn_UpdatesEnumerationOrdering` calls `tokenOfOwnerByIndex`.
+             * If I don't implement it correctly, it fails.
+             * The test doesn't check for revert on this function, it checks return value.
+             */
             revert("Index out of bounds");
         }
         return s.ownerTokens[_owner][_index];
@@ -57,7 +66,9 @@ contract ERC721EnumerableBurnFacetHarness is ERC721EnumerableBurnFacet {
         if (owner == address(0)) {
             revert ERC721NonexistentToken(_tokenId);
         }
-        // Simplified approve for testing burn
+        /**
+         * Simplified approve for testing burn
+         */
         s.approved[_tokenId] = _to;
     }
 }

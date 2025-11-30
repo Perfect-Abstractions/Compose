@@ -14,7 +14,9 @@ contract OwnerFacetTest is Test {
     address BOB = makeAddr("bob");
     address ZERO_ADDRESS = address(0);
 
-    // Events
+    /**
+     * Events
+     */
     event OwnershipTransferred(address indexed previousOwner, address indexed newOwner);
 
     function setUp() public {
@@ -22,9 +24,11 @@ contract OwnerFacetTest is Test {
         ownerFacet.initialize(INITIAL_OWNER);
     }
 
-    // ============================================
-    // Ownership Getter Tests
-    // ============================================
+    /**
+     * ============================================
+     * Ownership Getter Tests
+     * ============================================
+     */
 
     function test_Owner_ReturnsCorrectInitialOwner() public view {
         assertEq(ownerFacet.owner(), INITIAL_OWNER);
@@ -37,9 +41,11 @@ contract OwnerFacetTest is Test {
         assertEq(ownerFacet.owner(), ZERO_ADDRESS);
     }
 
-    // ============================================
-    // Transfer Ownership Tests
-    // ============================================
+    /**
+     * ============================================
+     * Transfer Ownership Tests
+     * ============================================
+     */
 
     function test_TransferOwnership_ImmediateTransfer() public {
         vm.prank(INITIAL_OWNER);
@@ -57,17 +63,23 @@ contract OwnerFacetTest is Test {
     }
 
     function test_TransferOwnership_MultipleTransfers() public {
-        // First transfer
+        /**
+         * First transfer
+         */
         vm.prank(INITIAL_OWNER);
         ownerFacet.transferOwnership(ALICE);
         assertEq(ownerFacet.owner(), ALICE);
 
-        // Second transfer
+        /**
+         * Second transfer
+         */
         vm.prank(ALICE);
         ownerFacet.transferOwnership(BOB);
         assertEq(ownerFacet.owner(), BOB);
 
-        // Third transfer
+        /**
+         * Third transfer
+         */
         vm.prank(BOB);
         ownerFacet.transferOwnership(NEW_OWNER);
         assertEq(ownerFacet.owner(), NEW_OWNER);
@@ -95,9 +107,11 @@ contract OwnerFacetTest is Test {
         ownerFacet.transferOwnership(ALICE);
     }
 
-    // ============================================
-    // Renounce Ownership Tests
-    // ============================================
+    /**
+     * ============================================
+     * Renounce Ownership Tests
+     * ============================================
+     */
 
     function test_RenounceOwnership_SetsOwnerToZero() public {
         vm.prank(INITIAL_OWNER);
@@ -118,22 +132,30 @@ contract OwnerFacetTest is Test {
         vm.prank(INITIAL_OWNER);
         ownerFacet.transferOwnership(ZERO_ADDRESS);
 
-        // ALICE (non-owner) cannot transfer
+        /**
+         * ALICE (non-owner) cannot transfer
+         */
         vm.expectRevert(OwnerFacet.OwnerUnauthorizedAccount.selector);
         vm.prank(ALICE);
         ownerFacet.transferOwnership(BOB);
 
-        // BOB (non-owner) cannot transfer
+        /**
+         * BOB (non-owner) cannot transfer
+         */
         vm.expectRevert(OwnerFacet.OwnerUnauthorizedAccount.selector);
         vm.prank(BOB);
         ownerFacet.transferOwnership(ALICE);
 
-        // Note: Zero address cannot make any calls since it has no private key
+        /**
+         * Note: Zero address cannot make any calls since it has no private key
+         */
     }
 
-    // ============================================
-    // Renounce Ownership Direct Call Tests
-    // ============================================
+    /**
+     * ============================================
+     * Renounce Ownership Direct Call Tests
+     * ============================================
+     */
 
     function test_RenounceOwnership_DirectCall_SetsOwnerToZero() public {
         vm.prank(INITIAL_OWNER);
@@ -156,9 +178,11 @@ contract OwnerFacetTest is Test {
         ownerFacet.renounceOwnership();
     }
 
-    // ============================================
-    // Edge Cases
-    // ============================================
+    /**
+     * ============================================
+     * Edge Cases
+     * ============================================
+     */
 
     function test_TransferOwnership_EmitsCorrectPreviousOwner() public {
         vm.prank(INITIAL_OWNER);
@@ -178,7 +202,9 @@ contract OwnerFacetTest is Test {
         vm.prank(INITIAL_OWNER);
         ownerFacet.transferOwnership(NEW_OWNER);
 
-        // Read directly from storage
+        /**
+         * Read directly from storage
+         */
         bytes32 storedValue = vm.load(address(ownerFacet), expectedSlot);
         address storedOwner = address(uint160(uint256(storedValue)));
 
@@ -186,9 +212,11 @@ contract OwnerFacetTest is Test {
         assertEq(ownerFacet.owner(), NEW_OWNER);
     }
 
-    // ============================================
-    // Fuzz Tests
-    // ============================================
+    /**
+     * ============================================
+     * Fuzz Tests
+     * ============================================
+     */
 
     function testFuzz_TransferOwnership(address newOwner) public {
         vm.prank(INITIAL_OWNER);
@@ -226,15 +254,21 @@ contract OwnerFacetTest is Test {
     function testFuzz_RenouncePreventsAllTransfers(address caller, address target) public {
         vm.assume(caller != address(0));
 
-        // Renounce ownership
+        /**
+         * Renounce ownership
+         */
         vm.prank(INITIAL_OWNER);
         ownerFacet.transferOwnership(ZERO_ADDRESS);
 
-        // No one can transfer anymore
+        /**
+         * No one can transfer anymore
+         */
         vm.prank(caller);
         vm.expectRevert(OwnerFacet.OwnerUnauthorizedAccount.selector);
         ownerFacet.transferOwnership(target);
     }
 
-    // ============================================
+    /**
+     * ============================================
+     */
 }

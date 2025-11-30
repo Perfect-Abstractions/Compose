@@ -23,11 +23,11 @@ contract Utils is Test {
         return keccak256(abi.encode(selector, DIAMOND_STORAGE_POSITION));
     }
 
-    function _packFacetAndPosition(address facet, uint16 position) internal pure returns (bytes32) {
+    function _packFacetAndPosition(address facet, uint32 position) internal pure returns (bytes32) {
         return bytes32((uint256(uint160(facet))) | (uint256(position) << 160));
     }
 
-    function _storeFacetAndPosition(address account, bytes4 selector, address facet, uint16 position) internal {
+    function _storeFacetAndPosition(address account, bytes4 selector, address facet, uint32 position) internal {
         vm.store(account, _facetAndPositionsSlot(selector), _packFacetAndPosition(facet, position));
     }
 
@@ -66,7 +66,7 @@ contract Utils is Test {
         uint256 globalIndex = 4;
         for (uint256 f = 0; f < nFacets; f++) {
             address facet = _facetAddr(f);
-            for (uint16 j = 0; j < perFacet; j++) {
+            for (uint32 j = 0; j < perFacet; j++) {
                 bytes4 selector = _selectorFor(f, j);
 
                 _storeSelectorAtIndex(account, selector, globalIndex);
@@ -84,7 +84,7 @@ contract Utils is Test {
         return makeAddr(string.concat("facet ", vm.toString(f)));
     }
 
-    function _selectorFor(uint256 f, uint16 j) internal pure returns (bytes4) {
+    function _selectorFor(uint256 f, uint32 j) internal pure returns (bytes4) {
         return bytes4(keccak256(abi.encodePacked("fn_f_", vm.toString(f), "_idx_", vm.toString(j), "()")));
     }
 }

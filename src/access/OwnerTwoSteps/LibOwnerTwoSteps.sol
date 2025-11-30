@@ -1,82 +1,130 @@
 // SPDX-License-Identifier: MIT
 pragma solidity >=0.8.30;
 
-/// @title ERC-173 Two-Step Contract Ownership Library
-/// @notice Provides two-step ownership transfer logic for facets or modular contracts.
+/**
+ * @title ERC-173 Two-Step Contract Ownership Library
+ * @notice Provides two-step ownership transfer logic for facets or modular contracts.
+ */
 library LibOwnerTwoSteps {
-    /// @dev Emitted when ownership transfer is initiated (pending owner set).
+    /**
+     * @dev Emitted when ownership transfer is initiated (pending owner set).
+     */
     event OwnershipTransferStarted(address indexed _previousOwner, address indexed _newOwner);
-    /// @dev Emitted when ownership transfer is finalized.
+    /**
+     * @dev Emitted when ownership transfer is finalized.
+     */
     event OwnershipTransferred(address indexed _previousOwner, address indexed _newOwner);
 
-    /// @notice Thrown when a non-owner attempts an action restricted to owner.
+    /**
+     * @notice Thrown when a non-owner attempts an action restricted to owner.
+     */
     error OwnerUnauthorizedAccount();
-    /// @notice Thrown when attempting to transfer ownership from a renounced state.
+    /**
+     * @notice Thrown when attempting to transfer ownership from a renounced state.
+     */
     error OwnerAlreadyRenounced();
 
-    bytes32 constant STORAGE_POSITION = keccak256("compose.owner");
+    bytes32 constant OWNER_STORAGE_POSITION = keccak256("compose.owner");
 
-    /// @custom:storage-location erc8042:compose.owner
-    struct OwnerTwoStepsStorage {
+    /**
+     * @custom:storage-location erc8042:compose.owner
+     */
+    struct OwnerStorage {
         address owner;
-        address pendingOwner;
     }
 
-    /// @notice Returns a pointer to the ERC-173 storage struct.
-    /// @dev Uses inline assembly to access the storage slot defined by STORAGE_POSITION.
-    /// @return s The ERC173Storage struct in storage.
-    function getStorage() internal pure returns (OwnerTwoStepsStorage storage s) {
-        bytes32 position = STORAGE_POSITION;
+    /**
+     * @notice Returns a pointer to the Owner storage struct.
+     * @dev Uses inline assembly to access the storage slot defined by OWNER_STORAGE_POSITION.
+     * @return s The OwnerStorage struct in storage.
+     */
+    function getOwnerStorage() internal pure returns (OwnerStorage storage s) {
+        bytes32 position = OWNER_STORAGE_POSITION;
         assembly {
             s.slot := position
         }
     }
 
-    /// @notice Returns the current owner.
+    bytes32 constant PENDING_OWNER_STORAGE_POSITION = keccak256("compose.owner.pending");
+
+    /**
+     * @custom:storage-location erc8042:compose.owner.pending
+     */
+    struct PendingOwnerStorage {
+        address pendingOwner;
+    }
+
+    /**
+     * @notice Returns a pointer to the PendingOwner storage struct.
+     * @dev Uses inline assembly to access the storage slot defined by PENDING_OWNER_STORAGE_POSITION.
+     * @return s The PendingOwnerStorage struct in storage.
+     */
+    function getPendingOwnerStorage() internal pure returns (PendingOwnerStorage storage s) {
+        bytes32 position = PENDING_OWNER_STORAGE_POSITION;
+        assembly {
+            s.slot := position
+        }
+    }
+
+    /**
+     * @notice Returns the current owner.
+     */
     function owner() internal view returns (address) {
-        return getStorage().owner;
+        return getOwnerStorage().owner;
     }
 
-    /// @notice Returns the pending owner (if any).
+    /**
+     * @notice Returns the pending owner (if any).
+     */
     function pendingOwner() internal view returns (address) {
-        return getStorage().pendingOwner;
+        return getPendingOwnerStorage().pendingOwner;
     }
 
-    /// @notice Reverts if the caller is not the owner.
+    /**
+     * @notice Reverts if the caller is not the owner.
+     */
     function requireOwner() internal view {
-        if (getStorage().owner != msg.sender) {
+        if (getOwnerStorage().owner != msg.sender) {
             revert OwnerUnauthorizedAccount();
         }
     }
 
-    /// @notice Initiates a two-step ownership transfer.
-    /// @param _newOwner The address of the new owner of the contract
+    /**
+     * @notice Initiates a two-step ownership transfer.
+     * @param _newOwner The address of the new owner of the contract
+     */
     function transferOwnership(address _newOwner) internal {
-        OwnerTwoStepsStorage storage s = getStorage();
-        address previousOwner = s.owner;
+        OwnerStorage storage ownerStorage = getOwnerStorage();
+        address previousOwner = ownerStorage.owner;
         if (previousOwner == address(0)) {
             revert OwnerAlreadyRenounced();
         }
-        s.pendingOwner = _newOwner;
+        getPendingOwnerStorage().pendingOwner = _newOwner;
         emit OwnershipTransferStarted(previousOwner, _newOwner);
     }
 
-    /// @notice Finalizes ownership transfer; must be called by the pending owner.
+    /**
+     * @notice Finalizes ownership transfer; must be called by the pending owner.
+     */
     function acceptOwnership() internal {
-        OwnerTwoStepsStorage storage s = getStorage();
-        address oldOwner = s.owner;
-        s.owner = s.pendingOwner;
-        s.pendingOwner = address(0);
-        emit OwnershipTransferred(oldOwner, s.owner);
+        OwnerStorage storage ownerStorage = getOwnerStorage();
+        PendingOwnerStorage storage pendingStorage = getPendingOwnerStorage();
+        address oldOwner = ownerStorage.owner;
+        ownerStorage.owner = pendingStorage.pendingOwner;
+        pendingStorage.pendingOwner = address(0);
+        emit OwnershipTransferred(oldOwner, ownerStorage.owner);
     }
 
-    /// @notice Renounce ownership of the contract
-    /// @dev Sets the owner to address(0), disabling all functions restricted to the owner.
+    /**
+     * @notice Renounce ownership of the contract
+     * @dev Sets the owner to address(0), disabling all functions restricted to the owner.
+     */
     function renounceOwnership() internal {
-        OwnerTwoStepsStorage storage s = getStorage();
-        address previousOwner = s.owner;
-        s.owner = address(0);
-        s.pendingOwner = address(0);
+        OwnerStorage storage ownerStorage = getOwnerStorage();
+        PendingOwnerStorage storage pendingStorage = getPendingOwnerStorage();
+        address previousOwner = ownerStorage.owner;
+        ownerStorage.owner = address(0);
+        pendingStorage.pendingOwner = address(0);
         emit OwnershipTransferred(previousOwner, address(0));
     }
 }

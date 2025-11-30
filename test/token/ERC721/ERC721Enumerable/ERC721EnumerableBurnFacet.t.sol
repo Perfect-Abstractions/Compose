@@ -59,7 +59,9 @@ contract ERC721EnumerableBurnFacetTest is Test {
         uint256 remainingToken = token.tokenOfOwnerByIndex(alice, 0);
         assertEq(remainingToken, 2);
 
-        // Ensure global enumeration shrinks
+        /**
+         * Ensure global enumeration shrinks
+         */
         assertEq(token.totalSupply(), 2);
     }
 
