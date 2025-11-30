@@ -489,7 +489,9 @@ contract OwnerTwoStepsFacetTest is Test {
         vm.prank(INITIAL_OWNER);
         ownerTwoSteps.transferOwnership(ALICE);
 
-        // Read pending owner from its separate storage location
+        /**
+         * Read pending owner from its separate storage location
+         */
         bytes32 pendingValue = vm.load(address(ownerTwoSteps), pendingOwnerSlot);
         address storedPendingOwner = address(uint160(uint256(pendingValue)));
 
