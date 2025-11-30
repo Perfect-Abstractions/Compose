@@ -21,20 +21,12 @@ contract OwnerTwoStepsFacet {
     error OwnerUnauthorizedAccount();
 
     bytes32 constant OWNER_STORAGE_POSITION = keccak256("compose.owner");
-    bytes32 constant PENDING_OWNER_STORAGE_POSITION = keccak256("compose.owner.pending");
 
     /**
      * @custom:storage-location erc8042:compose.owner
      */
     struct OwnerStorage {
         address owner;
-    }
-
-    /**
-     * @custom:storage-location erc8042:compose.owner.pending
-     */
-    struct PendingOwnerStorage {
-        address pendingOwner;
     }
 
     /**
@@ -47,6 +39,15 @@ contract OwnerTwoStepsFacet {
         assembly {
             s.slot := position
         }
+    }
+
+    bytes32 constant PENDING_OWNER_STORAGE_POSITION = keccak256("compose.owner.pending");
+
+    /**
+     * @custom:storage-location erc8042:compose.owner.pending
+     */
+    struct PendingOwnerStorage {
+        address pendingOwner;
     }
 
     /**
