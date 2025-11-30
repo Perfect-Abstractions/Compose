@@ -23,9 +23,11 @@ contract ERC20BridgeableFacetTest is Test {
         token.crosschainMint(alice, INITIAL_SUPPLY);
     }
 
-    // ======================================
-    // CrossChainMint Tests
-    // ======================================
+    /**
+     * ======================================
+     * CrossChainMint Tests
+     * ======================================
+     */
 
     function test_CrossChainMintRevertsInvalidCaller(address to, uint256 amount, address invalidCaller) public {
         vm.assume(to != address(0));
@@ -54,9 +56,11 @@ contract ERC20BridgeableFacetTest is Test {
         assertEq(token.balanceOf(bob), 500e18);
     }
 
-    // ======================================
-    // CrossChainBurn Tests
-    // ======================================
+    /**
+     * ======================================
+     * CrossChainBurn Tests
+     * ======================================
+     */
 
     function test_CrossChainBurnRevertsInvalidCaller(address from, uint256 amount, address invalidCaller) public {
         vm.assume(from != address(0));
@@ -90,11 +94,13 @@ contract ERC20BridgeableFacetTest is Test {
         assertEq(token.balanceOf(bob), 0);
     }
 
-    // ======================================
-    // checkTokenBridge Tests
-    // ======================================
+    /**
+     * ======================================
+     * checkTokenBridge Tests
+     * ======================================
+     */
 
-    function test_CheckTokenBridgeSucceeds(address caller) public {
+    function test_CheckTokenBridgeSucceeds(address _caller) public {
         vm.prank(alice);
         token.checkTokenBridge(alice);
     }
