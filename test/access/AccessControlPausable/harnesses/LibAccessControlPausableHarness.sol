@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity >=0.8.30;
 
-import {LibAccessControlPausable} from "../../../../src/access/AccessControlPausable/LibAccessControlPausable.sol";
+import * as LibAccessControlPausable from "../../../../src/access/AccessControlPausable/LibAccessControlPausable.sol";
 
 /**
  * @title LibAccessControlPausable Test Harness

@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity >=0.8.30;
 
-import {LibDiamondCut} from "../../../src/diamond/LibDiamondCut.sol";
+import * as LibDiamondCut from "../../../src/diamond/LibDiamondCut.sol";
 
 /**
  * @title LibDiamondHarness

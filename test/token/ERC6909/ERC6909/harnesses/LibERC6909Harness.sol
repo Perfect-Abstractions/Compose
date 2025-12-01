@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity >=0.8.30;
 
-import {LibERC6909} from "../../../../../src/token/ERC6909/ERC6909/LibERC6909.sol";
+import * as LibERC6909 from "../../../../../src/token/ERC6909/ERC6909/LibERC6909.sol";
 
 /**
  * @notice Test harness that exposes LibERC6909's internal functions as external

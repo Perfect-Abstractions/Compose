@@ -4,7 +4,8 @@ pragma solidity >=0.8.30;
 import {Test} from "forge-std/Test.sol";
 import {stdError} from "forge-std/StdError.sol";
 import {LibERC6909Harness} from "./harnesses/LibERC6909Harness.sol";
-import {LibERC6909} from "../../../../src/token/ERC6909/ERC6909/LibERC6909.sol";
+import * as LibERC6909 from "../../../../src/token/ERC6909/ERC6909/LibERC6909.sol";
+import {Transfer, OperatorSet, Approval} from "../../../../src/token/ERC6909/ERC6909/LibERC6909.sol";
 
 contract LibERC6909Test is Test {
     LibERC6909Harness internal harness;
@@ -33,7 +34,7 @@ contract LibERC6909Test is Test {
 
     function test_Mint() external {
         vm.expectEmit();
-        emit LibERC6909.Transfer(address(this), address(0), alice, TOKEN_ID, AMOUNT);
+        emit Transfer(address(this), address(0), alice, TOKEN_ID, AMOUNT);
 
         harness.mint(alice, TOKEN_ID, AMOUNT);
 
@@ -50,7 +51,7 @@ contract LibERC6909Test is Test {
         vm.assume(to != address(0));
 
         vm.expectEmit();
-        emit LibERC6909.Transfer(caller, address(0), to, id, amount);
+        emit Transfer(caller, address(0), to, id, amount);
 
         vm.prank(caller);
         harness.mint(to, id, amount);
@@ -78,7 +79,7 @@ contract LibERC6909Test is Test {
         harness.mint(alice, TOKEN_ID, AMOUNT);
 
         vm.expectEmit();
-        emit LibERC6909.Transfer(address(this), alice, address(0), TOKEN_ID, AMOUNT);
+        emit Transfer(address(this), alice, address(0), TOKEN_ID, AMOUNT);
 
         harness.burn(alice, TOKEN_ID, AMOUNT);
 
@@ -97,7 +98,7 @@ contract LibERC6909Test is Test {
         harness.mint(from, id, amount);
 
         vm.expectEmit();
-        emit LibERC6909.Transfer(caller, from, address(0), id, burnAmount);
+        emit Transfer(caller, from, address(0), id, burnAmount);
 
         vm.prank(caller);
         harness.burn(from, id, burnAmount);
@@ -123,7 +124,7 @@ contract LibERC6909Test is Test {
 
     function test_Approve() external {
         vm.expectEmit();
-        emit LibERC6909.Approval(alice, address(this), TOKEN_ID, AMOUNT);
+        emit Approval(alice, address(this), TOKEN_ID, AMOUNT);
 
         harness.approve(alice, address(this), TOKEN_ID, AMOUNT);
 
@@ -135,7 +136,7 @@ contract LibERC6909Test is Test {
         vm.assume(spender != address(0));
 
         vm.expectEmit();
-        emit LibERC6909.Approval(owner, spender, id, amount);
+        emit Approval(owner, spender, id, amount);
 
         harness.approve(owner, spender, id, amount);
 
@@ -160,7 +161,7 @@ contract LibERC6909Test is Test {
 
     function test_SetOperator_IsApproved() external {
         vm.expectEmit();
-        emit LibERC6909.OperatorSet(alice, address(this), true);
+        emit OperatorSet(alice, address(this), true);
 
         harness.setOperator(alice, address(this), true);
         assertEq(harness.isOperator(alice, address(this)), true);
@@ -170,7 +171,7 @@ contract LibERC6909Test is Test {
         harness.setOperator(alice, address(this), true);
 
         vm.expectEmit();
-        emit LibERC6909.OperatorSet(alice, address(this), false);
+        emit OperatorSet(alice, address(this), false);
 
         harness.setOperator(alice, address(this), false);
 
@@ -182,7 +183,7 @@ contract LibERC6909Test is Test {
         vm.assume(spender != address(0));
 
         vm.expectEmit();
-        emit LibERC6909.OperatorSet(owner, spender, approved);
+        emit OperatorSet(owner, spender, approved);
 
         harness.setOperator(owner, spender, approved);
 
@@ -203,7 +204,7 @@ contract LibERC6909Test is Test {
         harness.mint(from, id, amount);
 
         vm.expectEmit();
-        emit LibERC6909.Transfer(from, from, to, id, amount);
+        emit Transfer(from, from, to, id, amount);
 
         harness.transfer(from, from, to, id, amount);
 
@@ -222,7 +223,7 @@ contract LibERC6909Test is Test {
         harness.setOperator(from, by, true);
 
         vm.expectEmit();
-        emit LibERC6909.Transfer(by, from, to, id, amount);
+        emit Transfer(by, from, to, id, amount);
 
         harness.transfer(by, from, to, id, amount);
 
@@ -249,7 +250,7 @@ contract LibERC6909Test is Test {
         harness.approve(from, by, id, type(uint256).max);
 
         vm.expectEmit();
-        emit LibERC6909.Transfer(by, from, to, id, amount);
+        emit Transfer(by, from, to, id, amount);
 
         harness.transfer(by, from, to, id, amount);
 
@@ -279,7 +280,7 @@ contract LibERC6909Test is Test {
         harness.approve(from, by, id, amount);
 
         vm.expectEmit();
-        emit LibERC6909.Transfer(by, from, to, id, spend);
+        emit Transfer(by, from, to, id, spend);
 
         harness.transfer(by, from, to, id, spend);
 
@@ -404,7 +405,7 @@ contract LibERC6909Test is Test {
         harness.approve(from, by, id, amount);
 
         vm.expectEmit();
-        emit LibERC6909.Transfer(by, from, from, id, spend);
+        emit Transfer(by, from, from, id, spend);
 
         harness.transfer(by, from, from, id, spend);
 
@@ -448,7 +449,7 @@ contract LibERC6909Test is Test {
         harness.approve(from, by, id, allowance);
 
         vm.expectEmit();
-        emit LibERC6909.Transfer(by, from, to, id, 0);
+        emit Transfer(by, from, to, id, 0);
 
         harness.transfer(by, from, to, id, 0);
 

@@ -219,7 +219,7 @@ contract DiamondCutFacet {
         (bool success, bytes memory error) = _init.delegatecall(_calldata);
         if (!success) {
             if (error.length > 0) {
-                /**
+                /*
                  * bubble up error
                  */
                 assembly ("memory-safe") {

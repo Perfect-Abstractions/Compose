@@ -2,8 +2,8 @@
 pragma solidity >=0.8.30;
 
 import {Test, console2} from "forge-std/Test.sol";
-import {LibAccessControlTemporal} from "../../../src/access/AccessControlTemporal/LibAccessControlTemporal.sol";
-import {LibAccessControl} from "../../../src/access/AccessControl/LibAccessControl.sol";
+import * as LibAccessControlTemporal from "../../../src/access/AccessControlTemporal/LibAccessControlTemporal.sol";
+import * as LibAccessControl from "../../../src/access/AccessControl/LibAccessControl.sol";
 import {LibAccessControlTemporalHarness} from "./harnesses/LibAccessControlTemporalHarness.sol";
 import {LibAccessControlHarness} from "../AccessControl/harnesses/LibAccessControlHarness.sol";
 

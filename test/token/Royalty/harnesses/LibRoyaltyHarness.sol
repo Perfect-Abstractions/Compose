@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity >=0.8.30;
 
-import {LibRoyalty} from "../../../../src/token/Royalty/LibRoyalty.sol";
+import * as LibRoyalty from "../../../../src/token/Royalty/LibRoyalty.sol";
 
 /**
  * @title LibRoyaltyHarness

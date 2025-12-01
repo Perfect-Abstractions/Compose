@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity >=0.8.30;
 
-import {LibAccessControlTemporal} from "../../../../src/access/AccessControlTemporal/LibAccessControlTemporal.sol";
+import * as LibAccessControlTemporal from "../../../../src/access/AccessControlTemporal/LibAccessControlTemporal.sol";
 
 /**
  * @title LibAccessControlTemporal Test Harness

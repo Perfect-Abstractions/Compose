@@ -2,7 +2,7 @@
 pragma solidity >=0.8.30;
 
 import {Test, console2} from "forge-std/Test.sol";
-import {LibOwnerTwoSteps} from "../../../src/access/OwnerTwoSteps/LibOwnerTwoSteps.sol";
+import * as LibOwnerTwoSteps from "../../../src/access/OwnerTwoSteps/LibOwnerTwoSteps.sol";
 import {LibOwnerTwoStepsHarness} from "./harnesses/LibOwnerTwoStepsHarness.sol";
 
 contract LibOwnerTwoStepsTest is Test {

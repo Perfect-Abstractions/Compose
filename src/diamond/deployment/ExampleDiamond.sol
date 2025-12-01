@@ -1,14 +1,14 @@
 // SPDX-License-Identifier: MIT
 pragma solidity >=0.8.30;
 
-import {ComposeDiamond} from "../ComposeDiamond.sol";
-import {LibOwner} from "../../access/Owner/LibOwner.sol";
-import {LibERC721} from "../../token/ERC721/ERC721/LibERC721.sol";
-import {LibERC165} from "../../interfaceDetection/ERC165/LibERC165.sol";
+import * as LibDiamond from "../LibDiamond.sol";
+import * as LibOwner from "../../access/Owner/LibOwner.sol";
+import * as LibERC721 from "../../token/ERC721/ERC721/LibERC721.sol";
+import * as LibERC165 from "../../interfaceDetection/ERC165/LibERC165.sol";
 import {IERC721} from "../../interfaces/IERC721.sol";
 import {IERC721Metadata} from "../../interfaces/IERC721Metadata.sol";
 
-contract ExampleDiamond is ComposeDiamond {
+contract ExampleDiamond {
     /**
      * @notice Struct to hold facet address and its function selectors.
      * struct FacetCut {
@@ -24,8 +24,8 @@ contract ExampleDiamond is ComposeDiamond {
      * @param _facets Array of facet addresses and their corresponding function selectors to add to the diamond.
      * @param _diamondOwner Address that will be set as the owner of the diamond contract.
      */
-    constructor(ComposeDiamond.FacetCut[] memory _facets, address _diamondOwner) {
-        ComposeDiamond.addFacets(_facets);
+    constructor(LibDiamond.FacetCut[] memory _facets, address _diamondOwner) {
+        LibDiamond.addFacets(_facets);
 
         /*************************************
          * Initialize storage variables
@@ -45,4 +45,10 @@ contract ExampleDiamond is ComposeDiamond {
         LibERC165.registerInterface(type(IERC721).interfaceId);
         LibERC165.registerInterface(type(IERC721Metadata).interfaceId);
     }
+
+    fallback() external payable {
+        LibDiamond.diamondFallback();
+    }
+
+    receive() external payable {}
 }

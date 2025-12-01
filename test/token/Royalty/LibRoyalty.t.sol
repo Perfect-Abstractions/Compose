@@ -3,7 +3,7 @@ pragma solidity >=0.8.30;
 
 import {Test} from "forge-std/Test.sol";
 import {LibRoyaltyHarness} from "./harnesses/LibRoyaltyHarness.sol";
-import {LibRoyalty} from "../../../src/token/Royalty/LibRoyalty.sol";
+import * as LibRoyalty from "../../../src/token/Royalty/LibRoyalty.sol";
 
 contract LibRoyaltyTest is Test {
     LibRoyaltyHarness public harness;

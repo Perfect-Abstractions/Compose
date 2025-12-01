@@ -6,4 +6,3 @@ pragma solidity >=0.8.30;
  * @notice Provides common utility functions for Solidity contracts.
  * @dev Implements functions for data type conversions.
  */
-library LibUtils {}

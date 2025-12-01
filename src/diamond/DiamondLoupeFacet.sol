@@ -88,7 +88,7 @@ contract DiamondLoupeFacet {
                 numSelectors++;
             }
         }
-        /**
+        /*
          * Set the number of selectors in the array.
          */
         assembly ("memory-safe") {
@@ -135,7 +135,7 @@ contract DiamondLoupeFacet {
         bytes4 selector;
         uint256 selectorsCount = selectors.length;
 
-        /**
+        /*
          * Reuse the selectors array to hold unique facet addresses.
          * As we loop through the selectors, we overwrite earlier slots with facet addresses.
          * The selectors array and the allFacets array point to the same
@@ -211,7 +211,7 @@ contract DiamondLoupeFacet {
                     bucket = newBucket;
                     map[key] = bucket;
                 }
-                /**
+                /*
                  * Increase the bucket’s logical length by 1.
                  */
                 assembly ("memory-safe") {
@@ -227,7 +227,7 @@ contract DiamondLoupeFacet {
                 }
             }
         }
-        /**
+        /*
          * Set the correct length of the allFacets array.
          */
         assembly ("memory-safe") {
@@ -346,7 +346,7 @@ contract DiamondLoupeFacet {
                  * Holds a memory address to a Facet struct
                  */
                 facetPointer = bucket[bucketIndex];
-                /**
+                /*
                  * Assign the pointer to the facetAndSelectors variable so we can access the Facet struct.
                  */
                 assembly ("memory-safe") {
@@ -373,7 +373,7 @@ contract DiamondLoupeFacet {
                         functionSelectors = newFunctionSelectors;
                         facetAndSelectors.functionSelectors = functionSelectors;
                     }
-                    /**
+                    /*
                      * Increment the logical selector array length.
                      */
                     assembly ("memory-safe") {
@@ -410,17 +410,17 @@ contract DiamondLoupeFacet {
                     bucket = newBucket;
                     map[key] = bucket;
                 }
-                /**
+                /*
                  * Increase the bucket’s logical length by 1.
                  */
                 assembly ("memory-safe") {
                     mstore(bucket, add(bucketIndex, 1))
                 }
-                /**
+                /*
                  * Make selector slots
                  */
                 bytes4[] memory functionSelectors = new bytes4[](16);
-                /**
+                /*
                  * Set the its logical length to 1
                  */
                 assembly ("memory-safe") {
@@ -434,7 +434,7 @@ contract DiamondLoupeFacet {
                  * Create a new Facet struct for this facet address.
                  */
                 facetAndSelectors = Facet({facet: facet, functionSelectors: functionSelectors});
-                /**
+                /*
                  * Store a pointer to the new struct.
                  */
                 assembly ("memory-safe") {
