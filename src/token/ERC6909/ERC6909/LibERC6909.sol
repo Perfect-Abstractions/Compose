@@ -59,7 +59,9 @@ error ERC6909InvalidSpender(address _spender);
  * @param _id The token ID.
  * @param _amount The number of tokens transferred.
  */
-event Transfer(address _caller, address indexed _sender, address indexed _receiver, uint256 indexed _id, uint256 _amount);
+event Transfer(
+    address _caller, address indexed _sender, address indexed _receiver, uint256 indexed _id, uint256 _amount
+);
 
 /**
  * @notice Emitted when an operator is set.

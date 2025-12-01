@@ -87,11 +87,7 @@ function getStorage() pure returns (RoyaltyStorage storage s) {
  * @return receiver The address designated to receive the royalty payment.
  * @return royaltyAmount The royalty payment amount for _salePrice.
  */
-function royaltyInfo(uint256 _tokenId, uint256 _salePrice)
-    
-    view
-    returns (address receiver, uint256 royaltyAmount)
-{
+function royaltyInfo(uint256 _tokenId, uint256 _salePrice) view returns (address receiver, uint256 royaltyAmount) {
     RoyaltyStorage storage s = getStorage();
     RoyaltyInfo memory royalty = s.tokenRoyaltyInfo[_tokenId];
 

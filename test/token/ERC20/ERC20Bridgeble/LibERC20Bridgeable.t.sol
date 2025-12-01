@@ -2,7 +2,7 @@
 pragma solidity >=0.8.30;
 
 import {Test} from "forge-std/Test.sol";
-import * as LibERC20Bridgeable from "../../../../src/token/ERC20/ERC20Bridgeable/LibERC20Bridgeable.sol";
+import "../../../../src/token/ERC20/ERC20Bridgeable/LibERC20Bridgeable.sol" as LibERC20Bridgeable;
 import {LibERC20BridgeableHarness} from "./harnesses/LibERC20BridgeableHarness.sol";
 
 contract LibERC20BridgeableTest is Test {

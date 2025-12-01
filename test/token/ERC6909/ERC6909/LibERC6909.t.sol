@@ -4,7 +4,7 @@ pragma solidity >=0.8.30;
 import {Test} from "forge-std/Test.sol";
 import {stdError} from "forge-std/StdError.sol";
 import {LibERC6909Harness} from "./harnesses/LibERC6909Harness.sol";
-import * as LibERC6909 from "../../../../src/token/ERC6909/ERC6909/LibERC6909.sol";
+import "../../../../src/token/ERC6909/ERC6909/LibERC6909.sol" as LibERC6909;
 import {Transfer, OperatorSet, Approval} from "../../../../src/token/ERC6909/ERC6909/LibERC6909.sol";
 
 contract LibERC6909Test is Test {

@@ -4,7 +4,7 @@ pragma solidity >=0.8.30;
 /*
 * @title Diamond Library
 * @notice Internal functions and storage for diamond proxy functionality.
-* @dev Follows EIP-2535 Diamond Standard 
+* @dev Follows EIP-2535 Diamond Standard
 * (https://eips.ethereum.org/EIPS/eip-2535)
 */
 
@@ -21,13 +21,13 @@ struct FacetAndPosition {
 }
 
 /**
-* @custom:storage-location erc8042:compose.diamond
-*/
+ * @custom:storage-location erc8042:compose.diamond
+ */
 struct DiamondStorage {
     mapping(bytes4 functionSelector => FacetAndPosition) facetAndPosition;
     /**
-    * `selectors` contains all function selectors that can be called in the diamond.
-    */
+     * `selectors` contains all function selectors that can be called in the diamond.
+     */
     bytes4[] selectors;
 }
 
@@ -39,8 +39,8 @@ function getStorage() pure returns (DiamondStorage storage s) {
 }
 
 /**
-* @dev Add=0, Replace=1, Remove=2
-*/
+ * @dev Add=0, Replace=1, Remove=2
+ */
 enum FacetCutAction {
     Add,
     Replace,
@@ -66,9 +66,9 @@ error InvalidActionWhenDeployingDiamond(address facetAddress, FacetCutAction act
 error CannotAddFunctionToDiamondThatAlreadyExists(bytes4 _selector);
 
 /**
-* @notice Adds facets and their function selectors to the diamond.
-* @dev Only supports adding functions during diamond deployment.
-*/
+ * @notice Adds facets and their function selectors to the diamond.
+ * @dev Only supports adding functions during diamond deployment.
+ */
 function addFacets(FacetCut[] memory _facets) {
     DiamondStorage storage s = getStorage();
     uint32 selectorPosition = uint32(s.selectors.length);
@@ -98,14 +98,14 @@ function addFacets(FacetCut[] memory _facets) {
 error FunctionNotFound(bytes4 _selector);
 
 /**
-* Find facet for function that is called and execute the
-* function if a facet is found and return any value.
-*/
+ * Find facet for function that is called and execute the
+ * function if a facet is found and return any value.
+ */
 function diamondFallback() {
     DiamondStorage storage s = getStorage();
     /**
-    * get facet from function selector
-    */
+     * get facet from function selector
+     */
     address facet = s.facetAndPosition[msg.sig].facet;
     if (facet == address(0)) {
         revert FunctionNotFound(msg.sig);

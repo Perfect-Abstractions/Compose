@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity >=0.8.30;
 
-import * as LibERC20Bridgeable from "../../../../../src/token/ERC20/ERC20Bridgeable/LibERC20Bridgeable.sol";
+import "../../../../../src/token/ERC20/ERC20Bridgeable/LibERC20Bridgeable.sol" as LibERC20Bridgeable;
 
 contract LibERC20BridgeableHarness {
     /**

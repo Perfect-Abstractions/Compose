@@ -101,15 +101,7 @@ function DOMAIN_SEPARATOR() view returns (bytes32) {
  * @param _deadline Permit's time deadline.
  * @param _v, _r, _s   Signature fields.
  */
-function permit(
-    address _owner,
-    address _spender,
-    uint256 _value,
-    uint256 _deadline,
-    uint8 _v,
-    bytes32 _r,
-    bytes32 _s
-)  {
+function permit(address _owner, address _spender, uint256 _value, uint256 _deadline, uint8 _v, bytes32 _r, bytes32 _s) {
     if (_spender == address(0)) {
         revert ERC20InvalidSpender(address(0));
     }

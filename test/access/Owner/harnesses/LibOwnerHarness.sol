@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity >=0.8.30;
 
-import * as LibOwner from "../../../../src/access/Owner/LibOwner.sol";
+import "../../../../src/access/Owner/LibOwner.sol" as LibOwner;
 
 /**
  * @title LibOwner Test Harness

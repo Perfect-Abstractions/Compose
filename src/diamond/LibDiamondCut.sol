@@ -78,7 +78,7 @@ function replaceFunctions(address _facet, bytes4[] calldata _functionSelectors) 
         address diamondAddress;
         assembly {
             diamondAddress := address()
-        }        
+        }
         if (oldFacet == diamondAddress) {
             revert CannotReplaceImmutableFunction(selector);
         }

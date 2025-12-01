@@ -2,7 +2,7 @@
 pragma solidity >=0.8.30;
 
 import {Test} from "forge-std/Test.sol";
-import * as LibNonReentrancy from "src/libraries/LibNonReentrancy.sol";
+import "src/libraries/LibNonReentrancy.sol" as LibNonReentrancy;
 import {NonReentrantHarness} from "test/libraries/harnesses/LibNonReentrancyHarness.sol";
 
 contract LibNonReentrancyTest is Test {

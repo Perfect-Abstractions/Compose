@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity >=0.8.30;
 
-import * as LibERC1155 from "../../../../../src/token/ERC1155/LibERC1155.sol";
+import "../../../../../src/token/ERC1155/LibERC1155.sol" as LibERC1155;
 
 /**
  * @title LibERC1155Harness

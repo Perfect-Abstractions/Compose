@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity >=0.8.30;
 
-import * as LibDiamondCut from "../../src/diamond/LibDiamondCut.sol";
+import "../../src/diamond/LibDiamondCut.sol" as LibDiamondCut;
 
 /**
  *  Adapted from: https://github.com/mudgen/diamond-1-hardhat/blob/main/contracts/Diamond.sol
