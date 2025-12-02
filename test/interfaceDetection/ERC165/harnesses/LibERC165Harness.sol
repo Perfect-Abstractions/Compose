@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity >=0.8.30;
 
-import * as LibERC165 from "../../../../src/interfaceDetection/ERC165/LibERC165.sol";
+import "../../../../src/interfaceDetection/ERC165/LibERC165.sol" as LibERC165;
 
 /// @title LibERC165 Test Harness
 /// @notice Exposes internal LibERC165 functions as external for testing

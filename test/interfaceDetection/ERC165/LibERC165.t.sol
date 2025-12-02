@@ -2,7 +2,7 @@
 pragma solidity >=0.8.30;
 
 import {Test, console2} from "forge-std/Test.sol";
-import * as LibERC165 from "../../../src/interfaceDetection/ERC165/LibERC165.sol";
+import "../../../src/interfaceDetection/ERC165/LibERC165.sol" as LibERC165;
 import {LibERC165Harness} from "./harnesses/LibERC165Harness.sol";
 
 contract LibERC165Test is Test {
