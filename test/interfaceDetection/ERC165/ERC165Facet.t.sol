@@ -8,7 +8,9 @@ import {ERC165FacetHarness} from "./harnesses/ERC165FacetHarness.sol";
 contract ERC165FacetTest is Test {
     ERC165FacetHarness public erc165Facet;
 
-    // Test interface IDs
+    /**
+     * Test interface IDs
+     */
     bytes4 constant IERC165_INTERFACE_ID = type(IERC165).interfaceId;
     bytes4 constant IERC721_INTERFACE_ID = 0x80ac58cd;
     bytes4 constant IERC20_INTERFACE_ID = 0x36372b07;
@@ -21,21 +23,25 @@ contract ERC165FacetTest is Test {
         erc165Facet.initialize();
     }
 
-    // ============================================
-    // ERC165 Interface Support Tests
-    // ============================================
+    /**
+     * ERC165 Interface Support Tests
+     */
 
     function test_SupportsInterface_ERC165() public view {
         assertTrue(erc165Facet.supportsInterface(IERC165_INTERFACE_ID));
     }
 
     function test_SupportsInterface_ERC165_AlwaysReturnsTrue() public view {
-        // Even without registration, ERC165 interface should be supported
+        /**
+         * Even without registration, ERC165 interface should be supported
+         */
         assertTrue(erc165Facet.supportsInterface(IERC165_INTERFACE_ID));
     }
 
     function test_SupportsInterface_InvalidInterface() public view {
-        // 0xffffffff should return false per ERC-165 spec
+        /**
+         * 0xffffffff should return false per ERC-165 spec
+         */
         assertFalse(erc165Facet.supportsInterface(INVALID_INTERFACE_ID));
     }
 
@@ -49,9 +55,9 @@ contract ERC165FacetTest is Test {
         assertFalse(erc165Facet.supportsInterface(ZERO_INTERFACE_ID));
     }
 
-    // ============================================
-    // Interface Registration Tests
-    // ============================================
+    /**
+     * Interface Registration Tests
+     */
 
     function test_RegisterInterface_SingleInterface() public {
         erc165Facet.registerInterface(IERC721_INTERFACE_ID);
@@ -70,7 +76,9 @@ contract ERC165FacetTest is Test {
 
     function test_RegisterInterface_DoesNotAffectERC165() public {
         erc165Facet.registerInterface(IERC721_INTERFACE_ID);
-        // ERC165 should still be supported
+        /**
+         * ERC165 should still be supported
+         */
         assertTrue(erc165Facet.supportsInterface(IERC165_INTERFACE_ID));
     }
 
@@ -80,7 +88,9 @@ contract ERC165FacetTest is Test {
     }
 
     function test_RegisterInterface_CanRegisterInvalidInterfaceId() public {
-        // While 0xffffffff should return false per spec, we can still register it
+        /**
+         * While 0xffffffff should return false per spec, we can still register it
+         */
         erc165Facet.registerInterface(INVALID_INTERFACE_ID);
         assertTrue(erc165Facet.supportsInterface(INVALID_INTERFACE_ID));
     }
@@ -89,14 +99,16 @@ contract ERC165FacetTest is Test {
         erc165Facet.registerInterface(IERC721_INTERFACE_ID);
         assertTrue(erc165Facet.supportsInterface(IERC721_INTERFACE_ID));
 
-        // Register again
+        /**
+         * Register again
+         */
         erc165Facet.registerInterface(IERC721_INTERFACE_ID);
         assertTrue(erc165Facet.supportsInterface(IERC721_INTERFACE_ID));
     }
 
-    // ============================================
-    // Interface Unregistration Tests
-    // ============================================
+    /**
+     * Interface Unregistration Tests
+     */
 
     function test_UnregisterInterface_RemovesSupport() public {
         erc165Facet.registerInterface(IERC721_INTERFACE_ID);
@@ -118,7 +130,9 @@ contract ERC165FacetTest is Test {
     }
 
     function test_UnregisterInterface_CannotUnregisterERC165() public {
-        // Even if we try to unregister ERC165, it should still return true
+        /**
+         * Even if we try to unregister ERC165, it should still return true
+         */
         erc165Facet.unregisterInterface(IERC165_INTERFACE_ID);
         assertTrue(erc165Facet.supportsInterface(IERC165_INTERFACE_ID));
     }
@@ -128,14 +142,16 @@ contract ERC165FacetTest is Test {
         erc165Facet.unregisterInterface(IERC721_INTERFACE_ID);
         assertFalse(erc165Facet.supportsInterface(IERC721_INTERFACE_ID));
 
-        // Unregister again
+        /**
+         * Unregister again
+         */
         erc165Facet.unregisterInterface(IERC721_INTERFACE_ID);
         assertFalse(erc165Facet.supportsInterface(IERC721_INTERFACE_ID));
     }
 
-    // ============================================
-    // Storage Tests
-    // ============================================
+    /**
+     * Storage Tests
+     */
 
     function test_StorageSlot_UsesCorrectPosition() public view {
         bytes32 expectedSlot = keccak256("compose.erc165");
@@ -147,12 +163,18 @@ contract ERC165FacetTest is Test {
 
         erc165Facet.registerInterface(IERC721_INTERFACE_ID);
 
-        // Read directly from storage
-        // The mapping slot is calculated as keccak256(abi.encode(key, slot))
+        /**
+         * Read directly from storage
+         */
+        /**
+         * The mapping slot is calculated as keccak256(abi.encode(key, slot))
+         */
         bytes32 mappingSlot = keccak256(abi.encode(IERC721_INTERFACE_ID, expectedSlot));
         bytes32 storedValue = vm.load(address(erc165Facet), mappingSlot);
 
-        // Should be true (1)
+        /**
+         * Should be true (1)
+         */
         assertEq(uint256(storedValue), 1);
         assertTrue(erc165Facet.supportsInterface(IERC721_INTERFACE_ID));
     }
@@ -166,51 +188,71 @@ contract ERC165FacetTest is Test {
         assertEq(supportsResult, storageResult);
     }
 
-    // ============================================
-    // Edge Cases
-    // ============================================
+    /**
+     * Edge Cases
+     */
 
     function test_MultipleRegistrationAndUnregistration() public {
-        // Register
+        /**
+         * Register
+         */
         erc165Facet.registerInterface(IERC721_INTERFACE_ID);
         assertTrue(erc165Facet.supportsInterface(IERC721_INTERFACE_ID));
 
-        // Unregister
+        /**
+         * Unregister
+         */
         erc165Facet.unregisterInterface(IERC721_INTERFACE_ID);
         assertFalse(erc165Facet.supportsInterface(IERC721_INTERFACE_ID));
 
-        // Register again
+        /**
+         * Register again
+         */
         erc165Facet.registerInterface(IERC721_INTERFACE_ID);
         assertTrue(erc165Facet.supportsInterface(IERC721_INTERFACE_ID));
 
-        // Unregister again
+        /**
+         * Unregister again
+         */
         erc165Facet.unregisterInterface(IERC721_INTERFACE_ID);
         assertFalse(erc165Facet.supportsInterface(IERC721_INTERFACE_ID));
     }
 
     function test_MixedInterfaceOperations() public {
-        // Register multiple
+        /**
+         * Register multiple
+         */
         erc165Facet.registerInterface(IERC721_INTERFACE_ID);
         erc165Facet.registerInterface(IERC20_INTERFACE_ID);
         erc165Facet.registerInterface(CUSTOM_INTERFACE_ID);
 
-        // Verify all registered
+        /**
+         * Verify all registered
+         */
         assertTrue(erc165Facet.supportsInterface(IERC721_INTERFACE_ID));
         assertTrue(erc165Facet.supportsInterface(IERC20_INTERFACE_ID));
         assertTrue(erc165Facet.supportsInterface(CUSTOM_INTERFACE_ID));
 
-        // Unregister one
+        /**
+         * Unregister one
+         */
         erc165Facet.unregisterInterface(IERC20_INTERFACE_ID);
 
-        // Verify state
+        /**
+         * Verify state
+         */
         assertTrue(erc165Facet.supportsInterface(IERC721_INTERFACE_ID));
         assertFalse(erc165Facet.supportsInterface(IERC20_INTERFACE_ID));
         assertTrue(erc165Facet.supportsInterface(CUSTOM_INTERFACE_ID));
 
-        // Register a new one
+        /**
+         * Register a new one
+         */
         erc165Facet.registerInterface(ZERO_INTERFACE_ID);
 
-        // Verify final state
+        /**
+         * Verify final state
+         */
         assertTrue(erc165Facet.supportsInterface(IERC721_INTERFACE_ID));
         assertFalse(erc165Facet.supportsInterface(IERC20_INTERFACE_ID));
         assertTrue(erc165Facet.supportsInterface(CUSTOM_INTERFACE_ID));
@@ -218,12 +260,14 @@ contract ERC165FacetTest is Test {
         assertTrue(erc165Facet.supportsInterface(IERC165_INTERFACE_ID));
     }
 
-    // ============================================
-    // Fuzz Tests
-    // ============================================
+    /**
+     * Fuzz Tests
+     */
 
     function testFuzz_SupportsInterface_ERC165AlwaysTrue(bytes4) public view {
-        // ERC165 should always return true regardless of what else is registered
+        /**
+         * ERC165 should always return true regardless of what else is registered
+         */
         assertTrue(erc165Facet.supportsInterface(IERC165_INTERFACE_ID));
     }
 
@@ -231,10 +275,14 @@ contract ERC165FacetTest is Test {
         erc165Facet.registerInterface(interfaceId);
 
         if (interfaceId == IERC165_INTERFACE_ID) {
-            // ERC165 is always supported
+            /**
+             * ERC165 is always supported
+             */
             assertTrue(erc165Facet.supportsInterface(interfaceId));
         } else {
-            // Other interfaces should be supported after registration
+            /**
+             * Other interfaces should be supported after registration
+             */
             assertTrue(erc165Facet.supportsInterface(interfaceId));
         }
     }
@@ -252,17 +300,23 @@ contract ERC165FacetTest is Test {
     function testFuzz_RegisterAndUnregisterMultiple(bytes4[] calldata interfaceIds) public {
         vm.assume(interfaceIds.length > 0 && interfaceIds.length <= 20);
 
-        // Register all
+        /**
+         * Register all
+         */
         for (uint256 i = 0; i < interfaceIds.length; i++) {
             erc165Facet.registerInterface(interfaceIds[i]);
         }
 
-        // Verify all registered
+        /**
+         * Verify all registered
+         */
         for (uint256 i = 0; i < interfaceIds.length; i++) {
             assertTrue(erc165Facet.supportsInterface(interfaceIds[i]));
         }
 
-        // Unregister all (except ERC165)
+        /**
+         * Unregister all (except ERC165)
+         */
         for (uint256 i = 0; i < interfaceIds.length; i++) {
             if (interfaceIds[i] != IERC165_INTERFACE_ID) {
                 erc165Facet.unregisterInterface(interfaceIds[i]);
@@ -270,7 +324,9 @@ contract ERC165FacetTest is Test {
             }
         }
 
-        // ERC165 should still be supported
+        /**
+         * ERC165 should still be supported
+         */
         assertTrue(erc165Facet.supportsInterface(IERC165_INTERFACE_ID));
     }
 
@@ -286,12 +342,14 @@ contract ERC165FacetTest is Test {
         assertEq(erc165Facet.supportsInterface(interfaceId), erc165Facet.getStorageValue(interfaceId));
     }
 
-    // ============================================
-    // Gas Optimization Tests
-    // ============================================
+    /**
+     * Gas Optimization Tests
+     */
 
     function test_Gas_SupportsInterface_ERC165() public view {
-        // Should use less than 30,000 gas per ERC-165 spec
+        /**
+         * Should use less than 30,000 gas per ERC-165 spec
+         */
         uint256 gasBefore = gasleft();
         erc165Facet.supportsInterface(IERC165_INTERFACE_ID);
         uint256 gasUsed = gasBefore - gasleft();
