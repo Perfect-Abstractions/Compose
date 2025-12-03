@@ -14,7 +14,8 @@ contract ERC4626Facet {
     error ERC4626ExceededMaxMint(address receiver, uint256 shares, uint256 max);
     error ERC4626ExceededMaxWithdraw(address owner, uint256 assets, uint256 max);
     error ERC4626ExceededMaxRedeem(address owner, uint256 shares, uint256 max);
-    error ERC4626ZeroBalance();
+    error ERC4626ZeroAmount();
+    error ZeroAddress();
 
     bytes32 constant STORAGE_POSITION = keccak256("compose.erc4626");
     bytes32 constant ERC20_STORAGE_POSITION = keccak256("compose.erc20");
@@ -64,25 +65,31 @@ contract ERC4626Facet {
         return erc20s.balanceOf[account];
     }
 
-    function totalSupply() public view returns (uint256) {
+    function totalShares() public view returns (uint256) {
         ERC20Storage storage s = getERC20Storage();
         return s.totalSupply;
     }
 
     function convertToShares(uint256 assets) public view returns (uint256) {
-        uint256 supply = totalSupply();
-        if (supply == 0) {
-            revert ERC4626ZeroBalance();
+        uint256 totalShare = totalSupply();
+        /** This is the state when the vault was used for the first time.
+         * The ratio between the assets and the shares is 1:1 when the vault is in initial state.
+        */ 
+        if (totalShare == 0) {
+            return assets;
         }
-        return assets * supply / totalAssets();
+        return assets * totalShare / totalAssets();
     }
 
     function convertToAssets(uint256 shares) public view returns (uint256) {
-        uint256 supply = totalSupply();
-        if (supply == 0) {
+        uint256 totalShare = totalShares();
+        /** This is the state when the vault was used for the first time.
+         * The ratio between the assets and the shares is 1:1 when the vault is in initial state.
+        */ 
+        if (totalShare == 0) {
             return shares;
         }
-        return shares * totalAssets() / supply;
+        return shares * totalAssets() / totalShare;
     }
 
 
@@ -91,21 +98,23 @@ contract ERC4626Facet {
     }
 
     function previewMint(uint256 shares) public view returns (uint256) {
-        uint256 supply = totalSupply();
-        uint256 assets = totalAssets();
-        if (supply == 0) {
+        uint256 totalShare = totalShares();
+        uint256 totalAsset = totalAssets();
+        if (totalShare == 0) {
             return shares;
         }
-        return (shares * assets + supply - 1) / supply;
+
+        // rounded up
+        return (shares * totalAssets + totalShare - 1) / totalShare;
     }
 
     function previewWithdraw(uint256 assets) public view returns (uint256) {
-        uint256 supply = totalSupply();
-        uint256 total = totalAssets();
-        if (supply == 0) {
+        uint256 totalShare = totalShares();
+        uint256 totalAsset = totalAssets();
+        if (totalShare == 0) {
             return assets;
         }
-        return (assets * supply + total - 1) / total;
+        return (assets * totalShare + totalAsset - 1) / totalAsset;
     }
 
     function previewRedeem(uint256 shares) public view returns (uint256) {
@@ -135,7 +144,9 @@ contract ERC4626Facet {
             revert ERC4626ExceededMaxDeposit(receiver, assets, maxAssets);
         }
         uint256 shares = previewDeposit(assets);
-        require(shares != 0, "ZERO_SHARES");
+        if (shares == 0) {
+            revert ERC4626ZeroAmount();
+        }
 
         _deposit(_msgSender(), receiver, assets, shares);
         return shares;
@@ -147,13 +158,14 @@ contract ERC4626Facet {
             revert ERC4626ExceededMaxMint(receiver, shares, maxShares);
         }
         uint256 assets = previewMint(shares);
-        require(assets != 0, "ZERO_ASSETS");
+        if (assets == 0) {
+            revert ERC4626ZeroAmount();
+        }
 
         _deposit(_msgSender(), receiver, assets, shares);
         return assets;
     }
 
-    // ========== Withdraw/Redeem ==========
 
     function withdraw(uint256 assets, address receiver, address owner) public returns (uint256) {
         uint256 maxAssets = maxWithdraw(owner);
@@ -161,7 +173,9 @@ contract ERC4626Facet {
             revert ERC4626ExceededMaxWithdraw(owner, assets, maxAssets);
         }
         uint256 shares = previewWithdraw(assets);
-        require(shares != 0, "ZERO_SHARES");
+        if (shares == 0) {
+            revert ERC4626ZeroAmount();
+        }
 
         _withdraw(_msgSender(), receiver, owner, assets, shares);
         return shares;
@@ -173,17 +187,20 @@ contract ERC4626Facet {
             revert ERC4626ExceededMaxRedeem(owner, shares, maxShares);
         }
         uint256 assets = previewRedeem(shares);
-        require(assets != 0, "ZERO_ASSETS");
+        if (assets == 0) {
+            revert ERC4626ZeroAmount();
+        }
 
         _withdraw(_msgSender(), receiver, owner, assets, shares);
         return assets;
     }
 
 
-    // ========== Internal Deposit ==========
 
     function _deposit(address caller, address receiver, uint256 assets, uint256 shares) internal {
-        require(receiver != address(0), "RECEIVER_ZERO");
+        if (receiver == address(0)) {
+            revert ERC4626ZeroAddress();
+        }
         ERC20Storage storage erc20s = getERC20Storage();
         getStorage().asset.transferFrom(caller, address(this), assets);
 
@@ -193,8 +210,6 @@ contract ERC4626Facet {
         emit Transfer(address(0), receiver, shares);
         emit Deposit(caller, receiver, assets, shares);
     }
-
-    // ========== Internal Withdraw ==========
 
     function _withdraw(
         address caller,
@@ -212,7 +227,9 @@ contract ERC4626Facet {
                 erc20s.allowances[owner][caller] = allowed - shares;
             }
         }
-        require(receiver != address(0), "RECEIVER_ZERO");
+        if (receiver == address(0)) {
+            revert ERC4626ZeroAddress();
+        }
 
         erc20s.balanceOf[owner] -= shares;
         erc20s.totalSupply -= shares;
@@ -222,11 +239,5 @@ contract ERC4626Facet {
         getStorage().asset.transfer(receiver, assets);
 
         emit Withdraw(caller, receiver, owner, assets, shares);
-    }
-
-    // ========== Utility Functions ==========
-
-    function _msgSender() internal view returns (address) {
-        return msg.sender;
     }
 }
