@@ -1,78 +1,78 @@
 // SPDX-License-Identifier: MIT
 pragma solidity >=0.8.30;
 
-import "../../../../src/token/Royalty/LibRoyalty.sol" as LibRoyalty;
+import "../../../../src/token/Royalty/Royalty.sol" as Royalty;
 
 /**
- * @title LibRoyaltyHarness
+ * @title RoyaltyHarness
  * @notice Test harness that exposes LibRoyalty's internal functions as external
  * @dev Required for testing since LibRoyalty only has internal functions
  */
-contract LibRoyaltyHarness {
+contract RoyaltyHarness {
     /**
-     * @notice Exposes LibRoyalty.royaltyInfo as an external function
+     * @notice Exposes Royalty.royaltyInfo as an external function
      */
     function royaltyInfo(uint256 _tokenId, uint256 _salePrice)
         external
         view
         returns (address receiver, uint256 royaltyAmount)
     {
-        return LibRoyalty.royaltyInfo(_tokenId, _salePrice);
+        return Royalty.royaltyInfo(_tokenId, _salePrice);
     }
 
     /**
-     * @notice Exposes LibRoyalty.setDefaultRoyalty as an external function
+     * @notice Exposes Royalty.setDefaultRoyalty as an external function
      */
     function setDefaultRoyalty(address _receiver, uint96 _feeNumerator) external {
-        LibRoyalty.setDefaultRoyalty(_receiver, _feeNumerator);
+        Royalty.setDefaultRoyalty(_receiver, _feeNumerator);
     }
 
     /**
-     * @notice Exposes LibRoyalty.deleteDefaultRoyalty as an external function
+     * @notice Exposes Royalty.deleteDefaultRoyalty as an external function
      */
     function deleteDefaultRoyalty() external {
-        LibRoyalty.deleteDefaultRoyalty();
+        Royalty.deleteDefaultRoyalty();
     }
 
     /**
-     * @notice Exposes LibRoyalty.setTokenRoyalty as an external function
+     * @notice Exposes Royalty.setTokenRoyalty as an external function
      */
     function setTokenRoyalty(uint256 _tokenId, address _receiver, uint96 _feeNumerator) external {
-        LibRoyalty.setTokenRoyalty(_tokenId, _receiver, _feeNumerator);
+        Royalty.setTokenRoyalty(_tokenId, _receiver, _feeNumerator);
     }
 
     /**
-     * @notice Exposes LibRoyalty.resetTokenRoyalty as an external function
+     * @notice Exposes Royalty.resetTokenRoyalty as an external function
      */
     function resetTokenRoyalty(uint256 _tokenId) external {
-        LibRoyalty.resetTokenRoyalty(_tokenId);
+        Royalty.resetTokenRoyalty(_tokenId);
     }
 
     /**
      * @notice Get default royalty receiver for testing
      */
     function getDefaultRoyaltyReceiver() external view returns (address) {
-        return LibRoyalty.getStorage().defaultRoyaltyInfo.receiver;
+        return Royalty.getStorage().defaultRoyaltyInfo.receiver;
     }
 
     /**
      * @notice Get default royalty fraction for testing
      */
     function getDefaultRoyaltyFraction() external view returns (uint96) {
-        return LibRoyalty.getStorage().defaultRoyaltyInfo.royaltyFraction;
+        return Royalty.getStorage().defaultRoyaltyInfo.royaltyFraction;
     }
 
     /**
      * @notice Get token-specific royalty receiver for testing
      */
     function getTokenRoyaltyReceiver(uint256 _tokenId) external view returns (address) {
-        return LibRoyalty.getStorage().tokenRoyaltyInfo[_tokenId].receiver;
+        return Royalty.getStorage().tokenRoyaltyInfo[_tokenId].receiver;
     }
 
     /**
      * @notice Get token-specific royalty fraction for testing
      */
     function getTokenRoyaltyFraction(uint256 _tokenId) external view returns (uint96) {
-        return LibRoyalty.getStorage().tokenRoyaltyInfo[_tokenId].royaltyFraction;
+        return Royalty.getStorage().tokenRoyaltyInfo[_tokenId].royaltyFraction;
     }
 }

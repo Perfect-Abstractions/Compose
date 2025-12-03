@@ -1,27 +1,53 @@
 // SPDX-License-Identifier: MIT
 pragma solidity >=0.8.30;
 
-import {ERC20BridgeableFacet} from "../../../../../src/token/ERC20/ERC20Bridgeable/ERC20BridgeableFacet.sol";
+import "../../../../../src/token/ERC20/ERC20Bridgeable/ERC20Bridgeable.sol" as ERC20Bridgeable;
 
-contract ERC20BridgeableHarness is ERC20BridgeableFacet {
+contract ERC20BridgeableHarness {
     /**
-     * @notice Sets or unsets a specific role for an account.
-     * @param account The address of the account to modify.
-     * @param role The bytes32 identifier of the role.
-     * @param value Set to true to grant the role, or false to revoke.
+     * @notice Mints tokens to a specified address on behalf of the "trusted-bridge" role.
+     * @param _to The address receiving the minted tokens. [NATPSEC: Only trusted bridge callers]
+     * @param _amount The amount of tokens to mint. [NATPSEC: Only trusted bridge callers]
      */
-    function setRole(address account, bytes32 role, bool value) external {
-        ERC20BridgeableFacet.AccessControlStorage storage acs = ERC20BridgeableFacet.getAccessControlStorage();
-        acs.hasRole[account][role] = value;
+    function crosschainMint(address _to, uint256 _amount) external {
+        ERC20Bridgeable.crosschainMint(_to, _amount);
     }
 
     /**
-     * @notice Gets the balance of a specified account.
-     * @param _account The address of the account to query.
-     * @return The balance of the specified account.
+     * @notice Returns the token balance of a specified account.
+     * @param _account The account for which to query the balance. [NATPSEC: Read-only]
+     * @return The current balance of the account.
      */
     function balanceOf(address _account) external view returns (uint256) {
-        ERC20BridgeableFacet.ERC20Storage storage s = ERC20BridgeableFacet.getERC20Storage();
+        ERC20Bridgeable.ERC20Storage storage s = ERC20Bridgeable.getERC20Storage();
         return s.balanceOf[_account];
+    }
+
+    /**
+     * @notice Burns tokens from a specified address on behalf of the "trusted-bridge" role.
+     * @param _from The address whose tokens will be burned. [NATPSEC: Only trusted bridge callers]
+     * @param _amount The amount of tokens to burn. [NATPSEC: Only trusted bridge callers]
+     */
+    function crosschainBurn(address _from, uint256 _amount) external {
+        ERC20Bridgeable.crosschainBurn(_from, _amount);
+    }
+
+    /**
+     * @notice Validates whether the caller has the token bridge role.
+     * @param _caller The address to check for the "trusted-bridge" role. [NATPSEC: Internal access control]
+     */
+    function checkTokenBridge(address _caller) external view {
+        ERC20Bridgeable.checkTokenBridge(_caller);
+    }
+
+    /**
+     * @notice Grants or revokes a role for a given account, for harness/testing only.
+     * @param account The account to grant or revoke the role for. [NATPSEC: Test utility only]
+     * @param role The bytes32 identifier of the role. [NATPSEC: Test utility only]
+     * @param value True to grant the role, false to revoke. [NATPSEC: Test utility only]
+     */
+    function setRole(address account, bytes32 role, bool value) external {
+        ERC20Bridgeable.AccessControlStorage storage acs = ERC20Bridgeable.getAccessControlStorage();
+        acs.hasRole[account][role] = value;
     }
 }

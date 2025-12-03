@@ -2,11 +2,11 @@
 pragma solidity >=0.8.30;
 
 import {Test} from "forge-std/Test.sol";
-import {LibRoyaltyHarness} from "./harnesses/LibRoyaltyHarness.sol";
-import "../../../src/token/Royalty/LibRoyalty.sol" as LibRoyalty;
+import {RoyaltyHarness} from "./harnesses/RoyaltyHarness.sol";
+import "../../../src/token/Royalty/Royalty.sol" as Royalty;
 
 contract LibRoyaltyTest is Test {
-    LibRoyaltyHarness public harness;
+    RoyaltyHarness public harness;
 
     address public alice;
     address public bob;
@@ -21,7 +21,7 @@ contract LibRoyaltyTest is Test {
         charlie = makeAddr("charlie");
         royaltyReceiver = makeAddr("royaltyReceiver");
 
-        harness = new LibRoyaltyHarness();
+        harness = new RoyaltyHarness();
     }
 
     /**
@@ -299,13 +299,13 @@ contract LibRoyaltyTest is Test {
         uint96 invalidFee = 10001; // More than 100%
 
         vm.expectRevert(
-            abi.encodeWithSelector(LibRoyalty.ERC2981InvalidDefaultRoyalty.selector, invalidFee, FEE_DENOMINATOR)
+            abi.encodeWithSelector(Royalty.ERC2981InvalidDefaultRoyalty.selector, invalidFee, FEE_DENOMINATOR)
         );
         harness.setDefaultRoyalty(royaltyReceiver, invalidFee);
     }
 
     function test_RevertWhen_SetDefaultRoyalty_ZeroReceiver() public {
-        vm.expectRevert(abi.encodeWithSelector(LibRoyalty.ERC2981InvalidDefaultRoyaltyReceiver.selector, address(0)));
+        vm.expectRevert(abi.encodeWithSelector(Royalty.ERC2981InvalidDefaultRoyaltyReceiver.selector, address(0)));
         harness.setDefaultRoyalty(address(0), 500);
     }
 
@@ -421,7 +421,7 @@ contract LibRoyaltyTest is Test {
         uint96 invalidFee = 10001; // More than 100%
 
         vm.expectRevert(
-            abi.encodeWithSelector(LibRoyalty.ERC2981InvalidTokenRoyalty.selector, tokenId, invalidFee, FEE_DENOMINATOR)
+            abi.encodeWithSelector(Royalty.ERC2981InvalidTokenRoyalty.selector, tokenId, invalidFee, FEE_DENOMINATOR)
         );
         harness.setTokenRoyalty(tokenId, royaltyReceiver, invalidFee);
     }
@@ -430,7 +430,7 @@ contract LibRoyaltyTest is Test {
         uint256 tokenId = 1;
 
         vm.expectRevert(
-            abi.encodeWithSelector(LibRoyalty.ERC2981InvalidTokenRoyaltyReceiver.selector, tokenId, address(0))
+            abi.encodeWithSelector(Royalty.ERC2981InvalidTokenRoyaltyReceiver.selector, tokenId, address(0))
         );
         harness.setTokenRoyalty(tokenId, address(0), 500);
     }

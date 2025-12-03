@@ -1,0 +1,34 @@
+---
+sidebar_position: 3
+title: Solidity Modules
+description: Descrition of what Solidity modules are and how they are used in Compose.
+---
+
+
+Solidity **modules** are Solidity files whose top-level code lives *outside* of contracts and Solidity libraries. They contain reusable logic that gets pulled into other contracts at compile time.
+
+A Solidity module may define **functions**, **constants**, **structs**, **events**, **enums**, **errors**, and **interfaces**.
+
+
+A precise technical definition:
+
+> A Solidity module is a Solidity file that produces **no standalone bytecode**. It is never deployed on-chain. Instead, its code is included into the bytecode of any contract that imports and uses it.
+
+Modules exist to enable **clean, explicit code reuse**. Common logic can be written once, placed in a module, and imported anywhere — without duplication or inheritance chains.
+
+
+Using modules is also **gas efficient**. Because all module functions are `internal` the compiler can inline them when profitable, or compile them to extremely cheap `JUMP` calls.
+
+Solidity modules avoid the overhead of external calls or library deployments.
+
+### File Naming Conventions in Compose
+
+Compose uses clear naming patterns to distinguish Solidity file types:
+
+- Files ending in **`Facet.sol`** (e.g., `ERC20Facet.sol`) contain facet contracts for diamonds.
+- Files ending in **`Diamond.sol`** (e.g., `ExampleDiamond.sol`) implement diamond contracts.
+- Files that do **not** end in `Facet` or `Diamond` are **Solidity modules** — intended to be imported and used within facets or diamond contracts.
+
+**Exception:**  
+`Diamond.sol` is a **module**, not a diamond contract. It provides core diamond functionality that diamond contracts import.
+

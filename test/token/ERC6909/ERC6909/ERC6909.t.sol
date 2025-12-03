@@ -3,12 +3,12 @@ pragma solidity >=0.8.30;
 
 import {Test} from "forge-std/Test.sol";
 import {stdError} from "forge-std/StdError.sol";
-import {LibERC6909Harness} from "./harnesses/LibERC6909Harness.sol";
-import "../../../../src/token/ERC6909/ERC6909/LibERC6909.sol" as LibERC6909;
-import {Transfer, OperatorSet, Approval} from "../../../../src/token/ERC6909/ERC6909/LibERC6909.sol";
+import {ERC6909Harness} from "./harnesses/ERC6909Harness.sol";
+import "../../../../src/token/ERC6909/ERC6909/ERC6909.sol" as ERC6909;
+import {Transfer, OperatorSet, Approval} from "../../../../src/token/ERC6909/ERC6909/ERC6909.sol";
 
 contract LibERC6909Test is Test {
-    LibERC6909Harness internal harness;
+    ERC6909Harness internal harness;
 
     address internal alice;
 
@@ -18,7 +18,7 @@ contract LibERC6909Test is Test {
     function setUp() public {
         alice = makeAddr("alice");
 
-        harness = new LibERC6909Harness();
+        harness = new ERC6909Harness();
     }
 
     /**
@@ -28,7 +28,7 @@ contract LibERC6909Test is Test {
      */
 
     function test_ShouldRevert_Mint_ToIsZero() external {
-        vm.expectRevert(abi.encodeWithSelector(LibERC6909.ERC6909InvalidReceiver.selector, address(0)));
+        vm.expectRevert(abi.encodeWithSelector(ERC6909.ERC6909InvalidReceiver.selector, address(0)));
         harness.mint(address(0), TOKEN_ID, AMOUNT);
     }
 
@@ -66,12 +66,12 @@ contract LibERC6909Test is Test {
      */
 
     function test_ShouldRevert_Burn_InsufficientBalance() external {
-        vm.expectRevert(abi.encodeWithSelector(LibERC6909.ERC6909InsufficientBalance.selector, alice, 0, 1, TOKEN_ID));
+        vm.expectRevert(abi.encodeWithSelector(ERC6909.ERC6909InsufficientBalance.selector, alice, 0, 1, TOKEN_ID));
         harness.burn(alice, TOKEN_ID, 1);
     }
 
     function test_ShouldRevert_Burn_FromIsZero() external {
-        vm.expectRevert(abi.encodeWithSelector(LibERC6909.ERC6909InvalidSender.selector, address(0)));
+        vm.expectRevert(abi.encodeWithSelector(ERC6909.ERC6909InvalidSender.selector, address(0)));
         harness.burn(address(0), TOKEN_ID, 1);
     }
 
@@ -113,12 +113,12 @@ contract LibERC6909Test is Test {
      */
 
     function test_ShouldRevert_Approve_OwnerIsZero() external {
-        vm.expectRevert(abi.encodeWithSelector(LibERC6909.ERC6909InvalidApprover.selector, address(0)));
+        vm.expectRevert(abi.encodeWithSelector(ERC6909.ERC6909InvalidApprover.selector, address(0)));
         harness.approve(address(0), alice, TOKEN_ID, AMOUNT);
     }
 
     function test_ShouldRevert_Approve_SpenderIsZero() external {
-        vm.expectRevert(abi.encodeWithSelector(LibERC6909.ERC6909InvalidSpender.selector, address(0)));
+        vm.expectRevert(abi.encodeWithSelector(ERC6909.ERC6909InvalidSpender.selector, address(0)));
         harness.approve(alice, address(0), TOKEN_ID, AMOUNT);
     }
 
@@ -150,12 +150,12 @@ contract LibERC6909Test is Test {
      */
 
     function test_ShouldRevert_SetOperator_OwnerIsZero() external {
-        vm.expectRevert(abi.encodeWithSelector(LibERC6909.ERC6909InvalidApprover.selector, address(0)));
+        vm.expectRevert(abi.encodeWithSelector(ERC6909.ERC6909InvalidApprover.selector, address(0)));
         harness.setOperator(address(0), alice, true);
     }
 
     function test_ShouldRevert_SetOperator_SpenderIsZero() external {
-        vm.expectRevert(abi.encodeWithSelector(LibERC6909.ERC6909InvalidSpender.selector, address(0)));
+        vm.expectRevert(abi.encodeWithSelector(ERC6909.ERC6909InvalidSpender.selector, address(0)));
         harness.setOperator(alice, address(0), true);
     }
 
@@ -290,7 +290,7 @@ contract LibERC6909Test is Test {
     }
 
     function test_ShouldRevert_Transfer_InvalidSender() external {
-        vm.expectRevert(abi.encodeWithSelector(LibERC6909.ERC6909InvalidSender.selector, address(0)));
+        vm.expectRevert(abi.encodeWithSelector(ERC6909.ERC6909InvalidSender.selector, address(0)));
 
         harness.transfer(address(0), address(0), alice, TOKEN_ID, AMOUNT);
     }
@@ -315,7 +315,7 @@ contract LibERC6909Test is Test {
         harness.approve(from, by, id, amount);
 
         vm.expectRevert(
-            abi.encodeWithSelector(LibERC6909.ERC6909InsufficientBalance.selector, from, balance, amount, id)
+            abi.encodeWithSelector(ERC6909.ERC6909InsufficientBalance.selector, from, balance, amount, id)
         );
         harness.transfer(by, from, to, id, amount);
     }
@@ -339,7 +339,7 @@ contract LibERC6909Test is Test {
         harness.setOperator(from, by, true);
 
         vm.expectRevert(
-            abi.encodeWithSelector(LibERC6909.ERC6909InsufficientBalance.selector, from, balance, amount, id)
+            abi.encodeWithSelector(ERC6909.ERC6909InsufficientBalance.selector, from, balance, amount, id)
         );
         harness.transfer(by, from, to, id, amount);
     }
@@ -363,7 +363,7 @@ contract LibERC6909Test is Test {
         harness.mint(from, id, amount);
         harness.approve(from, by, id, amount);
 
-        vm.expectRevert(abi.encodeWithSelector(LibERC6909.ERC6909InsufficientAllowance.selector, by, amount, spend, id));
+        vm.expectRevert(abi.encodeWithSelector(ERC6909.ERC6909InsufficientAllowance.selector, by, amount, spend, id));
         harness.transfer(by, from, to, id, spend);
     }
 
@@ -383,7 +383,7 @@ contract LibERC6909Test is Test {
 
         harness.mint(from, id, amount);
 
-        vm.expectRevert(abi.encodeWithSelector(LibERC6909.ERC6909InsufficientAllowance.selector, by, 0, amount, id));
+        vm.expectRevert(abi.encodeWithSelector(ERC6909.ERC6909InsufficientAllowance.selector, by, 0, amount, id));
         harness.transfer(by, from, to, id, amount);
     }
 
@@ -427,7 +427,7 @@ contract LibERC6909Test is Test {
         harness.mint(from, id, amount);
         harness.approve(from, by, id, type(uint256).max);
 
-        vm.expectRevert(abi.encodeWithSelector(LibERC6909.ERC6909InvalidReceiver.selector, address(0)));
+        vm.expectRevert(abi.encodeWithSelector(ERC6909.ERC6909InvalidReceiver.selector, address(0)));
         harness.transfer(by, from, address(0), id, amount);
     }
 

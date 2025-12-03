@@ -1,19 +1,19 @@
 // SPDX-License-Identifier: MIT
 pragma solidity >=0.8.30;
 
-import "../../../../src/access/OwnerTwoSteps/LibOwnerTwoSteps.sol" as LibOwnerTwoSteps;
+import "../../../../src/access/OwnerTwoSteps/OwnerTwoSteps.sol" as OwnerTwoSteps;
 
 /**
  * @title LibOwnerTwoSteps Test Harness
  * @notice Exposes internal LibOwnerTwoSteps functions as external for testing
  */
-contract LibOwnerTwoStepsHarness {
+contract OwnerTwoStepsHarness {
     /**
      * @notice Initialize the owner (for testing)
      */
     function initialize(address _owner) external {
-        LibOwnerTwoSteps.OwnerStorage storage ownerStorage = LibOwnerTwoSteps.getOwnerStorage();
-        LibOwnerTwoSteps.PendingOwnerStorage storage pendingStorage = LibOwnerTwoSteps.getPendingOwnerStorage();
+        OwnerTwoSteps.OwnerStorage storage ownerStorage = OwnerTwoSteps.getOwnerStorage();
+        OwnerTwoSteps.PendingOwnerStorage storage pendingStorage = OwnerTwoSteps.getPendingOwnerStorage();
         ownerStorage.owner = _owner;
         pendingStorage.pendingOwner = address(0);
     }
@@ -22,64 +22,64 @@ contract LibOwnerTwoStepsHarness {
      * @notice Get the current owner
      */
     function owner() external view returns (address) {
-        return LibOwnerTwoSteps.owner();
+        return OwnerTwoSteps.owner();
     }
 
     /**
      * @notice Get the pending owner
      */
     function pendingOwner() external view returns (address) {
-        return LibOwnerTwoSteps.pendingOwner();
+        return OwnerTwoSteps.pendingOwner();
     }
 
     /**
      * @notice Initiate ownership transfer
      */
     function transferOwnership(address _newOwner) external {
-        LibOwnerTwoSteps.transferOwnership(_newOwner);
+        OwnerTwoSteps.transferOwnership(_newOwner);
     }
 
     /**
      * @notice Accept ownership transfer
      */
     function acceptOwnership() external {
-        LibOwnerTwoSteps.acceptOwnership();
+        OwnerTwoSteps.acceptOwnership();
     }
 
     /**
      * @notice Renounce ownership (new function added by maintainer)
      */
     function renounceOwnership() external {
-        LibOwnerTwoSteps.renounceOwnership();
+        OwnerTwoSteps.renounceOwnership();
     }
 
     /**
      * @notice Check if caller is owner (new function added by maintainer)
      */
     function requireOwner() external view {
-        LibOwnerTwoSteps.requireOwner();
+        OwnerTwoSteps.requireOwner();
     }
 
     /**
      * @notice Get storage directly (for testing storage consistency)
      */
     function getStorageOwner() external view returns (address) {
-        return LibOwnerTwoSteps.getOwnerStorage().owner;
+        return OwnerTwoSteps.getOwnerStorage().owner;
     }
 
     /**
      * @notice Get storage pending owner directly (for testing storage consistency)
      */
     function getStoragePendingOwner() external view returns (address) {
-        return LibOwnerTwoSteps.getPendingOwnerStorage().pendingOwner;
+        return OwnerTwoSteps.getPendingOwnerStorage().pendingOwner;
     }
 
     /**
      * @notice Force set owner to zero without checks (for testing renounced state)
      */
     function forceRenounce() external {
-        LibOwnerTwoSteps.OwnerStorage storage ownerStorage = LibOwnerTwoSteps.getOwnerStorage();
-        LibOwnerTwoSteps.PendingOwnerStorage storage pendingStorage = LibOwnerTwoSteps.getPendingOwnerStorage();
+        OwnerTwoSteps.OwnerStorage storage ownerStorage = OwnerTwoSteps.getOwnerStorage();
+        OwnerTwoSteps.PendingOwnerStorage storage pendingStorage = OwnerTwoSteps.getPendingOwnerStorage();
         ownerStorage.owner = address(0);
         pendingStorage.pendingOwner = address(0);
     }
@@ -88,7 +88,7 @@ contract LibOwnerTwoStepsHarness {
      * @notice Force set pending owner (for testing edge cases)
      */
     function forcePendingOwner(address _pendingOwner) external {
-        LibOwnerTwoSteps.PendingOwnerStorage storage pendingStorage = LibOwnerTwoSteps.getPendingOwnerStorage();
+        OwnerTwoSteps.PendingOwnerStorage storage pendingStorage = OwnerTwoSteps.getPendingOwnerStorage();
         pendingStorage.pendingOwner = _pendingOwner;
     }
 }

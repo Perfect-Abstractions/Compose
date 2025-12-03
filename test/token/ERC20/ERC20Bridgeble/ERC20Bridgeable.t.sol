@@ -2,11 +2,11 @@
 pragma solidity >=0.8.30;
 
 import {Test} from "forge-std/Test.sol";
-import "../../../../src/token/ERC20/ERC20Bridgeable/LibERC20Bridgeable.sol" as LibERC20Bridgeable;
-import {LibERC20BridgeableHarness} from "./harnesses/LibERC20BridgeableHarness.sol";
+import "../../../../src/token/ERC20/ERC20Bridgeable/ERC20Bridgeable.sol" as ERC20Bridgeable;
+import {ERC20BridgeableHarness} from "./harnesses/ERC20BridgeableHarness.sol";
 
 contract LibERC20BridgeableTest is Test {
-    LibERC20BridgeableHarness public token;
+    ERC20BridgeableHarness public token;
 
     address public alice;
     address public bob;
@@ -17,7 +17,7 @@ contract LibERC20BridgeableTest is Test {
         alice = makeAddr("alice");
         bob = makeAddr("bob");
 
-        token = new LibERC20BridgeableHarness();
+        token = new ERC20BridgeableHarness();
         token.setRole(alice, "trusted-bridge", true);
         vm.prank(alice);
         token.crosschainMint(alice, INITIAL_SUPPLY);
@@ -36,7 +36,7 @@ contract LibERC20BridgeableTest is Test {
         vm.prank(invalidCaller);
         vm.expectRevert(
             abi.encodeWithSelector(
-                LibERC20Bridgeable.AccessControlUnauthorizedAccount.selector, invalidCaller, bytes32("trusted-bridge")
+                ERC20Bridgeable.AccessControlUnauthorizedAccount.selector, invalidCaller, bytes32("trusted-bridge")
             )
         );
         token.crosschainMint(to, amount);
@@ -45,7 +45,7 @@ contract LibERC20BridgeableTest is Test {
     function test_CrossChainMintRevertsInvalidReceiver(uint256 amount) public {
         address to = address(0);
         vm.assume(amount > 0 && amount < INITIAL_SUPPLY);
-        vm.expectRevert(abi.encodeWithSelector(LibERC20Bridgeable.ERC20InvalidReciever.selector, to));
+        vm.expectRevert(abi.encodeWithSelector(ERC20Bridgeable.ERC20InvalidReciever.selector, to));
         vm.prank(alice);
         token.crosschainMint(to, amount);
     }
@@ -71,7 +71,7 @@ contract LibERC20BridgeableTest is Test {
         vm.prank(invalidCaller);
         vm.expectRevert(
             abi.encodeWithSelector(
-                LibERC20Bridgeable.AccessControlUnauthorizedAccount.selector, invalidCaller, bytes32("trusted-bridge")
+                ERC20Bridgeable.AccessControlUnauthorizedAccount.selector, invalidCaller, bytes32("trusted-bridge")
             )
         );
         token.crosschainBurn(from, amount);
@@ -81,7 +81,7 @@ contract LibERC20BridgeableTest is Test {
         address from = address(0);
         vm.assume(amount > 0 && amount < INITIAL_SUPPLY);
         vm.prank(alice);
-        vm.expectRevert(abi.encodeWithSelector(LibERC20Bridgeable.ERC20InvalidReciever.selector, from));
+        vm.expectRevert(abi.encodeWithSelector(ERC20Bridgeable.ERC20InvalidReciever.selector, from));
         token.crosschainBurn(from, amount);
     }
 
@@ -110,14 +110,14 @@ contract LibERC20BridgeableTest is Test {
         vm.assume(invalidCaller != alice);
         vm.assume(invalidCaller != address(0));
         vm.prank(invalidCaller);
-        vm.expectRevert(abi.encodeWithSelector(LibERC20Bridgeable.ERC20InvalidBridgeAccount.selector, invalidCaller));
+        vm.expectRevert(abi.encodeWithSelector(ERC20Bridgeable.ERC20InvalidBridgeAccount.selector, invalidCaller));
         token.checkTokenBridge(invalidCaller);
     }
 
     function test_CheckTokenBridgeRevertsZeroCaller() public {
         address zeroAddress = address(0);
         vm.prank(zeroAddress);
-        vm.expectRevert(abi.encodeWithSelector(LibERC20Bridgeable.ERC20InvalidBridgeAccount.selector, zeroAddress));
+        vm.expectRevert(abi.encodeWithSelector(ERC20Bridgeable.ERC20InvalidBridgeAccount.selector, zeroAddress));
         token.checkTokenBridge(zeroAddress);
     }
 }

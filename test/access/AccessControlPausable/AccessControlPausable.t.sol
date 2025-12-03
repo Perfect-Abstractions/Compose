@@ -2,14 +2,14 @@
 pragma solidity >=0.8.30;
 
 import {Test, console2} from "forge-std/Test.sol";
-import "../../../src/access/AccessControlPausable/LibAccessControlPausable.sol" as LibAccessControlPausable;
-import "../../../src/access/AccessControl/LibAccessControl.sol" as LibAccessControl;
-import {LibAccessControlPausableHarness} from "./harnesses/LibAccessControlPausableHarness.sol";
-import {LibAccessControlHarness} from "../AccessControl/harnesses/LibAccessControlHarness.sol";
+import "../../../src/access/AccessControlPausable/AccessControlPausable.sol" as AccessControlPausable;
+import "../../../src/access/AccessControl/AccessControl.sol" as AccessControl;
+import {AccessControlPausableHarness} from "./harnesses/AccessControlPausableHarness.sol";
+import {AccessControlHarness} from "../AccessControl/harnesses/AccessControlHarness.sol";
 
 contract LibAccessControlPausableTest is Test {
-    LibAccessControlPausableHarness public harness;
-    LibAccessControlHarness public accessControl;
+    AccessControlPausableHarness public harness;
+    AccessControlHarness public accessControl;
 
     /**
      * Test addresses
@@ -35,13 +35,13 @@ contract LibAccessControlPausableTest is Test {
         /**
          * Initialize AccessControl first (shared storage)
          */
-        accessControl = new LibAccessControlHarness();
+        accessControl = new AccessControlHarness();
         accessControl.initialize(ADMIN);
 
         /**
          * Initialize Pausable harness (uses same AccessControl storage)
          */
-        harness = new LibAccessControlPausableHarness();
+        harness = new AccessControlPausableHarness();
         harness.initialize(ADMIN);
     }
 
@@ -174,14 +174,14 @@ contract LibAccessControlPausableTest is Test {
         /**
          * Should revert
          */
-        vm.expectRevert(abi.encodeWithSelector(LibAccessControlPausable.AccessControlRolePaused.selector, MINTER_ROLE));
+        vm.expectRevert(abi.encodeWithSelector(AccessControlPausable.AccessControlRolePaused.selector, MINTER_ROLE));
         harness.requireRoleNotPaused(MINTER_ROLE, ALICE);
     }
 
     function test_RevertWhen_RequireRoleNotPaused_AccountDoesNotHaveRole() public {
         vm.expectRevert(
             abi.encodeWithSelector(
-                LibAccessControlPausable.AccessControlUnauthorizedAccount.selector, ALICE, MINTER_ROLE
+                AccessControlPausable.AccessControlUnauthorizedAccount.selector, ALICE, MINTER_ROLE
             )
         );
         harness.requireRoleNotPaused(MINTER_ROLE, ALICE);

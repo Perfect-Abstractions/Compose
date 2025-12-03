@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity >=0.8.30;
 
-import "src/libraries/LibNonReentrancy.sol" as LibNonReentrancy;
+import "src/libraries/NonReentrancy.sol" as NonReentrancy;
 
 contract NonReentrantHarness {
     error ForcedFailure();
@@ -9,22 +9,22 @@ contract NonReentrantHarness {
     uint256 public counter;
 
     function guardedIncrement() public {
-        LibNonReentrancy.enter();
+        NonReentrancy.enter();
         counter++;
-        LibNonReentrancy.exit();
+        NonReentrancy.exit();
     }
 
     function guardedIncrementAndReenter() external {
-        LibNonReentrancy.enter();
+        NonReentrancy.enter();
         counter++;
 
         this.guardedIncrement();
 
-        LibNonReentrancy.exit();
+        NonReentrancy.exit();
     }
 
     function guardedIncrementAndForceRevert() external {
-        LibNonReentrancy.enter();
+        NonReentrancy.enter();
         counter++;
         revert ForcedFailure();
     }

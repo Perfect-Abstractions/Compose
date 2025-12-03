@@ -2,8 +2,8 @@
 pragma solidity >=0.8.30;
 
 import {Test} from "forge-std/Test.sol";
-import "src/libraries/LibNonReentrancy.sol" as LibNonReentrancy;
-import {NonReentrantHarness} from "test/libraries/harnesses/LibNonReentrancyHarness.sol";
+import "src/libraries/NonReentrancy.sol" as NonReentrancy;
+import {NonReentrantHarness} from "test/libraries/harnesses/NonReentrancyHarness.sol";
 
 contract LibNonReentrancyTest is Test {
     NonReentrantHarness internal harness;
@@ -24,7 +24,7 @@ contract LibNonReentrancyTest is Test {
     }
 
     function test_RevertWhen_ReenteringFunction() public {
-        vm.expectRevert(LibNonReentrancy.Reentrancy.selector);
+        vm.expectRevert(NonReentrancy.Reentrancy.selector);
         harness.guardedIncrementAndReenter();
     }
 

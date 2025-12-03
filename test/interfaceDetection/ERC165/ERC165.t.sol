@@ -2,11 +2,11 @@
 pragma solidity >=0.8.30;
 
 import {Test, console2} from "forge-std/Test.sol";
-import "../../../src/interfaceDetection/ERC165/LibERC165.sol" as LibERC165;
-import {LibERC165Harness} from "./harnesses/LibERC165Harness.sol";
+import "../../../src/interfaceDetection/ERC165/ERC165.sol" as ERC165;
+import {ERC165Harness} from "./harnesses/ERC165Harness.sol";
 
 contract LibERC165Test is Test {
-    LibERC165Harness public harness;
+    ERC165Harness public harness;
 
     /**
      * Test interface IDs
@@ -20,7 +20,7 @@ contract LibERC165Test is Test {
     bytes4 constant ZERO_INTERFACE_ID = 0x00000000;
 
     function setUp() public {
-        harness = new LibERC165Harness();
+        harness = new ERC165Harness();
         harness.initialize();
     }
 

@@ -2,11 +2,11 @@
 pragma solidity >=0.8.30;
 
 import {Test} from "forge-std/Test.sol";
-import "../../../../src/token/ERC721/ERC721Enumerable/LibERC721Enumerable.sol" as LibERC721Enumerable;
-import {LibERC721EnumerableHarness} from "./harnesses/LibERC721EnumerableHarness.sol";
+import "../../../../src/token/ERC721/ERC721Enumerable/ERC721Enumerable.sol" as ERC721Enumerable;
+import {ERC721EnumerableHarness} from "./harnesses/ERC721EnumerableHarness.sol";
 
 contract LibERC721EnumerableTest is Test {
-    LibERC721EnumerableHarness public harness;
+    ERC721EnumerableHarness public harness;
 
     address public alice;
     address public bob;
@@ -23,7 +23,7 @@ contract LibERC721EnumerableTest is Test {
         bob = makeAddr("bob");
         charlie = makeAddr("charlie");
 
-        harness = new LibERC721EnumerableHarness();
+        harness = new ERC721EnumerableHarness();
         harness.initialize(TOKEN_NAME, TOKEN_SYMBOL, BASE_URI);
     }
 
@@ -147,7 +147,7 @@ contract LibERC721EnumerableTest is Test {
     function test_MintRevertWhenZeroAddress() public {
         uint256 tokenId = 1;
 
-        vm.expectRevert(abi.encodeWithSelector(LibERC721Enumerable.ERC721InvalidReceiver.selector, address(0)));
+        vm.expectRevert(abi.encodeWithSelector(ERC721Enumerable.ERC721InvalidReceiver.selector, address(0)));
         harness.mint(address(0), tokenId);
     }
 
@@ -156,7 +156,7 @@ contract LibERC721EnumerableTest is Test {
 
         harness.mint(alice, tokenId);
 
-        vm.expectRevert(abi.encodeWithSelector(LibERC721Enumerable.ERC721InvalidSender.selector, address(0)));
+        vm.expectRevert(abi.encodeWithSelector(ERC721Enumerable.ERC721InvalidSender.selector, address(0)));
         harness.mint(bob, tokenId);
     }
 
@@ -311,7 +311,7 @@ contract LibERC721EnumerableTest is Test {
     function test_TransferFromRevertWhenNonexistent() public {
         uint256 tokenId = 999;
 
-        vm.expectRevert(abi.encodeWithSelector(LibERC721Enumerable.ERC721NonexistentToken.selector, tokenId));
+        vm.expectRevert(abi.encodeWithSelector(ERC721Enumerable.ERC721NonexistentToken.selector, tokenId));
         vm.prank(alice);
         harness.transferFrom(alice, bob, tokenId);
     }
@@ -321,7 +321,7 @@ contract LibERC721EnumerableTest is Test {
 
         harness.mint(alice, tokenId);
 
-        vm.expectRevert(abi.encodeWithSelector(LibERC721Enumerable.ERC721InvalidReceiver.selector, address(0)));
+        vm.expectRevert(abi.encodeWithSelector(ERC721Enumerable.ERC721InvalidReceiver.selector, address(0)));
         vm.prank(alice);
         harness.transferFrom(alice, address(0), tokenId);
     }
@@ -331,7 +331,7 @@ contract LibERC721EnumerableTest is Test {
 
         harness.mint(alice, tokenId);
 
-        vm.expectRevert(abi.encodeWithSelector(LibERC721Enumerable.ERC721IncorrectOwner.selector, bob, tokenId, alice));
+        vm.expectRevert(abi.encodeWithSelector(ERC721Enumerable.ERC721IncorrectOwner.selector, bob, tokenId, alice));
         vm.prank(alice);
         harness.transferFrom(bob, charlie, tokenId);
     }
@@ -341,7 +341,7 @@ contract LibERC721EnumerableTest is Test {
 
         harness.mint(alice, tokenId);
 
-        vm.expectRevert(abi.encodeWithSelector(LibERC721Enumerable.ERC721InsufficientApproval.selector, bob, tokenId));
+        vm.expectRevert(abi.encodeWithSelector(ERC721Enumerable.ERC721InsufficientApproval.selector, bob, tokenId));
         vm.prank(bob);
         harness.transferFrom(alice, charlie, tokenId);
     }

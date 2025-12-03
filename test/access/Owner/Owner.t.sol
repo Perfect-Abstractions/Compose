@@ -2,11 +2,11 @@
 pragma solidity >=0.8.30;
 
 import {Test, console2} from "forge-std/Test.sol";
-import "../../../src/access/Owner/LibOwner.sol" as LibOwner;
-import {LibOwnerHarness} from "./harnesses/LibOwnerHarness.sol";
+import "../../../src/access/Owner/Owner.sol" as Owner;
+import {OwnerHarness} from "./harnesses/OwnerHarness.sol";
 
 contract LibOwnerTest is Test {
-    LibOwnerHarness public harness;
+    OwnerHarness public harness;
 
     address INITIAL_OWNER = makeAddr("owner");
     address NEW_OWNER = makeAddr("newOwner");
@@ -20,7 +20,7 @@ contract LibOwnerTest is Test {
     event OwnershipTransferred(address indexed previousOwner, address indexed newOwner);
 
     function setUp() public {
-        harness = new LibOwnerHarness();
+        harness = new OwnerHarness();
         harness.initialize(INITIAL_OWNER);
     }
 
@@ -116,7 +116,7 @@ contract LibOwnerTest is Test {
         /**
          * Should revert with OwnerAlreadyRenounced error
          */
-        vm.expectRevert(LibOwner.OwnerAlreadyRenounced.selector);
+        vm.expectRevert(Owner.OwnerAlreadyRenounced.selector);
         harness.transferOwnership(NEW_OWNER);
     }
 
@@ -194,7 +194,7 @@ contract LibOwnerTest is Test {
         /**
          * Should revert with OwnerAlreadyRenounced error
          */
-        vm.expectRevert(LibOwner.OwnerAlreadyRenounced.selector);
+        vm.expectRevert(Owner.OwnerAlreadyRenounced.selector);
         harness.transferOwnership(ALICE);
     }
 
@@ -257,7 +257,7 @@ contract LibOwnerTest is Test {
         /**
          * Should revert with OwnerAlreadyRenounced error
          */
-        vm.expectRevert(LibOwner.OwnerAlreadyRenounced.selector);
+        vm.expectRevert(Owner.OwnerAlreadyRenounced.selector);
         harness.transferOwnership(target);
     }
 
@@ -301,7 +301,7 @@ contract LibOwnerTest is Test {
     }
 
     function test_RevertWhen_RequireOwner_CalledByNonOwner() public {
-        vm.expectRevert(LibOwner.OwnerUnauthorizedAccount.selector);
+        vm.expectRevert(Owner.OwnerUnauthorizedAccount.selector);
         vm.prank(ALICE);
         harness.requireOwner();
     }
@@ -317,7 +317,7 @@ contract LibOwnerTest is Test {
             /**
              * Should revert for non-owner
              */
-            vm.expectRevert(LibOwner.OwnerUnauthorizedAccount.selector);
+            vm.expectRevert(Owner.OwnerUnauthorizedAccount.selector);
             vm.prank(caller);
             harness.requireOwner();
         }

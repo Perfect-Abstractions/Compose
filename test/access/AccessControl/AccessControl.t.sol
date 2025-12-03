@@ -2,11 +2,11 @@
 pragma solidity >=0.8.30;
 
 import {Test, console2} from "forge-std/Test.sol";
-import "../../../src/access/AccessControl/LibAccessControl.sol" as LibAccessControl;
-import {LibAccessControlHarness} from "./harnesses/LibAccessControlHarness.sol";
+import "../../../src/access/AccessControl/AccessControl.sol" as AccessControl;
+import {AccessControlHarness} from "./harnesses/AccessControlHarness.sol";
 
 contract LibAccessControlTest is Test {
-    LibAccessControlHarness public harness;
+    AccessControlHarness public harness;
 
     /**
      * Test addresses
@@ -34,7 +34,7 @@ contract LibAccessControlTest is Test {
     event RoleRevoked(bytes32 indexed role, address indexed account, address indexed sender);
 
     function setUp() public {
-        harness = new LibAccessControlHarness();
+        harness = new AccessControlHarness();
         harness.initialize(ADMIN);
     }
 
@@ -135,7 +135,7 @@ contract LibAccessControlTest is Test {
 
     function test_RevertWhen_RequireRole_AccountDoesNotHaveRole() public {
         vm.expectRevert(
-            abi.encodeWithSelector(LibAccessControl.AccessControlUnauthorizedAccount.selector, ALICE, MINTER_ROLE)
+            abi.encodeWithSelector(AccessControl.AccessControlUnauthorizedAccount.selector, ALICE, MINTER_ROLE)
         );
         harness.requireRole(MINTER_ROLE, ALICE);
     }
@@ -143,7 +143,7 @@ contract LibAccessControlTest is Test {
     function test_RevertWhen_RequireRole_ZeroAddressDoesNotHaveRole() public {
         vm.expectRevert(
             abi.encodeWithSelector(
-                LibAccessControl.AccessControlUnauthorizedAccount.selector, ZERO_ADDRESS, DEFAULT_ADMIN_ROLE
+                AccessControl.AccessControlUnauthorizedAccount.selector, ZERO_ADDRESS, DEFAULT_ADMIN_ROLE
             )
         );
         harness.requireRole(DEFAULT_ADMIN_ROLE, ZERO_ADDRESS);

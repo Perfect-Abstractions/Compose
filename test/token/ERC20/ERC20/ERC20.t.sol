@@ -2,11 +2,11 @@
 pragma solidity >=0.8.30;
 
 import {Test} from "forge-std/Test.sol";
-import {LibERC20Harness} from "./harnesses/LibERC20Harness.sol";
-import "../../../../src/token/ERC20/ERC20/LibERC20.sol" as LibERC20;
+import {ERC20Harness} from "./harnesses/ERC20Harness.sol";
+import "../../../../src/token/ERC20/ERC20/ERC20.sol" as ERC20;
 
 contract LibERC20Test is Test {
-    LibERC20Harness public harness;
+    ERC20Harness public harness;
 
     address public alice;
     address public bob;
@@ -24,7 +24,7 @@ contract LibERC20Test is Test {
         bob = makeAddr("bob");
         charlie = makeAddr("charlie");
 
-        harness = new LibERC20Harness();
+        harness = new ERC20Harness();
         harness.initialize(TOKEN_NAME, TOKEN_SYMBOL, TOKEN_DECIMALS);
     }
 
@@ -88,7 +88,7 @@ contract LibERC20Test is Test {
     }
 
     function test_RevertWhen_MintToZeroAddress() public {
-        vm.expectRevert(abi.encodeWithSelector(LibERC20.ERC20InvalidReceiver.selector, address(0)));
+        vm.expectRevert(abi.encodeWithSelector(ERC20.ERC20InvalidReceiver.selector, address(0)));
         harness.mint(address(0), 100e18);
     }
 
@@ -136,19 +136,19 @@ contract LibERC20Test is Test {
     }
 
     function test_RevertWhen_BurnFromZeroAddress() public {
-        vm.expectRevert(abi.encodeWithSelector(LibERC20.ERC20InvalidSender.selector, address(0)));
+        vm.expectRevert(abi.encodeWithSelector(ERC20.ERC20InvalidSender.selector, address(0)));
         harness.burn(address(0), 100e18);
     }
 
     function test_RevertWhen_BurnInsufficientBalance() public {
         harness.mint(alice, 50e18);
 
-        vm.expectRevert(abi.encodeWithSelector(LibERC20.ERC20InsufficientBalance.selector, alice, 50e18, 100e18));
+        vm.expectRevert(abi.encodeWithSelector(ERC20.ERC20InsufficientBalance.selector, alice, 50e18, 100e18));
         harness.burn(alice, 100e18);
     }
 
     function test_RevertWhen_BurnZeroBalance() public {
-        vm.expectRevert(abi.encodeWithSelector(LibERC20.ERC20InsufficientBalance.selector, alice, 0, 1));
+        vm.expectRevert(abi.encodeWithSelector(ERC20.ERC20InsufficientBalance.selector, alice, 0, 1));
         harness.burn(alice, 1);
     }
 
@@ -210,7 +210,7 @@ contract LibERC20Test is Test {
         harness.mint(alice, 100e18);
 
         vm.prank(alice);
-        vm.expectRevert(abi.encodeWithSelector(LibERC20.ERC20InvalidReceiver.selector, address(0)));
+        vm.expectRevert(abi.encodeWithSelector(ERC20.ERC20InvalidReceiver.selector, address(0)));
         harness.transfer(address(0), 100e18);
     }
 
@@ -218,7 +218,7 @@ contract LibERC20Test is Test {
         harness.mint(alice, 50e18);
 
         vm.prank(alice);
-        vm.expectRevert(abi.encodeWithSelector(LibERC20.ERC20InsufficientBalance.selector, alice, 50e18, 100e18));
+        vm.expectRevert(abi.encodeWithSelector(ERC20.ERC20InsufficientBalance.selector, alice, 50e18, 100e18));
         harness.transfer(bob, 100e18);
     }
 
@@ -283,7 +283,7 @@ contract LibERC20Test is Test {
 
     function test_RevertWhen_ApproveZeroAddressSpender() public {
         vm.prank(alice);
-        vm.expectRevert(abi.encodeWithSelector(LibERC20.ERC20InvalidSpender.selector, address(0)));
+        vm.expectRevert(abi.encodeWithSelector(ERC20.ERC20InvalidSpender.selector, address(0)));
         harness.approve(address(0), 100e18);
     }
 
@@ -347,7 +347,7 @@ contract LibERC20Test is Test {
     }
 
     function test_RevertWhen_TransferFromZeroAddressSender() public {
-        vm.expectRevert(abi.encodeWithSelector(LibERC20.ERC20InvalidSender.selector, address(0)));
+        vm.expectRevert(abi.encodeWithSelector(ERC20.ERC20InvalidSender.selector, address(0)));
         harness.transferFrom(address(0), bob, 100e18);
     }
 
@@ -358,7 +358,7 @@ contract LibERC20Test is Test {
         harness.approve(bob, 100e18);
 
         vm.prank(bob);
-        vm.expectRevert(abi.encodeWithSelector(LibERC20.ERC20InvalidReceiver.selector, address(0)));
+        vm.expectRevert(abi.encodeWithSelector(ERC20.ERC20InvalidReceiver.selector, address(0)));
         harness.transferFrom(alice, address(0), 100e18);
     }
 
@@ -373,7 +373,7 @@ contract LibERC20Test is Test {
 
         vm.prank(bob);
         vm.expectRevert(
-            abi.encodeWithSelector(LibERC20.ERC20InsufficientAllowance.selector, bob, allowanceAmount, transferAmount)
+            abi.encodeWithSelector(ERC20.ERC20InsufficientAllowance.selector, bob, allowanceAmount, transferAmount)
         );
         harness.transferFrom(alice, charlie, transferAmount);
     }
@@ -388,7 +388,7 @@ contract LibERC20Test is Test {
         harness.approve(bob, amount);
 
         vm.prank(bob);
-        vm.expectRevert(abi.encodeWithSelector(LibERC20.ERC20InsufficientBalance.selector, alice, balance, amount));
+        vm.expectRevert(abi.encodeWithSelector(ERC20.ERC20InsufficientBalance.selector, alice, balance, amount));
         harness.transferFrom(alice, charlie, amount);
     }
 
@@ -396,7 +396,7 @@ contract LibERC20Test is Test {
         harness.mint(alice, 100e18);
 
         vm.prank(bob);
-        vm.expectRevert(abi.encodeWithSelector(LibERC20.ERC20InsufficientAllowance.selector, bob, 0, 100e18));
+        vm.expectRevert(abi.encodeWithSelector(ERC20.ERC20InsufficientAllowance.selector, bob, 0, 100e18));
         harness.transferFrom(alice, charlie, 100e18);
     }
 
