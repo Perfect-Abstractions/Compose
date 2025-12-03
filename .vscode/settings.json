@@ -8,12 +8,7 @@
     
     // Enable GitHub Copilot
     "github.copilot.enable": {
-        "*": false,
-        "plaintext": false,
-        "markdown": false,
-        "scminput": false,
-        "rust": false,
-        "solidity": false
+        "*": true
     },
     "github.copilot.inlineSuggest.enable": true,
     "editor.inlineSuggest.enabled": true,
