@@ -1,7 +1,7 @@
 ---
 sidebar_position: 7
-title: "Understanding Facets and Libraries"
-description: Learn how facets and libraries work together through shared storage to build composable systems.
+title: "Understanding Facets and Modules"
+description: Learn how facets and modules work together through shared storage to build composable systems.
 ---
 
 Compose uses two complementary patterns for smart contract development:
@@ -17,35 +17,35 @@ Compose uses two complementary patterns for smart contract development:
 
 **Example**: `ERC20Facet.sol` contains the complete ERC-20 token implementation.
 
-### Libraries (Helper Functions)
+### Modules (Helper Functions)
 
-**Libraries** (prefixed with `Lib`) help developers integrate their custom facets with Compose's facets. They:
+**Solidity modules help developers integrate their custom facets with Compose's facets. They:
 
 - **Provide helper functions**: Reusable internal functions for custom facets
 - **Access shared storage**: Work with the same storage layout as their corresponding facet
 - **Enable composition**: Allow custom facets to interact with Compose functionality
 - **Initializes Deployment**: Used to set variables when deploying diamonds
 
-**Example**: `LibERC20.sol` provides helper functions to interact with ERC-20 storage from custom facets.
+**Example**: `ERC20.sol` provides helper functions to interact with ERC-20 storage from custom facets.
 
 ### The Key Insight: Shared Storage
 
-**Both facets and libraries access the SAME storage in your diamond.** When `ERC721Facet` and `LibERC721` both define identical storage at `keccak256("compose.erc721")`, they're reading and writing the same data. This is how your custom facets can extend Compose functionality without inheritance.
+**Both facets and modules access the SAME storage in your diamond.** When `ERC721Facet` and `ERC721` both define identical storage at `keccak256("compose.erc721")`, they're reading and writing the same data. This is how your custom facets can extend Compose functionality without inheritance.
 
 ### When to Use Each
 
-**Use a Facet when you want:**
+**Use a facet when you want:**
 
 - The complete, standard implementation (e.g., full ERC-20 functionality)
 - To reuse it (on-chain) across multiple diamonds
 - A verified, audited implementation
 
-**Use a Library when you're:**
+**Use a module when you're:**
 
 - Building a custom facet that needs to interact with Compose features
 - Extending standard functionality with custom logic
 - Initializing storage variables during diamond deployment
 
-## Available Facets & Libraries
+## Available Facets & Modules
 
-Look in the [src directory](https://github.com/Perfect-Abstractions/Compose/tree/main/src) to see the currently provided functionality, facets and libraries.
+Look in the [src directory](https://github.com/Perfect-Abstractions/Compose/tree/main/src) to see the currently provided functionality, facets and modules.
