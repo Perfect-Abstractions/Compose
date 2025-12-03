@@ -15,7 +15,7 @@ contract ERC4626Facet {
     error ERC4626ExceededMaxWithdraw(address owner, uint256 assets, uint256 max);
     error ERC4626ExceededMaxRedeem(address owner, uint256 shares, uint256 max);
     error ERC4626ZeroAmount();
-    error ZeroAddress();
+    error ERC4626ZeroAddress();
 
     bytes32 constant STORAGE_POSITION = keccak256("compose.erc4626");
     bytes32 constant ERC20_STORAGE_POSITION = keccak256("compose.erc20");
