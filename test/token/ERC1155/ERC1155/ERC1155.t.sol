@@ -355,9 +355,7 @@ contract LibERC1155Test is Test {
         burnAmounts[0] = 50;
         burnAmounts[1] = 100; // More than balance
 
-        vm.expectRevert(
-            abi.encodeWithSelector(ERC1155.ERC1155InsufficientBalance.selector, alice, 50, 100, TOKEN_ID_2)
-        );
+        vm.expectRevert(abi.encodeWithSelector(ERC1155.ERC1155InsufficientBalance.selector, alice, 50, 100, TOKEN_ID_2));
         harness.burnBatch(alice, ids, burnAmounts);
     }
 
@@ -616,9 +614,7 @@ contract LibERC1155Test is Test {
         transferAmounts[1] = 100; // More than balance
 
         vm.prank(alice);
-        vm.expectRevert(
-            abi.encodeWithSelector(ERC1155.ERC1155InsufficientBalance.selector, alice, 50, 100, TOKEN_ID_2)
-        );
+        vm.expectRevert(abi.encodeWithSelector(ERC1155.ERC1155InsufficientBalance.selector, alice, 50, 100, TOKEN_ID_2));
         harness.safeBatchTransferFrom(alice, bob, ids, transferAmounts);
     }
 

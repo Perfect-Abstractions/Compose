@@ -21,9 +21,7 @@ contract DiamondHarness {
         DiamondCut.removeFunctions(_facet, _functionSelectos);
     }
 
-    function diamondCut(DiamondCut.FacetCut[] calldata _diamondCut, address _init, bytes calldata _calldata)
-        external
-    {
+    function diamondCut(DiamondCut.FacetCut[] calldata _diamondCut, address _init, bytes calldata _calldata) external {
         DiamondCut.diamondCut(_diamondCut, _init, _calldata);
     }
 

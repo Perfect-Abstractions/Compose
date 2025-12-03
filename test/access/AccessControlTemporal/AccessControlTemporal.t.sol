@@ -226,9 +226,7 @@ contract LibAccessControlTemporalTest is Test {
 
     function test_RevertWhen_RequireValidRole_NoRole() public {
         vm.expectRevert(
-            abi.encodeWithSelector(
-                AccessControlTemporal.AccessControlUnauthorizedAccount.selector, ALICE, MINTER_ROLE
-            )
+            abi.encodeWithSelector(AccessControlTemporal.AccessControlUnauthorizedAccount.selector, ALICE, MINTER_ROLE)
         );
         harness.requireValidRole(MINTER_ROLE, ALICE);
     }
@@ -242,9 +240,7 @@ contract LibAccessControlTemporalTest is Test {
         vm.stopPrank();
 
         vm.expectRevert(
-            abi.encodeWithSelector(
-                AccessControlTemporal.AccessControlUnauthorizedAccount.selector, ALICE, MINTER_ROLE
-            )
+            abi.encodeWithSelector(AccessControlTemporal.AccessControlUnauthorizedAccount.selector, ALICE, MINTER_ROLE)
         );
         harness.requireValidRole(MINTER_ROLE, ALICE);
     }

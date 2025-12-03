@@ -86,9 +86,7 @@ contract LibDiamondHarnessTest is Test {
 
         DiamondCut.FacetCut[] memory _cut = new DiamondCut.FacetCut[](1);
         _cut[0] = DiamondCut.FacetCut({
-            facetAddress: address(facet),
-            action: DiamondCut.FacetCutAction.Add,
-            functionSelectors: _functionSelectors
+            facetAddress: address(facet), action: DiamondCut.FacetCutAction.Add, functionSelectors: _functionSelectors
         });
         address _init = ADDRESS_ZERO;
         bytes memory _calldata = abi.encode("0x00");
@@ -215,9 +213,7 @@ contract LibDiamondHarnessTest is Test {
         bytes4[] memory _functionSelectors = new bytes4[](1);
         _functionSelectors[0] = bytes4(keccak256("decimals()"));
 
-        vm.expectRevert(
-            abi.encodeWithSelector(DiamondCut.RemoveFacetAddressMustBeZeroAddress.selector, address(facet))
-        );
+        vm.expectRevert(abi.encodeWithSelector(DiamondCut.RemoveFacetAddressMustBeZeroAddress.selector, address(facet)));
         harness.removeFunctions(address(facet), _functionSelectors);
     }
 
@@ -249,18 +245,14 @@ contract LibDiamondHarnessTest is Test {
 
         DiamondCut.FacetCut[] memory _cut = new DiamondCut.FacetCut[](1);
         _cut[0] = DiamondCut.FacetCut({
-            facetAddress: address(facet),
-            action: DiamondCut.FacetCutAction.Add,
-            functionSelectors: _functionSelectors
+            facetAddress: address(facet), action: DiamondCut.FacetCutAction.Add, functionSelectors: _functionSelectors
         });
 
         address _init = makeAddr("zerocode");
         bytes memory _calldata = abi.encode("0x00");
 
         vm.expectRevert(
-            abi.encodeWithSelector(
-                DiamondCut.NoBytecodeAtAddress.selector, _init, "LibDiamond: _init address no code"
-            )
+            abi.encodeWithSelector(DiamondCut.NoBytecodeAtAddress.selector, _init, "LibDiamond: _init address no code")
         );
         harness.diamondCut(_cut, _init, _calldata);
     }
@@ -270,9 +262,7 @@ contract LibDiamondHarnessTest is Test {
 
         DiamondCut.FacetCut[] memory _cut = new DiamondCut.FacetCut[](1);
         _cut[0] = DiamondCut.FacetCut({
-            facetAddress: address(facet),
-            action: DiamondCut.FacetCutAction.Add,
-            functionSelectors: _functionSelectors
+            facetAddress: address(facet), action: DiamondCut.FacetCutAction.Add, functionSelectors: _functionSelectors
         });
 
         address _init = ADDRESS_ZERO;
@@ -288,9 +278,7 @@ contract LibDiamondHarnessTest is Test {
 
         DiamondCut.FacetCut[] memory _cut = new DiamondCut.FacetCut[](1);
         _cut[0] = DiamondCut.FacetCut({
-            facetAddress: address(facet),
-            action: DiamondCut.FacetCutAction.Add,
-            functionSelectors: _functionSelectors
+            facetAddress: address(facet), action: DiamondCut.FacetCutAction.Add, functionSelectors: _functionSelectors
         });
 
         ERC20FacetHarness newFacet = new ERC20FacetHarness();
@@ -310,9 +298,7 @@ contract LibDiamondHarnessTest is Test {
 
         DiamondCut.FacetCut[] memory _cut = new DiamondCut.FacetCut[](1);
         _cut[0] = DiamondCut.FacetCut({
-            facetAddress: address(facet),
-            action: DiamondCut.FacetCutAction.Add,
-            functionSelectors: _functionSelectors
+            facetAddress: address(facet), action: DiamondCut.FacetCutAction.Add, functionSelectors: _functionSelectors
         });
 
         ERC20FacetWithFallbackHarness newFacet = new ERC20FacetWithFallbackHarness();
@@ -366,9 +352,7 @@ contract LibDiamondHarnessTest is Test {
 
         DiamondCut.FacetCut[] memory _cut = new DiamondCut.FacetCut[](3);
         _cut[0] = DiamondCut.FacetCut({
-            facetAddress: address(facet),
-            action: DiamondCut.FacetCutAction.Add,
-            functionSelectors: _functionSelectors
+            facetAddress: address(facet), action: DiamondCut.FacetCutAction.Add, functionSelectors: _functionSelectors
         });
 
         _cut[1] = DiamondCut.FacetCut({
@@ -378,9 +362,7 @@ contract LibDiamondHarnessTest is Test {
         });
 
         _cut[2] = DiamondCut.FacetCut({
-            facetAddress: ADDRESS_ZERO,
-            action: DiamondCut.FacetCutAction.Remove,
-            functionSelectors: _functionSelectors
+            facetAddress: ADDRESS_ZERO, action: DiamondCut.FacetCutAction.Remove, functionSelectors: _functionSelectors
         });
 
         address _init = ADDRESS_ZERO;

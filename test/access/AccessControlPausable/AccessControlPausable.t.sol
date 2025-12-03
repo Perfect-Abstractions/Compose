@@ -180,9 +180,7 @@ contract LibAccessControlPausableTest is Test {
 
     function test_RevertWhen_RequireRoleNotPaused_AccountDoesNotHaveRole() public {
         vm.expectRevert(
-            abi.encodeWithSelector(
-                AccessControlPausable.AccessControlUnauthorizedAccount.selector, ALICE, MINTER_ROLE
-            )
+            abi.encodeWithSelector(AccessControlPausable.AccessControlUnauthorizedAccount.selector, ALICE, MINTER_ROLE)
         );
         harness.requireRoleNotPaused(MINTER_ROLE, ALICE);
     }

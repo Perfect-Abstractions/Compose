@@ -314,9 +314,7 @@ contract LibERC6909Test is Test {
         harness.mint(from, id, balance);
         harness.approve(from, by, id, amount);
 
-        vm.expectRevert(
-            abi.encodeWithSelector(ERC6909.ERC6909InsufficientBalance.selector, from, balance, amount, id)
-        );
+        vm.expectRevert(abi.encodeWithSelector(ERC6909.ERC6909InsufficientBalance.selector, from, balance, amount, id));
         harness.transfer(by, from, to, id, amount);
     }
 
@@ -338,9 +336,7 @@ contract LibERC6909Test is Test {
         harness.mint(from, id, balance);
         harness.setOperator(from, by, true);
 
-        vm.expectRevert(
-            abi.encodeWithSelector(ERC6909.ERC6909InsufficientBalance.selector, from, balance, amount, id)
-        );
+        vm.expectRevert(abi.encodeWithSelector(ERC6909.ERC6909InsufficientBalance.selector, from, balance, amount, id));
         harness.transfer(by, from, to, id, amount);
     }
 
