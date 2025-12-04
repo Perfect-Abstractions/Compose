@@ -1,10 +1,10 @@
 ---
 sidebar_position: 3
 title: Code Style Guide
-description: Code style guidelines for developing Compose facets and libraries
+description: Code style guidelines for developing Compose facets and modules
 ---
 
-This section outlines the code style guidelines for developing new facets and Solidity libraries in **Compose**.
+This section outlines the code style guidelines for developing new facets and Solidity modules in **Compose**.
 
 Follow [Compose's design principles](/docs/design) when contributing code.
 
@@ -19,11 +19,11 @@ Follow the [Solidity feature ban](/docs/design/banned-solidity-features).
     error ERC20InvalidSender(address _sender);
     function transfer(address _to, uint256 _amount) external {}
     ```
-- **Camel Case:** Use camelCase for variable, function, contract, and library names, except for standard uppercase abbreviations (e.g., ERC).
-  - Example: `totalSupply`, `LibERC20`, `ERC721Facet`
+- **Camel Case:** Use camelCase for variable, function, contract, and module names, except for standard uppercase abbreviations (e.g., ERC).
+  - Example: `totalSupply`, `ERC20Mod`, `ERC721Facet`
 
 - **Facets:** Internal function names in facets should be prefixed with `internal` if they otherwise have the same name as an external function in the same facet. Usually, there should be few or no internal functions in facets; repeat code if it improves readability.
-- **Libraries:** All functions in libraries use the `internal` visibility specifier. 
+- **Modules:** All functions in modules use the `internal` visibility specifier. 
 
 ### Value Resetting
 - Use `delete` to set a value to zero.

@@ -1,10 +1,10 @@
 ---
 sidebar_position: 4
 title: Banned Solidity Features
-description: Solidity language features that are banned from Compose facets and libraries.
+description: Solidity language features that are banned from Compose facets and modules.
 ---
 
-The following Solidity language features are **banned** from Compose facets and libraries.
+The following Solidity language features are **banned** from Compose facets and modules.
 
 Compose restricts certain Solidity features to keep facet and library code **simpler**, **more consistent**, and **easier to reason about**.
 
@@ -96,7 +96,7 @@ function approve(address _spender, uint256 _value) public {
 
   <Accordion title="No external functions in Solidity libraries">
 
-All Solidity library functions must be declared `internal`.
+All Solidity module functions must be declared `internal`.
 
 ```solidity title="🚫 Not allowed"
 function transfer() external {
@@ -106,10 +106,10 @@ function transfer() external {
 
   </Accordion>
 
-  <Accordion title="No `using` directives in libraries">
+  <Accordion title="No `using` directives in modules">
 
 ```solidity title="🚫 Not allowed"
-using LibSomething for uint256;
+using SomethingMod for uint256;
 ```
 
   </Accordion>
@@ -140,7 +140,7 @@ if (x < 10) {
 
   </Accordion>
   <Accordion title="No selfdestruct">
-  No contract or library may use `selfdestruct`
+  No contract or module may use `selfdestruct`
   ```solidity title="🚫 Not allowed"
   selfdestruct(owner);  
   ```

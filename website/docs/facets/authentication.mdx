@@ -119,7 +119,7 @@ The `AccessControlFacet` provides standard role-based access control functionali
 Here's how to integrate access control in your custom facet:
 
 ```solidity
-import {LibAccessControl} from "compose/LibAccessControl.sol";
+import {AccessControlMod} from "compose/AccessControlMod.sol";
 
 contract AdminFacet {
     // Define your custom role
@@ -163,11 +163,11 @@ bytes32 public constant BURNER_ROLE = keccak256("BURNER_ROLE");
 
 ## Integration with Custom Facets
 
-Your custom facets can use `LibAccessControl` to check permissions:
+Your custom facets can use `AccessControlMod` to check permissions:
 
 ```solidity
-import {LibAccessControl} from "compose/LibAccessControl.sol";
-import {LibERC20} from "compose/LibERC20.sol";
+import {AccessControlMod} from "compose/AccessControlMod.sol";
+import {ERC20Mod} from "compose/ERC20Mod.sol";
 
 contract TokenMinterFacet {
     bytes32 public constant MINTER_ROLE = keccak256("MINTER_ROLE");
@@ -175,18 +175,18 @@ contract TokenMinterFacet {
     function mintTokens(address to, uint256 amount) external {
         // Check minter permission
         require(
-            LibAccessControl.hasRole(MINTER_ROLE, msg.sender),
+            AccessControlMod.hasRole(MINTER_ROLE, msg.sender),
             "TokenMinter: caller is not minter"
         );
         
         // Mint using Compose's ERC20 library
-        LibERC20.mint(to, amount);
+        ERC20Mod.mint(to, amount);
     }
 }
 ```
 
 <Callout type="success" title="Shared Storage Power">
-The `LibAccessControl` library accesses the same storage as `AccessControlFacet`, so permissions set through the facet are instantly available to your custom facets!
+The `AccessControlMod` library accesses the same storage as `AccessControlFacet`, so permissions set through the facet are instantly available to your custom facets!
 </Callout>
 
 ## Security Considerations
@@ -226,17 +226,17 @@ contract TimeLockFacet {
         uint256 duration
     ) external {
         require(
-            LibAccessControl.hasRole(DEFAULT_ADMIN_ROLE, msg.sender),
+            AccessControlMod.hasRole(DEFAULT_ADMIN_ROLE, msg.sender),
             "Not admin"
         );
         
-        LibAccessControl.grantRole(OPERATOR_ROLE, account);
+        AccessControlMod.grantRole(OPERATOR_ROLE, account);
         roleExpiry[account] = block.timestamp + duration;
     }
     
     function revokeExpiredRoles(address account) external {
         if (block.timestamp >= roleExpiry[account]) {
-            LibAccessControl.revokeRole(OPERATOR_ROLE, account);
+            AccessControlMod.revokeRole(OPERATOR_ROLE, account);
         }
     }
 }
@@ -247,9 +247,9 @@ contract TimeLockFacet {
 <FeatureGrid columns={2}>
   <FeatureGridItem
     icon={<Icon name="diamond" size={32} />}
-    title="Facets & Libraries"
+    title="Facets & Modules"
     description="Learn how authentication integrates with the facet architecture."
-    href="/docs/foundations/facets-and-libraries"
+    href="/docs/foundations/facets-and-modules"
   />
   <FeatureGridItem
     icon={<Icon name="shield" size={32} />}
