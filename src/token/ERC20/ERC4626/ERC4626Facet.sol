@@ -16,7 +16,9 @@ interface IERC20 {
  */
 contract ERC4626Facet {
     event Deposit(address indexed caller, address indexed owner, uint256 assets, uint256 shares);
-    event Withdraw(address indexed caller, address indexed receiver, address indexed owner, uint256 assets, uint256 shares);
+    event Withdraw(
+        address indexed caller, address indexed receiver, address indexed owner, uint256 assets, uint256 shares
+    );
     event Transfer(address indexed from, address indexed to, uint256 value);
 
     error ERC4626ExceededMaxDeposit(address receiver, uint256 assets, uint256 max);
@@ -83,9 +85,10 @@ contract ERC4626Facet {
 
     function convertToShares(uint256 assets) public view returns (uint256) {
         uint256 totalShare = totalShares();
-        /** This is the state when the vault was used for the first time.
+        /**
+         * This is the state when the vault was used for the first time.
          * The ratio between the assets and the shares is 1:1 when the vault is in initial state.
-        */ 
+         */
         if (totalShare == 0) {
             return assets;
         }
@@ -94,9 +97,10 @@ contract ERC4626Facet {
 
     function convertToAssets(uint256 shares) public view returns (uint256) {
         uint256 totalShare = totalShares();
-        /** This is the state when the vault was used for the first time.
+        /**
+         * This is the state when the vault was used for the first time.
          * The ratio between the assets and the shares is 1:1 when the vault is in initial state.
-        */ 
+         */
         if (totalShare == 0) {
             return shares;
         }
@@ -243,7 +247,6 @@ contract ERC4626Facet {
         if (assets == 0) {
             revert ERC4626ZeroAmount(assets);
         }
-
 
         ERC20Storage storage erc20s = getERC20Storage();
 
