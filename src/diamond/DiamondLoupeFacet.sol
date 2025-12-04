@@ -4,6 +4,8 @@ pragma solidity >=0.8.30;
 /**
  * The functions in DiamondLoupeFacet MUST be added to a diamond.
  * The EIP-2535 Diamond standard requires these functions.
+ * A loupe is a small magnifying glass used to look at diamonds.
+ * These functions look at diamonds.
  */
 contract DiamondLoupeFacet {
     bytes32 constant DIAMOND_STORAGE_POSITION = keccak256("compose.diamond");
