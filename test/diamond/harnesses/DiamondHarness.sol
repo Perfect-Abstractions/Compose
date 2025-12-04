@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity >=0.8.30;
 
-import "../../../src/diamond/DiamondCutMod.sol" as DiamondCut;
+import "../../../src/diamond/DiamondCutMod.sol" as DiamondCutMod;
 
 /**
  * @title DiamondHarness
@@ -10,27 +10,29 @@ import "../../../src/diamond/DiamondCutMod.sol" as DiamondCut;
  */
 contract DiamondHarness {
     function addFunctions(address _facet, bytes4[] calldata _functionSelectors) external {
-        DiamondCut.addFunctions(_facet, _functionSelectors);
+        DiamondCutMod.addFunctions(_facet, _functionSelectors);
     }
 
     function replaceFunctions(address _facet, bytes4[] calldata _functionSelectors) external {
-        DiamondCut.replaceFunctions(_facet, _functionSelectors);
+        DiamondCutMod.replaceFunctions(_facet, _functionSelectors);
     }
 
     function removeFunctions(address _facet, bytes4[] calldata _functionSelectos) external {
-        DiamondCut.removeFunctions(_facet, _functionSelectos);
+        DiamondCutMod.removeFunctions(_facet, _functionSelectos);
     }
 
-    function diamondCut(DiamondCut.FacetCut[] calldata _diamondCut, address _init, bytes calldata _calldata) external {
-        DiamondCut.diamondCut(_diamondCut, _init, _calldata);
+    function diamondCut(DiamondCutMod.FacetCut[] calldata _diamondCut, address _init, bytes calldata _calldata)
+        external
+    {
+        DiamondCutMod.diamondCut(_diamondCut, _init, _calldata);
     }
 
     /**
      * @notice Read the facet and its selector position for a given function selector
      */
     function getFacetAndPosition(bytes4 selector) external view returns (address facet, uint32 position) {
-        DiamondCut.DiamondStorage storage s = DiamondCut.getStorage();
-        DiamondCut.FacetAndPosition memory f = s.facetAndPosition[selector];
+        DiamondCutMod.DiamondStorage storage s = DiamondCutMod.getStorage();
+        DiamondCutMod.FacetAndPosition memory f = s.facetAndPosition[selector];
         return (f.facet, f.position);
     }
 
@@ -38,7 +40,7 @@ contract DiamondHarness {
      * @notice Return the full list of registered selectors
      */
     function getSelectors() external view returns (bytes4[] memory) {
-        DiamondCut.DiamondStorage storage s = DiamondCut.getStorage();
+        DiamondCutMod.DiamondStorage storage s = DiamondCutMod.getStorage();
         return s.selectors;
     }
 
@@ -46,7 +48,7 @@ contract DiamondHarness {
      * @notice Convenience: number of selectors registered
      */
     function getSelectorsLength() external view returns (uint256) {
-        DiamondCut.DiamondStorage storage s = DiamondCut.getStorage();
+        DiamondCutMod.DiamondStorage storage s = DiamondCutMod.getStorage();
         return s.selectors.length;
     }
 }

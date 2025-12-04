@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity >=0.8.30;
 
-import "../../src/diamond/DiamondCutMod.sol" as DiamondCut;
+import "../../src/diamond/DiamondCutMod.sol" as DiamondCutMod;
 
 /**
  *  Adapted from: https://github.com/mudgen/diamond-1-hardhat/blob/main/contracts/Diamond.sol
@@ -15,12 +15,12 @@ contract MinimalDiamond {
         bytes initCalldata;
     }
 
-    function initialize(DiamondCut.FacetCut[] calldata _diamondCut, DiamondArgs calldata _args) public payable {
-        DiamondCut.diamondCut(_diamondCut, _args.init, _args.initCalldata);
+    function initialize(DiamondCutMod.FacetCut[] calldata _diamondCut, DiamondArgs calldata _args) public payable {
+        DiamondCutMod.diamondCut(_diamondCut, _args.init, _args.initCalldata);
     }
 
     fallback() external payable {
-        DiamondCut.DiamondStorage storage s = DiamondCut.getStorage();
+        DiamondCutMod.DiamondStorage storage s = DiamondCutMod.getStorage();
         address facet = s.facetAndPosition[msg.sig].facet;
         if (facet == address(0)) revert FunctionNotFound(msg.sig);
 

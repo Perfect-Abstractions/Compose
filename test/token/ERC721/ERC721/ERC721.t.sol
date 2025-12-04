@@ -3,7 +3,7 @@ pragma solidity >=0.8.30;
 
 import {Test} from "forge-std/Test.sol";
 import {ERC721Harness} from "./harnesses/ERC721Harness.sol";
-import "../../../../src/token/ERC721/ERC721/ERC721Mod.sol" as ERC721;
+import "../../../../src/token/ERC721/ERC721/ERC721Mod.sol" as ERC721Mod;
 
 contract LibERC721Test is Test {
     ERC721Harness public harness;
@@ -87,7 +87,7 @@ contract LibERC721Test is Test {
     function test_TransferRevertWhenTransferFromNonExistentToken() public {
         uint256 tokenId = 999;
 
-        vm.expectRevert(abi.encodeWithSelector(ERC721.ERC721NonexistentToken.selector, tokenId));
+        vm.expectRevert(abi.encodeWithSelector(ERC721Mod.ERC721NonexistentToken.selector, tokenId));
         harness.transferFrom(alice, bob, tokenId);
     }
 
@@ -98,7 +98,7 @@ contract LibERC721Test is Test {
         assertEq(harness.ownerOf(tokenId), alice);
 
         vm.prank(bob);
-        vm.expectRevert(abi.encodeWithSelector(ERC721.ERC721InsufficientApproval.selector, bob, tokenId));
+        vm.expectRevert(abi.encodeWithSelector(ERC721Mod.ERC721InsufficientApproval.selector, bob, tokenId));
         harness.transferFrom(alice, charlie, tokenId);
     }
 
@@ -133,7 +133,7 @@ contract LibERC721Test is Test {
     function test_MintRevertWhenInvalidReceiver() public {
         uint256 tokenId = 6;
 
-        vm.expectRevert(abi.encodeWithSelector(ERC721.ERC721InvalidReceiver.selector, address(0)));
+        vm.expectRevert(abi.encodeWithSelector(ERC721Mod.ERC721InvalidReceiver.selector, address(0)));
         harness.mint(address(0), tokenId);
     }
 
@@ -167,7 +167,7 @@ contract LibERC721Test is Test {
     function test_BurnRevertWhenNonExistentToken() public {
         uint256 tokenId = 888;
 
-        vm.expectRevert(abi.encodeWithSelector(ERC721.ERC721NonexistentToken.selector, tokenId));
+        vm.expectRevert(abi.encodeWithSelector(ERC721Mod.ERC721NonexistentToken.selector, tokenId));
         harness.burn(tokenId);
     }
 }

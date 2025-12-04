@@ -3,7 +3,7 @@ pragma solidity >=0.8.30;
 
 import {Vm} from "forge-std/Vm.sol";
 import {Test} from "forge-std/Test.sol";
-import "../../src/diamond/DiamondCutMod.sol" as DiamondCut;
+import "../../src/diamond/DiamondCutMod.sol" as DiamondCutMod;
 import {DiamondHarness} from "./harnesses/DiamondHarness.sol";
 import {ERC20FacetHarness} from "../token/ERC20/ERC20/harnesses/ERC20FacetHarness.sol";
 import {ERC20FacetWithFallbackHarness} from "./harnesses/ERC20FacetWithFallbackHarness.sol";
@@ -84,9 +84,11 @@ contract LibDiamondHarnessTest is Test {
         bytes4[] memory _functionSelectors = new bytes4[](1);
         _functionSelectors[0] = bytes4(keccak256("decimals()"));
 
-        DiamondCut.FacetCut[] memory _cut = new DiamondCut.FacetCut[](1);
-        _cut[0] = DiamondCut.FacetCut({
-            facetAddress: address(facet), action: DiamondCut.FacetCutAction.Add, functionSelectors: _functionSelectors
+        DiamondCutMod.FacetCut[] memory _cut = new DiamondCutMod.FacetCut[](1);
+        _cut[0] = DiamondCutMod.FacetCut({
+            facetAddress: address(facet),
+            action: DiamondCutMod.FacetCutAction.Add,
+            functionSelectors: _functionSelectors
         });
         address _init = ADDRESS_ZERO;
         bytes memory _calldata = abi.encode("0x00");
@@ -141,7 +143,7 @@ contract LibDiamondHarnessTest is Test {
 
         vm.expectRevert(
             abi.encodeWithSelector(
-                DiamondCut.NoBytecodeAtAddress.selector, facetWithZeroCode, "LibDiamond: Add facet has no code"
+                DiamondCutMod.NoBytecodeAtAddress.selector, facetWithZeroCode, "LibDiamond: Add facet has no code"
             )
         );
         harness.addFunctions(facetWithZeroCode, _functionSelectors);
@@ -153,7 +155,7 @@ contract LibDiamondHarnessTest is Test {
 
         vm.expectRevert(
             abi.encodeWithSelector(
-                DiamondCut.CannotAddFunctionToDiamondThatAlreadyExists.selector, _functionSelectors[0]
+                DiamondCutMod.CannotAddFunctionToDiamondThatAlreadyExists.selector, _functionSelectors[0]
             )
         );
         harness.addFunctions(address(facet), _functionSelectors);
@@ -167,7 +169,7 @@ contract LibDiamondHarnessTest is Test {
 
         vm.expectRevert(
             abi.encodeWithSelector(
-                DiamondCut.NoBytecodeAtAddress.selector, facetWithZeroCode, "LibDiamond: Replace facet has no code"
+                DiamondCutMod.NoBytecodeAtAddress.selector, facetWithZeroCode, "LibDiamond: Replace facet has no code"
             )
         );
         harness.replaceFunctions(facetWithZeroCode, _functionSelectors);
@@ -180,7 +182,7 @@ contract LibDiamondHarnessTest is Test {
         harness.addFunctions(address(harness), _functionSelectors);
 
         vm.expectRevert(
-            abi.encodeWithSelector(DiamondCut.CannotReplaceImmutableFunction.selector, _functionSelectors[0])
+            abi.encodeWithSelector(DiamondCutMod.CannotReplaceImmutableFunction.selector, _functionSelectors[0])
         );
         harness.replaceFunctions(address(facet), _functionSelectors);
     }
@@ -191,7 +193,7 @@ contract LibDiamondHarnessTest is Test {
 
         vm.expectRevert(
             abi.encodeWithSelector(
-                DiamondCut.CannotReplaceFunctionWithTheSameFunctionFromTheSameFacet.selector, _functionSelectors[0]
+                DiamondCutMod.CannotReplaceFunctionWithTheSameFunctionFromTheSameFacet.selector, _functionSelectors[0]
             )
         );
         harness.replaceFunctions(address(facet), _functionSelectors);
@@ -204,7 +206,7 @@ contract LibDiamondHarnessTest is Test {
         ERC20FacetHarness newFacet = new ERC20FacetHarness();
 
         vm.expectRevert(
-            abi.encodeWithSelector(DiamondCut.CannotReplaceFunctionThatDoesNotExists.selector, _functionSelectors[0])
+            abi.encodeWithSelector(DiamondCutMod.CannotReplaceFunctionThatDoesNotExists.selector, _functionSelectors[0])
         );
         harness.replaceFunctions(address(newFacet), _functionSelectors);
     }
@@ -213,7 +215,9 @@ contract LibDiamondHarnessTest is Test {
         bytes4[] memory _functionSelectors = new bytes4[](1);
         _functionSelectors[0] = bytes4(keccak256("decimals()"));
 
-        vm.expectRevert(abi.encodeWithSelector(DiamondCut.RemoveFacetAddressMustBeZeroAddress.selector, address(facet)));
+        vm.expectRevert(
+            abi.encodeWithSelector(DiamondCutMod.RemoveFacetAddressMustBeZeroAddress.selector, address(facet))
+        );
         harness.removeFunctions(address(facet), _functionSelectors);
     }
 
@@ -222,7 +226,7 @@ contract LibDiamondHarnessTest is Test {
         _functionSelectors[0] = bytes4(keccak256("decimals()"));
 
         vm.expectRevert(
-            abi.encodeWithSelector(DiamondCut.CannotRemoveFunctionThatDoesNotExist.selector, _functionSelectors[0])
+            abi.encodeWithSelector(DiamondCutMod.CannotRemoveFunctionThatDoesNotExist.selector, _functionSelectors[0])
         );
         harness.removeFunctions(ADDRESS_ZERO, _functionSelectors);
     }
@@ -234,7 +238,7 @@ contract LibDiamondHarnessTest is Test {
         harness.addFunctions(address(harness), _functionSelectors);
 
         vm.expectRevert(
-            abi.encodeWithSelector(DiamondCut.CannotRemoveImmutableFunction.selector, _functionSelectors[0])
+            abi.encodeWithSelector(DiamondCutMod.CannotRemoveImmutableFunction.selector, _functionSelectors[0])
         );
         harness.removeFunctions(ADDRESS_ZERO, _functionSelectors);
     }
@@ -243,16 +247,20 @@ contract LibDiamondHarnessTest is Test {
         bytes4[] memory _functionSelectors = new bytes4[](1);
         _functionSelectors[0] = bytes4(keccak256("decimals()"));
 
-        DiamondCut.FacetCut[] memory _cut = new DiamondCut.FacetCut[](1);
-        _cut[0] = DiamondCut.FacetCut({
-            facetAddress: address(facet), action: DiamondCut.FacetCutAction.Add, functionSelectors: _functionSelectors
+        DiamondCutMod.FacetCut[] memory _cut = new DiamondCutMod.FacetCut[](1);
+        _cut[0] = DiamondCutMod.FacetCut({
+            facetAddress: address(facet),
+            action: DiamondCutMod.FacetCutAction.Add,
+            functionSelectors: _functionSelectors
         });
 
         address _init = makeAddr("zerocode");
         bytes memory _calldata = abi.encode("0x00");
 
         vm.expectRevert(
-            abi.encodeWithSelector(DiamondCut.NoBytecodeAtAddress.selector, _init, "LibDiamond: _init address no code")
+            abi.encodeWithSelector(
+                DiamondCutMod.NoBytecodeAtAddress.selector, _init, "LibDiamond: _init address no code"
+            )
         );
         harness.diamondCut(_cut, _init, _calldata);
     }
@@ -260,15 +268,17 @@ contract LibDiamondHarnessTest is Test {
     function test_diamondCut_WithZeroFunctionSelectors() public {
         bytes4[] memory _functionSelectors = new bytes4[](0);
 
-        DiamondCut.FacetCut[] memory _cut = new DiamondCut.FacetCut[](1);
-        _cut[0] = DiamondCut.FacetCut({
-            facetAddress: address(facet), action: DiamondCut.FacetCutAction.Add, functionSelectors: _functionSelectors
+        DiamondCutMod.FacetCut[] memory _cut = new DiamondCutMod.FacetCut[](1);
+        _cut[0] = DiamondCutMod.FacetCut({
+            facetAddress: address(facet),
+            action: DiamondCutMod.FacetCutAction.Add,
+            functionSelectors: _functionSelectors
         });
 
         address _init = ADDRESS_ZERO;
         bytes memory _calldata = abi.encode("0x00");
 
-        vm.expectRevert(abi.encodeWithSelector(DiamondCut.NoSelectorsProvidedForFacet.selector, address(facet)));
+        vm.expectRevert(abi.encodeWithSelector(DiamondCutMod.NoSelectorsProvidedForFacet.selector, address(facet)));
         harness.diamondCut(_cut, _init, _calldata);
     }
 
@@ -276,9 +286,11 @@ contract LibDiamondHarnessTest is Test {
         bytes4[] memory _functionSelectors = new bytes4[](1);
         _functionSelectors[0] = bytes4(keccak256("decimals()"));
 
-        DiamondCut.FacetCut[] memory _cut = new DiamondCut.FacetCut[](1);
-        _cut[0] = DiamondCut.FacetCut({
-            facetAddress: address(facet), action: DiamondCut.FacetCutAction.Add, functionSelectors: _functionSelectors
+        DiamondCutMod.FacetCut[] memory _cut = new DiamondCutMod.FacetCut[](1);
+        _cut[0] = DiamondCutMod.FacetCut({
+            facetAddress: address(facet),
+            action: DiamondCutMod.FacetCutAction.Add,
+            functionSelectors: _functionSelectors
         });
 
         ERC20FacetHarness newFacet = new ERC20FacetHarness();
@@ -287,7 +299,7 @@ contract LibDiamondHarnessTest is Test {
         bytes memory _wrongCalldata = abi.encodeWithSelector(bytes4(keccak256("doesNotExist(uint256)")), uint256(123));
 
         vm.expectRevert(
-            abi.encodeWithSelector(DiamondCut.InitializationFunctionReverted.selector, _init, _wrongCalldata)
+            abi.encodeWithSelector(DiamondCutMod.InitializationFunctionReverted.selector, _init, _wrongCalldata)
         );
         harness.diamondCut(_cut, _init, _wrongCalldata);
     }
@@ -296,9 +308,11 @@ contract LibDiamondHarnessTest is Test {
         bytes4[] memory _functionSelectors = new bytes4[](1);
         _functionSelectors[0] = bytes4(keccak256("decimals()"));
 
-        DiamondCut.FacetCut[] memory _cut = new DiamondCut.FacetCut[](1);
-        _cut[0] = DiamondCut.FacetCut({
-            facetAddress: address(facet), action: DiamondCut.FacetCutAction.Add, functionSelectors: _functionSelectors
+        DiamondCutMod.FacetCut[] memory _cut = new DiamondCutMod.FacetCut[](1);
+        _cut[0] = DiamondCutMod.FacetCut({
+            facetAddress: address(facet),
+            action: DiamondCutMod.FacetCutAction.Add,
+            functionSelectors: _functionSelectors
         });
 
         ERC20FacetWithFallbackHarness newFacet = new ERC20FacetWithFallbackHarness();
@@ -350,19 +364,23 @@ contract LibDiamondHarnessTest is Test {
          */
         ERC20FacetHarness newFacet = new ERC20FacetHarness();
 
-        DiamondCut.FacetCut[] memory _cut = new DiamondCut.FacetCut[](3);
-        _cut[0] = DiamondCut.FacetCut({
-            facetAddress: address(facet), action: DiamondCut.FacetCutAction.Add, functionSelectors: _functionSelectors
-        });
-
-        _cut[1] = DiamondCut.FacetCut({
-            facetAddress: address(newFacet),
-            action: DiamondCut.FacetCutAction.Replace,
+        DiamondCutMod.FacetCut[] memory _cut = new DiamondCutMod.FacetCut[](3);
+        _cut[0] = DiamondCutMod.FacetCut({
+            facetAddress: address(facet),
+            action: DiamondCutMod.FacetCutAction.Add,
             functionSelectors: _functionSelectors
         });
 
-        _cut[2] = DiamondCut.FacetCut({
-            facetAddress: ADDRESS_ZERO, action: DiamondCut.FacetCutAction.Remove, functionSelectors: _functionSelectors
+        _cut[1] = DiamondCutMod.FacetCut({
+            facetAddress: address(newFacet),
+            action: DiamondCutMod.FacetCutAction.Replace,
+            functionSelectors: _functionSelectors
+        });
+
+        _cut[2] = DiamondCutMod.FacetCut({
+            facetAddress: ADDRESS_ZERO,
+            action: DiamondCutMod.FacetCutAction.Remove,
+            functionSelectors: _functionSelectors
         });
 
         address _init = ADDRESS_ZERO;

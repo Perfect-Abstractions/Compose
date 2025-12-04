@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity >=0.8.30;
 
-import "../../../../src/access/Owner/OwnerMod.sol" as Owner;
+import "../../../../src/access/Owner/OwnerMod.sol" as OwnerMod;
 
 /**
  * @title LibOwner Test Harness
@@ -12,7 +12,7 @@ contract OwnerHarness {
      * @notice Initialize the owner (for testing)
      */
     function initialize(address _owner) external {
-        Owner.OwnerStorage storage s = Owner.getStorage();
+        OwnerMod.OwnerStorage storage s = OwnerMod.getStorage();
         s.owner = _owner;
     }
 
@@ -20,35 +20,35 @@ contract OwnerHarness {
      * @notice Get the current owner
      */
     function owner() external view returns (address) {
-        return Owner.owner();
+        return OwnerMod.owner();
     }
 
     /**
      * @notice Transfer ownership
      */
     function transferOwnership(address _newOwner) external {
-        Owner.transferOwnership(_newOwner);
+        OwnerMod.transferOwnership(_newOwner);
     }
 
     /**
      * @notice Check if caller is owner (new function added by maintainer)
      */
     function requireOwner() external view {
-        Owner.requireOwner();
+        OwnerMod.requireOwner();
     }
 
     /**
      * @notice Get storage directly (for testing storage consistency)
      */
     function getStorageOwner() external view returns (address) {
-        return Owner.getStorage().owner;
+        return OwnerMod.getStorage().owner;
     }
 
     /**
      * @notice Force set owner to zero without checks (for testing renounced state)
      */
     function forceRenounce() external {
-        Owner.OwnerStorage storage s = Owner.getStorage();
+        OwnerMod.OwnerStorage storage s = OwnerMod.getStorage();
         s.owner = address(0);
     }
 }

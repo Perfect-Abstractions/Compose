@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity >=0.8.30;
 
-import "../../../../src/access/AccessControl/AccessControlMod.sol" as AccessControl;
+import "../../../../src/access/AccessControl/AccessControlMod.sol" as AccessControlMod;
 
 /**
  * @title LibAccessControl Test Harness
@@ -13,50 +13,50 @@ contract AccessControlHarness {
      * @param _account The account to grant the default admin role to
      */
     function initialize(address _account) external {
-        AccessControl.AccessControlStorage storage s = AccessControl.getStorage();
-        s.hasRole[_account][AccessControl.DEFAULT_ADMIN_ROLE] = true;
+        AccessControlMod.AccessControlStorage storage s = AccessControlMod.getStorage();
+        s.hasRole[_account][AccessControlMod.DEFAULT_ADMIN_ROLE] = true;
     }
 
     /**
      * @notice Check if an account has a role
      */
     function hasRole(bytes32 _role, address _account) external view returns (bool) {
-        return AccessControl.hasRole(_role, _account);
+        return AccessControlMod.hasRole(_role, _account);
     }
 
     /**
      * @notice Require that an account has a role
      */
     function requireRole(bytes32 _role, address _account) external view {
-        AccessControl.requireRole(_role, _account);
+        AccessControlMod.requireRole(_role, _account);
     }
 
     /**
      * @notice Set the admin role for a role
      */
     function setRoleAdmin(bytes32 _role, bytes32 _adminRole) external {
-        AccessControl.setRoleAdmin(_role, _adminRole);
+        AccessControlMod.setRoleAdmin(_role, _adminRole);
     }
 
     /**
      * @notice Grant a role to an account
      */
     function grantRole(bytes32 _role, address _account) external returns (bool) {
-        return AccessControl.grantRole(_role, _account);
+        return AccessControlMod.grantRole(_role, _account);
     }
 
     /**
      * @notice Revoke a role from an account
      */
     function revokeRole(bytes32 _role, address _account) external returns (bool) {
-        return AccessControl.revokeRole(_role, _account);
+        return AccessControlMod.revokeRole(_role, _account);
     }
 
     /**
      * @notice Get the admin role for a role (for testing storage consistency)
      */
     function getRoleAdmin(bytes32 _role) external view returns (bytes32) {
-        AccessControl.AccessControlStorage storage s = AccessControl.getStorage();
+        AccessControlMod.AccessControlStorage storage s = AccessControlMod.getStorage();
         return s.adminRole[_role];
     }
 
@@ -64,7 +64,7 @@ contract AccessControlHarness {
      * @notice Get raw storage hasRole mapping (for testing storage consistency)
      */
     function getStorageHasRole(address _account, bytes32 _role) external view returns (bool) {
-        AccessControl.AccessControlStorage storage s = AccessControl.getStorage();
+        AccessControlMod.AccessControlStorage storage s = AccessControlMod.getStorage();
         return s.hasRole[_account][_role];
     }
 
@@ -72,7 +72,7 @@ contract AccessControlHarness {
      * @notice Force set a role without checks (for testing edge cases)
      */
     function forceGrantRole(bytes32 _role, address _account) external {
-        AccessControl.AccessControlStorage storage s = AccessControl.getStorage();
+        AccessControlMod.AccessControlStorage storage s = AccessControlMod.getStorage();
         s.hasRole[_account][_role] = true;
     }
 
@@ -80,7 +80,7 @@ contract AccessControlHarness {
      * @notice Force revoke a role without checks (for testing edge cases)
      */
     function forceRevokeRole(bytes32 _role, address _account) external {
-        AccessControl.AccessControlStorage storage s = AccessControl.getStorage();
+        AccessControlMod.AccessControlStorage storage s = AccessControlMod.getStorage();
         s.hasRole[_account][_role] = false;
     }
 
@@ -88,7 +88,7 @@ contract AccessControlHarness {
      * @notice Force set the admin role without checks or events (for testing edge cases)
      */
     function forceSetRoleAdmin(bytes32 _role, bytes32 _adminRole) external {
-        AccessControl.AccessControlStorage storage s = AccessControl.getStorage();
+        AccessControlMod.AccessControlStorage storage s = AccessControlMod.getStorage();
         s.adminRole[_role] = _adminRole;
     }
 
@@ -96,6 +96,6 @@ contract AccessControlHarness {
      * @notice Get the DEFAULT_ADMIN_ROLE constant
      */
     function getDefaultAdminRole() external pure returns (bytes32) {
-        return AccessControl.DEFAULT_ADMIN_ROLE;
+        return AccessControlMod.DEFAULT_ADMIN_ROLE;
     }
 }

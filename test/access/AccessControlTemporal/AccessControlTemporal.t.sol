@@ -2,8 +2,8 @@
 pragma solidity >=0.8.30;
 
 import {Test, console2} from "forge-std/Test.sol";
-import "../../../src/access/AccessControlTemporal/AccessControlTemporalMod.sol" as AccessControlTemporal;
-import "../../../src/access/AccessControl/AccessControlMod.sol" as AccessControl;
+import "../../../src/access/AccessControlTemporal/AccessControlTemporalMod.sol" as AccessControlTemporalMod;
+import "../../../src/access/AccessControl/AccessControlMod.sol" as AccessControlMod;
 import {AccessControlTemporalHarness} from "./harnesses/AccessControlTemporalHarness.sol";
 import {AccessControlHarness} from "../AccessControl/harnesses/AccessControlHarness.sol";
 
@@ -219,14 +219,16 @@ contract LibAccessControlTemporalTest is Test {
         vm.warp(expiry + 1);
 
         vm.expectRevert(
-            abi.encodeWithSelector(AccessControlTemporal.AccessControlRoleExpired.selector, MINTER_ROLE, ALICE)
+            abi.encodeWithSelector(AccessControlTemporalMod.AccessControlRoleExpired.selector, MINTER_ROLE, ALICE)
         );
         harness.requireValidRole(MINTER_ROLE, ALICE);
     }
 
     function test_RevertWhen_RequireValidRole_NoRole() public {
         vm.expectRevert(
-            abi.encodeWithSelector(AccessControlTemporal.AccessControlUnauthorizedAccount.selector, ALICE, MINTER_ROLE)
+            abi.encodeWithSelector(
+                AccessControlTemporalMod.AccessControlUnauthorizedAccount.selector, ALICE, MINTER_ROLE
+            )
         );
         harness.requireValidRole(MINTER_ROLE, ALICE);
     }
@@ -240,7 +242,9 @@ contract LibAccessControlTemporalTest is Test {
         vm.stopPrank();
 
         vm.expectRevert(
-            abi.encodeWithSelector(AccessControlTemporal.AccessControlUnauthorizedAccount.selector, ALICE, MINTER_ROLE)
+            abi.encodeWithSelector(
+                AccessControlTemporalMod.AccessControlUnauthorizedAccount.selector, ALICE, MINTER_ROLE
+            )
         );
         harness.requireValidRole(MINTER_ROLE, ALICE);
     }

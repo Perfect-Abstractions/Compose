@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity >=0.8.30;
 
-import "../../../../src/interfaceDetection/ERC165/ERC165Mod.sol" as ERC165;
+import "../../../../src/interfaceDetection/ERC165/ERC165Mod.sol" as ERC165Mod;
 
 /**
  * @title LibERC165 Test Harness
@@ -26,14 +26,14 @@ contract ERC165Harness {
      * @notice Register an interface
      */
     function registerInterface(bytes4 _interfaceId) external {
-        ERC165.registerInterface(_interfaceId);
+        ERC165Mod.registerInterface(_interfaceId);
     }
 
     /**
      * @notice Check if an interface is supported
      */
     function supportsInterface(bytes4 _interfaceId) external view returns (bool) {
-        ERC165.ERC165Storage storage s = ERC165.getStorage();
+        ERC165Mod.ERC165Storage storage s = ERC165Mod.getStorage();
         return s.supportedInterfaces[_interfaceId];
     }
 
@@ -41,7 +41,7 @@ contract ERC165Harness {
      * @notice Get storage directly (for testing storage consistency)
      */
     function getStorageValue(bytes4 _interfaceId) external view returns (bool) {
-        return ERC165.getStorage().supportedInterfaces[_interfaceId];
+        return ERC165Mod.getStorage().supportedInterfaces[_interfaceId];
     }
 
     /**
@@ -55,7 +55,7 @@ contract ERC165Harness {
      * @notice Force set an interface support value (for testing edge cases)
      */
     function forceSetInterface(bytes4 _interfaceId, bool _supported) external {
-        ERC165.ERC165Storage storage s = ERC165.getStorage();
+        ERC165Mod.ERC165Storage storage s = ERC165Mod.getStorage();
         s.supportedInterfaces[_interfaceId] = _supported;
     }
 
@@ -64,7 +64,7 @@ contract ERC165Harness {
      */
     function registerMultipleInterfaces(bytes4[] calldata _interfaceIds) external {
         for (uint256 i = 0; i < _interfaceIds.length; i++) {
-            ERC165.registerInterface(_interfaceIds[i]);
+            ERC165Mod.registerInterface(_interfaceIds[i]);
         }
     }
 }

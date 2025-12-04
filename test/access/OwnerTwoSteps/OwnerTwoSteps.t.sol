@@ -2,7 +2,7 @@
 pragma solidity >=0.8.30;
 
 import {Test, console2} from "forge-std/Test.sol";
-import "../../../src/access/OwnerTwoSteps/OwnerTwoStepsMod.sol" as OwnerTwoSteps;
+import "../../../src/access/OwnerTwoSteps/OwnerTwoStepsMod.sol" as OwnerTwoStepsMod;
 import {OwnerTwoStepsHarness} from "./harnesses/OwnerTwoStepsHarness.sol";
 
 contract LibOwnerTwoStepsTest is Test {
@@ -200,7 +200,7 @@ contract LibOwnerTwoStepsTest is Test {
         /**
          * Should revert with OwnerAlreadyRenounced error
          */
-        vm.expectRevert(OwnerTwoSteps.OwnerAlreadyRenounced.selector);
+        vm.expectRevert(OwnerTwoStepsMod.OwnerAlreadyRenounced.selector);
         harness.transferOwnership(NEW_OWNER);
     }
 
@@ -338,7 +338,7 @@ contract LibOwnerTwoStepsTest is Test {
         /**
          * Should revert with OwnerAlreadyRenounced error
          */
-        vm.expectRevert(OwnerTwoSteps.OwnerAlreadyRenounced.selector);
+        vm.expectRevert(OwnerTwoStepsMod.OwnerAlreadyRenounced.selector);
         harness.transferOwnership(ALICE);
     }
 
@@ -364,7 +364,7 @@ contract LibOwnerTwoStepsTest is Test {
     }
 
     function test_RevertWhen_RequireOwner_CalledByNonOwner() public {
-        vm.expectRevert(OwnerTwoSteps.OwnerUnauthorizedAccount.selector);
+        vm.expectRevert(OwnerTwoStepsMod.OwnerUnauthorizedAccount.selector);
         vm.prank(ALICE);
         harness.requireOwner();
     }

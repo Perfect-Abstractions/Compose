@@ -2,7 +2,7 @@
 pragma solidity >=0.8.30;
 
 import {Test, console2} from "forge-std/Test.sol";
-import "../../../src/access/AccessControl/AccessControlMod.sol" as AccessControl;
+import "../../../src/access/AccessControl/AccessControlMod.sol" as AccessControlMod;
 import {AccessControlHarness} from "./harnesses/AccessControlHarness.sol";
 
 contract LibAccessControlTest is Test {
@@ -135,7 +135,7 @@ contract LibAccessControlTest is Test {
 
     function test_RevertWhen_RequireRole_AccountDoesNotHaveRole() public {
         vm.expectRevert(
-            abi.encodeWithSelector(AccessControl.AccessControlUnauthorizedAccount.selector, ALICE, MINTER_ROLE)
+            abi.encodeWithSelector(AccessControlMod.AccessControlUnauthorizedAccount.selector, ALICE, MINTER_ROLE)
         );
         harness.requireRole(MINTER_ROLE, ALICE);
     }
@@ -143,7 +143,7 @@ contract LibAccessControlTest is Test {
     function test_RevertWhen_RequireRole_ZeroAddressDoesNotHaveRole() public {
         vm.expectRevert(
             abi.encodeWithSelector(
-                AccessControl.AccessControlUnauthorizedAccount.selector, ZERO_ADDRESS, DEFAULT_ADMIN_ROLE
+                AccessControlMod.AccessControlUnauthorizedAccount.selector, ZERO_ADDRESS, DEFAULT_ADMIN_ROLE
             )
         );
         harness.requireRole(DEFAULT_ADMIN_ROLE, ZERO_ADDRESS);

@@ -4,7 +4,7 @@ pragma solidity >=0.8.30;
 import {
     ERC721EnumerableBurnFacet
 } from "../../../../../src/token/ERC721/ERC721Enumerable/ERC721EnumerableBurnFacet.sol";
-import "../../../../../src/token/ERC721/ERC721Enumerable/ERC721EnumerableMod.sol" as ERC721Enumerable;
+import "../../../../../src/token/ERC721/ERC721Enumerable/ERC721EnumerableMod.sol" as ERC721EnumerableMod;
 
 /**
  * @title ERC721EnumerableBurnFacetHarness
@@ -26,7 +26,7 @@ contract ERC721EnumerableBurnFacetHarness is ERC721EnumerableBurnFacet {
      * @notice Mint helper for tests (not part of production facet surface).
      */
     function mint(address _to, uint256 _tokenId) external {
-        ERC721Enumerable.mint(_to, _tokenId);
+        ERC721EnumerableMod.mint(_to, _tokenId);
     }
 
     function balanceOf(address _owner) external view returns (uint256) {

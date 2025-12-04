@@ -2,7 +2,7 @@
 pragma solidity >=0.8.30;
 
 import {Test, console2} from "forge-std/Test.sol";
-import "../../../src/access/Owner/OwnerMod.sol" as Owner;
+import "../../../src/access/Owner/OwnerMod.sol" as OwnerMod;
 import {OwnerHarness} from "./harnesses/OwnerHarness.sol";
 
 contract LibOwnerTest is Test {
@@ -116,7 +116,7 @@ contract LibOwnerTest is Test {
         /**
          * Should revert with OwnerAlreadyRenounced error
          */
-        vm.expectRevert(Owner.OwnerAlreadyRenounced.selector);
+        vm.expectRevert(OwnerMod.OwnerAlreadyRenounced.selector);
         harness.transferOwnership(NEW_OWNER);
     }
 
@@ -194,7 +194,7 @@ contract LibOwnerTest is Test {
         /**
          * Should revert with OwnerAlreadyRenounced error
          */
-        vm.expectRevert(Owner.OwnerAlreadyRenounced.selector);
+        vm.expectRevert(OwnerMod.OwnerAlreadyRenounced.selector);
         harness.transferOwnership(ALICE);
     }
 
@@ -257,7 +257,7 @@ contract LibOwnerTest is Test {
         /**
          * Should revert with OwnerAlreadyRenounced error
          */
-        vm.expectRevert(Owner.OwnerAlreadyRenounced.selector);
+        vm.expectRevert(OwnerMod.OwnerAlreadyRenounced.selector);
         harness.transferOwnership(target);
     }
 
@@ -301,7 +301,7 @@ contract LibOwnerTest is Test {
     }
 
     function test_RevertWhen_RequireOwner_CalledByNonOwner() public {
-        vm.expectRevert(Owner.OwnerUnauthorizedAccount.selector);
+        vm.expectRevert(OwnerMod.OwnerUnauthorizedAccount.selector);
         vm.prank(ALICE);
         harness.requireOwner();
     }
@@ -317,7 +317,7 @@ contract LibOwnerTest is Test {
             /**
              * Should revert for non-owner
              */
-            vm.expectRevert(Owner.OwnerUnauthorizedAccount.selector);
+            vm.expectRevert(OwnerMod.OwnerUnauthorizedAccount.selector);
             vm.prank(caller);
             harness.requireOwner();
         }

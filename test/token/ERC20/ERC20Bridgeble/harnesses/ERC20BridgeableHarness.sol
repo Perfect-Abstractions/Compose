@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity >=0.8.30;
 
-import "../../../../../src/token/ERC20/ERC20Bridgeable/ERC20BridgeableMod.sol" as ERC20Bridgeable;
+import "../../../../../src/token/ERC20/ERC20Bridgeable/ERC20BridgeableMod.sol" as ERC20BridgeableMod;
 
 contract ERC20BridgeableHarness {
     /**
@@ -10,7 +10,7 @@ contract ERC20BridgeableHarness {
      * @param _amount The amount of tokens to mint. [NATPSEC: Only trusted bridge callers]
      */
     function crosschainMint(address _to, uint256 _amount) external {
-        ERC20Bridgeable.crosschainMint(_to, _amount);
+        ERC20BridgeableMod.crosschainMint(_to, _amount);
     }
 
     /**
@@ -19,7 +19,7 @@ contract ERC20BridgeableHarness {
      * @return The current balance of the account.
      */
     function balanceOf(address _account) external view returns (uint256) {
-        ERC20Bridgeable.ERC20Storage storage s = ERC20Bridgeable.getERC20Storage();
+        ERC20BridgeableMod.ERC20Storage storage s = ERC20BridgeableMod.getERC20Storage();
         return s.balanceOf[_account];
     }
 
@@ -29,7 +29,7 @@ contract ERC20BridgeableHarness {
      * @param _amount The amount of tokens to burn. [NATPSEC: Only trusted bridge callers]
      */
     function crosschainBurn(address _from, uint256 _amount) external {
-        ERC20Bridgeable.crosschainBurn(_from, _amount);
+        ERC20BridgeableMod.crosschainBurn(_from, _amount);
     }
 
     /**
@@ -37,7 +37,7 @@ contract ERC20BridgeableHarness {
      * @param _caller The address to check for the "trusted-bridge" role. [NATPSEC: Internal access control]
      */
     function checkTokenBridge(address _caller) external view {
-        ERC20Bridgeable.checkTokenBridge(_caller);
+        ERC20BridgeableMod.checkTokenBridge(_caller);
     }
 
     /**
@@ -47,7 +47,7 @@ contract ERC20BridgeableHarness {
      * @param value True to grant the role, false to revoke. [NATPSEC: Test utility only]
      */
     function setRole(address account, bytes32 role, bool value) external {
-        ERC20Bridgeable.AccessControlStorage storage acs = ERC20Bridgeable.getAccessControlStorage();
+        ERC20BridgeableMod.AccessControlStorage storage acs = ERC20BridgeableMod.getAccessControlStorage();
         acs.hasRole[account][role] = value;
     }
 }

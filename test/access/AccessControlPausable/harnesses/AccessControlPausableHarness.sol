@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity >=0.8.30;
 
-import "../../../../src/access/AccessControlPausable/AccessControlPausableMod.sol" as AccessControlPausable;
+import "../../../../src/access/AccessControlPausable/AccessControlPausableMod.sol" as AccessControlPausableMod;
 
 /**
  * @title LibAccessControlPausable Test Harness
@@ -13,7 +13,7 @@ contract AccessControlPausableHarness {
      * @param _account The account to grant the default admin role to
      */
     function initialize(address _account) external {
-        AccessControlPausable.AccessControlStorage storage acs = AccessControlPausable.getAccessControlStorage();
+        AccessControlPausableMod.AccessControlStorage storage acs = AccessControlPausableMod.getAccessControlStorage();
         bytes32 DEFAULT_ADMIN_ROLE = 0x00;
         acs.hasRole[_account][DEFAULT_ADMIN_ROLE] = true;
     }
@@ -22,35 +22,35 @@ contract AccessControlPausableHarness {
      * @notice Check if a role is paused
      */
     function isRolePaused(bytes32 _role) external view returns (bool) {
-        return AccessControlPausable.isRolePaused(_role);
+        return AccessControlPausableMod.isRolePaused(_role);
     }
 
     /**
      * @notice Pause a role
      */
     function pauseRole(bytes32 _role) external {
-        AccessControlPausable.pauseRole(_role);
+        AccessControlPausableMod.pauseRole(_role);
     }
 
     /**
      * @notice Unpause a role
      */
     function unpauseRole(bytes32 _role) external {
-        AccessControlPausable.unpauseRole(_role);
+        AccessControlPausableMod.unpauseRole(_role);
     }
 
     /**
      * @notice Require that a role is not paused
      */
     function requireRoleNotPaused(bytes32 _role, address _account) external view {
-        AccessControlPausable.requireRoleNotPaused(_role, _account);
+        AccessControlPausableMod.requireRoleNotPaused(_role, _account);
     }
 
     /**
      * @notice Force grant a role without any checks (for testing edge cases)
      */
     function forceGrantRole(bytes32 _role, address _account) external {
-        AccessControlPausable.AccessControlStorage storage acs = AccessControlPausable.getAccessControlStorage();
+        AccessControlPausableMod.AccessControlStorage storage acs = AccessControlPausableMod.getAccessControlStorage();
         acs.hasRole[_account][_role] = true;
     }
 
@@ -58,7 +58,7 @@ contract AccessControlPausableHarness {
      * @notice Force set the admin role without checks (for testing edge cases)
      */
     function forceSetRoleAdmin(bytes32 _role, bytes32 _adminRole) external {
-        AccessControlPausable.AccessControlStorage storage acs = AccessControlPausable.getAccessControlStorage();
+        AccessControlPausableMod.AccessControlStorage storage acs = AccessControlPausableMod.getAccessControlStorage();
         acs.adminRole[_role] = _adminRole;
     }
 
@@ -66,6 +66,6 @@ contract AccessControlPausableHarness {
      * @notice Get the raw storage pausedRoles value (for testing storage consistency)
      */
     function getStoragePaused(bytes32 _role) external view returns (bool) {
-        return AccessControlPausable.getStorage().pausedRoles[_role];
+        return AccessControlPausableMod.getStorage().pausedRoles[_role];
     }
 }

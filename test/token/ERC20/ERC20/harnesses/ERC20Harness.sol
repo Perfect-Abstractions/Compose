@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity >=0.8.30;
 
-import "../../../../../src/token/ERC20/ERC20/ERC20Mod.sol" as ERC20;
+import "../../../../../src/token/ERC20/ERC20/ERC20Mod.sol" as ERC20Mod;
 
 /**
  * @title ERC20Harness
@@ -14,71 +14,71 @@ contract ERC20Harness {
      * @dev Only used for testing
      */
     function initialize(string memory _name, string memory _symbol, uint8 _decimals) external {
-        ERC20.ERC20Storage storage s = ERC20.getStorage();
+        ERC20Mod.ERC20Storage storage s = ERC20Mod.getStorage();
         s.name = _name;
         s.symbol = _symbol;
         s.decimals = _decimals;
     }
 
     /**
-     * @notice Exposes ERC20.mint as an external function
+     * @notice Exposes ERC20Mod.mint as an external function
      */
     function mint(address _account, uint256 _value) external {
-        ERC20.mint(_account, _value);
+        ERC20Mod.mint(_account, _value);
     }
 
     /**
-     * @notice Exposes ERC20.burn as an external function
+     * @notice Exposes ERC20Mod.burn as an external function
      */
     function burn(address _account, uint256 _value) external {
-        ERC20.burn(_account, _value);
+        ERC20Mod.burn(_account, _value);
     }
 
     /**
-     * @notice Exposes ERC20.transferFrom as an external function
+     * @notice Exposes ERC20Mod.transferFrom as an external function
      */
     function transferFrom(address _from, address _to, uint256 _value) external {
-        ERC20.transferFrom(_from, _to, _value);
+        ERC20Mod.transferFrom(_from, _to, _value);
     }
 
     /**
-     * @notice Exposes ERC20.transfer as an external function
+     * @notice Exposes ERC20Mod.transfer as an external function
      */
     function transfer(address _to, uint256 _value) external {
-        ERC20.transfer(_to, _value);
+        ERC20Mod.transfer(_to, _value);
     }
 
     /**
-     * @notice Exposes ERC20.approve as an external function
+     * @notice Exposes ERC20Mod.approve as an external function
      */
     function approve(address _spender, uint256 _value) external {
-        ERC20.approve(_spender, _value);
+        ERC20Mod.approve(_spender, _value);
     }
 
     /**
      * @notice Get storage values for testing
      */
     function name() external view returns (string memory) {
-        return ERC20.getStorage().name;
+        return ERC20Mod.getStorage().name;
     }
 
     function symbol() external view returns (string memory) {
-        return ERC20.getStorage().symbol;
+        return ERC20Mod.getStorage().symbol;
     }
 
     function decimals() external view returns (uint8) {
-        return ERC20.getStorage().decimals;
+        return ERC20Mod.getStorage().decimals;
     }
 
     function totalSupply() external view returns (uint256) {
-        return ERC20.getStorage().totalSupply;
+        return ERC20Mod.getStorage().totalSupply;
     }
 
     function balanceOf(address _account) external view returns (uint256) {
-        return ERC20.getStorage().balanceOf[_account];
+        return ERC20Mod.getStorage().balanceOf[_account];
     }
 
     function allowance(address _owner, address _spender) external view returns (uint256) {
-        return ERC20.getStorage().allowance[_owner][_spender];
+        return ERC20Mod.getStorage().allowance[_owner][_spender];
     }
 }

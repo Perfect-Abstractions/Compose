@@ -2,8 +2,8 @@
 pragma solidity >=0.8.30;
 
 import {Test, console2} from "forge-std/Test.sol";
-import "../../../src/access/AccessControlPausable/AccessControlPausableMod.sol" as AccessControlPausable;
-import "../../../src/access/AccessControl/AccessControlMod.sol" as AccessControl;
+import "../../../src/access/AccessControlPausable/AccessControlPausableMod.sol" as AccessControlPausableMod;
+import "../../../src/access/AccessControl/AccessControlMod.sol" as AccessControlMod;
 import {AccessControlPausableHarness} from "./harnesses/AccessControlPausableHarness.sol";
 import {AccessControlHarness} from "../AccessControl/harnesses/AccessControlHarness.sol";
 
@@ -174,13 +174,15 @@ contract LibAccessControlPausableTest is Test {
         /**
          * Should revert
          */
-        vm.expectRevert(abi.encodeWithSelector(AccessControlPausable.AccessControlRolePaused.selector, MINTER_ROLE));
+        vm.expectRevert(abi.encodeWithSelector(AccessControlPausableMod.AccessControlRolePaused.selector, MINTER_ROLE));
         harness.requireRoleNotPaused(MINTER_ROLE, ALICE);
     }
 
     function test_RevertWhen_RequireRoleNotPaused_AccountDoesNotHaveRole() public {
         vm.expectRevert(
-            abi.encodeWithSelector(AccessControlPausable.AccessControlUnauthorizedAccount.selector, ALICE, MINTER_ROLE)
+            abi.encodeWithSelector(
+                AccessControlPausableMod.AccessControlUnauthorizedAccount.selector, ALICE, MINTER_ROLE
+            )
         );
         harness.requireRoleNotPaused(MINTER_ROLE, ALICE);
     }

@@ -1,10 +1,10 @@
 // SPDX-License-Identifier: MIT
 pragma solidity >=0.8.30;
 
-import "../DiamondMod.sol" as Diamond;
-import "../../access/Owner/OwnerMod.sol" as Owner;
-import "../../token/ERC721/ERC721/ERC721Mod.sol" as ERC721;
-import "../../interfaceDetection/ERC165/ERC165Mod.sol" as ERC165;
+import "../DiamondMod.sol" as DiamondMod;
+import "../../access/Owner/OwnerMod.sol" as OwnerMod;
+import "../../token/ERC721/ERC721/ERC721Mod.sol" as ERC721Mod;
+import "../../interfaceDetection/ERC165/ERC165Mod.sol" as ERC165Mod;
 import {IERC721} from "../../interfaces/IERC721.sol";
 import {IERC721Metadata} from "../../interfaces/IERC721Metadata.sol";
 
@@ -24,8 +24,8 @@ contract ExampleDiamond {
      * @param _facets Array of facet addresses and their corresponding function selectors to add to the diamond.
      * @param _diamondOwner Address that will be set as the owner of the diamond contract.
      */
-    constructor(Diamond.FacetCut[] memory _facets, address _diamondOwner) {
-        Diamond.addFacets(_facets);
+    constructor(DiamondMod.FacetCut[] memory _facets, address _diamondOwner) {
+        DiamondMod.addFacets(_facets);
 
         /*************************************
          * Initialize storage variables
@@ -34,20 +34,20 @@ contract ExampleDiamond {
         /**
          * Setting the contract owner
          */
-        Owner.setContractOwner(_diamondOwner);
+        OwnerMod.setContractOwner(_diamondOwner);
         /**
          * Setting ERC721 token details
          */
-        ERC721.setMetadata({_name: "ExampleDiamondNFT", _symbol: "EDN", _baseURI: "https://example.com/metadata/"});
+        ERC721Mod.setMetadata({_name: "ExampleDiamondNFT", _symbol: "EDN", _baseURI: "https://example.com/metadata/"});
         /**
          * Registering ERC165 interfaces
          */
-        ERC165.registerInterface(type(IERC721).interfaceId);
-        ERC165.registerInterface(type(IERC721Metadata).interfaceId);
+        ERC165Mod.registerInterface(type(IERC721).interfaceId);
+        ERC165Mod.registerInterface(type(IERC721Metadata).interfaceId);
     }
 
     fallback() external payable {
-        Diamond.diamondFallback();
+        DiamondMod.diamondFallback();
     }
 
     receive() external payable {}
