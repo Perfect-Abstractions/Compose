@@ -1,7 +1,9 @@
 // SPDX-License-Identifier: MIT
 pragma solidity >=0.8.30;
 
-/// @notice Minimal IERC20 interface
+/**
+ * @notice Minimal IERC20 interface
+ */
 interface IERC20 {
     function totalSupply() external view returns (uint256);
     function balanceOf(address account) external view returns (uint256);
@@ -118,7 +120,9 @@ contract ERC4626Facet {
             return shares;
         }
 
-        // rounded up
+        /**
+         * rounded up
+         */
         return (shares * totalAsset + totalShare - 1) / totalShare;
     }
 
