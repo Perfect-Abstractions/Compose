@@ -1,6 +1,6 @@
 ---
 sidebar_position: 3
-title: Facets & Libraries
+title: Facets & Modules
 description: Complete guide to all 30+ components with live examples, detailed documentation, and usage
 draft: true
 ---
@@ -11,18 +11,18 @@ import FeatureGrid, { FeatureGridItem } from '@site/src/components/features/Feat
 import DocCard, { DocCardGrid } from '@site/src/components/docs/DocCard';
 
 <DocHero
-  title="Facets & Libraries"
-  subtitle="Understanding the core architecture: how facets and libraries work together through shared storage to build powerful, composable smart contract systems."
+  title="Facets & Modules"
+  subtitle="Understanding the core architecture: how facets and modules work together through shared storage to build powerful, composable smart contract systems."
   variant="gradient"
   height="small"
 />
 
 ## Overview
 
-Compose uses a dual-component architecture where **facets** provide complete implementations and **libraries** provide reusable helper functions. Both work with the same shared storage, enabling seamless integration.
+Compose uses a dual-component architecture where **facets** provide complete implementations and **modules** provide reusable helper functions. Both work with the same shared storage, enabling seamless integration.
 
 <Callout type="info" title="Key Concept">
-Facets are complete implementations. Libraries are helper functions. Both access the **same storage**.
+Facets are complete implementations. Modules are helper functions. Both access the **same storage**.
 </Callout>
 
 ## Architecture Comparison
@@ -32,7 +32,7 @@ Facets are complete implementations. Libraries are helper functions. Both access
 | Component | Purpose | Use Case |
 |-----------|---------|----------|
 | **Facets** | Complete, self-contained implementations | Use as-is in your diamond for standard functionality |
-| **Libraries** | Helper functions for custom facets | Import into your custom facets to extend Compose |
+| **Modules** | Helper functions for custom facets | Import into your custom facets to extend Compose |
 
 </div>
 
@@ -64,11 +64,11 @@ Facets are fully functional smart contracts that can be added to your diamond:
 // ERC721Facet provides standard NFT functionality
 contract ERC721Facet {
     function balanceOf(address owner) external view returns (uint256) {
-        return LibERC721.balanceOf(owner);
+        return ERC721Mod.balanceOf(owner);
     }
     
     function ownerOf(uint256 tokenId) external view returns (address) {
-        return LibERC721.ownerOf(tokenId);
+        return ERC721Mod.ownerOf(tokenId);
     }
     
     function transferFrom(
@@ -76,7 +76,7 @@ contract ERC721Facet {
         address to,
         uint256 tokenId
     ) external {
-        LibERC721.transferFrom(from, to, tokenId);
+        ERC721Mod.transferFrom(from, to, tokenId);
     }
     
     // ... more standard ERC721 functions
@@ -87,9 +87,9 @@ contract ERC721Facet {
 You can add `ERC721Facet` to your diamond and immediately have full ERC721 functionality!
 </Callout>
 
-## Libraries: Helper Functions
+## Modules: Helper Functions
 
-Libraries provide internal functions that your custom facets can use:
+Modules provide internal functions that your custom facets can use:
 
 <FeatureGrid columns={3}>
   <FeatureGridItem
@@ -109,11 +109,11 @@ Libraries provide internal functions that your custom facets can use:
   />
 </FeatureGrid>
 
-### Example: LibERC721
+### Example: ERC721Mod
 
 ```solidity
-// LibERC721 provides helper functions for custom facets
-library LibERC721 {
+// ERC721Mod provides helper functions for custom facets
+library ERC721Mod {
     function mint(address to, uint256 tokenId) internal {
         // Modifies storage that ERC721Facet reads
         ERC721Storage storage s = erc721Storage();
@@ -137,11 +137,11 @@ library LibERC721 {
 
 ## The Magic: Shared Storage
 
-Both facets and libraries access the **same storage location** in your diamond:
+Both facets and modules access the **same storage location** in your diamond:
 
 ```solidity
 // Your custom facet
-import {LibERC721} from "compose/LibERC721.sol";
+import {ERC721Mod} from "compose/ERC721Mod.sol";
 
 contract GameNFTFacet {
     function mintWithGameLogic(
@@ -154,10 +154,10 @@ contract GameNFTFacet {
             "Not enough points"
         );
         
-        // Use LibERC721 to mint
+        // Use ERC721Mod to mint
         // This modifies the SAME storage that
         // ERC721Facet uses!
-        LibERC721.mint(player, tokenId);
+        ERC721Mod.mint(player, tokenId);
         
         // Now ERC721Facet.ownerOf(tokenId) 
         // returns player!
@@ -167,16 +167,16 @@ contract GameNFTFacet {
 ```
 
 <Callout type="tip" title="The Power of Composition">
-You don't need to inherit from anything. You don't need to override functions. Just use the library functions and everything works together!
+You don't need to inherit from anything. You don't need to override functions. Just use the module functions and everything works together!
 </Callout>
 
 ## Visual Diagram
 
 ```
-┌─────────────────────────────────────────┐
-│           Diamond Contract              │
-├─────────────────────────────────────────┤
-│                                         │
+┌────────────────────────────────────────┐
+│           Diamond Contract             │
+├────────────────────────────────────────┤
+│                                        │
 │  ┌──────────────┐    ┌───────────────┐ │
 │  │ ERC721Facet  │    │ GameNFTFacet  │ │
 │  │              │    │               │ │
@@ -188,7 +188,7 @@ You don't need to inherit from anything. You don't need to override functions. J
 │         │  ┌─────────────────┘         │
 │         ▼  ▼                           │
 │   ┌─────────────┐                      │
-│   │  LibERC721  │                      │
+│   │  ERC721Mod  │                      │
 │   └──────┬──────┘                      │
 │          │                             │
 │          ▼                             │
@@ -196,8 +196,8 @@ You don't need to inherit from anything. You don't need to override functions. J
 │   │   Storage   │                      │
 │   │  (Shared)   │                      │
 │   └─────────────┘                      │
-│                                         │
-└─────────────────────────────────────────┘
+│                                        │
+└────────────────────────────────────────┘
 ```
 
 ## When to Use Each
@@ -216,7 +216,7 @@ You don't need to inherit from anything. You don't need to override functions. J
   </DocCard>
   <DocCard
     icon={<Icon name="wrench" size={32} />}
-    title="Use Libraries When..."
+    title="Use Modules When..."
     description="You're building custom facets that need to integrate with Compose."
   >
     <ul style={{margin: 0, paddingLeft: '1.25rem'}}>
@@ -232,8 +232,8 @@ You don't need to inherit from anything. You don't need to override functions. J
 Let's build a game where players earn NFTs by completing quests:
 
 ```solidity
-import {LibERC721} from "compose/LibERC721.sol";
-import {LibAccessControl} from "compose/LibAccessControl.sol";
+import {ERC721Mod} from "compose/ERC721Mod.sol";
+import {AccessControlMod} from "compose/AccessControlMod.sol";
 
 contract QuestRewardsFacet {
     bytes32 public constant GAME_MASTER = keccak256("GAME_MASTER");
@@ -245,9 +245,9 @@ contract QuestRewardsFacet {
         uint256 questId,
         uint256 tokenId
     ) external {
-        // Use LibAccessControl to check permissions
+        // Use AccessControlMod to check permissions
         require(
-            LibAccessControl.hasRole(GAME_MASTER, msg.sender),
+            AccessControlMod.hasRole(GAME_MASTER, msg.sender),
             "Not authorized"
         );
         
@@ -255,8 +255,8 @@ contract QuestRewardsFacet {
         require(!questCompleted[questId], "Quest already claimed");
         questCompleted[questId] = true;
         
-        // Use LibERC721 to mint reward NFT
-        LibERC721.mint(player, tokenId);
+        // Use ERC721Mod to mint reward NFT
+        ERC721Mod.mint(player, tokenId);
         
         // The standard ERC721Facet.ownerOf(tokenId) now works!
         // The player can transfer using ERC721Facet.transferFrom()!
@@ -273,8 +273,8 @@ Your `QuestRewardsFacet` mints NFTs that work with all standard ERC721 functions
 <FeatureGrid columns={2}>
   <FeatureGridItem
     icon={<Icon name="checkmark" size={32} />}
-    title="Do: Use Libraries in Custom Facets"
-    description="Import and use library functions to integrate with Compose functionality."
+    title="Do: Use Modules in Custom Facets"
+    description="Import and use module functions to integrate with Compose functionality."
   />
   <FeatureGridItem
     icon={<Icon name="checkmark" size={32} />}
@@ -289,11 +289,11 @@ Your `QuestRewardsFacet` mints NFTs that work with all standard ERC721 functions
   <FeatureGridItem
     icon={<Icon name="cross" size={32} />}
     title="Don't: Call Facets from Facets"
-    description="Use libraries for facet-to-facet communication, not external calls."
+    description="Use modules for facet-to-facet communication, not external calls."
   />
 </FeatureGrid>
 
-## Available Facets & Libraries
+## Available Facets & Modules
 
 <DocCardGrid columns={2}>
   <DocCard
@@ -330,7 +330,7 @@ Your `QuestRewardsFacet` mints NFTs that work with all standard ERC721 functions
   <FeatureGridItem
     icon={<Icon name="rocket" size={32} />}
     title="Quick Start"
-    description="Build your first diamond with facets and libraries."
+    description="Build your first diamond with facets and modules."
     href="/docs/getting-started/quick-start"
   />
 </FeatureGrid>

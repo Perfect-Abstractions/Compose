@@ -27,8 +27,8 @@ Compose uses clear naming patterns to distinguish Solidity file types:
 
 - Files ending in **`Facet.sol`** (e.g., `ERC20Facet.sol`) contain facet contracts for diamonds.
 - Files ending in **`Diamond.sol`** (e.g., `ExampleDiamond.sol`) implement diamond contracts.
-- Files that do **not** end in `Facet` or `Diamond` are **Solidity modules** — intended to be imported and used within facets or diamond contracts.
+- Files ending in **`Mod`** (e.g., `ERC20Mod.sol`) are **Solidity modules** — intended to be imported and used within facets or diamond contracts.
 
 **Exception:**  
-`Diamond.sol` is a **module**, not a diamond contract. It provides core diamond functionality that diamond contracts import.
+`DiamondMod.sol` is a **module**, not a diamond contract. It provides core diamond functionality that diamond contracts import.
 

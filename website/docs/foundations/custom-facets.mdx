@@ -7,18 +7,18 @@ description: "Build your own facets that work seamlessly with existing Compose F
 Many projects need custom functionality beyond the standard facets.  
 Compose is designed for this — you can build and integrate your own facets that work seamlessly alongside existing Compose facets.
 
-Compose provides Solidity libraries that expose the same storage layouts and internal logic used by its on-chain facets. This lets your custom facets share data and interact directly with Compose's reusable facets.
+Compose provides Solidity modules that expose the same storage layouts and internal logic used by its on-chain facets. This lets your custom facets share data and interact directly with Compose's reusable facets.
 
 **Example: Adding Game Logic to ERC-721**
 
 Suppose you're building an on-chain game and want to include the `ERC721Facet` in your diamond.
-You can add your own `GameNFTFacet` that extends functionality while still sharing the same ERC-721 storage through `LibERC721`:
+You can add your own `GameNFTFacet` that extends functionality while still sharing the same ERC-721 storage through `ERC721Mod`:
 
 ```Solidity
 /**
- * Your custom facet integrates with Compose using libraries
+ * Your custom facet integrates with Compose using Modules
  */
-import {LibERC721} from "compose/LibERC721.sol";
+import {ERC721Mod} from "compose/ERC721Mod.sol";
 
 contract GameNFTFacet {
     function mintWithGameLogic(address player, uint256 tokenId) external {
@@ -28,10 +28,10 @@ contract GameNFTFacet {
         require(playerHasEnoughPoints(player), "Not enough points");
         
         /**
-         * Use LibERC721 to mint - this modifies the SAME storage
+         * Use ERC721Mod to mint - this modifies the SAME storage
          * that ERC721Facet uses for balanceOf(), ownerOf(), etc.
          */
-        LibERC721.mint(player, tokenId);
+        ERC721Mod.mint(player, tokenId);
         
         /**
          * Now the player owns this NFT and can use standard

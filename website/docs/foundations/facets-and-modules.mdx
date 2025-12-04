@@ -26,11 +26,11 @@ Compose uses two complementary patterns for smart contract development:
 - **Enable composition**: Allow custom facets to interact with Compose functionality
 - **Initializes Deployment**: Used to set variables when deploying diamonds
 
-**Example**: `ERC20.sol` provides helper functions to interact with ERC-20 storage from custom facets.
+**Example**: `ERC20Mod.sol` provides helper functions to interact with ERC-20 storage from custom facets.
 
 ### The Key Insight: Shared Storage
 
-**Both facets and modules access the SAME storage in your diamond.** When `ERC721Facet` and `ERC721` both define identical storage at `keccak256("compose.erc721")`, they're reading and writing the same data. This is how your custom facets can extend Compose functionality without inheritance.
+**Both facets and modules access the SAME storage in your diamond.** When `ERC721Facet` and `ERC721Mod` both define identical storage at `keccak256("compose.erc721")`, they're reading and writing the same data. This is how your custom facets can extend Compose functionality without inheritance.
 
 ### When to Use Each
 
