@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity >=0.8.30;
 
-import "src/libraries/NonReentrancy.sol" as NonReentrancy;
+import "src/libraries/NonReentrancyMod.sol" as NonReentrancy;
 
 contract NonReentrantHarness {
     error ForcedFailure();

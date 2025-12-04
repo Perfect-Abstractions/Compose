@@ -2,7 +2,7 @@
 pragma solidity >=0.8.30;
 
 import {Test, console2} from "forge-std/Test.sol";
-import "../../../src/access/Owner/Owner.sol" as Owner;
+import "../../../src/access/Owner/OwnerMod.sol" as Owner;
 import {OwnerHarness} from "./harnesses/OwnerHarness.sol";
 
 contract LibOwnerTest is Test {

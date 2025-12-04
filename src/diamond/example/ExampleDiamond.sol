@@ -1,10 +1,10 @@
 // SPDX-License-Identifier: MIT
 pragma solidity >=0.8.30;
 
-import "../Diamond.sol" as Diamond;
-import "../../access/Owner/Owner.sol" as Owner;
-import "../../token/ERC721/ERC721/ERC721.sol" as ERC721;
-import "../../interfaceDetection/ERC165/ERC165.sol" as ERC165;
+import "../DiamondMod.sol" as Diamond;
+import "../../access/Owner/OwnerMod.sol" as Owner;
+import "../../token/ERC721/ERC721/ERC721Mod.sol" as ERC721;
+import "../../interfaceDetection/ERC165/ERC165Mod.sol" as ERC165;
 import {IERC721} from "../../interfaces/IERC721.sol";
 import {IERC721Metadata} from "../../interfaces/IERC721Metadata.sol";
 

@@ -4,7 +4,7 @@ pragma solidity >=0.8.30;
 import {Utils} from "./Utils.sol";
 
 import {MinimalDiamond} from "./MinimalDiamond.sol";
-import "../../src/diamond/DiamondCut.sol" as DiamondCut;
+import "../../src/diamond/DiamondCutMod.sol" as DiamondCut;
 import {DiamondLoupeFacet} from "../../src/diamond/DiamondLoupeFacet.sol";
 
 abstract contract BaseBenchmark is Utils {

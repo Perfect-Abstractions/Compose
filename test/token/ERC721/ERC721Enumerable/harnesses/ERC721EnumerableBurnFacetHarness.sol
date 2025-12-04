@@ -4,7 +4,7 @@ pragma solidity >=0.8.30;
 import {
     ERC721EnumerableBurnFacet
 } from "../../../../../src/token/ERC721/ERC721Enumerable/ERC721EnumerableBurnFacet.sol";
-import "../../../../../src/token/ERC721/ERC721Enumerable/ERC721Enumerable.sol" as ERC721Enumerable;
+import "../../../../../src/token/ERC721/ERC721Enumerable/ERC721EnumerableMod.sol" as ERC721Enumerable;
 
 /**
  * @title ERC721EnumerableBurnFacetHarness

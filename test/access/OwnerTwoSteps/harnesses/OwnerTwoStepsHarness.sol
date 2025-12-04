@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity >=0.8.30;
 
-import "../../../../src/access/OwnerTwoSteps/OwnerTwoSteps.sol" as OwnerTwoSteps;
+import "../../../../src/access/OwnerTwoSteps/OwnerTwoStepsMod.sol" as OwnerTwoSteps;
 
 /**
  * @title LibOwnerTwoSteps Test Harness

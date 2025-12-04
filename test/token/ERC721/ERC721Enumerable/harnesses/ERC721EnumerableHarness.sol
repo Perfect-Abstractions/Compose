@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity >=0.8.30;
 
-import "../../../../../src/token/ERC721/ERC721Enumerable/ERC721Enumerable.sol" as ERC721Enumerable;
+import "../../../../../src/token/ERC721/ERC721Enumerable/ERC721EnumerableMod.sol" as ERC721Enumerable;
 
 /**
  * @title ERC721EnumerableHarness

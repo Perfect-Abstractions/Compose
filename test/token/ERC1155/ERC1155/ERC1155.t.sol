@@ -3,7 +3,7 @@ pragma solidity >=0.8.30;
 
 import {Test} from "forge-std/Test.sol";
 import {ERC1155Harness} from "./harnesses/ERC1155Harness.sol";
-import "../../../../src/token/ERC1155/ERC1155.sol" as ERC1155;
+import "../../../../src/token/ERC1155/ERC1155Mod.sol" as ERC1155;
 import {ERC1155ReceiverMock} from "./mocks/ERC1155ReceiverMock.sol";
 
 contract LibERC1155Test is Test {

@@ -2,7 +2,7 @@
 pragma solidity >=0.8.30;
 
 import {Test, console2} from "forge-std/Test.sol";
-import "../../../src/access/AccessControl/AccessControl.sol" as AccessControl;
+import "../../../src/access/AccessControl/AccessControlMod.sol" as AccessControl;
 import {AccessControlHarness} from "./harnesses/AccessControlHarness.sol";
 
 contract LibAccessControlTest is Test {

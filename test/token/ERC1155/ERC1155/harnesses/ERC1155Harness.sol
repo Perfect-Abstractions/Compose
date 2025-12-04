@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity >=0.8.30;
 
-import "../../../../../src/token/ERC1155/ERC1155.sol" as ERC1155;
+import "../../../../../src/token/ERC1155/ERC1155Mod.sol" as ERC1155;
 
 /**
  * @title ERC1155Harness

@@ -4,8 +4,8 @@ pragma solidity >=0.8.30;
 import {Test} from "forge-std/Test.sol";
 import {stdError} from "forge-std/StdError.sol";
 import {ERC6909Harness} from "./harnesses/ERC6909Harness.sol";
-import "../../../../src/token/ERC6909/ERC6909/ERC6909.sol" as ERC6909;
-import {Transfer, OperatorSet, Approval} from "../../../../src/token/ERC6909/ERC6909/ERC6909.sol";
+import "../../../../src/token/ERC6909/ERC6909/ERC6909Mod.sol" as ERC6909;
+import {Transfer, OperatorSet, Approval} from "../../../../src/token/ERC6909/ERC6909/ERC6909Mod.sol";
 
 contract LibERC6909Test is Test {
     ERC6909Harness internal harness;

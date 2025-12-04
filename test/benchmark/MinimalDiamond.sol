@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity >=0.8.30;
 
-import "../../src/diamond/DiamondCut.sol" as DiamondCut;
+import "../../src/diamond/DiamondCutMod.sol" as DiamondCut;
 
 /**
  *  Adapted from: https://github.com/mudgen/diamond-1-hardhat/blob/main/contracts/Diamond.sol

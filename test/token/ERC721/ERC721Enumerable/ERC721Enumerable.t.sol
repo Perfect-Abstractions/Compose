@@ -2,7 +2,7 @@
 pragma solidity >=0.8.30;
 
 import {Test} from "forge-std/Test.sol";
-import "../../../../src/token/ERC721/ERC721Enumerable/ERC721Enumerable.sol" as ERC721Enumerable;
+import "../../../../src/token/ERC721/ERC721Enumerable/ERC721EnumerableMod.sol" as ERC721Enumerable;
 import {ERC721EnumerableHarness} from "./harnesses/ERC721EnumerableHarness.sol";
 
 contract LibERC721EnumerableTest is Test {

@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity >=0.8.30;
 
-import "../../../../../src/token/ERC721/ERC721/ERC721.sol" as ERC721;
+import "../../../../../src/token/ERC721/ERC721/ERC721Mod.sol" as ERC721;
 
 contract ERC721Harness {
     /**

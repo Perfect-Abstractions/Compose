@@ -3,7 +3,7 @@ pragma solidity >=0.8.30;
 
 import {Test} from "forge-std/Test.sol";
 import {ERC20Harness} from "./harnesses/ERC20Harness.sol";
-import "../../../../src/token/ERC20/ERC20/ERC20.sol" as ERC20;
+import "../../../../src/token/ERC20/ERC20/ERC20Mod.sol" as ERC20;
 
 contract LibERC20Test is Test {
     ERC20Harness public harness;
