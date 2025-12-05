@@ -328,7 +328,9 @@ contract ERC721EnumerableFacet {
                     revert ERC721InvalidReceiver(_to);
                 }
             } catch (bytes memory reason) {
-                if (reason.length == 0) revert ERC721InvalidReceiver(_to);
+                if (reason.length == 0) {
+                    revert ERC721InvalidReceiver(_to);
+                }
                 assembly ("memory-safe") {
                     revert(add(reason, 0x20), mload(reason))
                 }
@@ -351,7 +353,9 @@ contract ERC721EnumerableFacet {
                     revert ERC721InvalidReceiver(_to);
                 }
             } catch (bytes memory reason) {
-                if (reason.length == 0) revert ERC721InvalidReceiver(_to);
+                if (reason.length == 0) {
+                    revert ERC721InvalidReceiver(_to);
+                }
                 assembly ("memory-safe") {
                     revert(add(reason, 0x20), mload(reason))
                 }
