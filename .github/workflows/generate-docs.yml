@@ -1,0 +1,159 @@
+name: Generate Facets & Modules Docs
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'src/**/*.sol'
+  workflow_dispatch:
+    inputs:
+      process_all:
+        description: 'Process ALL Solidity files'
+        required: false
+        default: false
+        type: boolean
+      skip_enhancement:
+        description: 'Skip AI Documentation Enhancement'
+        required: false
+        default: false
+        type: boolean
+
+permissions:
+  contents: write
+  pull-requests: write
+  models: read  # Required for GitHub Models API (AI enhancement)
+
+jobs:
+  generate-docs:
+    name: Generate Pages
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # Full history for git diff
+          submodules: recursive
+
+      - name: Get changed Solidity files
+        id: changed-files
+        run: |
+          if [ "${{ github.event.inputs.process_all }}" == "true" ]; then
+            echo "Processing all Solidity files (manual trigger)"
+            echo "has_changes=true" >> $GITHUB_OUTPUT
+            echo "process_all=true" >> $GITHUB_OUTPUT
+          else
+            # Get list of changed .sol files compared to previous commit
+            CHANGED_FILES=$(git diff --name-only HEAD~1 HEAD -- 'src/**/*.sol' 2>/dev/null || echo "")
+            
+            if [ -z "$CHANGED_FILES" ]; then
+              echo "No Solidity files changed"
+              echo "has_changes=false" >> $GITHUB_OUTPUT
+            else
+              echo "Changed files:"
+              echo "$CHANGED_FILES"
+              echo "has_changes=true" >> $GITHUB_OUTPUT
+              echo "process_all=false" >> $GITHUB_OUTPUT
+              
+              # Save to file for script
+              echo "$CHANGED_FILES" > /tmp/changed_sol_files.txt
+            fi
+          fi
+
+      - name: Setup Node.js
+        if: steps.changed-files.outputs.has_changes == 'true'
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install Foundry
+        if: steps.changed-files.outputs.has_changes == 'true'
+        uses: foundry-rs/foundry-toolchain@v1
+
+      - name: Generate forge documentation
+        if: steps.changed-files.outputs.has_changes == 'true'
+        run: forge doc
+
+      - name: Run documentation generator
+        if: steps.changed-files.outputs.has_changes == 'true'
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          SKIP_ENHANCEMENT: ${{ github.event.inputs.skip_enhancement || 'false' }}
+        run: |
+          if [ "${{ steps.changed-files.outputs.process_all }}" == "true" ]; then
+            node .github/scripts/generate-docs.js --all
+          else
+            node .github/scripts/generate-docs.js /tmp/changed_sol_files.txt
+          fi
+
+      - name: Check for generated files
+        if: steps.changed-files.outputs.has_changes == 'true'
+        id: check-generated
+        run: |
+          # Check if any files were generated
+          if [ -f "docgen-summary.json" ]; then
+            TOTAL=$(cat docgen-summary.json | jq -r '.totalGenerated // 0' 2>/dev/null || echo "0")
+            if [ -n "$TOTAL" ] && [ "$TOTAL" -gt "0" ]; then
+              echo "has_generated=true" >> $GITHUB_OUTPUT
+              echo "Generated $TOTAL documentation files"
+            else
+              echo "has_generated=false" >> $GITHUB_OUTPUT
+              echo "No documentation files generated"
+            fi
+          else
+            echo "has_generated=false" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Verify documentation site build
+        if: steps.check-generated.outputs.has_generated == 'true'
+        working-directory: website
+        run: |
+          npm ci
+          npm run build
+        env:
+          # Prevent build failures from missing keys
+          ALGOLIA_APP_ID: ${{ secrets.ALGOLIA_APP_ID || 'dummy' }}
+          ALGOLIA_API_KEY: ${{ secrets.ALGOLIA_API_KEY || 'dummy' }}
+          ALGOLIA_INDEX_NAME: ${{ secrets.ALGOLIA_INDEX_NAME || 'compose' }}
+          POSTHOG_API_KEY: ${{ secrets.POSTHOG_API_KEY || 'dummy' }}
+        continue-on-error: true # TODO: Disable when ready to merge
+
+      - name: Generate PR body
+        if: steps.check-generated.outputs.has_generated == 'true'
+        id: pr-body
+        run: |
+          node .github/scripts/generate-docs-utils/pr-body-generator.js docgen-summary.json >> $GITHUB_OUTPUT
+
+      - name: Clean up tmp files and stage website pages
+        if: steps.check-generated.outputs.has_generated == 'true'
+        run: |
+          # Remove forge docs folder (if it exists)
+          if [ -d "docs" ]; then
+            rm -rf docs
+          fi
+          
+          # Remove summary file (if it exists)
+          if [ -f "docgen-summary.json" ]; then
+            rm -f docgen-summary.json
+          fi
+          
+          # Reset any staged changes
+          git reset
+          
+          # Only stage website documentation files
+          git add website/docs/contracts/
+
+      - name: Create Pull Request
+        if: steps.check-generated.outputs.has_generated == 'true'
+        uses: peter-evans/create-pull-request@v5
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          title: '[DOCS] Auto-generated API documentation'
+          commit-message: 'docs: auto-generate API docs from NatSpec'
+          branch: docs/auto-generated-${{ github.run_number }}
+          body: ${{ steps.pr-body.outputs.body }}
+          labels: |
+            documentation
+            auto-generated
+          delete-branch: true
+          draft: true
