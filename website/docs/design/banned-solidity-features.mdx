@@ -94,12 +94,10 @@ function approve(address _spender, uint256 _value) public {
 
   </Accordion>
 
-  <Accordion title="No external functions in Solidity libraries">
-
-All Solidity module functions must be declared `internal`.
+<Accordion title="No Solidity libraries">
 
 ```solidity title="🚫 Not allowed"
-function transfer() external {
+library MyLib {
     ...
 }
 ```
