@@ -19,7 +19,7 @@ const path = require('path');
  */
 function generatePRBody(summary) {
   const facets = summary.facets || [];
-  const libraries = summary.libraries || [];
+  const modules = summary.modules || [];
   const total = summary.totalGenerated || 0;
 
   let body = '## Auto-Generated Contract Documentation\n\n';
@@ -57,7 +57,7 @@ function generatePRBody(summary) {
   body += '- [ ] Ensure consistency with existing docs\n\n';
 
   body += '---\n';
-  body += '<b>This PR was automatically generated. Please review before merging.</b>\n';
+  body += '<b* This PR was automatically generated. Please review before merging.*\n';
 
   return body;
 }
