@@ -18,7 +18,7 @@ You can add your own `GameNFTFacet` that extends functionality while still shari
 /**
  * Your custom facet integrates with Compose using Modules
  */
-import {ERC721Mod} from "compose/ERC721Mod.sol";
+import "compose/ERC721Mod" as ERC721Mod;
 
 contract GameNFTFacet {
     function mintWithGameLogic(address player, uint256 tokenId) external {
