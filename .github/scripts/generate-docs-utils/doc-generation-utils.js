@@ -230,21 +230,23 @@ function extractModuleDescriptionFromSource(solFilePath) {
  */
 function getContractType(filePath, content) {
   const lowerPath = filePath.toLowerCase();
+  const normalizedPath = lowerPath.replace(/\\/g, '/');
+  const baseName = path.basename(filePath, path.extname(filePath)).toLowerCase();
   
-  // Check path patterns - files with 'lib' in the path are modules
-  if (lowerPath.includes('lib')) {
+  // Explicit modules folder
+  if (normalizedPath.includes('/modules/')) {
+    return 'module';
+  }
+
+  // File naming conventions (e.g., AccessControlMod.sol, NonReentrancyModule.sol)
+  if (baseName.endsWith('mod') || baseName.endsWith('module')) {
     return 'module';
   }
   
   if (lowerPath.includes('facet')) {
     return 'facet';
   }
-
-  // Check content patterns - files with 'library' keyword (Solidity libraries) are modules
-  if (content && content.includes('library ')) {
-    return 'module';
-  }
-
+  
   // Default to facet for contracts
   return 'facet';
 }
