@@ -86,11 +86,11 @@ async function processForgeDocFile(forgeDocFile, solFilePath) {
   // Check if we should skip AI enhancement (e.g., for interfaces or when SKIP_ENHANCEMENT is set)
   const skipAIEnhancement = shouldSkipEnhancement(data) || process.env.SKIP_ENHANCEMENT === 'true';
 
-  // Enhance with Copilot if not skipped, otherwise add fallback content
+  // Enhance with AI if not skipped, otherwise add fallback content
   let enhancedData = data;
   if (!skipAIEnhancement) {
     const token = process.env.GITHUB_TOKEN;
-    enhancedData = await enhanceWithCopilot(data, contractType, token);
+    enhancedData = await enhanceWithAI(data, contractType, token);
   } else {
     console.log(`Skipping AI enhancement for ${data.title}`);
     // Add fallback content when skipping AI enhancement
