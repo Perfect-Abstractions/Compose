@@ -22,7 +22,7 @@ function generatePRBody(summary) {
   const libraries = summary.libraries || [];
   const total = summary.totalGenerated || 0;
 
-  let body = '## Auto-Generated API Documentation\n\n';
+  let body = '## Auto-Generated Contract Documentation\n\n';
   body += 'This PR contains auto-generated documentation from contract comments using `forge doc`.\n\n';
   
   body += '### Summary\n';
@@ -36,10 +36,10 @@ function generatePRBody(summary) {
     body += '\n';
   }
 
-  if (libraries.length > 0) {
-    body += '### Libraries\n';
-    libraries.forEach(lib => {
-      body += `- ${lib.title}\n`;
+  if (modules.length > 0) {
+    body += '### Modules\n';
+    modules.forEach(module => {
+      body += `- ${module.title}\n`;
     });
     body += '\n';
   }
@@ -57,7 +57,7 @@ function generatePRBody(summary) {
   body += '- [ ] Ensure consistency with existing docs\n\n';
 
   body += '---\n';
-  body += '* This PR was automatically generated. Please review before merging.*\n';
+  body += '<b>This PR was automatically generated. Please review before merging.</b>\n';
 
   return body;
 }

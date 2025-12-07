@@ -32,7 +32,7 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
         with:
-          fetch-depth: 0  # Full history for git diff
+          fetch-depth: 0
           submodules: recursive
 
       - name: Get changed Solidity files
@@ -112,11 +112,11 @@ jobs:
           npm run build
         env:
           # Prevent build failures from missing keys
-          ALGOLIA_APP_ID: ${{ secrets.ALGOLIA_APP_ID || 'dummy' }}
-          ALGOLIA_API_KEY: ${{ secrets.ALGOLIA_API_KEY || 'dummy' }}
-          ALGOLIA_INDEX_NAME: ${{ secrets.ALGOLIA_INDEX_NAME || 'compose' }}
-          POSTHOG_API_KEY: ${{ secrets.POSTHOG_API_KEY || 'dummy' }}
-        continue-on-error: true # TODO: Disable when ready to merge
+          ALGOLIA_APP_ID: 'dummy'
+          ALGOLIA_API_KEY: 'dummy'
+          ALGOLIA_INDEX_NAME: 'dummy'
+          POSTHOG_API_KEY: 'dummy'    
+        continue-on-error: false
 
       - name: Generate PR body
         if: steps.check-generated.outputs.has_generated == 'true'
@@ -148,8 +148,8 @@ jobs:
         uses: peter-evans/create-pull-request@v5
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
-          title: '[DOCS] Auto-generated API documentation'
-          commit-message: 'docs: auto-generate API docs from NatSpec'
+          title: '[DOCS] Auto-generated Contract documentation'
+          commit-message: 'docs: auto-generate contracts docs from NatSpec'
           branch: docs/auto-generated-${{ github.run_number }}
           body: ${{ steps.pr-body.outputs.body }}
           labels: |
