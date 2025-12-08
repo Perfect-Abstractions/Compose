@@ -236,8 +236,10 @@ contract MockFacet {
                         TEST CONTRACT
 //////////////////////////////////////////////////////////////*/
 
-/** Gas benchmark comparing constructor vs initialize approaches for diamond deployment
-    Tests scenarios: 10, 50, and 100 facets with 12 selectors each */
+/**
+ *  Gas benchmark comparing constructor vs initialize approaches for diamond deployment
+ *     Tests scenarios: 10, 50, and 100 facets with 12 selectors each
+ */
 contract DiamondDeploymentGasBenchmarkTest is Test {
     uint256 constant SELECTORS_PER_FACET = 12;
 
