@@ -1,8 +1,5 @@
 # AI Documentation Enhancement Prompts
 
-This file contains all prompts and instructions used for AI-powered documentation enhancement.
-Edit this file to adjust AI behavior without modifying the JavaScript code.
-
 ---
 
 ## System Prompt

@@ -276,14 +276,33 @@ async function enhanceWithAI(data, contractType, token) {
         let enhanced = JSON.parse(content);
         console.log('✅ AI enhancement successful');
         
+        // Convert literal \n strings to actual newlines
+        const convertNewlines = (str) => {
+          if (!str || typeof str !== 'string') return str;
+          return str.replace(/\\n/g, '\n');
+        };
+        
+        // Decode HTML entities (for code blocks)
+        const decodeHtmlEntities = (str) => {
+          if (!str || typeof str !== 'string') return str;
+          return str
+            .replace(/&quot;/g, '"')
+            .replace(/&#x3D;/g, '=')
+            .replace(/&#x3D;&gt;/g, '=>')
+            .replace(/&lt;/g, '<')
+            .replace(/&gt;/g, '>')
+            .replace(/&#39;/g, "'")
+            .replace(/&amp;/g, '&');
+        };
+        
         return {
           ...data,
-          overview: enhanced.overview || data.overview,
-          usageExample: enhanced.usageExample || null,
-          bestPractices: enhanced.bestPractices || null,
-          keyFeatures: enhanced.keyFeatures || null,
-          integrationNotes: enhanced.integrationNotes || null,
-          securityConsiderations: enhanced.securityConsiderations || null,
+          overview: convertNewlines(enhanced.overview) || data.overview,
+          usageExample: decodeHtmlEntities(convertNewlines(enhanced.usageExample)) || null,
+          bestPractices: convertNewlines(enhanced.bestPractices) || null,
+          keyFeatures: convertNewlines(enhanced.keyFeatures) || null,
+          integrationNotes: convertNewlines(enhanced.integrationNotes) || null,
+          securityConsiderations: convertNewlines(enhanced.securityConsiderations) || null,
         };
       } catch (parseError) {
         console.log('    ⚠️ Could not parse API response as JSON');

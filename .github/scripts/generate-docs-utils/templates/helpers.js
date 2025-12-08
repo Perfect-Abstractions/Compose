@@ -21,12 +21,14 @@ function escapeYaml(str) {
 
 /**
  * Sanitize text to prevent MDX from interpreting it as JSX
+ * Converts literal \n strings to actual newlines for proper formatting
  * @param {string} str - String to sanitize
  * @returns {string} Sanitized string
  */
 function sanitizeForMdx(str) {
   if (!str) return '';
   return str
+    .replace(/\\n/g, '\n')  // Convert literal \n to actual newlines
     .replace(/</g, '&lt;')
     .replace(/>/g, '&gt;')
     .replace(/\{/g, '&#123;')
