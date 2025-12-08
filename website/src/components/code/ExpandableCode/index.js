@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
+import CodeBlock from '@theme/CodeBlock';
 import Icon from '../../ui/Icon';
 import clsx from 'clsx';
 import styles from './styles.module.css';
@@ -18,34 +19,29 @@ export default function ExpandableCode({
   children
 }) {
   const [isExpanded, setIsExpanded] = useState(false);
-  const codeRef = React.useRef(null);
-  const [needsExpansion, setNeedsExpansion] = React.useState(false);
-
-  React.useEffect(() => {
-    if (codeRef.current) {
-      const lines = codeRef.current.textContent.split('\n').length;
-      setNeedsExpansion(lines > maxLines);
-    }
-  }, [children, maxLines]);
+  const [needsExpansion, setNeedsExpansion] = useState(false);
 
   const codeContent = typeof children === 'string' ? children : children?.props?.children || '';
+  const lineCount = useMemo(() => codeContent.split('\n').length, [codeContent]);
+
+  useEffect(() => {
+    setNeedsExpansion(lineCount > maxLines);
+  }, [lineCount, maxLines]);
 
   return (
     <div className={styles.expandableCode}>
       {title && <div className={styles.codeTitle}>{title}</div>}
       <div className={styles.codeWrapper}>
-        <pre
-          ref={codeRef}
+        <CodeBlock
+          language={language}
           className={clsx(
             styles.codeBlock,
             !isExpanded && needsExpansion && styles.codeBlockCollapsed
           )}
-          style={{
-            '--max-lines': maxLines,
-          }}
+          style={{ '--max-lines': maxLines }}
         >
-          <code className={`language-${language}`}>{codeContent}</code>
-        </pre>
+          {codeContent}
+        </CodeBlock>
         {needsExpansion && (
           <button
             className={clsx(
@@ -63,7 +59,7 @@ export default function ExpandableCode({
             ) : (
               <>
                 <Icon name="chevron-down" size={16} />
-                Show More ({codeRef.current?.textContent.split('\n').length - maxLines} more lines)
+                Show More ({lineCount - maxLines} more lines)
               </>
             )}
           </button>

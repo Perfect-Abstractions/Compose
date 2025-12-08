@@ -395,6 +395,7 @@ function prepareBaseData(data, position = 99) {
     description,
     subtitle,
     overview,
+    generatedDate: data.generatedDate || new Date().toISOString(),
     gitSource: data.gitSource || '',
     keyFeatures: data.keyFeatures || '',
     usageExample: data.usageExample || '',

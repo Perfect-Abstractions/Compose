@@ -26,6 +26,98 @@ function registerHelpers() {
   Handlebars.registerHelper('sanitizeMdx', helpers.sanitizeMdx);
   Handlebars.registerHelper('escapeMarkdownTable', helpers.escapeMarkdownTable);
   
+  // Helper to emit a JSX style literal: returns a string like {{display: "flex", gap: "1rem"}}
+  Handlebars.registerHelper('styleLiteral', function(styles) {
+    if (!styles || typeof styles !== 'string') return '{{}}';
+
+    const styleObj = {};
+    const pairs = styles.split(';').filter(pair => pair.trim());
+
+    pairs.forEach(pair => {
+      const [key, value] = pair.split(':').map(s => s.trim());
+      if (key && value !== undefined) {
+        const camelKey = key.includes('-')
+          ? key.replace(/-([a-z])/g, (_, c) => c.toUpperCase())
+          : key;
+        const cleanValue = value.replace(/^["']|["']$/g, '');
+        styleObj[camelKey] = cleanValue;
+      }
+    });
+
+    const entries = Object.entries(styleObj).map(([k, v]) => {
+      const isPureNumber = /^-?\d+\.?\d*$/.test(v.trim());
+      // Quote everything except pure numbers
+      const valueLiteral = isPureNumber ? v : JSON.stringify(v);
+      return `${k}: ${valueLiteral}`;
+    }).join(', ');
+
+    // Wrap with double braces so MDX sees style={{...}}
+    return `{{${entries}}}`;
+  });
+
+  // Helper to wrap code content in template literal for MDX
+  // This ensures MDX treats the content as a string, not JSX to parse
+  Handlebars.registerHelper('codeContent', function(content) {
+    if (!content) return '{``}';
+    // Escape backticks in the content
+    const escaped = String(content).replace(/`/g, '\\`').replace(/\$/g, '\\$');
+    return `{\`${escaped}\`}`;
+  });
+  
+  // Helper to generate JSX style object syntax
+  // Accepts CSS string and converts to JSX object format
+  // Handles both kebab-case (margin-bottom) and camelCase (marginBottom)
+  Handlebars.registerHelper('jsxStyle', function(styles) {
+    if (!styles || typeof styles !== 'string') return '{}';
+    
+    // Parse CSS string like "display: flex; margin-bottom: 1rem;" or "marginBottom: 1rem"
+    const styleObj = {};
+    const pairs = styles.split(';').filter(pair => pair.trim());
+    
+    pairs.forEach(pair => {
+      const [key, value] = pair.split(':').map(s => s.trim());
+      if (key && value) {
+        // Convert kebab-case to camelCase if needed
+        const camelKey = key.includes('-') 
+          ? key.replace(/-([a-z])/g, (g) => g[1].toUpperCase())
+          : key;
+        // Remove quotes from value if present
+        const cleanValue = value.replace(/^["']|["']$/g, '');
+        styleObj[camelKey] = cleanValue;
+      }
+    });
+    
+    // Convert to JSX object string with proper quoting
+    // All CSS values should be quoted as strings unless they're pure numbers
+    const entries = Object.entries(styleObj)
+      .map(([k, v]) => {
+        // Check if it's a pure number (integer or decimal without units)
+        if (/^-?\d+\.?\d*$/.test(v.trim())) {
+          return `${k}: ${v}`;
+        }
+        // Everything else (including CSS units like "0.75rem", "2rem", CSS vars, etc.) should be quoted
+        return `${k}: ${JSON.stringify(v)}`;
+      })
+      .join(', ');
+    
+    // Return the object content wrapped in braces
+    // When used with {{{jsxStyle ...}}} in template, this becomes style={...}
+    // But we need style={{...}}, so we return with an extra opening brace
+    // The template uses {{{jsxStyle ...}}} which outputs raw, giving us style={{{...}}}
+    // To get style={{...}}, we need the helper to return {{...}}
+    // But with triple braces in template, we'd get style={{{{...}}}} which is wrong
+    // Solution: return just the object, template adds one brace manually
+    // Return the full JSX object expression with double braces
+    // Template will use raw block: {{{{jsxStyle ...}}}}
+    // This outputs: style={{{display: "flex", ...}}}
+    // But we need: style={{display: "flex", ...}}
+    // Actually, let's try: helper returns {{...}}, template uses {{jsxStyle}} (double)
+    // Handlebars will output the helper result
+    // But it will escape... unless we use raw block
+    // Simplest: return {{...}}, use {{{{jsxStyle}}}} raw block
+    return `{{${entries}}}`;
+  });
+  
   // Custom helper for better null/empty string handling
   // Handlebars' default #if treats empty strings as falsy, but we want to be explicit
   Handlebars.registerHelper('ifTruthy', function(value, options) {
