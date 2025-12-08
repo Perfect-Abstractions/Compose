@@ -273,44 +273,46 @@ contract DiamondDeploymentGasBenchmarkTest is Test {
                              GAS BENCHMARKS
     //////////////////////////////////////////////////////////////*/
 
-    // Estimated gas: 3_373_293
-    function testGas_Constructor_10Facets() external {
+    function testGas_Constructor_010Facets() external {
         address[] memory facets = _deployFacets(10);
         LibDiamond.FacetCut[] memory cuts = _buildFacetCuts(facets);
 
         uint256 startGas = gasleft();
         ConstructorDiamond diamond = new ConstructorDiamond(cuts, address(0), "");
-        emit log_uint(startGas - gasleft());
+        uint256 gasUsed = startGas - gasleft();
+
+        emit log_named_uint("Constructor (10 facets, 120 selectors) - Total Gas", gasUsed);
 
         assertTrue(address(diamond) != address(0));
     }
 
-    // Estimated gas: 16_424_695
-    function testGas_Constructor_50Facets() external {
+    function testGas_Constructor_050Facets() external {
         address[] memory facets = _deployFacets(50);
         LibDiamond.FacetCut[] memory cuts = _buildFacetCuts(facets);
 
         uint256 startGas = gasleft();
         ConstructorDiamond diamond = new ConstructorDiamond(cuts, address(0), "");
-        emit log_uint(startGas - gasleft());
+        uint256 gasUsed = startGas - gasleft();
+
+        emit log_named_uint("Constructor (50 facets, 600 selectors) - Total Gas", gasUsed);
 
         assertTrue(address(diamond) != address(0));
     }
 
-    // Estimated gas: 32_808_971
     function testGas_Constructor_100Facets() external {
         address[] memory facets = _deployFacets(100);
         LibDiamond.FacetCut[] memory cuts = _buildFacetCuts(facets);
 
         uint256 startGas = gasleft();
         ConstructorDiamond diamond = new ConstructorDiamond(cuts, address(0), "");
-        emit log_uint(startGas - gasleft());
+        uint256 gasUsed = startGas - gasleft();
+
+        emit log_named_uint("Constructor (100 facets, 1200 selectors) - Total Gas", gasUsed);
 
         assertTrue(address(diamond) != address(0));
     }
 
-    // Estimated gas: 4_434_331 (deploy: 1_136_494 + init: 3_297_837)
-    function testGas_Initialize_10Facets() external {
+    function testGas_Initialize_010Facets() external {
         address[] memory facets = _deployFacets(10);
         LibDiamond.FacetCut[] memory cuts = _buildFacetCuts(facets);
 
@@ -322,12 +324,16 @@ contract DiamondDeploymentGasBenchmarkTest is Test {
         diamond.initialize(cuts, address(0), "");
         uint256 initGas = startGas - gasleft();
 
-        emit log_uint(deployGas + initGas);
+        uint256 totalGas = deployGas + initGas;
+
+        emit log_named_uint("Initialize (10 facets, 120 selectors) - Deploy Gas", deployGas);
+        emit log_named_uint("Initialize (10 facets, 120 selectors) - Init Gas", initGas);
+        emit log_named_uint("Initialize (10 facets, 120 selectors) - Total Gas", totalGas);
+
         assertTrue(address(diamond) != address(0));
     }
 
-    // Estimated gas: 17_453_569 (deploy: 1_138_126 + init: 16_315_443)
-    function testGas_Initialize_50Facets() external {
+    function testGas_Initialize_050Facets() external {
         address[] memory facets = _deployFacets(50);
         LibDiamond.FacetCut[] memory cuts = _buildFacetCuts(facets);
 
@@ -339,11 +345,15 @@ contract DiamondDeploymentGasBenchmarkTest is Test {
         diamond.initialize(cuts, address(0), "");
         uint256 initGas = startGas - gasleft();
 
-        emit log_uint(deployGas + initGas);
+        uint256 totalGas = deployGas + initGas;
+
+        emit log_named_uint("Initialize (50 facets, 600 selectors) - Deploy Gas", deployGas);
+        emit log_named_uint("Initialize (50 facets, 600 selectors) - Init Gas", initGas);
+        emit log_named_uint("Initialize (50 facets, 600 selectors) - Total Gas", totalGas);
+
         assertTrue(address(diamond) != address(0));
     }
 
-    // Estimated gas: 33_762_974 (deploy: 1_140_166 + init: 32_622_808)
     function testGas_Initialize_100Facets() external {
         address[] memory facets = _deployFacets(100);
         LibDiamond.FacetCut[] memory cuts = _buildFacetCuts(facets);
@@ -356,7 +366,12 @@ contract DiamondDeploymentGasBenchmarkTest is Test {
         diamond.initialize(cuts, address(0), "");
         uint256 initGas = startGas - gasleft();
 
-        emit log_uint(deployGas + initGas);
+        uint256 totalGas = deployGas + initGas;
+
+        emit log_named_uint("Initialize (100 facets, 1200 selectors) - Deploy Gas", deployGas);
+        emit log_named_uint("Initialize (100 facets, 1200 selectors) - Init Gas", initGas);
+        emit log_named_uint("Initialize (100 facets, 1200 selectors) - Total Gas", totalGas);
+
         assertTrue(address(diamond) != address(0));
     }
 }
