@@ -35,6 +35,25 @@ import Callout from '@site/src/components/ui/Callout';
 This module provides internal functions for use in your custom facets. Import it to access shared logic and storage.
 </Callout>
 
+{{/if}}
+{{#if hasStructs}}
+## Structs
+
+{{#each structs}}
+### {{name}}
+
+{{#if description}}
+{{sanitizeMdx description}}
+
+{{/if}}
+{{#if definition}}
+```solidity
+{{definition}}
+```
+
+{{/if}}
+{{/each}}
+{{/if}}
 {{#if hasStorage}}
 ## Storage
 
@@ -53,7 +72,6 @@ This module provides internal functions for use in your custom facets. Import it
 
 {{/if}}
 {{/each}}
-{{/if}}
 {{/if}}
 {{/if}}
 {{#if hasFunctions}}
@@ -133,24 +151,6 @@ This module provides internal functions for use in your custom facets. Import it
 {{#if signature}}
 ```solidity
 {{signature}}
-```
-
-{{/if}}
-{{/each}}
-{{/if}}
-{{#if hasStructs}}
-## Structs
-
-{{#each structs}}
-### {{name}}
-
-{{#if description}}
-{{sanitizeMdx description}}
-
-{{/if}}
-{{#if definition}}
-```solidity
-{{definition}}
 ```
 
 {{/if}}

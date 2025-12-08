@@ -1,0 +1,10 @@
+{
+  "name": "compose-doc-templates",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Template engine for generating MDX documentation",
+  "dependencies": {
+    "handlebars": "^4.7.8"
+  }
+}
+

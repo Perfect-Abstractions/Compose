@@ -1,9 +1,9 @@
 /**
  * MDX Templates for Docusaurus documentation
- * Uses template files with a simple template engine
+ * Uses Handlebars template engine for reliable MDX generation
  */
 
-const { loadAndRenderTemplate } = require('./template-engine');
+const { loadAndRenderTemplate } = require('./template-engine-handlebars');
 const { sanitizeForMdx } = require('./helpers');
 const { readFileSafe } = require('../../workflow-utils');
 
@@ -398,9 +398,9 @@ function prepareBaseData(data, position = 99) {
     gitSource: data.gitSource || '',
     keyFeatures: data.keyFeatures || '',
     usageExample: data.usageExample || '',
-    bestPractices: data.bestPractices || '',
-    securityConsiderations: data.securityConsiderations || '',
-    integrationNotes: data.integrationNotes || '',
+    bestPractices: (data.bestPractices && data.bestPractices.trim()) ? data.bestPractices : null,
+    securityConsiderations: (data.securityConsiderations && data.securityConsiderations.trim()) ? data.securityConsiderations : null,
+    integrationNotes: (data.integrationNotes && data.integrationNotes.trim()) ? data.integrationNotes : null,
     storageInfo: data.storageInfo || '',
     
     // Events

@@ -93,8 +93,6 @@ async function processForgeDocFile(forgeDocFile, solFilePath) {
     enhancedData = await enhanceWithAI(data, contractType, token);
   } else {
     console.log(`Skipping AI enhancement for ${data.title}`);
-    // Add fallback content when skipping AI enhancement
-    const { addFallbackContent } = require('./generate-docs-utils/copilot-enhancement');
     enhancedData = addFallbackContent(data, contractType);
   }
 

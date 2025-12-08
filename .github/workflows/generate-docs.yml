@@ -74,6 +74,11 @@ jobs:
         if: steps.changed-files.outputs.has_changes == 'true'
         run: forge doc
 
+      - name: Install template dependencies
+        if: steps.changed-files.outputs.has_changes == 'true'
+        working-directory: .github/scripts/generate-docs-utils/templates
+        run: npm install
+
       - name: Run documentation generator
         if: steps.changed-files.outputs.has_changes == 'true'
         env:
