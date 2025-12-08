@@ -145,8 +145,8 @@ jobs:
           # Reset any staged changes
           git reset
           
-          # Only stage website documentation files
-          git add website/docs/contracts/
+          # Only stage website documentation files (force add in case they're ignored)
+          git add -f website/docs/contracts/
 
       - name: Create Pull Request
         if: steps.check-generated.outputs.has_generated == 'true'

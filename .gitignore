@@ -16,7 +16,7 @@ out/
 website/node_modules
 .github/scripts/generate-docs-utils/templates/node_modules
 
-# Ignore forge docs output
-docs/
+# Ignore forge docs output (root level only)
+/docs/
 # Ignore Docs generation summary file
 docgen-summary.json
