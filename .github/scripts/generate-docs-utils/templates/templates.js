@@ -418,6 +418,8 @@ function prepareBaseData(data, position = 99) {
     // State variables (for modules)
     stateVariables: (data.stateVariables || []).map(v => ({
       name: v.name,
+      type: v.type || '',
+      value: v.value || '',
       description: v.description || '',
     })),
     hasStateVariables: (data.stateVariables || []).length > 0,

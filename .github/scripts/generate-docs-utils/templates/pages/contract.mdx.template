@@ -6,6 +6,7 @@ description: "{{escapeYaml description}}"
 
 import DocHero from '@site/src/components/docs/DocHero';
 import Callout from '@site/src/components/ui/Callout';
+import PropertyTable from '@site/src/components/api/PropertyTable';
 
 {{#if isFacet}}
 <DocHero
@@ -64,14 +65,19 @@ This module provides internal functions for use in your custom facets. Import it
 {{#if hasStateVariables}}
 ### State Variables
 
+<PropertyTable
+  properties={[
 {{#each stateVariables}}
-#### {{name}}
-
-{{#if description}}
-{{sanitizeMdx description}}
-
-{{/if}}
+    {
+      name: "{{name}}",
+      type: "{{#if type}}{{type}}{{else}}constant{{/if}}",
+      description: "{{#if description}}{{escapeJsx description}}{{/if}}{{#if value}} (Value: `{{value}}`){{/if}}"
+    }{{#unless @last}},{{/unless}}
 {{/each}}
+  ]}
+  showRequired={false}
+/>
+
 {{/if}}
 {{/if}}
 {{#if hasFunctions}}
@@ -91,23 +97,33 @@ This module provides internal functions for use in your custom facets. Import it
 
 {{/if}}
 {{#if hasParams}}
-**Parameters**
-
-| Name | Type | Description |
-|------|------|-------------|
+<PropertyTable
+  properties={[
 {{#each params}}
-| `{{name}}` | `{{type}}` | {{escapeMarkdownTable description}} |
+    {
+      name: "{{name}}",
+      type: "{{type}}",
+      description: "{{#if description}}{{escapeJsx description}}{{/if}}"
+    }{{#unless @last}},{{/unless}}
 {{/each}}
+  ]}
+  showRequired={false}
+/>
 
 {{/if}}
 {{#if hasReturns}}
-**Returns**
-
-| Name | Type | Description |
-|------|------|-------------|
+<PropertyTable
+  properties={[
 {{#each returns}}
-| `{{name}}` | `{{type}}` | {{escapeMarkdownTable description}} |
+    {
+      name: "{{name}}",
+      type: "{{type}}",
+      description: "{{#if description}}{{escapeJsx description}}{{/if}}"
+    }{{#unless @last}},{{/unless}}
 {{/each}}
+  ]}
+  showRequired={false}
+/>
 
 {{/if}}
 {{/each}}
@@ -129,11 +145,18 @@ This module provides internal functions for use in your custom facets. Import it
 
 {{/if}}
 {{#if hasParams}}
-| Parameter | Type | Description |
-|-----------|------|-------------|
+<PropertyTable
+  properties={[
 {{#each params}}
-| `{{name}}` | `{{type}}` | {{escapeMarkdownTable description}} |
+    {
+      name: "{{name}}",
+      type: "{{type}}",
+      description: "{{#if description}}{{escapeJsx description}}{{/if}}"
+    }{{#unless @last}},{{/unless}}
 {{/each}}
+  ]}
+  showRequired={false}
+/>
 
 {{/if}}
 {{/each}}
