@@ -8,7 +8,7 @@ import {LibDiamond} from "../../src/diamond/LibDiamond.sol";
                     DIAMOND IMPLEMENTATIONS
 //////////////////////////////////////////////////////////////*/
 
-// Constructor approach - uses FacetCut[] memory in constructor
+/* Constructor approach - uses FacetCut[] memory in constructor */
 contract ConstructorDiamond {
     error FunctionNotFound(bytes4 selector);
     error NoSelectorsProvidedForFacet(address _facet);
@@ -145,7 +145,7 @@ contract ConstructorDiamond {
     receive() external payable {}
 }
 
-// Initialize approach - uses FacetCut[] calldata in external function
+/* Initialize approach - uses FacetCut[] calldata in external function */
 contract InitializeDiamond {
     error FunctionNotFound(bytes4 selector);
     error AlreadyInitialized();
@@ -181,7 +181,7 @@ contract InitializeDiamond {
     receive() external payable {}
 }
 
-// Mock facet with 12 functions for testing
+/* Mock facet with 12 functions for testing */
 contract MockFacet {
     function function01() external pure returns (uint256) {
         return 1;
@@ -236,8 +236,8 @@ contract MockFacet {
                         TEST CONTRACT
 //////////////////////////////////////////////////////////////*/
 
-// Gas benchmark comparing constructor vs initialize approaches for diamond deployment
-// Tests scenarios: 10, 50, and 100 facets with 12 selectors each
+/** Gas benchmark comparing constructor vs initialize approaches for diamond deployment
+    Tests scenarios: 10, 50, and 100 facets with 12 selectors each */
 contract DiamondDeploymentGasBenchmarkTest is Test {
     uint256 constant SELECTORS_PER_FACET = 12;
 
