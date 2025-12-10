@@ -107,19 +107,25 @@ contract ERC4626Facet {
      *      Reference: https://xn--2-umb.com/21/muldiv/
      */
     function muldiv(uint256 a, uint256 b, uint256 denominator) internal view returns (uint256 result) {
-        // Guard: denominator can't be zero
+        /**
+         * Guard: denominator can't be zero
+         */
         require(denominator > 0);
 
         uint256 prod0;
         uint256 prod1;
-        // Calculate 512-bit multiplication [prod1 prod0] = a * b
+        /**
+         * b
+         */
         assembly {
             let mm := mulmod(a, b, not(0))
             prod0 := mul(a, b)
             prod1 := sub(sub(mm, prod0), lt(mm, prod0))
         }
 
-        // If high 256 bits are zero, use simple division
+        /**
+         * If high 256 bits are zero, use simple division
+         */
         if (prod1 == 0) {
             assembly {
                 result := div(prod0, denominator)
@@ -127,10 +133,14 @@ contract ERC4626Facet {
             return result;
         }
 
-        // Ensure denominator exceeds high bits for exact division after reduction
+        /**
+         * Ensure denominator exceeds high bits for exact division after reduction
+         */
         require(prod1 < denominator);
 
-        // Subtract the modulus to enable exact division
+        /**
+         * Subtract the modulus to enable exact division
+         */
         uint256 remainder;
         assembly {
             remainder := mulmod(a, b, denominator)
@@ -140,7 +150,9 @@ contract ERC4626Facet {
             prod0 := sub(prod0, remainder)
         }
 
-        // Remove factors of two from denominator and product
+        /**
+         * Remove factors of two from denominator and product
+         */
         uint256 twos = (~denominator + 1) & denominator;
         assembly {
             denominator := div(denominator, twos)
@@ -148,10 +160,14 @@ contract ERC4626Facet {
             twos := add(div(sub(0, twos), twos), 1)
         }
 
-        // Move high bits into low using bit shifts
+        /**
+         * Move high bits into low using bit shifts
+         */
         prod0 |= prod1 * twos;
 
-        // Compute modular inverse for denominator using Newton-Raphson
+        /**
+         * Compute modular inverse for denominator using Newton-Raphson
+         */
         uint256 inv = (3 * denominator) ^ 2;
         inv *= 2 - denominator * inv;
         inv *= 2 - denominator * inv;
@@ -160,7 +176,9 @@ contract ERC4626Facet {
         inv *= 2 - denominator * inv;
         inv *= 2 - denominator * inv;
 
-        // Complete division
+        /**
+         * Complete division
+         */
         result = prod0 * inv;
         return result;
     }
