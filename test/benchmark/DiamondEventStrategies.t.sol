@@ -4,7 +4,6 @@ pragma solidity >=0.8.30;
 import {Test} from "forge-std/Test.sol";
 import "../../src/diamond/DiamondMod.sol" as DiamondMod;
 
-
 /* Strategy 1: Diamond using single big DiamondCut event */
 contract SingleEventDiamond {
     event DiamondCut(DiamondMod.FacetCut[] _diamondCut);
