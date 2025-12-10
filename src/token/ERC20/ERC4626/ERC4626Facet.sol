@@ -65,15 +65,9 @@ contract ERC4626Facet {
         return address(s.asset);
     }
 
-    function realTotalAssets() external view returns (uint256) {
-        ERC4626Storage storage s = getStorage();
-        return s.asset.balanceOf(address(this));
-    }
-
     function totalAssets() external view returns (uint256) {
         ERC4626Storage storage s = getStorage();
-        uint256 realAssets = s.asset.balanceOf(address(this));
-        return realAssets + VIRTUAL_ASSET;
+        return s.asset.balanceOf(address(this)) + VIRTUAL_ASSET;
     }
 
     function muldiv(uint256 a, uint256 b, uint256 denominator) internal view returns (uint256 result) {
@@ -139,11 +133,6 @@ contract ERC4626Facet {
         }
     }
 
-    function realTotalShares() external view returns (uint256) {
-        ERC20Storage storage erc20s = getERC20Storage();
-        return erc20s.totalSupply;
-    }
-
     function totalShares() external view returns (uint256) {
         ERC20Storage storage erc20s = getERC20Storage();
         return erc20s.totalSupply + VIRTUAL_SHARE;
@@ -154,8 +143,7 @@ contract ERC4626Facet {
         uint256 totalShares_ = erc20s.totalSupply + VIRTUAL_SHARE;
 
         ERC4626Storage storage s = getStorage();
-        uint256 realAssets = s.asset.balanceOf(address(this));
-        uint256 totalAssets_ = realAssets + VIRTUAL_ASSET;
+        uint256 totalAssets_ = s.asset.balanceOf(address(this)) + VIRTUAL_ASSET;
 
         return muldiv(totalShares_, assets, totalAssets_);
     }
@@ -164,8 +152,7 @@ contract ERC4626Facet {
         ERC20Storage storage erc20s = getERC20Storage();
         uint256 totalShares_ = erc20s.totalSupply + VIRTUAL_SHARE;
         ERC4626Storage storage s = getStorage();
-        uint256 realAssets = s.asset.balanceOf(address(this));
-        uint256 totalAssets_ = realAssets + VIRTUAL_ASSET;
+        uint256 totalAssets_ = s.asset.balanceOf(address(this)) + VIRTUAL_ASSET;
 
         return muldiv(totalAssets_, shares, totalShares_);
     }
@@ -178,8 +165,7 @@ contract ERC4626Facet {
         ERC20Storage storage erc20s = getERC20Storage();
         uint256 totalShares_ = erc20s.totalSupply + VIRTUAL_SHARE;
         ERC4626Storage storage s = getStorage();
-        uint256 realAssets = s.asset.balanceOf(address(this));
-        uint256 totalAssets_ = realAssets + VIRTUAL_ASSET;
+        uint256 totalAssets_ = s.asset.balanceOf(address(this)) + VIRTUAL_ASSET;
 
         return muldiv(totalShares_, assets, totalAssets_);
     }
@@ -196,15 +182,11 @@ contract ERC4626Facet {
         ERC20Storage storage erc20s = getERC20Storage();
         uint256 totalShares_ = erc20s.totalSupply + VIRTUAL_SHARE;
         ERC4626Storage storage s = getStorage();
-        uint256 realAssets = s.asset.balanceOf(address(this));
-        uint256 totalAssets_ = realAssets + VIRTUAL_ASSET;
+        uint256 totalAssets_ = s.asset.balanceOf(address(this)) + VIRTUAL_ASSET;
 
         uint256 shares;
-        if (totalShares_ == 0 || totalAssets_ == 0) {
-            shares = assets;
-        } else {
-            shares = muldiv(totalShares_, assets, totalAssets_);
-        }
+
+        shares = muldiv(totalShares_, assets, totalAssets_);
 
         if (shares == 0) {
             revert ERC4626InsufficientShares();
@@ -230,12 +212,7 @@ contract ERC4626Facet {
         ERC20Storage storage erc20s = getERC20Storage();
         uint256 totalShares_ = erc20s.totalSupply + VIRTUAL_SHARE;
         ERC4626Storage storage s = getStorage();
-        uint256 realAssets = s.asset.balanceOf(address(this));
-        uint256 totalAssets_ = realAssets + VIRTUAL_ASSET;
-
-        if (totalAssets_ == 0 || totalShares_ == 0) {
-            return shares;
-        }
+        uint256 totalAssets_ = s.asset.balanceOf(address(this)) + VIRTUAL_ASSET;
         return mulDivRoundingUp(totalAssets_, shares, totalShares_);
     }
 
@@ -251,15 +228,11 @@ contract ERC4626Facet {
         ERC20Storage storage erc20s = getERC20Storage();
         uint256 totalShares_ = erc20s.totalSupply + VIRTUAL_SHARE;
         ERC4626Storage storage s = getStorage();
-        uint256 realAssets = s.asset.balanceOf(address(this));
-        uint256 totalAssets_ = realAssets + VIRTUAL_ASSET;
+        uint256 totalAssets_ = s.asset.balanceOf(address(this)) + VIRTUAL_ASSET;
 
         uint256 assets;
-        if (totalAssets_ == 0 || totalShares_ == 0) {
-            assets = shares;
-        } else {
-            assets = mulDivRoundingUp(totalAssets_, shares, totalShares_);
-        }
+
+        assets = mulDivRoundingUp(totalAssets_, shares, totalShares_);
 
         if (assets == 0) {
             revert ERC4626InsufficientAssets();
@@ -281,8 +254,7 @@ contract ERC4626Facet {
         ERC20Storage storage erc20s = getERC20Storage();
         uint256 balance = erc20s.balanceOf[owner];
         ERC4626Storage storage s = getStorage();
-        uint256 realAssets = s.asset.balanceOf(address(this));
-        uint256 totalAssets_ = realAssets + VIRTUAL_ASSET;
+        uint256 totalAssets_ = s.asset.balanceOf(address(this)) + VIRTUAL_ASSET;
         uint256 totalShares_ = erc20s.totalSupply + VIRTUAL_SHARE;
         return muldiv(totalAssets_, balance, totalShares_);
     }
@@ -291,12 +263,8 @@ contract ERC4626Facet {
         ERC20Storage storage erc20s = getERC20Storage();
         uint256 totalShares_ = erc20s.totalSupply + VIRTUAL_SHARE;
         ERC4626Storage storage s = getStorage();
-        uint256 realAssets = s.asset.balanceOf(address(this));
-        uint256 totalAssets_ = realAssets + VIRTUAL_ASSET;
+        uint256 totalAssets_ = s.asset.balanceOf(address(this)) + VIRTUAL_ASSET;
 
-        if (totalAssets_ == 0 || totalShares_ == 0) {
-            return assets;
-        }
         return mulDivRoundingUp(totalShares_, assets, totalAssets_);
     }
 
@@ -308,8 +276,7 @@ contract ERC4626Facet {
         ERC20Storage storage erc20s = getERC20Storage();
         uint256 balance = erc20s.balanceOf[owner];
         ERC4626Storage storage s = getStorage();
-        uint256 realAssets = s.asset.balanceOf(address(this));
-        uint256 totalAssets_ = realAssets + VIRTUAL_ASSET;
+        uint256 totalAssets_ = s.asset.balanceOf(address(this)) + VIRTUAL_ASSET;
         uint256 totalShares_ = erc20s.totalSupply + VIRTUAL_SHARE;
 
         uint256 maxWithdrawVal = muldiv(totalAssets_, balance, totalShares_);
@@ -318,11 +285,8 @@ contract ERC4626Facet {
         }
 
         uint256 shares;
-        if (totalAssets_ == 0 || totalShares_ == 0) {
-            shares = assets;
-        } else {
-            shares = mulDivRoundingUp(totalShares_, assets, totalAssets_);
-        }
+
+        shares = mulDivRoundingUp(totalShares_, assets, totalAssets_);
 
         if (shares == 0) {
             revert ERC4626InsufficientShares();
@@ -356,12 +320,8 @@ contract ERC4626Facet {
         ERC20Storage storage erc20s = getERC20Storage();
         uint256 totalShares_ = erc20s.totalSupply + VIRTUAL_SHARE;
         ERC4626Storage storage s = getStorage();
-        uint256 realAssets = s.asset.balanceOf(address(this));
-        uint256 totalAssets_ = realAssets + VIRTUAL_ASSET;
+        uint256 totalAssets_ = s.asset.balanceOf(address(this)) + VIRTUAL_ASSET;
 
-        if (totalAssets_ == 0 || totalShares_ == 0) {
-            return shares;
-        }
         return muldiv(totalAssets_, shares, totalShares_);
     }
 
@@ -378,15 +338,10 @@ contract ERC4626Facet {
 
         ERC4626Storage storage s = getStorage();
         uint256 totalShares_ = erc20s.totalSupply + VIRTUAL_SHARE;
-        uint256 realAssets = s.asset.balanceOf(address(this));
-        uint256 totalAssets_ = realAssets + VIRTUAL_ASSET;
+        uint256 totalAssets_ = s.asset.balanceOf(address(this)) + VIRTUAL_ASSET;
         uint256 assets;
 
-        if (totalAssets_ == 0 || totalShares_ == 0) {
-            assets = shares;
-        } else {
-            assets = muldiv(totalAssets_, shares, totalShares_);
-        }
+        assets = muldiv(totalAssets_, shares, totalShares_);
 
         if (assets == 0) {
             revert ERC4626InsufficientAssets();
