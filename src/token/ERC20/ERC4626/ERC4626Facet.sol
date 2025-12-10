@@ -111,7 +111,9 @@ contract ERC4626Facet {
      * @return result The result of (a * b) / denominator.
      */
     function muldiv(uint256 a, uint256 b, uint256 denominator) internal view returns (uint256 result) {
-        // Step 1: Safety check to prevent division by zero, which would otherwise revert
+        /**
+         * Step 1: Safety check to prevent division by zero, which would otherwise revert
+         */
         require(denominator > 0);
 
         uint256 prod0;
@@ -123,13 +125,21 @@ contract ERC4626Facet {
          * - Assembly is used for efficiency.
          */
         assembly {
-            // Compute (a * b) in two parts:
-            // mm: full (modulo not(0)), which is 2**256 - 1
-            // prod0: a * b (mod 2**256)
-            // prod1: (a * b - prod0)/2**256
-            let mm := mulmod(a, b, not(0)) // Full-width mulmod for high bits
-            prod0 := mul(a, b) // Standard multiplication for low bits
-            // Derive prod1 using differences and underflow detection (see muldiv reference).
+            /**
+             * b) in two parts:
+             * mm: full (modulo not(0)), which is 2**256 - 1
+             * prod0: a * b (mod 2**256)
+             * prod1: (a * b - prod0)/2**256
+             */
+            let mm := mulmod(a, b, not(0)) /**
+                                            * Full-width mulmod for high bits
+                                            */
+            prod0 := mul(a, b) /**
+                                * Standard multiplication for low bits
+                                */
+            /**
+             * Derive prod1 using differences and underflow detection (see muldiv reference).
+             */
             prod1 := sub(sub(mm, prod0), lt(mm, prod0))
         }
 
@@ -172,11 +182,17 @@ contract ERC4626Facet {
          */
         uint256 twos = (~denominator + 1) & denominator;
         assembly {
-            // Divide denominator by its largest power of two divisor.
+            /**
+             * Divide denominator by its largest power of two divisor.
+             */
             denominator := div(denominator, twos)
-            // Divide prod0 by the same power of two, shifting low bits right
+            /**
+             * Divide prod0 by the same power of two, shifting low bits right
+             */
             prod0 := div(prod0, twos)
-            // Compute 2^256 / twos, prepares for condensing the top bits:
+            /**
+             * Compute 2^256 / twos, prepares for condensing the top bits:
+             */
             twos := add(div(sub(0, twos), twos), 1)
         }
 
@@ -193,12 +209,24 @@ contract ERC4626Facet {
          * - Unrolling the iterations since denominator is odd here (twos were factored out).
          */
         uint256 inv = (3 * denominator) ^ 2;
-        inv *= 2 - denominator * inv; // inverse mod 2^8
-        inv *= 2 - denominator * inv; // inverse mod 2^16
-        inv *= 2 - denominator * inv; // inverse mod 2^32
-        inv *= 2 - denominator * inv; // inverse mod 2^64
-        inv *= 2 - denominator * inv; // inverse mod 2^128
-        inv *= 2 - denominator * inv; // inverse mod 2^256
+        inv *= 2 - denominator * inv; /**
+                                       * inverse mod 2^8
+                                       */
+        inv *= 2 - denominator * inv; /**
+                                       * inverse mod 2^16
+                                       */
+        inv *= 2 - denominator * inv; /**
+                                       * inverse mod 2^32
+                                       */
+        inv *= 2 - denominator * inv; /**
+                                       * inverse mod 2^64
+                                       */
+        inv *= 2 - denominator * inv; /**
+                                       * inverse mod 2^128
+                                       */
+        inv *= 2 - denominator * inv; /**
+                                       * nverse mod 2^256
+                                       */
 
         /**
          * Step 9: Multiply prod0 by the modular inverse of denominator to get the final division result.
