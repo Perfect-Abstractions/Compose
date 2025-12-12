@@ -19,7 +19,7 @@ interface IERC20 {
 }
 
 /**
- * @title ERC4626 Vault Facet
+ * @title ERC4626 Facet
  * @notice ERC4626 vault core mechanics with storage, conversions, and safe computations.
  */
 contract ERC4626Facet {

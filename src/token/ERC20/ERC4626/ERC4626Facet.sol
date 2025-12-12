@@ -14,7 +14,7 @@ interface IERC20 {
 }
 
 /**
- * @title ERC4626 Vault Facet
+ * @title ERC4626Mod
  * @notice Composable vault logic based on the ERC4626 tokenized vault standard,
  *         with storage, conversion logic, and safe math handling.
  */
