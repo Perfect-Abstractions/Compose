@@ -246,6 +246,38 @@ contract ERC4626Facet {
     }
 
     /**
+     * @dev Safe ERC20 transferFrom wrapper supporting non-standard tokens.
+     */
+    function _safeTransferFrom(IERC20 token, address from, address to, uint256 amount) internal returns (bool) {
+        bytes memory data = abi.encodeWithSelector(token.transferFrom.selector, from, to, amount);
+        (bool success, bytes memory returndata) = address(token).call(data);
+        if (!success) return false;
+        if (returndata.length == 0) {
+            return true;
+        } else if (returndata.length == 32) {
+            return abi.decode(returndata, (bool));
+        } else {
+            return false;
+        }
+    }
+
+    /**
+     * @dev Safe ERC20 transfer wrapper supporting non-standard tokens.
+     */
+    function _safeTransfer(IERC20 token, address to, uint256 amount) internal returns (bool) {
+        bytes memory data = abi.encodeWithSelector(token.transfer.selector, to, amount);
+        (bool success, bytes memory returndata) = address(token).call(data);
+        if (!success) return false;
+        if (returndata.length == 0) {
+            return true;
+        } else if (returndata.length == 32) {
+            return abi.decode(returndata, (bool));
+        } else {
+            return false;
+        }
+    }
+
+    /**
      * @dev Effect actual deposit, minting shares for the receiver.
      * @param assets Asset amount sent in.
      * @param receiver Address to receive the minted shares.
@@ -262,7 +294,7 @@ contract ERC4626Facet {
         uint256 shares = muldiv(totalShares_, assets, totalAssets_);
 
         if (shares == 0) revert ERC4626InsufficientShares();
-        bool success = s.asset.transferFrom(msg.sender, address(this), assets);
+        bool success = _safeTransferFrom(s.asset, msg.sender, address(this), assets);
         if (!success) revert ERC4626TransferFailed();
 
         erc20s.totalSupply += shares;
@@ -308,7 +340,7 @@ contract ERC4626Facet {
         uint256 assets = mulDivRoundingUp(totalAssets_, shares, totalShares_);
 
         if (assets == 0) revert ERC4626InsufficientAssets();
-        bool success = s.asset.transferFrom(msg.sender, address(this), assets);
+        bool success = _safeTransferFrom(s.asset, msg.sender, address(this), assets);
         if (!success) revert ERC4626TransferFailed();
 
         erc20s.totalSupply += shares;
@@ -365,7 +397,7 @@ contract ERC4626Facet {
 
         uint256 shares = mulDivRoundingUp(totalShares_, assets, totalAssets_);
         if (shares == 0) revert ERC4626InsufficientShares();
-        bool success = s.asset.transfer(receiver, assets);
+        bool success = _safeTransfer(s.asset, receiver, assets);
         if (!success) revert ERC4626TransferFailed();
 
         if (msg.sender != owner) {
@@ -421,7 +453,7 @@ contract ERC4626Facet {
         uint256 assets = muldiv(totalAssets_, shares, totalShares_);
 
         if (assets == 0) revert ERC4626InsufficientAssets();
-        bool success = s.asset.transfer(receiver, assets);
+        bool success = _safeTransfer(s.asset, receiver, assets);
         if (!success) revert ERC4626TransferFailed();
 
         if (msg.sender != owner) {
