@@ -7,6 +7,8 @@ libs = ["lib"]
 optimizer = true
 optimizer_runs = 20_000
 evm_version = "prague"
+gas_limit = 9223372036854775807
+memory_limit = 9223372036854775807
 
 
 [profile.ci]
