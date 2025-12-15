@@ -277,6 +277,15 @@ async function enhanceWithAI(data, contractType, token) {
       if (response.choices && response.choices[0] && response.choices[0].message) {
         const content = response.choices[0].message.content;
         
+        // Debug: Log full response content
+        console.log('    📋 Full API response content:');
+        console.log('    ' + '='.repeat(80));
+        console.log(content);
+        console.log('    ' + '='.repeat(80));
+        console.log('    Response length:', content.length, 'chars');
+        console.log('    First 100 chars:', JSON.stringify(content.substring(0, 100)));
+        console.log('    Last 100 chars:', JSON.stringify(content.substring(Math.max(0, content.length - 100))));
+        
         try {
           let enhanced = JSON.parse(content);
           console.log('✅ AI enhancement successful');
@@ -311,12 +320,20 @@ async function enhanceWithAI(data, contractType, token) {
           };
         } catch (parseError) {
           console.log('    ⚠️ Could not parse API response as JSON');
-          console.log('    Response:', content.substring(0, 200));
+          console.log('    Parse error:', parseError.message);
+          console.log('    Error stack:', parseError.stack);
+          console.log('    Response type:', typeof content);
+          console.log('    Response length:', content ? content.length : 'null/undefined');
+          if (content) {
+            console.log('    First 500 chars:', JSON.stringify(content.substring(0, 500)));
+            console.log('    Last 500 chars:', JSON.stringify(content.substring(Math.max(0, content.length - 500))));
+          }
           return addFallbackContent(data, contractType);
         }
       }
 
       console.log('    ⚠️ Unexpected API response format');
+      console.log('    Response structure:', JSON.stringify(response, null, 2).substring(0, 1000));
       return addFallbackContent(data, contractType);
     };
 
