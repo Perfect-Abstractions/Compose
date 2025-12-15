@@ -7,6 +7,10 @@ on:
       - 'src/**/*.sol'
   workflow_dispatch:
     inputs:
+      target_file:
+        description: 'Process ONLY the specified Solidity file(s) (relative path, e.g. src/contracts/MyFacet.sol or src/facets/A.sol,src/facets/B.sol)'
+        required: false
+        type: string
       process_all:
         description: 'Process ALL Solidity files'
         required: false
@@ -38,7 +42,22 @@ jobs:
       - name: Get changed Solidity files
         id: changed-files
         run: |
-          if [ "${{ github.event.inputs.process_all }}" == "true" ]; then
+          # Prefer explicit target_file when provided via manual dispatch.
+          # You can pass a single file or a comma/space-separated list, e.g.:
+          #   src/facets/A.sol,src/facets/B.sol
+          #   src/facets/A.sol src/facets/B.sol
+          if [ -n "${{ github.event.inputs.target_file }}" ]; then
+            echo "Processing Solidity file(s) from input:"
+            echo "${{ github.event.inputs.target_file }}"
+            echo "has_changes=true" >> $GITHUB_OUTPUT
+            echo "process_all=false" >> $GITHUB_OUTPUT
+            # Normalize comma/space-separated list into one file path per line
+            echo "${{ github.event.inputs.target_file }}" \
+              | tr ',' '\n' \
+              | tr ' ' '\n' \
+              | sed '/^$/d' \
+              > /tmp/changed_sol_files.txt
+          elif [ "${{ github.event.inputs.process_all }}" == "true" ]; then
             echo "Processing all Solidity files (manual trigger)"
             echo "has_changes=true" >> $GITHUB_OUTPUT
             echo "process_all=true" >> $GITHUB_OUTPUT
