@@ -31,10 +31,8 @@ contract Transfer_ERC20Mod_Fuzz_Unit_Test is Base_Test {
         vm.assume(balance < MAX_UINT256);
         value = bound(value, balance + 1, MAX_UINT256);
 
-        // Setup
         harness.mint(users.alice, balance);
 
-        // Test
         vm.expectRevert(abi.encodeWithSelector(ERC20Mod.ERC20InsufficientBalance.selector, users.alice, balance, value));
         harness.transfer(to, value);
     }
@@ -45,16 +43,15 @@ contract Transfer_ERC20Mod_Fuzz_Unit_Test is Base_Test {
         givenWhenSenderBalanceGETransferAmount
     {
         vm.assume(to != ADDRESS_ZERO);
+        vm.assume(to != users.alice);
         balance = bound(balance, 1, MAX_UINT256);
         value = bound(value, 1, balance);
 
-        // Setup
         harness.mint(users.alice, balance);
 
         uint256 beforeBalanceOfAlice = harness.balanceOf(users.alice);
         uint256 beforeBalanceOfTo = harness.balanceOf(to);
 
-        // Test
         vm.expectEmit(address(harness));
         emit Transfer(users.alice, to, value);
         harness.transfer(to, value);

@@ -44,12 +44,10 @@ contract TransferFrom_ERC20Mod_Fuzz_Unit_Test is Base_Test {
         allowance = bound(allowance, 0, MAX_UINT256 - 1);
         value = bound(value, allowance + 1, MAX_UINT256);
 
-        // Setup
         setMsgSender(from);
         harness.approve(users.sender, allowance);
         setMsgSender(users.sender);
 
-        // Test
         vm.expectRevert(
             abi.encodeWithSelector(ERC20Mod.ERC20InsufficientAllowance.selector, users.sender, allowance, value)
         );
@@ -70,14 +68,12 @@ contract TransferFrom_ERC20Mod_Fuzz_Unit_Test is Base_Test {
         allowance = bound(allowance, value, MAX_UINT256); // allowance >= value
         balance = bound(balance, 0, value - 1); // balance < value
 
-        // Setup
         harness.mint(from, balance);
 
         setMsgSender(from);
         harness.approve(users.sender, allowance);
         setMsgSender(users.sender);
 
-        // Test
         vm.expectRevert(abi.encodeWithSelector(ERC20Mod.ERC20InsufficientBalance.selector, from, balance, value));
         harness.transferFrom(from, to, value);
     }
@@ -97,14 +93,12 @@ contract TransferFrom_ERC20Mod_Fuzz_Unit_Test is Base_Test {
         value = bound(value, 1, MAX_UINT256);
         balance = bound(balance, value, MAX_UINT256);
 
-        // Setup
         harness.mint(from, balance);
 
         setMsgSender(from);
         harness.approve(users.sender, MAX_UINT256);
         setMsgSender(users.sender);
 
-        // Test
         uint256 beforeBalanceOfFrom = harness.balanceOf(from);
         uint256 beforeBalanceOfTo = harness.balanceOf(to);
 
@@ -132,14 +126,12 @@ contract TransferFrom_ERC20Mod_Fuzz_Unit_Test is Base_Test {
         allowance = bound(allowance, value, MAX_UINT256 - 1);
         balance = bound(balance, value, MAX_UINT256);
 
-        // Setup
         harness.mint(from, balance);
 
         setMsgSender(from);
         harness.approve(users.sender, allowance);
         setMsgSender(users.sender);
 
-        // Test
         uint256 beforeBalanceOfFrom = harness.balanceOf(from);
         uint256 beforeBalanceOfTo = harness.balanceOf(to);
 

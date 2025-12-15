@@ -27,18 +27,14 @@ abstract contract Base_Test is Constants, Modifiers, StdAssertions, StdCheats {
     //////////////////////////////////////////////////////////////*/
 
     function setUp() public virtual {
-        // Deploy defaults contract
         defaults = new Defaults();
 
-        // Create and set test users
         createTestUsers();
         defaults.setUsers(users);
 
-        // Set the variables in the Modifiers contract
-        setVariables(defaults, users);
+        setVariables(defaults, users); // set in modifier contract
 
-        // Set alice as the default caller for the tests
-        setMsgSender(users.alice);
+        setMsgSender(users.alice); // alice default caller
     }
 
     /*//////////////////////////////////////////////////////////////

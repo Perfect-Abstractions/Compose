@@ -30,10 +30,8 @@ contract Mint_ERC20Mod_Fuzz_Unit_Test is Base_Test {
         vm.assume(account != ADDRESS_ZERO);
         vm.assume(value > 0);
 
-        // Setup: mint MAX_UINT256 tokens to alice
         harness.mint(users.alice, MAX_UINT256);
 
-        // Test
         vm.expectRevert(stdError.arithmeticError);
         harness.mint(account, value);
     }

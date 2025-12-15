@@ -31,10 +31,8 @@ contract Burn_ERC20Mod_Fuzz_Unit_Test is Base_Test {
         vm.assume(balance < MAX_UINT256);
         value = bound(value, balance + 1, MAX_UINT256);
 
-        // Setup
         harness.mint(account, balance);
 
-        // Test
         vm.expectRevert(abi.encodeWithSelector(ERC20Mod.ERC20InsufficientBalance.selector, account, balance, value));
         harness.burn(account, value);
     }
@@ -48,13 +46,11 @@ contract Burn_ERC20Mod_Fuzz_Unit_Test is Base_Test {
         balance = bound(balance, 1, MAX_UINT256);
         value = bound(value, 1, balance);
 
-        // Setup
         harness.mint(account, balance);
 
         uint256 beforeTotalSupply = harness.totalSupply();
         uint256 beforeBalanceOfAccount = harness.balanceOf(account);
 
-        // Test
         vm.expectEmit(address(harness));
         emit Transfer(account, ADDRESS_ZERO, value);
         harness.burn(account, value);

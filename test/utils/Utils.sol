@@ -19,7 +19,6 @@ abstract contract Utils is StdBase, StdUtils {
         vm.stopPrank();
         vm.startPrank(msgSender);
 
-        // Deal some ETH to the new caller.
-        vm.deal(msgSender, 1 ether);
+        vm.deal(msgSender, 1 ether); // Deal ETH to new caller.
     }
 }
