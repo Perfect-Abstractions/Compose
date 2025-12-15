@@ -2,7 +2,6 @@
 pragma solidity >=0.8.30;
 
 contract DiamondInspectFacet {
-
     bytes32 constant DIAMOND_STORAGE_POSITION = keccak256("compose.diamond");
 
     /**
@@ -26,7 +25,6 @@ contract DiamondInspectFacet {
         bytes4[] selectors;
     }
 
-
     /**
      * @notice Retrieves the diamond's storage struct from its fixed position.
      * @dev Uses inline assembly to access the storage slot directly.
@@ -38,7 +36,7 @@ contract DiamondInspectFacet {
             s.slot := position
         }
     }
-    
+
     struct FunctionFacetPair {
         bytes4 selector;
         address facet;
@@ -49,11 +47,11 @@ contract DiamondInspectFacet {
      * @dev Iterates through the diamond's stored selectors and pairs each with its facet.
      * @return pairs An array of `FunctionFacetPair` structs, each containing a selector and its facet address.
      */
-    function functionFacetPairs() external view returns(FunctionFacetPair[] memory pairs) {
-        DiamondStorage storage s  = getStorage();
+    function functionFacetPairs() external view returns (FunctionFacetPair[] memory pairs) {
+        DiamondStorage storage s = getStorage();
         uint256 length = s.selectors.length;
         pairs = new FunctionFacetPair[](length);
-        for(uint i; i < length; i++){
+        for (uint256 i; i < length; i++) {
             bytes4 selector = s.selectors[i];
             pairs[i] = FunctionFacetPair(selector, s.facetAndPosition[selector].facet);
         }
