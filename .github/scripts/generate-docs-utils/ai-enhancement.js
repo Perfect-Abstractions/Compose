@@ -13,6 +13,8 @@ const { sleep, makeHttpsRequest } = require('../workflow-utils');
 // We add 7 seconds between calls to stay safe (60/10 = 6, +1 buffer)
 const RATE_LIMIT_DELAY_MS = 8000;
 let lastApiCallTime = 0;
+// Maximum number of times to retry a single request after hitting a 429
+const MAX_RATE_LIMIT_RETRIES = 3;
 
 const AI_PROMPT_PATH = path.join(__dirname, '../../docs-gen-prompts.md');
 const REPO_INSTRUCTIONS_PATH = path.join(__dirname, '../../copilot-instructions.md');
@@ -267,54 +269,90 @@ async function enhanceWithAI(data, contractType, token) {
 
   try {
     await waitForRateLimit();
-    const response = await makeHttpsRequest(options, requestBody);
 
-    if (response.choices && response.choices[0] && response.choices[0].message) {
-      const content = response.choices[0].message.content;
-      
+    // Helper to handle a single API call and common response parsing
+    const performApiCall = async () => {
+      const response = await makeHttpsRequest(options, requestBody);
+
+      if (response.choices && response.choices[0] && response.choices[0].message) {
+        const content = response.choices[0].message.content;
+        
+        try {
+          let enhanced = JSON.parse(content);
+          console.log('✅ AI enhancement successful');
+          
+          // Convert literal \n strings to actual newlines
+          const convertNewlines = (str) => {
+            if (!str || typeof str !== 'string') return str;
+            return str.replace(/\\n/g, '\n');
+          };
+          
+          // Decode HTML entities (for code blocks)
+          const decodeHtmlEntities = (str) => {
+            if (!str || typeof str !== 'string') return str;
+            return str
+              .replace(/&quot;/g, '"')
+              .replace(/&#x3D;/g, '=')
+              .replace(/&#x3D;&gt;/g, '=>')
+              .replace(/&lt;/g, '<')
+              .replace(/&gt;/g, '>')
+              .replace(/&#39;/g, "'")
+              .replace(/&amp;/g, '&');
+          };
+          
+          return {
+            ...data,
+            overview: convertNewlines(enhanced.overview) || data.overview,
+            usageExample: decodeHtmlEntities(convertNewlines(enhanced.usageExample)) || null,
+            bestPractices: convertNewlines(enhanced.bestPractices) || null,
+            keyFeatures: convertNewlines(enhanced.keyFeatures) || null,
+            integrationNotes: convertNewlines(enhanced.integrationNotes) || null,
+            securityConsiderations: convertNewlines(enhanced.securityConsiderations) || null,
+          };
+        } catch (parseError) {
+          console.log('    ⚠️ Could not parse API response as JSON');
+          console.log('    Response:', content.substring(0, 200));
+          return addFallbackContent(data, contractType);
+        }
+      }
+
+      console.log('    ⚠️ Unexpected API response format');
+      return addFallbackContent(data, contractType);
+    };
+
+    let attempt = 0;
+    // Retry loop for handling minute-token 429s while still eventually
+    // progressing through all files in the run.
+    // We respect the guidance from the API by waiting ~60s before retries.
+    // eslint-disable-next-line no-constant-condition
+    while (true) {
       try {
-        let enhanced = JSON.parse(content);
-        console.log('✅ AI enhancement successful');
-        
-        // Convert literal \n strings to actual newlines
-        const convertNewlines = (str) => {
-          if (!str || typeof str !== 'string') return str;
-          return str.replace(/\\n/g, '\n');
-        };
-        
-        // Decode HTML entities (for code blocks)
-        const decodeHtmlEntities = (str) => {
-          if (!str || typeof str !== 'string') return str;
-          return str
-            .replace(/&quot;/g, '"')
-            .replace(/&#x3D;/g, '=')
-            .replace(/&#x3D;&gt;/g, '=>')
-            .replace(/&lt;/g, '<')
-            .replace(/&gt;/g, '>')
-            .replace(/&#39;/g, "'")
-            .replace(/&amp;/g, '&');
-        };
-        
-        return {
-          ...data,
-          overview: convertNewlines(enhanced.overview) || data.overview,
-          usageExample: decodeHtmlEntities(convertNewlines(enhanced.usageExample)) || null,
-          bestPractices: convertNewlines(enhanced.bestPractices) || null,
-          keyFeatures: convertNewlines(enhanced.keyFeatures) || null,
-          integrationNotes: convertNewlines(enhanced.integrationNotes) || null,
-          securityConsiderations: convertNewlines(enhanced.securityConsiderations) || null,
-        };
-      } catch (parseError) {
-        console.log('    ⚠️ Could not parse API response as JSON');
-        console.log('    Response:', content.substring(0, 200));
+        return await performApiCall();
+      } catch (error) {
+        const msg = error && error.message ? error.message : '';
+
+        // Detect GitHub Models minute-token rate limit (HTTP 429)
+        if (msg.startsWith('HTTP 429:') && attempt < MAX_RATE_LIMIT_RETRIES) {
+          attempt += 1;
+          console.log(
+            `    ⚠️ GitHub Models rate limit reached (minute tokens). ` +
+            `Waiting 60s before retry ${attempt}/${MAX_RATE_LIMIT_RETRIES}...`
+          );
+          await sleep(60000);
+          continue;
+        }
+
+        if (msg.startsWith('HTTP 429:')) {
+          console.log('    ⚠️ Rate limit persisted after maximum retries, using fallback content');
+        } else {
+          console.log(`    ⚠️ GitHub Models API error: ${msg}`);
+        }
+
         return addFallbackContent(data, contractType);
       }
     }
-
-    console.log('    ⚠️ Unexpected API response format');
-    return addFallbackContent(data, contractType);
-  } catch (error) {
-    console.log(`    ⚠️ GitHub Models API error: ${error.message}`);
+  } catch (outerError) {
+    console.log(`    ⚠️ GitHub Models API error (outer): ${outerError.message}`);
     return addFallbackContent(data, contractType);
   }
 }
