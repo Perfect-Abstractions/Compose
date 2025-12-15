@@ -1,38 +1,34 @@
 import React from 'react';
-import Link from '@docusaurus/Link';
-import {useDoc} from '@docusaurus/plugin-content-docs/client';
-import styles from './styles.module.css';
+import {useLocation} from '@docusaurus/router';
+import SimpleEditThisPage from './SimpleEditThisPage';
+import SafeDocsEditThisPage from './SafeDocsEditThisPage';
 
+/**
+ * Main EditThisPage component
+ * 
+ * Intelligently renders the appropriate EditThisPage variant based on the current route:
+ * - Docs pages (/docs/*): Uses SafeDocsEditThisPage (with useDoc hook, wrapped in error boundary)
+ * - Other pages: Uses SimpleEditThisPage
+ * 
+ * Route checking is necessary because error boundaries don't work reliably during SSR/build.
+ * 
+ * @param {string} editUrl - URL to edit the page
+ */
 export default function EditThisPage({editUrl}) {
-  const {frontMatter} = useDoc();
-  const viewSource = frontMatter?.gitSource;
-
-  // Nothing to show
-  if (!editUrl && !viewSource) {
-    return null;
+  let isDocsPage = false;
+  
+  try {
+    const location = useLocation();
+    const pathname = location?.pathname || '';
+    
+    isDocsPage = pathname.startsWith('/docs/');
+  } catch (error) {
+    isDocsPage = false;
   }
 
-  return (
-    <div className={styles.wrapper}>
-      {viewSource && (
-        <Link
-          className={styles.link}
-          href={viewSource}
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <span aria-hidden="true">🔗</span>
-          <span>View Source</span>
-        </Link>
-      )}
-      {editUrl && (
-        <Link className={styles.link} href={editUrl}>
-          <span aria-hidden="true">✏️</span>
-          <span>Edit this page</span>
-        </Link>
-      )}
-    </div>
-  );
+  if (isDocsPage) {
+    return <SafeDocsEditThisPage editUrl={editUrl} />;
+  }
+
+  return <SimpleEditThisPage editUrl={editUrl} />;
 }
-
-
