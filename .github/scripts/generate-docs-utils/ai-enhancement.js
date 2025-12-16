@@ -13,6 +13,7 @@ const {
   waitForRateLimit,
   recordTokenConsumption,
   updateLastTokenConsumption,
+  calculate429WaitTime,
 } = require('./token-rate-limiter');
 
 // Maximum number of times to retry a single request after hitting a 429
@@ -370,18 +371,21 @@ async function enhanceWithAI(data, contractType, token) {
     const performApiCall = async () => {
       const response = await makeHttpsRequest(options, requestBody);
 
-      // Record token consumption (use estimated, or actual if available in response)
-      if (response.usage && response.usage.total_tokens) {
-        // GitHub Models API provides actual usage - use it for more accurate tracking
-        const actualTokens = response.usage.total_tokens;
-        recordTokenConsumption(actualTokens);
-        console.log(`    📊 Actual token usage: ${actualTokens} tokens`);
-      } else {
-        // Fallback to estimated tokens if API doesn't provide usage
-        recordTokenConsumption(estimatedTokens);
-      }
-
+      // Only record token consumption if we got a successful response
+      // (not a 429 or other error that would throw before reaching here)
       if (response.choices && response.choices[0] && response.choices[0].message) {
+        // Record token consumption (use actual if available, otherwise estimated)
+        if (response.usage && response.usage.total_tokens) {
+          // GitHub Models API provides actual usage - use it for more accurate tracking
+          const actualTokens = response.usage.total_tokens;
+          recordTokenConsumption(actualTokens);
+          console.log(`    📊 Actual token usage: ${actualTokens} tokens`);
+        } else {
+          // Fallback to estimated tokens if API doesn't provide usage
+          recordTokenConsumption(estimatedTokens);
+          console.log(`    📊 Estimated token usage: ${estimatedTokens} tokens`);
+        }
+        
         const content = response.choices[0].message.content;
         
         // Debug: Log full response content
@@ -457,7 +461,7 @@ async function enhanceWithAI(data, contractType, token) {
     let attempt = 0;
     // Retry loop for handling minute-token 429s while still eventually
     // progressing through all files in the run.
-    // We respect the guidance from the API by waiting ~60s before retries.
+    // We calculate the exact wait time based on when tokens will be available.
     // eslint-disable-next-line no-constant-condition
     while (true) {
       try {
@@ -468,11 +472,19 @@ async function enhanceWithAI(data, contractType, token) {
         // Detect GitHub Models minute-token rate limit (HTTP 429)
         if (msg.startsWith('HTTP 429:') && attempt < MAX_RATE_LIMIT_RETRIES) {
           attempt += 1;
+          
+          // Calculate smart wait time based on token budget
+          const waitTime = calculate429WaitTime(estimatedTokens);
+          const waitSeconds = Math.ceil(waitTime / 1000);
+          
           console.log(
             `    ⚠️ GitHub Models rate limit reached (minute tokens). ` +
-            `Waiting 60s before retry ${attempt}/${MAX_RATE_LIMIT_RETRIES}...`
+            `Waiting ${waitSeconds}s for token budget to reset (retry ${attempt}/${MAX_RATE_LIMIT_RETRIES})...`
           );
-          await sleep(60000);
+          await sleep(waitTime);
+          
+          // Re-check rate limit before retrying
+          await waitForRateLimit(estimatedTokens);
           continue;
         }
 

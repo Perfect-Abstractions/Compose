@@ -22,10 +22,11 @@ module.exports = {
   models: {
     host: 'models.inference.ai.azure.com',
     model: 'gpt-4o',
-    // Increased for better quality documentation with more detailed content
+    // Balanced setting for quality documentation while respecting rate limits
     // Token-aware rate limiting (token-rate-limiter.js) ensures we stay within
-    // the 40k tokens/minute limit while allowing higher per-request token usage
-    maxTokens: 3500,
+    // the 40k tokens/minute limit. Setting to 2500 allows ~10-12 requests/minute
+    // with typical prompt sizes, providing good quality without hitting limits.
+    maxTokens: 2500,
   },
 };
 

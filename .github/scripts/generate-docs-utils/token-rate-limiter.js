@@ -4,27 +4,132 @@
  * Handles both time-based and token-based rate limiting to stay within:
  * - 10 requests per 60 seconds (request rate limit)
  * - 40,000 tokens per 60 seconds (minute-token limit)
+ * - Daily limits (requests and tokens per day)
  * 
  */
 
+const fs = require('fs');
+const path = require('path');
 const { sleep } = require('../workflow-utils');
 
 // GitHub Models API Limits
 const MAX_REQUESTS_PER_MINUTE = 10;
 const MAX_TOKENS_PER_MINUTE = 40000;
 
+// Daily limits (conservative estimates - adjust based on your actual tier)
+// Free tier typically has lower limits, paid tiers have higher
+const MAX_REQUESTS_PER_DAY = 1500; // Conservative estimate
+const MAX_TOKENS_PER_DAY = 150000; // Conservative estimate
+
 // Safety margins to avoid hitting limits
 const REQUEST_SAFETY_BUFFER_MS = 1000; // Add 1s buffer to request spacing
-const TOKEN_BUDGET_SAFETY_MARGIN = 0.85; // Use 85% of token budget
+const TOKEN_BUDGET_SAFETY_MARGIN = 0.85; // Use 85% of minute budget
+const DAILY_BUDGET_SAFETY_MARGIN = 0.90; // Use 90% of daily budget
 
 // Calculated values
 const REQUEST_DELAY_MS = Math.ceil((60000 / MAX_REQUESTS_PER_MINUTE) + REQUEST_SAFETY_BUFFER_MS);
 const EFFECTIVE_TOKEN_BUDGET = MAX_TOKENS_PER_MINUTE * TOKEN_BUDGET_SAFETY_MARGIN;
+const EFFECTIVE_DAILY_REQUESTS = Math.floor(MAX_REQUESTS_PER_DAY * DAILY_BUDGET_SAFETY_MARGIN);
+const EFFECTIVE_DAILY_TOKENS = Math.floor(MAX_TOKENS_PER_DAY * DAILY_BUDGET_SAFETY_MARGIN);
 const TOKEN_WINDOW_MS = 60000; // 60 second rolling window
 
-// State tracking
+// State tracking (minute-level)
 let lastApiCallTime = 0;
 let tokenConsumptionHistory = []; // Array of { timestamp, tokens }
+
+// Daily tracking
+const DAILY_USAGE_FILE = path.join(__dirname, '.daily-usage.json');
+let dailyUsage = loadDailyUsage();
+
+/**
+ * Load daily usage from file
+ * @returns {object} Daily usage data
+ */
+function loadDailyUsage() {
+  try {
+    if (fs.existsSync(DAILY_USAGE_FILE)) {
+      const data = JSON.parse(fs.readFileSync(DAILY_USAGE_FILE, 'utf8'));
+      const today = new Date().toISOString().split('T')[0];
+      
+      // Reset if it's a new day
+      if (data.date !== today) {
+        return { date: today, requests: 0, tokens: 0 };
+      }
+      
+      return data;
+    }
+  } catch (error) {
+    console.warn('Could not load daily usage file:', error.message);
+  }
+  
+  // Default: new day
+  return {
+    date: new Date().toISOString().split('T')[0],
+    requests: 0,
+    tokens: 0,
+  };
+}
+
+/**
+ * Save daily usage to file
+ */
+function saveDailyUsage() {
+  try {
+    fs.writeFileSync(DAILY_USAGE_FILE, JSON.stringify(dailyUsage, null, 2));
+  } catch (error) {
+    console.warn('Could not save daily usage file:', error.message);
+  }
+}
+
+/**
+ * Check if daily limits would be exceeded
+ * @param {number} estimatedTokens - Tokens needed for next request
+ * @returns {object} { exceeded: boolean, reason: string }
+ */
+function checkDailyLimits(estimatedTokens) {
+  const today = new Date().toISOString().split('T')[0];
+  
+  // Reset if new day
+  if (dailyUsage.date !== today) {
+    dailyUsage = { date: today, requests: 0, tokens: 0 };
+    saveDailyUsage();
+  }
+  
+  // Check request limit
+  if (dailyUsage.requests >= EFFECTIVE_DAILY_REQUESTS) {
+    return {
+      exceeded: true,
+      reason: `Daily request limit reached (${dailyUsage.requests}/${EFFECTIVE_DAILY_REQUESTS})`,
+    };
+  }
+  
+  // Check token limit
+  if (dailyUsage.tokens + estimatedTokens > EFFECTIVE_DAILY_TOKENS) {
+    return {
+      exceeded: true,
+      reason: `Daily token limit would be exceeded (${dailyUsage.tokens + estimatedTokens}/${EFFECTIVE_DAILY_TOKENS})`,
+    };
+  }
+  
+  return { exceeded: false };
+}
+
+/**
+ * Record daily usage
+ * @param {number} tokens - Tokens consumed
+ */
+function recordDailyUsage(tokens) {
+  const today = new Date().toISOString().split('T')[0];
+  
+  // Reset if new day
+  if (dailyUsage.date !== today) {
+    dailyUsage = { date: today, requests: 0, tokens: 0 };
+  }
+  
+  dailyUsage.requests += 1;
+  dailyUsage.tokens += tokens;
+  saveDailyUsage();
+}
 
 /**
  * Estimate token usage for a request
@@ -123,7 +228,33 @@ function calculateTokenWaitTime(tokensNeeded, currentConsumption) {
   const timeUntilExpiry = TOKEN_WINDOW_MS - (now - oldestTimestamp);
   
   // Add small buffer to ensure the tokens have actually expired
-  return Math.max(0, timeUntilExpiry + 1000);
+  return Math.max(0, timeUntilExpiry + 2000);
+}
+
+/**
+ * Calculate wait time for 429 rate limit recovery
+ * When we hit a 429, we need to wait for enough tokens to free up from the window
+ * @param {number} tokensNeeded - Tokens needed for the next request
+ * @returns {number} Milliseconds to wait
+ */
+function calculate429WaitTime(tokensNeeded) {
+  cleanTokenHistory();
+  const currentConsumption = getCurrentTokenConsumption();
+  const availableTokens = EFFECTIVE_TOKEN_BUDGET - currentConsumption;
+  
+  if (tokensNeeded <= availableTokens) {
+    // We should have budget, but got 429 anyway - wait for oldest entry to expire
+    if (tokenConsumptionHistory.length > 0) {
+      const oldestEntry = tokenConsumptionHistory[0];
+      const now = Date.now();
+      const timeUntilExpiry = TOKEN_WINDOW_MS - (now - oldestEntry.timestamp);
+      return Math.max(5000, timeUntilExpiry + 2000); // At least 5s, plus buffer
+    }
+    return 10000; // Default 10s if no history
+  }
+  
+  // Calculate how long until we have enough budget
+  return calculateTokenWaitTime(tokensNeeded, currentConsumption);
 }
 
 /**
@@ -208,6 +339,7 @@ module.exports = {
   getCurrentTokenConsumption,
   getStats,
   reset,
+  calculate429WaitTime,
   // Export constants for testing/configuration
   MAX_REQUESTS_PER_MINUTE,
   MAX_TOKENS_PER_MINUTE,
