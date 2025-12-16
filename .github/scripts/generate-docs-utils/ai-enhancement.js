@@ -247,6 +247,7 @@ function convertEnhancedFields(enhanced, data) {
 /**
  * Extract and clean JSON from API response
  * Handles markdown code blocks, wrapped text, and attempts to fix truncated JSON
+ * Also removes control characters that break JSON parsing
  * @param {string} content - Raw API response content
  * @returns {string} Cleaned JSON string ready for parsing
  */
@@ -262,6 +263,10 @@ function extractJSON(content) {
   cleaned = cleaned.replace(/^```(?:json)?\s*\n?/gm, '');
   cleaned = cleaned.replace(/\n?```\s*$/gm, '');
   cleaned = cleaned.trim();
+
+  // Remove control characters (0x00-0x1F except newline, tab, carriage return)
+  // These are illegal in JSON strings and cause "Bad control character" parsing errors
+  cleaned = cleaned.replace(/[\x00-\x08\x0B\x0C\x0E-\x1F]/g, '');
 
   // Find the first { and last } to extract JSON object
   const firstBrace = cleaned.indexOf('{');
