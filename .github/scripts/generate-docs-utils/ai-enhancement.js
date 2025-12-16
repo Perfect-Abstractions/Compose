@@ -8,33 +8,18 @@ const fs = require('fs');
 const path = require('path');
 const { models: MODELS_CONFIG } = require('./config');
 const { sleep, makeHttpsRequest } = require('../workflow-utils');
+const {
+  estimateTokenUsage,
+  waitForRateLimit,
+  recordTokenConsumption,
+  updateLastTokenConsumption,
+} = require('./token-rate-limiter');
 
-// Rate limiting: GitHub Models has 10 requests per 60s limit
-// We add 7 seconds between calls to stay safe (60/10 = 6, +1 buffer)
-const RATE_LIMIT_DELAY_MS = 8000;
-let lastApiCallTime = 0;
 // Maximum number of times to retry a single request after hitting a 429
 const MAX_RATE_LIMIT_RETRIES = 3;
 
 const AI_PROMPT_PATH = path.join(__dirname, '../../docs-gen-prompts.md');
 const REPO_INSTRUCTIONS_PATH = path.join(__dirname, '../../copilot-instructions.md');
-
-/**
- * Wait for rate limit if needed
- * Ensures at least RATE_LIMIT_DELAY_MS between API calls
- */
-async function waitForRateLimit() {
-  const now = Date.now();
-  const elapsed = now - lastApiCallTime;
-  
-  if (lastApiCallTime > 0 && elapsed < RATE_LIMIT_DELAY_MS) {
-    const waitTime = RATE_LIMIT_DELAY_MS - elapsed;
-    console.log(`    ⏳ Rate limit: waiting ${Math.ceil(waitTime / 1000)}s...`);
-    await sleep(waitTime);
-  }
-  
-  lastApiCallTime = Date.now();
-}
 
 // Load repository instructions for context
 let REPO_INSTRUCTIONS = '';
@@ -222,6 +207,112 @@ Respond ONLY with valid JSON in this exact format (no markdown code blocks, no e
 }
 
 /**
+ * Convert enhanced data fields (newlines, HTML entities)
+ * @param {object} enhanced - Parsed JSON from API
+ * @param {object} data - Original documentation data
+ * @returns {object} Enhanced data with converted fields
+ */
+function convertEnhancedFields(enhanced, data) {
+  // Convert literal \n strings to actual newlines
+  const convertNewlines = (str) => {
+    if (!str || typeof str !== 'string') return str;
+    return str.replace(/\\n/g, '\n');
+  };
+  
+  // Decode HTML entities (for code blocks)
+  const decodeHtmlEntities = (str) => {
+    if (!str || typeof str !== 'string') return str;
+    return str
+      .replace(/&quot;/g, '"')
+      .replace(/&#x3D;/g, '=')
+      .replace(/&#x3D;&gt;/g, '=>')
+      .replace(/&lt;/g, '<')
+      .replace(/&gt;/g, '>')
+      .replace(/&#39;/g, "'")
+      .replace(/&amp;/g, '&');
+  };
+  
+  return {
+    ...data,
+    overview: convertNewlines(enhanced.overview) || data.overview,
+    usageExample: decodeHtmlEntities(convertNewlines(enhanced.usageExample)) || null,
+    bestPractices: convertNewlines(enhanced.bestPractices) || null,
+    keyFeatures: convertNewlines(enhanced.keyFeatures) || null,
+    integrationNotes: convertNewlines(enhanced.integrationNotes) || null,
+    securityConsiderations: convertNewlines(enhanced.securityConsiderations) || null,
+  };
+}
+
+/**
+ * Extract and clean JSON from API response
+ * Handles markdown code blocks, wrapped text, and attempts to fix truncated JSON
+ * @param {string} content - Raw API response content
+ * @returns {string} Cleaned JSON string ready for parsing
+ */
+function extractJSON(content) {
+  if (!content || typeof content !== 'string') {
+    return content;
+  }
+
+  let cleaned = content.trim();
+
+  // Remove markdown code blocks (```json ... ``` or ``` ... ```)
+  // Handle both at start and anywhere in the string
+  cleaned = cleaned.replace(/^```(?:json)?\s*\n?/gm, '');
+  cleaned = cleaned.replace(/\n?```\s*$/gm, '');
+  cleaned = cleaned.trim();
+
+  // Find the first { and last } to extract JSON object
+  const firstBrace = cleaned.indexOf('{');
+  const lastBrace = cleaned.lastIndexOf('}');
+
+  if (firstBrace !== -1 && lastBrace !== -1 && lastBrace > firstBrace) {
+    cleaned = cleaned.substring(firstBrace, lastBrace + 1);
+  } else if (firstBrace !== -1) {
+    // We have a { but no closing }, JSON might be truncated
+    cleaned = cleaned.substring(firstBrace);
+  }
+
+  // Try to fix common truncation issues
+  const openBraces = (cleaned.match(/\{/g) || []).length;
+  const closeBraces = (cleaned.match(/\}/g) || []).length;
+  
+  if (openBraces > closeBraces) {
+    // JSON might be truncated - try to close incomplete strings and objects
+    // Check if we're in the middle of a string (simple heuristic)
+    const lastChar = cleaned[cleaned.length - 1];
+    const lastQuote = cleaned.lastIndexOf('"');
+    const lastBraceInCleaned = cleaned.lastIndexOf('}');
+    
+    // If last quote is after last brace and not escaped, we might be in a string
+    if (lastQuote > lastBraceInCleaned && lastChar !== '"') {
+      // Check if the quote before last is escaped
+      let isEscaped = false;
+      for (let i = lastQuote - 1; i >= 0 && cleaned[i] === '\\'; i--) {
+        isEscaped = !isEscaped;
+      }
+      
+      if (!isEscaped) {
+        // We're likely in an incomplete string, close it
+        cleaned = cleaned + '"';
+      }
+    }
+    
+    // Close any incomplete objects/arrays
+    const missingBraces = openBraces - closeBraces;
+    // Try to intelligently close - if we're in the middle of a property, add a value first
+    const trimmed = cleaned.trim();
+    if (trimmed.endsWith(',') || trimmed.endsWith(':')) {
+      // We're in the middle of a property, add null and close
+      cleaned = cleaned.replace(/[,:]\s*$/, ': null');
+    }
+    cleaned = cleaned + '\n' + '}'.repeat(missingBraces);
+  }
+
+  return cleaned.trim();
+}
+
+/**
  * Enhance documentation data using GitHub Copilot
  * @param {object} data - Parsed documentation data
  * @param {'module' | 'facet'} contractType - Type of contract
@@ -236,6 +327,10 @@ async function enhanceWithAI(data, contractType, token) {
 
   const systemPrompt = buildSystemPrompt();
   const userPrompt = buildPrompt(data, contractType);
+  const maxTokens = MODELS_CONFIG.maxTokens;
+
+  // Estimate token usage for this request (for rate limiting)
+  const estimatedTokens = estimateTokenUsage(systemPrompt, userPrompt, maxTokens);
 
   const requestBody = JSON.stringify({
     messages: [
@@ -249,7 +344,7 @@ async function enhanceWithAI(data, contractType, token) {
       },
     ],
     model: MODELS_CONFIG.model,
-    max_tokens: MODELS_CONFIG.maxTokens,
+    max_tokens: maxTokens,
   });
 
   // GitHub Models uses Azure AI inference endpoint
@@ -268,11 +363,23 @@ async function enhanceWithAI(data, contractType, token) {
   };
 
   try {
-    await waitForRateLimit();
+    // Wait for both time-based and token-based rate limits
+    await waitForRateLimit(estimatedTokens);
 
     // Helper to handle a single API call and common response parsing
     const performApiCall = async () => {
       const response = await makeHttpsRequest(options, requestBody);
+
+      // Record token consumption (use estimated, or actual if available in response)
+      if (response.usage && response.usage.total_tokens) {
+        // GitHub Models API provides actual usage - use it for more accurate tracking
+        const actualTokens = response.usage.total_tokens;
+        recordTokenConsumption(actualTokens);
+        console.log(`    📊 Actual token usage: ${actualTokens} tokens`);
+      } else {
+        // Fallback to estimated tokens if API doesn't provide usage
+        recordTokenConsumption(estimatedTokens);
+      }
 
       if (response.choices && response.choices[0] && response.choices[0].message) {
         const content = response.choices[0].message.content;
@@ -287,47 +394,57 @@ async function enhanceWithAI(data, contractType, token) {
         console.log('    Last 100 chars:', JSON.stringify(content.substring(Math.max(0, content.length - 100))));
         
         try {
-          let enhanced = JSON.parse(content);
-          console.log('✅ AI enhancement successful');
+          // First, try to parse directly (most responses should be valid JSON)
+          let enhanced;
+          try {
+            enhanced = JSON.parse(content);
+            console.log('✅ AI enhancement successful (direct parse)');
+          } catch (directParseError) {
+            // If direct parse fails, try to extract and clean JSON
+            console.log('    Direct parse failed, attempting to extract JSON...');
+            const cleanedContent = extractJSON(content);
+            console.log('    Cleaned content length:', cleanedContent.length, 'chars');
+            
+            enhanced = JSON.parse(cleanedContent);
+            console.log('✅ AI enhancement successful (after extraction)');
+          }
           
-          // Convert literal \n strings to actual newlines
-          const convertNewlines = (str) => {
-            if (!str || typeof str !== 'string') return str;
-            return str.replace(/\\n/g, '\n');
-          };
-          
-          // Decode HTML entities (for code blocks)
-          const decodeHtmlEntities = (str) => {
-            if (!str || typeof str !== 'string') return str;
-            return str
-              .replace(/&quot;/g, '"')
-              .replace(/&#x3D;/g, '=')
-              .replace(/&#x3D;&gt;/g, '=>')
-              .replace(/&lt;/g, '<')
-              .replace(/&gt;/g, '>')
-              .replace(/&#39;/g, "'")
-              .replace(/&amp;/g, '&');
-          };
-          
-          return {
-            ...data,
-            overview: convertNewlines(enhanced.overview) || data.overview,
-            usageExample: decodeHtmlEntities(convertNewlines(enhanced.usageExample)) || null,
-            bestPractices: convertNewlines(enhanced.bestPractices) || null,
-            keyFeatures: convertNewlines(enhanced.keyFeatures) || null,
-            integrationNotes: convertNewlines(enhanced.integrationNotes) || null,
-            securityConsiderations: convertNewlines(enhanced.securityConsiderations) || null,
-          };
+          return convertEnhancedFields(enhanced, data);
         } catch (parseError) {
           console.log('    ⚠️ Could not parse API response as JSON');
           console.log('    Parse error:', parseError.message);
-          console.log('    Error stack:', parseError.stack);
-          console.log('    Response type:', typeof content);
-          console.log('    Response length:', content ? content.length : 'null/undefined');
-          if (content) {
-            console.log('    First 500 chars:', JSON.stringify(content.substring(0, 500)));
-            console.log('    Last 500 chars:', JSON.stringify(content.substring(Math.max(0, content.length - 500))));
+          
+          // As a last resort, try one more time with extraction
+          try {
+            const cleanedContent = extractJSON(content);
+            console.log('    Attempting final parse with extracted JSON...');
+            const enhanced = JSON.parse(cleanedContent);
+            console.log('✅ AI enhancement successful (final attempt with extraction)');
+            
+            return convertEnhancedFields(enhanced, data);
+          } catch (finalError) {
+            console.log('    Final parse attempt also failed:', finalError.message);
+            console.log('    Error position:', finalError.message.match(/position (\d+)/)?.[1] || 'unknown');
+            
+            // Show debugging info
+            try {
+              const cleanedContent = extractJSON(content);
+              console.log('    Cleaned content (first 500 chars):', JSON.stringify(cleanedContent.substring(0, 500)));
+              console.log('    Cleaned content (last 500 chars):', JSON.stringify(cleanedContent.substring(Math.max(0, cleanedContent.length - 500))));
+              
+              // Try to find the error position in cleaned content
+              const errorPosMatch = finalError.message.match(/position (\d+)/);
+              if (errorPosMatch) {
+                const errorPos = parseInt(errorPosMatch[1], 10);
+                const start = Math.max(0, errorPos - 50);
+                const end = Math.min(cleanedContent.length, errorPos + 50);
+                console.log('    Error context (chars ' + start + '-' + end + '):', JSON.stringify(cleanedContent.substring(start, end)));
+              }
+            } catch (e) {
+              console.log('    Could not extract/clean content:', e.message);
+            }
           }
+          
           return addFallbackContent(data, contractType);
         }
       }
