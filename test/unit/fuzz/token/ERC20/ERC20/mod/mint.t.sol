@@ -2,10 +2,10 @@
 pragma solidity >=0.8.30;
 
 import {stdError} from "forge-std/StdError.sol";
-import {Base_Test} from "../../../../Base.t.sol";
+import {Base_Test} from "test/Base.t.sol";
+import {ERC20Harness} from "test/harnesses/token/ERC20/ERC20/ERC20Harness.sol";
 
-import {ERC20Harness} from "../harnesses/ERC20Harness.sol";
-import "../../../../../src/token/ERC20/ERC20/ERC20Mod.sol" as ERC20Mod;
+import "src/token/ERC20/ERC20/ERC20Mod.sol" as ERC20Mod;
 
 contract Mint_ERC20Mod_Fuzz_Unit_Test is Base_Test {
     ERC20Harness internal harness;
