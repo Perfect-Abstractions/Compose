@@ -6,11 +6,23 @@ pragma solidity >=0.8.30;
  */
 interface IERC20 {
     function totalSupply() external view returns (uint256);
+
     function balanceOf(address account) external view returns (uint256);
+
     function transfer(address to, uint256 amount) external returns (bool);
-    function allowance(address owner, address spender) external view returns (uint256);
+
+    function allowance(
+        address owner,
+        address spender
+    ) external view returns (uint256);
+
     function approve(address spender, uint256 amount) external returns (bool);
-    function transferFrom(address from, address to, uint256 amount) external returns (bool);
+
+    function transferFrom(
+        address from,
+        address to,
+        uint256 amount
+    ) external returns (bool);
 }
 
 /**
@@ -28,13 +40,22 @@ contract ERC4626Facet {
     /**
      * @notice Emitted when assets are deposited and shares issued.
      */
-    event Deposit(address indexed sender, address indexed owner, uint256 assets, uint256 shares);
+    event Deposit(
+        address indexed sender,
+        address indexed owner,
+        uint256 assets,
+        uint256 shares
+    );
 
     /**
      * @notice Emitted when assets are withdrawn and shares burned.
      */
     event Withdraw(
-        address indexed sender, address indexed receiver, address indexed owner, uint256 assets, uint256 shares
+        address indexed sender,
+        address indexed receiver,
+        address indexed owner,
+        uint256 assets,
+        uint256 shares
     );
 
     bytes32 constant ERC20_STORAGE_POSITION = keccak256("compose.erc20");
@@ -60,6 +81,7 @@ contract ERC4626Facet {
      */
     struct ERC4626Storage {
         IERC20 asset;
+        address vaultAddress;
     }
 
     /**
@@ -95,7 +117,7 @@ contract ERC4626Facet {
      */
     function totalAssets() external view returns (uint256) {
         ERC4626Storage storage s = getStorage();
-        return s.asset.balanceOf(address(this)) + VIRTUAL_ASSET;
+        return s.asset.balanceOf(s.vaultAddress) + VIRTUAL_ASSET;
     }
 
     /**
@@ -110,7 +132,11 @@ contract ERC4626Facet {
      * @param denominator Denominator.
      * @return result The result of (a * b) / denominator.
      */
-    function muldiv(uint256 a, uint256 b, uint256 denominator) internal view returns (uint256 result) {
+    function muldiv(
+        uint256 a,
+        uint256 b,
+        uint256 denominator
+    ) internal view returns (uint256 result) {
         /**
          * Step 1: Safety check to prevent division by zero, which would otherwise revert
          */
@@ -131,12 +157,14 @@ contract ERC4626Facet {
              * prod0: a * b (mod 2**256)
              * prod1: (a * b - prod0)/2**256
              */
-            let mm := mulmod(a, b, not(0)) /**
-                                            * Full-width mulmod for high bits
-                                            */
-            prod0 := mul(a, b) /**
-                                * Standard multiplication for low bits
-                                */
+            let mm := mulmod(a, b, not(0))
+            /**
+             * Full-width mulmod for high bits
+             */
+            prod0 := mul(a, b)
+            /**
+             * Standard multiplication for low bits
+             */
             /**
              * Derive prod1 using differences and underflow detection (see muldiv reference).
              */
@@ -209,24 +237,30 @@ contract ERC4626Facet {
          * - Unrolling the iterations since denominator is odd here (twos were factored out).
          */
         uint256 inv = (3 * denominator) ^ 2;
-        inv *= 2 - denominator * inv; /**
-                                       * inverse mod 2^8
-                                       */
-        inv *= 2 - denominator * inv; /**
-                                       * inverse mod 2^16
-                                       */
-        inv *= 2 - denominator * inv; /**
-                                       * inverse mod 2^32
-                                       */
-        inv *= 2 - denominator * inv; /**
-                                       * inverse mod 2^64
-                                       */
-        inv *= 2 - denominator * inv; /**
-                                       * inverse mod 2^128
-                                       */
-        inv *= 2 - denominator * inv; /**
-                                       * nverse mod 2^256
-                                       */
+        inv *= 2 - denominator * inv;
+        /**
+         * inverse mod 2^8
+         */
+        inv *= 2 - denominator * inv;
+        /**
+         * inverse mod 2^16
+         */
+        inv *= 2 - denominator * inv;
+        /**
+         * inverse mod 2^32
+         */
+        inv *= 2 - denominator * inv;
+        /**
+         * inverse mod 2^64
+         */
+        inv *= 2 - denominator * inv;
+        /**
+         * inverse mod 2^128
+         */
+        inv *= 2 - denominator * inv;
+        /**
+         * nverse mod 2^256
+         */
 
         /**
          * Step 9: Multiply prod0 by the modular inverse of denominator to get the final division result.
@@ -240,7 +274,11 @@ contract ERC4626Facet {
     /**
      * @notice Same as muldiv, but rounds up if there is a remainder.
      */
-    function mulDivRoundingUp(uint256 a, uint256 b, uint256 denominator) internal view returns (uint256 result) {
+    function mulDivRoundingUp(
+        uint256 a,
+        uint256 b,
+        uint256 denominator
+    ) internal view returns (uint256 result) {
         result = muldiv(a, b, denominator);
         if (mulmod(a, b, denominator) > 0) {
             require(result < type(uint256).max);
@@ -251,8 +289,18 @@ contract ERC4626Facet {
     /**
      * @dev Safe ERC20 transferFrom wrapper supporting non-standard tokens.
      */
-    function _safeTransferFrom(IERC20 token, address from, address to, uint256 amount) internal returns (bool) {
-        bytes memory data = abi.encodeWithSelector(token.transferFrom.selector, from, to, amount);
+    function _safeTransferFrom(
+        IERC20 token,
+        address from,
+        address to,
+        uint256 amount
+    ) internal returns (bool) {
+        bytes memory data = abi.encodeWithSelector(
+            token.transferFrom.selector,
+            from,
+            to,
+            amount
+        );
         (bool success, bytes memory returndata) = address(token).call(data);
         if (!success) return false;
         if (returndata.length == 0) {
@@ -267,8 +315,16 @@ contract ERC4626Facet {
     /**
      * @dev Safe ERC20 transfer wrapper supporting non-standard tokens.
      */
-    function _safeTransfer(IERC20 token, address to, uint256 amount) internal returns (bool) {
-        bytes memory data = abi.encodeWithSelector(token.transfer.selector, to, amount);
+    function _safeTransfer(
+        IERC20 token,
+        address to,
+        uint256 amount
+    ) internal returns (bool) {
+        bytes memory data = abi.encodeWithSelector(
+            token.transfer.selector,
+            to,
+            amount
+        );
         (bool success, bytes memory returndata) = address(token).call(data);
         if (!success) return false;
         if (returndata.length == 0) {
@@ -296,7 +352,8 @@ contract ERC4626Facet {
         ERC20Storage storage erc20s = getERC20Storage();
         uint256 totalShares_ = erc20s.totalSupply + VIRTUAL_SHARE;
         ERC4626Storage storage s = getStorage();
-        uint256 totalAssets_ = s.asset.balanceOf(address(this)) + VIRTUAL_ASSET;
+        uint256 totalAssets_ = s.asset.balanceOf(s.vaultAddress) +
+            VIRTUAL_ASSET;
         return muldiv(totalShares_, assets, totalAssets_);
     }
 
@@ -308,7 +365,8 @@ contract ERC4626Facet {
         ERC20Storage storage erc20s = getERC20Storage();
         uint256 totalShares_ = erc20s.totalSupply + VIRTUAL_SHARE;
         ERC4626Storage storage s = getStorage();
-        uint256 totalAssets_ = s.asset.balanceOf(address(this)) + VIRTUAL_ASSET;
+        uint256 totalAssets_ = s.asset.balanceOf(s.vaultAddress) +
+            VIRTUAL_ASSET;
         return muldiv(totalAssets_, shares, totalShares_);
     }
 
@@ -327,7 +385,8 @@ contract ERC4626Facet {
         ERC20Storage storage erc20s = getERC20Storage();
         uint256 totalShares_ = erc20s.totalSupply + VIRTUAL_SHARE;
         ERC4626Storage storage s = getStorage();
-        uint256 totalAssets_ = s.asset.balanceOf(address(this)) + VIRTUAL_ASSET;
+        uint256 totalAssets_ = s.asset.balanceOf(s.vaultAddress) +
+            VIRTUAL_ASSET;
         return muldiv(totalShares_, assets, totalAssets_);
     }
 
@@ -337,18 +396,27 @@ contract ERC4626Facet {
      * @param receiver Address to receive shares.
      * @return shares Amount of shares minted.
      */
-    function deposit(uint256 assets, address receiver) external returns (uint256) {
+    function deposit(
+        uint256 assets,
+        address receiver
+    ) external returns (uint256) {
         if (receiver == address(0)) revert ERC4626InvalidAddress();
         if (assets > type(uint256).max) revert ERC4626InvalidAmount();
 
         ERC20Storage storage erc20s = getERC20Storage();
         uint256 totalShares_ = erc20s.totalSupply + VIRTUAL_SHARE;
         ERC4626Storage storage s = getStorage();
-        uint256 totalAssets_ = s.asset.balanceOf(address(this)) + VIRTUAL_ASSET;
+        uint256 totalAssets_ = s.asset.balanceOf(s.vaultAddress) +
+            VIRTUAL_ASSET;
         uint256 shares = muldiv(totalShares_, assets, totalAssets_);
 
         if (shares == 0) revert ERC4626InsufficientShares();
-        bool success = _safeTransferFrom(s.asset, msg.sender, address(this), assets);
+        bool success = _safeTransferFrom(
+            s.asset,
+            msg.sender,
+            s.vaultAddress,
+            assets
+        );
         if (!success) revert ERC4626TransferFailed();
 
         erc20s.totalSupply += shares;
@@ -373,7 +441,8 @@ contract ERC4626Facet {
         ERC20Storage storage erc20s = getERC20Storage();
         uint256 totalShares_ = erc20s.totalSupply + VIRTUAL_SHARE;
         ERC4626Storage storage s = getStorage();
-        uint256 totalAssets_ = s.asset.balanceOf(address(this)) + VIRTUAL_ASSET;
+        uint256 totalAssets_ = s.asset.balanceOf(s.vaultAddress) +
+            VIRTUAL_ASSET;
         return mulDivRoundingUp(totalAssets_, shares, totalShares_);
     }
 
@@ -390,11 +459,17 @@ contract ERC4626Facet {
         ERC20Storage storage erc20s = getERC20Storage();
         uint256 totalShares_ = erc20s.totalSupply + VIRTUAL_SHARE;
         ERC4626Storage storage s = getStorage();
-        uint256 totalAssets_ = s.asset.balanceOf(address(this)) + VIRTUAL_ASSET;
+        uint256 totalAssets_ = s.asset.balanceOf(s.vaultAddress) +
+            VIRTUAL_ASSET;
         uint256 assets = mulDivRoundingUp(totalAssets_, shares, totalShares_);
 
         if (assets == 0) revert ERC4626InsufficientAssets();
-        bool success = _safeTransferFrom(s.asset, msg.sender, address(this), assets);
+        bool success = _safeTransferFrom(
+            s.asset,
+            msg.sender,
+            s.vaultAddress,
+            assets
+        );
         if (!success) revert ERC4626TransferFailed();
 
         erc20s.totalSupply += shares;
@@ -412,7 +487,8 @@ contract ERC4626Facet {
         ERC20Storage storage erc20s = getERC20Storage();
         uint256 balance = erc20s.balanceOf[owner];
         ERC4626Storage storage s = getStorage();
-        uint256 totalAssets_ = s.asset.balanceOf(address(this)) + VIRTUAL_ASSET;
+        uint256 totalAssets_ = s.asset.balanceOf(s.vaultAddress) +
+            VIRTUAL_ASSET;
         uint256 totalShares_ = erc20s.totalSupply + VIRTUAL_SHARE;
         return muldiv(totalAssets_, balance, totalShares_);
     }
@@ -425,7 +501,8 @@ contract ERC4626Facet {
         ERC20Storage storage erc20s = getERC20Storage();
         uint256 totalShares_ = erc20s.totalSupply + VIRTUAL_SHARE;
         ERC4626Storage storage s = getStorage();
-        uint256 totalAssets_ = s.asset.balanceOf(address(this)) + VIRTUAL_ASSET;
+        uint256 totalAssets_ = s.asset.balanceOf(s.vaultAddress) +
+            VIRTUAL_ASSET;
         return mulDivRoundingUp(totalShares_, assets, totalAssets_);
     }
 
@@ -436,13 +513,19 @@ contract ERC4626Facet {
      * @param owner Address whose shares are burned.
      * @return shares Amount of shares burned.
      */
-    function withdraw(uint256 assets, address receiver, address owner) external returns (uint256) {
-        if (receiver == address(0) || owner == address(0)) revert ERC4626InvalidAddress();
+    function withdraw(
+        uint256 assets,
+        address receiver,
+        address owner
+    ) external returns (uint256) {
+        if (receiver == address(0) || owner == address(0))
+            revert ERC4626InvalidAddress();
 
         ERC20Storage storage erc20s = getERC20Storage();
         uint256 balance = erc20s.balanceOf[owner];
         ERC4626Storage storage s = getStorage();
-        uint256 totalAssets_ = s.asset.balanceOf(address(this)) + VIRTUAL_ASSET;
+        uint256 totalAssets_ = s.asset.balanceOf(s.vaultAddress) +
+            VIRTUAL_ASSET;
         uint256 totalShares_ = erc20s.totalSupply + VIRTUAL_SHARE;
         uint256 maxWithdrawVal = muldiv(totalAssets_, balance, totalShares_);
         if (assets > maxWithdrawVal) revert ERC4626InvalidAmount();
@@ -481,7 +564,8 @@ contract ERC4626Facet {
         ERC20Storage storage erc20s = getERC20Storage();
         uint256 totalShares_ = erc20s.totalSupply + VIRTUAL_SHARE;
         ERC4626Storage storage s = getStorage();
-        uint256 totalAssets_ = s.asset.balanceOf(address(this)) + VIRTUAL_ASSET;
+        uint256 totalAssets_ = s.asset.balanceOf(s.vaultAddress) +
+            VIRTUAL_ASSET;
         return muldiv(totalAssets_, shares, totalShares_);
     }
 
@@ -492,14 +576,20 @@ contract ERC4626Facet {
      * @param owner Address whose shares are redeemed.
      * @return assets Amount of assets withdrawn.
      */
-    function redeem(uint256 shares, address receiver, address owner) external returns (uint256) {
-        if (receiver == address(0) || owner == address(0)) revert ERC4626InvalidAddress();
+    function redeem(
+        uint256 shares,
+        address receiver,
+        address owner
+    ) external returns (uint256) {
+        if (receiver == address(0) || owner == address(0))
+            revert ERC4626InvalidAddress();
         ERC20Storage storage erc20s = getERC20Storage();
         if (shares > erc20s.balanceOf[owner]) revert ERC4626InvalidAmount();
 
         ERC4626Storage storage s = getStorage();
         uint256 totalShares_ = erc20s.totalSupply + VIRTUAL_SHARE;
-        uint256 totalAssets_ = s.asset.balanceOf(address(this)) + VIRTUAL_ASSET;
+        uint256 totalAssets_ = s.asset.balanceOf(s.vaultAddress) +
+            VIRTUAL_ASSET;
         uint256 assets = muldiv(totalAssets_, shares, totalShares_);
 
         if (assets == 0) revert ERC4626InsufficientAssets();
