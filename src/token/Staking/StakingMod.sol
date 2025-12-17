@@ -2,520 +2,109 @@
 pragma solidity >=0.8.30;
 
 /**
- * @dev Simplified ERC20 interface.
+ * @title Staking Library for Compose
+ * @notice Provides internal logic for staking functionality using diamond storage.
+ *        This library is intended to be used by custom facets to integrate with staking features.
+ * @dev Uses ERC-8042 for storage location standardization.
  */
-interface IERC20 {
-    function totalSupply() external view returns (uint256);
 
-    function balanceOf(address account) external view returns (uint256);
+bytes32 constant STAKING_STORAGE_POSITION = keccak256("compose.staking");
 
-    function transfer(address to, uint256 amount) external returns (bool);
-
-    function allowance(address owner, address spender) external view returns (uint256);
-
-    function approve(address spender, uint256 amount) external returns (bool);
-
-    function transferFrom(address from, address to, uint256 amount) external returns (bool);
+/**
+ * @notice Structure containing staking information for a specific token.
+ * @param amount The amount of tokens staked.
+ * @param stakedAt The timestamp when the tokens were staked.
+ * @param lastClaimedAt The timestamp when rewards were last claimed.
+ * @param accumulatedRewards The total accumulated rewards for the staked tokens.
+ */
+struct StakedTokenInfo {
+    uint256 amount;
+    uint256 stakedAt;
+    uint256 lastClaimedAt;
+    uint256 accumulatedRewards;
 }
 
 /**
- * @dev Simplified ERC721 interface.
+ * @notice Structure containing type of tokens being staked.
+ * @param isERC20 Boolean indicating if the token is ERC-20.
+ * @param isERC721 Boolean indicating if the token is ERC-721.
+ * @param isERC1155 Boolean indicating if the token is ERC-1155.
  */
-interface IERC721 {
-    function ownerOf(uint256 tokenId) external view returns (address owner);
-
-    function safeTransferFrom(address from, address to, uint256 tokenId) external;
+struct TokenType {
+    bool isERC20;
+    bool isERC721;
+    bool isERC1155;
 }
 
 /**
- * @dev Simplified ERC1155 interface.
+ * @custom:storage-location erc8042:compose.staking
  */
-interface IERC1155 {
-    function balanceOf(address account, uint256 id) external view returns (uint256);
-    function safeTransferFrom(address from, address to, uint256 id, uint256 amount, bytes calldata data) external;
+struct StakingStorage {
+    mapping(address tokenType => TokenType) supportedTokens;
+    mapping(address tokenAddress => mapping(uint256 tokenId => StakedTokenInfo)) stakedTokens;
+    uint256 baseAPR;
+    uint256 rewardDecayRate;
+    uint256 compoundFrequency;
+    address rewardToken;
+    mapping(address tokenAddress => uint256 totalStaked) totalStakedPerToken;
+    uint256 cooldownPeriod;
+    uint256 maxStakeAmount;
+    uint256 minStakeAmount;
+    mapping(address user => mapping(address spender => uint256 allowance)) allowance;
 }
 
 /**
- * @title ERC-721 Token Receiver Interface
- * @notice Interface for contracts that want to handle safe transfers of ERC-721 tokens.
- * @dev Contracts implementing this must return the selector to confirm token receipt.
+ * @notice Returns the staking storage structure from its predefined slot.
+ * @dev Uses inline assembly to access diamond storage location.
+ * @return s The storage reference to StakingStorage.
  */
-interface IERC721Receiver {
-    /**
-     * @notice Handles the receipt of an NFT.
-     * @param _operator The address which called `safeTransferFrom`.
-     * @param _from The previous owner of the token.
-     * @param _tokenId The NFT identifier being transferred.
-     * @param _data Additional data with no specified format.
-     * @return The selector to confirm the token transfer.
-     */
-    function onERC721Received(address _operator, address _from, uint256 _tokenId, bytes calldata _data)
-        external
-        returns (bytes4);
+function getStorage() internal pure returns (StakingStorage storage s) {
+    bytes32 position = STAKING_STORAGE_POSITION;
+    assembly {
+        s.slot := position
+    }
 }
 
 /**
- * @title ERC-1155 Token Receiver Interface
- * @notice Interface that must be implemented by smart contracts in order to receive ERC-1155 token transfers.
+ * @notice An admin function to support a new token type for staking.
+ * @param _tokenAddress The address of the token to support.
+ * @param _isERC20 Boolean indicating if the token is ERC-20.
+ * @param _isERC721 Boolean indicating if the token is ERC-721.
+ * @param _isERC1155 Boolean indicating if the token is ERC-1155
+ * @dev This function should be restricted to admin use only.
  */
-interface IERC1155Receiver {
-    /**
-     * @notice Handles the receipt of a single ERC-1155 token type.
-     * @dev This function is called at the end of a `safeTransferFrom` after the balance has been updated.
-     *
-     * IMPORTANT: To accept the transfer, this must return
-     * `bytes4(keccak256("onERC1155Received(address,address,uint256,uint256,bytes)"))`
-     * (i.e. 0xf23a6e61, or its own function selector).
-     *
-     * @param _operator The address which initiated the transfer (i.e. msg.sender).
-     * @param _from The address which previously owned the token.
-     * @param _id The ID of the token being transferred.
-     * @param _value The amount of tokens being transferred.
-     * @param _data Additional data with no specified format.
-     * @return `bytes4(keccak256("onERC1155Received(address,address,uint256,uint256,bytes)"))` if transfer is allowed.
-     */
-    function onERC1155Received(address _operator, address _from, uint256 _id, uint256 _value, bytes calldata _data)
-        external
-        returns (bytes4);
-
-    /**
-     * @notice Handles the receipt of multiple ERC-1155 token types.
-     * @dev This function is called at the end of a `safeBatchTransferFrom` after the balances have been updated.
-     *
-     * IMPORTANT: To accept the transfer(s), this must return
-     * `bytes4(keccak256("onERC1155BatchReceived(address,address,uint256[],uint256[],bytes)"))`
-     * (i.e. 0xbc197c81, or its own function selector).
-     *
-     * @param _operator The address which initiated the batch transfer (i.e. msg.sender).
-     * @param _from The address which previously owned the token.
-     * @param _ids An array containing ids of each token being transferred (order and length must match _values array).
-     * @param _values An array containing amounts of each token being transferred (order and length must match _ids array).
-     * @param _data Additional data with no specified format.
-     * @return `bytes4(keccak256("onERC1155BatchReceived(address,address,uint256[],uint256[],bytes)"))` if transfer is allowed.
-     */
-    function onERC1155BatchReceived(
-        address _operator,
-        address _from,
-        uint256[] calldata _ids,
-        uint256[] calldata _values,
-        bytes calldata _data
-    ) external returns (bytes4);
+function addSupportedToken(address _tokenAddress, bool _isERC20, bool _isERC721, bool _isERC1155) {
+    StakingStorage storage s = getStorage();
+    s.supportedTokens[_tokenAddress] = TokenType({isERC20: _isERC20, isERC721: _isERC721, isERC1155: _isERC1155});
 }
 
-contract StakingFacet {
-    /**
-     * @title LibStaking - Standard Staking Library
-     * @notice Provides internal functions and storage layout for staking ERC-20, ERC-721, and ERC-1155 tokens.
-     * @dev Uses ERC-8042 for storage location standardization.
-     */
-    /**
-     * @notice Thrown when attempting to stake an unsupported token type.
-     * @param tokenAddress The address of the unsupported token.
-     */
-    error StakingUnsupportedToken(address tokenAddress);
-
-    /**
-     * @notice Thrown when attempting to stake a zero amount.
-     */
-    error StakingZeroStakeAmount();
-
-    /**
-     * @notice Thrown when attempting to stake an amount below the minimum stake amount.
-     * @param amount The attempted stake amount.
-     * @param minAmount The minimum required stake amount.
-     */
-    error StakingAmountBelowMinimum(uint256 amount, uint256 minAmount);
-
-    /**
-     * @notice Thrown when attempting to stake an amount above the maximum stake amount.
-     * @param amount The attempted stake amount.
-     * @param maxAmount The maximum allowed stake amount.
-     */
-    error StakingAmountAboveMaximum(uint256 amount, uint256 maxAmount);
-
-    /**
-     * @notice Thrown when there's no rewards to claim for the staked token.
-     * @param tokenAddress The address of the staked token.
-     * @param tokenId The ID of the staked token.
-     */
-    error StakingNoRewardsToClaim(address tokenAddress, uint256 tokenId);
-
-    /**
-     * @notice Thrown when attempting to unstake before the cooldown period has elapsed.
-     * @param stakedAt The timestamp when the tokens were staked.
-     * @param cooldownPeriod The required cooldown period in seconds.
-     * @param currentTime The current block timestamp.
-     */
-    error StakingCooldownNotElapsed(uint256 stakedAt, uint256 cooldownPeriod, uint256 currentTime);
-
-    /**
-     * @notice Thrown when owner is not the owner of the staked token.
-     * @param owner The address of the token owner.
-     * @param tokenAddress The address of the staked token.
-     * @param tokenId The ID of the staked token.
-     */
-    error StakingNotTokenOwner(address owner, address tokenAddress, uint256 tokenId);
-
-    /**
-     * @notice Thrown when an account has insufficient balance for a transfer or burn.
-     * @param _sender Address attempting the transfer.
-     * @param _balance Current balance of the sender.
-     * @param _needed Amount required to complete the operation.
-     */
-    error StakingInsufficientBalance(address _sender, uint256 _balance, uint256 _needed);
-
-    /**
-     * @notice Thrown when the sender address is invalid (e.g., zero address).
-     * @param _sender Invalid sender address.
-     */
-    error StakingInvalidSender(address _sender);
-
-    /**
-     * @notice Thrown when the receiver address is invalid (e.g., zero address).
-     * @param _receiver Invalid receiver address.
-     */
-    error StakingInvalidReceiver(address _receiver);
-
-    /**
-     * @notice Thrown when a spender tries to use more than the approved allowance.
-     * @param _spender Address attempting to spend.
-     * @param _allowance Current allowance for the spender.
-     * @param _needed Amount required to complete the operation.
-     */
-    error StakingInsufficientAllowance(address _spender, uint256 _allowance, uint256 _needed);
-
-    /**
-     * @notice Emitted when tokens are successfully staked.
-     * @param staker The address of the user who staked the tokens.
-     * @param tokenAddress The address of the staked token.
-     * @param tokenId The ID of the staked token.
-     * @param amount The amount of tokens staked.
-     */
-    event TokensStaked(address indexed staker, address indexed tokenAddress, uint256 indexed tokenId, uint256 amount);
-
-    /**
-     * @notice Emitted when tokens are successfully unstaked.
-     * @param staker The address of the user who unstaked the tokens.
-     * @param tokenAddress The address of the unstaked token.
-     * @param tokenId The ID of the unstaked token.
-     * @param amount The amount of tokens unstaked.
-     */
-    event TokensUnstaked(address indexed staker, address indexed tokenAddress, uint256 indexed tokenId, uint256 amount);
-
-    /**
-     * @notice Emitted when rewards are claimed for staked tokens.
-     * @param staker The address of the user who claimed the rewards.
-     * @param tokenAddress The address of the staked token.
-     * @param tokenId The ID of the staked token.
-     * @param rewardAmount The amount of rewards claimed.
-     */
-    event RewardsClaimed(
-        address indexed staker, address indexed tokenAddress, uint256 indexed tokenId, uint256 rewardAmount
-    );
-
-    /**
-     * @notice Emitted when an approval is made for a spender by an owner.
-     * @param _owner The address granting the allowance.
-     * @param _spender The address receiving the allowance.
-     * @param _oldValue The previous allowance amount.
-     * @param _newValue The new allowance amount.
-     */
-    event Approval(address indexed _owner, address indexed _spender, uint256 _oldValue, uint256 _newValue);
-
-    /**
-     * @notice Emitted when tokens are transferred between two addresses.
-     * @param _from Address sending the tokens.
-     * @param _to Address receiving the tokens.
-     * @param _value Amount of tokens transferred.
-     */
-    event Transfer(address indexed _from, address indexed _to, uint256 _value);
-
-    bytes32 constant STAKING_STORAGE_POSITION = keccak256("compose.staking");
-
-    /**
-     * @notice Structure containing staking information for a specific token.
-     * @param amount The amount of tokens staked.
-     * @param stakedAt The timestamp when the tokens were staked.
-     * @param lastClaimedAt The timestamp when rewards were last claimed.
-     * @param accumulatedRewards The total accumulated rewards for the staked tokens.
-     */
-    struct StakedTokenInfo {
-        uint256 amount;
-        uint256 stakedAt;
-        uint256 lastClaimedAt;
-        uint256 accumulatedRewards;
-    }
-
-    /**
-     * @notice Structure containing type of tokens being staked.
-     * @param isERC20 Boolean indicating if the token is ERC-20.
-     * @param isERC721 Boolean indicating if the token is ERC-721.
-     * @param isERC1155 Boolean indicating if the token is ERC-1155.
-     */
-    struct TokenType {
-        bool isERC20;
-        bool isERC721;
-        bool isERC1155;
-    }
-
-    /**
-     * @custom:storage-location erc8042:compose.staking
-     */
-    struct StakingStorage {
-        mapping(address tokenType => TokenType) supportedTokens;
-        mapping(address tokenAddress => mapping(uint256 tokenId => StakedTokenInfo)) stakedTokens;
-        uint256 baseAPR;
-        uint256 rewardDecayRate;
-        uint256 compoundFrequency;
-        address rewardToken;
-        mapping(address tokenAddress => uint256 totalStaked) totalStakedPerToken;
-        uint256 cooldownPeriod;
-        uint256 maxStakeAmount;
-        uint256 minStakeAmount;
-        mapping(address user => mapping(address spender => uint256 allowance)) allowance;
-    }
-
-    /**
-     * @notice Returns the staking storage structure from its predefined slot.
-     * @dev Uses inline assembly to access diamond storage location.
-     * @return s The storage reference to StakingStorage.
-     */
-    function getStorage() internal pure returns (StakingStorage storage s) {
-        bytes32 position = STAKING_STORAGE_POSITION;
-        assembly {
-            s.slot := position
-        }
-    }
-
-    /**
-     * @notice Stakes tokens of a supported type.
-     * @param _tokenAddress The address of the token to stake.
-     * @param _tokenId The ID of the token to stake (for ERC-721 and ERC-1155).
-     * @param _amount The amount of tokens to stake.
-     */
-    function stakeToken(address _tokenAddress, uint256 _tokenId, uint256 _amount) external {
-        StakingStorage storage s = getStorage();
-
-        TokenType storage tokenType = s.supportedTokens[_tokenAddress];
-        if (!tokenType.isERC20 && !tokenType.isERC721 && !tokenType.isERC1155) {
-            revert StakingUnsupportedToken(_tokenAddress);
-        }
-        if (_amount < s.minStakeAmount) {
-            revert StakingAmountBelowMinimum(_amount, s.minStakeAmount);
-        }
-        if (_amount > s.maxStakeAmount) {
-            revert StakingAmountAboveMaximum(_amount, s.maxStakeAmount);
-        }
-
-        if (s.supportedTokens[_tokenAddress].isERC20) {
-            IERC20(_tokenAddress).transferFrom(msg.sender, address(this), _amount);
-            _stakeERC20(_tokenAddress, _amount);
-        } else if (s.supportedTokens[_tokenAddress].isERC721) {
-            IERC721(_tokenAddress).safeTransferFrom(msg.sender, address(this), _tokenId);
-            _stakeERC721(_tokenAddress, _tokenId);
-        } else if (s.supportedTokens[_tokenAddress].isERC1155) {
-            IERC1155(_tokenAddress).safeTransferFrom(msg.sender, address(this), _tokenId, _amount, "");
-            _stakeERC1155(_tokenAddress, _tokenId, _amount);
-        }
-    }
-
-    /**
-     * @notice Unstakes tokens of a supported type.
-     * @param _tokenAddress The address of the token to unstake.
-     * @param _tokenId The ID of the token to unstake (for ERC-721 and ERC-1155).
-     */
-    function unstakeToken(address _tokenAddress, uint256 _tokenId) external {
-        StakingStorage storage s = getStorage();
-        StakedTokenInfo storage stake = s.stakedTokens[_tokenAddress][_tokenId];
-
-        uint256 amount = stake.amount;
-        if (amount == 0) {
-            revert StakingZeroStakeAmount();
-        }
-
-        if (s.cooldownPeriod > 0 && block.timestamp <= stake.stakedAt + s.cooldownPeriod) {
-            revert StakingCooldownNotElapsed(stake.stakedAt, s.cooldownPeriod, block.timestamp);
-        }
-
-        uint256 rewards = calculateRewards(_tokenAddress, _tokenId);
-        if (rewards > 0) {
-            _claimRewards(_tokenAddress, _tokenId);
-        }
-
-        if (s.supportedTokens[_tokenAddress].isERC20) {
-            IERC20(_tokenAddress).transfer(msg.sender, amount);
-        } else if (s.supportedTokens[_tokenAddress].isERC721) {
-            IERC721(_tokenAddress).safeTransferFrom(address(this), msg.sender, _tokenId);
-        } else if (s.supportedTokens[_tokenAddress].isERC1155) {
-            IERC1155(_tokenAddress).safeTransferFrom(address(this), msg.sender, _tokenId, amount, "");
-        }
-
-        s.totalStakedPerToken[_tokenAddress] -= amount;
-        delete s.stakedTokens[_tokenAddress][_tokenId];
-
-        emit TokensUnstaked(msg.sender, _tokenAddress, _tokenId, amount);
-    }
-
-    /**
-     * @notice An admin function to support a new token type for staking.
-     * @param _tokenAddress The address of the token to support.
-     * @param _isERC20 Boolean indicating if the token is ERC-20.
-     * @param _isERC721 Boolean indicating if the token is ERC-721.
-     * @param _isERC1155 Boolean indicating if the token is ERC-1155
-     * @dev This function should be restricted to admin use only.
-     */
-    function addSupportedToken(address _tokenAddress, bool _isERC20, bool _isERC721, bool _isERC1155) external {
-        StakingStorage storage s = getStorage();
-        s.supportedTokens[_tokenAddress] = TokenType({isERC20: _isERC20, isERC721: _isERC721, isERC1155: _isERC1155});
-    }
-
-    /**
-     * @notice An admin function to set staking parameters.
-     * @param _baseAPR The base annual percentage rate for rewards.
-     * @param _rewardDecayRate The decay rate for rewards over time.
-     * @param _compoundFrequency The frequency at which rewards are compounded.
-     * @param _rewardToken The address of the token used for rewards.
-     * @param _cooldownPeriod The cooldown period before unstaking is allowed.
-     * @param _minStakeAmount The minimum amount required to stake.
-     * @param _maxStakeAmount The maximum amount allowed to stake.
-     * @dev This function should be restricted to admin use only.
-     */
-    function setStakingParameters(
-        uint256 _baseAPR,
-        uint256 _rewardDecayRate,
-        uint256 _compoundFrequency,
-        address _rewardToken,
-        uint256 _cooldownPeriod,
-        uint256 _minStakeAmount,
-        uint256 _maxStakeAmount
-    ) external {
-        StakingStorage storage s = getStorage();
-        s.baseAPR = _baseAPR;
-        s.rewardDecayRate = _rewardDecayRate;
-        s.compoundFrequency = _compoundFrequency;
-        s.rewardToken = _rewardToken;
-        s.cooldownPeriod = _cooldownPeriod;
-        s.minStakeAmount = _minStakeAmount;
-        s.maxStakeAmount = _maxStakeAmount;
-    }
-
-    /**
-     * @notice Claims rewards for a staked token.
-     * @dev Updates the last claimed timestamp and accumulated rewards.
-     * @param _tokenAddress The address of the staked token.
-     * @param _tokenId The ID of the staked token.
-     */
-    function claimRewards(address _tokenAddress, uint256 _tokenId) external {
-        _claimRewards(_tokenAddress, _tokenId);
-    }
-
-    /**
-     * @notice Stake ERC-20 tokens
-     * @dev Transfers token from the user and updates the amount staked and staking info.
-     * @param _tokenAddress The address of the ERC-20 token to stake.
-     * @param _value The amount of tokens to stake.
-     */
-    function _stakeERC20(address _tokenAddress, uint256 _value) internal {
-        StakingStorage storage s = getStorage();
-        StakedTokenInfo storage stake = s.stakedTokens[_tokenAddress][0];
-
-        stake.amount += _value;
-        stake.stakedAt = block.timestamp;
-        stake.lastClaimedAt = block.timestamp;
-
-        s.totalStakedPerToken[_tokenAddress] += _value;
-    }
-
-    /**
-     * @notice Stake ERC-721 tokens
-     * @dev Transfers token from the user and updates the amount staked and staking info.
-     * @param _tokenAddress The address of the ERC-721 token to stake.
-     * @param _tokenId The ID of the token to stake.
-     */
-    function _stakeERC721(address _tokenAddress, uint256 _tokenId) internal {
-        StakingStorage storage s = getStorage();
-        StakedTokenInfo storage stake = s.stakedTokens[_tokenAddress][_tokenId];
-
-        stake.amount = 1;
-        stake.stakedAt = block.timestamp;
-        stake.lastClaimedAt = block.timestamp;
-
-        s.totalStakedPerToken[_tokenAddress] += 1;
-    }
-
-    /**
-     * @notice Stake ERC-1155 tokens
-     * @dev Transfers token from the user and updates the amount staked and staking info.
-     * @param _tokenAddress The address of the ERC-1155 token to stake.
-     * @param _tokenId The ID of the token to stake.
-     * @param _value The amount of tokens to stake.
-     */
-    function _stakeERC1155(address _tokenAddress, uint256 _tokenId, uint256 _value) internal {
-        StakingStorage storage s = getStorage();
-        StakedTokenInfo storage stake = s.stakedTokens[_tokenAddress][_tokenId];
-
-        stake.amount += _value;
-        stake.stakedAt = block.timestamp;
-        stake.lastClaimedAt = block.timestamp;
-
-        s.totalStakedPerToken[_tokenAddress] += _value;
-    }
-
-    /**
-     * @notice Calculates the rewards for a staked token.
-     * @dev Uses base APR, decay rate, and compounding frequency to compute rewards.
-     * @param _tokenAddress The address of the staked token.
-     * @param _tokenId The ID of the staked token.
-     * @return finalReward The calculated reward amount.
-     */
-    function calculateRewards(address _tokenAddress, uint256 _tokenId) internal view returns (uint256) {
-        StakingStorage storage s = getStorage();
-        StakedTokenInfo storage stake = s.stakedTokens[_tokenAddress][_tokenId];
-
-        uint256 stakedDuration = block.timestamp - stake.lastClaimedAt;
-        if (stakedDuration == 0 || stake.amount == 0) {
-            return 0;
-        }
-
-        uint256 baseReward = (stake.amount * s.baseAPR * stakedDuration) / (365 days * 100);
-
-        uint256 decayFactor =
-            s.rewardDecayRate > 0 ? (s.rewardDecayRate ** (stakedDuration / s.compoundFrequency)) : 10 ** 18;
-
-        uint256 finalReward = (baseReward * decayFactor) / (10 ** 18);
-
-        return finalReward;
-    }
-
-    /**
-     * @notice Claimes rewards for a staked token.
-     * @dev Internal function to update staking info after rewards are claimed.
-     * @param _tokenAddress The address of the staked token.
-     * @param _tokenId The ID of the staked token.
-     */
-    function _claimRewards(address _tokenAddress, uint256 _tokenId) internal {
-        StakingStorage storage s = getStorage();
-        StakedTokenInfo storage stake = s.stakedTokens[_tokenAddress][_tokenId];
-
-        uint256 rewards = calculateRewards(_tokenAddress, _tokenId);
-        if (rewards == 0) {
-            return;
-        }
-
-        IERC20(s.rewardToken).transfer(msg.sender, rewards);
-
-        stake.lastClaimedAt = block.timestamp;
-        stake.accumulatedRewards += rewards;
-
-        emit RewardsClaimed(msg.sender, _tokenAddress, _tokenId, rewards);
-    }
-
-    /**
-     * @notice Support Interface to satisfy ERC-165 standard.
-     * @param interfaceId The interface identifier, as specified in ERC-165.
-     * @return True if the contract implements the requested interface.
-     */
-    function supportsInterface(bytes4 interfaceId) external pure returns (bool) {
-        return interfaceId == type(IERC721Receiver).interfaceId || interfaceId == type(IERC1155Receiver).interfaceId;
-    }
+/**
+ * @notice An admin function to set staking parameters.
+ * @param _baseAPR The base annual percentage rate for rewards.
+ * @param _rewardDecayRate The decay rate for rewards over time.
+ * @param _compoundFrequency The frequency at which rewards are compounded.
+ * @param _rewardToken The address of the token used for rewards.
+ * @param _cooldownPeriod The cooldown period before unstaking is allowed.
+ * @param _minStakeAmount The minimum amount required to stake.
+ * @param _maxStakeAmount The maximum amount allowed to stake.
+ * @dev This function should be restricted to admin use only.
+ */
+function setStakingParameters(
+    uint256 _baseAPR,
+    uint256 _rewardDecayRate,
+    uint256 _compoundFrequency,
+    address _rewardToken,
+    uint256 _cooldownPeriod,
+    uint256 _minStakeAmount,
+    uint256 _maxStakeAmount
+) external {
+    StakingStorage storage s = getStorage();
+    s.baseAPR = _baseAPR;
+    s.rewardDecayRate = _rewardDecayRate;
+    s.compoundFrequency = _compoundFrequency;
+    s.rewardToken = _rewardToken;
+    s.cooldownPeriod = _cooldownPeriod;
+    s.minStakeAmount = _minStakeAmount;
+    s.maxStakeAmount = _maxStakeAmount;
 }
+
