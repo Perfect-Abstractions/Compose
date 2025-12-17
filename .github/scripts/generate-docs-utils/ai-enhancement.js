@@ -1,23 +1,11 @@
 /**
- * GitHub Models integration for documentation enhancement
- * Uses Azure AI inference endpoint with GitHub token auth
- * See: https://github.blog/changelog/2025-04-14-github-actions-token-integration-now-generally-available-in-github-models/
+ * AI-powered documentation enhancement
+ * Uses the ai-provider service for multi-provider support
  */
 
 const fs = require('fs');
 const path = require('path');
-const { models: MODELS_CONFIG } = require('./config');
-const { sleep, makeHttpsRequest } = require('../workflow-utils');
-const {
-  estimateTokenUsage,
-  waitForRateLimit,
-  recordTokenConsumption,
-  updateLastTokenConsumption,
-  calculate429WaitTime,
-} = require('./token-rate-limiter');
-
-// Maximum number of times to retry a single request after hitting a 429
-const MAX_RATE_LIMIT_RETRIES = 3;
+const ai = require('../ai-provider');
 
 const AI_PROMPT_PATH = path.join(__dirname, '../../docs-gen-prompts.md');
 const REPO_INSTRUCTIONS_PATH = path.join(__dirname, '../../copilot-instructions.md');
@@ -319,191 +307,44 @@ function extractJSON(content) {
 }
 
 /**
- * Enhance documentation data using GitHub Copilot
+ * Enhance documentation data using AI
  * @param {object} data - Parsed documentation data
  * @param {'module' | 'facet'} contractType - Type of contract
- * @param {string} token - GitHub token
+ * @param {string} token - Legacy token parameter (deprecated, uses env vars now)
  * @returns {Promise<object>} Enhanced data
  */
 async function enhanceWithAI(data, contractType, token) {
-  if (!token) {
-    console.log('    ⚠️ No GitHub token provided, skipping AI enhancement');
-    return addFallbackContent(data, contractType);
-  }
-
-  const systemPrompt = buildSystemPrompt();
-  const userPrompt = buildPrompt(data, contractType);
-  const maxTokens = MODELS_CONFIG.maxTokens;
-
-  // Estimate token usage for this request (for rate limiting)
-  const estimatedTokens = estimateTokenUsage(systemPrompt, userPrompt, maxTokens);
-
-  const requestBody = JSON.stringify({
-    messages: [
-      {
-        role: 'system',
-        content: systemPrompt,
-      },
-      {
-        role: 'user',
-        content: userPrompt,
-      },
-    ],
-    model: MODELS_CONFIG.model,
-    max_tokens: maxTokens,
-  });
-
-  // GitHub Models uses Azure AI inference endpoint
-  // Authentication: GITHUB_TOKEN works directly in GitHub Actions
-  const options = {
-    hostname: MODELS_CONFIG.host,
-    port: 443,
-    path: '/chat/completions',
-    method: 'POST',
-    headers: {
-      'Authorization': `Bearer ${token}`,
-      'Content-Type': 'application/json',
-      'Accept': 'application/json',
-      'User-Agent': 'Compose-DocGen/1.0',
-    },
-  };
-
   try {
-    // Wait for both time-based and token-based rate limits
-    await waitForRateLimit(estimatedTokens);
+    console.log(`    AI Content Enhancement: ${data.title}`);
+    
+    const systemPrompt = buildSystemPrompt();
+    const userPrompt = buildPrompt(data, contractType);
 
-    // Helper to handle a single API call and common response parsing
-    const performApiCall = async () => {
-      const response = await makeHttpsRequest(options, requestBody);
-
-      // Only record token consumption if we got a successful response
-      // (not a 429 or other error that would throw before reaching here)
-      if (response.choices && response.choices[0] && response.choices[0].message) {
-        // Record token consumption (use actual if available, otherwise estimated)
-        if (response.usage && response.usage.total_tokens) {
-          // GitHub Models API provides actual usage - use it for more accurate tracking
-          const actualTokens = response.usage.total_tokens;
-          recordTokenConsumption(actualTokens);
-          console.log(`    📊 Actual token usage: ${actualTokens} tokens`);
-        } else {
-          // Fallback to estimated tokens if API doesn't provide usage
-          recordTokenConsumption(estimatedTokens);
-          console.log(`    📊 Estimated token usage: ${estimatedTokens} tokens`);
-        }
-        
-        const content = response.choices[0].message.content;
-        
-        // Debug: Log full response content
-        console.log('    📋 Full API response content:');
-        console.log('    ' + '='.repeat(80));
-        console.log(content);
-        console.log('    ' + '='.repeat(80));
-        console.log('    Response length:', content.length, 'chars');
-        console.log('    First 100 chars:', JSON.stringify(content.substring(0, 100)));
-        console.log('    Last 100 chars:', JSON.stringify(content.substring(Math.max(0, content.length - 100))));
-        
-        try {
-          // First, try to parse directly (most responses should be valid JSON)
-          let enhanced;
-          try {
-            enhanced = JSON.parse(content);
-            console.log('✅ AI enhancement successful (direct parse)');
-          } catch (directParseError) {
-            // If direct parse fails, try to extract and clean JSON
-            console.log('    Direct parse failed, attempting to extract JSON...');
-            const cleanedContent = extractJSON(content);
-            console.log('    Cleaned content length:', cleanedContent.length, 'chars');
-            
-            enhanced = JSON.parse(cleanedContent);
-            console.log('✅ AI enhancement successful (after extraction)');
-          }
-          
-          return convertEnhancedFields(enhanced, data);
-        } catch (parseError) {
-          console.log('    ⚠️ Could not parse API response as JSON');
-          console.log('    Parse error:', parseError.message);
-          
-          // As a last resort, try one more time with extraction
-          try {
-            const cleanedContent = extractJSON(content);
-            console.log('    Attempting final parse with extracted JSON...');
-            const enhanced = JSON.parse(cleanedContent);
-            console.log('✅ AI enhancement successful (final attempt with extraction)');
-            
-            return convertEnhancedFields(enhanced, data);
-          } catch (finalError) {
-            console.log('    Final parse attempt also failed:', finalError.message);
-            console.log('    Error position:', finalError.message.match(/position (\d+)/)?.[1] || 'unknown');
-            
-            // Show debugging info
-            try {
-              const cleanedContent = extractJSON(content);
-              console.log('    Cleaned content (first 500 chars):', JSON.stringify(cleanedContent.substring(0, 500)));
-              console.log('    Cleaned content (last 500 chars):', JSON.stringify(cleanedContent.substring(Math.max(0, cleanedContent.length - 500))));
-              
-              // Try to find the error position in cleaned content
-              const errorPosMatch = finalError.message.match(/position (\d+)/);
-              if (errorPosMatch) {
-                const errorPos = parseInt(errorPosMatch[1], 10);
-                const start = Math.max(0, errorPos - 50);
-                const end = Math.min(cleanedContent.length, errorPos + 50);
-                console.log('    Error context (chars ' + start + '-' + end + '):', JSON.stringify(cleanedContent.substring(start, end)));
-              }
-            } catch (e) {
-              console.log('    Could not extract/clean content:', e.message);
-            }
-          }
-          
-          return addFallbackContent(data, contractType);
-        }
+    // Call AI provider
+    const responseText = await ai.call(systemPrompt, userPrompt, {
+      onSuccess: (text, tokens) => {
+        console.log(`    ✅ AI enhancement complete (${tokens} tokens)`);
+      },
+      onError: (error) => {
+        console.log(`    ⚠️ AI call failed: ${error.message}`);
       }
+    });
 
-      console.log('    ⚠️ Unexpected API response format');
-      console.log('    Response structure:', JSON.stringify(response, null, 2).substring(0, 1000));
-      return addFallbackContent(data, contractType);
-    };
-
-    let attempt = 0;
-    // Retry loop for handling minute-token 429s while still eventually
-    // progressing through all files in the run.
-    // We calculate the exact wait time based on when tokens will be available.
-    // eslint-disable-next-line no-constant-condition
-    while (true) {
-      try {
-        return await performApiCall();
-      } catch (error) {
-        const msg = error && error.message ? error.message : '';
-
-        // Detect GitHub Models minute-token rate limit (HTTP 429)
-        if (msg.startsWith('HTTP 429:') && attempt < MAX_RATE_LIMIT_RETRIES) {
-          attempt += 1;
-          
-          // Calculate smart wait time based on token budget
-          const waitTime = calculate429WaitTime(estimatedTokens);
-          const waitSeconds = Math.ceil(waitTime / 1000);
-          
-          console.log(
-            `    ⚠️ GitHub Models rate limit reached (minute tokens). ` +
-            `Waiting ${waitSeconds}s for token budget to reset (retry ${attempt}/${MAX_RATE_LIMIT_RETRIES})...`
-          );
-          await sleep(waitTime);
-          
-          // Re-check rate limit before retrying
-          await waitForRateLimit(estimatedTokens);
-          continue;
-        }
-
-        if (msg.startsWith('HTTP 429:')) {
-          console.log('    ⚠️ Rate limit persisted after maximum retries, using fallback content');
-        } else {
-          console.log(`    ⚠️ GitHub Models API error: ${msg}`);
-        }
-
-        return addFallbackContent(data, contractType);
-      }
+    // Parse JSON response
+    let enhanced;
+    try {
+      enhanced = JSON.parse(responseText);
+      console.log('    ✅ JSON parsed successfully');
+    } catch (directParseError) {
+      const cleanedContent = extractJSON(responseText);
+      enhanced = JSON.parse(cleanedContent);
+      console.log('    ✅ JSON extracted and parsed');
     }
-  } catch (outerError) {
-    console.log(`    ⚠️ GitHub Models API error (outer): ${outerError.message}`);
+
+    return convertEnhancedFields(enhanced, data);
+
+  } catch (error) {
+    console.log(`    ⚠️ Enhancement failed for ${data.title}: ${error.message}`);
     return addFallbackContent(data, contractType);
   }
 }
@@ -517,7 +358,7 @@ async function enhanceWithAI(data, contractType, token) {
 function addFallbackContent(data, contractType) {
   console.log('    Using fallback content');
 
-  const enhanced = { ...data };
+  const enhanced = { ...data }
 
   if (contractType === 'module') {
     enhanced.integrationNotes = AI_PROMPTS.moduleFallback.integrationNotes ||
