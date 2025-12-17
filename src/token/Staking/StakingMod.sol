@@ -8,6 +8,9 @@ pragma solidity >=0.8.30;
  * @dev Uses ERC-8042 for storage location standardization.
  */
 
+/**
+ * @dev Storage position constant defined via keccak256 hash of diamond storage identifier.
+ */
 bytes32 constant STAKING_STORAGE_POSITION = keccak256("compose.staking");
 
 /**
@@ -58,7 +61,7 @@ struct StakingStorage {
  * @dev Uses inline assembly to access diamond storage location.
  * @return s The storage reference to StakingStorage.
  */
-function getStorage() internal pure returns (StakingStorage storage s) {
+function getStorage() pure returns (StakingStorage storage s) {
     bytes32 position = STAKING_STORAGE_POSITION;
     assembly {
         s.slot := position
@@ -97,7 +100,7 @@ function setStakingParameters(
     uint256 _cooldownPeriod,
     uint256 _minStakeAmount,
     uint256 _maxStakeAmount
-) external {
+) {
     StakingStorage storage s = getStorage();
     s.baseAPR = _baseAPR;
     s.rewardDecayRate = _rewardDecayRate;
