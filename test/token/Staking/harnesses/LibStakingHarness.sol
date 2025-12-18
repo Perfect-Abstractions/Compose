@@ -64,4 +64,15 @@ contract LibStakingHarness {
     {
         return StakingMod.getStakingParameters();
     }
+
+    /**
+     * @notice Exposes StakingMod.getStakedTokenInfo as an external function
+     */
+    function getStakedTokenInfo(address _tokenAddress, uint256 _tokenId)
+        external
+        view
+        returns (uint256, uint256, uint256, uint256)
+    {
+        return StakingMod.getStakedTokenInfo(_tokenAddress, _tokenId);
+    }
 }

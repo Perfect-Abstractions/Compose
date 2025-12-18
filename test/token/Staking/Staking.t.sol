@@ -104,4 +104,43 @@ contract StakingTest is Test {
         assertEq(minStakeAmount, MIN_STAKE_AMOUNT);
         assertEq(maxStakeAmount, MAX_STAKE_AMOUNT);
     }
+
+    function test_StakeERC20UpdatesState() public {
+        uint256 stakeAmount = 100 ether;
+
+        // Stake ERC-20 tokens
+        staking.stakeERC20(address(erc20Token), stakeAmount);
+
+        (uint256 amount,,,) = staking.getStakedTokenInfo(address(erc20Token), 0);
+
+        assertEq(amount, stakeAmount);
+    }
+
+    function test_StakeERC721UpdatesState() public {
+        // Mint an ERC-721 token to Alice
+        erc721Token.mint(alice, TOKEN_ID_1);
+
+        // Stake ERC-721 token
+        vm.prank(alice);
+        staking.stakeERC721(address(erc721Token), TOKEN_ID_1);
+
+        (uint256 amount,,,) = staking.getStakedTokenInfo(address(erc721Token), TOKEN_ID_1);
+
+        assertEq(amount, 1);
+    }
+
+    function test_StakeERC1155UpdatesState() public {
+        uint256 stakeAmount = 10;
+
+        // Mint ERC-1155 tokens to Bob
+        erc1155Token.mint(bob, TOKEN_ID_2, stakeAmount);
+
+        // Stake ERC-1155 tokens
+        vm.prank(bob);
+        staking.stakeERC1155(address(erc1155Token), TOKEN_ID_2, stakeAmount);
+
+        (uint256 amount,,,) = staking.getStakedTokenInfo(address(erc1155Token), TOKEN_ID_2);
+
+        assertEq(amount, stakeAmount);
+    }
 }
