@@ -9,6 +9,42 @@ pragma solidity >=0.8.30;
  */
 
 /**
+ * @notice Thrown when attempting to stake an unsupported token type.
+ * @param tokenAddress The address of the unsupported token.
+ */
+error StakingUnsupportedToken(address tokenAddress);
+
+/**
+ * @notice Thrown when attempting to stake a zero amount.
+ */
+error StakingZeroStakeAmount();
+
+/**
+ * @notice Emitted when staking parameters are updated.
+ * @param baseAPR The base annual percentage rate for rewards.
+ * @param rewardDecayRate The decay rate for rewards over time.
+ * @param compoundFrequency The frequency at which rewards are compounded.
+ * @param rewardToken The address of the token used for rewards.
+ * @param cooldownPeriod The cooldown period before unstaking is allowed.
+ * @param minStakeAmount The minimum amount required to stake.
+ * @param maxStakeAmount The maximum amount allowed to stake.
+ */
+event StakingParametersUpdated(
+    uint256 baseAPR,
+    uint256 rewardDecayRate,
+    uint256 compoundFrequency,
+    address rewardToken,
+    uint256 cooldownPeriod,
+    uint256 minStakeAmount,
+    uint256 maxStakeAmount
+);
+
+/**
+ * @notice Emitted when supported token types are added.
+ */
+event SupportedTokenAdded(address indexed tokenAddress, bool isERC20, bool isERC721, bool isERC1155);
+
+/**
  * @dev Storage position constant defined via keccak256 hash of diamond storage identifier.
  */
 bytes32 constant STAKING_STORAGE_POSITION = keccak256("compose.staking");
@@ -76,9 +112,13 @@ function getStorage() pure returns (StakingStorage storage s) {
  * @param _isERC1155 Boolean indicating if the token is ERC-1155
  * @dev This function should be restricted to admin use only.
  */
-function addSupportedToken(address _tokenAddress, bool _isERC20, bool _isERC721, bool _isERC1155) {
+function addSupportedToken(address _tokenAddress, bool _isERC20, bool _isERC721, bool _isERC1155) returns (bool) {
     StakingStorage storage s = getStorage();
     s.supportedTokens[_tokenAddress] = TokenType({isERC20: _isERC20, isERC721: _isERC721, isERC1155: _isERC1155});
+
+    emit SupportedTokenAdded(_tokenAddress, _isERC20, _isERC721, _isERC1155);
+
+    return true;
 }
 
 /**
@@ -102,6 +142,16 @@ function setStakingParameters(
     uint256 _maxStakeAmount
 ) {
     StakingStorage storage s = getStorage();
+
+    bool isSupported = isTokenSupported(_rewardToken);
+    if (!isSupported) {
+        revert StakingUnsupportedToken(_rewardToken);
+    }
+
+    if (_minStakeAmount == 0 || _maxStakeAmount == 0) {
+        revert StakingZeroStakeAmount();
+    }
+
     s.baseAPR = _baseAPR;
     s.rewardDecayRate = _rewardDecayRate;
     s.compoundFrequency = _compoundFrequency;
@@ -109,6 +159,10 @@ function setStakingParameters(
     s.cooldownPeriod = _cooldownPeriod;
     s.minStakeAmount = _minStakeAmount;
     s.maxStakeAmount = _maxStakeAmount;
+
+    emit StakingParametersUpdated(
+        _baseAPR, _rewardDecayRate, _compoundFrequency, _rewardToken, _cooldownPeriod, _minStakeAmount, _maxStakeAmount
+    );
 }
 
 /**
@@ -213,4 +267,15 @@ function getStakedTokenInfo(address _tokenAddress, uint256 _tokenId)
     StakingStorage storage s = getStorage();
     StakedTokenInfo storage stake = s.stakedTokens[_tokenAddress][_tokenId];
     return (stake.amount, stake.stakedAt, stake.lastClaimedAt, stake.accumulatedRewards);
+}
+
+/**
+ * @notice Retrieve supported token types
+ * @param _tokenAddress The address of the token.
+ * @return true if the token is supported, false otherwise.
+ */
+function isTokenSupported(address _tokenAddress) view returns (bool) {
+    StakingStorage storage s = getStorage();
+    TokenType storage tokenType = s.supportedTokens[_tokenAddress];
+    return tokenType.isERC20 || tokenType.isERC721 || tokenType.isERC1155;
 }

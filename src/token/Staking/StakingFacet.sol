@@ -109,11 +109,6 @@ interface IERC1155Receiver {
  */
 contract StakingFacet {
     /**
-     * @title LibStaking - Standard Staking Library
-     * @notice Provides internal functions and storage layout for staking ERC-20, ERC-721, and ERC-1155 tokens.
-     * @dev Uses ERC-8042 for storage location standardization.
-     */
-    /**
      * @notice Thrown when attempting to stake an unsupported token type.
      * @param tokenAddress The address of the unsupported token.
      */
@@ -188,6 +183,31 @@ contract StakingFacet {
      * @param _needed Amount required to complete the operation.
      */
     error StakingInsufficientAllowance(address _spender, uint256 _allowance, uint256 _needed);
+
+    /**
+     * @notice Emitted when staking parameters are updated.
+     * @param baseAPR The base annual percentage rate for rewards.
+     * @param rewardDecayRate The decay rate for rewards over time.
+     * @param compoundFrequency The frequency at which rewards are compounded.
+     * @param rewardToken The address of the token used for rewards.
+     * @param cooldownPeriod The cooldown period before unstaking is allowed.
+     * @param minStakeAmount The minimum amount required to stake.
+     * @param maxStakeAmount The maximum amount allowed to stake.
+     */
+    event StakingParametersUpdated(
+        uint256 baseAPR,
+        uint256 rewardDecayRate,
+        uint256 compoundFrequency,
+        address rewardToken,
+        uint256 cooldownPeriod,
+        uint256 minStakeAmount,
+        uint256 maxStakeAmount
+    );
+
+    /**
+     * @notice Emitted when supported token types are added.
+     */
+    event SupportedTokenAdded(address indexed tokenAddress, bool isERC20, bool isERC721, bool isERC1155);
 
     /**
      * @notice Emitted when tokens are successfully staked.
@@ -314,14 +334,16 @@ contract StakingFacet {
 
         if (s.supportedTokens[_tokenAddress].isERC20) {
             IERC20(_tokenAddress).transferFrom(msg.sender, address(this), _amount);
-            _stakeERC20(_tokenAddress, _amount);
+            stakeERC20(_tokenAddress, _amount);
         } else if (s.supportedTokens[_tokenAddress].isERC721) {
             IERC721(_tokenAddress).safeTransferFrom(msg.sender, address(this), _tokenId);
-            _stakeERC721(_tokenAddress, _tokenId);
+            stakeERC721(_tokenAddress, _tokenId);
         } else if (s.supportedTokens[_tokenAddress].isERC1155) {
             IERC1155(_tokenAddress).safeTransferFrom(msg.sender, address(this), _tokenId, _amount, "");
-            _stakeERC1155(_tokenAddress, _tokenId, _amount);
+            stakeERC1155(_tokenAddress, _tokenId, _amount);
         }
+
+        emit TokensStaked(msg.sender, _tokenAddress, _tokenId, _amount);
     }
 
     /**
@@ -356,9 +378,10 @@ contract StakingFacet {
         }
 
         s.totalStakedPerToken[_tokenAddress] -= amount;
-        delete s.stakedTokens[_tokenAddress][_tokenId];
 
         emit TokensUnstaked(msg.sender, _tokenAddress, _tokenId, amount);
+
+        delete s.stakedTokens[_tokenAddress][_tokenId];
     }
 
     /**
@@ -369,9 +392,14 @@ contract StakingFacet {
      * @param _isERC1155 Boolean indicating if the token is ERC-1155
      * @dev This function should be restricted to admin use only.
      */
-    function addSupportedToken(address _tokenAddress, bool _isERC20, bool _isERC721, bool _isERC1155) external {
+    function addSupportedToken(address _tokenAddress, bool _isERC20, bool _isERC721, bool _isERC1155)
+        external
+        returns (bool)
+    {
         StakingStorage storage s = getStorage();
         s.supportedTokens[_tokenAddress] = TokenType({isERC20: _isERC20, isERC721: _isERC721, isERC1155: _isERC1155});
+        emit SupportedTokenAdded(_tokenAddress, _isERC20, _isERC721, _isERC1155);
+        return true;
     }
 
     /**
@@ -395,6 +423,16 @@ contract StakingFacet {
         uint256 _maxStakeAmount
     ) external {
         StakingStorage storage s = getStorage();
+
+        bool isSupported = isTokenSupported(_rewardToken);
+        if (!isSupported) {
+            revert StakingUnsupportedToken(_rewardToken);
+        }
+
+        if (_minStakeAmount == 0 || _maxStakeAmount == 0) {
+            revert StakingZeroStakeAmount();
+        }
+
         s.baseAPR = _baseAPR;
         s.rewardDecayRate = _rewardDecayRate;
         s.compoundFrequency = _compoundFrequency;
@@ -402,6 +440,70 @@ contract StakingFacet {
         s.cooldownPeriod = _cooldownPeriod;
         s.minStakeAmount = _minStakeAmount;
         s.maxStakeAmount = _maxStakeAmount;
+
+        emit StakingParametersUpdated(
+            _baseAPR,
+            _rewardDecayRate,
+            _compoundFrequency,
+            _rewardToken,
+            _cooldownPeriod,
+            _minStakeAmount,
+            _maxStakeAmount
+        );
+    }
+
+    /**
+     * @notice Retrieve staking parameters
+     * @return baseAPR The base annual percentage rate for rewards.
+     * @return rewardDecayRate The decay rate for rewards over time.
+     * @return compoundFrequency The frequency at which rewards are compounded.
+     * @return rewardToken The address of the token used for rewards.
+     * @return cooldownPeriod The cooldown period before unstaking is allowed.
+     * @return minStakeAmount The minimum amount required to stake.
+     * @return maxStakeAmount The maximum amount allowed to stake.
+     */
+    function getStakingParameters()
+        external
+        view
+        returns (
+            uint256 baseAPR,
+            uint256 rewardDecayRate,
+            uint256 compoundFrequency,
+            address rewardToken,
+            uint256 cooldownPeriod,
+            uint256 minStakeAmount,
+            uint256 maxStakeAmount
+        )
+    {
+        StakingStorage storage s = getStorage();
+        return (
+            s.baseAPR,
+            s.rewardDecayRate,
+            s.compoundFrequency,
+            s.rewardToken,
+            s.cooldownPeriod,
+            s.minStakeAmount,
+            s.maxStakeAmount
+        );
+    }
+
+    /**
+     * @notice Retrieve staked token info for ERC-20, ERC-721, or ERC-1155 tokens
+     * @param _tokenAddress The address of the token.
+     * @param _tokenId The ID of the token (0 for ERC-20).
+     * @return amount The amount of tokens staked.
+     * @return stakedAt The timestamp when the tokens were staked.
+     * @return lastClaimedAt The timestamp when rewards were last claimed.
+     * @return accumulatedRewards The total accumulated rewards for the staked tokens.
+     */
+    function getStakedTokenInfo(address _tokenAddress, uint256 _tokenId)
+        external
+        view
+        returns (uint256 amount, uint256 stakedAt, uint256 lastClaimedAt, uint256 accumulatedRewards)
+    {
+        StakingStorage storage s = getStorage();
+        StakedTokenInfo storage stake = s.stakedTokens[_tokenAddress][_tokenId];
+        return (stake.amount, stake.stakedAt, stake.lastClaimedAt, stake.accumulatedRewards);
     }
 
     /**
@@ -420,7 +522,7 @@ contract StakingFacet {
      * @param _tokenAddress The address of the ERC-20 token to stake.
      * @param _value The amount of tokens to stake.
      */
-    function _stakeERC20(address _tokenAddress, uint256 _value) internal {
+    function stakeERC20(address _tokenAddress, uint256 _value) internal {
         StakingStorage storage s = getStorage();
         StakedTokenInfo storage stake = s.stakedTokens[_tokenAddress][0];
 
@@ -437,7 +539,7 @@ contract StakingFacet {
      * @param _tokenAddress The address of the ERC-721 token to stake.
      * @param _tokenId The ID of the token to stake.
      */
-    function _stakeERC721(address _tokenAddress, uint256 _tokenId) internal {
+    function stakeERC721(address _tokenAddress, uint256 _tokenId) internal {
         StakingStorage storage s = getStorage();
         StakedTokenInfo storage stake = s.stakedTokens[_tokenAddress][_tokenId];
 
@@ -455,7 +557,7 @@ contract StakingFacet {
      * @param _tokenId The ID of the token to stake.
      * @param _value The amount of tokens to stake.
      */
-    function _stakeERC1155(address _tokenAddress, uint256 _tokenId, uint256 _value) internal {
+    function stakeERC1155(address _tokenAddress, uint256 _tokenId, uint256 _value) internal {
         StakingStorage storage s = getStorage();
         StakedTokenInfo storage stake = s.stakedTokens[_tokenAddress][_tokenId];
 

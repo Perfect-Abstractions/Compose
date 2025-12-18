@@ -34,6 +34,13 @@ contract LibStakingHarness {
     }
 
     /**
+     * @notice Exposes StakingMod.addSupportedToken as an external function
+     */
+    function addSupportedToken(address _tokenAddress, bool _isERC20, bool _isERC721, bool _isERC1155) external {
+        StakingMod.addSupportedToken(_tokenAddress, _isERC20, _isERC721, _isERC1155);
+    }
+
+    /**
      * @notice Exposes StakingMod._stakeERC20 as an external function
      */
     function stakeERC20(address _tokenAddress, uint256 _value) external {
@@ -74,5 +81,12 @@ contract LibStakingHarness {
         returns (uint256, uint256, uint256, uint256)
     {
         return StakingMod.getStakedTokenInfo(_tokenAddress, _tokenId);
+    }
+
+    /**
+     * @notice Exposes StakingMod.isSupportedToken as an external function
+     */
+    function isSupportedToken(address _tokenAddress) external view returns (bool) {
+        return StakingMod.isTokenSupported(_tokenAddress);
     }
 }
