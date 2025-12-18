@@ -111,3 +111,55 @@ function setStakingParameters(
     s.maxStakeAmount = _maxStakeAmount;
 }
 
+/**
+ * @notice Stake ERC-20 tokens
+ * @dev Transfers token from the user and updates the amount staked and staking info.
+ * @param _tokenAddress The address of the ERC-20 token to stake.
+ * @param _value The amount of tokens to stake.
+ */
+function _stakeERC20(address _tokenAddress, uint256 _value) {
+    StakingStorage storage s = getStorage();
+    StakedTokenInfo storage stake = s.stakedTokens[_tokenAddress][0];
+
+    stake.amount += _value;
+    stake.stakedAt = block.timestamp;
+    stake.lastClaimedAt = block.timestamp;
+
+    s.totalStakedPerToken[_tokenAddress] += _value;
+}
+
+/**
+ * @notice Stake ERC-721 tokens
+ * @dev Transfers token from the user and updates the amount staked and staking info.
+ * @param _tokenAddress The address of the ERC-721 token to stake.
+ * @param _tokenId The ID of the token to stake.
+ */
+function _stakeERC721(address _tokenAddress, uint256 _tokenId) {
+    StakingStorage storage s = getStorage();
+    StakedTokenInfo storage stake = s.stakedTokens[_tokenAddress][_tokenId];
+
+    stake.amount = 1;
+    stake.stakedAt = block.timestamp;
+    stake.lastClaimedAt = block.timestamp;
+
+    s.totalStakedPerToken[_tokenAddress] += 1;
+}
+
+/**
+ * @notice Stake ERC-1155 tokens
+ * @dev Transfers token from the user and updates the amount staked and staking info.
+ * @param _tokenAddress The address of the ERC-1155 token to stake.
+ * @param _tokenId The ID of the token to stake.
+ * @param _value The amount of tokens to stake.
+ */
+function _stakeERC1155(address _tokenAddress, uint256 _tokenId, uint256 _value) {
+    StakingStorage storage s = getStorage();
+    StakedTokenInfo storage stake = s.stakedTokens[_tokenAddress][_tokenId];
+
+    stake.amount += _value;
+    stake.stakedAt = block.timestamp;
+    stake.lastClaimedAt = block.timestamp;
+
+    s.totalStakedPerToken[_tokenAddress] += _value;
+}
+
