@@ -117,7 +117,7 @@ function setStakingParameters(
  * @param _tokenAddress The address of the ERC-20 token to stake.
  * @param _value The amount of tokens to stake.
  */
-function _stakeERC20(address _tokenAddress, uint256 _value) {
+function stakeERC20(address _tokenAddress, uint256 _value) {
     StakingStorage storage s = getStorage();
     StakedTokenInfo storage stake = s.stakedTokens[_tokenAddress][0];
 
@@ -134,7 +134,7 @@ function _stakeERC20(address _tokenAddress, uint256 _value) {
  * @param _tokenAddress The address of the ERC-721 token to stake.
  * @param _tokenId The ID of the token to stake.
  */
-function _stakeERC721(address _tokenAddress, uint256 _tokenId) {
+function stakeERC721(address _tokenAddress, uint256 _tokenId) {
     StakingStorage storage s = getStorage();
     StakedTokenInfo storage stake = s.stakedTokens[_tokenAddress][_tokenId];
 
@@ -152,7 +152,7 @@ function _stakeERC721(address _tokenAddress, uint256 _tokenId) {
  * @param _tokenId The ID of the token to stake.
  * @param _value The amount of tokens to stake.
  */
-function _stakeERC1155(address _tokenAddress, uint256 _tokenId, uint256 _value) {
+function stakeERC1155(address _tokenAddress, uint256 _tokenId, uint256 _value) {
     StakingStorage storage s = getStorage();
     StakedTokenInfo storage stake = s.stakedTokens[_tokenAddress][_tokenId];
 
@@ -163,3 +163,54 @@ function _stakeERC1155(address _tokenAddress, uint256 _tokenId, uint256 _value) 
     s.totalStakedPerToken[_tokenAddress] += _value;
 }
 
+/**
+ * @notice Retrieve staking parameters
+ * @return baseAPR The base annual percentage rate for rewards.
+ * @return rewardDecayRate The decay rate for rewards over time.
+ * @return compoundFrequency The frequency at which rewards are compounded.
+ * @return rewardToken The address of the token used for rewards.
+ * @return cooldownPeriod The cooldown period before unstaking is allowed.
+ * @return minStakeAmount The minimum amount required to stake.
+ * @return maxStakeAmount The maximum amount allowed to stake.
+ */
+function getStakingParameters()
+    view
+    returns (
+        uint256 baseAPR,
+        uint256 rewardDecayRate,
+        uint256 compoundFrequency,
+        address rewardToken,
+        uint256 cooldownPeriod,
+        uint256 minStakeAmount,
+        uint256 maxStakeAmount
+    )
+{
+    StakingStorage storage s = getStorage();
+    return (
+        s.baseAPR,
+        s.rewardDecayRate,
+        s.compoundFrequency,
+        s.rewardToken,
+        s.cooldownPeriod,
+        s.minStakeAmount,
+        s.maxStakeAmount
+    );
+}
+
+/**
+ * @notice Retrieve staked token info for ERC-20, ERC-721, or ERC-1155 tokens
+ * @param _tokenAddress The address of the token.
+ * @param _tokenId The ID of the token (0 for ERC-20).
+ * @return amount The amount of tokens staked.
+ * @return stakedAt The timestamp when the tokens were staked.
+ * @return lastClaimedAt The timestamp when rewards were last claimed.
+ * @return accumulatedRewards The total accumulated rewards for the staked tokens.
+ */
+function getStakedTokenInfo(address _tokenAddress, uint256 _tokenId)
+    view
+    returns (uint256 amount, uint256 stakedAt, uint256 lastClaimedAt, uint256 accumulatedRewards)
+{
+    StakingStorage storage s = getStorage();
+    StakedTokenInfo storage stake = s.stakedTokens[_tokenAddress][_tokenId];
+    return (stake.amount, stake.stakedAt, stake.lastClaimedAt, stake.accumulatedRewards);
+}
