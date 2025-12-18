@@ -137,14 +137,14 @@ contract ERC4626Facet {
              * prod0: a * b (mod 2**256)
              * prod1: (a * b - prod0)/2**256
              */
-            let mm := mulmod(a, b, not(0))
             /**
              * Full-width mulmod for high bits
              */
-            prod0 := mul(a, b)
+            let mm := mulmod(a, b, not(0))
             /**
              * Standard multiplication for low bits
              */
+            prod0 := mul(a, b)
             /**
              * Derive prod1 using differences and underflow detection (see muldiv reference).
              */
@@ -239,7 +239,7 @@ contract ERC4626Facet {
          */
         inv *= 2 - denominator * inv;
         /**
-         * nverse mod 2^256
+         * inverse mod 2^256
          */
 
         /**
@@ -329,7 +329,7 @@ contract ERC4626Facet {
     /**
      * @notice Returns the maximum depositable amount.
      */
-    function maxDeposit() external pure returns (uint256) {
+    function maxDeposit(address receiver) external pure returns (uint256) {
         return type(uint256).max;
     }
 
@@ -375,7 +375,7 @@ contract ERC4626Facet {
     /**
      * @notice Returns the maximum shares that can be minted.
      */
-    function maxMint() external pure returns (uint256) {
+    function maxMint(address receiver) external pure returns (uint256) {
         return type(uint256).max;
     }
 

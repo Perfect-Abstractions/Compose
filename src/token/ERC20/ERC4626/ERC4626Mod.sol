@@ -223,7 +223,7 @@ function convertToAssets(uint256 shares) view returns (uint256) {
 /**
  * @dev Maximum possible deposit allowed for this vault.
  */
-function maxDeposit() pure returns (uint256) {
+function maxDeposit(address receiver) pure returns (uint256) {
     return type(uint256).max;
 }
 
@@ -301,7 +301,7 @@ function deposit(uint256 assets, address receiver) returns (uint256) {
 /**
  * @dev Return the max number of shares that can be minted.
  */
-function maxMint() pure returns (uint256) {
+function maxMint(address receiver) pure returns (uint256) {
     return type(uint256).max;
 }
 
