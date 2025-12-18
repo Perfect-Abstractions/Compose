@@ -38,7 +38,7 @@ bytes32 constant ERC20_STORAGE_POSITION = keccak256("compose.erc20");
 bytes32 constant STORAGE_POSITION = keccak256("compose.erc4626");
 
 uint256 constant VIRTUAL_ASSET = 1;
-uint256 constant VIRTUAL_SHARE = 1;
+uint256 constant VIRTUAL_SHARE = 1e1;
 
 /**
  * @dev Storage for ERC20 logic.

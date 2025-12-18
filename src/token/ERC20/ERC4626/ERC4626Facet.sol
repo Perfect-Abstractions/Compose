@@ -46,7 +46,7 @@ contract ERC4626Facet {
     bytes32 constant STORAGE_POSITION = keccak256("compose.erc4626");
 
     uint256 constant VIRTUAL_ASSET = 1;
-    uint256 constant VIRTUAL_SHARE = 1;
+    uint256 constant VIRTUAL_SHARE = 1e1;
 
     /**
      * @dev ERC20 storage layout.
