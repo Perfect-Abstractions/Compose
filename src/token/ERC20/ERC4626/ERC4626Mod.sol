@@ -57,7 +57,6 @@ struct ERC20Storage {
  */
 struct ERC4626Storage {
     IERC20 asset;
-    address vaultAddress;
 }
 
 /**
@@ -93,14 +92,18 @@ function asset() view returns (address) {
  */
 function totalAssets() view returns (uint256) {
     ERC4626Storage storage s = getStorage();
-    return s.asset.balanceOf(s.vaultAddress) + VIRTUAL_ASSET;
+    address diamondAddress;
+    assembly {
+        diamondAddress := address()
+    }
+    return s.asset.balanceOf(diamondAddress) + VIRTUAL_ASSET;
 }
 
 /**
  * @dev Compute (a * b) / denominator, using full precision and safe for overflow.
  *      Reference: https://xn--2-umb.com/21/muldiv/
  */
-function muldiv(uint256 a, uint256 b, uint256 denominator) view returns (uint256 result) {
+function muldiv(uint256 a, uint256 b, uint256 denominator) pure returns (uint256 result) {
     /**
      * Guard: denominator can't be zero
      */
@@ -108,9 +111,7 @@ function muldiv(uint256 a, uint256 b, uint256 denominator) view returns (uint256
 
     uint256 prod0;
     uint256 prod1;
-    /**
-     * b
-     */
+
     assembly {
         let mm := mulmod(a, b, not(0))
         prod0 := mul(a, b)
@@ -180,7 +181,7 @@ function muldiv(uint256 a, uint256 b, uint256 denominator) view returns (uint256
 /**
  * @dev Compute muldiv and round up the result if remainder exists.
  */
-function mulDivRoundingUp(uint256 a, uint256 b, uint256 denominator) view returns (uint256 result) {
+function mulDivRoundingUp(uint256 a, uint256 b, uint256 denominator) pure returns (uint256 result) {
     result = muldiv(a, b, denominator);
     if (mulmod(a, b, denominator) > 0) {
         require(result < type(uint256).max);
@@ -204,7 +205,11 @@ function convertToShares(uint256 assets) view returns (uint256) {
     ERC20Storage storage erc20s = getERC20Storage();
     uint256 totalShares_ = erc20s.totalSupply + VIRTUAL_SHARE;
     ERC4626Storage storage s = getStorage();
-    uint256 totalAssets_ = s.asset.balanceOf(s.vaultAddress) + VIRTUAL_ASSET;
+    address diamondAddress;
+    assembly {
+        diamondAddress := address()
+    }
+    uint256 totalAssets_ = s.asset.balanceOf(diamondAddress) + VIRTUAL_ASSET;
     return muldiv(totalShares_, assets, totalAssets_);
 }
 
@@ -216,14 +221,25 @@ function convertToAssets(uint256 shares) view returns (uint256) {
     ERC20Storage storage erc20s = getERC20Storage();
     uint256 totalShares_ = erc20s.totalSupply + VIRTUAL_SHARE;
     ERC4626Storage storage s = getStorage();
-    uint256 totalAssets_ = s.asset.balanceOf(s.vaultAddress) + VIRTUAL_ASSET;
+    address diamondAddress;
+    assembly {
+        diamondAddress := address()
+    }
+    uint256 totalAssets_ = s.asset.balanceOf(diamondAddress) + VIRTUAL_ASSET;
     return muldiv(totalAssets_, shares, totalShares_);
 }
 
 /**
  * @dev Maximum possible deposit allowed for this vault.
  */
-function maxDeposit(address receiver) pure returns (uint256) {
+function maxDeposit(
+    /**
+     * address receiver
+     */
+)
+    pure
+    returns (uint256)
+{
     return type(uint256).max;
 }
 
@@ -235,7 +251,11 @@ function previewDeposit(uint256 assets) view returns (uint256) {
     ERC20Storage storage erc20s = getERC20Storage();
     uint256 totalShares_ = erc20s.totalSupply + VIRTUAL_SHARE;
     ERC4626Storage storage s = getStorage();
-    uint256 totalAssets_ = s.asset.balanceOf(s.vaultAddress) + VIRTUAL_ASSET;
+    address diamondAddress;
+    assembly {
+        diamondAddress := address()
+    }
+    uint256 totalAssets_ = s.asset.balanceOf(diamondAddress) + VIRTUAL_ASSET;
     return muldiv(totalShares_, assets, totalAssets_);
 }
 
@@ -284,11 +304,15 @@ function deposit(uint256 assets, address receiver) returns (uint256) {
     ERC20Storage storage erc20s = getERC20Storage();
     uint256 totalShares_ = erc20s.totalSupply + VIRTUAL_SHARE;
     ERC4626Storage storage s = getStorage();
-    uint256 totalAssets_ = s.asset.balanceOf(s.vaultAddress) + VIRTUAL_ASSET;
+    address diamondAddress;
+    assembly {
+        diamondAddress := address()
+    }
+    uint256 totalAssets_ = s.asset.balanceOf(diamondAddress) + VIRTUAL_ASSET;
     uint256 shares = muldiv(totalShares_, assets, totalAssets_);
 
     if (shares == 0) revert ERC4626InsufficientShares();
-    bool success = _safeTransferFrom(s.asset, msg.sender, s.vaultAddress, assets);
+    bool success = _safeTransferFrom(s.asset, msg.sender, diamondAddress, assets);
     if (!success) revert ERC4626TransferFailed();
 
     erc20s.totalSupply += shares;
@@ -301,7 +325,14 @@ function deposit(uint256 assets, address receiver) returns (uint256) {
 /**
  * @dev Return the max number of shares that can be minted.
  */
-function maxMint(address receiver) pure returns (uint256) {
+function maxMint(
+    /**
+     * address receiver
+     */
+)
+    pure
+    returns (uint256)
+{
     return type(uint256).max;
 }
 
@@ -313,7 +344,11 @@ function previewMint(uint256 shares) view returns (uint256) {
     ERC20Storage storage erc20s = getERC20Storage();
     uint256 totalShares_ = erc20s.totalSupply + VIRTUAL_SHARE;
     ERC4626Storage storage s = getStorage();
-    uint256 totalAssets_ = s.asset.balanceOf(s.vaultAddress) + VIRTUAL_ASSET;
+    address diamondAddress;
+    assembly {
+        diamondAddress := address()
+    }
+    uint256 totalAssets_ = s.asset.balanceOf(diamondAddress) + VIRTUAL_ASSET;
     return mulDivRoundingUp(totalAssets_, shares, totalShares_);
 }
 
@@ -330,11 +365,15 @@ function mint(uint256 shares, address receiver) returns (uint256) {
     ERC20Storage storage erc20s = getERC20Storage();
     uint256 totalShares_ = erc20s.totalSupply + VIRTUAL_SHARE;
     ERC4626Storage storage s = getStorage();
-    uint256 totalAssets_ = s.asset.balanceOf(s.vaultAddress) + VIRTUAL_ASSET;
+    address diamondAddress;
+    assembly {
+        diamondAddress := address()
+    }
+    uint256 totalAssets_ = s.asset.balanceOf(diamondAddress) + VIRTUAL_ASSET;
     uint256 assets = mulDivRoundingUp(totalAssets_, shares, totalShares_);
 
     if (assets == 0) revert ERC4626InsufficientAssets();
-    bool success = _safeTransferFrom(s.asset, msg.sender, s.vaultAddress, assets);
+    bool success = _safeTransferFrom(s.asset, msg.sender, diamondAddress, assets);
     if (!success) revert ERC4626TransferFailed();
 
     erc20s.totalSupply += shares;
@@ -352,7 +391,11 @@ function maxWithdraw(address owner) view returns (uint256) {
     ERC20Storage storage erc20s = getERC20Storage();
     uint256 balance = erc20s.balanceOf[owner];
     ERC4626Storage storage s = getStorage();
-    uint256 totalAssets_ = s.asset.balanceOf(s.vaultAddress) + VIRTUAL_ASSET;
+    address diamondAddress;
+    assembly {
+        diamondAddress := address()
+    }
+    uint256 totalAssets_ = s.asset.balanceOf(diamondAddress) + VIRTUAL_ASSET;
     uint256 totalShares_ = erc20s.totalSupply + VIRTUAL_SHARE;
     return muldiv(totalAssets_, balance, totalShares_);
 }
@@ -365,7 +408,11 @@ function previewWithdraw(uint256 assets) view returns (uint256) {
     ERC20Storage storage erc20s = getERC20Storage();
     uint256 totalShares_ = erc20s.totalSupply + VIRTUAL_SHARE;
     ERC4626Storage storage s = getStorage();
-    uint256 totalAssets_ = s.asset.balanceOf(s.vaultAddress) + VIRTUAL_ASSET;
+    address diamondAddress;
+    assembly {
+        diamondAddress := address()
+    }
+    uint256 totalAssets_ = s.asset.balanceOf(diamondAddress) + VIRTUAL_ASSET;
     return mulDivRoundingUp(totalShares_, assets, totalAssets_);
 }
 
@@ -384,7 +431,11 @@ function withdraw(uint256 assets, address receiver, address owner) returns (uint
     ERC20Storage storage erc20s = getERC20Storage();
     uint256 balance = erc20s.balanceOf[owner];
     ERC4626Storage storage s = getStorage();
-    uint256 totalAssets_ = s.asset.balanceOf(s.vaultAddress) + VIRTUAL_ASSET;
+    address diamondAddress;
+    assembly {
+        diamondAddress := address()
+    }
+    uint256 totalAssets_ = s.asset.balanceOf(diamondAddress) + VIRTUAL_ASSET;
     uint256 totalShares_ = erc20s.totalSupply + VIRTUAL_SHARE;
     uint256 maxWithdrawVal = muldiv(totalAssets_, balance, totalShares_);
     if (assets > maxWithdrawVal) revert ERC4626InvalidAmount();
@@ -423,7 +474,11 @@ function previewRedeem(uint256 shares) view returns (uint256) {
     ERC20Storage storage erc20s = getERC20Storage();
     uint256 totalShares_ = erc20s.totalSupply + VIRTUAL_SHARE;
     ERC4626Storage storage s = getStorage();
-    uint256 totalAssets_ = s.asset.balanceOf(s.vaultAddress) + VIRTUAL_ASSET;
+    address diamondAddress;
+    assembly {
+        diamondAddress := address()
+    }
+    uint256 totalAssets_ = s.asset.balanceOf(diamondAddress) + VIRTUAL_ASSET;
     return muldiv(totalAssets_, shares, totalShares_);
 }
 
@@ -443,7 +498,11 @@ function redeem(uint256 shares, address receiver, address owner) returns (uint25
 
     ERC4626Storage storage s = getStorage();
     uint256 totalShares_ = erc20s.totalSupply + VIRTUAL_SHARE;
-    uint256 totalAssets_ = s.asset.balanceOf(s.vaultAddress) + VIRTUAL_ASSET;
+    address diamondAddress;
+    assembly {
+        diamondAddress := address()
+    }
+    uint256 totalAssets_ = s.asset.balanceOf(diamondAddress) + VIRTUAL_ASSET;
     uint256 assets = muldiv(totalAssets_, shares, totalShares_);
 
     if (assets == 0) revert ERC4626InsufficientAssets();
