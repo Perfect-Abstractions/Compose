@@ -524,6 +524,11 @@ contract StakingFacet {
         StakingStorage storage s = getStorage();
         StakedTokenInfo storage stake = s.stakedTokens[_tokenAddress][0];
 
+        bool isSupported = isTokenSupported(_tokenAddress);
+        if (!isSupported) {
+            revert StakingUnsupportedToken(_tokenAddress);
+        }
+
         stake.amount += _value;
         stake.stakedAt = block.timestamp;
         stake.lastClaimedAt = block.timestamp;
@@ -540,6 +545,11 @@ contract StakingFacet {
     function stakeERC721(address _tokenAddress, uint256 _tokenId) internal {
         StakingStorage storage s = getStorage();
         StakedTokenInfo storage stake = s.stakedTokens[_tokenAddress][_tokenId];
+
+        bool isSupported = isTokenSupported(_tokenAddress);
+        if (!isSupported) {
+            revert StakingUnsupportedToken(_tokenAddress);
+        }
 
         stake.amount = 1;
         stake.stakedAt = block.timestamp;
@@ -558,6 +568,11 @@ contract StakingFacet {
     function stakeERC1155(address _tokenAddress, uint256 _tokenId, uint256 _value) internal {
         StakingStorage storage s = getStorage();
         StakedTokenInfo storage stake = s.stakedTokens[_tokenAddress][_tokenId];
+
+        bool isSupported = isTokenSupported(_tokenAddress);
+        if (!isSupported) {
+            revert StakingUnsupportedToken(_tokenAddress);
+        }
 
         stake.amount += _value;
         stake.stakedAt = block.timestamp;
