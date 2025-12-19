@@ -137,11 +137,10 @@ jobs:
           npm ci
           npm run build
         env:
-          # Prevent build failures from missing keys
           ALGOLIA_APP_ID: 'dummy'
           ALGOLIA_API_KEY: 'dummy'
           ALGOLIA_INDEX_NAME: 'dummy'
-          POSTHOG_API_KEY: 'dummy'    
+          POSTHOG_API_KEY: 'dummy'
         continue-on-error: false
 
       - name: Generate PR body
@@ -174,8 +173,8 @@ jobs:
         uses: peter-evans/create-pull-request@v5
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
-          title: '[DOCS] Auto-generated Contract documentation'
-          commit-message: 'docs: auto-generate contracts docs from NatSpec'
+          title: '[DOCS] Auto-generated Docs Pages'
+          commit-message: 'docs: auto-generate docs pages from NatSpec'
           branch: docs/auto-generated-${{ github.run_number }}
           body: ${{ steps.pr-body.outputs.body }}
           labels: |

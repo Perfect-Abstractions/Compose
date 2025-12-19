@@ -22,8 +22,11 @@ function generatePRBody(summary) {
   const modules = summary.modules || [];
   const total = summary.totalGenerated || 0;
 
-  let body = '## Auto-Generated Contract Documentation\n\n';
-  body += 'This PR contains auto-generated documentation from contract comments using `forge doc`.\n\n';
+  let body = '## Auto-Generated Docs Pages\n\n';
+  body += 'This PR contains auto-generated documentation from contract comments using `forge doc`.';
+  body += 'The output is passed through AI to enhance the documentation content and add additional information.\n';
+  body += 'Please ALWAYS review the generated content and ensure it is accurate and complete to Compose Standards.\n';
+
   
   body += '### Summary\n';
   body += `- **Total generated:** ${total} files\n\n`;
@@ -57,7 +60,7 @@ function generatePRBody(summary) {
   body += '- [ ] Ensure consistency with existing docs\n\n';
 
   body += '---\n';
-  body += '<b* This PR was automatically generated. Please review before merging.*\n';
+  body += '<b> 🚨 This PR was automatically generated. Please ALWAYS review before merging</b>\n';
 
   return body;
 }
