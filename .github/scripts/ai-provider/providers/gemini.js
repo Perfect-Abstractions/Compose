@@ -88,12 +88,10 @@ class GeminiProvider extends BaseAIProvider {
  */
 function createGeminiProvider(customModel) {
   const apiKey = process.env.GOOGLE_AI_API_KEY;
-  if (!apiKey) {
-    return null;
-  }
+
 
   const config = {
-    model: customModel || 'gemini-1.5-flash',
+    model: customModel,
     maxTokens: 2500,
     maxRequestsPerMinute: 15,
     maxTokensPerMinute: 1000000,

@@ -61,12 +61,9 @@ class GitHubModelsProvider extends BaseAIProvider {
  */
 function createGitHubProvider(customModel) {
   const apiKey = process.env.GITHUB_TOKEN;
-  if (!apiKey) {
-    return null;
-  }
 
   const config = {
-    model: customModel || 'gpt-4o',
+    model: customModel,
     maxTokens: 2500,
     maxRequestsPerMinute: 10,
     maxTokensPerMinute: 40000,
