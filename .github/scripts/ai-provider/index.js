@@ -38,8 +38,9 @@ class AIProvider {
       );
     }
 
-    console.log(`Using AI provider: ${this.provider.name}`);
-    console.log(`Provider model: ${this.provider.model}`);
+    console.log(`====================================================`);
+    console.log(` ✨ Using AI provider: ${this.provider.name}`);
+    console.log(`====================================================`);
 
     this.rateLimiter.setProvider(this.provider);
     this.initialized = true;

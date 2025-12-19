@@ -4,9 +4,24 @@
  */
 const BaseAIProvider = require('./base-provider');
 
+/**
+ * Gemini Provider Class
+ * Default model: gemini-2.5-flash-lite
+ * This model is a lightweight model that is designed to be fast and efficient.
+ * Refer to https://ai.google.dev/gemini-api/docs for the list of models.
+ */
 class GeminiProvider extends BaseAIProvider {
+  /**
+   * Constructor
+   * @param {object} config - Configuration object
+   * @param {string} config.model - Model to use
+   * @param {number} config.maxTokens - Maximum number of tokens to generate
+   * @param {number} config.maxRequestsPerMinute - Maximum number of requests per minute
+   * @param {number} config.maxTokensPerMinute - Maximum number of tokens per minute
+   * @param {string} apiKey - Google AI API key (required)
+   */
   constructor(config, apiKey) {
-    const model = config.model || 'gemini-1.5-flash';
+    const model = config.model || 'gemini-2.5-flash-lite';
     super(`Google AI (${model})`, config, apiKey);
     this.model = model;
   }

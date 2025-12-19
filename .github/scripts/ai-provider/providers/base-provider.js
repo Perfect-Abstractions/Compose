@@ -4,6 +4,10 @@
  */
 class BaseAIProvider {
   constructor(name, config, apiKey) {
+    if (!apiKey) {
+      throw new Error('API key is required');
+    }
+    
     this.name = name;
     this.config = config;
     this.apiKey = apiKey;
