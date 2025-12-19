@@ -23,9 +23,9 @@ function generatePRBody(summary) {
   const total = summary.totalGenerated || 0;
 
   let body = '## Auto-Generated Docs Pages\n\n';
-  body += 'This PR contains auto-generated documentation from contract comments using `forge doc`.';
-  body += 'The output is passed through AI to enhance the documentation content and add additional information.\n';
-  body += 'Please ALWAYS review the generated content and ensure it is accurate and complete to Compose Standards.\n';
+  body += 'This PR contains auto-generated documentation from contract comments using `forge doc`. ';
+  body += 'The output is passed through AI to enhance the documentation content and add additional information.\n\n';
+  body += '**Please ALWAYS review the generated content and ensure it is accurate and complete to Compose Standards.**\n';
 
   
   body += '### Summary\n';
@@ -60,7 +60,8 @@ function generatePRBody(summary) {
   body += '- [ ] Ensure consistency with existing docs\n\n';
 
   body += '---\n';
-  body += '<b> 🚨 This PR was automatically generated. Please ALWAYS review before merging</b>\n';
+  body += '** 🚨 This PR was automatically generated. Please ALWAYS review before merging **\n';
+  body += `Generated on: ${new Date().toISOString()}\n`;
 
   return body;
 }

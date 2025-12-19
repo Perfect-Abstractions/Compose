@@ -84,6 +84,28 @@ async function processForgeDocFile(forgeDocFile, solFilePath) {
     data.storageInfo = extractStorageInfo(data);
   }
 
+  // Apply smart description fallback for facets with generic descriptions
+  // (Modules are handled in processAggregatedFiles)
+  if (contractType === 'facet') {
+    // Check if description looks like an enum definition (e.g., "Add=0, Replace=1, Remove=2")
+    const looksLikeEnum = data.description && /\w+\s*=\s*\d+/.test(data.description) && 
+      (data.description.match(/\w+\s*=\s*\d+/g) || []).length >= 2;
+    
+    const isGenericDescription = !data.description || 
+      data.description.startsWith('Contract documentation for') ||
+      looksLikeEnum ||
+      data.description.length < 20;
+    
+    if (isGenericDescription) {
+      const generatedDescription = generateDescriptionFromName(data.title);
+      if (generatedDescription) {
+        data.description = generatedDescription;
+        data.subtitle = generatedDescription;
+        data.overview = generatedDescription;
+      }
+    }
+  }
+
   // Check if we should skip AI enhancement (e.g., for interfaces or when SKIP_ENHANCEMENT is set)
   const skipAIEnhancement = shouldSkipEnhancement(data) || process.env.SKIP_ENHANCEMENT === 'true';
 
@@ -154,7 +176,6 @@ async function processAggregatedFiles(forgeDocFiles, solFilePath) {
       continue;
     }
 
-    console.log(`Reading: ${path.basename(forgeDocFile)}`);
     const parsed = parseIndividualItemFile(content, forgeDocFile);
     if (parsed) {
       parsedItems.push(parsed);
