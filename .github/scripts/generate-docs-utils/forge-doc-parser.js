@@ -51,7 +51,7 @@ function parseForgeDocMarkdown(content, filePath) {
 
     // Parse description (first non-empty lines after title, before sections)
     if (data.title && !currentSection && trimmedLine && !line.startsWith('#') && !line.startsWith('[')) {
-      const sanitizedLine = sanitizeBrokenLinks(trimmedLine);
+      const sanitizedLine = cleanDescription(sanitizeBrokenLinks(trimmedLine));
       if (!data.description) {
         data.description = sanitizedLine;
         data.subtitle = sanitizedLine;
@@ -142,7 +142,7 @@ function parseForgeDocMarkdown(content, filePath) {
       // End description collection on special markers
       if (trimmedLine.startsWith('**Parameters**') || trimmedLine.startsWith('**Returns**')) {
         if (descriptionBuffer.length > 0) {
-          const description = sanitizeBrokenLinks(descriptionBuffer.join(' ').trim());
+          const description = cleanDescription(sanitizeBrokenLinks(descriptionBuffer.join(' ').trim()));
           currentItem.description = description;
           currentItem.notice = description;
           descriptionBuffer = [];
@@ -295,6 +295,47 @@ function sanitizeBrokenLinks(text) {
   // Remove markdown links that point to /src/ paths (forge doc links)
   // Pattern: [text](/src/...)
   return text.replace(/\[([^\]]+)\]\(\/src\/[^\)]+\)/g, '$1');
+}
+
+/**
+ * Clean description text by removing markdown artifacts
+ * Strips **Parameters**, **Returns**, **Note:** and other section markers
+ * that get incorrectly included in descriptions from forge doc output
+ * @param {string} text - Description text that may contain markdown artifacts
+ * @returns {string} Cleaned description text
+ */
+function cleanDescription(text) {
+  if (!text) return text;
+  
+  let cleaned = text;
+  
+  // Remove markdown section headers that shouldn't be in descriptions
+  // These patterns appear when forge doc parsing doesn't stop at section boundaries
+  const artifactPatterns = [
+    /\s*\*\*Parameters\*\*\s*/g,
+    /\s*\*\*Returns\*\*\s*/g,
+    /\s*\*\*Note:\*\*\s*/g,
+    /\s*\*\*Events\*\*\s*/g,
+    /\s*\*\*Errors\*\*\s*/g,
+    /\s*\*\*See Also\*\*\s*/g,
+    /\s*\*\*Example\*\*\s*/g,
+  ];
+  
+  for (const pattern of artifactPatterns) {
+    cleaned = cleaned.replace(pattern, ' ');
+  }
+  
+  // Remove @custom: tags that may leak through (e.g., "@custom:error AccessControlUnauthorizedAccount")
+  cleaned = cleaned.replace(/@custom:\w+\s+/g, '');
+  
+  // Clean up "error: ErrorName" patterns that appear inline
+  // Keep the error name but format it better: "error: ErrorName If..." -> "Reverts with ErrorName if..."
+  cleaned = cleaned.replace(/\berror:\s+(\w+)\s+/gi, 'Reverts with $1 ');
+  
+  // Normalize whitespace: collapse multiple spaces, trim
+  cleaned = cleaned.replace(/\s+/g, ' ').trim();
+  
+  return cleaned;
 }
 
 /**
@@ -543,9 +584,9 @@ function parseIndividualItemFile(content, filePath) {
     }
   }
 
-  // Combine description buffer
+  // Combine description buffer and clean it
   if (descriptionBuffer.length > 0) {
-    description = sanitizeBrokenLinks(descriptionBuffer.join(' ').trim());
+    description = cleanDescription(sanitizeBrokenLinks(descriptionBuffer.join(' ').trim()));
   }
 
   // For constants, return array of constant objects

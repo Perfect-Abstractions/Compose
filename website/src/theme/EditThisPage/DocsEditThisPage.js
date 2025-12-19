@@ -25,19 +25,20 @@ export default function DocsEditThisPage({editUrl}) {
   return (
     <div className={styles.wrapper}>
       {viewSource && (
-        <Link
-          className={styles.link}
-          href={viewSource}
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <span aria-hidden="true">🔗</span>
-          <span>View Source</span>
-        </Link>
+        <> 
+          <Link
+            className={styles.link}
+            href={viewSource}
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            <span>View Source</span>
+          </Link>
+          <span className={styles.separator}>|</span>
+        </>
       )}
       {editUrl && (
         <Link className={styles.link} href={editUrl}>
-          <span aria-hidden="true">✏️</span>
           <span>Edit this page</span>
         </Link>
       )}

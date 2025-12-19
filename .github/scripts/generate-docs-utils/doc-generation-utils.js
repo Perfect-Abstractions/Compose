@@ -123,9 +123,33 @@ function extractModuleNameFromPath(filePath) {
 }
 
 /**
+ * Check if a line is a code element declaration (event, error, function, struct, etc.)
+ * @param {string} line - Trimmed line to check
+ * @returns {boolean} True if line is a code element declaration
+ */
+function isCodeElementDeclaration(line) {
+  if (!line) return false;
+  return (
+    line.startsWith('function ') ||
+    line.startsWith('error ') ||
+    line.startsWith('event ') ||
+    line.startsWith('struct ') ||
+    line.startsWith('enum ') ||
+    line.startsWith('contract ') ||
+    line.startsWith('library ') ||
+    line.startsWith('interface ') ||
+    line.startsWith('modifier ') ||
+    /^\w+\s+(constant|immutable)\s/.test(line) ||
+    /^(bytes32|uint\d*|int\d*|address|bool|string)\s+constant\s/.test(line)
+  );
+}
+
+/**
  * Extract module description from source file NatSpec comments
+ * Only extracts TRUE file-level comments (those with @title, or comments not immediately followed by code elements)
+ * Skips comments that belong to events, errors, functions, etc.
  * @param {string} solFilePath - Path to the Solidity source file
- * @returns {string} Description extracted from @title and @notice tags
+ * @returns {string} Description extracted from @title and @notice tags, or empty string
  */
 function extractModuleDescriptionFromSource(solFilePath) {
   const content = readFileSafe(solFilePath);
@@ -135,10 +159,10 @@ function extractModuleDescriptionFromSource(solFilePath) {
 
   const lines = content.split('\n');
   let inComment = false;
+  let commentStartLine = -1;
   let commentBuffer = [];
   let title = '';
   let notice = '';
-  let foundFirstCodeElement = false;
 
   for (let i = 0; i < lines.length; i++) {
     const line = lines[i];
@@ -149,30 +173,16 @@ function extractModuleDescriptionFromSource(solFilePath) {
       continue;
     }
 
-    // Check if we've reached the first function/constant/error (end of file-level comments)
-    if (trimmed && !trimmed.startsWith('//') && !trimmed.startsWith('/*') && !trimmed.startsWith('*') && 
-        (trimmed.startsWith('function ') || trimmed.startsWith('error ') || trimmed.startsWith('event ') || 
-         trimmed.startsWith('struct ') || trimmed.startsWith('enum ') || trimmed.match(/^\w+\s+constant/))) {
-      foundFirstCodeElement = true;
-      // If we're in a comment, finish processing it first
-      if (inComment) {
-        // Process the comment we were collecting
-        const commentText = commentBuffer.join(' ');
-        const titleMatch = commentText.match(/@title\s+(.+?)(?:\s+@|\s*\*\/|$)/);
-        if (titleMatch) {
-          title = titleMatch[1].trim();
-        }
-        const noticeMatch = commentText.match(/@notice\s+(.+?)(?:\s+@|\s*\*\/|$)/);
-        if (noticeMatch) {
-          notice = noticeMatch[1].trim();
-        }
-      }
+    // Check if we've reached a code element without finding a file-level comment
+    if (!inComment && isCodeElementDeclaration(trimmed)) {
+      // We hit code without finding a file-level comment
       break;
     }
 
     // Start of block comment
-    if (trimmed.startsWith('/*')) {
+    if (trimmed.startsWith('/**') || trimmed.startsWith('/*')) {
       inComment = true;
+      commentStartLine = i;
       commentBuffer = [];
       continue;
     }
@@ -182,18 +192,42 @@ function extractModuleDescriptionFromSource(solFilePath) {
       inComment = false;
       const commentText = commentBuffer.join(' ');
       
-      // Extract @title
-      const titleMatch = commentText.match(/@title\s+(.+?)(?:\s+@|\s*\*\/|$)/);
+      // Look ahead to see if next non-empty line is a code element
+      let nextCodeLine = '';
+      for (let j = i + 1; j < lines.length && j < i + 5; j++) {
+        const nextTrimmed = lines[j].trim();
+        if (nextTrimmed && !nextTrimmed.startsWith('//') && !nextTrimmed.startsWith('/*')) {
+          nextCodeLine = nextTrimmed;
+          break;
+        }
+      }
+      
+      // If the comment has @title, it's a file-level comment
+      const titleMatch = commentText.match(/@title\s+(.+?)(?:\s+@|\s*$)/);
       if (titleMatch) {
         title = titleMatch[1].trim();
+        const noticeMatch = commentText.match(/@notice\s+(.+?)(?:\s+@|\s*$)/);
+        if (noticeMatch) {
+          notice = noticeMatch[1].trim();
+        }
+        break; // Found file-level comment, stop searching
       }
-
-      // Extract @notice
-      const noticeMatch = commentText.match(/@notice\s+(.+?)(?:\s+@|\s*\*\/|$)/);
-      if (noticeMatch) {
-        notice = noticeMatch[1].trim();
+      
+      // If next line is a code element (event, error, function, etc.), 
+      // this comment belongs to that element, not the file
+      if (isCodeElementDeclaration(nextCodeLine)) {
+        // This is an item-level comment, skip it and continue looking
+        commentBuffer = [];
+        continue;
       }
-
+      
+      // If it's a standalone comment with @notice (no code element following), use it
+      const standaloneNotice = commentText.match(/@notice\s+(.+?)(?:\s+@|\s*$)/);
+      if (standaloneNotice && !isCodeElementDeclaration(nextCodeLine)) {
+        notice = standaloneNotice[1].trim();
+        break;
+      }
+      
       commentBuffer = [];
       continue;
     }
@@ -218,6 +252,93 @@ function extractModuleDescriptionFromSource(solFilePath) {
   }
 
   return '';
+}
+
+/**
+ * Generate a meaningful description from module/facet name when no source description exists
+ * @param {string} contractName - Name of the contract (e.g., "AccessControlMod", "ERC20Facet")
+ * @returns {string} Generated description
+ */
+function generateDescriptionFromName(contractName) {
+  if (!contractName) return '';
+  
+  // Remove common suffixes
+  let baseName = contractName
+    .replace(/Mod$/, '')
+    .replace(/Module$/, '')
+    .replace(/Facet$/, '');
+  
+  // Add spaces before capitals (CamelCase to spaces)
+  const readable = baseName
+    .replace(/([A-Z])/g, ' $1')
+    .replace(/([A-Z]+)([A-Z][a-z])/g, '$1 $2') // Handle acronyms like ERC20
+    .trim();
+  
+  // Detect contract type
+  const isModule = contractName.endsWith('Mod') || contractName.endsWith('Module');
+  const isFacet = contractName.endsWith('Facet');
+  
+  // Generate description based on known patterns
+  const lowerName = baseName.toLowerCase();
+  
+  // Common patterns
+  if (lowerName.includes('accesscontrol')) {
+    if (lowerName.includes('pausable')) {
+      return `Role-based access control with pause functionality for Compose diamonds`;
+    }
+    if (lowerName.includes('temporal')) {
+      return `Time-limited role-based access control for Compose diamonds`;
+    }
+    return `Role-based access control (RBAC) ${isModule ? 'module' : 'facet'} for Compose diamonds`;
+  }
+  if (lowerName.startsWith('erc20')) {
+    const variant = baseName.replace(/^ERC20/, '').trim();
+    if (variant) {
+      return `ERC-20 token ${variant.toLowerCase()} ${isModule ? 'module' : 'facet'} for Compose diamonds`;
+    }
+    return `ERC-20 fungible token ${isModule ? 'module' : 'facet'} for Compose diamonds`;
+  }
+  if (lowerName.startsWith('erc721')) {
+    const variant = baseName.replace(/^ERC721/, '').trim();
+    if (variant) {
+      return `ERC-721 NFT ${variant.toLowerCase()} ${isModule ? 'module' : 'facet'} for Compose diamonds`;
+    }
+    return `ERC-721 non-fungible token ${isModule ? 'module' : 'facet'} for Compose diamonds`;
+  }
+  if (lowerName.startsWith('erc1155')) {
+    return `ERC-1155 multi-token ${isModule ? 'module' : 'facet'} for Compose diamonds`;
+  }
+  if (lowerName.startsWith('erc6909')) {
+    return `ERC-6909 minimal multi-token ${isModule ? 'module' : 'facet'} for Compose diamonds`;
+  }
+  if (lowerName.includes('owner')) {
+    if (lowerName.includes('twostep')) {
+      return `Two-step ownership transfer ${isModule ? 'module' : 'facet'} for Compose diamonds`;
+    }
+    return `Ownership management ${isModule ? 'module' : 'facet'} for Compose diamonds`;
+  }
+  if (lowerName.includes('diamond')) {
+    if (lowerName.includes('cut')) {
+      return `Diamond upgrade (cut) ${isModule ? 'module' : 'facet'} for ERC-2535 diamonds`;
+    }
+    if (lowerName.includes('loupe')) {
+      return `Diamond introspection (loupe) ${isModule ? 'module' : 'facet'} for ERC-2535 diamonds`;
+    }
+    return `Diamond core ${isModule ? 'module' : 'facet'} for ERC-2535 implementation`;
+  }
+  if (lowerName.includes('royalty')) {
+    return `ERC-2981 royalty ${isModule ? 'module' : 'facet'} for Compose diamonds`;
+  }
+  if (lowerName.includes('nonreentran') || lowerName.includes('reentrancy')) {
+    return `Reentrancy guard ${isModule ? 'module' : 'facet'} for Compose diamonds`;
+  }
+  if (lowerName.includes('erc165')) {
+    return `ERC-165 interface detection ${isModule ? 'module' : 'facet'} for Compose diamonds`;
+  }
+  
+  // Generic fallback
+  const typeLabel = isModule ? 'module' : isFacet ? 'facet' : 'contract';
+  return `${readable} ${typeLabel} for Compose diamonds`;
 }
 
 /**
@@ -285,6 +406,7 @@ module.exports = {
   readChangedFilesFromFile,
   extractModuleNameFromPath,
   extractModuleDescriptionFromSource,
+  generateDescriptionFromName,
 };
 
 

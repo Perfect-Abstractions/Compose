@@ -19,6 +19,7 @@ const {
   readChangedFilesFromFile,
   extractModuleNameFromPath,
   extractModuleDescriptionFromSource,
+  generateDescriptionFromName,
 } = require('./generate-docs-utils/doc-generation-utils');
 const { readFileSafe, writeFileSafe } = require('./workflow-utils');
 const { 
@@ -183,12 +184,21 @@ async function processAggregatedFiles(forgeDocFiles, solFilePath) {
     data.subtitle = sourceDescription;
     data.overview = sourceDescription;
   } else {
-    // Use a generic description if no source description found
-    const genericDescription = `Module providing internal functions for ${data.title}`;
-    if (!data.description || data.description.includes('Event emitted') || data.description.includes('Thrown when')) {
-      data.description = genericDescription;
-      data.subtitle = genericDescription;
-      data.overview = genericDescription;
+    // Use smart description generator based on contract name
+    // This handles cases where source file has no file-level @title/@notice
+    const generatedDescription = generateDescriptionFromName(data.title);
+    if (generatedDescription) {
+      data.description = generatedDescription;
+      data.subtitle = generatedDescription;
+      data.overview = generatedDescription;
+    } else {
+      // Last resort fallback
+      const genericDescription = `Module providing internal functions for ${data.title}`;
+      if (!data.description || data.description.includes('Event emitted') || data.description.includes('Thrown when')) {
+        data.description = genericDescription;
+        data.subtitle = genericDescription;
+        data.overview = genericDescription;
+      }
     }
   }
 

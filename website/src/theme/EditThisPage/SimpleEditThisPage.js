@@ -16,7 +16,6 @@ export default function SimpleEditThisPage({editUrl}) {
   return (
     <div className={styles.wrapper}>
       <Link className={styles.link} href={editUrl}>
-        <span aria-hidden="true">✏️</span>
         <span>Edit this page</span>
       </Link>
     </div>

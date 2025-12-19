@@ -29,7 +29,7 @@ import GradientButton from '@site/src/components/ui/GradientButton';
 
 {{#if keyFeatures}}
 <Callout type="info" title="Key Features">
-{{sanitizeMdx keyFeatures}}
+{{{sanitizeMdx keyFeatures}}}
 </Callout>
 {{/if}}
 
@@ -41,7 +41,7 @@ This module provides internal functions for use in your custom facets. Import it
 
 ## Overview
 
-{{sanitizeMdx overview}}
+{{{sanitizeMdx overview}}}
 
 ---
 
@@ -52,7 +52,7 @@ This module provides internal functions for use in your custom facets. Import it
 ### {{name}}
 
 {{#if description}}
-{{sanitizeMdx description}}
+{{{sanitizeMdx description}}}
 {{/if}}
 
 {{#if definition}}
@@ -70,7 +70,7 @@ This module provides internal functions for use in your custom facets. Import it
 {{#if hasStorage}}
 
 {{#if storageInfo}}
-{{sanitizeMdx storageInfo}}
+{{{sanitizeMdx storageInfo}}}
 {{/if}}
 ---
 {{#if hasStateVariables}}
@@ -98,7 +98,7 @@ This module provides internal functions for use in your custom facets. Import it
 ### {{name}}
 
 {{#if description}}
-{{sanitizeMdx description}}
+{{{sanitizeMdx description}}}
 {{/if}}
 
 {{#if signature}}
@@ -155,7 +155,7 @@ This module provides internal functions for use in your custom facets. Import it
   <Accordion title="{{name}}" defaultOpen={false}>
     {{#if description}}
     <div style={{{styleLiteral "margin-bottom: 1rem"}}}>
-      {{sanitizeMdx description}}
+      {{{sanitizeMdx description}}}
     </div>
     {{/if}}
 
@@ -198,7 +198,7 @@ This module provides internal functions for use in your custom facets. Import it
   <Accordion title="{{name}}" defaultOpen={false}>
     {{#if description}}
     <div style={{{styleLiteral "margin-bottom: 1rem"}}}>
-      {{sanitizeMdx description}}
+      {{{sanitizeMdx description}}}
     </div>
     {{/if}}
 
@@ -227,7 +227,7 @@ This module provides internal functions for use in your custom facets. Import it
 ## Best Practices
 
 <Callout type="tip" title="Best Practice">
-{{sanitizeMdx bestPractices}}
+{{{sanitizeMdx bestPractices}}}
 </Callout>
 {{/if}}
 
@@ -236,7 +236,7 @@ This module provides internal functions for use in your custom facets. Import it
 ## Security Considerations
 
 <Callout type="warning" title="Security">
-{{sanitizeMdx securityConsiderations}}
+{{{sanitizeMdx securityConsiderations}}}
 </Callout>
 {{/if}}
 {{/if}}
@@ -246,7 +246,7 @@ This module provides internal functions for use in your custom facets. Import it
 ## Integration Notes
 
 <Callout type="success" title="Shared Storage">
-{{sanitizeMdx integrationNotes}}
+{{{sanitizeMdx integrationNotes}}}
 </Callout>
 {{/if}}
 {{/if}}

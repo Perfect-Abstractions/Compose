@@ -377,6 +377,67 @@ function validateData(data) {
 }
 
 /**
+ * Generate fallback description for state variables/constants based on naming patterns
+ * @param {string} name - Variable name (e.g., "STORAGE_POSITION", "DEFAULT_ADMIN_ROLE")
+ * @param {string} moduleName - Name of the module/contract for context
+ * @returns {string} Generated description or empty string
+ */
+function generateStateVariableDescription(name, moduleName) {
+  if (!name) return '';
+  
+  const upperName = name.toUpperCase();
+  
+  // Common patterns for diamond/ERC contracts
+  const patterns = {
+    // Storage position patterns
+    'STORAGE_POSITION': 'Diamond storage slot position for this module',
+    'STORAGE_SLOT': 'Diamond storage slot identifier',
+    '_STORAGE_POSITION': 'Diamond storage slot position',
+    '_STORAGE_SLOT': 'Diamond storage slot identifier',
+    
+    // Role patterns
+    'DEFAULT_ADMIN_ROLE': 'Default administrative role identifier (bytes32(0))',
+    'ADMIN_ROLE': 'Administrative role identifier',
+    'MINTER_ROLE': 'Minter role identifier',
+    'PAUSER_ROLE': 'Pauser role identifier',
+    'BURNER_ROLE': 'Burner role identifier',
+    
+    // ERC patterns  
+    'INTERFACE_ID': 'ERC-165 interface identifier',
+    'EIP712_DOMAIN': 'EIP-712 domain separator',
+    'PERMIT_TYPEHASH': 'EIP-2612 permit type hash',
+    
+    // Reentrancy patterns
+    'NON_REENTRANT_SLOT': 'Reentrancy guard storage slot',
+    '_NOT_ENTERED': 'Reentrancy status: not entered',
+    '_ENTERED': 'Reentrancy status: entered',
+  };
+  
+  // Check exact matches first
+  if (patterns[upperName]) {
+    return patterns[upperName];
+  }
+  
+  // Check partial matches
+  if (upperName.includes('STORAGE') && (upperName.includes('POSITION') || upperName.includes('SLOT'))) {
+    return 'Diamond storage slot position for this module';
+  }
+  if (upperName.includes('_ROLE')) {
+    const roleName = name.replace(/_ROLE$/i, '').replace(/_/g, ' ').toLowerCase();
+    return `${roleName.charAt(0).toUpperCase() + roleName.slice(1)} role identifier`;
+  }
+  if (upperName.includes('TYPEHASH')) {
+    return 'Type hash for EIP-712 structured data';
+  }
+  if (upperName.includes('INTERFACE')) {
+    return 'ERC-165 interface identifier';
+  }
+  
+  // Generic fallback
+  return '';
+}
+
+/**
  * Prepare base data common to both facet and module templates
  * @param {object} data - Documentation data
  * @param {number} position - Sidebar position
@@ -416,12 +477,12 @@ function prepareBaseData(data, position = 99) {
     structs: (data.structs || []).map(prepareStructData),
     hasStructs: (data.structs || []).length > 0,
     
-    // State variables (for modules)
+    // State variables (for modules) - with fallback description generation
     stateVariables: (data.stateVariables || []).map(v => ({
       name: v.name,
       type: v.type || '',
       value: v.value || '',
-      description: v.description || '',
+      description: v.description || generateStateVariableDescription(v.name, data.title),
     })),
     hasStateVariables: (data.stateVariables || []).length > 0,
     hasStorage: Boolean(data.storageInfo || (data.stateVariables && data.stateVariables.length > 0)),
