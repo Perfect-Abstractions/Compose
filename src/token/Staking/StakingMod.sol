@@ -111,6 +111,7 @@ function getStorage() pure returns (StakingStorage storage s) {
  * @param _isERC721 Boolean indicating if the token is ERC-721.
  * @param _isERC1155 Boolean indicating if the token is ERC-1155
  * @dev This function should be restricted to admin use only.
+ * @dev Emits a SupportedTokenAdded event upon successful addition.
  */
 function addSupportedToken(address _tokenAddress, bool _isERC20, bool _isERC721, bool _isERC1155) returns (bool) {
     StakingStorage storage s = getStorage();
@@ -131,6 +132,7 @@ function addSupportedToken(address _tokenAddress, bool _isERC20, bool _isERC721,
  * @param _minStakeAmount The minimum amount required to stake.
  * @param _maxStakeAmount The maximum amount allowed to stake.
  * @dev This function should be restricted to admin use only.
+ * @dev Emits a StakingParametersUpdated event upon successful update.
  */
 function setStakingParameters(
     uint256 _baseAPR,
@@ -175,6 +177,11 @@ function stakeERC20(address _tokenAddress, uint256 _value) {
     StakingStorage storage s = getStorage();
     StakedTokenInfo storage stake = s.stakedTokens[_tokenAddress][0];
 
+    bool isSupported = isTokenSupported(_tokenAddress);
+    if (!isSupported) {
+        revert StakingUnsupportedToken(_tokenAddress);
+    }
+
     stake.amount += _value;
     stake.stakedAt = block.timestamp;
     stake.lastClaimedAt = block.timestamp;
@@ -191,6 +198,11 @@ function stakeERC20(address _tokenAddress, uint256 _value) {
 function stakeERC721(address _tokenAddress, uint256 _tokenId) {
     StakingStorage storage s = getStorage();
     StakedTokenInfo storage stake = s.stakedTokens[_tokenAddress][_tokenId];
+
+    bool isSupported = isTokenSupported(_tokenAddress);
+    if (!isSupported) {
+        revert StakingUnsupportedToken(_tokenAddress);
+    }
 
     stake.amount = 1;
     stake.stakedAt = block.timestamp;
@@ -209,6 +221,11 @@ function stakeERC721(address _tokenAddress, uint256 _tokenId) {
 function stakeERC1155(address _tokenAddress, uint256 _tokenId, uint256 _value) {
     StakingStorage storage s = getStorage();
     StakedTokenInfo storage stake = s.stakedTokens[_tokenAddress][_tokenId];
+
+    bool isSupported = isTokenSupported(_tokenAddress);
+    if (!isSupported) {
+        revert StakingUnsupportedToken(_tokenAddress);
+    }
 
     stake.amount += _value;
     stake.stakedAt = block.timestamp;

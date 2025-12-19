@@ -6,6 +6,7 @@ import {LibStakingHarness} from "./harnesses/LibStakingHarness.sol";
 import {ERC20FacetHarness} from "../ERC20//ERC20/harnesses/ERC20FacetHarness.sol";
 import {ERC721FacetHarness} from "../ERC721/ERC721/harnesses/ERC721FacetHarness.sol";
 import {ERC1155FacetHarness} from "../ERC1155/ERC1155/harnesses/ERC1155FacetHarness.sol";
+import "../../../../src/token/Staking/StakingMod.sol" as StakingMod;
 
 // import "forge-std/console.sol";
 
@@ -42,6 +43,18 @@ contract StakingTest is Test {
     uint256 constant MIN_STAKE_AMOUNT = 1 ether;
     uint256 constant MAX_STAKE_AMOUNT = 1000 ether;
 
+    event StakingParametersUpdated(
+        uint256 baseAPR,
+        uint256 rewardDecayRate,
+        uint256 compoundFrequency,
+        address rewardToken,
+        uint256 cooldownPeriod,
+        uint256 minStakeAmount,
+        uint256 maxStakeAmount
+    );
+
+    event SupportedTokenAdded(address indexed tokenAddress, bool isERC20, bool isERC721, bool isERC1155);
+
     function setUp() public {
         alice = makeAddr("alice");
         bob = makeAddr("bob");
@@ -74,6 +87,18 @@ contract StakingTest is Test {
          * Deploy and initialize the staking harness
          */
         staking = new LibStakingHarness();
+
+        /**
+         * Register supported tokens
+         */
+        staking.addSupportedToken(address(erc20Token), true, false, false);
+        staking.addSupportedToken(address(erc721Token), false, true, false);
+        staking.addSupportedToken(address(erc1155Token), false, false, true);
+        staking.addSupportedToken(address(rewardToken), true, false, false);
+
+        /**
+         * Initialize staking parameters
+         */
         staking.initialize(
             BASE_APR,
             REWARD_DECAY_RATE,
@@ -103,6 +128,106 @@ contract StakingTest is Test {
         assertEq(cooldownPeriod, COOLDOWN_PERIOD);
         assertEq(minStakeAmount, MIN_STAKE_AMOUNT);
         assertEq(maxStakeAmount, MAX_STAKE_AMOUNT);
+    }
+
+    function test_ParametersAreSetCorrectly_EventEmitted() public {
+        vm.expectEmit(true, true, true, true);
+        emit StakingParametersUpdated(
+            BASE_APR,
+            REWARD_DECAY_RATE,
+            COMPOUND_FREQUENCY,
+            address(rewardToken),
+            COOLDOWN_PERIOD,
+            MIN_STAKE_AMOUNT,
+            MAX_STAKE_AMOUNT
+        );
+
+        staking.initialize(
+            BASE_APR,
+            REWARD_DECAY_RATE,
+            COMPOUND_FREQUENCY,
+            address(rewardToken),
+            COOLDOWN_PERIOD,
+            MIN_STAKE_AMOUNT,
+            MAX_STAKE_AMOUNT
+        );
+    }
+
+    function test_ParametersAreSetCorrectly_RevertOnUnsupportedToken() public {
+        address unsupportedToken = makeAddr("unsupportedToken");
+
+        vm.expectRevert(abi.encodeWithSelector(StakingMod.StakingUnsupportedToken.selector, unsupportedToken));
+        staking.initialize(
+            BASE_APR,
+            REWARD_DECAY_RATE,
+            COMPOUND_FREQUENCY,
+            unsupportedToken,
+            COOLDOWN_PERIOD,
+            MIN_STAKE_AMOUNT,
+            MAX_STAKE_AMOUNT
+        );
+    }
+
+    function test_ParametersAreSetCorrectly_RevertOnZeroStakeAmount() public {
+        uint256 newMinStakeAmount = 0;
+        vm.expectRevert(abi.encodeWithSelector(StakingMod.StakingZeroStakeAmount.selector, newMinStakeAmount));
+        staking.initialize(
+            BASE_APR,
+            REWARD_DECAY_RATE,
+            COMPOUND_FREQUENCY,
+            address(rewardToken),
+            COOLDOWN_PERIOD,
+            newMinStakeAmount,
+            MAX_STAKE_AMOUNT
+        );
+
+        uint256 newMaxStakeAmount = 0;
+        vm.expectRevert(abi.encodeWithSelector(StakingMod.StakingZeroStakeAmount.selector, newMaxStakeAmount));
+        staking.initialize(
+            BASE_APR,
+            REWARD_DECAY_RATE,
+            COMPOUND_FREQUENCY,
+            address(rewardToken),
+            COOLDOWN_PERIOD,
+            MIN_STAKE_AMOUNT,
+            newMaxStakeAmount
+        );
+    }
+
+    function test_ParametersAreSetCorrectly_EmitEventsSupportedToken() public {
+        vm.expectEmit(true, true, true, true);
+        emit SupportedTokenAdded(address(erc20Token), true, false, false);
+        staking.addSupportedToken(address(erc20Token), true, false, false);
+
+        vm.expectEmit(true, true, true, true);
+        emit SupportedTokenAdded(address(erc721Token), false, true, false);
+        staking.addSupportedToken(address(erc721Token), false, true, false);
+
+        vm.expectEmit(true, true, true, true);
+        emit SupportedTokenAdded(address(erc1155Token), false, false, true);
+        staking.addSupportedToken(address(erc1155Token), false, false, true);
+
+        vm.expectEmit(true, true, true, true);
+        emit SupportedTokenAdded(address(rewardToken), true, false, false);
+        staking.addSupportedToken(address(rewardToken), true, false, false);
+    }
+
+    function test_VerifySupportedTokens() public {
+        // Supported tokens
+        bool isERC20Supported = staking.isTokenSupported(address(erc20Token));
+        bool isERC721Supported = staking.isTokenSupported(address(erc721Token));
+        bool isERC1155Supported = staking.isTokenSupported(address(erc1155Token));
+        bool isRewardTokenSupported = staking.isTokenSupported(address(rewardToken));
+
+        assertTrue(isERC20Supported);
+        assertTrue(isERC721Supported);
+        assertTrue(isERC1155Supported);
+        assertTrue(isRewardTokenSupported);
+
+        // Unsupported token
+        address unsupportedToken = makeAddr("unsupportedToken");
+        bool isUnsupportedTokenSupported = staking.isTokenSupported(unsupportedToken);
+        assertFalse(isUnsupportedTokenSupported);
     }
 
     function test_StakeERC20UpdatesState() public {
@@ -142,5 +267,12 @@ contract StakingTest is Test {
         (uint256 amount,,,) = staking.getStakedTokenInfo(address(erc1155Token), TOKEN_ID_2);
 
         assertEq(amount, stakeAmount);
+    }
+
+    function test_StakeTokens_RevertWithUnsupportedToken() public {
+        address unsupportedToken = makeAddr("unsupportedToken");
+
+        vm.expectRevert(abi.encodeWithSelector(StakingMod.StakingUnsupportedToken.selector, unsupportedToken));
+        staking.stakeERC20(unsupportedToken, 100 ether);
     }
 }

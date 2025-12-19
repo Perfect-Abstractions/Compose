@@ -86,7 +86,7 @@ contract LibStakingHarness {
     /**
      * @notice Exposes StakingMod.isSupportedToken as an external function
      */
-    function isSupportedToken(address _tokenAddress) external view returns (bool) {
+    function isTokenSupported(address _tokenAddress) external view returns (bool) {
         return StakingMod.isTokenSupported(_tokenAddress);
     }
 }

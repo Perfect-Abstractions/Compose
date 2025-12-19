@@ -322,9 +322,7 @@ contract StakingFacet {
         StakingStorage storage s = getStorage();
 
         TokenType storage tokenType = s.supportedTokens[_tokenAddress];
-        if (!tokenType.isERC20 && !tokenType.isERC721 && !tokenType.isERC1155) {
-            revert StakingUnsupportedToken(_tokenAddress);
-        }
+
         if (_amount < s.minStakeAmount) {
             revert StakingAmountBelowMinimum(_amount, s.minStakeAmount);
         }
@@ -615,6 +613,17 @@ contract StakingFacet {
         stake.accumulatedRewards += rewards;
 
         emit RewardsClaimed(msg.sender, _tokenAddress, _tokenId, rewards);
+    }
+
+    /**
+     * @notice Retrieve supported token types
+     * @param _tokenAddress The address of the token.
+     * @return true if the token is supported, false otherwise.
+     */
+    function isTokenSupported(address _tokenAddress) internal view returns (bool) {
+        StakingStorage storage s = getStorage();
+        TokenType storage tokenType = s.supportedTokens[_tokenAddress];
+        return true;
     }
 
     /**
