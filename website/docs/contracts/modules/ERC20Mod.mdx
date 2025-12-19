@@ -1,0 +1,429 @@
+---
+sidebar_position: 99
+title: "ERC20Mod"
+description: "LibERC20 — ERC-20 Library - Provides internal functions and storage layout for ERC-20 token logic."
+gitSource: "https://github.com/maxnorm/Compose/blob/8fd3d0c28913baf3b948e02cb6af2111875ad106/src/token/ERC20/ERC20/ERC20Mod.sol"
+---
+
+import DocSubtitle  from '@site/src/components/docs/DocSubtitle';
+import Badge from '@site/src/components/ui/Badge';
+import Callout from '@site/src/components/ui/Callout';
+import CalloutBox from '@site/src/components/ui/CalloutBox';
+import Accordion, { AccordionGroup } from '@site/src/components/ui/Accordion';
+import PropertyTable from '@site/src/components/api/PropertyTable';
+import ExpandableCode from '@site/src/components/code/ExpandableCode';
+import CodeShowcase from '@site/src/components/code/CodeShowcase';
+import RelatedDocs from '@site/src/components/docs/RelatedDocs';
+import WasThisHelpful from '@site/src/components/docs/WasThisHelpful';
+import LastUpdated from '@site/src/components/docs/LastUpdated';
+import ReadingTime from '@site/src/components/docs/ReadingTime';
+import GradientText from '@site/src/components/ui/GradientText';
+import GradientButton from '@site/src/components/ui/GradientButton';
+
+<DocSubtitle>
+LibERC20 — ERC-20 Library - Provides internal functions and storage layout for ERC-20 token logic.
+</DocSubtitle>
+
+<Callout type="info" title="Key Features">
+- Provides `mint`, `burn`, `transfer`, and `transferFrom` internal functions for standard ERC-20 operations.
+- Manages ERC-20 token balances and total supply.
+- Includes an `approve` function to manage spender allowances.
+- Utilizes `getStorage` to provide a reference to the ERC-20 specific storage slot.
+</Callout>
+
+<Callout type="info" title="Module Usage">
+This module provides internal functions for use in your custom facets. Import it to access shared logic and storage.
+</Callout>
+
+## Overview
+
+The ERC20Mod module provides essential internal functions and storage for ERC-20 token logic within a Compose diamond. It enables standard ERC-20 operations like minting, burning, transferring, and approving allowances, ensuring composability and adherence to the ERC-20 standard.
+
+---
+
+## Storage
+
+### ERC20Storage
+
+<ExpandableCode language="solidity" maxLines={15} title="Definition">
+{`struct ERC20Storage {
+mapping(address owner => uint256 balance) balanceOf;
+uint256 totalSupply;
+mapping(address owner => mapping(address spender => uint256 allowance)) allowance;
+uint8 decimals;
+string name;
+string symbol;
+}`}
+</ExpandableCode>
+
+Storage position: `STORAGE_POSITION` - Used for diamond storage pattern.
+---
+### State Variables
+
+<PropertyTable
+  properties={[
+    {
+      name: "STORAGE_POSITION",
+      type: "bytes32",
+      description: "Diamond storage slot position for this module (Value: `keccak256(&quot;compose.erc20&quot;)`)"
+    }
+  ]}
+  showRequired={false}
+/>
+
+## Functions
+
+### approve
+
+Approves a spender to transfer tokens on behalf of the caller. Sets the allowance for the spender.
+
+<ExpandableCode language="solidity" maxLines={8}>
+{`function approve(address _spender, uint256 _value) ;`}
+</ExpandableCode>
+
+**Parameters:**
+
+<PropertyTable
+  properties={[
+    {
+      name: "_spender",
+      type: "address",
+      description: "The address to approve for spending."
+    },
+    {
+      name: "_value",
+      type: "uint256",
+      description: "The amount of tokens to approve."
+    }
+  ]}
+  showRequired={false}
+/>
+
+---
+### burn
+
+Burns tokens from a specified address. Decreases both total supply and the sender's balance.
+
+<ExpandableCode language="solidity" maxLines={8}>
+{`function burn(address _account, uint256 _value) ;`}
+</ExpandableCode>
+
+**Parameters:**
+
+<PropertyTable
+  properties={[
+    {
+      name: "_account",
+      type: "address",
+      description: "The address whose tokens will be burned."
+    },
+    {
+      name: "_value",
+      type: "uint256",
+      description: "The number of tokens to burn."
+    }
+  ]}
+  showRequired={false}
+/>
+
+---
+### getStorage
+
+Returns a pointer to the ERC-20 storage struct. Uses inline assembly to bind the storage struct to the fixed storage position.
+
+<ExpandableCode language="solidity" maxLines={8}>
+{`function getStorage() pure returns (ERC20Storage storage s);`}
+</ExpandableCode>
+
+**Returns:**
+
+<PropertyTable
+  properties={[
+    {
+      name: "s",
+      type: "ERC20Storage",
+      description: "The ERC-20 storage struct."
+    }
+  ]}
+  showRequired={false}
+/>
+
+---
+### mint
+
+Mints new tokens to a specified address. Increases both total supply and the recipient's balance.
+
+<ExpandableCode language="solidity" maxLines={8}>
+{`function mint(address _account, uint256 _value) ;`}
+</ExpandableCode>
+
+**Parameters:**
+
+<PropertyTable
+  properties={[
+    {
+      name: "_account",
+      type: "address",
+      description: "The address receiving the newly minted tokens."
+    },
+    {
+      name: "_value",
+      type: "uint256",
+      description: "The number of tokens to mint."
+    }
+  ]}
+  showRequired={false}
+/>
+
+---
+### transfer
+
+Transfers tokens from the caller to another address. Updates balances directly without allowance mechanism.
+
+<ExpandableCode language="solidity" maxLines={8}>
+{`function transfer(address _to, uint256 _value) ;`}
+</ExpandableCode>
+
+**Parameters:**
+
+<PropertyTable
+  properties={[
+    {
+      name: "_to",
+      type: "address",
+      description: "The address to send tokens to."
+    },
+    {
+      name: "_value",
+      type: "uint256",
+      description: "The number of tokens to transfer."
+    }
+  ]}
+  showRequired={false}
+/>
+
+---
+### transferFrom
+
+Transfers tokens from one address to another using an allowance. Deducts the spender's allowance and updates balances.
+
+<ExpandableCode language="solidity" maxLines={8}>
+{`function transferFrom(address _from, address _to, uint256 _value) ;`}
+</ExpandableCode>
+
+**Parameters:**
+
+<PropertyTable
+  properties={[
+    {
+      name: "_from",
+      type: "address",
+      description: "The address to send tokens from."
+    },
+    {
+      name: "_to",
+      type: "address",
+      description: "The address to send tokens to."
+    },
+    {
+      name: "_value",
+      type: "uint256",
+      description: "The number of tokens to transfer."
+    }
+  ]}
+  showRequired={false}
+/>
+
+## Events
+
+<AccordionGroup>
+  <Accordion title="Approval" defaultOpen={false}>
+    <div style={{marginBottom: "1rem"}}>
+      Emitted when an approval is made for a spender by an owner.
+    </div>
+
+    <div style={{marginBottom: "1rem"}}>
+      <strong>Signature:</strong>
+      <ExpandableCode language="solidity" maxLines={5}>
+{`event Approval(address indexed _owner, address indexed _spender, uint256 _value);`}
+      </ExpandableCode>
+    </div>
+
+    <div style={{marginBottom: "1rem"}}>
+      <strong>Parameters:</strong>
+      <PropertyTable
+        properties={[
+          {
+            name: "_owner",
+            type: "address",
+            description: "The address granting the allowance."
+          },
+          {
+            name: "_spender",
+            type: "address",
+            description: "The address receiving the allowance."
+          },
+          {
+            name: "_value",
+            type: "uint256",
+            description: "The amount approved."
+          }
+        ]}
+        showRequired={false}
+      />
+    </div>
+  </Accordion>
+  <Accordion title="Transfer" defaultOpen={false}>
+    <div style={{marginBottom: "1rem"}}>
+      Emitted when tokens are transferred between addresses.
+    </div>
+
+    <div style={{marginBottom: "1rem"}}>
+      <strong>Signature:</strong>
+      <ExpandableCode language="solidity" maxLines={5}>
+{`event Transfer(address indexed _from, address indexed _to, uint256 _value);`}
+      </ExpandableCode>
+    </div>
+
+    <div style={{marginBottom: "1rem"}}>
+      <strong>Parameters:</strong>
+      <PropertyTable
+        properties={[
+          {
+            name: "_from",
+            type: "address",
+            description: "The address tokens are transferred from."
+          },
+          {
+            name: "_to",
+            type: "address",
+            description: "The address tokens are transferred to."
+          },
+          {
+            name: "_value",
+            type: "uint256",
+            description: "The amount of tokens transferred."
+          }
+        ]}
+        showRequired={false}
+      />
+    </div>
+  </Accordion>
+</AccordionGroup>
+
+## Errors
+
+<AccordionGroup>
+  <Accordion title="ERC20InsufficientAllowance" defaultOpen={false}>
+    <div style={{marginBottom: "1rem"}}>
+      Thrown when a spender tries to spend more than their allowance.
+    </div>
+
+    <div>
+      <strong>Signature:</strong>
+      <ExpandableCode language="solidity" maxLines={5}>
+error ERC20InsufficientAllowance(address _spender, uint256 _allowance, uint256 _needed);
+      </ExpandableCode>
+    </div>
+  </Accordion>
+  <Accordion title="ERC20InsufficientBalance" defaultOpen={false}>
+    <div style={{marginBottom: "1rem"}}>
+      Thrown when a sender attempts to transfer or burn more tokens than their balance.
+    </div>
+
+    <div>
+      <strong>Signature:</strong>
+      <ExpandableCode language="solidity" maxLines={5}>
+error ERC20InsufficientBalance(address _sender, uint256 _balance, uint256 _needed);
+      </ExpandableCode>
+    </div>
+  </Accordion>
+  <Accordion title="ERC20InvalidReceiver" defaultOpen={false}>
+    <div style={{marginBottom: "1rem"}}>
+      Thrown when the receiver address is invalid (e.g., zero address).
+    </div>
+
+    <div>
+      <strong>Signature:</strong>
+      <ExpandableCode language="solidity" maxLines={5}>
+error ERC20InvalidReceiver(address _receiver);
+      </ExpandableCode>
+    </div>
+  </Accordion>
+  <Accordion title="ERC20InvalidSender" defaultOpen={false}>
+    <div style={{marginBottom: "1rem"}}>
+      Thrown when the sender address is invalid (e.g., zero address).
+    </div>
+
+    <div>
+      <strong>Signature:</strong>
+      <ExpandableCode language="solidity" maxLines={5}>
+error ERC20InvalidSender(address _sender);
+      </ExpandableCode>
+    </div>
+  </Accordion>
+  <Accordion title="ERC20InvalidSpender" defaultOpen={false}>
+    <div style={{marginBottom: "1rem"}}>
+      Thrown when the spender address is invalid (e.g., zero address).
+    </div>
+
+    <div>
+      <strong>Signature:</strong>
+      <ExpandableCode language="solidity" maxLines={5}>
+error ERC20InvalidSpender(address _spender);
+      </ExpandableCode>
+    </div>
+  </Accordion>
+</AccordionGroup>
+
+## Usage Example
+
+<ExpandableCode language="solidity" maxLines={20} title="Example Implementation">
+{`pragma solidity ^0.8.30;
+
+import {IERC20Mod } from "./interfaces/IERC20Mod.sol";
+import { ERC20Storage } from "./storage/ERC20Storage.sol";
+
+contract ERC20Facet {
+    // Assume ERC20Storage is correctly laid out in the diamond's storage
+    // and IERC20Mod is the interface for the ERC20Mod library.
+
+    function mintTokens(address _to, uint256 _amount) external {
+        // Obtain a pointer to the ERC20 storage struct
+        ERC20Storage storage erc20 = IERC20Mod.getStorage();
+
+        // Call the internal mint function from the ERC20Mod library
+        IERC20Mod.mint(erc20, address(this), _to, _amount);
+    }
+
+    function transferTokens(address _from, address _to, uint256 _amount) external {
+        ERC20Storage storage erc20 = IERC20Mod.getStorage();
+        IERC20Mod.transfer(erc20, _from, _to, _amount);
+    }
+
+    function approveAllowance(address _spender, uint256 _amount) external {
+        ERC20Storage storage erc20 = IERC20Mod.getStorage();
+        IERC20Mod.approve(erc20, msg.sender, _spender, _amount);
+    }
+}`}
+</ExpandableCode>
+
+## Best Practices
+
+<Callout type="tip" title="Best Practice">
+- Access control for minting and burning should be enforced by the calling facet, as ERC20Mod provides only the core logic.
+- Ensure the `ERC20Storage` struct is correctly initialized and laid out in the diamond's storage to prevent state corruption.
+- Handle potential `ERC20TransferFailed` or other custom errors gracefully in your facet logic.
+</Callout>
+
+## Integration Notes
+
+<Callout type="success" title="Shared Storage">
+The ERC20Mod relies on a specific storage slot for its `ERC20Storage` struct. Facets using this module must ensure that the diamond's storage layout correctly allocates this slot and that the `ERC20Storage` struct definition (including variable order and types) is identical to the one used internally by ERC20Mod. The `getStorage` function uses inline assembly to reliably access this storage position. Changes to the `ERC20Storage` struct definition or its storage slot will break compatibility and require diamond upgrades.
+</Callout>
+
+<div style={{marginTop: "3rem", paddingTop: "2rem", borderTop: "1px solid var(--ifm-color-emphasis-200)"}}>
+  <WasThisHelpful pageId="ERC20Mod" />
+</div>
+
+<LastUpdated date="2025-12-19T22:25:14.421Z" />
