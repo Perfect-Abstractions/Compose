@@ -1,0 +1,432 @@
+---
+sidebar_position: 99
+title: "ERC20BridgeableFacet"
+description: "ERC-20 token bridgeable facet for Compose diamonds"
+gitSource: "https://github.com/maxnorm/Compose/blob/4f58223f08f652d9b72a6792643c40cac4f0f4a0/src/token/ERC20/ERC20Bridgeable/ERC20BridgeableFacet.sol"
+---
+
+import DocSubtitle  from '@site/src/components/docs/DocSubtitle';
+import Badge from '@site/src/components/ui/Badge';
+import Callout from '@site/src/components/ui/Callout';
+import CalloutBox from '@site/src/components/ui/CalloutBox';
+import Accordion, { AccordionGroup } from '@site/src/components/ui/Accordion';
+import PropertyTable from '@site/src/components/api/PropertyTable';
+import ExpandableCode from '@site/src/components/code/ExpandableCode';
+import CodeShowcase from '@site/src/components/code/CodeShowcase';
+import RelatedDocs from '@site/src/components/docs/RelatedDocs';
+import WasThisHelpful from '@site/src/components/docs/WasThisHelpful';
+import LastUpdated from '@site/src/components/docs/LastUpdated';
+import ReadingTime from '@site/src/components/docs/ReadingTime';
+import GradientText from '@site/src/components/ui/GradientText';
+import GradientButton from '@site/src/components/ui/GradientButton';
+
+<DocSubtitle>
+ERC-20 token bridgeable facet for Compose diamonds
+</DocSubtitle>
+
+<Callout type="info" title="Key Features">
+- Enables cross-chain token transfers by allowing trusted bridges to mint and burn ERC-20 tokens.
+- Integrates with the diamond's access control system to enforce authorization for bridging operations.
+- Provides internal utility functions (`getERC20Storage`, `getAccessControlStorage`, `checkTokenBridge`) for interacting with diamond storage and access control.
+</Callout>
+
+## Overview
+
+The ERC20BridgeableFacet enables cross-chain minting and burning of ERC-20 tokens within a Compose diamond. It orchestrates token bridging operations by interacting with diamond storage and access control mechanisms to verify trusted bridge addresses.
+
+---
+
+## Storage
+
+### ERC20Storage
+
+<ExpandableCode language="solidity" maxLines={15} title="Definition">
+{`struct ERC20Storage {
+    mapping(address owner => uint256 balance) balanceOf;
+    uint256 totalSupply;
+}`}
+</ExpandableCode>
+
+---
+### AccessControlStorage
+
+<ExpandableCode language="solidity" maxLines={15} title="Definition">
+{`struct AccessControlStorage {
+    mapping(address account => mapping(bytes32 role => bool hasRole)) hasRole;
+}`}
+</ExpandableCode>
+
+---
+### State Variables
+
+<PropertyTable
+  properties={[
+    {
+      name: "ERC20_STORAGE_POSITION",
+      type: "constant",
+      description: "Diamond storage slot position for this module"
+    },
+    {
+      name: "ACCESS_STORAGE_POSITION",
+      type: "constant",
+      description: "Diamond storage slot position for this module"
+    }
+  ]}
+  showRequired={false}
+/>
+
+## Functions
+
+### getERC20Storage
+
+Returns the ERC20 storage struct from the predefined diamond storage slot. Uses inline assembly to set the storage slot reference.
+
+<ExpandableCode language="solidity" maxLines={8}>
+{`function getERC20Storage() internal pure returns (ERC20Storage storage s);`}
+</ExpandableCode>
+
+**Returns:**
+
+<PropertyTable
+  properties={[
+    {
+      name: "s",
+      type: "ERC20Storage",
+      description: "The ERC20 storage struct reference."
+    }
+  ]}
+  showRequired={false}
+/>
+
+---
+### getAccessControlStorage
+
+<ExpandableCode language="solidity" maxLines={8}>
+{`function getAccessControlStorage() internal pure returns (AccessControlStorage storage s);`}
+</ExpandableCode>
+
+---
+### crosschainMint
+
+Cross-chain mint — callable only by an address having the `trusted-bridge` role.
+
+<ExpandableCode language="solidity" maxLines={8}>
+{`function crosschainMint(address _account, uint256 _value) external;`}
+</ExpandableCode>
+
+**Parameters:**
+
+<PropertyTable
+  properties={[
+    {
+      name: "_account",
+      type: "address",
+      description: "The account to mint tokens to."
+    },
+    {
+      name: "_value",
+      type: "uint256",
+      description: "The amount to mint."
+    }
+  ]}
+  showRequired={false}
+/>
+
+---
+### crosschainBurn
+
+Cross-chain burn — callable only by an address having the `trusted-bridge` role.
+
+<ExpandableCode language="solidity" maxLines={8}>
+{`function crosschainBurn(address _from, uint256 _value) external;`}
+</ExpandableCode>
+
+**Parameters:**
+
+<PropertyTable
+  properties={[
+    {
+      name: "_from",
+      type: "address",
+      description: "The account to burn tokens from."
+    },
+    {
+      name: "_value",
+      type: "uint256",
+      description: "The amount to burn."
+    }
+  ]}
+  showRequired={false}
+/>
+
+---
+### checkTokenBridge
+
+Internal check to check if the bridge (caller) is trusted. Reverts if caller is zero or not in the AccessControl `trusted-bridge` role.
+
+<ExpandableCode language="solidity" maxLines={8}>
+{`function checkTokenBridge(address _caller) external view;`}
+</ExpandableCode>
+
+**Parameters:**
+
+<PropertyTable
+  properties={[
+    {
+      name: "_caller",
+      type: "address",
+      description: "The address to validate"
+    }
+  ]}
+  showRequired={false}
+/>
+
+## Events
+
+<AccordionGroup>
+  <Accordion title="CrosschainMint" defaultOpen={false}>
+    <div style={{marginBottom: "1rem"}}>
+      Emitted when tokens are minted via a cross-chain bridge.
+    </div>
+
+    <div style={{marginBottom: "1rem"}}>
+      <strong>Signature:</strong>
+      <ExpandableCode language="solidity" maxLines={5}>
+{`event CrosschainMint(address indexed _to, uint256 _amount, address indexed _sender);`}
+      </ExpandableCode>
+    </div>
+
+    <div style={{marginBottom: "1rem"}}>
+      <strong>Parameters:</strong>
+      <PropertyTable
+        properties={[
+          {
+            name: "_to",
+            type: "address",
+            description: "The recipient of minted tokens."
+          },
+          {
+            name: "_amount",
+            type: "uint256",
+            description: "The amount minted."
+          },
+          {
+            name: "_sender",
+            type: "address",
+            description: "The bridge account that triggered the mint (msg.sender)."
+          }
+        ]}
+        showRequired={false}
+      />
+    </div>
+  </Accordion>
+  <Accordion title="CrosschainBurn" defaultOpen={false}>
+    <div style={{marginBottom: "1rem"}}>
+      Emitted when a crosschain transfer burns tokens.
+    </div>
+
+    <div style={{marginBottom: "1rem"}}>
+      <strong>Signature:</strong>
+      <ExpandableCode language="solidity" maxLines={5}>
+{`event CrosschainBurn(address indexed _from, uint256 _amount, address indexed _sender);`}
+      </ExpandableCode>
+    </div>
+
+    <div style={{marginBottom: "1rem"}}>
+      <strong>Parameters:</strong>
+      <PropertyTable
+        properties={[
+          {
+            name: "_from",
+            type: "address",
+            description: "Address of the account tokens are being burned from."
+          },
+          {
+            name: "_amount",
+            type: "uint256",
+            description: "Amount of tokens burned."
+          },
+          {
+            name: "_sender",
+            type: "address",
+            description: "Address of the caller (msg.sender) who invoked crosschainBurn."
+          }
+        ]}
+        showRequired={false}
+      />
+    </div>
+  </Accordion>
+  <Accordion title="Transfer" defaultOpen={false}>
+    <div style={{marginBottom: "1rem"}}>
+      Emitted when tokens are transferred between two addresses.
+    </div>
+
+    <div style={{marginBottom: "1rem"}}>
+      <strong>Signature:</strong>
+      <ExpandableCode language="solidity" maxLines={5}>
+{`event Transfer(address indexed _from, address indexed _to, uint256 _value);`}
+      </ExpandableCode>
+    </div>
+
+    <div style={{marginBottom: "1rem"}}>
+      <strong>Parameters:</strong>
+      <PropertyTable
+        properties={[
+          {
+            name: "_from",
+            type: "address",
+            description: "Address sending the tokens."
+          },
+          {
+            name: "_to",
+            type: "address",
+            description: "Address receiving the tokens."
+          },
+          {
+            name: "_value",
+            type: "uint256",
+            description: "Amount of tokens transferred."
+          }
+        ]}
+        showRequired={false}
+      />
+    </div>
+  </Accordion>
+</AccordionGroup>
+
+## Errors
+
+<AccordionGroup>
+  <Accordion title="ERC20InvalidReciever" defaultOpen={false}>
+    <div style={{marginBottom: "1rem"}}>
+      Revert when a provided receiver is invalid(e.g,zero address) .
+    </div>
+
+    <div>
+      <strong>Signature:</strong>
+      <ExpandableCode language="solidity" maxLines={5}>
+error ERC20InvalidReciever(address _receiver);
+      </ExpandableCode>
+    </div>
+  </Accordion>
+  <Accordion title="ERC20InvalidSender" defaultOpen={false}>
+    <div style={{marginBottom: "1rem"}}>
+      Thrown when the sender address is invalid (e.g., zero address).
+    </div>
+
+    <div>
+      <strong>Signature:</strong>
+      <ExpandableCode language="solidity" maxLines={5}>
+error ERC20InvalidSender(address _sender);
+      </ExpandableCode>
+    </div>
+  </Accordion>
+  <Accordion title="ERC20InvalidBridgeAccount" defaultOpen={false}>
+    <div style={{marginBottom: "1rem"}}>
+      Revert when caller is not a trusted bridge.
+    </div>
+
+    <div>
+      <strong>Signature:</strong>
+      <ExpandableCode language="solidity" maxLines={5}>
+error ERC20InvalidBridgeAccount(address _caller);
+      </ExpandableCode>
+    </div>
+  </Accordion>
+  <Accordion title="ERC20InvalidCallerAddress" defaultOpen={false}>
+    <div style={{marginBottom: "1rem"}}>
+      Revert when caller address is invalid.
+    </div>
+
+    <div>
+      <strong>Signature:</strong>
+      <ExpandableCode language="solidity" maxLines={5}>
+error ERC20InvalidCallerAddress(address _caller);
+      </ExpandableCode>
+    </div>
+  </Accordion>
+  <Accordion title="AccessControlUnauthorizedAccount" defaultOpen={false}>
+    <div style={{marginBottom: "1rem"}}>
+      Thrown when the account does not have a specific role.
+    </div>
+
+    <div>
+      <strong>Signature:</strong>
+      <ExpandableCode language="solidity" maxLines={5}>
+error AccessControlUnauthorizedAccount(address _account, bytes32 _role);
+      </ExpandableCode>
+    </div>
+  </Accordion>
+  <Accordion title="ERC20InsufficientBalance" defaultOpen={false}>
+
+    <div>
+      <strong>Signature:</strong>
+      <ExpandableCode language="solidity" maxLines={5}>
+error ERC20InsufficientBalance(address _from, uint256 _accountBalance, uint256 _value);
+      </ExpandableCode>
+    </div>
+  </Accordion>
+</AccordionGroup>
+
+## Usage Example
+
+<ExpandableCode language="solidity" maxLines={20} title="Example Implementation">
+{`pragma solidity ^0.8.30;
+
+import {ERC20BridgeableFacet} from "@compose/contracts/facets/ERC20/ERC20BridgeableFacet.sol";
+import {AccessControlFacet} from "@compose/contracts/facets/AccessControl/AccessControlFacet.sol";
+
+contract ERC20BridgeableFacetConsumer {
+    ERC20BridgeableFacet public erc20BridgeableFacet;
+    AccessControlFacet public accessControlFacet;
+
+    constructor(address _diamondAddress) {
+        erc20BridgeableFacet = ERC20BridgeableFacet(_diamondAddress);
+        accessControlFacet = AccessControlFacet(_diamondAddress);
+    }
+
+    /**
+     * @notice Example of minting tokens via the bridge.
+     * @param _token The ERC20 token address.
+     * @param _to The recipient address.
+     * @param _amount The amount to mint.
+     */
+    function mintTokens(address _token, address _to, uint256 _amount) external {
+        // Assume the caller has the 'trusted-bridge' role.
+        // In a real scenario, access control would be enforced by the diamond proxy itself
+        // or by a separate caller with the appropriate role.
+        erc20BridgeableFacet.crosschainMint(_token, _to, _amount);
+    }
+
+    /**
+     * @notice Example of burning tokens via the bridge.
+     * @param _token The ERC20 token address.
+     * @param _from The sender address.
+     * @param _amount The amount to burn.
+     */
+    function burnTokens(address _token, address _from, uint256 _amount) external {
+        // Assume the caller has the 'trusted-bridge' role.
+        erc20BridgeableFacet.crosschainBurn(_token, _from, _amount);
+    }
+}`}
+</ExpandableCode>
+
+## Best Practices
+
+<Callout type="tip" title="Best Practice">
+- Initialize the `ERC20BridgeableFacet` by adding it to the diamond proxy during deployment.
+- Ensure the `trusted-bridge` role is correctly assigned to authorized bridge addresses in the `AccessControlFacet`.
+- Use the `checkTokenBridge` internal function or rely on the diamond's access control mechanisms to verify bridge authorization before calling `crosschainMint` or `crosschainBurn`.
+</Callout>
+
+## Security Considerations
+
+<Callout type="warning" title="Security">
+The `crosschainMint` and `crosschainBurn` functions are protected by the `trusted-bridge` role. Ensure that only authorized and audited bridge contracts or addresses are granted this role to prevent unauthorized token minting or burning. The `checkTokenBridge` function explicitly verifies the caller's `trusted-bridge` role, mitigating risks from unauthorized callers. Reentrancy is not a direct concern for these mint/burn functions as they do not perform external calls back to untrusted contracts.
+</Callout>
+
+<div style={{marginTop: "3rem", paddingTop: "2rem", borderTop: "1px solid var(--ifm-color-emphasis-200)"}}>
+  <WasThisHelpful pageId="ERC20BridgeableFacet" />
+</div>
+
+<LastUpdated date="2025-12-19T22:46:14.251Z" />
