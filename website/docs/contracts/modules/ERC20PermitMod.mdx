@@ -1,0 +1,309 @@
+---
+sidebar_position: 99
+title: "ERC20PermitMod"
+description: "LibERC20Permit — Library for ERC-2612 Permit Logic - Library for self-contained ERC-2612 permit and domain separator logic and storage"
+gitSource: "https://github.com/maxnorm/Compose/blob/8fd3d0c28913baf3b948e02cb6af2111875ad106/src/token/ERC20/ERC20Permit/ERC20PermitMod.sol"
+---
+
+import DocSubtitle  from '@site/src/components/docs/DocSubtitle';
+import Badge from '@site/src/components/ui/Badge';
+import Callout from '@site/src/components/ui/Callout';
+import CalloutBox from '@site/src/components/ui/CalloutBox';
+import Accordion, { AccordionGroup } from '@site/src/components/ui/Accordion';
+import PropertyTable from '@site/src/components/api/PropertyTable';
+import ExpandableCode from '@site/src/components/code/ExpandableCode';
+import CodeShowcase from '@site/src/components/code/CodeShowcase';
+import RelatedDocs from '@site/src/components/docs/RelatedDocs';
+import WasThisHelpful from '@site/src/components/docs/WasThisHelpful';
+import LastUpdated from '@site/src/components/docs/LastUpdated';
+import ReadingTime from '@site/src/components/docs/ReadingTime';
+import GradientText from '@site/src/components/ui/GradientText';
+import GradientButton from '@site/src/components/ui/GradientButton';
+
+<DocSubtitle>
+LibERC20Permit — Library for ERC-2612 Permit Logic - Library for self-contained ERC-2612 permit and domain separator logic and storage
+</DocSubtitle>
+
+<Callout type="info" title="Key Features">
+- Implements ERC-2612 permit logic, enabling gas-efficient off-chain token approvals.
+- Provides a self-contained domain separator calculation, preventing signature replay attacks across different contracts or chains.
+- Designed for integration into Compose diamonds, leveraging the diamond storage pattern for state management.
+</Callout>
+
+<Callout type="info" title="Module Usage">
+This module provides internal functions for use in your custom facets. Import it to access shared logic and storage.
+</Callout>
+
+## Overview
+
+The ERC20PermitMod library provides self-contained logic and storage for implementing ERC-2612 permit functionality within a Compose diamond. This enables gas-efficient, off-chain approvals for ERC-20 token transfers, enhancing composability and user experience by reducing on-chain transaction costs for approvals.
+
+---
+
+## Storage
+
+### ERC20PermitStorage
+
+storage-location: erc8042:compose.erc20.permit
+
+<ExpandableCode language="solidity" maxLines={15} title="Definition">
+{`struct ERC20PermitStorage {
+mapping(address owner => uint256) nonces;
+}`}
+</ExpandableCode>
+
+---
+### ERC20Storage
+
+storage-location: erc8042:compose.erc20
+
+<ExpandableCode language="solidity" maxLines={15} title="Definition">
+{`struct ERC20Storage {
+mapping(address owner => uint256 balance) balanceOf;
+uint256 totalSupply;
+mapping(address owner => mapping(address spender => uint256 allowance)) allowance;
+uint8 decimals;
+string name;
+}`}
+</ExpandableCode>
+
+Storage position: `ERC20_STORAGE_POSITION` - Used for diamond storage pattern.
+---
+### State Variables
+
+<PropertyTable
+  properties={[
+    {
+      name: "ERC20_STORAGE_POSITION",
+      type: "bytes32",
+      description: "Diamond storage slot position for this module (Value: `keccak256(&quot;compose.erc20&quot;)`)"
+    },
+    {
+      name: "STORAGE_POSITION",
+      type: "bytes32",
+      description: "Diamond storage slot position for this module (Value: `keccak256(&quot;compose.erc20.permit&quot;)`)"
+    }
+  ]}
+  showRequired={false}
+/>
+
+## Functions
+
+### DOMAIN_SEPARATOR
+
+Returns the domain separator used in the encoding of the signature for &#123;permit&#125;. This value is unique to a contract and chain ID combination to prevent replay attacks.
+
+<ExpandableCode language="solidity" maxLines={8}>
+{`function DOMAIN_SEPARATOR() view returns (bytes32);`}
+</ExpandableCode>
+
+**Returns:**
+
+<PropertyTable
+  properties={[
+    {
+      name: "-",
+      type: "bytes32",
+      description: "The domain separator."
+    }
+  ]}
+  showRequired={false}
+/>
+
+---
+### getERC20Storage
+
+<ExpandableCode language="solidity" maxLines={8}>
+{`function getERC20Storage() pure returns (ERC20Storage storage s);`}
+</ExpandableCode>
+
+---
+### getPermitStorage
+
+<ExpandableCode language="solidity" maxLines={8}>
+{`function getPermitStorage() pure returns (ERC20PermitStorage storage s);`}
+</ExpandableCode>
+
+---
+### permit
+
+Validates a permit signature and sets allowance. Emits Approval event; must be emitted by the calling facet/contract.
+
+<ExpandableCode language="solidity" maxLines={8}>
+{`function permit(address _owner, address _spender, uint256 _value, uint256 _deadline, uint8 _v, bytes32 _r, bytes32 _s) ;`}
+</ExpandableCode>
+
+**Parameters:**
+
+<PropertyTable
+  properties={[
+    {
+      name: "_owner",
+      type: "address",
+      description: "Token owner."
+    },
+    {
+      name: "_spender",
+      type: "address",
+      description: "Token spender."
+    },
+    {
+      name: "_value",
+      type: "uint256",
+      description: "Allowance value."
+    },
+    {
+      name: "_deadline",
+      type: "uint256",
+      description: "Permit\&#x27;s time deadline."
+    }
+  ]}
+  showRequired={false}
+/>
+
+## Events
+
+<AccordionGroup>
+  <Accordion title="Approval" defaultOpen={false}>
+    <div style={{marginBottom: "1rem"}}>
+      Emitted when an approval is made for a spender by an owner.
+    </div>
+
+    <div style={{marginBottom: "1rem"}}>
+      <strong>Signature:</strong>
+      <ExpandableCode language="solidity" maxLines={5}>
+{`event Approval(address indexed _owner, address indexed _spender, uint256 _value);`}
+      </ExpandableCode>
+    </div>
+
+    <div style={{marginBottom: "1rem"}}>
+      <strong>Parameters:</strong>
+      <PropertyTable
+        properties={[
+          {
+            name: "_owner",
+            type: "address",
+            description: "The address granting the allowance."
+          },
+          {
+            name: "_spender",
+            type: "address",
+            description: "The address receiving the allowance."
+          },
+          {
+            name: "_value",
+            type: "uint256",
+            description: "The amount approved."
+          }
+        ]}
+        showRequired={false}
+      />
+    </div>
+  </Accordion>
+</AccordionGroup>
+
+## Errors
+
+<AccordionGroup>
+  <Accordion title="ERC20InvalidSpender" defaultOpen={false}>
+    <div style={{marginBottom: "1rem"}}>
+      Thrown when the spender address is invalid (e.g., zero address).
+    </div>
+
+    <div>
+      <strong>Signature:</strong>
+      <ExpandableCode language="solidity" maxLines={5}>
+error ERC20InvalidSpender(address _spender);
+      </ExpandableCode>
+    </div>
+  </Accordion>
+  <Accordion title="ERC2612InvalidSignature" defaultOpen={false}>
+    <div style={{marginBottom: "1rem"}}>
+      Thrown when a permit signature is invalid or expired.
+    </div>
+
+    <div>
+      <strong>Signature:</strong>
+      <ExpandableCode language="solidity" maxLines={5}>
+error ERC2612InvalidSignature(
+address _owner, address _spender, uint256 _value, uint256 _deadline, uint8 _v, bytes32 _r, bytes32 _s
+);
+      </ExpandableCode>
+    </div>
+  </Accordion>
+</AccordionGroup>
+
+## Usage Example
+
+<ExpandableCode language="solidity" maxLines={20} title="Example Implementation">
+{`pragma solidity ^0.8.30;
+
+import {IERC20PermitMod, ERC20PermitMod} from "@compose-protocol/contracts/src/modules/ERC20PermitMod.sol";
+import {DiamondStorage} from "@compose-protocol/contracts/src/DiamondStorage.sol";
+
+contract MyERC20Facet {
+    using ERC20PermitMod for ERC20PermitMod.PermitStorage;
+
+    DiamondStorage internal diamondStorage;
+
+    /**
+     * @notice Approves a spender to withdraw tokens on behalf of the owner using a permit signature.
+     * @dev This function must be implemented by the facet calling the ERC20PermitMod library.
+     * @param _owner The address of the token owner.
+     * @param _spender The address to be approved.
+     * @param _value The amount of tokens to be approved.
+     * @param _deadline The deadline for the permit.
+     * @param _v The v component of the signature.
+     * @param _r The r component of the signature.
+     * @param _s The s component of the signature.
+     */
+    function permit(address _owner, address _spender, uint256 _value, uint256 _deadline, uint8 _v, bytes32 _r, bytes32 _s) external {
+        // Ensure the facet has access to the diamond storage.
+        // The actual storage access will depend on the Compose diamond implementation.
+        ERC20PermitMod.PermitStorage storage permitStorage = _getPermitStorage();
+
+        // Call the permit logic from the library.
+        permitStorage.permit(_owner, _spender, _value, _deadline, _v, _r, _s);
+    }
+
+    /**
+     * @notice Retrieves the permit storage for the ERC20PermitMod.
+     * @return permitStorage The storage struct for permit logic.
+     */
+    function _getPermitStorage() internal view returns (ERC20PermitMod.PermitStorage storage) {
+        // This is a placeholder. Actual storage retrieval depends on the diamond's storage layout.
+        // It would typically involve accessing a specific slot in the diamond storage.
+        return ERC20PermitMod.getPermitStorage(diamondStorage);
+    }
+
+    /**
+     * @notice Returns the domain separator used in the encoding of the signature for {permit}.
+     * @return The domain separator.
+     */
+    function DOMAIN_SEPARATOR() external view returns (bytes32) {
+        ERC20PermitMod.PermitStorage storage permitStorage = _getPermitStorage();
+        return permitStorage.DOMAIN_SEPARATOR();
+    }
+}
+`}
+</ExpandableCode>
+
+## Best Practices
+
+<Callout type="tip" title="Best Practice">
+- Ensure the `permit` function in your facet correctly emits the `Approval` event after calling the library function, as the library itself does not emit events.
+- Validate the `_deadline` parameter to prevent expired permits from being used and consider using a sufficiently distant deadline to accommodate off-chain signing and on-chain execution delays.
+- Carefully manage access control for the `permit` function to ensure only authorized entities can execute permit approvals.
+</Callout>
+
+## Integration Notes
+
+<Callout type="success" title="Shared Storage">
+The ERC20PermitMod library manages its own state through a `PermitStorage` struct. Facets integrating this module must correctly retrieve and pass this storage slot to the library functions. The `getPermitStorage` function within the library is responsible for accessing this state, which is assumed to be managed within the diamond's overall storage layout. Facets are responsible for calling the `permit` function and ensuring the associated `Approval` event is emitted externally. The domain separator is calculated based on the contract's address and chain ID, ensuring uniqueness for replay protection.
+</Callout>
+
+<div style={{marginTop: "3rem", paddingTop: "2rem", borderTop: "1px solid var(--ifm-color-emphasis-200)"}}>
+  <WasThisHelpful pageId="ERC20PermitMod" />
+</div>
+
+<LastUpdated date="2025-12-19T22:25:03.626Z" />
