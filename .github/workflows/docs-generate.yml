@@ -32,16 +32,7 @@ jobs:
     name: Generate Pages
     runs-on: ubuntu-latest
     
-    steps:
-      - name: Debug AI Provider Configuration
-        env:
-          GOOGLE_AI_API_KEY: ${{ secrets.GOOGLE_AI_API_KEY }}
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          echo "GOOGLE_AI_API_KEY is set: $( [ -n \"$GOOGLE_AI_API_KEY\" ] && echo 'YES' || echo 'NO' )"
-          echo "GITHUB_TOKEN is set: $( [ -n \"$GITHUB_TOKEN\" ] && echo 'YES' || echo 'NO' )"
-          echo "GOOGLE_AI_API_KEY length: ${#GOOGLE_AI_API_KEY}"
-        
+    steps:   
       - name: Checkout code
         uses: actions/checkout@v4
         with:
