@@ -1,8 +1,26 @@
+/**
+ * Documentation Generation Utilities
+ *
+ * Provides helper functions for:
+ * - Finding and reading Solidity source files
+ * - Detecting contract types (module vs facet)
+ * - Computing output paths (mirrors src/ structure)
+ * - Extracting documentation from source files
+ */
+
 const fs = require('fs');
 const path = require('path');
 const { execSync } = require('child_process');
 const { readFileSafe } = require('../workflow-utils');
 const CONFIG = require('./config');
+const {
+  computeOutputPath,
+  ensureCategoryFiles,
+} = require('./category-generator');
+
+// ============================================================================
+// Git Integration
+// ============================================================================
 
 /**
  * Get list of changed Solidity files from git diff
@@ -14,7 +32,10 @@ function getChangedSolFiles(baseBranch = 'HEAD~1') {
     const output = execSync(`git diff --name-only ${baseBranch} HEAD -- 'src/**/*.sol'`, {
       encoding: 'utf8',
     });
-    return output.trim().split('\n').filter(f => f.endsWith('.sol'));
+    return output
+      .trim()
+      .split('\n')
+      .filter((f) => f.endsWith('.sol'));
   } catch (error) {
     console.error('Error getting changed files:', error.message);
     return [];
@@ -30,7 +51,10 @@ function getAllSolFiles() {
     const output = execSync('find src -name "*.sol" -type f', {
       encoding: 'utf8',
     });
-    return output.trim().split('\n').filter(f => f);
+    return output
+      .trim()
+      .split('\n')
+      .filter((f) => f);
   } catch (error) {
     console.error('Error getting all sol files:', error.message);
     return [];
@@ -38,13 +62,33 @@ function getAllSolFiles() {
 }
 
 /**
+ * Read changed files from a file (used in CI)
+ * @param {string} filePath - Path to file containing list of changed files
+ * @returns {string[]} Array of file paths
+ */
+function readChangedFilesFromFile(filePath) {
+  const content = readFileSafe(filePath);
+  if (!content) {
+    return [];
+  }
+  return content
+    .trim()
+    .split('\n')
+    .filter((f) => f.endsWith('.sol'));
+}
+
+// ============================================================================
+// Forge Doc Integration
+// ============================================================================
+
+/**
  * Find forge doc output files for a given source file
- * @param {string} solFilePath - Path to .sol file (e.g., 'src/access/AccessControl/LibAccessControl.sol')
+ * @param {string} solFilePath - Path to .sol file (e.g., 'src/access/AccessControl/AccessControlMod.sol')
  * @returns {string[]} Array of markdown file paths from forge doc output
  */
 function findForgeDocFiles(solFilePath) {
-  // Transform: src/access/AccessControl/LibAccessControl.sol
-  // To: docs/src/src/access/AccessControl/LibAccessControl.sol/
+  // Transform: src/access/AccessControl/AccessControlMod.sol
+  // To: docs/src/src/access/AccessControl/AccessControlMod.sol/
   const relativePath = solFilePath.replace(/^src\//, '');
   const docsDir = path.join(CONFIG.forgeDocsDir, relativePath);
 
@@ -54,14 +98,16 @@ function findForgeDocFiles(solFilePath) {
 
   try {
     const files = fs.readdirSync(docsDir);
-    return files
-      .filter(f => f.endsWith('.md'))
-      .map(f => path.join(docsDir, f));
+    return files.filter((f) => f.endsWith('.md')).map((f) => path.join(docsDir, f));
   } catch (error) {
     console.error(`Error reading docs dir ${docsDir}:`, error.message);
     return [];
   }
 }
+
+// ============================================================================
+// Contract Type Detection
+// ============================================================================
 
 /**
  * Determine if a contract is an interface
@@ -75,27 +121,96 @@ function isInterface(title, content) {
   if (title && /^I[A-Z]/.test(title)) {
     return true;
   }
-  
+
   // Check if content indicates it's an interface
-  // Forge doc marks interfaces with "interface" in the first few lines
   if (content) {
     const firstLines = content.split('\n').slice(0, 20).join('\n').toLowerCase();
     if (firstLines.includes('interface ') || firstLines.includes('*interface*')) {
       return true;
     }
   }
-  
+
   return false;
 }
 
 /**
+ * Determine if a contract is a module or facet
+ * @param {string} filePath - Path to the file
+ * @param {string} content - File content
+ * @returns {'module' | 'facet'} Contract type
+ */
+function getContractType(filePath, content) {
+  const lowerPath = filePath.toLowerCase();
+  const normalizedPath = lowerPath.replace(/\\/g, '/');
+  const baseName = path.basename(filePath, path.extname(filePath)).toLowerCase();
+
+  // Explicit modules folder
+  if (normalizedPath.includes('/modules/')) {
+    return 'module';
+  }
+
+  // File naming conventions (e.g., AccessControlMod.sol, NonReentrancyModule.sol)
+  if (baseName.endsWith('mod') || baseName.endsWith('module')) {
+    return 'module';
+  }
+
+  if (lowerPath.includes('facet')) {
+    return 'facet';
+  }
+
+  // Libraries folder typically contains modules
+  if (normalizedPath.includes('/libraries/')) {
+    return 'module';
+  }
+
+  // Default to facet for contracts
+  return 'facet';
+}
+
+// ============================================================================
+// Output Path Computation
+// ============================================================================
+
+/**
+ * Get output directory and file path based on source file path
+ * Mirrors the src/ structure in website/docs/contracts/
+ *
+ * @param {string} solFilePath - Path to the source .sol file
+ * @param {'module' | 'facet'} contractType - Type of contract (for logging)
+ * @returns {object} { outputDir, outputFile, relativePath, fileName, category }
+ */
+function getOutputPath(solFilePath, contractType) {
+  // Compute path using the new structure-mirroring logic
+  const pathInfo = computeOutputPath(solFilePath);
+
+  // Ensure all parent category files exist
+  ensureCategoryFiles(pathInfo.outputDir);
+
+  return pathInfo;
+}
+
+/**
+ * Get sidebar position for a contract
+ * @param {string} contractName - Name of the contract
+ * @returns {number} Sidebar position
+ */
+function getSidebarPosition(contractName) {
+  if (CONFIG.contractPositions && CONFIG.contractPositions[contractName] !== undefined) {
+    return CONFIG.contractPositions[contractName];
+  }
+  return CONFIG.defaultSidebarPosition || 50;
+}
+
+// ============================================================================
+// Source File Parsing
+// ============================================================================
+
+/**
  * Extract module name from file path
- * @param {string} filePath - Path to the file (e.g., 'src/modules/LibNonReentrancy.sol' or 'constants.LibNonReentrancy.md')
- * @returns {string} Module name (e.g., 'LibNonReentrancy')
+ * @param {string} filePath - Path to the file
+ * @returns {string} Module name
  */
 function extractModuleNameFromPath(filePath) {
-  const path = require('path');
-  
   // If it's a constants file, extract from filename
   const basename = path.basename(filePath);
   if (basename.startsWith('constants.')) {
@@ -104,26 +219,26 @@ function extractModuleNameFromPath(filePath) {
       return match[1];
     }
   }
-  
+
   // Extract from .sol file path
   if (filePath.endsWith('.sol')) {
     return path.basename(filePath, '.sol');
   }
-  
-  // Extract from directory structure (e.g., docs/src/src/libraries/LibNonReentrancy.sol/function.enter.md)
+
+  // Extract from directory structure
   const parts = filePath.split(path.sep);
   for (let i = parts.length - 1; i >= 0; i--) {
     if (parts[i].endsWith('.sol')) {
       return path.basename(parts[i], '.sol');
     }
   }
-  
+
   // Fallback: use basename without extension
   return path.basename(filePath, path.extname(filePath));
 }
 
 /**
- * Check if a line is a code element declaration (event, error, function, struct, etc.)
+ * Check if a line is a code element declaration
  * @param {string} line - Trimmed line to check
  * @returns {boolean} True if line is a code element declaration
  */
@@ -146,10 +261,8 @@ function isCodeElementDeclaration(line) {
 
 /**
  * Extract module description from source file NatSpec comments
- * Only extracts TRUE file-level comments (those with @title, or comments not immediately followed by code elements)
- * Skips comments that belong to events, errors, functions, etc.
  * @param {string} solFilePath - Path to the Solidity source file
- * @returns {string} Description extracted from @title and @notice tags, or empty string
+ * @returns {string} Description extracted from @title and @notice tags
  */
 function extractModuleDescriptionFromSource(solFilePath) {
   const content = readFileSafe(solFilePath);
@@ -159,7 +272,6 @@ function extractModuleDescriptionFromSource(solFilePath) {
 
   const lines = content.split('\n');
   let inComment = false;
-  let commentStartLine = -1;
   let commentBuffer = [];
   let title = '';
   let notice = '';
@@ -175,14 +287,12 @@ function extractModuleDescriptionFromSource(solFilePath) {
 
     // Check if we've reached a code element without finding a file-level comment
     if (!inComment && isCodeElementDeclaration(trimmed)) {
-      // We hit code without finding a file-level comment
       break;
     }
 
     // Start of block comment
     if (trimmed.startsWith('/**') || trimmed.startsWith('/*')) {
       inComment = true;
-      commentStartLine = i;
       commentBuffer = [];
       continue;
     }
@@ -191,7 +301,7 @@ function extractModuleDescriptionFromSource(solFilePath) {
     if (inComment && trimmed.includes('*/')) {
       inComment = false;
       const commentText = commentBuffer.join(' ');
-      
+
       // Look ahead to see if next non-empty line is a code element
       let nextCodeLine = '';
       for (let j = i + 1; j < lines.length && j < i + 5; j++) {
@@ -201,7 +311,7 @@ function extractModuleDescriptionFromSource(solFilePath) {
           break;
         }
       }
-      
+
       // If the comment has @title, it's a file-level comment
       const titleMatch = commentText.match(/@title\s+(.+?)(?:\s+@|\s*$)/);
       if (titleMatch) {
@@ -210,32 +320,32 @@ function extractModuleDescriptionFromSource(solFilePath) {
         if (noticeMatch) {
           notice = noticeMatch[1].trim();
         }
-        break; // Found file-level comment, stop searching
+        break;
       }
-      
-      // If next line is a code element (event, error, function, etc.), 
-      // this comment belongs to that element, not the file
+
+      // If next line is a code element, this comment belongs to that element
       if (isCodeElementDeclaration(nextCodeLine)) {
-        // This is an item-level comment, skip it and continue looking
         commentBuffer = [];
         continue;
       }
-      
-      // If it's a standalone comment with @notice (no code element following), use it
+
+      // Standalone comment with @notice
       const standaloneNotice = commentText.match(/@notice\s+(.+?)(?:\s+@|\s*$)/);
       if (standaloneNotice && !isCodeElementDeclaration(nextCodeLine)) {
         notice = standaloneNotice[1].trim();
         break;
       }
-      
+
       commentBuffer = [];
       continue;
     }
 
     // Collect comment lines
     if (inComment) {
-      // Remove comment markers
-      let cleanLine = trimmed.replace(/^\*\s*/, '').replace(/^\s*\*/, '').trim();
+      let cleanLine = trimmed
+        .replace(/^\*\s*/, '')
+        .replace(/^\s*\*/, '')
+        .trim();
       if (cleanLine && !cleanLine.startsWith('*/')) {
         commentBuffer.push(cleanLine);
       }
@@ -255,158 +365,66 @@ function extractModuleDescriptionFromSource(solFilePath) {
 }
 
 /**
- * Generate a meaningful description from module/facet name when no source description exists
- * @param {string} contractName - Name of the contract (e.g., "AccessControlMod", "ERC20Facet")
- * @returns {string} Generated description
+ * Generate a fallback description from contract name
+ *
+ * This is a minimal, generic fallback used only when:
+ * 1. No NatSpec @title/@notice exists in source
+ * 2. AI enhancement will improve it later
+ *
+ * The AI enhancement step receives this as input and generates
+ * a richer, context-aware description from the actual code.
+ *
+ * @param {string} contractName - Name of the contract
+ * @returns {string} Generic description (will be enhanced by AI)
  */
 function generateDescriptionFromName(contractName) {
   if (!contractName) return '';
-  
-  // Remove common suffixes
-  let baseName = contractName
+
+  // Detect contract type from naming convention
+  const isModule = contractName.endsWith('Mod') || contractName.endsWith('Module');
+  const isFacet = contractName.endsWith('Facet');
+  const typeLabel = isModule ? 'module' : isFacet ? 'facet' : 'contract';
+
+  // Remove suffix and convert CamelCase to readable text
+  const baseName = contractName
     .replace(/Mod$/, '')
     .replace(/Module$/, '')
     .replace(/Facet$/, '');
-  
-  // Add spaces before capitals (CamelCase to spaces)
+
+  // Convert CamelCase to readable format
+  // Handles: ERC20 -> ERC-20, AccessControl -> Access Control
   const readable = baseName
-    .replace(/([A-Z])/g, ' $1')
-    .replace(/([A-Z]+)([A-Z][a-z])/g, '$1 $2') // Handle acronyms like ERC20
+    .replace(/([a-z])([A-Z])/g, '$1 $2') // camelCase splits
+    .replace(/([A-Z]+)([A-Z][a-z])/g, '$1 $2') // acronym handling
+    .replace(/^ERC(\d+)/, 'ERC-$1') // ERC20 -> ERC-20
     .trim();
-  
-  // Detect contract type
-  const isModule = contractName.endsWith('Mod') || contractName.endsWith('Module');
-  const isFacet = contractName.endsWith('Facet');
-  
-  // Generate description based on known patterns
-  const lowerName = baseName.toLowerCase();
-  
-  // Common patterns
-  if (lowerName.includes('accesscontrol')) {
-    if (lowerName.includes('pausable')) {
-      return `Role-based access control with pause functionality for Compose diamonds`;
-    }
-    if (lowerName.includes('temporal')) {
-      return `Time-limited role-based access control for Compose diamonds`;
-    }
-    return `Role-based access control (RBAC) ${isModule ? 'module' : 'facet'} for Compose diamonds`;
-  }
-  if (lowerName.startsWith('erc20')) {
-    const variant = baseName.replace(/^ERC20/, '').trim();
-    if (variant) {
-      return `ERC-20 token ${variant.toLowerCase()} ${isModule ? 'module' : 'facet'} for Compose diamonds`;
-    }
-    return `ERC-20 fungible token ${isModule ? 'module' : 'facet'} for Compose diamonds`;
-  }
-  if (lowerName.startsWith('erc721')) {
-    const variant = baseName.replace(/^ERC721/, '').trim();
-    if (variant) {
-      return `ERC-721 NFT ${variant.toLowerCase()} ${isModule ? 'module' : 'facet'} for Compose diamonds`;
-    }
-    return `ERC-721 non-fungible token ${isModule ? 'module' : 'facet'} for Compose diamonds`;
-  }
-  if (lowerName.startsWith('erc1155')) {
-    return `ERC-1155 multi-token ${isModule ? 'module' : 'facet'} for Compose diamonds`;
-  }
-  if (lowerName.startsWith('erc6909')) {
-    return `ERC-6909 minimal multi-token ${isModule ? 'module' : 'facet'} for Compose diamonds`;
-  }
-  if (lowerName.includes('owner')) {
-    if (lowerName.includes('twostep')) {
-      return `Two-step ownership transfer ${isModule ? 'module' : 'facet'} for Compose diamonds`;
-    }
-    return `Ownership management ${isModule ? 'module' : 'facet'} for Compose diamonds`;
-  }
-  if (lowerName.includes('diamond')) {
-    if (lowerName.includes('cut')) {
-      return `Diamond upgrade (cut) ${isModule ? 'module' : 'facet'} for ERC-2535 diamonds`;
-    }
-    if (lowerName.includes('loupe')) {
-      return `Diamond introspection (loupe) ${isModule ? 'module' : 'facet'} for ERC-2535 diamonds`;
-    }
-    return `Diamond core ${isModule ? 'module' : 'facet'} for ERC-2535 implementation`;
-  }
-  if (lowerName.includes('royalty')) {
-    return `ERC-2981 royalty ${isModule ? 'module' : 'facet'} for Compose diamonds`;
-  }
-  if (lowerName.includes('nonreentran') || lowerName.includes('reentrancy')) {
-    return `Reentrancy guard ${isModule ? 'module' : 'facet'} for Compose diamonds`;
-  }
-  if (lowerName.includes('erc165')) {
-    return `ERC-165 interface detection ${isModule ? 'module' : 'facet'} for Compose diamonds`;
-  }
-  
-  // Generic fallback
-  const typeLabel = isModule ? 'module' : isFacet ? 'facet' : 'contract';
+
   return `${readable} ${typeLabel} for Compose diamonds`;
 }
 
-/**
- * Determine if a contract is a module or facet
- * Modules are Solidity files whose top-level code lives outside of contracts and Solidity libraries.
- * They contain reusable logic that gets pulled into other contracts at compile time.
- * @param {string} filePath - Path to the file
- * @param {string} content - File content
- * @returns {'module' | 'facet'} Contract type
- */
-function getContractType(filePath, content) {
-  const lowerPath = filePath.toLowerCase();
-  const normalizedPath = lowerPath.replace(/\\/g, '/');
-  const baseName = path.basename(filePath, path.extname(filePath)).toLowerCase();
-  
-  // Explicit modules folder
-  if (normalizedPath.includes('/modules/')) {
-    return 'module';
-  }
-
-  // File naming conventions (e.g., AccessControlMod.sol, NonReentrancyModule.sol)
-  if (baseName.endsWith('mod') || baseName.endsWith('module')) {
-    return 'module';
-  }
-  
-  if (lowerPath.includes('facet')) {
-    return 'facet';
-  }
-  
-  // Default to facet for contracts
-  return 'facet';
-}
-
-/**
- * Get output directory based on contract type
- * @param {'module' | 'facet'} contractType - Type of contract
- * @returns {string} Output directory path
- */
-function getOutputDir(contractType) {
-  return contractType === 'module' 
-    ? CONFIG.modulesOutputDir 
-    : CONFIG.facetsOutputDir;
-}
-
-/**
- * Read changed files from a file (used in CI)
- * @param {string} filePath - Path to file containing list of changed files
- * @returns {string[]} Array of file paths
- */
-function readChangedFilesFromFile(filePath) {
-  const content = readFileSafe(filePath);
-  if (!content) {
-    return [];
-  }
-  return content.trim().split('\n').filter(f => f.endsWith('.sol'));
-}
+// ============================================================================
+// Exports
+// ============================================================================
 
 module.exports = {
+  // Git integration
   getChangedSolFiles,
   getAllSolFiles,
+  readChangedFilesFromFile,
+
+  // Forge doc integration
   findForgeDocFiles,
+
+  // Contract type detection
   isInterface,
   getContractType,
-  getOutputDir,
-  readChangedFilesFromFile,
+
+  // Output path computation
+  getOutputPath,
+  getSidebarPosition,
+
+  // Source file parsing
   extractModuleNameFromPath,
   extractModuleDescriptionFromSource,
   generateDescriptionFromName,
 };
-
-

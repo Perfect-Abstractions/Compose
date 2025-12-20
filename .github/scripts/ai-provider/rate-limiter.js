@@ -60,17 +60,11 @@ class RateLimiter {
       const waitTime = this._calculateTokenWaitTime(estimatedTokens, currentConsumption);
       if (waitTime > 0) {
         console.log(
-          `    ⏳ Token budget: ${currentConsumption.toFixed(0)}/${effectiveBudget.toFixed(0)} used. ` +
           `Waiting ${Math.ceil(waitTime / 1000)}s...`
         );
         await this._sleep(waitTime);
         this._cleanTokenHistory();
       }
-    } else {
-      console.log(
-        `    📊 Token budget: ${currentConsumption.toFixed(0)}/${effectiveBudget.toFixed(0)} used, ` +
-        `~${estimatedTokens} needed`
-      );
     }
 
     this.lastCallTime = Date.now();

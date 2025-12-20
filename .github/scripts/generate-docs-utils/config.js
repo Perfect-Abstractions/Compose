@@ -1,18 +1,111 @@
 /**
  * Configuration for documentation generation
- * 
+ *
  * Centralized configuration for paths, settings, and defaults.
  * Modify this file to change documentation output paths or behavior.
  */
 
 module.exports = {
-  // Input paths
+  // ============================================================================
+  // Input Paths
+  // ============================================================================
+
+  /** Directory containing forge doc output */
   forgeDocsDir: 'docs/src/src',
-  
-  // Output paths for generated documentation
-  facetsOutputDir: 'website/docs/contracts/facets',
-  modulesOutputDir: 'website/docs/contracts/modules',
-  
-  // Template settings
-  defaultSidebarPosition: 99
+
+  /** Source code directory to mirror */
+  srcDir: 'src',
+
+  // ============================================================================
+  // Output Paths
+  // ============================================================================
+
+  /**
+   * Base output directory for contract documentation
+   * Structure mirrors src/ automatically
+   */
+  contractsOutputDir: 'website/docs/contracts',
+
+  // ============================================================================
+  // Sidebar Positions
+  // ============================================================================
+
+  /** Default sidebar position for contracts without explicit mapping */
+  defaultSidebarPosition: 50,
+
+  /**
+   * Contract-specific sidebar positions
+   * Maps contract name to position number (lower = higher in sidebar)
+   *
+   * Convention:
+   * - Modules come before their corresponding facets
+   * - Core/base contracts come before extensions
+   * - Burn facets come after main facets
+   */
+  contractPositions: {
+    // Diamond core
+    DiamondMod: 1,
+    DiamondCutMod: 2,
+    DiamondCutFacet: 3,
+    DiamondLoupeFacet: 4,
+
+    // Access - Owner pattern
+    OwnerMod: 1,
+    OwnerFacet: 2,
+
+    // Access - Two-step owner
+    OwnerTwoStepsMod: 1,
+    OwnerTwoStepsFacet: 2,
+
+    // Access - AccessControl pattern
+    AccessControlMod: 1,
+    AccessControlFacet: 2,
+
+    // Access - AccessControlPausable
+    AccessControlPausableMod: 1,
+    AccessControlPausableFacet: 2,
+
+    // Access - AccessControlTemporal
+    AccessControlTemporalMod: 1,
+    AccessControlTemporalFacet: 2,
+
+    // ERC-20 base
+    ERC20Mod: 1,
+    ERC20Facet: 2,
+    ERC20BurnFacet: 3,
+
+    // ERC-20 Bridgeable
+    ERC20BridgeableMod: 1,
+    ERC20BridgeableFacet: 2,
+
+    // ERC-20 Permit
+    ERC20PermitMod: 1,
+    ERC20PermitFacet: 2,
+
+    // ERC-721 base
+    ERC721Mod: 1,
+    ERC721Facet: 2,
+    ERC721BurnFacet: 3,
+
+    // ERC-721 Enumerable
+    ERC721EnumerableMod: 1,
+    ERC721EnumerableFacet: 2,
+    ERC721EnumerableBurnFacet: 3,
+
+    // ERC-1155
+    ERC1155Mod: 1,
+    ERC1155Facet: 2,
+
+    // ERC-6909
+    ERC6909Mod: 1,
+    ERC6909Facet: 2,
+
+    // Royalty
+    RoyaltyMod: 1,
+    RoyaltyFacet: 2,
+
+    // Libraries
+    NonReentrancyMod: 1,
+    ERC165Mod: 1,
+  },
 };

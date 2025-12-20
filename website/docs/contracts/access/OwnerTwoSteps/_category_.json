@@ -1,0 +1,10 @@
+{
+  "label": "Two-Step Owner",
+  "position": 2,
+  "collapsible": true,
+  "collapsed": true,
+  "link": {
+    "type": "generated-index",
+    "description": "Two-step ownership transfer pattern."
+  }
+}

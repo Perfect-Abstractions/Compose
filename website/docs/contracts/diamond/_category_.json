@@ -1,0 +1,10 @@
+{
+  "label": "Diamond Core",
+  "position": 1,
+  "collapsible": true,
+  "collapsed": false,
+  "link": {
+    "type": "generated-index",
+    "description": "Core diamond proxy functionality for ERC-2535 diamonds."
+  }
+}

@@ -150,6 +150,10 @@ function buildPrompt(data, contractType) {
     .map(f => `- ${f.name}: ${f.description || 'No description'}`)
     .join('\n');
 
+  // Include events and errors for richer context
+  const eventNames = (data.events || []).map(e => e.name).join(', ');
+  const errorNames = (data.errors || []).map(e => e.name).join(', ');
+
   const promptTemplate = contractType === 'module' 
     ? AI_PROMPTS.modulePrompt 
     : AI_PROMPTS.facetPrompt;
@@ -160,33 +164,40 @@ function buildPrompt(data, contractType) {
       .replace(/\{\{title\}\}/g, data.title)
       .replace(/\{\{description\}\}/g, data.description || 'No description provided')
       .replace(/\{\{functionNames\}\}/g, functionNames || 'None')
-      .replace(/\{\{functionDescriptions\}\}/g, functionDescriptions || '  None');
+      .replace(/\{\{functionDescriptions\}\}/g, functionDescriptions || '  None')
+      .replace(/\{\{eventNames\}\}/g, eventNames || 'None')
+      .replace(/\{\{errorNames\}\}/g, errorNames || 'None');
   }
 
   // Fallback to hardcoded prompt if template not loaded
   return `Given this ${contractType} documentation from the Compose diamond proxy framework, enhance it by generating:
 
-1. **overview**: A clear, concise overview (2-3 sentences) explaining what this ${contractType} does and why it's useful in the context of diamond contracts.
+1. **description**: A concise one-line description (max 100 chars) for the page subtitle. Derive this from the contract's purpose based on its functions, events, and errors.
 
-2. **usageExample**: A practical Solidity code example (10-20 lines) showing how to use this ${contractType}. For modules, show importing and calling functions. For facets, show how it would be used in a diamond.
+2. **overview**: A clear, concise overview (2-3 sentences) explaining what this ${contractType} does and why it's useful in the context of diamond contracts.
 
-3. **bestPractices**: 2-3 bullet points of best practices for using this ${contractType}.
+3. **usageExample**: A practical Solidity code example (10-20 lines) showing how to use this ${contractType}. For modules, show importing and calling functions. For facets, show how it would be used in a diamond.
 
-${contractType === 'module' ? '4. **integrationNotes**: A note about how this module works with diamond storage pattern and how changes made through it are visible to facets.' : ''}
+4. **bestPractices**: 2-3 bullet points of best practices for using this ${contractType}.
 
-${contractType === 'facet' ? '4. **securityConsiderations**: Important security considerations when using this facet (access control, reentrancy, etc.).' : ''}
+${contractType === 'module' ? '5. **integrationNotes**: A note about how this module works with diamond storage pattern and how changes made through it are visible to facets.' : ''}
 
-5. **keyFeatures**: A brief bullet list of key features.
+${contractType === 'facet' ? '5. **securityConsiderations**: Important security considerations when using this facet (access control, reentrancy, etc.).' : ''}
+
+6. **keyFeatures**: A brief bullet list of key features.
 
 Contract Information:
 - Name: ${data.title}
-- Description: ${data.description || 'No description provided'}
+- Current Description: ${data.description || 'No description provided'}
 - Functions: ${functionNames || 'None'}
+- Events: ${eventNames || 'None'}
+- Errors: ${errorNames || 'None'}
 - Function Details:
 ${functionDescriptions || '  None'}
 
 Respond ONLY with valid JSON in this exact format (no markdown code blocks, no extra text):
 {
+  "description": "concise one-line description here",
   "overview": "enhanced overview text here",
   "usageExample": "solidity code here (use \\n for newlines)",
   "bestPractices": "- Point 1\\n- Point 2\\n- Point 3",
@@ -220,9 +231,16 @@ function convertEnhancedFields(enhanced, data) {
       .replace(/&#39;/g, "'")
       .replace(/&amp;/g, '&');
   };
+
+  // Use AI-generated description if provided, otherwise keep original
+  const aiDescription = enhanced.description?.trim();
+  const finalDescription = aiDescription || data.description;
   
   return {
     ...data,
+    // Description is used for page subtitle - AI improves it from NatSpec
+    description: finalDescription,
+    subtitle: finalDescription,
     overview: convertNewlines(enhanced.overview) || data.overview,
     usageExample: decodeHtmlEntities(convertNewlines(enhanced.usageExample)) || null,
     bestPractices: convertNewlines(enhanced.bestPractices) || null,

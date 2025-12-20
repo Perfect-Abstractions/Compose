@@ -1,29 +1,36 @@
 /**
  * Docusaurus Documentation Generator
- * 
+ *
  * Converts forge doc output to Docusaurus MDX format
- * with optional GitHub Copilot enhancement.
- * 
+ * with optional AI enhancement.
+ *
+ * Features:
+ * - Mirrors src/ folder structure in documentation
+ * - Auto-generates category navigation files
+ * - AI-enhanced content generation
+ *
  * Environment variables:
- *   GITHUB_TOKEN - GitHub token for Copilot API (optional)
- *   SKIP_ENHANCEMENT - Set to 'true' to skip Copilot enhancement
+ *   GITHUB_TOKEN - GitHub token for AI API (optional)
+ *   SKIP_ENHANCEMENT - Set to 'true' to skip AI enhancement
  */
 
+const fs = require('fs');
 const path = require('path');
 const {
   getAllSolFiles,
   findForgeDocFiles,
   isInterface,
   getContractType,
-  getOutputDir,
+  getOutputPath,
+  getSidebarPosition,
   readChangedFilesFromFile,
   extractModuleNameFromPath,
   extractModuleDescriptionFromSource,
   generateDescriptionFromName,
 } = require('./generate-docs-utils/doc-generation-utils');
 const { readFileSafe, writeFileSafe } = require('./workflow-utils');
-const { 
-  parseForgeDocMarkdown, 
+const {
+  parseForgeDocMarkdown,
   extractStorageInfo,
   parseIndividualItemFile,
   aggregateParsedItems,
@@ -31,14 +38,23 @@ const {
 } = require('./generate-docs-utils/forge-doc-parser');
 const { generateFacetDoc, generateModuleDoc } = require('./generate-docs-utils/templates/templates');
 const { enhanceWithAI, shouldSkipEnhancement, addFallbackContent } = require('./generate-docs-utils/ai-enhancement');
+const { syncDocsStructure } = require('./generate-docs-utils/category-generator');
 
-// Track processed files for summary
+// ============================================================================
+// Tracking
+// ============================================================================
+
+/** Track processed files for summary */
 const processedFiles = {
   facets: [],
   modules: [],
   skipped: [],
   errors: [],
 };
+
+// ============================================================================
+// Processing Functions
+// ============================================================================
 
 /**
  * Process a single forge doc markdown file
@@ -56,7 +72,7 @@ async function processForgeDocFile(forgeDocFile, solFilePath) {
 
   // Parse the forge doc markdown
   const data = parseForgeDocMarkdown(content, forgeDocFile);
-  
+
   // Add source file path for parameter extraction
   if (solFilePath) {
     data.sourceFilePath = solFilePath;
@@ -68,7 +84,7 @@ async function processForgeDocFile(forgeDocFile, solFilePath) {
     return false;
   }
 
-  // Skip interfaces - only generate docs for facets and modules
+  // Skip interfaces
   if (isInterface(data.title, content)) {
     console.log(`Skipping interface: ${data.title}`);
     processedFiles.skipped.push({ file: forgeDocFile, reason: 'Interface (filtered)' });
@@ -85,17 +101,18 @@ async function processForgeDocFile(forgeDocFile, solFilePath) {
   }
 
   // Apply smart description fallback for facets with generic descriptions
-  // (Modules are handled in processAggregatedFiles)
   if (contractType === 'facet') {
-    // Check if description looks like an enum definition (e.g., "Add=0, Replace=1, Remove=2")
-    const looksLikeEnum = data.description && /\w+\s*=\s*\d+/.test(data.description) && 
+    const looksLikeEnum =
+      data.description &&
+      /\w+\s*=\s*\d+/.test(data.description) &&
       (data.description.match(/\w+\s*=\s*\d+/g) || []).length >= 2;
-    
-    const isGenericDescription = !data.description || 
+
+    const isGenericDescription =
+      !data.description ||
       data.description.startsWith('Contract documentation for') ||
       looksLikeEnum ||
       data.description.length < 20;
-    
+
     if (isGenericDescription) {
       const generatedDescription = generateDescriptionFromName(data.title);
       if (generatedDescription) {
@@ -106,10 +123,16 @@ async function processForgeDocFile(forgeDocFile, solFilePath) {
     }
   }
 
-  // Check if we should skip AI enhancement (e.g., for interfaces or when SKIP_ENHANCEMENT is set)
+  // Get output path (mirrors src/ structure)
+  const pathInfo = getOutputPath(solFilePath, contractType);
+
+  // Get smart sidebar position
+  data.position = getSidebarPosition(data.title);
+
+  // Check if we should skip AI enhancement
   const skipAIEnhancement = shouldSkipEnhancement(data) || process.env.SKIP_ENHANCEMENT === 'true';
 
-  // Enhance with AI if not skipped, otherwise add fallback content
+  // Enhance with AI if not skipped
   let enhancedData = data;
   if (!skipAIEnhancement) {
     const token = process.env.GITHUB_TOKEN;
@@ -119,26 +142,26 @@ async function processForgeDocFile(forgeDocFile, solFilePath) {
     enhancedData = addFallbackContent(data, contractType);
   }
 
-  const mdxContent = contractType === 'module'
-    ? generateModuleDoc(enhancedData)
-    : generateFacetDoc(enhancedData);
+  // Generate MDX content
+  const mdxContent = contractType === 'module' ? generateModuleDoc(enhancedData) : generateFacetDoc(enhancedData);
 
-  const outputDir = getOutputDir(contractType);
-  const outputFile = path.join(outputDir, `${data.title}.mdx`);
+  // Ensure output directory exists
+  fs.mkdirSync(pathInfo.outputDir, { recursive: true });
 
-  if (writeFileSafe(outputFile, mdxContent)) {
-    console.log('✅  Generated:', outputFile);
-    
+  // Write the file
+  if (writeFileSafe(pathInfo.outputFile, mdxContent)) {
+    console.log('✅  Generated:', pathInfo.outputFile);
+
     if (contractType === 'module') {
-      processedFiles.modules.push({ title: data.title, file: outputFile });
+      processedFiles.modules.push({ title: data.title, file: pathInfo.outputFile });
     } else {
-      processedFiles.facets.push({ title: data.title, file: outputFile });
+      processedFiles.facets.push({ title: data.title, file: pathInfo.outputFile });
     }
-    
+
     return true;
   }
 
-  processedFiles.errors.push({ file: outputFile, error: 'Could not write file' });
+  processedFiles.errors.push({ file: pathInfo.outputFile, error: 'Could not write file' });
   return false;
 }
 
@@ -192,21 +215,21 @@ async function processAggregatedFiles(forgeDocFiles, solFilePath) {
   }
 
   const data = aggregateParsedItems(parsedItems, solFilePath);
-  
+
   data.sourceFilePath = solFilePath;
 
   if (!data.title) {
     data.title = extractModuleNameFromPath(solFilePath);
   }
 
+  // Try to get description from source file
   const sourceDescription = extractModuleDescriptionFromSource(solFilePath);
   if (sourceDescription) {
     data.description = sourceDescription;
     data.subtitle = sourceDescription;
     data.overview = sourceDescription;
   } else {
-    // Use smart description generator based on contract name
-    // This handles cases where source file has no file-level @title/@notice
+    // Use smart description generator
     const generatedDescription = generateDescriptionFromName(data.title);
     if (generatedDescription) {
       data.description = generatedDescription;
@@ -215,7 +238,11 @@ async function processAggregatedFiles(forgeDocFiles, solFilePath) {
     } else {
       // Last resort fallback
       const genericDescription = `Module providing internal functions for ${data.title}`;
-      if (!data.description || data.description.includes('Event emitted') || data.description.includes('Thrown when')) {
+      if (
+        !data.description ||
+        data.description.includes('Event emitted') ||
+        data.description.includes('Thrown when')
+      ) {
         data.description = genericDescription;
         data.subtitle = genericDescription;
         data.overview = genericDescription;
@@ -234,6 +261,12 @@ async function processAggregatedFiles(forgeDocFiles, solFilePath) {
     data.storageInfo = extractStorageInfo(data);
   }
 
+  // Get output path (mirrors src/ structure)
+  const pathInfo = getOutputPath(solFilePath, contractType);
+
+  // Get smart sidebar position
+  data.position = getSidebarPosition(data.title);
+
   const skipAIEnhancement = shouldSkipEnhancement(data) || process.env.SKIP_ENHANCEMENT === 'true';
 
   let enhancedData = data;
@@ -242,33 +275,29 @@ async function processAggregatedFiles(forgeDocFiles, solFilePath) {
     enhancedData = await enhanceWithAI(data, contractType, token);
   } else {
     console.log(`Skipping AI enhancement for ${data.title}`);
-    // Add fallback content when skipping AI enhancement
     enhancedData = addFallbackContent(data, contractType);
   }
 
   // Generate MDX content
-  const mdxContent = contractType === 'module'
-    ? generateModuleDoc(enhancedData)
-    : generateFacetDoc(enhancedData);
+  const mdxContent = contractType === 'module' ? generateModuleDoc(enhancedData) : generateFacetDoc(enhancedData);
 
-  // Determine output path
-  const outputDir = getOutputDir(contractType);
-  const outputFile = path.join(outputDir, `${data.title}.mdx`);
+  // Ensure output directory exists
+  fs.mkdirSync(pathInfo.outputDir, { recursive: true });
 
   // Write the file
-  if (writeFileSafe(outputFile, mdxContent)) {
-    console.log('✅  Generated:', outputFile);
-    
+  if (writeFileSafe(pathInfo.outputFile, mdxContent)) {
+    console.log('✅  Generated:', pathInfo.outputFile);
+
     if (contractType === 'module') {
-      processedFiles.modules.push({ title: data.title, file: outputFile });
+      processedFiles.modules.push({ title: data.title, file: pathInfo.outputFile });
     } else {
-      processedFiles.facets.push({ title: data.title, file: outputFile });
+      processedFiles.facets.push({ title: data.title, file: pathInfo.outputFile });
     }
-    
+
     return true;
   }
 
-  processedFiles.errors.push({ file: outputFile, error: 'Could not write file' });
+  processedFiles.errors.push({ file: pathInfo.outputFile, error: 'Could not write file' });
   return false;
 }
 
@@ -297,6 +326,10 @@ async function processSolFile(solFilePath) {
     }
   }
 }
+
+// ============================================================================
+// Summary & Reporting
+// ============================================================================
 
 /**
  * Print processing summary
@@ -351,12 +384,27 @@ function writeSummaryFile() {
   writeFileSafe('docgen-summary.json', JSON.stringify(summary, null, 2));
 }
 
+// ============================================================================
+// Main Entry Point
+// ============================================================================
+
 /**
  * Main entry point
  */
 async function main() {
   console.log('Compose Documentation Generator\n');
 
+  // Step 1: Sync docs structure with src structure
+  console.log('📁 Syncing documentation structure with source...');
+  const syncResult = syncDocsStructure();
+
+  if (syncResult.created.length > 0) {
+    console.log(`   Created ${syncResult.created.length} new categories:`);
+    syncResult.created.forEach((c) => console.log(`      ✅ ${c}`));
+  }
+  console.log(`   Total categories: ${syncResult.total}\n`);
+
+  // Step 2: Determine which files to process
   const args = process.argv.slice(2);
   let solFiles = [];
 
@@ -367,7 +415,7 @@ async function main() {
     const changedFilesPath = args[0];
     console.log(`Reading changed files from: ${changedFilesPath}`);
     solFiles = readChangedFilesFromFile(changedFilesPath);
-    
+
     if (solFiles.length === 0) {
       console.log('No files in list, checking git diff...');
       const { getChangedSolFiles } = require('./generate-docs-utils/doc-generation-utils');
@@ -386,11 +434,13 @@ async function main() {
 
   console.log(`Found ${solFiles.length} Solidity file(s) to process\n`);
 
+  // Step 3: Process each file
   for (const solFile of solFiles) {
     await processSolFile(solFile);
     console.log('');
   }
 
+  // Step 4: Print summary
   printSummary();
   writeSummaryFile();
 }
@@ -399,5 +449,3 @@ main().catch((error) => {
   console.error(`Fatal error: ${error}`);
   process.exit(1);
 });
-
-
