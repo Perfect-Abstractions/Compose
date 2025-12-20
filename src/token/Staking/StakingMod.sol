@@ -80,7 +80,8 @@ struct TokenType {
  */
 struct StakingStorage {
     mapping(address tokenType => TokenType) supportedTokens;
-    mapping(address tokenAddress => mapping(uint256 tokenId => StakedTokenInfo)) stakedTokens;
+    mapping(address tokenOwner => mapping(address tokenAddress => mapping(uint256 tokenId => StakedTokenInfo)))
+        stakedTokens;
     uint256 baseAPR;
     uint256 rewardDecayRate;
     uint256 compoundFrequency;
@@ -89,7 +90,6 @@ struct StakingStorage {
     uint256 cooldownPeriod;
     uint256 maxStakeAmount;
     uint256 minStakeAmount;
-    mapping(address user => mapping(address spender => uint256 allowance)) allowance;
 }
 
 /**
@@ -175,7 +175,7 @@ function setStakingParameters(
  */
 function stakeERC20(address _tokenAddress, uint256 _value) {
     StakingStorage storage s = getStorage();
-    StakedTokenInfo storage stake = s.stakedTokens[_tokenAddress][0];
+    StakedTokenInfo storage stake = s.stakedTokens[msg.sender][_tokenAddress][0];
 
     bool isSupported = isTokenSupported(_tokenAddress);
     if (!isSupported) {
@@ -197,7 +197,7 @@ function stakeERC20(address _tokenAddress, uint256 _value) {
  */
 function stakeERC721(address _tokenAddress, uint256 _tokenId) {
     StakingStorage storage s = getStorage();
-    StakedTokenInfo storage stake = s.stakedTokens[_tokenAddress][_tokenId];
+    StakedTokenInfo storage stake = s.stakedTokens[msg.sender][_tokenAddress][_tokenId];
 
     bool isSupported = isTokenSupported(_tokenAddress);
     if (!isSupported) {
@@ -220,7 +220,7 @@ function stakeERC721(address _tokenAddress, uint256 _tokenId) {
  */
 function stakeERC1155(address _tokenAddress, uint256 _tokenId, uint256 _value) {
     StakingStorage storage s = getStorage();
-    StakedTokenInfo storage stake = s.stakedTokens[_tokenAddress][_tokenId];
+    StakedTokenInfo storage stake = s.stakedTokens[msg.sender][_tokenAddress][_tokenId];
 
     bool isSupported = isTokenSupported(_tokenAddress);
     if (!isSupported) {
@@ -282,7 +282,7 @@ function getStakedTokenInfo(address _tokenAddress, uint256 _tokenId)
     returns (uint256 amount, uint256 stakedAt, uint256 lastClaimedAt, uint256 accumulatedRewards)
 {
     StakingStorage storage s = getStorage();
-    StakedTokenInfo storage stake = s.stakedTokens[_tokenAddress][_tokenId];
+    StakedTokenInfo storage stake = s.stakedTokens[msg.sender][_tokenAddress][_tokenId];
     return (stake.amount, stake.stakedAt, stake.lastClaimedAt, stake.accumulatedRewards);
 }
 

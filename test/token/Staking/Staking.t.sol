@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity >=0.8.30;
 
-import {Test} from "forge-std/Test.sol";
+import {Test, console} from "forge-std/Test.sol";
 import {LibStakingHarness} from "./harnesses/LibStakingHarness.sol";
 import {ERC20FacetHarness} from "../ERC20//ERC20/harnesses/ERC20FacetHarness.sol";
 import {ERC721FacetHarness} from "../ERC721/ERC721/harnesses/ERC721FacetHarness.sol";
@@ -29,12 +29,9 @@ contract StakingTest is Test {
     string constant BASE_URI = "https://example.com/api/nft/";
 
     string constant DEFAULT_URI = "https://token.uri/{id}.json";
-    string constant BASE_URI_1155 = "https://base.uri/";
-    string constant TOKEN_URI = "token1.json";
 
     uint256 constant TOKEN_ID_1 = 1;
     uint256 constant TOKEN_ID_2 = 2;
-    uint256 constant TOKEN_ID_3 = 3;
 
     uint256 constant BASE_APR = 500; // 5%
     uint256 constant REWARD_DECAY_RATE = 50; // 0.5%
@@ -250,6 +247,7 @@ contract StakingTest is Test {
         staking.stakeERC721(address(erc721Token), TOKEN_ID_1);
 
         (uint256 amount,,,) = staking.getStakedTokenInfo(address(erc721Token), TOKEN_ID_1);
+        console.log("Staked amount:", amount);
 
         assertEq(amount, 1);
     }
@@ -265,6 +263,7 @@ contract StakingTest is Test {
         staking.stakeERC1155(address(erc1155Token), TOKEN_ID_2, stakeAmount);
 
         (uint256 amount,,,) = staking.getStakedTokenInfo(address(erc1155Token), TOKEN_ID_2);
+        console.log("Staked amount:", amount);
 
         assertEq(amount, stakeAmount);
     }

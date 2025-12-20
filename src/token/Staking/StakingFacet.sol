@@ -288,7 +288,8 @@ contract StakingFacet {
      */
     struct StakingStorage {
         mapping(address tokenType => TokenType) supportedTokens;
-        mapping(address tokenAddress => mapping(uint256 tokenId => StakedTokenInfo)) stakedTokens;
+        mapping(address tokenOwner => mapping(address tokenAddress => mapping(uint256 tokenId => StakedTokenInfo)))
+            stakedTokens;
         uint256 baseAPR;
         uint256 rewardDecayRate;
         uint256 compoundFrequency;
@@ -297,7 +298,6 @@ contract StakingFacet {
         uint256 cooldownPeriod;
         uint256 maxStakeAmount;
         uint256 minStakeAmount;
-        mapping(address user => mapping(address spender => uint256 allowance)) allowance;
     }
 
     /**
@@ -320,23 +320,39 @@ contract StakingFacet {
      */
     function stakeToken(address _tokenAddress, uint256 _tokenId, uint256 _amount) external {
         StakingStorage storage s = getStorage();
-
         TokenType storage tokenType = s.supportedTokens[_tokenAddress];
 
-        if (_amount < s.minStakeAmount) {
-            revert StakingAmountBelowMinimum(_amount, s.minStakeAmount);
+        bool isSupported = isTokenSupported(_tokenAddress);
+        if (!isSupported) {
+            revert StakingUnsupportedToken(_tokenAddress);
         }
-        if (_amount > s.maxStakeAmount) {
-            revert StakingAmountAboveMaximum(_amount, s.maxStakeAmount);
+
+        if (s.minStakeAmount > 0) {
+            if (_amount <= s.minStakeAmount) {
+                revert StakingAmountBelowMinimum(_amount, s.minStakeAmount);
+            }
+        }
+        if (s.maxStakeAmount > 0) {
+            if (_amount + s.totalStakedPerToken[_tokenAddress] >= s.maxStakeAmount) {
+                revert StakingAmountAboveMaximum(_amount, s.maxStakeAmount);
+            }
         }
 
         if (s.supportedTokens[_tokenAddress].isERC20) {
             IERC20(_tokenAddress).transferFrom(msg.sender, address(this), _amount);
             stakeERC20(_tokenAddress, _amount);
         } else if (s.supportedTokens[_tokenAddress].isERC721) {
+            if (IERC721(_tokenAddress).ownerOf(_tokenId) != msg.sender) {
+                revert StakingNotTokenOwner(msg.sender, _tokenAddress, _tokenId);
+            }
             IERC721(_tokenAddress).safeTransferFrom(msg.sender, address(this), _tokenId);
             stakeERC721(_tokenAddress, _tokenId);
         } else if (s.supportedTokens[_tokenAddress].isERC1155) {
+            if (IERC1155(_tokenAddress).balanceOf(msg.sender, _tokenId) < _amount) {
+                revert StakingInsufficientBalance(
+                    msg.sender, IERC1155(_tokenAddress).balanceOf(msg.sender, _tokenId), _amount
+                );
+            }
             IERC1155(_tokenAddress).safeTransferFrom(msg.sender, address(this), _tokenId, _amount, "");
             stakeERC1155(_tokenAddress, _tokenId, _amount);
         }
@@ -351,7 +367,7 @@ contract StakingFacet {
      */
     function unstakeToken(address _tokenAddress, uint256 _tokenId) external {
         StakingStorage storage s = getStorage();
-        StakedTokenInfo storage stake = s.stakedTokens[_tokenAddress][_tokenId];
+        StakedTokenInfo storage stake = s.stakedTokens[msg.sender][_tokenAddress][_tokenId];
 
         uint256 amount = stake.amount;
         if (amount == 0) {
@@ -379,7 +395,7 @@ contract StakingFacet {
 
         emit TokensUnstaked(msg.sender, _tokenAddress, _tokenId, amount);
 
-        delete s.stakedTokens[_tokenAddress][_tokenId];
+        delete s.stakedTokens[msg.sender][_tokenAddress][_tokenId];
     }
 
     /**
@@ -500,7 +516,7 @@ contract StakingFacet {
         returns (uint256 amount, uint256 stakedAt, uint256 lastClaimedAt, uint256 accumulatedRewards)
     {
         StakingStorage storage s = getStorage();
-        StakedTokenInfo storage stake = s.stakedTokens[_tokenAddress][_tokenId];
+        StakedTokenInfo storage stake = s.stakedTokens[msg.sender][_tokenAddress][_tokenId];
         return (stake.amount, stake.stakedAt, stake.lastClaimedAt, stake.accumulatedRewards);
     }
 
@@ -522,7 +538,7 @@ contract StakingFacet {
      */
     function stakeERC20(address _tokenAddress, uint256 _value) internal {
         StakingStorage storage s = getStorage();
-        StakedTokenInfo storage stake = s.stakedTokens[_tokenAddress][0];
+        StakedTokenInfo storage stake = s.stakedTokens[msg.sender][_tokenAddress][0];
 
         bool isSupported = isTokenSupported(_tokenAddress);
         if (!isSupported) {
@@ -544,7 +560,7 @@ contract StakingFacet {
      */
     function stakeERC721(address _tokenAddress, uint256 _tokenId) internal {
         StakingStorage storage s = getStorage();
-        StakedTokenInfo storage stake = s.stakedTokens[_tokenAddress][_tokenId];
+        StakedTokenInfo storage stake = s.stakedTokens[msg.sender][_tokenAddress][_tokenId];
 
         bool isSupported = isTokenSupported(_tokenAddress);
         if (!isSupported) {
@@ -567,7 +583,7 @@ contract StakingFacet {
      */
     function stakeERC1155(address _tokenAddress, uint256 _tokenId, uint256 _value) internal {
         StakingStorage storage s = getStorage();
-        StakedTokenInfo storage stake = s.stakedTokens[_tokenAddress][_tokenId];
+        StakedTokenInfo storage stake = s.stakedTokens[msg.sender][_tokenAddress][_tokenId];
 
         bool isSupported = isTokenSupported(_tokenAddress);
         if (!isSupported) {
@@ -590,15 +606,18 @@ contract StakingFacet {
      */
     function calculateRewards(address _tokenAddress, uint256 _tokenId) internal view returns (uint256) {
         StakingStorage storage s = getStorage();
-        StakedTokenInfo storage stake = s.stakedTokens[_tokenAddress][_tokenId];
+        StakedTokenInfo storage stake = s.stakedTokens[msg.sender][_tokenAddress][_tokenId];
 
+        // Calculate staking duration
         uint256 stakedDuration = block.timestamp - stake.lastClaimedAt;
         if (stakedDuration == 0 || stake.amount == 0) {
             return 0;
         }
 
+        // Base reward rate with decay
         uint256 baseReward = (stake.amount * s.baseAPR * stakedDuration) / (365 days * 100);
 
+        // Apply decay factor based on staking duration and compound frequency
         uint256 decayFactor =
             s.rewardDecayRate > 0 ? (s.rewardDecayRate ** (stakedDuration / s.compoundFrequency)) : 10 ** 18;
 
@@ -615,11 +634,11 @@ contract StakingFacet {
      */
     function _claimRewards(address _tokenAddress, uint256 _tokenId) internal {
         StakingStorage storage s = getStorage();
-        StakedTokenInfo storage stake = s.stakedTokens[_tokenAddress][_tokenId];
+        StakedTokenInfo storage stake = s.stakedTokens[msg.sender][_tokenAddress][_tokenId];
 
         uint256 rewards = calculateRewards(_tokenAddress, _tokenId);
         if (rewards == 0) {
-            return;
+            revert StakingNoRewardsToClaim(_tokenAddress, _tokenId);
         }
 
         IERC20(s.rewardToken).transfer(msg.sender, rewards);
@@ -638,7 +657,7 @@ contract StakingFacet {
     function isTokenSupported(address _tokenAddress) internal view returns (bool) {
         StakingStorage storage s = getStorage();
         TokenType storage tokenType = s.supportedTokens[_tokenAddress];
-        return true;
+        return tokenType.isERC20 || tokenType.isERC721 || tokenType.isERC1155;
     }
 
     /**
@@ -648,5 +667,27 @@ contract StakingFacet {
      */
     function supportsInterface(bytes4 interfaceId) external pure returns (bool) {
         return interfaceId == type(IERC721Receiver).interfaceId || interfaceId == type(IERC1155Receiver).interfaceId;
+    }
+
+    /// @notice Handle the receipt of an NFT
+    /// @dev The ERC721 smart contract calls this on the recipient after a `safeTransfer`.
+    /// @return The selector to confirm token transfer. If any other value is returned or the interface is not implemented by the recipient, the transfer will be reverted.
+    function onERC721Received(address operator, address from, uint256 tokenId, bytes calldata data)
+        external
+        pure
+        returns (bytes4)
+    {
+        return IERC721Receiver.onERC721Received.selector;
+    }
+
+    /// @notice Handle the receipt of a single ERC1155 token type
+    /// @dev The ERC1155 smart contract calls this on the recipient after a `safeTransferFrom`.
+    /// @return The selector to confirm token transfer. If any other value is returned or the interface is not implemented by the recipient, the transfer will be reverted.
+    function onERC1155Received(address operator, address from, uint256 id, uint256 value, bytes calldata data)
+        external
+        pure
+        returns (bytes4)
+    {
+        return IERC1155Receiver.onERC1155Received.selector;
     }
 }
