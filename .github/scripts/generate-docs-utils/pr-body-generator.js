@@ -60,7 +60,7 @@ function generatePRBody(summary) {
   body += '- [ ] Ensure consistency with existing docs\n\n';
 
   body += '---\n';
-  body += '** 🚨 This PR was automatically generated. Please ALWAYS review before merging **\n';
+  body += '🚨 **This PR was automatically generated. Please ALWAYS review before merging.**\n';
   body += `Generated on: ${new Date().toISOString()}\n`;
 
   return body;

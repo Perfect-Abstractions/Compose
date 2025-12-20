@@ -25,6 +25,12 @@ function registerHelpers() {
   Handlebars.registerHelper('escapeJsx', helpers.escapeJsx);
   Handlebars.registerHelper('sanitizeMdx', helpers.sanitizeMdx);
   Handlebars.registerHelper('escapeMarkdownTable', helpers.escapeMarkdownTable);
+  // Helper to escape value for JavaScript strings in JSX object literals
+  Handlebars.registerHelper('escapeJsString', function(value) {
+    if (!value) return '';
+    const escaped = helpers.escapeJsString(value);
+    return new Handlebars.SafeString(escaped);
+  });
   
   // Helper to emit a JSX style literal: returns a string like {{display: "flex", gap: "1rem"}}
   Handlebars.registerHelper('styleLiteral', function(styles) {

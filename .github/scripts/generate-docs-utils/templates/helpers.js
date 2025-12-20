@@ -105,6 +105,23 @@ function escapeHtml(str) {
     .replace(/'/g, '&#39;');
 }
 
+/**
+ * Escape string for use in JavaScript/JSX object literal values
+ * Escapes quotes and backslashes for JavaScript strings (not HTML entities)
+ * @param {string} str - String to escape
+ * @returns {string} Escaped string safe for JavaScript string literals
+ */
+function escapeJsString(str) {
+  if (!str) return '';
+  return String(str)
+    .replace(/\\/g, '\\\\')  // Escape backslashes first
+    .replace(/"/g, '\\"')     // Escape double quotes
+    .replace(/'/g, "\\'")     // Escape single quotes
+    .replace(/\n/g, '\\n')    // Escape newlines
+    .replace(/\r/g, '\\r')    // Escape carriage returns
+    .replace(/\t/g, '\\t');   // Escape tabs
+}
+
 module.exports = {
   escapeYaml,
   escapeJsx,
@@ -113,5 +130,6 @@ module.exports = {
   toJsxExpression,
   escapeMarkdownTable,
   escapeHtml,
+  escapeJsString,
 };
 

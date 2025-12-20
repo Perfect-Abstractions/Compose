@@ -82,7 +82,7 @@ This module provides internal functions for use in your custom facets. Import it
     {
       name: "{{name}}",
       type: "{{#if type}}{{type}}{{else}}constant{{/if}}",
-      description: "{{#if description}}{{escapeJsx description}}{{/if}}{{#if value}} (Value: `{{value}}`){{/if}}"
+      description: "{{#if description}}{{escapeJsx description}}{{/if}}{{#if value}} (Value: `{{escapeJsString value}}`){{/if}}"
     }{{#unless @last}},{{/unless}}
 {{/each}}
   ]}
