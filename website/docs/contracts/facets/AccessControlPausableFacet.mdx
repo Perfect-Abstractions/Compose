@@ -1,0 +1,375 @@
+---
+sidebar_position: 99
+title: "AccessControlPausableFacet"
+description: "Role-based access control with pause functionality for Compose diamonds"
+gitSource: "https://github.com/maxnorm/Compose/blob/8fcbb812c7f4f59338db6b04ce17631a729a30f9/src/access/AccessControlPausable/AccessControlPausableFacet.sol"
+---
+
+import DocSubtitle  from '@site/src/components/docs/DocSubtitle';
+import Badge from '@site/src/components/ui/Badge';
+import Callout from '@site/src/components/ui/Callout';
+import CalloutBox from '@site/src/components/ui/CalloutBox';
+import Accordion, { AccordionGroup } from '@site/src/components/ui/Accordion';
+import PropertyTable from '@site/src/components/api/PropertyTable';
+import ExpandableCode from '@site/src/components/code/ExpandableCode';
+import CodeShowcase from '@site/src/components/code/CodeShowcase';
+import RelatedDocs from '@site/src/components/docs/RelatedDocs';
+import WasThisHelpful from '@site/src/components/docs/WasThisHelpful';
+import LastUpdated from '@site/src/components/docs/LastUpdated';
+import ReadingTime from '@site/src/components/docs/ReadingTime';
+import GradientText from '@site/src/components/ui/GradientText';
+import GradientButton from '@site/src/components/ui/GradientButton';
+
+<DocSubtitle>
+Role-based access control with pause functionality for Compose diamonds
+</DocSubtitle>
+
+<Callout type="info" title="Key Features">
+- Granular role pausing: Allows selective disabling of functionalities tied to specific roles.
+- Admin-controlled pausing: Only designated role administrators can pause or unpause roles.
+- Integrated with role-based access control: Seamlessly combines pausing with existing role checks.
+</Callout>
+
+## Overview
+
+The AccessControlPausableFacet enhances a Compose diamond by integrating role-based access control with the ability to pause specific roles. This allows for granular control over functionality, enabling administrators to temporarily halt operations for certain roles without affecting the entire diamond.
+
+---
+
+## Storage
+
+### AccessControlStorage
+
+<ExpandableCode language="solidity" maxLines={15} title="Definition">
+{`struct AccessControlStorage {
+    mapping(address account => mapping(bytes32 role => bool hasRole)) hasRole;
+    mapping(bytes32 role => bytes32 adminRole) adminRole;
+}`}
+</ExpandableCode>
+
+---
+### AccessControlPausableStorage
+
+<ExpandableCode language="solidity" maxLines={15} title="Definition">
+{`struct AccessControlPausableStorage {
+    mapping(bytes32 role => bool paused) pausedRoles;
+}`}
+</ExpandableCode>
+
+### State Variables
+
+<PropertyTable
+  properties={[
+    {
+      name: "ACCESS_CONTROL_STORAGE_POSITION",
+      type: "constant",
+      description: "Diamond storage slot position for this module"
+    },
+    {
+      name: "PAUSABLE_STORAGE_POSITION",
+      type: "constant",
+      description: "Diamond storage slot position for this module"
+    }
+  ]}
+  showRequired={false}
+/>
+
+## Functions
+
+### getAccessControlStorage
+
+Returns the storage for AccessControl.
+
+<ExpandableCode language="solidity" maxLines={8}>
+{`function getAccessControlStorage() internal pure returns (AccessControlStorage storage s);`}
+</ExpandableCode>
+
+**Returns:**
+
+<PropertyTable
+  properties={[
+    {
+      name: "s",
+      type: "AccessControlStorage",
+      description: "The AccessControl storage struct."
+    }
+  ]}
+  showRequired={false}
+/>
+
+---
+### getStorage
+
+Returns the storage for AccessControlPausable.
+
+<ExpandableCode language="solidity" maxLines={8}>
+{`function getStorage() internal pure returns (AccessControlPausableStorage storage s);`}
+</ExpandableCode>
+
+**Returns:**
+
+<PropertyTable
+  properties={[
+    {
+      name: "s",
+      type: "AccessControlPausableStorage",
+      description: "The AccessControlPausable storage struct."
+    }
+  ]}
+  showRequired={false}
+/>
+
+---
+### isRolePaused
+
+Returns if a role is paused.
+
+<ExpandableCode language="solidity" maxLines={8}>
+{`function isRolePaused(bytes32 _role) external view returns (bool);`}
+</ExpandableCode>
+
+**Parameters:**
+
+<PropertyTable
+  properties={[
+    {
+      name: "_role",
+      type: "bytes32",
+      description: "The role to check."
+    }
+  ]}
+  showRequired={false}
+/>
+
+**Returns:**
+
+<PropertyTable
+  properties={[
+    {
+      name: "-",
+      type: "bool",
+      description: "True if the role is paused, false otherwise."
+    }
+  ]}
+  showRequired={false}
+/>
+
+---
+### pauseRole
+
+Temporarily disables a role, preventing all accounts from using it. Only the admin of the role can pause it. Emits a RolePaused event. Reverts with AccessControlUnauthorizedAccount If the caller is not the admin of the role.
+
+<ExpandableCode language="solidity" maxLines={8}>
+{`function pauseRole(bytes32 _role) external;`}
+</ExpandableCode>
+
+**Parameters:**
+
+<PropertyTable
+  properties={[
+    {
+      name: "_role",
+      type: "bytes32",
+      description: "The role to pause."
+    }
+  ]}
+  showRequired={false}
+/>
+
+---
+### unpauseRole
+
+Re-enables a role that was previously paused. Only the admin of the role can unpause it. Emits a RoleUnpaused event. Reverts with AccessControlUnauthorizedAccount If the caller is not the admin of the role.
+
+<ExpandableCode language="solidity" maxLines={8}>
+{`function unpauseRole(bytes32 _role) external;`}
+</ExpandableCode>
+
+**Parameters:**
+
+<PropertyTable
+  properties={[
+    {
+      name: "_role",
+      type: "bytes32",
+      description: "The role to unpause."
+    }
+  ]}
+  showRequired={false}
+/>
+
+---
+### requireRoleNotPaused
+
+Checks if an account has a role and if the role is not paused. - Reverts with AccessControlUnauthorizedAccount If the account does not have the role. - Reverts with AccessControlRolePaused If the role is paused.
+
+<ExpandableCode language="solidity" maxLines={8}>
+{`function requireRoleNotPaused(bytes32 _role, address _account) external view;`}
+</ExpandableCode>
+
+**Parameters:**
+
+<PropertyTable
+  properties={[
+    {
+      name: "_role",
+      type: "bytes32",
+      description: "The role to check."
+    },
+    {
+      name: "_account",
+      type: "address",
+      description: "The account to check the role for."
+    }
+  ]}
+  showRequired={false}
+/>
+
+## Events
+
+<AccordionGroup>
+  <Accordion title="RolePaused" defaultOpen={false}>
+    <div style={{marginBottom: "1rem"}}>
+      Event emitted when a role is paused.
+    </div>
+
+    <div style={{marginBottom: "1rem"}}>
+      <strong>Signature:</strong>
+      <ExpandableCode language="solidity" maxLines={5}>
+{`event RolePaused(bytes32 indexed _role, address indexed _account);`}
+      </ExpandableCode>
+    </div>
+
+    <div style={{marginBottom: "1rem"}}>
+      <strong>Parameters:</strong>
+      <PropertyTable
+        properties={[
+          {
+            name: "_role",
+            type: "bytes32",
+            description: "The role that was paused."
+          },
+          {
+            name: "_account",
+            type: "address",
+            description: "The account that paused the role."
+          }
+        ]}
+        showRequired={false}
+      />
+    </div>
+  </Accordion>
+  <Accordion title="RoleUnpaused" defaultOpen={false}>
+    <div style={{marginBottom: "1rem"}}>
+      Event emitted when a role is unpaused.
+    </div>
+
+    <div style={{marginBottom: "1rem"}}>
+      <strong>Signature:</strong>
+      <ExpandableCode language="solidity" maxLines={5}>
+{`event RoleUnpaused(bytes32 indexed _role, address indexed _account);`}
+      </ExpandableCode>
+    </div>
+
+    <div style={{marginBottom: "1rem"}}>
+      <strong>Parameters:</strong>
+      <PropertyTable
+        properties={[
+          {
+            name: "_role",
+            type: "bytes32",
+            description: "The role that was unpaused."
+          },
+          {
+            name: "_account",
+            type: "address",
+            description: "The account that unpaused the role."
+          }
+        ]}
+        showRequired={false}
+      />
+    </div>
+  </Accordion>
+</AccordionGroup>
+
+## Errors
+
+<AccordionGroup>
+  <Accordion title="AccessControlUnauthorizedAccount" defaultOpen={false}>
+    <div style={{marginBottom: "1rem"}}>
+      Thrown when the account does not have a specific role.
+    </div>
+
+    <div>
+      <strong>Signature:</strong>
+      <ExpandableCode language="solidity" maxLines={5}>
+error AccessControlUnauthorizedAccount(address _account, bytes32 _role);
+      </ExpandableCode>
+    </div>
+  </Accordion>
+  <Accordion title="AccessControlRolePaused" defaultOpen={false}>
+    <div style={{marginBottom: "1rem"}}>
+      Thrown when a role is paused and an operation requiring that role is attempted.
+    </div>
+
+    <div>
+      <strong>Signature:</strong>
+      <ExpandableCode language="solidity" maxLines={5}>
+error AccessControlRolePaused(bytes32 _role);
+      </ExpandableCode>
+    </div>
+  </Accordion>
+</AccordionGroup>
+
+## Usage Example
+
+<ExpandableCode language="solidity" maxLines={20} title="Example Implementation">
+{`pragma solidity ^0.8.30;
+
+import {DiamondLoupeFacet} from "@compose/diamond-loupe/DiamondLoupeFacet.sol";
+import {DiamondCutFacet} from "@compose/diamond-cut/DiamondCutFacet.sol";
+import {AccessControlPausableFacet} from "@compose/access-control/AccessControlPausableFacet.sol";
+
+contract DeployDiamond {
+    // ... deployment setup ...
+
+    function deployDiamond() public {
+        // ... other facet deployments ...
+
+        AccessControlPausableFacet accessControlPausableFacet = new AccessControlPausableFacet();
+
+        // Add AccessControlPausableFacet to the diamond
+        // ... Diamond Cut operations ...
+
+        // Example: Get storage pointers
+        AccessControlPausableFacet.AccessControlPausableStorage storage acpStorage = AccessControlPausableFacet.getStorage();
+        // AccessControlPausableFacet.AccessControlStorage storage acStorage = AccessControlPausableFacet.getAccessControlStorage();
+
+        // Example: Pause a role (assuming 'MY_ROLE' is defined and caller is admin)
+        // accessControlPausableFacet.pauseRole(keccak256("MY_ROLE"));
+
+        // Example: Check if a role is paused
+        // bool isPaused = accessControlPausableFacet.isRolePaused(keccak256("MY_ROLE"));
+    }
+}`}
+</ExpandableCode>
+
+## Best Practices
+
+<Callout type="tip" title="Best Practice">
+- Initialize roles and assign administrators via an upgrade function or during deployment to ensure proper access control setup.
+- Use `requireRoleNotPaused` within your facet functions to enforce the paused state of roles before executing sensitive operations.
+- Store role identifiers consistently (e.g., using `keccak256` hashes of role names) to avoid discrepancies when checking pause status or granting permissions.
+</Callout>
+
+## Security Considerations
+
+<Callout type="warning" title="Security">
+Ensure that the caller attempting to pause or unpause a role possesses the necessary administrative privileges for that specific role. Reentrancy is not a direct concern for `pauseRole` and `unpauseRole` as they only modify internal state and do not make external calls. However, downstream functions that check the paused state must be audited for reentrancy risks.
+</Callout>
+
+<div style={{marginTop: "3rem", paddingTop: "2rem", borderTop: "1px solid var(--ifm-color-emphasis-200)"}}>
+  <WasThisHelpful pageId="AccessControlPausableFacet" />
+</div>
+
+<LastUpdated date="2025-12-20T02:02:13.795Z" />
