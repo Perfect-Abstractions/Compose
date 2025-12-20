@@ -63,4 +63,25 @@ contract StakingFacetHarness is StakingFacet {
     function tokenSupported(address _tokenAddress) external view {
         isTokenSupported(_tokenAddress);
     }
+
+    function testSetStakeInfo(
+        address user,
+        address token,
+        uint256 tokenId,
+        uint256 amount,
+        uint256 stakedAt,
+        uint256 lastClaimedAt
+    ) external {
+        StakingStorage storage s = getStorage();
+        StakedTokenInfo storage stake = s.stakedTokens[user][token][tokenId];
+
+        stake.amount = amount;
+        stake.stakedAt = stakedAt;
+        stake.lastClaimedAt = lastClaimedAt;
+    }
+
+    function getStakeInfo(address user, address token, uint256 tokenId) external view returns (StakedTokenInfo memory) {
+        StakingStorage storage s = getStorage();
+        return s.stakedTokens[user][token][tokenId];
+    }
 }

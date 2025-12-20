@@ -238,6 +238,48 @@ contract StakingFacetTest is Test {
         vm.stopPrank();
     }
 
+    function test_FuzzRewardDecayMath(uint256 stakedSeconds, uint256 decayRate, uint256 compoundFreq) public {
+        vm.startPrank(owner);
+        // Clamp fuzzed values to safe bounds
+        stakedSeconds = bound(stakedSeconds, 1 days, 3650 days); // 1 day to 10 years
+        decayRate = bound(decayRate, 0.5e18, 1.5e18); // 50% to 150%
+        compoundFreq = bound(compoundFreq, 1 days, 365 days); // 1 day to 1 year
+
+        facet.addSupportedToken(address(erc20Token), true, false, false);
+        facet.addSupportedToken(address(rewardToken), true, false, false);
+
+        // set the staking parameters
+        facet.setStakingParameters(
+            1000, decayRate, compoundFreq, address(rewardToken), COOLDOWN_PERIOD, 1, type(uint256).max
+        );
+
+        vm.stopPrank();
+
+        /**
+         * Warp time forward to ensure block.timestamp > stakedSeconds
+         * Add buffer to ensure we're well past the stake time
+         */
+        vm.warp(stakedSeconds + 1 days);
+
+        uint256 stakeTime = block.timestamp - stakedSeconds;
+        facet.testSetStakeInfo(alice, address(erc20Token), 0, 100 ether, stakeTime, stakeTime);
+
+        vm.prank(alice);
+        uint256 rewards = facet.calculateRewardsForToken(address(erc20Token), 0);
+
+        assertLe(rewards, type(uint256).max);
+        if (decayRate >= 1e18 && stakedSeconds < 10 * 365 days) {
+            assertGt(rewards, 0);
+        }
+
+        if (rewards == 0 || rewards > 1_000_000 ether) {
+            emit log_named_uint("Decay Rate", decayRate);
+            emit log_named_uint("Compound Frequency", compoundFreq);
+            emit log_named_uint("Staked Seconds", stakedSeconds);
+            emit log_named_uint("Calculated Rewards", rewards);
+        }
+    }
+
     function test_Unstake() public {
         vm.startPrank(alice);
 
