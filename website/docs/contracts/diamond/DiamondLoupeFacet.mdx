@@ -1,0 +1,252 @@
+---
+sidebar_position: 99
+title: "DiamondLoupeFacet"
+description: "Query diamond facets and their associated function selectors."
+gitSource: "https://github.com/maxnorm/Compose/blob/00106e341b257629f718c654a349c0ad60a7cf8a/src/diamond/DiamondLoupeFacet.sol"
+---
+
+import DocSubtitle  from '@site/src/components/docs/DocSubtitle';
+import Badge from '@site/src/components/ui/Badge';
+import Callout from '@site/src/components/ui/Callout';
+import CalloutBox from '@site/src/components/ui/CalloutBox';
+import Accordion, { AccordionGroup } from '@site/src/components/ui/Accordion';
+import PropertyTable from '@site/src/components/api/PropertyTable';
+import ExpandableCode from '@site/src/components/code/ExpandableCode';
+import CodeShowcase from '@site/src/components/code/CodeShowcase';
+import RelatedDocs from '@site/src/components/docs/RelatedDocs';
+import WasThisHelpful from '@site/src/components/docs/WasThisHelpful';
+import LastUpdated from '@site/src/components/docs/LastUpdated';
+import ReadingTime from '@site/src/components/docs/ReadingTime';
+import GradientText from '@site/src/components/ui/GradientText';
+import GradientButton from '@site/src/components/ui/GradientButton';
+
+<DocSubtitle>
+Query diamond facets and their associated function selectors.
+</DocSubtitle>
+
+<Callout type="info" title="Key Features">
+- Provides read-only access to the diamond's facet registry.
+- Supports querying individual facet addresses by function selector.
+- Returns a structured list of all facets and their associated selectors.
+</Callout>
+
+## Overview
+
+The DiamondLoupeFacet provides essential introspection capabilities for a diamond proxy. It allows developers to query which facets are deployed, their addresses, and the specific function selectors each facet handles. This is crucial for understanding the diamond's internal structure and for building tools or dapps that interact with it.
+
+---
+
+## Storage
+
+### FacetAndPosition
+
+<ExpandableCode language="solidity" maxLines={15} title="Definition">
+{`struct FacetAndPosition {
+    address facet;
+    uint32 position;
+}`}
+</ExpandableCode>
+
+---
+### DiamondStorage
+
+<ExpandableCode language="solidity" maxLines={15} title="Definition">
+{`struct DiamondStorage {
+    mapping(bytes4 functionSelector => FacetAndPosition) facetAndPosition;
+    /**
+     * Array of all function selectors that can be called in the diamond.
+     */
+    bytes4[] selectors;
+}`}
+</ExpandableCode>
+
+---
+### Facet
+
+<ExpandableCode language="solidity" maxLines={15} title="Definition">
+{`struct Facet {
+    address facet;
+    bytes4[] functionSelectors;
+}`}
+</ExpandableCode>
+
+### State Variables
+
+<PropertyTable
+  properties={[
+    {
+      name: "DIAMOND_STORAGE_POSITION",
+      type: "constant",
+      description: "Diamond storage slot position for this module"
+    }
+  ]}
+  showRequired={false}
+/>
+
+## Functions
+
+### getStorage
+
+<ExpandableCode language="solidity" maxLines={8}>
+{`function getStorage() internal pure returns (DiamondStorage storage s);`}
+</ExpandableCode>
+
+---
+### facetAddress
+
+Gets the facet address that supports the given selector. If facet is not found return address(0).
+
+<ExpandableCode language="solidity" maxLines={8}>
+{`function facetAddress(bytes4 _functionSelector) external view returns (address facet);`}
+</ExpandableCode>
+
+**Parameters:**
+
+<PropertyTable
+  properties={[
+    {
+      name: "_functionSelector",
+      type: "bytes4",
+      description: "The function selector."
+    }
+  ]}
+  showRequired={false}
+/>
+
+**Returns:**
+
+<PropertyTable
+  properties={[
+    {
+      name: "facet",
+      type: "address",
+      description: "The facet address."
+    }
+  ]}
+  showRequired={false}
+/>
+
+---
+### facetFunctionSelectors
+
+Gets all the function selectors supported by a specific facet. Returns the set of selectors that this diamond currently routes to the given facet address. How it works: 1. Iterates through the diamond’s global selector list (s.selectors) — i.e., the selectors that have been added to this diamond. 2. For each selector, reads its facet address from diamond storage (s.facetAndPosition[selector].facet) and compares it to `_facet`. 3. When it matches, writes the selector into a preallocated memory array and increments a running count. 4. After the scan, updates the logical length of the result array with assembly to the exact number of matches. Why this approach: - Single-pass O(n) scan over all selectors keeps the logic simple and predictable. - Preallocating to the maximum possible size (total selector count) avoids repeated reallocations while building the result. - Trimming the array length at the end yields an exactly sized return value.
+
+<ExpandableCode language="solidity" maxLines={8}>
+{`function facetFunctionSelectors(address _facet) external view returns (bytes4[] memory facetSelectors);`}
+</ExpandableCode>
+
+**Parameters:**
+
+<PropertyTable
+  properties={[
+    {
+      name: "_facet",
+      type: "address",
+      description: "The facet address to filter by."
+    }
+  ]}
+  showRequired={false}
+/>
+
+**Returns:**
+
+<PropertyTable
+  properties={[
+    {
+      name: "facetSelectors",
+      type: "bytes4[]",
+      description: "The function selectors implemented by &#x60;_facet&#x60;."
+    }
+  ]}
+  showRequired={false}
+/>
+
+---
+### facetAddresses
+
+Get all the facet addresses used by a diamond. This function returns the unique set of facet addresses that provide functionality to the diamond. How it works:** 1. Uses a memory-based hash map to group facet addresses by the last byte of the address, reducing linear search costs from O(n²) to approximately O(n) for most cases. 2. Reuses the selectors array memory space to store the unique facet addresses, avoiding an extra memory allocation for the intermediate array. The selectors array is overwritten with facet addresses as we iterate. 3. For each selector, looks up its facet address and checks if we've seen this address before by searching the appropriate hash map bucket. 4. If the facet is new (not found in the bucket), expands the bucket by 4 slots if it's full or empty, then adds the facet to both the bucket and the return array. 5. If the facet was already seen, skips it to maintain uniqueness. 6. Finally, sets the correct length of the return array to match the number of unique facets found. Why this approach:** - Hash mapping by last address byte provides O(1) average-case bucket lookup instead of scanning all previously-found facets linearly for each selector. - Growing in fixed-size chunks (4 for buckets) keeps reallocations infrequent and prevents over-allocation, while keeping bucket sizes small for sparse key distributions. - Reusing the selectors array memory eliminates one memory allocation and reduces total memory usage, which saves gas. - This design is optimized for diamonds with many selectors across many facets, where the original O(n²) nested loop approach becomes prohibitively expensive. - The 256-bucket hash map trades a small fixed memory cost for dramatic algorithmic improvement in worst-case scenarios.
+
+<ExpandableCode language="solidity" maxLines={8}>
+{`function facetAddresses() external view returns (address[] memory allFacets);`}
+</ExpandableCode>
+
+**Returns:**
+
+<PropertyTable
+  properties={[
+    {
+      name: "allFacets",
+      type: "address[]",
+      description: "Array of unique facet addresses used by this diamond."
+    }
+  ]}
+  showRequired={false}
+/>
+
+---
+### facets
+
+Gets all facets and their selectors. Returns each unique facet address currently used by the diamond and the list of function selectors that the diamond maps to that facet. How it works:** 1. Uses a memory-based hash map to group facets by the last byte of their address, reducing linear search costs from O(n²) to approximately O(n) for most cases. 2. Reuses the selectors array memory space to store pointers to Facet structs, avoiding an extra memory allocation for the intermediate array. 3. For each selector, looks up its facet address and checks if we've seen this facet before by searching the appropriate hash map bucket. 4. If the facet is new, expands the bucket by 4 slots if it's full or empty, creates a Facet struct with a 16-slot selector array, and stores a pointer to it in both the bucket and the facet pointers array. 5. If the facet exists, expands its selector array by 16 slots if full, then appends the selector to the array. 6. Finally, copies all Facet structs from their pointers into a properly-sized return array. Why this approach:** - Hash mapping by last address byte provides O(1) average-case bucket lookup instead of scanning all previously-found facets linearly. - Growing in fixed-size chunks (4 for buckets, 16 for selector arrays) keeps reallocations infrequent and prevents over-allocation. - Reusing the selectors array memory reduces total memory usage and allocation. - This design is optimized for diamonds with many facets and many selectors, where the original O(n²) nested loop approach becomes prohibitively expensive.
+
+<ExpandableCode language="solidity" maxLines={8}>
+{`function facets() external view returns (Facet[] memory facetsAndSelectors);`}
+</ExpandableCode>
+
+**Returns:**
+
+<PropertyTable
+  properties={[
+    {
+      name: "facetsAndSelectors",
+      type: "Facet[]",
+      description: "Array of Facet structs, each containing a facet address and function selectors."
+    }
+  ]}
+  showRequired={false}
+/>
+
+## Usage Example
+
+<ExpandableCode language="solidity" maxLines={20} title="Example Implementation">
+{`pragma solidity ^0.8.30;
+
+import {IDiamondLoupe} from "@compose/diamond/contracts/facets/DiamondLoupeFacet.sol";
+
+contract DiamondUser {
+    address immutable diamondAddress;
+
+    constructor(address _diamondAddress) {
+        diamondAddress = _diamondAddress;
+    }
+
+    function getDiamondFacets() public view returns (IDiamondLoupe.Facet[] memory) {
+        IDiamondLoupe loupe = IDiamondLoupe(diamondAddress);
+        return loupe.facets();
+    }
+
+    function getFacetAddrForSelector(bytes4 _selector) public view returns (address) {
+        IDiamondLoupe loupe = IDiamondLoupe(diamondAddress);
+        return loupe.facetAddress(_selector);
+    }
+}`}
+</ExpandableCode>
+
+## Best Practices
+
+<Callout type="tip" title="Best Practice">
+- Integrate this facet into your diamond to enable runtime inspection of its deployed facets and their function mappings.
+- Use the `facets()` function to retrieve a comprehensive list of all facets and their selectors for auditing or tooling purposes.
+- Utilize `facetAddress(_selector)` to determine which facet handles a specific function call, aiding in debugging and external contract interactions.
+</Callout>
+
+## Security Considerations
+
+<Callout type="warning" title="Security">
+This facet is read-only and does not modify state, making it inherently safe from reentrancy and state corruption attacks. Access control is typically managed at the diamond proxy level, ensuring only authorized entities can modify the facet registry itself.
+</Callout>
+
+<div style={{marginTop: "3rem", paddingTop: "2rem", borderTop: "1px solid var(--ifm-color-emphasis-200)"}}>
+  <WasThisHelpful pageId="DiamondLoupeFacet" />
+</div>
+
+<LastUpdated date="2025-12-20T03:05:14.624Z" />
