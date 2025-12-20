@@ -1,0 +1,138 @@
+---
+sidebar_position: 99
+title: "NonReentrancyMod"
+description: "Prevent reentrant calls within diamond functions."
+gitSource: "https://github.com/maxnorm/Compose/blob/00106e341b257629f718c654a349c0ad60a7cf8a/src/libraries/NonReentrancyMod.sol"
+---
+
+import DocSubtitle  from '@site/src/components/docs/DocSubtitle';
+import Badge from '@site/src/components/ui/Badge';
+import Callout from '@site/src/components/ui/Callout';
+import CalloutBox from '@site/src/components/ui/CalloutBox';
+import Accordion, { AccordionGroup } from '@site/src/components/ui/Accordion';
+import PropertyTable from '@site/src/components/api/PropertyTable';
+import ExpandableCode from '@site/src/components/code/ExpandableCode';
+import CodeShowcase from '@site/src/components/code/CodeShowcase';
+import RelatedDocs from '@site/src/components/docs/RelatedDocs';
+import WasThisHelpful from '@site/src/components/docs/WasThisHelpful';
+import LastUpdated from '@site/src/components/docs/LastUpdated';
+import ReadingTime from '@site/src/components/docs/ReadingTime';
+import GradientText from '@site/src/components/ui/GradientText';
+import GradientButton from '@site/src/components/ui/GradientButton';
+
+<DocSubtitle>
+Prevent reentrant calls within diamond functions.
+</DocSubtitle>
+
+<Callout type="info" title="Key Features">
+- Atomic execution guarantee: Prevents reentrant calls, ensuring functions complete without interruption.
+- Simple integration: Utilizes a straightforward `enter`/`exit` pattern for easy adoption.
+- Gas efficiency: Designed to minimize gas overhead associated with reentrancy protection.
+</Callout>
+
+<Callout type="info" title="Module Usage">
+This module provides internal functions for use in your custom facets. Import it to access shared logic and storage.
+</Callout>
+
+## Overview
+
+The NonReentrancyMod module provides essential functions to prevent reentrant function calls, safeguarding against reentrancy attacks. By integrating this module, developers ensure that sensitive operations within a diamond are executed atomically and without unintended recursive calls, maintaining state integrity.
+
+---
+
+## Storage
+
+### State Variables
+
+<PropertyTable
+  properties={[
+    {
+      name: "NON_REENTRANT_SLOT",
+      type: "bytes32",
+      description: "Reentrancy guard storage slot (Value: `keccak256(\"compose.nonreentrant\")`)"
+    }
+  ]}
+  showRequired={false}
+/>
+
+## Functions
+
+### enter
+
+How to use as a library in user facets How to use as a modifier in user facets This unlocks the entry into a function
+
+<ExpandableCode language="solidity" maxLines={8}>
+{`function enter() ;`}
+</ExpandableCode>
+
+---
+### exit
+
+This locks the entry into a function
+
+<ExpandableCode language="solidity" maxLines={8}>
+{`function exit() ;`}
+</ExpandableCode>
+
+## Errors
+
+<AccordionGroup>
+  <Accordion title="Reentrancy" defaultOpen={false}>
+    <div style={{marginBottom: "1rem"}}>
+      Function selector - 0x43a0d067
+    </div>
+
+    <div>
+      <strong>Signature:</strong>
+      <ExpandableCode language="solidity" maxLines={5}>
+error Reentrancy();
+      </ExpandableCode>
+    </div>
+  </Accordion>
+</AccordionGroup>
+
+## Usage Example
+
+<ExpandableCode language="solidity" maxLines={20} title="Example Implementation">
+{`pragma solidity ^0.8.30;
+
+import {LibNonReentrancy} from "@compose/modules/NonReentrancyMod.sol";
+
+contract MyFacet {
+    using LibNonReentrancy for uint256;
+
+    uint256 internal _lock;
+
+    function protectedAction() external {
+        // Enter the non-reentrant lock. The lock state is managed internally by the library.
+        _lock.enter();
+
+        // Perform sensitive operations here...
+        // If another external call tries to re-enter this function while it's executing,
+        // it will revert due to the active lock.
+
+        // Exit the non-reentrant lock, allowing future calls.
+        _lock.exit();
+    }
+}`}
+</ExpandableCode>
+
+## Best Practices
+
+<Callout type="tip" title="Best Practice">
+- Use `_lock.enter()` at the beginning of functions vulnerable to reentrancy and `_lock.exit()` at the end, before any external calls or state changes that could trigger reentrancy.
+- Ensure the `_lock` variable is correctly initialized and managed according to the library's expectations. Typically, this involves a storage slot dedicated to the reentrancy lock.
+- Handle the `Reentrancy` error explicitly in calling facets to gracefully manage situations where a reentrant call is detected.
+</Callout>
+
+## Integration Notes
+
+<Callout type="success" title="Shared Storage">
+The `NonReentrancyMod` operates by managing a lock state, typically stored within a facet. The `enter` function sets the lock, and the `exit` function releases it. The library expects to be used with a `uint256` or equivalent type that can store the lock's state. Facets integrating this module must ensure that the storage slot used for the lock is appropriately managed and that the `enter` and `exit` functions are called in the correct sequence to maintain the reentrancy guard's integrity.
+</Callout>
+
+<div style={{marginTop: "3rem", paddingTop: "2rem", borderTop: "1px solid var(--ifm-color-emphasis-200)"}}>
+  <WasThisHelpful pageId="NonReentrancyMod" />
+</div>
+
+<LastUpdated date="2025-12-20T03:05:19.394Z" />
