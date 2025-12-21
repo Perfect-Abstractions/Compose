@@ -328,12 +328,14 @@ contract StakingFacet {
         TokenType storage tokenType = s.supportedTokens[_tokenAddress];
 
         bool isSupported = isTokenSupported(_tokenAddress);
+        bool isTokenERC20 = s.supportedTokens[_tokenAddress].isERC20;
+
         if (!isSupported) {
             revert StakingUnsupportedToken(_tokenAddress);
         }
 
         if (s.minStakeAmount > 0) {
-            if (_amount <= s.minStakeAmount) {
+            if (isTokenERC20 && _amount <= s.minStakeAmount) {
                 revert StakingAmountBelowMinimum(_amount, s.minStakeAmount);
             }
         }
@@ -605,6 +607,8 @@ contract StakingFacet {
     /**
      * @notice Calculates the rewards for a staked token.
      * @dev Uses base APR, decay rate, and compounding frequency to compute rewards.
+     * @dev Rewards are calculated based on the time since last claim.
+     * @dev Uses fixed-point arithmetic with 1e18 precision.
      * @param _tokenAddress The address of the staked token.
      * @param _tokenId The ID of the staked token.
      * @return finalReward The calculated reward amount.

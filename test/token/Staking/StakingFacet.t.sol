@@ -38,8 +38,11 @@ contract StakingFacetTest is Test {
     uint256 constant REWARD_DECAY_RATE = 0; // no decay
     uint256 constant COMPOUND_FREQUENCY = 365 days;
     uint256 constant COOLDOWN_PERIOD = 1 days;
-    uint256 constant MIN_STAKE_AMOUNT = 0 ether;
+    uint256 constant MIN_STAKE_AMOUNT = 1 ether;
     uint256 constant MAX_STAKE_AMOUNT = 1_000_000 ether;
+
+    event TokensStaked(address indexed staker, address indexed tokenAddress, uint256 indexed tokenId, uint256 amount);
+    event TokensUnstaked(address indexed staker, address indexed tokenAddress, uint256 indexed tokenId, uint256 amount);
 
     function setUp() public {
         alice = makeAddr("alice");
@@ -197,6 +200,22 @@ contract StakingFacetTest is Test {
         vm.stopPrank();
     }
 
+    function test_StakeToken_EmitTokensStakedEvent() public {
+        vm.startPrank(alice);
+
+        // Approve the staking contract to spend Alice's tokens
+        erc20Token.approve(address(facet), 500 ether);
+
+        // Expect event
+        vm.expectEmit(true, true, true, true);
+        emit TokensStaked(alice, address(erc20Token), 0, 500 ether);
+
+        // Stake tokens
+        facet.stakeToken(address(erc20Token), 0, 500 ether);
+
+        vm.stopPrank();
+    }
+
     function test_StakeToken_RevertsForUnsupportedToken() public {
         address unsupportedToken = makeAddr("unsupportedToken");
 
@@ -204,6 +223,140 @@ contract StakingFacetTest is Test {
 
         vm.expectRevert(abi.encodeWithSelector(StakingFacet.StakingUnsupportedToken.selector, unsupportedToken));
         facet.stakeToken(unsupportedToken, 0, 100 ether);
+
+        vm.stopPrank();
+    }
+
+    function test_StakeToken_RevertsForMinimumAmount() public {
+        vm.startPrank(alice);
+
+        vm.expectRevert(
+            abi.encodeWithSelector(StakingFacet.StakingAmountBelowMinimum.selector, 0 ether, MIN_STAKE_AMOUNT)
+        );
+        facet.stakeToken(address(erc20Token), 0, 0 ether);
+
+        vm.stopPrank();
+    }
+
+    function test_StakeToken_RevertsForMaximumAmount() public {
+        vm.startPrank(alice);
+
+        vm.expectRevert(
+            abi.encodeWithSelector(StakingFacet.StakingAmountAboveMaximum.selector, 2_000_000 ether, MAX_STAKE_AMOUNT)
+        );
+        facet.stakeToken(address(erc20Token), 0, 2_000_000 ether);
+
+        vm.stopPrank();
+    }
+
+    function test_StakeERC721Token_RevertsIfNotOwner() public {
+        vm.startPrank(bob);
+
+        // Bob tries to stake Alice's NFT
+        vm.expectRevert(
+            abi.encodeWithSelector(StakingFacet.StakingNotTokenOwner.selector, bob, address(erc721Token), TOKEN_ID_1)
+        );
+        facet.stakeToken(address(erc721Token), TOKEN_ID_1, 1);
+
+        vm.stopPrank();
+    }
+
+    function test_StakeERC1155Token_RevertsIfNotEnoughBalance() public {
+        vm.startPrank(bob);
+
+        // Bob tries to stake more ERC-1155 tokens than he owns
+        vm.expectRevert(abi.encodeWithSelector(StakingFacet.StakingInsufficientBalance.selector, bob, 10, 20));
+        facet.stakeToken(address(erc1155Token), TOKEN_ID_2, 20);
+
+        vm.stopPrank();
+    }
+
+    function test_UnstakeERC20Token() public {
+        vm.startPrank(alice);
+
+        // Approve and stake tokens
+        erc20Token.approve(address(facet), 500 ether);
+        facet.stakeToken(address(erc20Token), 0, 500 ether);
+
+        // Warp time to pass cooldown period
+        vm.warp(block.timestamp + COOLDOWN_PERIOD + 1);
+
+        // Unstake tokens
+        facet.unstakeToken(address(erc20Token), 0);
+
+        // Verify staking state is reset
+        (uint256 amount,,,) = facet.getStakedTokenInfo(address(erc20Token), 0);
+        assertEq(amount, 0);
+
+        vm.stopPrank();
+    }
+
+    function test_UnstakeERC721Token() public {
+        vm.startPrank(bob);
+
+        // Approve and stake NFT
+        erc721Token.approve(address(facet), TOKEN_ID_2);
+        facet.stakeToken(address(erc721Token), TOKEN_ID_2, 1);
+
+        // Warp time to pass cooldown period
+        vm.warp(block.timestamp + COOLDOWN_PERIOD + 1);
+
+        // Unstake NFT
+        facet.unstakeToken(address(erc721Token), TOKEN_ID_2);
+
+        // Verify staking state is reset
+        (uint256 amount,,,) = facet.getStakedTokenInfo(address(erc721Token), TOKEN_ID_2);
+        assertEq(amount, 0);
+
+        vm.stopPrank();
+    }
+
+    function test_UnstakeERC1155Token() public {
+        vm.startPrank(alice);
+
+        // Approve and stake ERC-1155 tokens
+        erc1155Token.setApprovalForAll(address(facet), true);
+        facet.stakeToken(address(erc1155Token), TOKEN_ID_1, 5);
+
+        // Warp time to pass cooldown period
+        vm.warp(block.timestamp + COOLDOWN_PERIOD + 1);
+
+        // Unstake ERC-1155 tokens
+        facet.unstakeToken(address(erc1155Token), TOKEN_ID_1);
+
+        // Verify staking state is reset
+        (uint256 amount,,,) = facet.getStakedTokenInfo(address(erc1155Token), TOKEN_ID_1);
+        assertEq(amount, 0);
+
+        vm.stopPrank();
+    }
+
+    function test_Unstake_RevertsBeforeCooldown() public {
+        vm.startPrank(alice);
+
+        erc20Token.approve(address(facet), 1000 ether);
+        facet.stakeToken(address(erc20Token), 0, 1000 ether);
+
+        vm.warp(block.timestamp + COOLDOWN_PERIOD - 1);
+
+        (uint256 amount, uint256 stakedAt, uint256 lastClaimedAt, uint256 accumulatedRewards) =
+            facet.getStakedTokenInfo(address(erc20Token), 0);
+
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                StakingFacet.StakingCooldownNotElapsed.selector, stakedAt, COOLDOWN_PERIOD, block.timestamp
+            )
+        );
+        facet.unstakeToken(address(erc20Token), 0);
+
+        vm.stopPrank();
+    }
+
+    function test_Unstake_RevertsZeroStakeAmount() public {
+        vm.startPrank(alice);
+
+        vm.expectRevert(abi.encodeWithSelector(StakingFacet.StakingZeroStakeAmount.selector));
+        facet.unstakeToken(address(erc20Token), 0);
 
         vm.stopPrank();
     }
@@ -278,43 +431,5 @@ contract StakingFacetTest is Test {
             emit log_named_uint("Staked Seconds", stakedSeconds);
             emit log_named_uint("Calculated Rewards", rewards);
         }
-    }
-
-    function test_Unstake() public {
-        vm.startPrank(alice);
-
-        erc20Token.approve(address(facet), 1000 ether);
-        facet.stakeToken(address(erc20Token), 0, 1000 ether);
-
-        vm.warp(block.timestamp + COOLDOWN_PERIOD + 1);
-
-        facet.unstakeToken(address(erc20Token), 0);
-
-        (uint256 amount,,,) = facet.getStakedTokenInfo(address(erc20Token), 0);
-
-        assertEq(amount, 0); // Alice should have unstaked all tokens
-
-        vm.stopPrank();
-    }
-
-    function test_Unstake_RevertsBeforeCooldown() public {
-        vm.startPrank(alice);
-
-        erc20Token.approve(address(facet), 1000 ether);
-        facet.stakeToken(address(erc20Token), 0, 1000 ether);
-
-        vm.warp(block.timestamp + COOLDOWN_PERIOD - 1);
-
-        (uint256 amount, uint256 stakedAt, uint256 lastClaimedAt, uint256 accumulatedRewards) =
-            facet.getStakedTokenInfo(address(erc20Token), 0);
-
-        vm.expectRevert(
-            abi.encodeWithSelector(
-                StakingFacet.StakingCooldownNotElapsed.selector, stakedAt, COOLDOWN_PERIOD, block.timestamp
-            )
-        );
-        facet.unstakeToken(address(erc20Token), 0);
-
-        vm.stopPrank();
     }
 }
