@@ -1,0 +1,258 @@
+---
+sidebar_position: 99
+title: "OwnerMod"
+description: "Manages contract ownership according to ERC-173."
+gitSource: "https://github.com/maxnorm/Compose/blob/75e2e68f9cd44e6a24767abe937e3f91886c823f/src/access/Owner/OwnerMod.sol"
+---
+
+import DocSubtitle  from '@site/src/components/docs/DocSubtitle';
+import Badge from '@site/src/components/ui/Badge';
+import Callout from '@site/src/components/ui/Callout';
+import CalloutBox from '@site/src/components/ui/CalloutBox';
+import Accordion, { AccordionGroup } from '@site/src/components/ui/Accordion';
+import PropertyTable from '@site/src/components/api/PropertyTable';
+import ExpandableCode from '@site/src/components/code/ExpandableCode';
+import CodeShowcase from '@site/src/components/code/CodeShowcase';
+import RelatedDocs from '@site/src/components/docs/RelatedDocs';
+import WasThisHelpful from '@site/src/components/docs/WasThisHelpful';
+import LastUpdated from '@site/src/components/docs/LastUpdated';
+import ReadingTime from '@site/src/components/docs/ReadingTime';
+import GradientText from '@site/src/components/ui/GradientText';
+import GradientButton from '@site/src/components/ui/GradientButton';
+
+<DocSubtitle>
+Manages contract ownership according to ERC-173.
+</DocSubtitle>
+
+<Callout type="info" title="Key Features">
+- Implements ERC-173 contract ownership.
+- Provides `owner()`, `transferOwnership()`, and `requireOwner()` functions.
+- Supports ownership renouncement by transferring to `address(0)`.
+</Callout>
+
+<Callout type="info" title="Module Usage">
+This module provides internal functions for use in your custom facets. Import it to access shared logic and storage.
+</Callout>
+
+## Overview
+
+The OwnerMod provides a standardized way to manage contract ownership, adhering to the ERC-173 standard. It enables secure ownership transfers and provides a mechanism for owner-only access control, crucial for administrative functions within a diamond.
+
+---
+
+## Storage
+
+### OwnerStorage
+
+storage-location: erc8042:compose.owner
+
+<ExpandableCode language="solidity" maxLines={15} title="Definition">
+{`struct OwnerStorage {
+address owner;
+}`}
+</ExpandableCode>
+
+### State Variables
+
+<PropertyTable
+  properties={[
+    {
+      name: "STORAGE_POSITION",
+      type: "bytes32",
+      description: "Diamond storage slot position for this module (Value: `keccak256(\"compose.owner\")`)"
+    }
+  ]}
+  showRequired={false}
+/>
+
+## Functions
+
+### getStorage
+
+Returns a pointer to the ERC-173 storage struct. Uses inline assembly to access the storage slot defined by STORAGE_POSITION.
+
+<ExpandableCode language="solidity" maxLines={8}>
+{`function getStorage() pure returns (OwnerStorage storage s);`}
+</ExpandableCode>
+
+**Returns:**
+
+<PropertyTable
+  properties={[
+    {
+      name: "s",
+      type: "OwnerStorage",
+      description: "The OwnerStorage struct in storage."
+    }
+  ]}
+  showRequired={false}
+/>
+
+---
+### owner
+
+Get the address of the owner
+
+<ExpandableCode language="solidity" maxLines={8}>
+{`function owner() view returns (address);`}
+</ExpandableCode>
+
+**Returns:**
+
+<PropertyTable
+  properties={[
+    {
+      name: "-",
+      type: "address",
+      description: "The address of the owner."
+    }
+  ]}
+  showRequired={false}
+/>
+
+---
+### requireOwner
+
+Reverts if the caller is not the owner.
+
+<ExpandableCode language="solidity" maxLines={8}>
+{`function requireOwner() view;`}
+</ExpandableCode>
+
+---
+### setContractOwner
+
+<ExpandableCode language="solidity" maxLines={8}>
+{`function setContractOwner(address _initialOwner) ;`}
+</ExpandableCode>
+
+**Parameters:**
+
+<PropertyTable
+  properties={[
+    {
+      name: "_initialOwner",
+      type: "address",
+      description: ""
+    }
+  ]}
+  showRequired={false}
+/>
+
+---
+### transferOwnership
+
+Set the address of the new owner of the contract Set _newOwner to address(0) to renounce any ownership.
+
+<ExpandableCode language="solidity" maxLines={8}>
+{`function transferOwnership(address _newOwner) ;`}
+</ExpandableCode>
+
+**Parameters:**
+
+<PropertyTable
+  properties={[
+    {
+      name: "_newOwner",
+      type: "address",
+      description: "The address of the new owner of the contract"
+    }
+  ]}
+  showRequired={false}
+/>
+
+## Events
+
+<AccordionGroup>
+  <Accordion title="OwnershipTransferred" defaultOpen={false}>
+    <div style={{marginBottom: "1rem"}}>
+      This emits when ownership of a contract changes.
+    </div>
+
+    <div style={{marginBottom: "1rem"}}>
+      <strong>Signature:</strong>
+      <ExpandableCode language="solidity" maxLines={5}>
+{`event OwnershipTransferred(address indexed previousOwner, address indexed newOwner);`}
+      </ExpandableCode>
+    </div>
+
+  </Accordion>
+</AccordionGroup>
+
+## Errors
+
+<AccordionGroup>
+  <Accordion title="OwnerAlreadyRenounced" defaultOpen={false}>
+
+    <div>
+      <strong>Signature:</strong>
+      <ExpandableCode language="solidity" maxLines={5}>
+error OwnerAlreadyRenounced();
+      </ExpandableCode>
+    </div>
+  </Accordion>
+  <Accordion title="OwnerUnauthorizedAccount" defaultOpen={false}>
+
+    <div>
+      <strong>Signature:</strong>
+      <ExpandableCode language="solidity" maxLines={5}>
+error OwnerUnauthorizedAccount();
+      </ExpandableCode>
+    </div>
+  </Accordion>
+</AccordionGroup>
+
+## Usage Example
+
+<ExpandableCode language="solidity" maxLines={20} title="Example Implementation">
+{`pragma solidity ^0.8.30;
+
+import {IOwnerMod} from "@compose/modules/owner/IOwnerMod.sol";
+
+contract MyFacet {
+    uint256 constant OWNER_STORAGE_SLOT = 1; // Example slot
+
+    struct OwnerStorage {
+        address owner;
+        // other storage variables...
+    }
+
+    function _getOwnerStorage() internal pure returns (OwnerStorage storage) {
+        assembly {
+            storage.slot := OWNER_STORAGE_SLOT
+        }
+    }
+
+    function owner() public view returns (address) {
+        return _getOwnerStorage().owner;
+    }
+
+    function transferOwnership(address _newOwner) external {
+        IOwnerMod(_getOwnerStorage()).transferOwnership(_newOwner);
+    }
+
+    function requireOwner() external view {
+        IOwnerMod(_getOwnerStorage()).requireOwner();
+    }
+}`}
+</ExpandableCode>
+
+## Best Practices
+
+<Callout type="tip" title="Best Practice">
+- Use `transferOwnership` to change the contract owner. Setting the new owner to `address(0)` renounces ownership.
+- Employ `requireOwner` to restrict access to sensitive administrative functions to the current owner.
+- Ensure the `OwnerMod` storage slot is correctly defined and not duplicated by other facets.
+</Callout>
+
+## Integration Notes
+
+<Callout type="success" title="Shared Storage">
+The OwnerMod utilizes a dedicated storage slot to store the owner's address. Facets can access this storage via the `getStorage` function or by directly referencing the defined storage slot. Any facet can read the owner address, but only the current owner can execute administrative functions protected by `requireOwner` or initiate ownership transfers.
+</Callout>
+
+<div style={{marginTop: "3rem", paddingTop: "2rem", borderTop: "1px solid var(--ifm-color-emphasis-200)"}}>
+  <WasThisHelpful pageId="OwnerMod" />
+</div>
+
+<LastUpdated date="2025-12-21T20:53:49.834Z" />

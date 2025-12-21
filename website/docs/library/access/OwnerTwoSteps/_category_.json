@@ -1,0 +1,11 @@
+{
+  "label": "Two-Step Owner",
+  "position": 2,
+  "collapsible": true,
+  "collapsed": true,
+  "link": {
+    "type": "generated-index",
+    "slug": "/docs/library/access/OwnerTwoSteps",
+    "description": "Two-step ownership transfer pattern."
+  }
+}

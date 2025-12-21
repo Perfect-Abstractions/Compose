@@ -1,0 +1,11 @@
+{
+  "label": "Royalty",
+  "position": 5,
+  "collapsible": true,
+  "collapsed": true,
+  "link": {
+    "type": "generated-index",
+    "slug": "/docs/library/token/Royalty",
+    "description": "ERC-2981 royalty standard implementations."
+  }
+}

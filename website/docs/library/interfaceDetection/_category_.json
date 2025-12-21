@@ -1,0 +1,11 @@
+{
+  "label": "Interface Detection",
+  "position": 5,
+  "collapsible": true,
+  "collapsed": true,
+  "link": {
+    "type": "generated-index",
+    "slug": "/docs/library/interfaceDetection",
+    "description": "ERC-165 interface detection support."
+  }
+}

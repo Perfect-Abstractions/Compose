@@ -1,0 +1,221 @@
+---
+sidebar_position: 99
+title: "ERC721EnumerableBurnFacet"
+description: "Handles burning of ERC721 tokens and maintains enumeration."
+gitSource: "https://github.com/maxnorm/Compose/blob/75e2e68f9cd44e6a24767abe937e3f91886c823f/src/token/ERC721/ERC721Enumerable/ERC721EnumerableBurnFacet.sol"
+---
+
+import DocSubtitle  from '@site/src/components/docs/DocSubtitle';
+import Badge from '@site/src/components/ui/Badge';
+import Callout from '@site/src/components/ui/Callout';
+import CalloutBox from '@site/src/components/ui/CalloutBox';
+import Accordion, { AccordionGroup } from '@site/src/components/ui/Accordion';
+import PropertyTable from '@site/src/components/api/PropertyTable';
+import ExpandableCode from '@site/src/components/code/ExpandableCode';
+import CodeShowcase from '@site/src/components/code/CodeShowcase';
+import RelatedDocs from '@site/src/components/docs/RelatedDocs';
+import WasThisHelpful from '@site/src/components/docs/WasThisHelpful';
+import LastUpdated from '@site/src/components/docs/LastUpdated';
+import ReadingTime from '@site/src/components/docs/ReadingTime';
+import GradientText from '@site/src/components/ui/GradientText';
+import GradientButton from '@site/src/components/ui/GradientButton';
+
+<DocSubtitle>
+Handles burning of ERC721 tokens and maintains enumeration.
+</DocSubtitle>
+
+<Callout type="info" title="Key Features">
+- Enables burning of ERC721 tokens.
+- Maintains internal token enumeration consistency after burns.
+- Emits `Transfer` event for burned tokens (from owner to address(0)).
+</Callout>
+
+## Overview
+
+The ERC721EnumerableBurnFacet provides the functionality to burn ERC721 tokens within a Compose diamond. It ensures that token destruction is properly recorded and that the internal enumeration of tokens remains accurate after a burn operation.
+
+---
+
+## Storage
+
+### ERC721EnumerableStorage
+
+<ExpandableCode language="solidity" maxLines={15} title="Definition">
+{`struct ERC721EnumerableStorage {
+    mapping(uint256 tokenId => address owner) ownerOf;
+    mapping(address owner => uint256[] ownerTokens) ownerTokens;
+    mapping(uint256 tokenId => uint256 ownerTokensIndex) ownerTokensIndex;
+    uint256[] allTokens;
+    mapping(uint256 tokenId => uint256 allTokensIndex) allTokensIndex;
+    mapping(address owner => mapping(address operator => bool approved)) isApprovedForAll;
+    mapping(uint256 tokenId => address approved) approved;
+}`}
+</ExpandableCode>
+
+### State Variables
+
+<PropertyTable
+  properties={[
+    {
+      name: "STORAGE_POSITION",
+      type: "constant",
+      description: "Diamond storage slot position for this module"
+    }
+  ]}
+  showRequired={false}
+/>
+
+## Functions
+
+### getStorage
+
+Returns the storage struct used by this facet.
+
+<ExpandableCode language="solidity" maxLines={8}>
+{`function getStorage() internal pure returns (ERC721EnumerableStorage storage s);`}
+</ExpandableCode>
+
+**Returns:**
+
+<PropertyTable
+  properties={[
+    {
+      name: "s",
+      type: "ERC721EnumerableStorage",
+      description: "The ERC721Enumerable storage struct."
+    }
+  ]}
+  showRequired={false}
+/>
+
+---
+### burn
+
+Burns (destroys) a token, removing it from enumeration tracking.
+
+<ExpandableCode language="solidity" maxLines={8}>
+{`function burn(uint256 _tokenId) external;`}
+</ExpandableCode>
+
+**Parameters:**
+
+<PropertyTable
+  properties={[
+    {
+      name: "_tokenId",
+      type: "uint256",
+      description: "The ID of the token to burn."
+    }
+  ]}
+  showRequired={false}
+/>
+
+## Events
+
+<AccordionGroup>
+  <Accordion title="Transfer" defaultOpen={false}>
+    <div style={{marginBottom: "1rem"}}>
+      Emitted when ownership of a token changes, including burning.
+    </div>
+
+    <div style={{marginBottom: "1rem"}}>
+      <strong>Signature:</strong>
+      <ExpandableCode language="solidity" maxLines={5}>
+{`event Transfer(address indexed _from, address indexed _to, uint256 indexed _tokenId);`}
+      </ExpandableCode>
+    </div>
+
+    <div style={{marginBottom: "1rem"}}>
+      <strong>Parameters:</strong>
+      <PropertyTable
+        properties={[
+          {
+            name: "_from",
+            type: "address",
+            description: "The address transferring the token (or owner when burning)."
+          },
+          {
+            name: "_to",
+            type: "address",
+            description: "The address receiving the token (zero address when burning)."
+          },
+          {
+            name: "_tokenId",
+            type: "uint256",
+            description: "The ID of the token being transferred."
+          }
+        ]}
+        showRequired={false}
+      />
+    </div>
+  </Accordion>
+</AccordionGroup>
+
+## Errors
+
+<AccordionGroup>
+  <Accordion title="ERC721NonexistentToken" defaultOpen={false}>
+    <div style={{marginBottom: "1rem"}}>
+      Thrown when attempting to interact with a non-existent token.
+    </div>
+
+    <div>
+      <strong>Signature:</strong>
+      <ExpandableCode language="solidity" maxLines={5}>
+error ERC721NonexistentToken(uint256 _tokenId);
+      </ExpandableCode>
+    </div>
+  </Accordion>
+  <Accordion title="ERC721InsufficientApproval" defaultOpen={false}>
+    <div style={{marginBottom: "1rem"}}>
+      Thrown when the caller lacks approval to operate on the token.
+    </div>
+
+    <div>
+      <strong>Signature:</strong>
+      <ExpandableCode language="solidity" maxLines={5}>
+error ERC721InsufficientApproval(address _operator, uint256 _tokenId);
+      </ExpandableCode>
+    </div>
+  </Accordion>
+</AccordionGroup>
+
+## Usage Example
+
+<ExpandableCode language="solidity" maxLines={20} title="Example Implementation">
+{`pragma solidity ^0.8.30;
+
+import {IERC721EnumerableBurnFacet} from "@compose-protocol/diamond/facets/ERC721/IERC721EnumerableBurnFacet.sol";
+
+contract ExampleUsage {
+    address immutable diamondAddress;
+
+    constructor(address _diamondAddress) {
+        diamondAddress = _diamondAddress;
+    }
+
+    function burnToken(uint256 _tokenId) external {
+        // Assume appropriate access control is handled by the diamond proxy
+        IERC721EnumerableBurnFacet(diamondAddress).burn(_tokenId);
+    }
+}`}
+</ExpandableCode>
+
+## Best Practices
+
+<Callout type="tip" title="Best Practice">
+- Ensure the diamond proxy is configured to route `burn` calls to this facet.
+- Implement necessary access control mechanisms within the diamond to authorize token burning.
+</Callout>
+
+## Security Considerations
+
+<Callout type="warning" title="Security">
+Access control for burning tokens must be strictly enforced at the diamond proxy level. The `burn` function relies on the caller having the necessary permissions to burn the specified token. The facet itself does not implement specific access control checks beyond those inherent to ERC721 ownership and approvals.
+</Callout>
+
+<div style={{marginTop: "3rem", paddingTop: "2rem", borderTop: "1px solid var(--ifm-color-emphasis-200)"}}>
+  <WasThisHelpful pageId="ERC721EnumerableBurnFacet" />
+</div>
+
+<LastUpdated date="2025-12-21T20:54:50.095Z" />

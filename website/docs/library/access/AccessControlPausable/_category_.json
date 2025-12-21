@@ -1,0 +1,11 @@
+{
+  "label": "Pausable Access Control",
+  "position": 4,
+  "collapsible": true,
+  "collapsed": true,
+  "link": {
+    "type": "generated-index",
+    "slug": "/docs/library/access/AccessControlPausable",
+    "description": "RBAC with pause functionality."
+  }
+}

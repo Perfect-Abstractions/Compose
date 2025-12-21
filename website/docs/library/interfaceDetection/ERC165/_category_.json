@@ -1,0 +1,11 @@
+{
+  "label": "ERC-165",
+  "position": 99,
+  "collapsible": true,
+  "collapsed": true,
+  "link": {
+    "type": "generated-index",
+    "slug": "/docs/library/interfaceDetection/ERC165",
+    "description": "ERC-165 components for Compose diamonds."
+  }
+}
