@@ -487,7 +487,7 @@ function syncDocsStructure() {
     const pathParts = relativePath.split('/');
     const mappedPathParts = pathParts.map(part => mapDirectoryName(part));
     const mappedRelativePath = mappedPathParts.join('/');
-    const outputDir = path.join(libraryDir, mappedPathParts);
+    const outputDir = path.join(libraryDir, ...mappedPathParts);
     
     const wasCreated = createCategoryFile(
       outputDir,
