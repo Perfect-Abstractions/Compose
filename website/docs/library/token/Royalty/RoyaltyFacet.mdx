@@ -2,7 +2,7 @@
 sidebar_position: 99
 title: "RoyaltyFacet"
 description: "Manages token royalties according to ERC-2981."
-gitSource: "https://github.com/maxnorm/Compose/blob/2dfa9eb69851162421010a7e56bd0fa891a9311a/src/token/Royalty/RoyaltyFacet.sol"
+gitSource: "https://github.com/maxnorm/Compose/blob/5736454575f67743dd05ba6cb1265bc06d0c1422/src/token/Royalty/RoyaltyFacet.sol"
 ---
 
 import DocSubtitle  from '@site/src/components/docs/DocSubtitle';
@@ -26,14 +26,13 @@ Manages token royalties according to ERC-2981.
 
 <Callout type="info" title="Key Features">
 - Implements ERC-2981 `royaltyInfo` function.
-- Supports both default and token-specific royalty configurations.
-- Calculates royalty fees as a percentage (basis points) of the sale price.
-- Utilizes inline assembly for efficient storage access.
+- Supports token-specific and default royalty configurations.
+- Calculates royalty amounts based on sale price and basis points.
 </Callout>
 
 ## Overview
 
-The RoyaltyFacet implements the ERC-2981 standard for royalty payments. It provides functions to retrieve royalty information for a given token and sale price, supporting both token-specific and default royalty configurations. This facet enables marketplaces and other dApps to correctly distribute royalties.
+The RoyaltyFacet implements the ERC-2981 standard to provide royalty information for NFTs. It allows setting token-specific royalties and a default royalty, ensuring creators receive their due percentage on secondary sales. This facet integrates seamlessly with the diamond proxy pattern for efficient storage and access.
 
 ---
 
@@ -152,35 +151,21 @@ Returns royalty information for a given token and sale price. Returns token-spec
 <ExpandableCode language="solidity" maxLines={20} title="Example Implementation">
 {`pragma solidity ^0.8.30;
 
-import {IDiamondCut, IDiamondLoupe} from "@compose/diamond-contracts/contracts/interfaces/IDiamond.sol";
-import {IRoyaltyFacet} from "@compose/diamond-contracts/contracts/facets/Royalty/IRoyaltyFacet.sol";
+import {IRoyaltyFacet} from "@compose/contracts/facets/Royalty/IRoyaltyFacet.sol";
 
-contract DeployDiamond {
-    // ... deployment setup ...
+contract RoyaltyConsumer {
+    address immutable _diamondAddress;
 
-    function deploy() external {
-        // ... other facet deployments ...
-
-        address royaltyFacet = address(new RoyaltyFacet());
-        facetCuts.push(IDiamondCut.FacetCut({
-            facetAddress: royaltyFacet,
-            action: IDiamondCut.Action.Add,
-            functionSelectors:
-                bytes4.concat(IRoyaltyFacet.royaltyInfo.selector)
-        }));
-
-        // ... diamond cut execution ...
+    constructor(address diamondAddress) {
+        _diamondAddress = diamondAddress;
     }
-}
 
-contract MyMarketplace {
-    // Assuming the diamond proxy is deployed at address \`diamondProxy\`
-    IRoyaltyFacet public royaltyFacet = IRoyaltyFacet(diamondProxy);
-
-    function getSaleRoyalty(uint256 tokenId, uint256 salePrice) public view returns (address receiver, uint256 feeBasisPoints) {
-        // Calls the royaltyInfo function through the diamond proxy
-        (receiver, feeBasisPoints) = royaltyFacet.royaltyInfo(tokenId, salePrice);
-        return (receiver, feeBasisPoints);
+    function getRoyaltyInfo(uint256 _tokenId, uint256 _salePrice) public view returns (address receiver, uint256 royaltyAmount) {
+        bytes4 selector = IRoyaltyFacet.royaltyInfo.selector;
+        (bool success, bytes memory data) = _diamondAddress.staticcall(abi.encodeWithSelector(selector, _tokenId, _salePrice));
+        require(success, "RoyaltyFacet: call failed");
+        (receiver, royaltyAmount) = abi.decode(data, (address, uint256));
+        return (receiver, royaltyAmount);
     }
 }`}
 </ExpandableCode>
@@ -188,19 +173,19 @@ contract MyMarketplace {
 ## Best Practices
 
 <Callout type="tip" title="Best Practice">
-- Initialize royalty settings (default and token-specific) via a separate facet or deployment script after deploying the RoyaltyFacet.
-- Ensure the `royaltyInfo` function is called through the diamond proxy to correctly dispatch the call to the facet.
-- Store royalty data efficiently, considering the diamond storage pattern to avoid slot collisions.
+- Initialize the facet with the default royalty receiver and basis points during diamond deployment.
+- Use `setTokenRoyalty` to define specific royalties for individual tokens, overriding the default.
+- Access royalty information via the diamond proxy to ensure correct routing and state management.
 </Callout>
 
 ## Security Considerations
 
 <Callout type="warning" title="Security">
-Access control for setting default and token-specific royalties should be managed by a separate facet (e.g., an ownership or admin facet). The `royaltyInfo` function itself is read-only and does not present reentrancy risks. Ensure the storage slot for royalty data is unique to prevent conflicts with other facets.
+The `royaltyInfo` function is `view`, preventing reentrancy. Access control for setting royalties should be managed at the diamond level. Ensure the `_tokenId` and `_salePrice` inputs are validated appropriately by the calling facet or contract.
 </Callout>
 
 <div style={{marginTop: "3rem", paddingTop: "2rem", borderTop: "1px solid var(--ifm-color-emphasis-200)"}}>
   <WasThisHelpful pageId="RoyaltyFacet" />
 </div>
 
-<LastUpdated date="2025-12-21T21:45:10.681Z" />
+<LastUpdated date="2025-12-21T22:06:03.970Z" />

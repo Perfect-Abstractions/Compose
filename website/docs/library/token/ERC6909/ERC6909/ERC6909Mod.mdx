@@ -1,8 +1,8 @@
 ---
 sidebar_position: 99
 title: "ERC6909Mod"
-description: "Implements ERC-6909 minimal multi-token logic."
-gitSource: "https://github.com/maxnorm/Compose/blob/2dfa9eb69851162421010a7e56bd0fa891a9311a/src/token/ERC6909/ERC6909/ERC6909Mod.sol"
+description: "Implements ERC-6909 minimal multi-token functionality."
+gitSource: "https://github.com/maxnorm/Compose/blob/5736454575f67743dd05ba6cb1265bc06d0c1422/src/token/ERC6909/ERC6909/ERC6909Mod.sol"
 ---
 
 import DocSubtitle  from '@site/src/components/docs/DocSubtitle';
@@ -21,13 +21,13 @@ import GradientText from '@site/src/components/ui/GradientText';
 import GradientButton from '@site/src/components/ui/GradientButton';
 
 <DocSubtitle>
-Implements ERC-6909 minimal multi-token logic.
+Implements ERC-6909 minimal multi-token functionality.
 </DocSubtitle>
 
 <Callout type="info" title="Key Features">
-- Supports minting, burning, transferring, and approving tokens by ID.
-- Includes operator functionality for delegated transfers.
-- Provides necessary storage layout and internal functions for ERC-6909 compliance.
+- Supports standard ERC-6909 token operations (transfer, approve, burn, mint).
+- Enables operator functionality to bypass allowance checks.
+- Provides direct access to internal storage via `getStorage` for advanced interactions.
 </Callout>
 
 <Callout type="info" title="Module Usage">
@@ -36,7 +36,7 @@ This module provides internal functions for use in your custom facets. Import it
 
 ## Overview
 
-The ERC6909Mod provides the core logic and storage for implementing the ERC-6909 standard within a Compose diamond. It enables standard token operations like minting, burning, transferring, and approvals for multiple token IDs, ensuring composability and adherence to the standard.
+This module provides the core logic and storage for the ERC-6909 standard, enabling diamonds to manage multiple token types with standard transfer, approval, and operator functionalities. It adheres to Compose's storage pattern for safe upgrades and composability.
 
 ---
 
@@ -48,9 +48,9 @@ storage-location: erc8042:compose.erc6909
 
 <ExpandableCode language="solidity" maxLines={15} title="Definition">
 {`struct ERC6909Storage {
-mapping(address owner => mapping(uint256 id => uint256 amount)) balanceOf;
-mapping(address owner => mapping(address spender => mapping(uint256 id => uint256 amount))) allowance;
-mapping(address owner => mapping(address spender => bool)) isOperator;
+    mapping(address owner => mapping(uint256 id => uint256 amount)) balanceOf;
+    mapping(address owner => mapping(address spender => mapping(uint256 id => uint256 amount))) allowance;
+    mapping(address owner => mapping(address spender => bool)) isOperator;
 }`}
 </ExpandableCode>
 
@@ -477,38 +477,59 @@ error ERC6909InvalidSpender(address _spender);
 <ExpandableCode language="solidity" maxLines={20} title="Example Implementation">
 {`pragma solidity ^0.8.30;
 
-import {IERC6909, IERC6909Mod} from "@compose/contracts/src/modules/erc6909/interfaces/IERC6909.sol";
-import {ERC6909} from "@compose/contracts/src/modules/erc6909/facets/ERC6909.sol";
+import {IERC6909Mod} from "./interfaces/IERC6909Mod.sol";
 
-contract MyERC6909Facet is ERC6909 {
-    function transferTokens(address _from, address _to, uint256 _id, uint256 _amount) external {
-        // Assume ownership checks or other logic is handled externally
-        transfer(_from, _to, _id, _amount);
+contract MyERC6909Facet {
+    address immutable DIAMOND_ADDRESS;
+    IERC6909Mod private constant _erc6909 = IERC6909Mod(DIAMOND_ADDRESS);
+
+    // ... other facet storage
+
+    constructor(address diamondAddress) {
+        DIAMOND_ADDRESS = diamondAddress;
     }
 
-    function approveToken(address _spender, uint256 _id, uint256 _amount) external {
-        // Assume ownership checks or other logic is handled externally
-        approve(_spender, _id, _amount);
+    /**
+     * @notice Transfers tokens from the caller.
+     * @param _id The token ID to transfer.
+     * @param _from The address to transfer from.
+     * @param _to The address to transfer to.
+     * @param _amount The amount to transfer.
+     */
+    function transferFrom(uint256 _id, address _from, address _to, uint256 _amount) external {
+        _erc6909.transfer(_id, _from, _to, _amount);
     }
+
+    /**
+     * @notice Approves a spender for a token ID.
+     * @param _id The token ID.
+     * @param _spender The address to approve.
+     * @param _amount The amount to approve.
+     */
+    function approve(uint256 _id, address _spender, uint256 _amount) external {
+        _erc6909.approve(_id, _spender, _amount);
+    }
+
+    // ... other functions
 }`}
 </ExpandableCode>
 
 ## Best Practices
 
 <Callout type="tip" title="Best Practice">
-- Ensure proper access control is implemented in calling facets for sensitive operations like minting and burning.
-- Be mindful of allowance management; `type(uint256).max` bypasses deduction, and operators can transfer without deduction.
-- Handle potential `ERC6909InsufficientBalance` and `ERC6909InsufficientAllowance` errors gracefully in calling facets.
+- Ensure the `ERC6909Mod` facet is correctly initialized with the appropriate storage slot.
+- Handle custom errors like `ERC6909InsufficientBalance` and `ERC6909InsufficientAllowance` gracefully in your facet logic.
+- Be aware that operators bypass allowance checks for transfers, so manage operator roles carefully.
 </Callout>
 
 ## Integration Notes
 
 <Callout type="success" title="Shared Storage">
-The ERC6909Mod defines a specific storage struct (`ERC6909Storage`) which must be laid out according to the Compose storage pattern. Facets interacting with this module should use the `getStorage` function (or access the storage slot directly if integrated via an initializer) to retrieve a pointer to this struct. Operations modify this shared storage, making them visible to all facets that implement ERC-6909 logic.
+The `ERC6909Mod` relies on a dedicated storage slot for its internal `ERC6909Storage` struct. Facets interacting with this module should use the `getStorage` function to obtain a pointer to this struct. Ensure the `ERC6909Mod` facet is added to the diamond and its functions are correctly routed. The module's operations directly modify the shared diamond storage.
 </Callout>
 
 <div style={{marginTop: "3rem", paddingTop: "2rem", borderTop: "1px solid var(--ifm-color-emphasis-200)"}}>
   <WasThisHelpful pageId="ERC6909Mod" />
 </div>
 
-<LastUpdated date="2025-12-21T21:44:41.096Z" />
+<LastUpdated date="2025-12-21T22:05:36.105Z" />

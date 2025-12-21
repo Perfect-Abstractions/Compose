@@ -1,8 +1,8 @@
 ---
 sidebar_position: 99
 title: "AccessControlPausableFacet"
-description: "Access Control Pausable facet for Compose diamonds"
-gitSource: "https://github.com/maxnorm/Compose/blob/2dfa9eb69851162421010a7e56bd0fa891a9311a/src/access/AccessControlPausable/AccessControlPausableFacet.sol"
+description: "Manage roles and pausing functionality within a diamond."
+gitSource: "https://github.com/maxnorm/Compose/blob/5736454575f67743dd05ba6cb1265bc06d0c1422/src/access/AccessControlPausable/AccessControlPausableFacet.sol"
 ---
 
 import DocSubtitle  from '@site/src/components/docs/DocSubtitle';
@@ -21,19 +21,18 @@ import GradientText from '@site/src/components/ui/GradientText';
 import GradientButton from '@site/src/components/ui/GradientButton';
 
 <DocSubtitle>
-Access Control Pausable facet for Compose diamonds
+Manage roles and pausing functionality within a diamond.
 </DocSubtitle>
 
 <Callout type="info" title="Key Features">
-- Self-contained facet with no imports or inheritance
-- Only `external` and `internal` function visibility
-- Follows Compose readability-first conventions
-- Ready for diamond integration
+- Role-specific pausing and unpausing capabilities.
+- Integration with existing diamond access control mechanisms.
+- Prevents execution of role-restricted functions when a role is paused.
 </Callout>
 
 ## Overview
 
-Access Control Pausable facet for Compose diamonds
+This facet provides granular control over role-based access and the ability to temporarily pause specific roles. It integrates with the diamond's access control system to enforce role restrictions and prevent execution when roles are paused, enhancing security and operational flexibility.
 
 ---
 
@@ -322,8 +321,59 @@ error AccessControlRolePaused(bytes32 _role);
   </Accordion>
 </AccordionGroup>
 
+## Usage Example
+
+<ExpandableCode language="solidity" maxLines={20} title="Example Implementation">
+{`pragma solidity ^0.8.30;
+
+import {IAccessControlPausableFacet} from "@compose/diamond/facets/AccessControlPausable/IAccessControlPausableFacet.sol";
+
+contract ExampleUsage {
+    IAccessControlPausableFacet accessControlPausableFacet;
+
+    constructor(address _diamondAddress) {
+        // Assume accessControlPausableFacet is a registered facet on the diamond
+        accessControlPausableFacet = IAccessControlPausableFacet(_diamondAddress);
+    }
+
+    function checkRolePaused(bytes32 _role) public view {
+        bool paused = accessControlPausableFacet.isRolePaused(_role);
+        // Use 'paused' variable
+    }
+
+    function pauseMyRole(bytes32 _role) public {
+        // Caller must be the admin of _role
+        accessControlPausableFacet.pauseRole(_role);
+    }
+
+    function unpauseMyRole(bytes32 _role) public {
+        // Caller must be the admin of _role
+        accessControlPausableFacet.unpauseRole(_role);
+    }
+
+    function ensureRoleActive(bytes32 _role) public {
+        // Reverts if caller is not authorized for _role or if _role is paused
+        accessControlPausableFacet.requireRoleNotPaused(_role);
+    }
+}`}
+</ExpandableCode>
+
+## Best Practices
+
+<Callout type="tip" title="Best Practice">
+- Ensure the `AccessControlPausableFacet` is correctly initialized and its functions are accessible via the diamond proxy.
+- Grant the `PAUSER_ROLE` and `ROLE_ADMIN_ROLE` (or equivalent roles defined by your access control implementation) judiciously, as they control pausing and unpausing operations.
+- Use `requireRoleNotPaused` proactively within other facets to prevent execution when a role's functionality is temporarily suspended.
+</Callout>
+
+## Security Considerations
+
+<Callout type="warning" title="Security">
+Access to `pauseRole` and `unpauseRole` functions is restricted to the administrative role of the specific role being managed. Ensure that the administrative roles are themselves secured appropriately. Reentrancy is not a direct concern for `pauseRole` and `unpauseRole` as they only modify state, but calls within other facets that rely on `requireRoleNotPaused` should be audited for reentrancy risks.
+</Callout>
+
 <div style={{marginTop: "3rem", paddingTop: "2rem", borderTop: "1px solid var(--ifm-color-emphasis-200)"}}>
   <WasThisHelpful pageId="AccessControlPausableFacet" />
 </div>
 
-<LastUpdated date="2025-12-21T21:43:34.621Z" />
+<LastUpdated date="2025-12-21T22:04:28.547Z" />

@@ -1,8 +1,8 @@
 ---
 sidebar_position: 99
 title: "ERC1155Facet"
-description: "Manage ERC-1155 fungible and non-fungible tokens."
-gitSource: "https://github.com/maxnorm/Compose/blob/2dfa9eb69851162421010a7e56bd0fa891a9311a/src/token/ERC1155/ERC1155Facet.sol"
+description: "Manages fungible and non-fungible tokens via ERC-1155 standard."
+gitSource: "https://github.com/maxnorm/Compose/blob/5736454575f67743dd05ba6cb1265bc06d0c1422/src/token/ERC1155/ERC1155Facet.sol"
 ---
 
 import DocSubtitle  from '@site/src/components/docs/DocSubtitle';
@@ -21,19 +21,18 @@ import GradientText from '@site/src/components/ui/GradientText';
 import GradientButton from '@site/src/components/ui/GradientButton';
 
 <DocSubtitle>
-Manage ERC-1155 fungible and non-fungible tokens.
+Manages fungible and non-fungible tokens via ERC-1155 standard.
 </DocSubtitle>
 
 <Callout type="info" title="Key Features">
-- Supports both fungible and non-fungible ERC-1155 tokens.
-- Provides standard `balanceOf`, `balanceOfBatch`, `safeTransferFrom`, and `safeBatchTransferFrom` functions.
-- Includes `setApprovalForAll` and `isApprovedForAll` for operator permissions.
-- Allows for dynamic token URIs using a base URI and individual token URI overrides.
+- Supports ERC-1155 multi-token standard.
+- Provides batch transfer and balance checking capabilities.
+- Manages token approvals for operators.
 </Callout>
 
 ## Overview
 
-The ERC1155Facet enables a Compose diamond to manage ERC-1155 compliant tokens. It provides standard functions for token transfers, batch transfers, balance checks, and operator approvals, facilitating the creation and management of multi-token standards within a single diamond.
+The ERC1155Facet implements the ERC-1155 multi-token standard, enabling a diamond to manage both fungible and non-fungible tokens. It provides core functionalities for balance tracking, approvals, and transfers, facilitating a unified token management system within the diamond.
 
 ---
 
@@ -624,50 +623,45 @@ error ERC1155InvalidArrayLength(uint256 _idsLength, uint256 _valuesLength);
 <ExpandableCode language="solidity" maxLines={20} title="Example Implementation">
 {`pragma solidity ^0.8.30;
 
-import {IERC1155Facet} from "@compose-protocol/diamond-contracts/contracts/facets/erc1155/IERC1155Facet.sol";
-import {ERC1155Facet} from "@compose-protocol/diamond-contracts/contracts/facets/erc1155/ERC1155Facet.sol";
+import {IERC1155Facet} from "@compose/contracts/src/facets/ERC1155/IERC1155Facet.sol";
 
-contract MyDiamond is IERC1155Facet {
-    // ... other facets and diamond setup ...
+contract ERC1155Consumer {
+    IERC1155Facet private immutable _erc1155Facet;
 
-    function supportsInterface(bytes4 _interfaceId) external view virtual override returns (bool) {
-        // ... other interface checks ...
-        if (_interfaceId == type(IERC1155Facet).interfaceId) {
-            return true;
-        }
-        return false;
+    constructor(address _diamondAddress) {
+        _erc1155Facet = IERC1155Facet(_diamondAddress);
     }
 
-    // Example: Transferring tokens
-    function transferERC1155(address _to, uint256 _id, uint256 _value) external {
-        // Assume caller is approved or owner
-        safeTransferFrom(_to, msg.sender, _id, _value, "");
+    function getTokenBalance(address _account, uint256 _id) external view returns (uint256) {
+        return _erc1155Facet.balanceOf(_account, _id);
     }
 
-    // Example: Checking balance
-    function getERC1155Balance(address _account, uint256 _id) external view returns (uint256) {
-        return balanceOf(_account, _id);
+    function getTokenUri(uint256 _id) external view returns (string memory) {
+        return _erc1155Facet.uri(_id);
     }
-}
-`}
+
+    function transferSingleToken(address _from, address _to, uint256 _id, uint256 _value) external {
+        _erc1155Facet.safeTransferFrom(_from, _to, _id, _value, "");
+    }
+}`}
 </ExpandableCode>
 
 ## Best Practices
 
 <Callout type="tip" title="Best Practice">
-- Initialize the `ERC1155Facet` with `baseURI` and `tokenURIs` as needed during diamond deployment.
-- Ensure appropriate access control is implemented on functions that modify token balances or approvals, if required by your diamond's logic.
-- Store the `ERC1155Facet` contract address in the diamond's facet registry.
+- Initialize the ERC1155Facet with the diamond proxy address before interaction.
+- Ensure necessary approvals are set using `setApprovalForAll` before performing transfers on behalf of another account.
+- Handle token URIs carefully, considering both base URI concatenation and the `&#123;id&#125;` placeholder.
 </Callout>
 
 ## Security Considerations
 
 <Callout type="warning" title="Security">
-The `ERC1155Facet` itself does not enforce ownership or complex access controls beyond what is standard for ERC-1155. Ensure that the diamond's upgradeability mechanism and any custom logic interacting with this facet correctly manage permissions and prevent unauthorized token transfers or approvals. Input validation for token IDs and amounts is handled by the facet to prevent basic errors.
+Ensure sufficient balance before initiating transfers to prevent `ERC1155InsufficientBalance` errors. Validate `_from`, `_to`, and `_id` parameters to prevent unintended state changes or errors. Approvals should be managed carefully to prevent unauthorized token movements. The `safeTransferFrom` and `safeBatchTransferFrom` functions include checks to ensure the recipient contract implements the `onERC1155Received` hook if applicable.
 </Callout>
 
 <div style={{marginTop: "3rem", paddingTop: "2rem", borderTop: "1px solid var(--ifm-color-emphasis-200)"}}>
   <WasThisHelpful pageId="ERC1155Facet" />
 </div>
 
-<LastUpdated date="2025-12-21T21:44:33.932Z" />
+<LastUpdated date="2025-12-21T22:05:28.387Z" />

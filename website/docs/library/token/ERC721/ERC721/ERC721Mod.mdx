@@ -1,8 +1,8 @@
 ---
 sidebar_position: 99
 title: "ERC721Mod"
-description: "Manage ERC721 tokens within a Compose diamond."
-gitSource: "https://github.com/maxnorm/Compose/blob/2dfa9eb69851162421010a7e56bd0fa891a9311a/src/token/ERC721/ERC721/ERC721Mod.sol"
+description: "Internal logic for ERC-721 token management."
+gitSource: "https://github.com/maxnorm/Compose/blob/5736454575f67743dd05ba6cb1265bc06d0c1422/src/token/ERC721/ERC721/ERC721Mod.sol"
 ---
 
 import DocSubtitle  from '@site/src/components/docs/DocSubtitle';
@@ -21,13 +21,13 @@ import GradientText from '@site/src/components/ui/GradientText';
 import GradientButton from '@site/src/components/ui/GradientButton';
 
 <DocSubtitle>
-Manage ERC721 tokens within a Compose diamond.
+Internal logic for ERC-721 token management.
 </DocSubtitle>
 
 <Callout type="info" title="Key Features">
-- Implements core ERC-721 operations: mint, burn, and transfer.
-- Utilizes inline assembly for efficient access to diamond storage.
-- Enforces standard ERC-721 ownership and approval checks.
+- Provides internal, reusable logic for minting, burning, and transferring ERC-721 tokens.
+- Leverages diamond storage pattern for efficient and consistent state management.
+- Includes necessary error handling for common ERC-721 operations.
 </Callout>
 
 <Callout type="info" title="Module Usage">
@@ -36,7 +36,7 @@ This module provides internal functions for use in your custom facets. Import it
 
 ## Overview
 
-The ERC721Mod provides essential internal logic for ERC-721 token management, enabling custom facets to integrate robust token functionalities. It abstracts the complexities of ERC-721 state handling, ensuring safe and consistent token operations within the diamond's storage.
+This module provides the core internal logic for managing ERC-721 tokens within a Compose diamond. It encapsulates essential functions like minting, burning, and transferring, ensuring consistency and efficient state management through the diamond's storage pattern. By using this module, facets can reliably integrate ERC-721 functionality without reimplementing complex state logic.
 
 ---
 
@@ -46,13 +46,13 @@ The ERC721Mod provides essential internal logic for ERC-721 token management, en
 
 <ExpandableCode language="solidity" maxLines={15} title="Definition">
 {`struct ERC721Storage {
-mapping(uint256 tokenId => address owner) ownerOf;
-mapping(address owner => uint256 balance) balanceOf;
-mapping(address owner => mapping(address operator => bool approved)) isApprovedForAll;
-mapping(uint256 tokenId => address approved) approved;
-string name;
-string symbol;
-string baseURI;
+    mapping(uint256 tokenId => address owner) ownerOf;
+    mapping(address owner => uint256 balance) balanceOf;
+    mapping(address owner => mapping(address operator => bool approved)) isApprovedForAll;
+    mapping(uint256 tokenId => address approved) approved;
+    string name;
+    string symbol;
+    string baseURI;
 }`}
 </ExpandableCode>
 
@@ -314,25 +314,37 @@ error ERC721NonexistentToken(uint256 _tokenId);
 <ExpandableCode language="solidity" maxLines={20} title="Example Implementation">
 {`pragma solidity ^0.8.30;
 
-import {IERC721Mod } from "@compose/modules/erc721/IERC721Mod.sol";
+import {IERC721Mod } from "@compose/modules/ERC721Mod.sol";
 
 contract MyERC721Facet {
-    IERC721Mod internal erc721Mod;
+    struct DiamondStorage {
+        // ... other storage ...
+        IERC721Mod.ERC721Storage erc721;
+    }
 
-    constructor(address _diamondProxy) {
-        erc721Mod = IERC721Mod(_diamondProxy);
+    function _getERC721Storage() internal pure returns (IERC721Mod.ERC721Storage storage _erc721) {
+        assembly (memory-safe) {
+            // Slot 1 is reserved for ERC721Storage
+            _erc721 := sload(1)
+        }
     }
 
     function mintToken(address _to, uint256 _tokenId) external {
-        erc721Mod.mint(_to, _tokenId);
+        IERC721Mod.ERC721Storage storage erc721Storage = _getERC721Storage();
+        // Call the internal mint function from the module
+        IERC721Mod.mint(erc721Storage, _to, _tokenId);
     }
 
     function burnToken(uint256 _tokenId) external {
-        erc721Mod.burn(_tokenId);
+        IERC721Mod.ERC721Storage storage erc721Storage = _getERC721Storage();
+        // Call the internal burn function from the module
+        IERC721Mod.burn(erc721Storage, _tokenId);
     }
 
     function transferToken(address _from, address _to, uint256 _tokenId) external {
-        erc721Mod.transferFrom(_from, _to, _tokenId);
+        IERC721Mod.ERC721Storage storage erc721Storage = _getERC721Storage();
+        // Call the internal transferFrom function from the module
+        IERC721Mod.transferFrom(erc721Storage, _from, _to, _tokenId);
     }
 }`}
 </ExpandableCode>
@@ -340,19 +352,19 @@ contract MyERC721Facet {
 ## Best Practices
 
 <Callout type="tip" title="Best Practice">
-- Ensure the `ERC721Mod` facet is correctly initialized with the diamond proxy address.
-- Always validate token existence and ownership before calling `transferFrom` or `burn` if external checks are needed beyond the module's internal reverts.
-- Handle custom errors like `ERC721IncorrectOwner` and `ERC721NonexistentToken` in facet logic for clear user feedback.
+- Ensure the ERC721Storage struct is correctly placed in a dedicated storage slot (e.g., slot 1) and accessed via inline assembly for predictable state management.
+- Implement access control within your facets to restrict who can call mint, burn, and transfer functions, as these operations modify critical token ownership data.
+- Handle custom errors like `ERC721IncorrectOwner` and `ERC721NonexistentToken` gracefully in your facet logic to provide informative feedback to users.
 </Callout>
 
 ## Integration Notes
 
 <Callout type="success" title="Shared Storage">
-The ERC721Mod interacts with diamond storage using a predefined slot for its `ERC721Storage` struct. Facets using this module will access and modify token ownership, approvals, and metadata through the module's functions. Changes made by the module are immediately visible to all facets via the diamond proxy. The storage layout is defined within the module and should not be altered by other facets to maintain compatibility.
+The `ERC721Mod` module utilizes a dedicated storage slot (conventionally slot 1) for its `ERC721Storage` struct. Facets integrating with this module must ensure this storage slot is allocated and accessible. The `getStorage` function demonstrates how to access this storage using inline assembly. Any facet that interacts with ERC-721 state must retrieve this storage struct and pass it to the module's internal functions. Changes made via the module's functions are immediately reflected in the diamond's storage and visible to all facets.
 </Callout>
 
 <div style={{marginTop: "3rem", paddingTop: "2rem", borderTop: "1px solid var(--ifm-color-emphasis-200)"}}>
   <WasThisHelpful pageId="ERC721Mod" />
 </div>
 
-<LastUpdated date="2025-12-21T21:45:01.331Z" />
+<LastUpdated date="2025-12-21T22:05:56.548Z" />

@@ -1,8 +1,8 @@
 ---
 sidebar_position: 99
 title: "ERC721EnumerableBurnFacet"
-description: "Burn ERC721 tokens and manage enumeration."
-gitSource: "https://github.com/maxnorm/Compose/blob/2dfa9eb69851162421010a7e56bd0fa891a9311a/src/token/ERC721/ERC721Enumerable/ERC721EnumerableBurnFacet.sol"
+description: "Burn tokens and manage ERC721 enumeration."
+gitSource: "https://github.com/maxnorm/Compose/blob/5736454575f67743dd05ba6cb1265bc06d0c1422/src/token/ERC721/ERC721Enumerable/ERC721EnumerableBurnFacet.sol"
 ---
 
 import DocSubtitle  from '@site/src/components/docs/DocSubtitle';
@@ -21,18 +21,17 @@ import GradientText from '@site/src/components/ui/GradientText';
 import GradientButton from '@site/src/components/ui/GradientButton';
 
 <DocSubtitle>
-Burn ERC721 tokens and manage enumeration.
+Burn tokens and manage ERC721 enumeration.
 </DocSubtitle>
 
 <Callout type="info" title="Key Features">
-- Allows burning of ERC721 tokens.
-- Integrates with enumeration tracking to remove burned tokens.
-- Emits `Transfer` event upon successful token burn.
+- Burns ERC721 tokens, permanently removing them from circulation.
+- Maintains enumeration order by removing burned tokens from internal tracking.
 </Callout>
 
 ## Overview
 
-The ERC721EnumerableBurnFacet provides functionality to burn ERC721 tokens within a Compose diamond. It ensures that burned tokens are correctly removed from enumeration tracking, maintaining the integrity of the token supply and ownership lists.
+This facet provides functionality to burn ERC721 tokens and updates internal enumeration tracking. It ensures that burned tokens are removed from the total supply and ownership lists, maintaining the integrity of enumerable ERC721 state.
 
 ---
 
@@ -185,19 +184,17 @@ error ERC721InsufficientApproval(address _operator, uint256 _tokenId);
 <ExpandableCode language="solidity" maxLines={20} title="Example Implementation">
 {`pragma solidity ^0.8.30;
 
-import {IERC721EnumerableBurnFacet} from "../facets/IERC721EnumerableBurnFacet.sol";
+import {IERC721EnumerableBurn} from "@compose-protocol/diamond-contracts/contracts/facets/ERC721/ERC721EnumerableBurn.sol";
 
-contract MyDiamondConsumer {
-    IERC721EnumerableBurnFacet immutable erc721BurnFacet;
+contract ExampleConsumer {
+    address immutable diamondProxy;
 
-    constructor(address _diamondAddress) {
-        // Assume _diamondAddress is the address of your deployed diamond proxy
-        erc721BurnFacet = IERC721EnumerableBurnFacet(_diamondAddress);
+    constructor(address _diamondProxy) {
+        diamondProxy = _diamondProxy;
     }
 
-    function burnToken(uint256 _tokenId) public {
-        // Directly call the burn function on the diamond proxy
-        erc721BurnFacet.burn(_tokenId);
+    function burnToken(uint256 _tokenId) external {
+        IERC721EnumerableBurn(diamondProxy).burn(_tokenId);
     }
 }`}
 </ExpandableCode>
@@ -205,19 +202,18 @@ contract MyDiamondConsumer {
 ## Best Practices
 
 <Callout type="tip" title="Best Practice">
-- Ensure the `ERC721EnumerableBurnFacet` is correctly registered with the diamond proxy before use.
-- Always verify token ownership and necessary approvals before calling the `burn` function to prevent `ERC721InsufficientApproval` errors.
-- Consider the implications of burning on token enumeration order and total supply.
+- Ensure the `ERC721EnumerableBurnFacet` is correctly initialized with the diamond proxy.
+- Verify that the caller has the necessary permissions to burn the specified token, as enforced by the `burn` function's access control.
 </Callout>
 
 ## Security Considerations
 
 <Callout type="warning" title="Security">
-This facet's `burn` function requires careful access control to be implemented at the diamond level or within calling contracts to ensure only authorized parties can burn tokens. The function itself does not perform ownership checks; these must be handled by the caller or enforced by other facets. Incorrect usage could lead to unintended token destruction. The `ERC721NonexistentToken` error is emitted if the token ID does not exist.
+The `burn` function requires careful access control to ensure only authorized parties can destroy tokens. The facet relies on the underlying ERC721 implementation to enforce ownership checks before burning. Ensure the `Transfer` event is correctly emitted by the facet implementation for accurate off-chain tracking.
 </Callout>
 
 <div style={{marginTop: "3rem", paddingTop: "2rem", borderTop: "1px solid var(--ifm-color-emphasis-200)"}}>
   <WasThisHelpful pageId="ERC721EnumerableBurnFacet" />
 </div>
 
-<LastUpdated date="2025-12-21T21:44:48.911Z" />
+<LastUpdated date="2025-12-21T22:05:43.616Z" />

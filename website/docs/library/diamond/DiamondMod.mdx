@@ -1,8 +1,8 @@
 ---
 sidebar_position: 99
 title: "DiamondMod"
-description: "Internal functions and storage for diamond proxy."
-gitSource: "https://github.com/maxnorm/Compose/blob/2dfa9eb69851162421010a7e56bd0fa891a9311a/src/diamond/DiamondMod.sol"
+description: "Manage diamond facets and internal storage."
+gitSource: "https://github.com/maxnorm/Compose/blob/5736454575f67743dd05ba6cb1265bc06d0c1422/src/diamond/DiamondMod.sol"
 ---
 
 import DocSubtitle  from '@site/src/components/docs/DocSubtitle';
@@ -21,13 +21,13 @@ import GradientText from '@site/src/components/ui/GradientText';
 import GradientButton from '@site/src/components/ui/GradientButton';
 
 <DocSubtitle>
-Internal functions and storage for diamond proxy.
+Manage diamond facets and internal storage.
 </DocSubtitle>
 
 <Callout type="info" title="Key Features">
-- Manages facet registration and function selector mapping within the diamond proxy.
-- Provides the core `diamondFallback` mechanism for dynamic function dispatch to appropriate facets.
-- Exposes an internal `getStorage` function for retrieving storage values (though direct use is discouraged in external facets).
+- Facet management: Allows adding facets and their function selectors to the diamond.
+- Function routing: Provides a fallback mechanism to dispatch calls to the correct facet.
+- Internal storage access: Exposes a method to retrieve the diamond's internal storage slot.
 </Callout>
 
 <Callout type="info" title="Module Usage">
@@ -36,7 +36,7 @@ This module provides internal functions for use in your custom facets. Import it
 
 ## Overview
 
-The DiamondMod module provides core internal logic for managing diamond facets and handling function calls. It is essential for the diamond proxy's operation, enabling facet registration and dynamic dispatch.
+This module provides core functionality for managing facets within a diamond proxy. It enables adding new facets during deployment and offers a fallback mechanism to route external calls to the appropriate facet, ensuring composability and upgradability.
 
 ---
 
@@ -53,11 +53,11 @@ storage-location: erc8042:compose.diamond
 
 <ExpandableCode language="solidity" maxLines={15} title="Definition">
 {`struct DiamondStorage {
-mapping(bytes4 functionSelector => FacetAndPosition) facetAndPosition;
-/**
- * \`selectors\` contains all function selectors that can be called in the diamond.
- */
-bytes4[] selectors;
+    mapping(bytes4 functionSelector => FacetAndPosition) facetAndPosition;
+    /**
+    * \`selectors\` contains all function selectors that can be called in the diamond.
+    */
+    bytes4[] selectors;
 }`}
 </ExpandableCode>
 
@@ -66,8 +66,8 @@ bytes4[] selectors;
 
 <ExpandableCode language="solidity" maxLines={15} title="Definition">
 {`struct FacetAndPosition {
-address facet;
-uint32 position;
+    address facet;
+    uint32 position;
 }`}
 </ExpandableCode>
 
@@ -76,9 +76,9 @@ uint32 position;
 
 <ExpandableCode language="solidity" maxLines={15} title="Definition">
 {`struct FacetCut {
-address facetAddress;
-FacetCutAction action;
-bytes4[] functionSelectors;
+    address facetAddress;
+    FacetCutAction action;
+    bytes4[] functionSelectors;
 }`}
 </ExpandableCode>
 
@@ -195,21 +195,18 @@ error NoBytecodeAtAddress(address _contractAddress, string _message);
 <ExpandableCode language="solidity" maxLines={20} title="Example Implementation">
 {`pragma solidity ^0.8.30;
 
-import {IDiamondMod} from "@compose/contracts/src/diamond/IDiamondMod.sol";
+import {IDiamondMod} from "@compose/diamond-proxy/contracts/modules/DiamondMod.sol";
 
 contract MyFacet {
-    IDiamondMod internal diamondMod;
+    IDiamondMod public diamondMod;
 
-    constructor(address _diamondMod) {
+    function initialize(address _diamondMod) external {
         diamondMod = IDiamondMod(_diamondMod);
     }
 
-    function someFunction() external {
-        // Example of calling a function that might interact with diamond storage
-        // Note: Direct calls to diamondMod internal functions are generally not exposed or recommended.
-        // This is illustrative; actual interaction would be through the diamond proxy itself.
-        // For instance, a facet might read storage values managed by the diamond proxy.
-        // bytes32 storageSlot = diamondMod.getStorageSlot(keccak256("myState"));
+    function getDiamondStorage() external view returns (bytes32) {
+        // Example of accessing storage via the module
+        return diamondMod.getStorage();
     }
 }`}
 </ExpandableCode>
@@ -217,19 +214,19 @@ contract MyFacet {
 ## Best Practices
 
 <Callout type="tip" title="Best Practice">
-- Access control for functions like `addFacets` is crucial and should be managed externally, typically by an upgrade agent or owner.
-- Ensure that `addFacets` is only called during the initial diamond deployment phase to maintain diamond immutability.
-- Handle `FunctionNotFound` errors gracefully in consumer contracts that call functions routed through the diamond proxy.
+- Use `addFacets` exclusively during initial diamond deployment to avoid unexpected state changes.
+- Implement robust error handling for `diamondFallback` to gracefully manage unknown function selectors.
+- Understand that `getStorage` provides access to the diamond's internal storage slot, which is fundamental to the diamond pattern.
 </Callout>
 
 ## Integration Notes
 
 <Callout type="success" title="Shared Storage">
-DiamondMod interacts directly with the diamond's storage layout to store facet information and function mappings. Facets added via `addFacets` are registered in a way that `diamondFallback` can resolve incoming calls. The `getStorage` function allows facets to access state managed by the diamond proxy, adhering to the storage slotting conventions. `addFacets` must be called during deployment; subsequent calls will revert.
+This module manages the diamond's internal mapping of function selectors to facet addresses. Facets can interact with this module to retrieve the diamond's storage slot via `getStorage()`. The `addFacets` function is intended for use only during the initial deployment of the diamond contract. Calling it after deployment can lead to the `InvalidActionWhenDeployingDiamond` error.
 </Callout>
 
 <div style={{marginTop: "3rem", paddingTop: "2rem", borderTop: "1px solid var(--ifm-color-emphasis-200)"}}>
   <WasThisHelpful pageId="DiamondMod" />
 </div>
 
-<LastUpdated date="2025-12-21T21:45:25.482Z" />
+<LastUpdated date="2025-12-21T22:06:23.168Z" />

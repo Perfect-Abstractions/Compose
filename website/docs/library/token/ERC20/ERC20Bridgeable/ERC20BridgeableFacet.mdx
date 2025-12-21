@@ -1,8 +1,8 @@
 ---
 sidebar_position: 99
 title: "ERC20BridgeableFacet"
-description: "Facilitates cross-chain ERC20 token bridging operations."
-gitSource: "https://github.com/maxnorm/Compose/blob/2dfa9eb69851162421010a7e56bd0fa891a9311a/src/token/ERC20/ERC20Bridgeable/ERC20BridgeableFacet.sol"
+description: "Facilitates cross-chain token transfers for ERC-20 tokens."
+gitSource: "https://github.com/maxnorm/Compose/blob/5736454575f67743dd05ba6cb1265bc06d0c1422/src/token/ERC20/ERC20Bridgeable/ERC20BridgeableFacet.sol"
 ---
 
 import DocSubtitle  from '@site/src/components/docs/DocSubtitle';
@@ -21,18 +21,18 @@ import GradientText from '@site/src/components/ui/GradientText';
 import GradientButton from '@site/src/components/ui/GradientButton';
 
 <DocSubtitle>
-Facilitates cross-chain ERC20 token bridging operations.
+Facilitates cross-chain token transfers for ERC-20 tokens.
 </DocSubtitle>
 
 <Callout type="info" title="Key Features">
-- Role-based access control for cross-chain operations, requiring the `trusted-bridge` role.
-- Explicit functions for cross-chain minting and burning of ERC20 tokens.
-- Utilizes inline assembly for efficient retrieval of storage structs.
+- Enables cross-chain minting and burning of ERC-20 tokens.
+- Enforces authorization for bridge operations via the `trusted-bridge` role.
+- Provides internal checks for token bridging trust.
 </Callout>
 
 ## Overview
 
-The ERC20BridgeableFacet enables secure and controlled cross-chain transfers of ERC20 tokens within a Compose diamond. It provides functions for minting and burning tokens on behalf of trusted bridge operators, ensuring integrity and proper role-based access.
+The ERC20BridgeableFacet enables secure and controlled cross-chain minting and burning of ERC-20 tokens. It relies on a trusted bridge role for authorization, ensuring only authorized entities can initiate these operations. This facet provides essential functions for bridging assets across different blockchain networks.
 
 ---
 
@@ -372,33 +372,25 @@ error ERC20InsufficientBalance(address _from, uint256 _accountBalance, uint256 _
 <ExpandableCode language="solidity" maxLines={20} title="Example Implementation">
 {`pragma solidity ^0.8.30;
 
-import {IERC20BridgeableFacet} from "@compose-protocol/diamond-contracts/contracts/facets/ERC20Bridgeable/IERC20BridgeableFacet.sol";
-import {Diamond} from "@compose-protocol/diamond-contracts/contracts/Diamond.sol";
+import {IERC20BridgeableFacet} from "@compose/diamond/contracts/facets/ERC20Bridgeable/IERC20BridgeableFacet.sol";
 
 contract Deployer {
-    function deploy() external {
-        // Assume diamond is already deployed and initialized
-        Diamond diamond = Diamond(address(0x123));
+    address immutable diamondAddress;
+    IERC20BridgeableFacet immutable erc20BridgeableFacet;
 
-        // Get the ERC20BridgeableFacet interface
-        IERC20BridgeableFacet erc20BridgeableFacet = IERC20BridgeableFacet(address(diamond));
+    constructor(address _diamondAddress) {
+        diamondAddress = _diamondAddress;
+        erc20BridgeableFacet = IERC20BridgeableFacet(diamondAddress);
+    }
 
-        // Example: Mint tokens across chains (called by a trusted bridge operator)
-        address tokenAddress = address(0xabc);
-        address recipient = address(0xdef);
-        uint256 amount = 100 ether;
-        bytes32 metadata = "0x";
+    function mintCrossChain(address _token, address _to, uint256 _amount) external {
+        // Assumes the caller has the 'trusted-bridge' role.
+        erc20BridgeableFacet.crosschainMint(_token, _to, _amount);
+    }
 
-        // Assuming the caller has the 'trusted-bridge' role
-        erc20BridgeableFacet.crosschainMint(tokenAddress, recipient, amount, metadata);
-
-        // Example: Burn tokens across chains (called by a trusted bridge operator)
-        address sender = address(0xghi);
-        uint256 burnAmount = 50 ether;
-        bytes32 burnMetadata = "0x";
-
-        // Assuming the caller has the 'trusted-bridge' role
-        erc20BridgeableFacet.crosschainBurn(tokenAddress, sender, burnAmount, burnMetadata);
+    function burnCrossChain(address _token, address _from, uint256 _amount) external {
+        // Assumes the caller has the 'trusted-bridge' role.
+        erc20BridgeableFacet.crosschainBurn(_token, _from, _amount);
     }
 }`}
 </ExpandableCode>
@@ -406,19 +398,18 @@ contract Deployer {
 ## Best Practices
 
 <Callout type="tip" title="Best Practice">
-- Ensure the `trusted-bridge` role is correctly assigned to authorized bridge operator addresses via the Access Control facet.
-- Store the ERC20 token addresses that will be bridged in a secure and auditable manner, likely managed by a separate facet or contract.
-- Verify that the diamond proxy has the ERC20BridgeableFacet correctly appended and selectors are mapped.
+- Ensure the 'trusted-bridge' role is correctly assigned to authorized bridge contracts or addresses.
+- Use `getERC20Storage` and `getAccessControlStorage` to safely access facet storage when implementing custom logic or extensions.
 </Callout>
 
 ## Security Considerations
 
 <Callout type="warning" title="Security">
-This facet is callable by addresses with the `trusted-bridge` role. Ensure this role is granted with extreme caution and only to verified, audited bridge operator contracts or addresses. Input validation for token addresses, amounts, and recipient/sender addresses is critical to prevent unexpected state changes or token loss. Reentrancy is not directly applicable as functions do not make external calls that return control to the caller within the same execution context, but external calls to the bridged ERC20 token contract should be considered in the overall security model.
+Cross-chain operations are sensitive. Ensure the `trusted-bridge` role is strictly managed. The `crosschainMint` and `crosschainBurn` functions are only callable by addresses holding the `trusted-bridge` role, preventing unauthorized token supply manipulation. Input validation is performed by `checkTokenBridge`.
 </Callout>
 
 <div style={{marginTop: "3rem", paddingTop: "2rem", borderTop: "1px solid var(--ifm-color-emphasis-200)"}}>
   <WasThisHelpful pageId="ERC20BridgeableFacet" />
 </div>
 
-<LastUpdated date="2025-12-21T21:44:25.861Z" />
+<LastUpdated date="2025-12-21T22:05:19.300Z" />

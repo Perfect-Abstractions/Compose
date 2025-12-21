@@ -1,8 +1,8 @@
 ---
 sidebar_position: 99
 title: "DiamondCutFacet"
-description: "Manage diamond facets and functions within a diamond proxy."
-gitSource: "https://github.com/maxnorm/Compose/blob/2dfa9eb69851162421010a7e56bd0fa891a9311a/src/diamond/DiamondCutFacet.sol"
+description: "Manage diamond facets and function registrations."
+gitSource: "https://github.com/maxnorm/Compose/blob/5736454575f67743dd05ba6cb1265bc06d0c1422/src/diamond/DiamondCutFacet.sol"
 ---
 
 import DocSubtitle  from '@site/src/components/docs/DocSubtitle';
@@ -21,18 +21,18 @@ import GradientText from '@site/src/components/ui/GradientText';
 import GradientButton from '@site/src/components/ui/GradientButton';
 
 <DocSubtitle>
-Manage diamond facets and functions within a diamond proxy.
+Manage diamond facets and function registrations.
 </DocSubtitle>
 
 <Callout type="info" title="Key Features">
-- Supports adding, replacing, and removing functions and entire facets.
-- Allows optional execution of an initialization function during a cut operation.
-- Provides access to diamond storage and owner information through dedicated functions.
+- Supports adding, replacing, and removing facets and their associated functions.
+- Enables atomic upgrades with the `diamondCut` function.
+- Provides owner-only control over diamond modifications.
 </Callout>
 
 ## Overview
 
-The DiamondCutFacet provides essential functionality for managing the diamond proxy's facets and functions. It allows for adding, replacing, and removing functions, as well as executing arbitrary code during the cut operation. This facet is crucial for upgrading and extending the diamond's capabilities.
+The DiamondCutFacet provides essential functions for managing the diamond's functionality. It allows for adding, replacing, and removing facets, as well as updating function selectors. This facet is crucial for diamond upgrades and maintaining its modular structure.
 
 ---
 
@@ -63,8 +63,8 @@ The DiamondCutFacet provides essential functionality for managing the diamond pr
 {`struct DiamondStorage {
     mapping(bytes4 functionSelector => FacetAndPosition) facetAndPosition;
     /**
-     * Array of all function selectors that can be called in the diamond
-     */
+    * Array of all function selectors that can be called in the diamond
+    */
     bytes4[] selectors;
 }`}
 </ExpandableCode>
@@ -368,29 +368,27 @@ error InitializationFunctionReverted(address _initializationContractAddress, byt
 <ExpandableCode language="solidity" maxLines={20} title="Example Implementation">
 {`pragma solidity ^0.8.30;
 
-import {IDiamondCut} from "@compose-protocol/diamond-contracts/contracts/interfaces/IDiamondCut.sol";
+import {IDiamondCut} from "@compose/diamond/contracts/facets/DiamondCutFacet.sol";
 
-contract DiamondCutConsumer {
-    IDiamondCut public diamondCutFacet;
+contract Deployer {
+    address immutable DIAMOND_PROXY;
 
-    constructor(address _diamondCutFacetAddress) {
-        diamondCutFacet = IDiamondCut(_diamondCutFacetAddress);
+    constructor(address _diamondProxy) {
+        DIAMOND_PROXY = _diamondProxy;
     }
 
-    function addMyFacet(address _facetAddress, bytes4[] memory _functionSelectors) external {
-        // Assume DiamondLoupeFacet is already deployed and its selectors are known
-        // Assume MyFacet is deployed at _facetAddress
-        diamondCutFacet.diamondCut([(_facetAddress, IDiamondCut.FacetCutAction.Add, _functionSelectors)], address(0), "");
-    }
+    function upgradeDiamond() external {
+        IDiamondCut diamondCut = IDiamondCut(DIAMOND_PROXY);
 
-    function replaceMyFacet(address _newFacetAddress, bytes4[] memory _functionSelectors) external {
-        // Assume MyFacet is deployed at _newFacetAddress
-        diamondCutFacet.diamondCut([(_newFacetAddress, IDiamondCut.FacetCutAction.Replace, _functionSelectors)], address(0), "");
-    }
+        // Example: Add a new facet
+        bytes[] memory facetCuts = new bytes[](1);
+        // Assume facetCuts[0] contains encoded data for adding a facet
+        // diamondCut.diamondCut(facetCuts, address(0), "", false);
 
-    function removeMyFacet(bytes4[] memory _functionSelectors) external {
-        // Remove functions associated with a facet
-        diamondCutFacet.diamondCut([], address(0), ""); // Placeholder for actual function removal logic
+        // Example: Replace a function
+        // bytes[] memory replaceCuts = new bytes[](1);
+        // Assume replaceCuts[0] contains encoded data for replacing a function
+        // diamondCut.diamondCut(new bytes[](0), address(0), "", false);
     }
 }`}
 </ExpandableCode>
@@ -398,19 +396,19 @@ contract DiamondCutConsumer {
 ## Best Practices
 
 <Callout type="tip" title="Best Practice">
-- Use `diamondCut` to atomically add, replace, or remove functions and facets. This ensures consistency and prevents partial upgrades.
-- Always provide selectors when adding or replacing facets to ensure the diamond can route calls correctly.
-- For upgrades, carefully manage the `InitializationFunctionReverted` error to ensure new facet initializers execute successfully.
+- Ensure the caller is authorized before performing any cut operations.
+- Carefully manage function selector registrations to avoid conflicts or unintended overwrites.
+- Leverage `diamondCut`'s ability to execute an initialization function post-upgrade for proper state setup.
 </Callout>
 
 ## Security Considerations
 
 <Callout type="warning" title="Security">
-Access control is paramount; only authorized addresses (typically the diamond owner) should be able to call `diamondCut` to prevent unauthorized modifications to the diamond's functionality. Ensure that facet addresses provided are valid and that selectors do not conflict with existing functions, especially immutable ones. Reentrancy is mitigated by the atomic nature of the `diamondCut` operation.
+This facet is highly sensitive as it modifies the diamond's core functionality. Access control is paramount; only authorized addresses (typically the diamond's owner) should be able to call `diamondCut` and related functions. Incorrectly managing function selectors can lead to unexpected behavior or denial of service. Reentrancy is not an immediate concern for the cut operations themselves, but any initialization function called via `diamondCut` must be reentrancy-guarded.
 </Callout>
 
 <div style={{marginTop: "3rem", paddingTop: "2rem", borderTop: "1px solid var(--ifm-color-emphasis-200)"}}>
   <WasThisHelpful pageId="DiamondCutFacet" />
 </div>
 
-<LastUpdated date="2025-12-21T21:45:34.002Z" />
+<LastUpdated date="2025-12-21T22:06:32.435Z" />
