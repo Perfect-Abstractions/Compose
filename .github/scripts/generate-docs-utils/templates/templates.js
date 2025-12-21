@@ -350,6 +350,88 @@ function prepareErrorData(error) {
 }
 
 /**
+ * Normalize struct definition indentation
+ * Ensures consistent 4-space indentation for struct body content
+ * @param {string} definition - Struct definition code
+ * @returns {string} Normalized struct definition with proper indentation
+ */
+function normalizeStructIndentation(definition) {
+  if (!definition) return definition;
+  
+  const lines = definition.split('\n');
+  if (lines.length === 0) return definition;
+  
+  // Find the struct opening line (contains "struct" keyword)
+  let structStartIndex = -1;
+  let openingBraceOnSameLine = false;
+  
+  for (let i = 0; i < lines.length; i++) {
+    if (lines[i].includes('struct')) {
+      structStartIndex = i;
+      openingBraceOnSameLine = lines[i].includes('{');
+      break;
+    }
+  }
+  
+  if (structStartIndex === -1) return definition;
+  
+  // Get the indentation of the struct declaration line
+  const structLine = lines[structStartIndex];
+  const structIndentMatch = structLine.match(/^(\s*)/);
+  const structIndent = structIndentMatch ? structIndentMatch[1] : '';
+  
+  // Normalize all lines
+  const normalized = [];
+  let inStructBody = openingBraceOnSameLine;
+  
+  for (let i = 0; i < lines.length; i++) {
+    const line = lines[i];
+    const trimmed = line.trim();
+    
+    if (i === structStartIndex) {
+      // Keep struct declaration line as-is
+      normalized.push(line);
+      if (openingBraceOnSameLine) {
+        inStructBody = true;
+      }
+      continue;
+    }
+    
+    // Handle opening brace on separate line
+    if (!openingBraceOnSameLine && trimmed === '{') {
+      normalized.push(structIndent + '{');
+      inStructBody = true;
+      continue;
+    }
+    
+    // Handle closing brace
+    if (trimmed === '}') {
+      normalized.push(structIndent + '}');
+      inStructBody = false;
+      continue;
+    }
+    
+    // Skip empty lines
+    if (trimmed === '') {
+      normalized.push('');
+      continue;
+    }
+    
+    // For struct body content, ensure 4-space indentation relative to struct declaration
+    if (inStructBody) {
+      // Remove any existing indentation and add proper indentation
+      const bodyIndent = structIndent + '    '; // 4 spaces
+      normalized.push(bodyIndent + trimmed);
+    } else {
+      // Keep lines outside struct body as-is
+      normalized.push(line);
+    }
+  }
+  
+  return normalized.join('\n');
+}
+
+/**
  * Prepare struct data for template rendering
  * @param {object} struct - Struct data
  * @returns {object} Prepared struct data
@@ -358,7 +440,7 @@ function prepareStructData(struct) {
   return {
     name: struct.name,
     description: struct.description || '',
-    definition: struct.definition,
+    definition: normalizeStructIndentation(struct.definition),
   };
 }
 
