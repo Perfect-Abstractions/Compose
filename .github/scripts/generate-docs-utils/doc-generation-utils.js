@@ -16,7 +16,7 @@ const CONFIG = require('./config');
 const {
   computeOutputPath,
   ensureCategoryFiles,
-} = require('./category-generator');
+} = require('./category/category-generator');
 
 // ============================================================================
 // Git Integration

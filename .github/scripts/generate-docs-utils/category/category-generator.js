@@ -13,11 +13,11 @@
 
 const fs = require('fs');
 const path = require('path');
-const CONFIG = require('./config');
+const CONFIG = require('../config');
 const {
   getCategoryItems,
   createCategoryIndexFile: createIndexFile,
-} = require('./category/index-page-generator');
+} = require('./index-page-generator');
 
 // ============================================================================
 // Constants

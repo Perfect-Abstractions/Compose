@@ -25,7 +25,7 @@ const path = require('path');
 const scriptDir = __dirname;
 process.chdir(path.join(scriptDir, '../..'));
 
-const { syncDocsStructure, scanSourceStructure } = require('./generate-docs-utils/category-generator');
+const { syncDocsStructure, scanSourceStructure } = require('./generate-docs-utils/category/category-generator');
 
 // ============================================================================
 // CLI Parsing
