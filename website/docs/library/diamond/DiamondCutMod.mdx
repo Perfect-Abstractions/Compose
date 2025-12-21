@@ -1,8 +1,8 @@
 ---
 sidebar_position: 99
 title: "DiamondCutMod"
-description: "Manages facet additions, removals, and replacements on a diamond."
-gitSource: "https://github.com/maxnorm/Compose/blob/2dfa9eb69851162421010a7e56bd0fa891a9311a/src/diamond/DiamondCutMod.sol"
+description: "Manages diamond facet additions, replacements, and removals."
+gitSource: "https://github.com/maxnorm/Compose/blob/5736454575f67743dd05ba6cb1265bc06d0c1422/src/diamond/DiamondCutMod.sol"
 ---
 
 import DocSubtitle  from '@site/src/components/docs/DocSubtitle';
@@ -21,13 +21,13 @@ import GradientText from '@site/src/components/ui/GradientText';
 import GradientButton from '@site/src/components/ui/GradientButton';
 
 <DocSubtitle>
-Manages facet additions, removals, and replacements on a diamond.
+Manages diamond facet additions, replacements, and removals.
 </DocSubtitle>
 
 <Callout type="info" title="Key Features">
-- Dynamically adds, replaces, and removes functions from the diamond proxy's routing table.
-- Supports batch operations for efficient interface updates.
-- Allows for an optional initialization call via `delegatecall` during a cut operation.
+- Atomically adds, replaces, or removes multiple functions in a single transaction.
+- Supports optional delegatecall execution of an initialization function after the cut.
+- Enforces restrictions against modifying immutable functions and prevents redundant operations.
 </Callout>
 
 <Callout type="info" title="Module Usage">
@@ -36,7 +36,7 @@ This module provides internal functions for use in your custom facets. Import it
 
 ## Overview
 
-The DiamondCutMod provides essential functions for modifying the diamond's contract interface. It allows for the dynamic addition, replacement, or removal of functions across various facets. This module is crucial for maintaining and evolving the diamond's capabilities post-deployment, enabling upgrades and feature extensions.
+The DiamondCutMod provides essential functions for managing the facets of a Compose diamond. It allows for controlled addition, replacement, and removal of functions, ensuring the diamond's logic can be upgraded and extended safely. This module is critical for maintaining the diamond's integrity during upgrades.
 
 ---
 
@@ -53,11 +53,11 @@ storage-location: erc8042:compose.diamond
 
 <ExpandableCode language="solidity" maxLines={15} title="Definition">
 {`struct DiamondStorage {
-mapping(bytes4 functionSelector => FacetAndPosition) facetAndPosition;
-/**
- * Array of all function selectors that can be called in the diamond
- */
-bytes4[] selectors;
+    mapping(bytes4 functionSelector => FacetAndPosition) facetAndPosition;
+    /**
+    * Array of all function selectors that can be called in the diamond
+    */
+    bytes4[] selectors;
 }`}
 </ExpandableCode>
 
@@ -66,8 +66,8 @@ bytes4[] selectors;
 
 <ExpandableCode language="solidity" maxLines={15} title="Definition">
 {`struct FacetAndPosition {
-address facet;
-uint32 position;
+    address facet;
+    uint32 position;
 }`}
 </ExpandableCode>
 
@@ -76,9 +76,9 @@ uint32 position;
 
 <ExpandableCode language="solidity" maxLines={15} title="Definition">
 {`struct FacetCut {
-address facetAddress;
-FacetCutAction action;
-bytes4[] functionSelectors;
+    address facetAddress;
+    FacetCutAction action;
+    bytes4[] functionSelectors;
 }`}
 </ExpandableCode>
 
@@ -334,47 +334,41 @@ error RemoveFacetAddressMustBeZeroAddress(address _facet);
 <ExpandableCode language="solidity" maxLines={20} title="Example Implementation">
 {`pragma solidity ^0.8.30;
 
-import {IDiamondCutMod} from "@compose/diamond-contracts/contracts/modules/diamondCut/IDiamondCutMod.sol";
-import {DiamondCutFacet} from "@compose/diamond-contracts/contracts/modules/diamondCut/DiamondCutFacet.sol";
+import {IDiamondCut} from "@compose-protocol/diamond-contracts/contracts/facets/DiamondCutMod.sol";
 
-contract MyDiamondConsumerFacet {
-    IDiamondCutMod constant DIAMOND_CUT_MODULE = IDiamondCutMod(address(this)); // Replace with actual diamond address
+contract MyFacet {
+    // ... other facet logic ...
 
-    function upgradeDiamond() external {
-        // Example: Add a new function
-        address newFacetAddress = address(0x123); // Address of the new facet contract
-        bytes4[] memory selectorsToAdd = new bytes4[](1);
-        selectorsToAdd[0] = DiamondCutFacet.addFunctions.selector; // Example selector
+    function upgradeDiamond(address _diamondAddress) external {
+        address[] memory facetAddresses = new address[](1);
+        facetAddresses[0] = address(this); // Assuming this contract is the new facet
 
-        DIAMOND_CUT_MODULE.diamondCut(
-            address(0), // Facet address for additions (can be zero if only replacing/removing)
-            selectorsToAdd,
-            new bytes4[](0), // Selectors to remove
-            new address[](0), // Facet addresses for replacements (can be empty)
-            new bytes4[][](0), // New selectors for replacements (can be empty)
-            address(0), // Target address for initialization call
-            bytes('') // Initialization calldata
-        );
+        bytes[] memory functionSigs = new bytes[](1);
+        functionSigs[0] = bytes4(keccak256(\"myNewFunction(uint256)\")); // Example selector
+
+        IDiamondCut(_diamondAddress).diamondCut(facetAddresses, address(0), functionSigs, address(0), \"\");
     }
+
+    // ... other facet logic ...
 }`}
 </ExpandableCode>
 
 ## Best Practices
 
 <Callout type="tip" title="Best Practice">
-- Always ensure the facet address provided for adding functions is valid and contains the intended bytecode. Use `getStorage` to verify facet existence before removal.
-- Be aware that `diamondCut` can execute an arbitrary `delegatecall` for initialization, requiring careful validation of the target address and calldata.
-- Prefer adding or replacing functions over removing them to maintain backward compatibility where possible. Ensure immutable functions are not targeted for removal or replacement.
+- Use `diamondCut` carefully; ensure all function selectors are correctly identified to avoid unintended logic changes or access control bypasses.
+- Always verify that the facet addresses provided are deployed and contain the intended bytecode before executing `diamondCut`.
+- Handle potential `InitializationFunctionReverted` errors by ensuring any initialization logic within the cut is robust and correctly implemented.
 </Callout>
 
 ## Integration Notes
 
 <Callout type="success" title="Shared Storage">
-This module directly interacts with the diamond's internal storage to manage the mapping of function selectors to facet addresses. Changes made via `diamondCut` are immediately reflected in the diamond proxy's dispatch logic. Facets should use `getStorage` to query the current facet implementations. Facet cuts are atomic; either all operations succeed or none do. The order of operations within a single `diamondCut` call is significant: additions are processed first, then replacements, and finally removals.
+The DiamondCutMod directly manipulates the diamond's function selector to facet address mapping. Any changes made via `diamondCut` are immediately reflected in the diamond proxy's routing logic. Facets interact with this module by calling its external functions, typically during upgrade processes. The `DiamondCut` event is emitted upon successful completion of a diamond cut operation, providing an audit trail of changes.
 </Callout>
 
 <div style={{marginTop: "3rem", paddingTop: "2rem", borderTop: "1px solid var(--ifm-color-emphasis-200)"}}>
   <WasThisHelpful pageId="DiamondCutMod" />
 </div>
 
-<LastUpdated date="2025-12-21T21:45:22.280Z" />
+<LastUpdated date="2025-12-21T22:06:20.158Z" />

@@ -2,7 +2,7 @@
 sidebar_position: 99
 title: "AccessControlTemporalMod"
 description: "Manage time-bound role assignments in Compose diamonds."
-gitSource: "https://github.com/maxnorm/Compose/blob/2dfa9eb69851162421010a7e56bd0fa891a9311a/src/access/AccessControlTemporal/AccessControlTemporalMod.sol"
+gitSource: "https://github.com/maxnorm/Compose/blob/5736454575f67743dd05ba6cb1265bc06d0c1422/src/access/AccessControlTemporal/AccessControlTemporalMod.sol"
 ---
 
 import DocSubtitle  from '@site/src/components/docs/DocSubtitle';
@@ -25,9 +25,9 @@ Manage time-bound role assignments in Compose diamonds.
 </DocSubtitle>
 
 <Callout type="info" title="Key Features">
-- Grants roles with a specific expiry timestamp.
-- Automatically checks for role expiry upon validation.
-- Allows explicit revocation of temporal roles.
+- Grants roles with configurable expiry timestamps.
+- Automatically enforces role validity, revoking expired assignments.
+- Provides functions to check role expiry and revoke temporal roles.
 </Callout>
 
 <Callout type="info" title="Module Usage">
@@ -36,7 +36,7 @@ This module provides internal functions for use in your custom facets. Import it
 
 ## Overview
 
-This module extends standard access control by introducing time-bound role assignments. It allows granting roles that automatically expire, enhancing security and operational flexibility. By integrating temporal logic, diamonds can enforce dynamic permissions, reducing the need for manual role revocation.
+This module extends standard access control by introducing time-bound role assignments. It allows for roles to be granted with a specific expiry timestamp, automatically revoking them once that time passes. This enhances security and automates the cleanup of temporary permissions.
 
 ---
 
@@ -46,8 +46,8 @@ This module extends standard access control by introducing time-bound role assig
 
 <ExpandableCode language="solidity" maxLines={15} title="Definition">
 {`struct AccessControlStorage {
-mapping(address account => mapping(bytes32 role => bool hasRole)) hasRole;
-mapping(bytes32 role => bytes32 adminRole) adminRole;
+    mapping(address account => mapping(bytes32 role => bool hasRole)) hasRole;
+    mapping(bytes32 role => bytes32 adminRole) adminRole;
 }`}
 </ExpandableCode>
 
@@ -56,7 +56,7 @@ mapping(bytes32 role => bytes32 adminRole) adminRole;
 
 <ExpandableCode language="solidity" maxLines={15} title="Definition">
 {`struct AccessControlTemporalStorage {
-mapping(address account => mapping(bytes32 role => uint256 expiryTimestamp)) roleExpiry;
+    mapping(address account => mapping(bytes32 role => uint256 expiryTimestamp)) roleExpiry;
 }`}
 </ExpandableCode>
 
@@ -433,21 +433,29 @@ error AccessControlUnauthorizedAccount(address _account, bytes32 _role);
 <ExpandableCode language="solidity" maxLines={20} title="Example Implementation">
 {`pragma solidity ^0.8.30;
 
-import {IAccessControlTemporalMod} from "@compose/diamond-protocol/src/modules/accesscontroltemporal/IAccessControlTemporalMod.sol";
+import {IAccessControlTemporalMod} from "@compose/contracts/modules/AccessControlTemporalMod.sol";
+import {IDiamond} from "@compose/contracts/IDiamond.sol";
 
 contract MyDiamondFacet {
     IAccessControlTemporalMod internal accessControlTemporalMod;
 
-    function grantRoleTemporarily(address _account, bytes32 _role, uint64 _expiry) external {
-        accessControlTemporalMod.grantRoleWithExpiry(_account, _role, _expiry);
+    function initialize(IDiamond _diamond) external {
+        accessControlTemporalMod = IAccessControlTemporalMod(_diamond.getFacetAddress(address(this)));
     }
 
-    function checkRoleValidity(address _account, bytes32 _role) external view {
-        accessControlTemporalMod.requireValidRole(_account, _role);
+    function grantTempAdmin(address _account, uint64 _expiry) external {
+        accessControlTemporalMod.grantRoleWithExpiry(
+            keccak256("ADMIN_ROLE"),
+            _account,
+            _expiry
+        );
     }
 
-    function revokeRole(address _account, bytes32 _role) external {
-        accessControlTemporalMod.revokeTemporalRole(_account, _role);
+    function checkAdminStatus(address _account) external view {
+        accessControlTemporalMod.requireValidRole(
+            keccak256("ADMIN_ROLE"),
+            _account
+        );
     }
 }`}
 </ExpandableCode>
@@ -456,18 +464,18 @@ contract MyDiamondFacet {
 
 <Callout type="tip" title="Best Practice">
 - Use `requireValidRole` to enforce non-expired role checks before sensitive operations.
-- Grant roles with explicit expiry timestamps to minimize stale permissions.
-- Regularly audit temporal role assignments to ensure continued necessity.
+- Carefully manage expiry timestamps to prevent accidental role expiration or prolonged access.
+- Leverage custom errors `AccessControlRoleExpired` and `AccessControlUnauthorizedAccount` for clear revert reasons.
 </Callout>
 
 ## Integration Notes
 
 <Callout type="success" title="Shared Storage">
-The AccessControlTemporalMod manages its own storage, distinct from other facets. When integrating, ensure its storage slot is correctly mapped. The `requireValidRole` function directly interacts with diamond access control logic, potentially reverting with `AccessControlUnauthorizedAccount` or `AccessControlRoleExpired`.
+This module interacts with the diamond's storage. Facets can access its functionality via the diamond proxy. Ensure the `AccessControlTemporalMod` facet is correctly initialized and accessible. The module manages role assignments and their expiry, which is critical for any access control logic within other facets.
 </Callout>
 
 <div style={{marginTop: "3rem", paddingTop: "2rem", borderTop: "1px solid var(--ifm-color-emphasis-200)"}}>
   <WasThisHelpful pageId="AccessControlTemporalMod" />
 </div>
 
-<LastUpdated date="2025-12-21T21:43:41.142Z" />
+<LastUpdated date="2025-12-21T22:04:36.051Z" />

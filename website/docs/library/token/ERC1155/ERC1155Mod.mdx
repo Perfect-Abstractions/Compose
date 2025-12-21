@@ -1,8 +1,8 @@
 ---
 sidebar_position: 99
 title: "ERC1155Mod"
-description: "Manages ERC-1155 token balances, transfers, and metadata."
-gitSource: "https://github.com/maxnorm/Compose/blob/2dfa9eb69851162421010a7e56bd0fa891a9311a/src/token/ERC1155/ERC1155Mod.sol"
+description: "Manage ERC-1155 tokens with minting, burning, and transfers."
+gitSource: "https://github.com/maxnorm/Compose/blob/5736454575f67743dd05ba6cb1265bc06d0c1422/src/token/ERC1155/ERC1155Mod.sol"
 ---
 
 import DocSubtitle  from '@site/src/components/docs/DocSubtitle';
@@ -21,13 +21,13 @@ import GradientText from '@site/src/components/ui/GradientText';
 import GradientButton from '@site/src/components/ui/GradientButton';
 
 <DocSubtitle>
-Manages ERC-1155 token balances, transfers, and metadata.
+Manage ERC-1155 tokens with minting, burning, and transfers.
 </DocSubtitle>
 
 <Callout type="info" title="Key Features">
-- Supports minting and burning of single and batch token types.
-- Implements safe transfer logic compliant with EIP-1155.
-- Allows setting base and token-specific URIs for metadata.
+- Full ERC-1155 token lifecycle management (minting, burning).
+- Supports atomic batch operations for efficiency.
+- Implements EIP-1155 safe transfer logic with receiver validation.
 </Callout>
 
 <Callout type="info" title="Module Usage">
@@ -36,7 +36,7 @@ This module provides internal functions for use in your custom facets. Import it
 
 ## Overview
 
-This module implements the core ERC-1155 token functionality, including minting, burning, and safe transfers. It ensures proper balance tracking and adherence to the ERC-1155 standard, enabling composable multi-token systems within a diamond.
+The ERC1155Mod provides a comprehensive interface for managing ERC-1155 tokens within a Compose diamond. It enables minting, burning, and safe transfers of both single and batch token types, adhering to EIP-1155 standards. This module is crucial for any diamond that needs to support fungible or semi-fungible token functionalities.
 
 ---
 
@@ -48,11 +48,11 @@ ERC-8042 compliant storage struct for ERC-1155 token data. storage-location: erc
 
 <ExpandableCode language="solidity" maxLines={15} title="Definition">
 {`struct ERC1155Storage {
-mapping(uint256 id => mapping(address account => uint256 balance)) balanceOf;
-mapping(address account => mapping(address operator => bool)) isApprovedForAll;
-string uri;
-string baseURI;
-mapping(uint256 tokenId => string) tokenURIs;
+    mapping(uint256 id => mapping(address account => uint256 balance)) balanceOf;
+    mapping(address account => mapping(address operator => bool)) isApprovedForAll;
+    string uri;
+    string baseURI;
+    mapping(uint256 tokenId => string) tokenURIs;
 }`}
 </ExpandableCode>
 
@@ -561,24 +561,21 @@ error ERC1155MissingApprovalForAll(address _operator, address _owner);
 <ExpandableCode language="solidity" maxLines={20} title="Example Implementation">
 {`pragma solidity ^0.8.30;
 
-import {IERC1155Mod} from "@compose/core/src/modules/ERC1155Mod.sol";
+import {IERC1155Mod} from "@compose/modules/ERC1155Mod.sol";
 
 contract MyFacet {
-    IERC1155Mod public immutable erc1155Mod;
+    address immutable diamondProxy;
 
-    constructor(address diamondAddress) {
-        // Assuming ERC1155Mod facet is already deployed and accessible
-        erc1155Mod = IERC1155Mod(diamondAddress);
+    constructor(address _diamondProxy) {
+        diamondProxy = _diamondProxy;
     }
 
-    function mintErc1155Tokens(address to, uint256 id, uint256 amount) external {
-        // Call the mint function from the ERC1155Mod facet
-        erc1155Mod.mint(to, id, amount);
+    function mintErc1155Tokens(address _to, uint256 _id, uint256 _amount) external {
+        IERC1155Mod(diamondProxy).mint(_to, _id, _amount);
     }
 
-    function transferErc1155Tokens(address from, address to, uint256 id, uint256 amount) external {
-        // Call the safeTransferFrom function from the ERC1155Mod facet
-        erc1155Mod.safeTransferFrom(from, to, id, amount, "");
+    function transferErc1155Tokens(address _from, address _to, uint256 _id, uint256 _amount) external {
+        IERC1155Mod(diamondProxy).safeTransferFrom(_from, _to, _id, _amount, "");
     }
 }`}
 </ExpandableCode>
@@ -586,19 +583,19 @@ contract MyFacet {
 ## Best Practices
 
 <Callout type="tip" title="Best Practice">
-- Always validate receiver addresses when minting or transferring to contracts to ensure they implement the ERC1155Receiver interface.
-- Use `safeTransferFrom` and `safeBatchTransferFrom` for transfers involving contract recipients to ensure proper handling of tokens.
-- Handle potential `ERC1155InsufficientBalance`, `ERC1155InvalidArrayLength`, `ERC1155InvalidReceiver`, `ERC1155InvalidSender`, and `ERC1155MissingApprovalForAll` errors gracefully.
+- Always validate token IDs and amounts before minting or burning to prevent unexpected state changes.
+- Ensure that approvals are managed correctly before performing transfers to prevent unauthorized token movements.
+- Handle `ERC1155InsufficientBalance` and `ERC1155InvalidArrayLength` errors to gracefully manage transaction failures.
 </Callout>
 
 ## Integration Notes
 
 <Callout type="success" title="Shared Storage">
-This module interacts with the diamond's storage to manage ERC-1155 balances and token URIs. The storage is accessed via a predefined slot. Facets interacting with this module should be aware of the ERC-1155 storage layout and potential state changes.
+The ERC1155Mod utilizes a dedicated storage slot within the diamond's main storage contract to manage token balances, approvals, and URIs. Facets interacting with this module will need to call its functions through the diamond proxy. The `getStorage` function can be used to directly access the module's internal storage struct, which contains mappings for balances (`_balances`), operator approvals (`_operatorApprovals`), and token URIs (`_tokenURIs`), along with the `_baseURI`.
 </Callout>
 
 <div style={{marginTop: "3rem", paddingTop: "2rem", borderTop: "1px solid var(--ifm-color-emphasis-200)"}}>
   <WasThisHelpful pageId="ERC1155Mod" />
 </div>
 
-<LastUpdated date="2025-12-21T21:44:29.466Z" />
+<LastUpdated date="2025-12-21T22:05:24.394Z" />

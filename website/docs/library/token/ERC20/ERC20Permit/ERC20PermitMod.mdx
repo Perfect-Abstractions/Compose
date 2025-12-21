@@ -1,8 +1,8 @@
 ---
 sidebar_position: 99
 title: "ERC20PermitMod"
-description: "Implement ERC-2612 permit functionality for ERC-20 tokens."
-gitSource: "https://github.com/maxnorm/Compose/blob/2dfa9eb69851162421010a7e56bd0fa891a9311a/src/token/ERC20/ERC20Permit/ERC20PermitMod.sol"
+description: "ERC-2612 Permit logic and domain separator"
+gitSource: "https://github.com/maxnorm/Compose/blob/5736454575f67743dd05ba6cb1265bc06d0c1422/src/token/ERC20/ERC20Permit/ERC20PermitMod.sol"
 ---
 
 import DocSubtitle  from '@site/src/components/docs/DocSubtitle';
@@ -21,13 +21,13 @@ import GradientText from '@site/src/components/ui/GradientText';
 import GradientButton from '@site/src/components/ui/GradientButton';
 
 <DocSubtitle>
-Implement ERC-2612 permit functionality for ERC-20 tokens.
+ERC-2612 Permit logic and domain separator
 </DocSubtitle>
 
 <Callout type="info" title="Key Features">
-- Implements EIP-2612 Permit functionality for ERC-20 tokens.
-- Provides a reusable library for domain separator generation and signature verification.
-- Isolates complex signature logic, enabling cleaner facet implementations.
+- Implements ERC-2612 permit functionality for gasless allowance grants.
+- Manages the domain separator for signature validation, ensuring chain and contract uniqueness.
+- Provides a standardized interface for permit operations.
 </Callout>
 
 <Callout type="info" title="Module Usage">
@@ -36,7 +36,7 @@ This module provides internal functions for use in your custom facets. Import it
 
 ## Overview
 
-This module provides the core logic and storage for implementing the ERC-2612 Permit functionality. It allows users to grant token allowances via signed messages, enhancing gas efficiency and user experience. By isolating this logic, facets can easily integrate permit capabilities without duplicating complex signature verification and allowance setting code.
+This module provides the necessary logic and storage structures for implementing ERC-2612 permit functionality. It allows users to grant allowances via signed messages, enhancing gas efficiency and user experience. Integrating this module enables standard permit flows within your diamond.
 
 ---
 
@@ -48,7 +48,7 @@ storage-location: erc8042:compose.erc20.permit
 
 <ExpandableCode language="solidity" maxLines={15} title="Definition">
 {`struct ERC20PermitStorage {
-mapping(address owner => uint256) nonces;
+    mapping(address owner => uint256) nonces;
 }`}
 </ExpandableCode>
 
@@ -59,11 +59,11 @@ storage-location: erc8042:compose.erc20
 
 <ExpandableCode language="solidity" maxLines={15} title="Definition">
 {`struct ERC20Storage {
-mapping(address owner => uint256 balance) balanceOf;
-uint256 totalSupply;
-mapping(address owner => mapping(address spender => uint256 allowance)) allowance;
-uint8 decimals;
-string name;
+    mapping(address owner => uint256 balance) balanceOf;
+    uint256 totalSupply;
+    mapping(address owner => mapping(address spender => uint256 allowance)) allowance;
+    uint8 decimals;
+    string name;
 }`}
 </ExpandableCode>
 
@@ -236,57 +236,43 @@ address _owner, address _spender, uint256 _value, uint256 _deadline, uint8 _v, b
 <ExpandableCode language="solidity" maxLines={20} title="Example Implementation">
 {`pragma solidity ^0.8.30;
 
-import {IERC20PermitMod, IERC20PermitStorage} from "@compose/modules/erc20/ERC20PermitMod.sol";
+import {IERC20PermitMod, ERC20InvalidSpender, ERC2612InvalidSignature} from "@compose/modules/erc20-permit/src/ERC20PermitMod.sol";
 
 contract MyERC20Facet {
-    // Assume ERC20PermitMod is deployed and its address is known
-    address immutable erc20PermitModAddress;
+    using ERC20PermitMod for ERC20PermitMod.PermitStorage;
 
-    constructor(address _erc20PermitModAddress) {
-        erc20PermitModAddress = _erc20PermitModAddress;
+    ERC20PermitMod.PermitStorage public permitStorage;
+
+    function permit(address owner, address spender, uint256 value, uint256 deadline, uint8 v, bytes32 r, bytes32 s) external {
+        // Ensure this function is callable and correctly routed within the diamond.
+        // The module's permit function will validate the signature and update allowances.
+        permitStorage.permit(owner, spender, value, deadline, v, r, s);
     }
 
-    /**
-     * @notice Allows a user to permit an operator by signing a permit message.
-     * @param _owner The owner of the tokens.
-     * @param _spender The address to grant allowance to.
-     * @param _value The amount of tokens to allow.
-     * @param _deadline The timestamp after which the permit is invalid.
-     * @param _v The v component of the signature.
-     * @param _r The r component of the signature.
-     * @param _s The s component of the signature.
-     */
-    function permit(address _owner, address _spender, uint256 _value, uint256 _deadline, uint8 _v, bytes32 _r, bytes32 _s) external {
-        // Call the module's permit function. The module will handle signature validation
-        // and setting the allowance. The Approval event MUST be emitted by the calling facet.
-        (bool success, bytes memory data) = erc20PermitModAddress.call(abi.encodeWithSelector(IERC20PermitMod.permit.selector, _owner, _spender, _value, _deadline, _v, _r, _s));
-        require(success, "ERC20PermitMod: permit call failed");
-
-        // Emit the Approval event as required by ERC-20 and ERC-2612
-        emit Approval(_owner, _spender, _value);
+    function DOMAIN_SEPARATOR() external view returns (bytes32) {
+        return permitStorage.DOMAIN_SEPARATOR();
     }
 
-    // Other ERC-20 functions...
-}
-`}
+    // Other ERC20 functions like allowance, approve, etc.
+}`}
 </ExpandableCode>
 
 ## Best Practices
 
 <Callout type="tip" title="Best Practice">
-- Ensure the `permit` function in your facet emits the `Approval` event after a successful call to the module, as required by the ERC-2612 standard.
-- Validate the `_deadline` parameter to prevent the use of stale permits.
-- Implement appropriate access control for the `permit` function if necessary, though it is typically permissionless.
+- Ensure the `permit` function is correctly accessible through the diamond proxy.
+- The `Approval` event must be emitted by the facet calling the module's `permit` function, not the module itself.
+- Validate `deadline` to prevent stale permits.
 </Callout>
 
 ## Integration Notes
 
 <Callout type="success" title="Shared Storage">
-This module requires access to specific storage slots for ERC-20 token data and permit-specific data. The `getERC20Storage` and `getPermitStorage` functions are internal helpers to access these slots. Facets integrating this module must ensure that their storage layout is compatible or that they correctly delegate to this module's storage access. The `permit` function in the calling facet must emit the `Approval` event to adhere to ERC-20 and ERC-2612 standards.
+This module manages its own `PermitStorage` struct. Facets integrating this module should declare a `PermitStorage` variable and use the `ERC20PermitMod` library to interact with it. The `permit` function within the module validates the signature and updates allowances. The `Approval` event, however, must be emitted by the calling facet after the module's `permit` function successfully executes. The `DOMAIN_SEPARATOR` function should be exposed by the facet to allow clients to construct valid permit messages.
 </Callout>
 
 <div style={{marginTop: "3rem", paddingTop: "2rem", borderTop: "1px solid var(--ifm-color-emphasis-200)"}}>
   <WasThisHelpful pageId="ERC20PermitMod" />
 </div>
 
-<LastUpdated date="2025-12-21T21:44:01.583Z" />
+<LastUpdated date="2025-12-21T22:04:55.890Z" />

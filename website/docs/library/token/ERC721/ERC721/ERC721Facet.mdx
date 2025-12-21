@@ -1,8 +1,8 @@
 ---
 sidebar_position: 99
 title: "ERC721Facet"
-description: "Manages ERC-721 token ownership, approvals, and metadata within a diamond."
-gitSource: "https://github.com/maxnorm/Compose/blob/2dfa9eb69851162421010a7e56bd0fa891a9311a/src/token/ERC721/ERC721/ERC721Facet.sol"
+description: "Manages ERC-721 token standard operations within a diamond."
+gitSource: "https://github.com/maxnorm/Compose/blob/5736454575f67743dd05ba6cb1265bc06d0c1422/src/token/ERC721/ERC721/ERC721Facet.sol"
 ---
 
 import DocSubtitle  from '@site/src/components/docs/DocSubtitle';
@@ -21,19 +21,18 @@ import GradientText from '@site/src/components/ui/GradientText';
 import GradientButton from '@site/src/components/ui/GradientButton';
 
 <DocSubtitle>
-Manages ERC-721 token ownership, approvals, and metadata within a diamond.
+Manages ERC-721 token standard operations within a diamond.
 </DocSubtitle>
 
 <Callout type="info" title="Key Features">
-- Full ERC-721 compliance, including safe transfer hooks.
-- Direct access to token metadata via `tokenURI`.
-- Comprehensive ownership and approval management functions.
-- Internal `internalTransferFrom` for composable internal logic.
+- Implements core ERC-721 functions: `name`, `symbol`, `tokenURI`, `balanceOf`, `ownerOf`, `getApproved`, `isApprovedForAll`.
+- Supports token transfers via `transferFrom` and `safeTransferFrom` (with and without data).
+- Manages approvals for individual tokens and for all tokens owned by an address.
 </Callout>
 
 ## Overview
 
-The ERC721Facet provides a complete implementation of the ERC-721 Non-Fungible Token Standard. It enables token creation, transfers, ownership tracking, and approval management, surfacing these critical functionalities through the diamond proxy's unified interface.
+The ERC721Facet provides the core functionality for managing non-fungible tokens (NFTs) on-chain, adhering to the ERC-721 standard. It handles token ownership, transfers, approvals, and metadata retrieval, enabling composability for NFT marketplaces and games within a Compose diamond.
 
 ---
 
@@ -620,12 +619,10 @@ error ERC721InvalidOperator(address _operator);
 import {IERC721Facet} from "@compose/contracts/src/facets/ERC721Facet.sol";
 
 contract ERC721Consumer {
-    address immutable DIAMOND_FACET_CUTTER;
-    IERC721Facet immutable erc721Facet;
+    IERC721Facet public immutable erc721Facet;
 
-    constructor(address _diamondFacetCutter) {
-        DIAMOND_FACET_CUTTER = _diamondFacetCutter;
-        erc721Facet = IERC721Facet(DIAMOND_FACET_CUTTER);
+    constructor(address _erc721FacetAddress) {
+        erc721Facet = IERC721Facet(_erc721FacetAddress);
     }
 
     function getTokenName() external view returns (string memory) {
@@ -636,12 +633,13 @@ contract ERC721Consumer {
         return erc721Facet.symbol();
     }
 
-    function getTokenOwner(uint256 tokenId) external view returns (address) {
+    function getOwner(uint256 tokenId) external view returns (address) {
         return erc721Facet.ownerOf(tokenId);
     }
 
-    function safeTransferToken(address from, address to, uint256 tokenId) external {
-        erc721Facet.safeTransferFrom(from, to, tokenId);
+    function transferToken(address from, address to, uint256 tokenId) external {
+        // Ensure appropriate approvals or ownership before calling
+        erc721Facet.transferFrom(from, to, tokenId);
     }
 }`}
 </ExpandableCode>
@@ -649,19 +647,19 @@ contract ERC721Consumer {
 ## Best Practices
 
 <Callout type="tip" title="Best Practice">
-- Ensure the ERC721Facet is correctly initialized with its storage slot and any required parameters during diamond deployment.
-- Utilize the `ownerOf`, `balanceOf`, and `getApproved` functions to query token state before performing state-changing operations.
-- Implement robust access control mechanisms for functions that mint or burn tokens if these capabilities are exposed through other facets.
+- Initialize the `ERC721Facet` with correct storage slot configurations during diamond deployment.
+- Ensure proper access control is implemented at the diamond level or within calling facets for sensitive operations like transfers and approvals.
+- Leverage `safeTransferFrom` when interacting with potentially unknown receiver contracts to ensure ERC-721 compliance.
 </Callout>
 
 ## Security Considerations
 
 <Callout type="warning" title="Security">
-Input validation is crucial for all token-related operations, especially `tokenId`. Ensure that token IDs exist before attempting transfers or approvals to prevent `ERC721NonexistentToken` errors. The `safeTransferFrom` functions include checks for receiver compatibility, mitigating reentrancy risks related to token handling. Access to sensitive functions like minting or burning (if applicable through other facets) must be strictly controlled.
+Ensure that calls to `approve`, `setApprovalForAll`, `transferFrom`, and `safeTransferFrom` are guarded by appropriate access control mechanisms to prevent unauthorized actions. The internal `internalTransferFrom` function includes necessary checks for ownership and approvals, but the facet itself does not enforce external authorization beyond ERC-721 standard requirements.
 </Callout>
 
 <div style={{marginTop: "3rem", paddingTop: "2rem", borderTop: "1px solid var(--ifm-color-emphasis-200)"}}>
   <WasThisHelpful pageId="ERC721Facet" />
 </div>
 
-<LastUpdated date="2025-12-21T21:45:05.468Z" />
+<LastUpdated date="2025-12-21T22:06:00.369Z" />
