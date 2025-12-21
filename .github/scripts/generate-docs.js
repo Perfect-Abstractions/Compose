@@ -38,7 +38,7 @@ const {
 } = require('./generate-docs-utils/forge-doc-parser');
 const { generateFacetDoc, generateModuleDoc } = require('./generate-docs-utils/templates/templates');
 const { enhanceWithAI, shouldSkipEnhancement, addFallbackContent } = require('./generate-docs-utils/ai-enhancement');
-const { syncDocsStructure } = require('./generate-docs-utils/category-generator');
+const { syncDocsStructure, regenerateAllIndexFiles } = require('./generate-docs-utils/category-generator');
 
 // ============================================================================
 // Tracking
@@ -440,7 +440,18 @@ async function main() {
     console.log('');
   }
 
-  // Step 4: Print summary
+  // Step 4: Regenerate all index pages now that docs are created
+  console.log('📄 Regenerating category index pages...');
+  const indexResult = regenerateAllIndexFiles(true);
+  if (indexResult.regenerated.length > 0) {
+    console.log(`   Regenerated ${indexResult.regenerated.length} index pages`);
+    if (indexResult.regenerated.length <= 10) {
+      indexResult.regenerated.forEach((c) => console.log(`      ✅ ${c}`));
+    }
+  }
+  console.log('');
+
+  // Step 5: Print summary
   printSummary();
   writeSummaryFile();
 }
