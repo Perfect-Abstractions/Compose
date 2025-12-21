@@ -29,6 +29,7 @@ const CATEGORY_LABELS = {
   token: 'Token Standards',
   diamond: 'Diamond Core',
   libraries: 'Utilities',
+  utils: 'Utilities',
   interfaceDetection: 'Interface Detection',
 
   // Token subcategories
@@ -56,6 +57,7 @@ const CATEGORY_DESCRIPTIONS = {
   token: 'Token standard implementations for Compose diamonds.',
   diamond: 'Core diamond proxy functionality for ERC-2535 diamonds.',
   libraries: 'Utility libraries and helpers for diamond development.',
+  utils: 'Utility libraries and helpers for diamond development.',
   interfaceDetection: 'ERC-165 interface detection support.',
 
   // Token subcategories
@@ -83,6 +85,7 @@ const CATEGORY_POSITIONS = {
   access: 2,
   token: 3,
   libraries: 4,
+  utils: 4,
   interfaceDetection: 5,
 
   // Token subcategories
@@ -267,6 +270,38 @@ function scanSourceStructure() {
 // ============================================================================
 
 /**
+ * Map source directory name to docs directory name
+ * @param {string} srcName - Source directory name
+ * @returns {string} Documentation directory name
+ */
+function mapDirectoryName(srcName) {
+  // Map libraries -> utils for URL consistency
+  if (srcName === 'libraries') {
+    return 'utils';
+  }
+  return srcName;
+}
+
+/**
+ * Compute slug from output directory path
+ * @param {string} outputDir - Full output directory path
+ * @param {string} libraryDir - Base library directory
+ * @returns {string} Slug path (e.g., '/docs/library/access')
+ */
+function computeSlug(outputDir, libraryDir) {
+  const relativePath = path.relative(libraryDir, outputDir);
+  
+  if (!relativePath || relativePath.startsWith('..')) {
+    // Root library directory
+    return '/docs/library';
+  }
+
+  // Convert path separators and create slug
+  const normalizedPath = relativePath.replace(/\\/g, '/');
+  return `/docs/library/${normalizedPath}`;
+}
+
+/**
  * Create a _category_.json file for a directory
  * @param {string} outputDir - Directory to create category file in
  * @param {string} name - Directory name
@@ -276,16 +311,21 @@ function scanSourceStructure() {
  */
 function createCategoryFile(outputDir, name, relativePath, depth) {
   const categoryFile = path.join(outputDir, '_category_.json');
+  const libraryDir = CONFIG.libraryOutputDir || 'website/docs/library';
 
   // Don't overwrite existing category files (allows manual customization)
   if (fs.existsSync(categoryFile)) {
     return false;
   }
 
+  // Get the actual directory name from the output path (may be mapped, e.g., utils instead of libraries)
+  const actualDirName = path.basename(outputDir);
   const parentParts = relativePath.split('/').slice(0, -1);
-  const label = generateLabel(name);
-  const position = getCategoryPosition(name, depth);
-  const description = generateDescription(name, parentParts);
+  // Use actual directory name for label generation (supports both original and mapped names)
+  const label = generateLabel(actualDirName);
+  const position = getCategoryPosition(actualDirName, depth);
+  const description = generateDescription(actualDirName, parentParts);
+  const slug = computeSlug(outputDir, libraryDir);
 
   const category = {
     label,
@@ -294,6 +334,7 @@ function createCategoryFile(outputDir, name, relativePath, depth) {
     collapsed: true, // Collapse all categories by default
     link: {
       type: 'generated-index',
+      slug,
       description,
     },
   };
@@ -324,6 +365,7 @@ function ensureBaseCategory(libraryDir) {
     collapsed: true, // Collapse base Library category by default
     link: {
       type: 'generated-index',
+      slug: '/docs/library',
       title: 'Library Reference',
       description: 'API reference for all Compose modules and facets.',
     },
@@ -342,6 +384,7 @@ function ensureBaseCategory(libraryDir) {
 /**
  * Compute output path for a source file
  * Mirrors the src/ structure in website/docs/library/
+ * Applies directory name mapping (e.g., libraries -> utils)
  *
  * @param {string} solFilePath - Path to .sol file (e.g., 'src/access/AccessControl/AccessControlMod.sol')
  * @returns {object} Output path information
@@ -358,18 +401,21 @@ function computeOutputPath(solFilePath) {
   const parts = relativePath.split('/');
   const fileName = parts.pop();
 
-  const outputDir = path.join(libraryDir, ...parts);
+  // Map directory names (e.g., libraries -> utils)
+  const mappedParts = parts.map(part => mapDirectoryName(part));
+
+  const outputDir = path.join(libraryDir, ...mappedParts);
   const outputFile = path.join(outputDir, `${fileName}.mdx`);
 
   return {
     outputDir,
     outputFile,
-    relativePath: parts.join('/'),
+    relativePath: mappedParts.join('/'),
     fileName,
-    category: parts[0] || '',
-    subcategory: parts[1] || '',
-    fullRelativePath: relativePath,
-    depth: parts.length,
+    category: mappedParts[0] || '',
+    subcategory: mappedParts[1] || '',
+    fullRelativePath: mappedParts.join('/'),
+    depth: mappedParts.length,
   };
 }
 
@@ -399,6 +445,7 @@ function ensureCategoryFiles(outputDir) {
   for (let i = 0; i < parts.length; i++) {
     currentPath = path.join(currentPath, parts[i]);
     const segment = parts[i];
+    // Use the mapped path for the relative path (already mapped in computeOutputPath)
     const relPath = parts.slice(0, i + 1).join('/');
 
     createCategoryFile(currentPath, segment, relPath, i + 1);
@@ -436,18 +483,23 @@ function syncDocsStructure() {
   );
 
   for (const [relativePath, info] of sortedPaths) {
-    const outputDir = path.join(libraryDir, relativePath);
+    // Map directory names in the path (e.g., libraries -> utils)
+    const pathParts = relativePath.split('/');
+    const mappedPathParts = pathParts.map(part => mapDirectoryName(part));
+    const mappedRelativePath = mappedPathParts.join('/');
+    const outputDir = path.join(libraryDir, mappedPathParts);
+    
     const wasCreated = createCategoryFile(
       outputDir,
       info.name,
-      relativePath,
+      mappedRelativePath,
       info.depth
     );
 
     if (wasCreated) {
-      created.push(relativePath);
+      created.push(mappedRelativePath);
     } else {
-      existing.push(relativePath);
+      existing.push(mappedRelativePath);
     }
   }
 
@@ -475,6 +527,8 @@ module.exports = {
   generateDescription,
   getCategoryPosition,
   containsSolFiles,
+  mapDirectoryName,
+  computeSlug,
 
   // For extending/customizing
   CATEGORY_LABELS,
