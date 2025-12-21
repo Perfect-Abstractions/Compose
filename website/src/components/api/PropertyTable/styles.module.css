@@ -20,6 +20,7 @@
 .tableWrapper {
   position: relative;
   width: 100%;
+  max-width: 100%;
   border: 1px solid var(--ifm-color-emphasis-200);
   border-radius: 0.5rem;
   background: var(--ifm-background-surface-color);
@@ -38,6 +39,7 @@
   -webkit-overflow-scrolling: touch;
   scrollbar-width: thin;
   scrollbar-color: var(--ifm-color-emphasis-300) transparent;
+  max-width: 100%;
 }
 
 /* Custom Scrollbar */
@@ -69,9 +71,10 @@
 /* Table */
 .table {
   width: 100%;
+  max-width: 100%;
   border-collapse: separate;
   border-spacing: 0;
-  min-width: 640px;
+  table-layout: auto;
 }
 
 /* Table Header */
@@ -162,22 +165,26 @@
 
 /* Column Styles */
 .nameColumn {
-  width: 20%;
-  min-width: 180px;
+  width: auto;
+  min-width: 120px;
+  max-width: 25%;
 }
 
 .typeColumn {
-  width: 15%;
-  min-width: 140px;
+  width: auto;
+  min-width: 100px;
+  max-width: 20%;
 }
 
 .requiredColumn {
-  width: 12%;
-  min-width: 100px;
+  width: auto;
+  min-width: 80px;
+  max-width: 15%;
 }
 
 .descriptionColumn {
-  width: auto;
+  width: 1%; /* Small width forces expansion to fill remaining space in auto layout */
+  min-width: 200px;
 }
 
 /* Name Cell */
@@ -272,6 +279,8 @@
 .descriptionCell {
   line-height: 1.6;
   color: var(--ifm-color-emphasis-700);
+  width: 100%; /* Ensure cell expands to fill column width */
+  min-width: 0; /* Allow shrinking if needed, but column width will enforce expansion */
 }
 
 [data-theme='dark'] .descriptionCell {
