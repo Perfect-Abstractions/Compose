@@ -352,11 +352,9 @@ async function enhanceWithAI(data, contractType, token) {
     let enhanced;
     try {
       enhanced = JSON.parse(responseText);
-      console.log('    ✅ JSON parsed successfully');
     } catch (directParseError) {
       const cleanedContent = extractJSON(responseText);
       enhanced = JSON.parse(cleanedContent);
-      console.log('    ✅ JSON extracted and parsed');
     }
 
     return convertEnhancedFields(enhanced, data);

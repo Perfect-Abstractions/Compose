@@ -2,7 +2,7 @@
 /**
  * Sync Documentation Structure
  *
- * Standalone script to mirror the src/ folder structure in website/docs/contracts/
+ * Standalone script to mirror the src/ folder structure in website/docs/library/
  * Creates _category_.json files for Docusaurus navigation.
  *
  * Usage:
@@ -46,7 +46,7 @@ function showHelp() {
   console.log(`
 Sync Documentation Structure
 
-Mirrors the src/ folder structure in website/docs/contracts/
+Mirrors the src/ folder structure in website/docs/library/
 Creates _category_.json files for Docusaurus navigation.
 
 Usage:
@@ -121,12 +121,12 @@ function displayTree(structure) {
 function dryRun(structure) {
   console.log('\n🔍 Dry Run Mode - No changes will be made\n');
 
-  const contractsDir = 'website/docs/contracts';
+  const libraryDir = 'website/docs/library';
   let wouldCreate = 0;
   let alreadyExists = 0;
 
   // Check base category
-  const baseCategoryFile = path.join(contractsDir, '_category_.json');
+  const baseCategoryFile = path.join(libraryDir, '_category_.json');
   if (fs.existsSync(baseCategoryFile)) {
     console.log(`   ✓ ${baseCategoryFile} (exists)`);
     alreadyExists++;
@@ -137,7 +137,7 @@ function dryRun(structure) {
 
   // Check each category
   for (const [relativePath] of structure) {
-    const categoryFile = path.join(contractsDir, relativePath, '_category_.json');
+    const categoryFile = path.join(libraryDir, relativePath, '_category_.json');
     if (fs.existsSync(categoryFile)) {
       if (options.verbose) {
         console.log(`   ✓ ${categoryFile} (exists)`);

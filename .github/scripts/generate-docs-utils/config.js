@@ -21,10 +21,10 @@ module.exports = {
   // ============================================================================
 
   /**
-   * Base output directory for contract documentation
+   * Base output directory for library documentation
    * Structure mirrors src/ automatically
    */
-  contractsOutputDir: 'website/docs/contracts',
+  libraryOutputDir: 'website/docs/library',
 
   // ============================================================================
   // Sidebar Positions

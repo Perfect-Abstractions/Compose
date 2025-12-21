@@ -270,7 +270,7 @@ function scanSourceStructure() {
  * Create a _category_.json file for a directory
  * @param {string} outputDir - Directory to create category file in
  * @param {string} name - Directory name
- * @param {string} relativePath - Relative path from contracts dir
+ * @param {string} relativePath - Relative path from library dir
  * @param {number} depth - Nesting depth
  * @returns {boolean} True if file was created, false if it already existed
  */
@@ -291,7 +291,7 @@ function createCategoryFile(outputDir, name, relativePath, depth) {
     label,
     position,
     collapsible: true,
-    collapsed: depth > 1, // Collapse nested categories by default
+    collapsed: true, // Collapse all categories by default
     link: {
       type: 'generated-index',
       description,
@@ -306,30 +306,30 @@ function createCategoryFile(outputDir, name, relativePath, depth) {
 }
 
 /**
- * Ensure the base contracts category file exists
- * @param {string} contractsDir - Path to contracts directory
+ * Ensure the base library category file exists
+ * @param {string} libraryDir - Path to library directory
  * @returns {boolean} True if created, false if existed
  */
-function ensureBaseCategory(contractsDir) {
-  const categoryFile = path.join(contractsDir, '_category_.json');
+function ensureBaseCategory(libraryDir) {
+  const categoryFile = path.join(libraryDir, '_category_.json');
 
   if (fs.existsSync(categoryFile)) {
     return false;
   }
 
   const baseCategory = {
-    label: 'Contracts',
+    label: 'Library',
     position: 4,
     collapsible: true,
-    collapsed: false,
+    collapsed: true, // Collapse base Library category by default
     link: {
       type: 'generated-index',
-      title: 'Contract Reference',
+      title: 'Library Reference',
       description: 'API reference for all Compose modules and facets.',
     },
   };
 
-  fs.mkdirSync(contractsDir, { recursive: true });
+  fs.mkdirSync(libraryDir, { recursive: true });
   fs.writeFileSync(categoryFile, JSON.stringify(baseCategory, null, 2) + '\n');
 
   return true;
@@ -341,13 +341,13 @@ function ensureBaseCategory(contractsDir) {
 
 /**
  * Compute output path for a source file
- * Mirrors the src/ structure in website/docs/contracts/
+ * Mirrors the src/ structure in website/docs/library/
  *
  * @param {string} solFilePath - Path to .sol file (e.g., 'src/access/AccessControl/AccessControlMod.sol')
  * @returns {object} Output path information
  */
 function computeOutputPath(solFilePath) {
-  const contractsDir = CONFIG.contractsOutputDir || 'website/docs/contracts';
+  const libraryDir = CONFIG.libraryOutputDir || 'website/docs/library';
 
   // Normalize path separators
   const normalizedPath = solFilePath.replace(/\\/g, '/');
@@ -358,7 +358,7 @@ function computeOutputPath(solFilePath) {
   const parts = relativePath.split('/');
   const fileName = parts.pop();
 
-  const outputDir = path.join(contractsDir, ...parts);
+  const outputDir = path.join(libraryDir, ...parts);
   const outputFile = path.join(outputDir, `${fileName}.mdx`);
 
   return {
@@ -380,21 +380,21 @@ function computeOutputPath(solFilePath) {
  * @param {string} outputDir - Full output directory path
  */
 function ensureCategoryFiles(outputDir) {
-  const contractsDir = CONFIG.contractsOutputDir || 'website/docs/contracts';
+  const libraryDir = CONFIG.libraryOutputDir || 'website/docs/library';
 
-  // Get relative path from contracts base
-  const relativePath = path.relative(contractsDir, outputDir);
+  // Get relative path from library base
+  const relativePath = path.relative(libraryDir, outputDir);
 
   if (!relativePath || relativePath.startsWith('..')) {
-    return; // outputDir is not under contractsDir
+    return; // outputDir is not under libraryDir
   }
 
   // Ensure base category exists
-  ensureBaseCategory(contractsDir);
+  ensureBaseCategory(libraryDir);
 
   // Walk up the directory tree, creating category files
   const parts = relativePath.split(path.sep);
-  let currentPath = contractsDir;
+  let currentPath = libraryDir;
 
   for (let i = 0; i < parts.length; i++) {
     currentPath = path.join(currentPath, parts[i]);
@@ -417,16 +417,16 @@ function ensureCategoryFiles(outputDir) {
  */
 function syncDocsStructure() {
   const structure = scanSourceStructure();
-  const contractsDir = CONFIG.contractsOutputDir || 'website/docs/contracts';
+  const libraryDir = CONFIG.libraryOutputDir || 'website/docs/library';
 
   const created = [];
   const existing = [];
 
-  // Ensure base contracts directory exists with category
-  if (ensureBaseCategory(contractsDir)) {
-    created.push('contracts');
+  // Ensure base library directory exists with category
+  if (ensureBaseCategory(libraryDir)) {
+    created.push('library');
   } else {
-    existing.push('contracts');
+    existing.push('library');
   }
 
   // Create category for each directory in the structure
@@ -436,7 +436,7 @@ function syncDocsStructure() {
   );
 
   for (const [relativePath, info] of sortedPaths) {
-    const outputDir = path.join(contractsDir, relativePath);
+    const outputDir = path.join(libraryDir, relativePath);
     const wasCreated = createCategoryFile(
       outputDir,
       info.name,

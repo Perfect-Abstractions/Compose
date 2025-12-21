@@ -380,10 +380,10 @@ function extractModuleDescriptionFromSource(solFilePath) {
 function generateDescriptionFromName(contractName) {
   if (!contractName) return '';
 
-  // Detect contract type from naming convention
+  // Detect library type from naming convention
   const isModule = contractName.endsWith('Mod') || contractName.endsWith('Module');
   const isFacet = contractName.endsWith('Facet');
-  const typeLabel = isModule ? 'module' : isFacet ? 'facet' : 'contract';
+  const typeLabel = isModule ? 'module' : isFacet ? 'facet' : 'library';
 
   // Remove suffix and convert CamelCase to readable text
   const baseName = contractName
