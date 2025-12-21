@@ -1,0 +1,10 @@
+{
+  "label": "Access Control",
+  "position": 2,
+  "collapsible": true,
+  "collapsed": true,
+  "link": {
+    "type": "generated-index",
+    "description": "Access control patterns for permission management in Compose diamonds."
+  }
+}

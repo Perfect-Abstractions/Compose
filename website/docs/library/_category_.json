@@ -1,0 +1,11 @@
+{
+  "label": "Library",
+  "position": 4,
+  "collapsible": true,
+  "collapsed": true,
+  "link": {
+    "type": "generated-index",
+    "title": "Library Reference",
+    "description": "API reference for all Compose modules and facets."
+  }
+}
