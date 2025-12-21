@@ -1,0 +1,525 @@
+---
+sidebar_position: 99
+title: "ERC6909Facet"
+description: "Manage ERC-6909 compliant token balances and operator permissions."
+gitSource: "https://github.com/maxnorm/Compose/blob/75e2e68f9cd44e6a24767abe937e3f91886c823f/src/token/ERC6909/ERC6909/ERC6909Facet.sol"
+---
+
+import DocSubtitle  from '@site/src/components/docs/DocSubtitle';
+import Badge from '@site/src/components/ui/Badge';
+import Callout from '@site/src/components/ui/Callout';
+import CalloutBox from '@site/src/components/ui/CalloutBox';
+import Accordion, { AccordionGroup } from '@site/src/components/ui/Accordion';
+import PropertyTable from '@site/src/components/api/PropertyTable';
+import ExpandableCode from '@site/src/components/code/ExpandableCode';
+import CodeShowcase from '@site/src/components/code/CodeShowcase';
+import RelatedDocs from '@site/src/components/docs/RelatedDocs';
+import WasThisHelpful from '@site/src/components/docs/WasThisHelpful';
+import LastUpdated from '@site/src/components/docs/LastUpdated';
+import ReadingTime from '@site/src/components/docs/ReadingTime';
+import GradientText from '@site/src/components/ui/GradientText';
+import GradientButton from '@site/src/components/ui/GradientButton';
+
+<DocSubtitle>
+Manage ERC-6909 compliant token balances and operator permissions.
+</DocSubtitle>
+
+<Callout type="info" title="Key Features">
+- Implements core ERC-6909 functionality for token management.
+- Supports transfer, transferFrom, approve, and setOperator operations.
+- Provides view functions for querying balances, allowances, and operator status.
+- Emits standard ERC-6909 events for state changes.
+</Callout>
+
+## Overview
+
+The ERC6909Facet provides functionality for managing fungible or non-fungible token balances and operator approvals according to the ERC-6909 standard. It enables transfers, balance queries, allowance checks, and operator management directly within the diamond proxy.
+
+---
+
+## Storage
+
+### ERC6909Storage
+
+<ExpandableCode language="solidity" maxLines={15} title="Definition">
+{`struct ERC6909Storage {
+    mapping(address owner => mapping(uint256 id => uint256 amount)) balanceOf;
+    mapping(address owner => mapping(address spender => mapping(uint256 id => uint256 amount))) allowance;
+    mapping(address owner => mapping(address spender => bool)) isOperator;
+}`}
+</ExpandableCode>
+
+### State Variables
+
+<PropertyTable
+  properties={[
+    {
+      name: "STORAGE_POSITION",
+      type: "constant",
+      description: "Diamond storage slot position for this module"
+    }
+  ]}
+  showRequired={false}
+/>
+
+## Functions
+
+### getStorage
+
+Returns a pointer to the ERC-6909 storage struct. Uses inline assembly to access the storage slot defined by STORAGE_POSITION.
+
+<ExpandableCode language="solidity" maxLines={8}>
+{`function getStorage() internal pure returns (ERC6909Storage storage s);`}
+</ExpandableCode>
+
+**Returns:**
+
+<PropertyTable
+  properties={[
+    {
+      name: "s",
+      type: "ERC6909Storage",
+      description: "The ERC6909Storage struct in storage."
+    }
+  ]}
+  showRequired={false}
+/>
+
+---
+### balanceOf
+
+Owner balance of an id.
+
+<ExpandableCode language="solidity" maxLines={8}>
+{`function balanceOf(address _owner, uint256 _id) external view returns (uint256);`}
+</ExpandableCode>
+
+**Parameters:**
+
+<PropertyTable
+  properties={[
+    {
+      name: "_owner",
+      type: "address",
+      description: "The address of the owner."
+    },
+    {
+      name: "_id",
+      type: "uint256",
+      description: "The id of the token."
+    }
+  ]}
+  showRequired={false}
+/>
+
+**Returns:**
+
+<PropertyTable
+  properties={[
+    {
+      name: "-",
+      type: "uint256",
+      description: "The balance of the token."
+    }
+  ]}
+  showRequired={false}
+/>
+
+---
+### allowance
+
+Spender allowance of an id.
+
+<ExpandableCode language="solidity" maxLines={8}>
+{`function allowance(address _owner, address _spender, uint256 _id) external view returns (uint256);`}
+</ExpandableCode>
+
+**Parameters:**
+
+<PropertyTable
+  properties={[
+    {
+      name: "_owner",
+      type: "address",
+      description: "The address of the owner."
+    },
+    {
+      name: "_spender",
+      type: "address",
+      description: "The address of the spender."
+    },
+    {
+      name: "_id",
+      type: "uint256",
+      description: "The id of the token."
+    }
+  ]}
+  showRequired={false}
+/>
+
+**Returns:**
+
+<PropertyTable
+  properties={[
+    {
+      name: "-",
+      type: "uint256",
+      description: "The allowance of the token."
+    }
+  ]}
+  showRequired={false}
+/>
+
+---
+### isOperator
+
+Checks if a spender is approved by an owner as an operator.
+
+<ExpandableCode language="solidity" maxLines={8}>
+{`function isOperator(address _owner, address _spender) external view returns (bool);`}
+</ExpandableCode>
+
+**Parameters:**
+
+<PropertyTable
+  properties={[
+    {
+      name: "_owner",
+      type: "address",
+      description: "The address of the owner."
+    },
+    {
+      name: "_spender",
+      type: "address",
+      description: "The address of the spender."
+    }
+  ]}
+  showRequired={false}
+/>
+
+**Returns:**
+
+<PropertyTable
+  properties={[
+    {
+      name: "-",
+      type: "bool",
+      description: "The approval status."
+    }
+  ]}
+  showRequired={false}
+/>
+
+---
+### transfer
+
+Transfers an amount of an id from the caller to a receiver.
+
+<ExpandableCode language="solidity" maxLines={8}>
+{`function transfer(address _receiver, uint256 _id, uint256 _amount) external returns (bool);`}
+</ExpandableCode>
+
+**Parameters:**
+
+<PropertyTable
+  properties={[
+    {
+      name: "_receiver",
+      type: "address",
+      description: "The address of the receiver."
+    },
+    {
+      name: "_id",
+      type: "uint256",
+      description: "The id of the token."
+    },
+    {
+      name: "_amount",
+      type: "uint256",
+      description: "The amount of the token."
+    }
+  ]}
+  showRequired={false}
+/>
+
+**Returns:**
+
+<PropertyTable
+  properties={[
+    {
+      name: "-",
+      type: "bool",
+      description: "Whether the transfer succeeded."
+    }
+  ]}
+  showRequired={false}
+/>
+
+---
+### transferFrom
+
+Transfers an amount of an id from a sender to a receiver.
+
+<ExpandableCode language="solidity" maxLines={8}>
+{`function transferFrom(address _sender, address _receiver, uint256 _id, uint256 _amount) external returns (bool);`}
+</ExpandableCode>
+
+**Parameters:**
+
+<PropertyTable
+  properties={[
+    {
+      name: "_sender",
+      type: "address",
+      description: "The address of the sender."
+    },
+    {
+      name: "_receiver",
+      type: "address",
+      description: "The address of the receiver."
+    },
+    {
+      name: "_id",
+      type: "uint256",
+      description: "The id of the token."
+    },
+    {
+      name: "_amount",
+      type: "uint256",
+      description: "The amount of the token."
+    }
+  ]}
+  showRequired={false}
+/>
+
+**Returns:**
+
+<PropertyTable
+  properties={[
+    {
+      name: "-",
+      type: "bool",
+      description: "Whether the transfer succeeded."
+    }
+  ]}
+  showRequired={false}
+/>
+
+---
+### approve
+
+Approves an amount of an id to a spender.
+
+<ExpandableCode language="solidity" maxLines={8}>
+{`function approve(address _spender, uint256 _id, uint256 _amount) external returns (bool);`}
+</ExpandableCode>
+
+**Parameters:**
+
+<PropertyTable
+  properties={[
+    {
+      name: "_spender",
+      type: "address",
+      description: "The address of the spender."
+    },
+    {
+      name: "_id",
+      type: "uint256",
+      description: "The id of the token."
+    },
+    {
+      name: "_amount",
+      type: "uint256",
+      description: "The amount of the token."
+    }
+  ]}
+  showRequired={false}
+/>
+
+**Returns:**
+
+<PropertyTable
+  properties={[
+    {
+      name: "-",
+      type: "bool",
+      description: "Whether the approval succeeded."
+    }
+  ]}
+  showRequired={false}
+/>
+
+---
+### setOperator
+
+Sets or removes a spender as an operator for the caller.
+
+<ExpandableCode language="solidity" maxLines={8}>
+{`function setOperator(address _spender, bool _approved) external returns (bool);`}
+</ExpandableCode>
+
+**Parameters:**
+
+<PropertyTable
+  properties={[
+    {
+      name: "_spender",
+      type: "address",
+      description: "The address of the spender."
+    },
+    {
+      name: "_approved",
+      type: "bool",
+      description: "The approval status."
+    }
+  ]}
+  showRequired={false}
+/>
+
+**Returns:**
+
+<PropertyTable
+  properties={[
+    {
+      name: "-",
+      type: "bool",
+      description: "Whether the operator update succeeded."
+    }
+  ]}
+  showRequired={false}
+/>
+
+## Events
+
+<AccordionGroup>
+  <Accordion title="Transfer" defaultOpen={false}>
+
+    <div style={{marginBottom: "1rem"}}>
+      <strong>Signature:</strong>
+      <ExpandableCode language="solidity" maxLines={5}>
+{`event Transfer(
+    address _caller, address indexed _sender, address indexed _receiver, uint256 indexed _id, uint256 _amount
+);`}
+      </ExpandableCode>
+    </div>
+
+  </Accordion>
+  <Accordion title="OperatorSet" defaultOpen={false}>
+
+    <div style={{marginBottom: "1rem"}}>
+      <strong>Signature:</strong>
+      <ExpandableCode language="solidity" maxLines={5}>
+{`event OperatorSet(address indexed _owner, address indexed _spender, bool _approved);`}
+      </ExpandableCode>
+    </div>
+
+  </Accordion>
+  <Accordion title="Approval" defaultOpen={false}>
+
+    <div style={{marginBottom: "1rem"}}>
+      <strong>Signature:</strong>
+      <ExpandableCode language="solidity" maxLines={5}>
+{`event Approval(address indexed _owner, address indexed _spender, uint256 indexed _id, uint256 _amount);`}
+      </ExpandableCode>
+    </div>
+
+  </Accordion>
+</AccordionGroup>
+
+## Errors
+
+<AccordionGroup>
+  <Accordion title="ERC6909InsufficientBalance" defaultOpen={false}>
+
+    <div>
+      <strong>Signature:</strong>
+      <ExpandableCode language="solidity" maxLines={5}>
+error ERC6909InsufficientBalance(address _sender, uint256 _balance, uint256 _needed, uint256 _id);
+      </ExpandableCode>
+    </div>
+  </Accordion>
+  <Accordion title="ERC6909InsufficientAllowance" defaultOpen={false}>
+
+    <div>
+      <strong>Signature:</strong>
+      <ExpandableCode language="solidity" maxLines={5}>
+error ERC6909InsufficientAllowance(address _spender, uint256 _allowance, uint256 _needed, uint256 _id);
+      </ExpandableCode>
+    </div>
+  </Accordion>
+  <Accordion title="ERC6909InvalidReceiver" defaultOpen={false}>
+
+    <div>
+      <strong>Signature:</strong>
+      <ExpandableCode language="solidity" maxLines={5}>
+error ERC6909InvalidReceiver(address _receiver);
+      </ExpandableCode>
+    </div>
+  </Accordion>
+  <Accordion title="ERC6909InvalidSender" defaultOpen={false}>
+
+    <div>
+      <strong>Signature:</strong>
+      <ExpandableCode language="solidity" maxLines={5}>
+error ERC6909InvalidSender(address _sender);
+      </ExpandableCode>
+    </div>
+  </Accordion>
+  <Accordion title="ERC6909InvalidSpender" defaultOpen={false}>
+
+    <div>
+      <strong>Signature:</strong>
+      <ExpandableCode language="solidity" maxLines={5}>
+error ERC6909InvalidSpender(address _spender);
+      </ExpandableCode>
+    </div>
+  </Accordion>
+</AccordionGroup>
+
+## Usage Example
+
+<ExpandableCode language="solidity" maxLines={20} title="Example Implementation">
+{`pragma solidity ^0.8.30;
+
+import {IERC6909Facet} from "@compose-protocol/diamond/contracts/facets/ERC6909/IERC6909Facet.sol";
+import {DiamondProxy} from "@compose-protocol/diamond/contracts/DiamondProxy.sol";
+
+contract ERC6909Consumer {
+    IERC6909Facet public erc6909Facet;
+
+    constructor(address _diamondProxyAddress) {
+        erc6909Facet = IERC6909Facet(_diamondProxyAddress);
+    }
+
+    function consumeERC6909(address _receiver, uint256 _amount) external {
+        // Assume token ID is known or managed elsewhere
+        uint256 tokenId = 1;
+        erc6909Facet.transfer(tokenId, msg.sender, _receiver, _amount);
+    }
+
+    function getBalance(address _owner, uint256 _tokenId) external view returns (uint256) {
+        return erc6909Facet.balanceOf(_owner, _tokenId);
+    }
+}`}
+</ExpandableCode>
+
+## Best Practices
+
+<Callout type="tip" title="Best Practice">
+- Integrate the `ERC6909Facet` into your diamond via deployment scripts. Ensure the facet's functions are correctly added to the diamond's facet registry.
+- Use the `balanceOf`, `allowance`, and `isOperator` functions for read-only queries to understand token ownership and permissions.
+- Handle `Transfer` and `Approval` events emitted by the facet to maintain off-chain state or trigger further actions.
+</Callout>
+
+## Security Considerations
+
+<Callout type="warning" title="Security">
+Ensure appropriate access control is configured at the diamond level for functions like `transfer`, `transferFrom`, and `approve` if they are not intended to be universally accessible. Validate receiver and sender addresses to prevent sending tokens to unintended recipients. Be mindful of potential reentrancy if downstream logic triggered by events is not carefully implemented.
+</Callout>
+
+<div style={{marginTop: "3rem", paddingTop: "2rem", borderTop: "1px solid var(--ifm-color-emphasis-200)"}}>
+  <WasThisHelpful pageId="ERC6909Facet" />
+</div>
+
+<LastUpdated date="2025-12-21T20:54:38.099Z" />

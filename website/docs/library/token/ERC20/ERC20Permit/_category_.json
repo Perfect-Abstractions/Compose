@@ -1,0 +1,11 @@
+{
+  "label": "ERC-20 Permit",
+  "position": 3,
+  "collapsible": true,
+  "collapsed": true,
+  "link": {
+    "type": "generated-index",
+    "slug": "/docs/library/token/ERC20/ERC20Permit",
+    "description": "ERC-20 Permit extension for ERC-20 tokens."
+  }
+}

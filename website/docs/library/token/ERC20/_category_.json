@@ -1,0 +1,11 @@
+{
+  "label": "ERC-20",
+  "position": 1,
+  "collapsible": true,
+  "collapsed": true,
+  "link": {
+    "type": "generated-index",
+    "slug": "/docs/library/token/ERC20",
+    "description": "ERC-20 fungible token implementations."
+  }
+}

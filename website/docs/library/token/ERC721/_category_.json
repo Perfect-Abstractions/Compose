@@ -1,0 +1,11 @@
+{
+  "label": "ERC-721",
+  "position": 2,
+  "collapsible": true,
+  "collapsed": true,
+  "link": {
+    "type": "generated-index",
+    "slug": "/docs/library/token/ERC721",
+    "description": "ERC-721 non-fungible token implementations."
+  }
+}

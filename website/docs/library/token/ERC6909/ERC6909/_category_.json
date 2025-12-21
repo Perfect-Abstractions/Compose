@@ -1,0 +1,11 @@
+{
+  "label": "ERC-6909",
+  "position": 4,
+  "collapsible": true,
+  "collapsed": true,
+  "link": {
+    "type": "generated-index",
+    "slug": "/docs/library/token/ERC6909/ERC6909",
+    "description": "ERC-6909 minimal multi-token implementations."
+  }
+}

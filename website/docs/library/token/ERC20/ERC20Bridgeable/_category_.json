@@ -1,0 +1,11 @@
+{
+  "label": "ERC-20 Bridgeable",
+  "position": 2,
+  "collapsible": true,
+  "collapsed": true,
+  "link": {
+    "type": "generated-index",
+    "slug": "/docs/library/token/ERC20/ERC20Bridgeable",
+    "description": "ERC-20 Bridgeable extension for ERC-20 tokens."
+  }
+}

@@ -1,0 +1,11 @@
+{
+  "label": "ERC-1155",
+  "position": 3,
+  "collapsible": true,
+  "collapsed": true,
+  "link": {
+    "type": "generated-index",
+    "slug": "/docs/library/token/ERC1155",
+    "description": "ERC-1155 multi-token implementations."
+  }
+}

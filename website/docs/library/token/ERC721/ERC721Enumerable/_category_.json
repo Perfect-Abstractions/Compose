@@ -1,0 +1,11 @@
+{
+  "label": "ERC-721 Enumerable",
+  "position": 2,
+  "collapsible": true,
+  "collapsed": true,
+  "link": {
+    "type": "generated-index",
+    "slug": "/docs/library/token/ERC721/ERC721Enumerable",
+    "description": "ERC-721 Enumerable extension for ERC-721 tokens."
+  }
+}
