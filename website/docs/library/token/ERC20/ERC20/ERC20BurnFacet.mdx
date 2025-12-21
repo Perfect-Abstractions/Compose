@@ -1,8 +1,8 @@
 ---
 sidebar_position: 99
 title: "ERC20BurnFacet"
-description: "Burn ERC-20 tokens within a Compose diamond."
-gitSource: "https://github.com/maxnorm/Compose/blob/fc8e8677d3c3fe32a459f173c58ec546dfcb9e13/src/token/ERC20/ERC20/ERC20BurnFacet.sol"
+description: "Burn ERC20 tokens from caller or spender allowance."
+gitSource: "https://github.com/maxnorm/Compose/blob/2dfa9eb69851162421010a7e56bd0fa891a9311a/src/token/ERC20/ERC20/ERC20BurnFacet.sol"
 ---
 
 import DocSubtitle  from '@site/src/components/docs/DocSubtitle';
@@ -21,18 +21,17 @@ import GradientText from '@site/src/components/ui/GradientText';
 import GradientButton from '@site/src/components/ui/GradientButton';
 
 <DocSubtitle>
-Burn ERC-20 tokens within a Compose diamond.
+Burn ERC20 tokens from caller or spender allowance.
 </DocSubtitle>
 
 <Callout type="info" title="Key Features">
-- Allows burning of ERC-20 tokens directly via the diamond proxy.
-- Supports burning from the caller's balance (`burn`).
-- Supports burning from an allowance granted by another account (`burnFrom`).
+- Supports burning tokens from the caller's balance.
+- Enables burning tokens from another account's balance using allowances.
 </Callout>
 
 ## Overview
 
-The ERC20BurnFacet enables the burning of ERC-20 tokens directly within a Compose diamond. It provides functions to burn tokens from the caller's balance or from another account's allowance, facilitating token destruction mechanisms.
+The ERC20BurnFacet allows for the destruction of ERC20 tokens within a Compose diamond. It provides functions to burn tokens directly from the caller's balance or by deducting from an allowance granted by another account. This facet facilitates token supply reduction mechanisms.
 
 ---
 
@@ -208,22 +207,21 @@ error ERC20InsufficientAllowance(address _spender, uint256 _allowance, uint256 _
 <ExpandableCode language="solidity" maxLines={20} title="Example Implementation">
 {`pragma solidity ^0.8.30;
 
-import {IERC20BurnFacet} from "@compose/contracts/facets/erc20/IERC20BurnFacet.sol";
+import {IERC20BurnFacet} from "@compose/diamond/facets/ERC20BurnFacet.sol";
 
-contract ERC20BurnConsumer {
-    // Replace with the actual diamond proxy address
-    address immutable DIAMOND_PROXY;
+contract BurnExample {
+    address immutable diamondAddress;
 
-    constructor(address _diamondProxy) {
-        DIAMOND_PROXY = _diamondProxy;
+    constructor(address _diamondAddress) {
+        diamondAddress = _diamondAddress;
     }
 
-    function burnMyTokens(address _tokenAddress, uint256 _amount) external {
-        IERC20BurnFacet(DIAMOND_PROXY).burn(_tokenAddress, _amount);
+    function burnTokens(uint256 _amount) public {
+        IERC20BurnFacet(diamondAddress).burn(_amount);
     }
 
-    function burnOtherTokens(address _tokenAddress, address _from, uint256 _amount) external {
-        IERC20BurnFacet(DIAMOND_PROXY).burnFrom(_tokenAddress, _from, _amount);
+    function burnTokensFromSpender(address _from, uint256 _amount) public {
+        IERC20BurnFacet(diamondAddress).burnFrom(_from, _amount);
     }
 }`}
 </ExpandableCode>
@@ -231,18 +229,18 @@ contract ERC20BurnConsumer {
 ## Best Practices
 
 <Callout type="tip" title="Best Practice">
-- Ensure the ERC20BurnFacet is correctly added to the diamond proxy during deployment or upgrade.
-- Use `burnFrom` only when the caller has a sufficient allowance for the specified token and amount.
+- Ensure the ERC20 token contract is correctly deployed and accessible via the diamond proxy.
+- Use `burnFrom` only after verifying sufficient allowance has been set for the spender.
 </Callout>
 
 ## Security Considerations
 
 <Callout type="warning" title="Security">
-The `burn` function relies on the caller's balance. The `burnFrom` function relies on the caller's allowance. Ensure sufficient balances and allowances are managed correctly to prevent `ERC20InsufficientBalance` or `ERC20InsufficientAllowance` errors. No reentrancy concerns as the facet does not make external calls.
+The `burn` and `burnFrom` functions reduce the total supply of ERC20 tokens. Ensure that the logic triggering these burns aligns with the intended tokenomics. `burnFrom` requires that the caller has been granted sufficient allowance by the `_from` address prior to invocation. The facet relies on the underlying ERC20 token implementation for balance and allowance checks, and emits `Transfer` events to the zero address as per ERC20 standards for burning.
 </Callout>
 
 <div style={{marginTop: "3rem", paddingTop: "2rem", borderTop: "1px solid var(--ifm-color-emphasis-200)"}}>
   <WasThisHelpful pageId="ERC20BurnFacet" />
 </div>
 
-<LastUpdated date="2025-12-21T21:25:24.784Z" />
+<LastUpdated date="2025-12-21T21:44:17.108Z" />

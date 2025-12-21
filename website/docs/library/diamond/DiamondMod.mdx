@@ -1,8 +1,8 @@
 ---
 sidebar_position: 99
 title: "DiamondMod"
-description: "Manages diamond facets and provides core proxy logic."
-gitSource: "https://github.com/maxnorm/Compose/blob/fc8e8677d3c3fe32a459f173c58ec546dfcb9e13/src/diamond/DiamondMod.sol"
+description: "Internal functions and storage for diamond proxy."
+gitSource: "https://github.com/maxnorm/Compose/blob/2dfa9eb69851162421010a7e56bd0fa891a9311a/src/diamond/DiamondMod.sol"
 ---
 
 import DocSubtitle  from '@site/src/components/docs/DocSubtitle';
@@ -21,13 +21,13 @@ import GradientText from '@site/src/components/ui/GradientText';
 import GradientButton from '@site/src/components/ui/GradientButton';
 
 <DocSubtitle>
-Manages diamond facets and provides core proxy logic.
+Internal functions and storage for diamond proxy.
 </DocSubtitle>
 
 <Callout type="info" title="Key Features">
-- Supports adding multiple facets and their function selectors during initial diamond deployment.
-- Acts as the diamond's central fallback for routing external calls to the correct facet implementation.
-- Provides a mechanism (`getStorage`) to retrieve the facet address associated with a given function selector.
+- Manages facet registration and function selector mapping within the diamond proxy.
+- Provides the core `diamondFallback` mechanism for dynamic function dispatch to appropriate facets.
+- Exposes an internal `getStorage` function for retrieving storage values (though direct use is discouraged in external facets).
 </Callout>
 
 <Callout type="info" title="Module Usage">
@@ -36,7 +36,7 @@ This module provides internal functions for use in your custom facets. Import it
 
 ## Overview
 
-This module provides essential functions for managing facets within a Compose diamond. It handles the addition of new facets during initial deployment and acts as the central fallback mechanism to route external calls to the appropriate facet implementation. Understanding its storage interactions is key for facet composition.
+The DiamondMod module provides core internal logic for managing diamond facets and handling function calls. It is essential for the diamond proxy's operation, enabling facet registration and dynamic dispatch.
 
 ---
 
@@ -195,29 +195,21 @@ error NoBytecodeAtAddress(address _contractAddress, string _message);
 <ExpandableCode language="solidity" maxLines={20} title="Example Implementation">
 {`pragma solidity ^0.8.30;
 
-import {IDiamondMod} from "@compose/diamond-proxy/contracts/modules/DiamondMod.sol";
+import {IDiamondMod} from "@compose/contracts/src/diamond/IDiamondMod.sol";
 
 contract MyFacet {
-    IDiamondMod public diamondMod;
+    IDiamondMod internal diamondMod;
 
-    function initialize(address _diamondMod) external {
+    constructor(address _diamondMod) {
         diamondMod = IDiamondMod(_diamondMod);
     }
 
-    /**
-     * @notice Calls a function on another facet via the DiamondMod.
-     */
-    function callOtherFacet(bytes4 _functionSelector, address _facetAddress, bytes memory _calldata) external returns (bytes memory) {
-        // This is a simplified example. In a real scenario, the facet address would be dynamically resolved.
-        // The actual diamondFallback would handle this resolution internally.
-        return diamondMod.diamondFallback(_functionSelector, _facetAddress, _calldata);
-    }
-
-    /**
-     * @notice Gets the storage slot for a specific function selector.
-     */
-    function getFunctionStorage(bytes4 _functionSelector) external view returns (address) {
-        return diamondMod.getStorage(_functionSelector);
+    function someFunction() external {
+        // Example of calling a function that might interact with diamond storage
+        // Note: Direct calls to diamondMod internal functions are generally not exposed or recommended.
+        // This is illustrative; actual interaction would be through the diamond proxy itself.
+        // For instance, a facet might read storage values managed by the diamond proxy.
+        // bytes32 storageSlot = diamondMod.getStorageSlot(keccak256("myState"));
     }
 }`}
 </ExpandableCode>
@@ -225,19 +217,19 @@ contract MyFacet {
 ## Best Practices
 
 <Callout type="tip" title="Best Practice">
-- Facet functions should only be added during the initial diamond deployment phase via `addFacets`. Calls to `addFacets` after deployment are unsupported and will revert.
-- Handle `FunctionNotFound` errors gracefully, as they indicate an attempt to call a non-existent function selector.
-- Utilize `getStorage` to understand the storage layout and potential interactions between facets.
+- Access control for functions like `addFacets` is crucial and should be managed externally, typically by an upgrade agent or owner.
+- Ensure that `addFacets` is only called during the initial diamond deployment phase to maintain diamond immutability.
+- Handle `FunctionNotFound` errors gracefully in consumer contracts that call functions routed through the diamond proxy.
 </Callout>
 
 ## Integration Notes
 
 <Callout type="success" title="Shared Storage">
-The `DiamondMod` interacts directly with the diamond's storage to map function selectors to facet addresses. The `addFacets` function is designed to be called only once during deployment. The `diamondFallback` function is the core of the diamond proxy pattern, resolving function calls by looking up the selector in storage and then executing the corresponding facet. The `getStorage` function exposes this mapping for external inspection.
+DiamondMod interacts directly with the diamond's storage layout to store facet information and function mappings. Facets added via `addFacets` are registered in a way that `diamondFallback` can resolve incoming calls. The `getStorage` function allows facets to access state managed by the diamond proxy, adhering to the storage slotting conventions. `addFacets` must be called during deployment; subsequent calls will revert.
 </Callout>
 
 <div style={{marginTop: "3rem", paddingTop: "2rem", borderTop: "1px solid var(--ifm-color-emphasis-200)"}}>
   <WasThisHelpful pageId="DiamondMod" />
 </div>
 
-<LastUpdated date="2025-12-21T21:26:33.482Z" />
+<LastUpdated date="2025-12-21T21:45:25.482Z" />

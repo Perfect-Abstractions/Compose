@@ -1,8 +1,8 @@
 ---
 sidebar_position: 99
 title: "OwnerTwoStepsFacet"
-description: "Manages ownership transfer with a two-step verification process."
-gitSource: "https://github.com/maxnorm/Compose/blob/fc8e8677d3c3fe32a459f173c58ec546dfcb9e13/src/access/OwnerTwoSteps/OwnerTwoStepsFacet.sol"
+description: "Manages contract ownership with a two-step transfer process."
+gitSource: "https://github.com/maxnorm/Compose/blob/2dfa9eb69851162421010a7e56bd0fa891a9311a/src/access/OwnerTwoSteps/OwnerTwoStepsFacet.sol"
 ---
 
 import DocSubtitle  from '@site/src/components/docs/DocSubtitle';
@@ -21,18 +21,18 @@ import GradientText from '@site/src/components/ui/GradientText';
 import GradientButton from '@site/src/components/ui/GradientButton';
 
 <DocSubtitle>
-Manages ownership transfer with a two-step verification process.
+Manages contract ownership with a two-step transfer process.
 </DocSubtitle>
 
 <Callout type="info" title="Key Features">
-- Two-step ownership transfer for enhanced security.
-- Provides view functions for `owner()` and `pendingOwner()`.
-- Supports `renounceOwnership()` to remove owner privileges.
+- Two-step ownership transfer: requires initiation and acceptance.
+- `renounceOwnership` allows for relinquishing ownership.
+- Provides direct access to owner and pending owner addresses.
 </Callout>
 
 ## Overview
 
-This facet implements a secure, two-step ownership transfer mechanism for Compose diamonds. It separates the initiation and finalization of ownership changes, preventing accidental or malicious takeovers. The facet provides read access to current and pending ownership states and allows for renouncing ownership.
+The OwnerTwoStepsFacet provides a secure, two-step ownership transfer mechanism for Compose diamonds. It ensures that ownership changes are deliberate by requiring both the current owner to initiate a transfer and the new owner to accept it, preventing accidental or malicious takeovers.
 
 ---
 
@@ -242,25 +242,32 @@ error OwnerUnauthorizedAccount();
 <ExpandableCode language="solidity" maxLines={20} title="Example Implementation">
 {`pragma solidity ^0.8.30;
 
-import {IOwnerTwoStepsFacet} from "@compose-protocol/diamond-contracts/facets/OwnerTwoSteps/IOwnerTwoStepsFacet.sol";
+import {IOwnerTwoStepsFacet} from "@compose/core/src/facets/ownership/IOwnerTwoStepsFacet.sol";
 
-contract OwnerConsumer {
-    IOwnerTwoStepsFacet public ownerFacet;
+contract Diamond {
+    IOwnerTwoStepsFacet ownerFacet;
 
-    constructor(address _ownerFacetAddress) {
-        ownerFacet = IOwnerTwoStepsFacet(_ownerFacetAddress);
+    function setOwnerFacet(address _facetAddress) external {
+        ownerFacet = IOwnerTwoStepsFacet(_facetAddress);
     }
 
-    function initiateOwnershipTransfer(address _newOwner) public {
+    // Example of initiating an ownership transfer
+    function initiateOwnershipTransfer(address _newOwner) external {
+        // Assuming Diamond contract has an access control mechanism for this function
         ownerFacet.transferOwnership(_newOwner);
     }
 
-    function acceptNewOwnership() public {
+    // Example of accepting ownership transfer (would be called by the new owner)
+    function acceptOwnershipTransfer() external {
         ownerFacet.acceptOwnership();
     }
 
-    function getCurrentOwner() public view returns (address) {
+    function getOwner() external view returns (address) {
         return ownerFacet.owner();
+    }
+
+    function getPendingOwner() external view returns (address) {
+        return ownerFacet.pendingOwner();
     }
 }`}
 </ExpandableCode>
@@ -268,19 +275,19 @@ contract OwnerConsumer {
 ## Best Practices
 
 <Callout type="tip" title="Best Practice">
-- Initialize ownership transfer using `transferOwnership(newOwner)`.
-- The new owner must call `acceptOwnership()` to finalize the transfer.
-- Use `renounceOwnership()` to permanently relinquish ownership.
+- Initialize the facet with the current owner address during deployment.
+- Ensure only the current owner can call `transferOwnership` and `renounceOwnership`.
+- The pending owner must call `acceptOwnership` to finalize the transfer.
 </Callout>
 
 ## Security Considerations
 
 <Callout type="warning" title="Security">
-Access to `transferOwnership` is restricted to the current owner. `acceptOwnership` is restricted to the pending owner. `renounceOwnership` is restricted to the current owner. Ensure the `OwnerTwoStepsFacet` is correctly initialized with the initial owner.
+Access control is critical. The `transferOwnership` function must be restricted to the current owner. The `acceptOwnership` function is intended to be called by the proposed new owner. `renounceOwnership` should also be restricted to the current owner. Incorrect access control could lead to unauthorized ownership changes. No reentrancy concerns as state changes are atomic and do not call external contracts.
 </Callout>
 
 <div style={{marginTop: "3rem", paddingTop: "2rem", borderTop: "1px solid var(--ifm-color-emphasis-200)"}}>
   <WasThisHelpful pageId="OwnerTwoStepsFacet" />
 </div>
 
-<LastUpdated date="2025-12-21T21:24:28.386Z" />
+<LastUpdated date="2025-12-21T21:43:21.344Z" />

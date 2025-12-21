@@ -1,8 +1,8 @@
 ---
 sidebar_position: 99
 title: "ERC6909Mod"
-description: "Manages ERC-6909 token logic including minting, burning, and transfers."
-gitSource: "https://github.com/maxnorm/Compose/blob/fc8e8677d3c3fe32a459f173c58ec546dfcb9e13/src/token/ERC6909/ERC6909/ERC6909Mod.sol"
+description: "Implements ERC-6909 minimal multi-token logic."
+gitSource: "https://github.com/maxnorm/Compose/blob/2dfa9eb69851162421010a7e56bd0fa891a9311a/src/token/ERC6909/ERC6909/ERC6909Mod.sol"
 ---
 
 import DocSubtitle  from '@site/src/components/docs/DocSubtitle';
@@ -21,13 +21,13 @@ import GradientText from '@site/src/components/ui/GradientText';
 import GradientButton from '@site/src/components/ui/GradientButton';
 
 <DocSubtitle>
-Manages ERC-6909 token logic including minting, burning, and transfers.
+Implements ERC-6909 minimal multi-token logic.
 </DocSubtitle>
 
 <Callout type="info" title="Key Features">
-- Supports standard ERC-6909 token operations: mint, burn, transfer, approve, setOperator.
-- Utilizes inline assembly for efficient storage access via `getStorage`.
-- Defines custom errors for specific failure conditions, enhancing gas efficiency and clarity.
+- Supports minting, burning, transferring, and approving tokens by ID.
+- Includes operator functionality for delegated transfers.
+- Provides necessary storage layout and internal functions for ERC-6909 compliance.
 </Callout>
 
 <Callout type="info" title="Module Usage">
@@ -36,7 +36,7 @@ This module provides internal functions for use in your custom facets. Import it
 
 ## Overview
 
-The ERC6909Mod module provides the core internal logic and storage for implementing the ERC-6909 standard within a Compose diamond. It enables efficient management of multi-token fungible assets, supporting standard operations like approvals, transfers, minting, and burning.
+The ERC6909Mod provides the core logic and storage for implementing the ERC-6909 standard within a Compose diamond. It enables standard token operations like minting, burning, transferring, and approvals for multiple token IDs, ensuring composability and adherence to the standard.
 
 ---
 
@@ -477,21 +477,18 @@ error ERC6909InvalidSpender(address _spender);
 <ExpandableCode language="solidity" maxLines={20} title="Example Implementation">
 {`pragma solidity ^0.8.30;
 
-import {IERC6909Mod} from "./IERC6909Mod.sol";
+import {IERC6909, IERC6909Mod} from "@compose/contracts/src/modules/erc6909/interfaces/IERC6909.sol";
+import {ERC6909} from "@compose/contracts/src/modules/erc6909/facets/ERC6909.sol";
 
-contract ERC6909Facet {
-    IERC6909Mod public immutable erc6909Mod;
-
-    constructor(address _diamondAddress) {
-        erc6909Mod = IERC6909Mod(_diamondAddress);
+contract MyERC6909Facet is ERC6909 {
+    function transferTokens(address _from, address _to, uint256 _id, uint256 _amount) external {
+        // Assume ownership checks or other logic is handled externally
+        transfer(_from, _to, _id, _amount);
     }
 
-    function mint(uint256 _id, uint256 _amount, address _to) external {
-        erc6909Mod.mint(_id, _amount, _to);
-    }
-
-    function transfer(uint256 _id, uint256 _amount, address _from, address _to) external {
-        erc6909Mod.transfer(_id, _amount, _from, _to);
+    function approveToken(address _spender, uint256 _id, uint256 _amount) external {
+        // Assume ownership checks or other logic is handled externally
+        approve(_spender, _id, _amount);
     }
 }`}
 </ExpandableCode>
@@ -499,19 +496,19 @@ contract ERC6909Facet {
 ## Best Practices
 
 <Callout type="tip" title="Best Practice">
-- Ensure proper access control is implemented in facets calling module functions.
-- Handle custom errors like `ERC6909InsufficientBalance` and `ERC6909InsufficientAllowance` gracefully.
-- Be mindful of potential reentrancy if facets implementing ERC6909 logic interact with external contracts.
+- Ensure proper access control is implemented in calling facets for sensitive operations like minting and burning.
+- Be mindful of allowance management; `type(uint256).max` bypasses deduction, and operators can transfer without deduction.
+- Handle potential `ERC6909InsufficientBalance` and `ERC6909InsufficientAllowance` errors gracefully in calling facets.
 </Callout>
 
 ## Integration Notes
 
 <Callout type="success" title="Shared Storage">
-This module relies on a specific storage slot defined by `STORAGE_POSITION` for its internal state. Facets interacting with this module must ensure that this storage slot is correctly allocated and managed within the diamond's storage layout. The `getStorage` function provides a direct pointer to the `ERC6909Storage` struct, allowing facets to read and write token balances and allowances.
+The ERC6909Mod defines a specific storage struct (`ERC6909Storage`) which must be laid out according to the Compose storage pattern. Facets interacting with this module should use the `getStorage` function (or access the storage slot directly if integrated via an initializer) to retrieve a pointer to this struct. Operations modify this shared storage, making them visible to all facets that implement ERC-6909 logic.
 </Callout>
 
 <div style={{marginTop: "3rem", paddingTop: "2rem", borderTop: "1px solid var(--ifm-color-emphasis-200)"}}>
   <WasThisHelpful pageId="ERC6909Mod" />
 </div>
 
-<LastUpdated date="2025-12-21T21:25:48.814Z" />
+<LastUpdated date="2025-12-21T21:44:41.096Z" />

@@ -1,8 +1,8 @@
 ---
 sidebar_position: 99
 title: "AccessControlPausableFacet"
-description: "Manages role-based access control and pausing functionality for diamond modules."
-gitSource: "https://github.com/maxnorm/Compose/blob/fc8e8677d3c3fe32a459f173c58ec546dfcb9e13/src/access/AccessControlPausable/AccessControlPausableFacet.sol"
+description: "Access Control Pausable facet for Compose diamonds"
+gitSource: "https://github.com/maxnorm/Compose/blob/2dfa9eb69851162421010a7e56bd0fa891a9311a/src/access/AccessControlPausable/AccessControlPausableFacet.sol"
 ---
 
 import DocSubtitle  from '@site/src/components/docs/DocSubtitle';
@@ -21,18 +21,19 @@ import GradientText from '@site/src/components/ui/GradientText';
 import GradientButton from '@site/src/components/ui/GradientButton';
 
 <DocSubtitle>
-Manages role-based access control and pausing functionality for diamond modules.
+Access Control Pausable facet for Compose diamonds
 </DocSubtitle>
 
 <Callout type="info" title="Key Features">
-- Role-specific pausing and unpausing of permissions.
-- Granular control over module availability based on role status.
-- Reverts with specific errors for unauthorized access or paused roles.
+- Self-contained facet with no imports or inheritance
+- Only `external` and `internal` function visibility
+- Follows Compose readability-first conventions
+- Ready for diamond integration
 </Callout>
 
 ## Overview
 
-The AccessControlPausableFacet extends Compose's access control by introducing role-specific pausing. This allows granular control over module functionality, enabling temporary deactivation of roles without affecting the entire diamond. It provides essential functions for checking pause status, pausing, and unpausing roles, ensuring robust operational control.
+Access Control Pausable facet for Compose diamonds
 
 ---
 
@@ -321,51 +322,8 @@ error AccessControlRolePaused(bytes32 _role);
   </Accordion>
 </AccordionGroup>
 
-## Usage Example
-
-<ExpandableCode language="solidity" maxLines={20} title="Example Implementation">
-{`pragma solidity ^0.8.30;
-
-import {AccessControlPausableFacet} from "@compose/contracts/facets/AccessControl/AccessControlPausableFacet.sol";
-import {IDiamondCut} from "@compose/contracts/diamond/IDiamondCut.sol";
-
-contract Deployer {
-    function deployAccessControlPausable() external {
-        // Assume diamondCut is an instance of IDiamondCut
-        IDiamondCut diamondCut;
-
-        // Add the AccessControlPausableFacet
-        diamondCut.execute(IDiamondCut.DiamondCutArgs(
-            IDiamondCut.FacetCut[](
-                IDiamondCut.FacetCut(address(new AccessControlPausableFacet()), IDiamondCut.FacetCutAction.ADD, new bytes[](0))
-            ),
-            address(0), // No delete action
-            new bytes[](0) // No init data
-        ));
-
-        // Example of pausing a role (assuming 'CALLER' is a defined role)
-        // address accessControlPausableFacetAddress = diamondCut.getFacetAddress(AccessControlPausableFacet.FUNC_PAUSEROLE);
-        // AccessControlPausableFacet(accessControlPausableFacetAddress).pauseRole("CALLER");
-    }
-}`}
-</ExpandableCode>
-
-## Best Practices
-
-<Callout type="tip" title="Best Practice">
-- Integrate this facet to enforce role-based access control with the ability to temporarily disable specific roles.
-- Use `requireRoleNotPaused` within other facets to ensure operations are only permitted when their associated roles are active.
-- Ensure the diamond's admin or the designated role admin is correctly configured to manage pausing and unpausing operations.
-</Callout>
-
-## Security Considerations
-
-<Callout type="warning" title="Security">
-Access to `pauseRole` and `unpauseRole` is restricted to the admin of the respective role, preventing unauthorized pausing. The `requireRoleNotPaused` function ensures that calls to protected functions fail if the caller's role is paused, mitigating reentrancy risks related to paused states. Input validation on role names is crucial.
-</Callout>
-
 <div style={{marginTop: "3rem", paddingTop: "2rem", borderTop: "1px solid var(--ifm-color-emphasis-200)"}}>
   <WasThisHelpful pageId="AccessControlPausableFacet" />
 </div>
 
-<LastUpdated date="2025-12-21T21:24:41.443Z" />
+<LastUpdated date="2025-12-21T21:43:34.621Z" />
