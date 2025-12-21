@@ -80,8 +80,11 @@ contract StakingFacetHarness is StakingFacet {
         stake.lastClaimedAt = lastClaimedAt;
     }
 
-    function getStakeInfo(address user, address token, uint256 tokenId) external view returns (StakedTokenInfo memory) {
-        StakingStorage storage s = getStorage();
-        return s.stakedTokens[user][token][tokenId];
+    function rPow(uint256 _base, uint256 _exp) external pure returns (uint256) {
+        return rpow(_base, _exp);
+    }
+
+    function rMul(uint256 _a, uint256 _b) external pure returns (uint256) {
+        return rmul(_a, _b);
     }
 }

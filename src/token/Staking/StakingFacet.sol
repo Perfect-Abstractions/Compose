@@ -127,6 +127,11 @@ contract StakingFacet {
     error StakingAmountBelowMinimum(uint256 amount, uint256 minAmount);
 
     /**
+     * @notice Thrown when a token transfer fails.
+     */
+    error StakingTransferFailed();
+
+    /**
      * @notice Thrown when attempting to stake an amount above the maximum stake amount.
      * @param amount The attempted stake amount.
      * @param maxAmount The maximum allowed stake amount.
@@ -346,7 +351,10 @@ contract StakingFacet {
         }
 
         if (s.supportedTokens[_tokenAddress].isERC20) {
-            IERC20(_tokenAddress).transferFrom(msg.sender, address(this), _amount);
+            bool success = IERC20(_tokenAddress).transferFrom(msg.sender, address(this), _amount);
+            if (!success) {
+                revert StakingTransferFailed();
+            }
             stakeERC20(_tokenAddress, _amount);
         } else if (s.supportedTokens[_tokenAddress].isERC721) {
             if (IERC721(_tokenAddress).ownerOf(_tokenId) != msg.sender) {
@@ -664,7 +672,10 @@ contract StakingFacet {
             revert StakingNoRewardsToClaim(_tokenAddress, _tokenId);
         }
 
-        IERC20(s.rewardToken).transfer(msg.sender, rewards);
+        bool success = IERC20(s.rewardToken).transfer(msg.sender, rewards);
+        if (!success) {
+            revert StakingTransferFailed();
+        }
 
         stake.lastClaimedAt = block.timestamp;
         stake.accumulatedRewards += rewards;

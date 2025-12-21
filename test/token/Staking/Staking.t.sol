@@ -6,7 +6,7 @@ import {LibStakingHarness} from "./harnesses/LibStakingHarness.sol";
 import {ERC20FacetHarness} from "../ERC20//ERC20/harnesses/ERC20FacetHarness.sol";
 import {ERC721FacetHarness} from "../ERC721/ERC721/harnesses/ERC721FacetHarness.sol";
 import {ERC1155FacetHarness} from "../ERC1155/ERC1155/harnesses/ERC1155FacetHarness.sol";
-import "../../../../src/token/Staking/StakingMod.sol" as StakingMod;
+import "../../../src/token/Staking/StakingMod.sol" as StakingMod;
 
 // import "forge-std/console.sol";
 
@@ -92,6 +92,17 @@ contract StakingTest is Test {
         staking.addSupportedToken(address(erc721Token), false, true, false);
         staking.addSupportedToken(address(erc1155Token), false, false, true);
         staking.addSupportedToken(address(rewardToken), true, false, false);
+
+        /**
+         * Mint tokens to Alice and Bob for testing
+         */
+        erc20Token.mint(alice, 1_000 ether);
+        erc20Token.mint(bob, 1_000 ether);
+        erc1155Token.mint(bob, TOKEN_ID_2, 100);
+        erc1155Token.mint(alice, TOKEN_ID_1, 100);
+        erc721Token.mint(bob, TOKEN_ID_2);
+        erc721Token.mint(alice, TOKEN_ID_1);
+        rewardToken.mint(address(staking), 10_000 ether);
 
         /**
          * Initialize staking parameters
@@ -229,6 +240,9 @@ contract StakingTest is Test {
 
     function test_StakeERC20UpdatesState() public {
         uint256 stakeAmount = 100 ether;
+        vm.startPrank(alice);
+
+        erc20Token.approve(address(staking), stakeAmount);
 
         // Stake ERC-20 tokens
         staking.stakeERC20(address(erc20Token), stakeAmount);
@@ -236,36 +250,36 @@ contract StakingTest is Test {
         (uint256 amount,,,) = staking.getStakedTokenInfo(address(erc20Token), 0);
 
         assertEq(amount, stakeAmount);
+        vm.stopPrank();
     }
 
     function test_StakeERC721UpdatesState() public {
-        // Mint an ERC-721 token to Alice
-        erc721Token.mint(alice, TOKEN_ID_1);
+        vm.startPrank(alice);
 
         // Stake ERC-721 token
-        vm.prank(alice);
         staking.stakeERC721(address(erc721Token), TOKEN_ID_1);
 
         (uint256 amount,,,) = staking.getStakedTokenInfo(address(erc721Token), TOKEN_ID_1);
         console.log("Staked amount:", amount);
 
         assertEq(amount, 1);
+        vm.stopPrank();
     }
 
     function test_StakeERC1155UpdatesState() public {
         uint256 stakeAmount = 10;
+        vm.startPrank(bob);
 
-        // Mint ERC-1155 tokens to Bob
-        erc1155Token.mint(bob, TOKEN_ID_2, stakeAmount);
+        erc1155Token.setApprovalForAll(address(staking), true);
 
         // Stake ERC-1155 tokens
-        vm.prank(bob);
         staking.stakeERC1155(address(erc1155Token), TOKEN_ID_2, stakeAmount);
 
         (uint256 amount,,,) = staking.getStakedTokenInfo(address(erc1155Token), TOKEN_ID_2);
         console.log("Staked amount:", amount);
 
         assertEq(amount, stakeAmount);
+        vm.stopPrank();
     }
 
     function test_StakeTokens_RevertWithUnsupportedToken() public {

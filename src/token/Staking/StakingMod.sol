@@ -20,6 +20,11 @@ error StakingUnsupportedToken(address tokenAddress);
 error StakingZeroStakeAmount();
 
 /**
+ * @notice Thrown when an overflow occurs during arithmetic operations.
+ */
+error StakingOverflow();
+
+/**
  * @notice Emitted when staking parameters are updated.
  * @param baseAPR The base annual percentage rate for rewards.
  * @param rewardDecayRate The decay rate for rewards over time.
@@ -295,4 +300,49 @@ function isTokenSupported(address _tokenAddress) view returns (bool) {
     StakingStorage storage s = getStorage();
     TokenType storage tokenType = s.supportedTokens[_tokenAddress];
     return tokenType.isERC20 || tokenType.isERC721 || tokenType.isERC1155;
+}
+
+/**
+ * @notice Raises a 1e18 fixed-point number to an integer power, with 1e18 precision.
+ * @dev Implements binary exponentiation. Handles underflow and overflow safely.
+ * @param _base 1e18-scaled fixed-point base (e.g. 0.99e18, 1e18, 1.01e18).
+ * @param _exp Integer exponent (e.g staked duration / compound frequency).
+ * @return result Fixed-point result of base^exp, scaled by 1e18.
+ */
+function rpow(uint256 _base, uint256 _exp) pure returns (uint256 result) {
+    result = 1e18; // Initialize result as 1 in 1e18 fixed-point
+    uint256 base = _base;
+
+    while (_exp > 0) {
+        if (_exp % 2 == 1) {
+            result = rmul(result, base);
+        }
+        base = rmul(base, base);
+        _exp /= 2;
+    }
+
+    return result;
+}
+
+/**
+ * @notice Multiplies two 1e18 fixed-point numbers, returning a 1e18 fixed-point result.
+ * @dev Equivalent to (x * y) / 1e18, rounded down.
+ */
+function rmul(uint256 x, uint256 y) pure returns (uint256 z) {
+    if (x == 0 || y == 0) {
+        return 0;
+    }
+
+    /**
+     * Check for overflow in multiplication
+     */
+    if (x > type(uint256).max / y) {
+        revert StakingOverflow();
+    }
+
+    unchecked {
+        z = (x * y) / 1e18;
+    }
+
+    return z;
 }
