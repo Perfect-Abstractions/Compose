@@ -1,0 +1,10 @@
+{
+  "label": "Royalty",
+  "position": 5,
+  "collapsible": true,
+  "collapsed": true,
+  "link": {
+    "type": "generated-index",
+    "description": "ERC-2981 royalty standard implementations."
+  }
+}

@@ -1,0 +1,150 @@
+---
+sidebar_position: 99
+title: "ExampleDiamond"
+description: "Example Diamond initialization and routing"
+gitSource: "https://github.com/maxnorm/Compose/blob/ff6fa8311504bcc485d7920faddca96c4144627c/src/diamond/example/ExampleDiamond.sol"
+---
+
+import DocSubtitle  from '@site/src/components/docs/DocSubtitle';
+import Badge from '@site/src/components/ui/Badge';
+import Callout from '@site/src/components/ui/Callout';
+import CalloutBox from '@site/src/components/ui/CalloutBox';
+import Accordion, { AccordionGroup } from '@site/src/components/ui/Accordion';
+import PropertyTable from '@site/src/components/api/PropertyTable';
+import ExpandableCode from '@site/src/components/code/ExpandableCode';
+import CodeShowcase from '@site/src/components/code/CodeShowcase';
+import RelatedDocs from '@site/src/components/docs/RelatedDocs';
+import WasThisHelpful from '@site/src/components/docs/WasThisHelpful';
+import LastUpdated from '@site/src/components/docs/LastUpdated';
+import ReadingTime from '@site/src/components/docs/ReadingTime';
+import GradientText from '@site/src/components/ui/GradientText';
+import GradientButton from '@site/src/components/ui/GradientButton';
+
+<DocSubtitle>
+Example Diamond initialization and routing
+</DocSubtitle>
+
+<Callout type="info" title="Key Features">
+- Manages initial facet registration and diamond ownership.
+- Supports adding facets and their associated function selectors.
+- Enables delegatecall routing by mapping function selectors to facet addresses.
+</Callout>
+
+## Overview
+
+The ExampleDiamond facet serves as a foundational component for Compose diamonds, demonstrating core initialization and routing mechanisms. It handles the initial setup of facets and establishes the diamond's owner, enabling delegatecall routing for all registered functions.
+
+---
+
+## Storage
+
+## Functions
+
+### constructor
+
+Struct to hold facet address and its function selectors. struct FacetCut &#123; address facetAddress; FacetCutAction action; // Add=0, Replace=1, Remove=2 bytes4[] functionSelectors; &#125; Initializes the diamond contract with facets, owner and other data. Adds all provided facets to the diamond's function selector mapping and sets the contract owner. Each facet in the array will have its function selectors registered to enable delegatecall routing.
+
+<ExpandableCode language="solidity" maxLines={8}>
+{`constructor(DiamondMod.FacetCut[] memory _facets, address _diamondOwner) ;`}
+</ExpandableCode>
+
+**Parameters:**
+
+<PropertyTable
+  properties={[
+    {
+      name: "_facets",
+      type: "DiamondMod.FacetCut[]",
+      description: "Array of facet addresses and their corresponding function selectors to add to the diamond."
+    },
+    {
+      name: "_diamondOwner",
+      type: "address",
+      description: "Address that will be set as the owner of the diamond contract."
+    }
+  ]}
+  showRequired={false}
+/>
+
+---
+### fallback
+
+<ExpandableCode language="solidity" maxLines={8}>
+{`fallback() external payable;`}
+</ExpandableCode>
+
+---
+### receive
+
+<ExpandableCode language="solidity" maxLines={8}>
+{`receive() external payable;`}
+</ExpandableCode>
+
+## Usage Example
+
+<ExpandableCode language="solidity" maxLines={20} title="Example Implementation">
+{`pragma solidity ^0.8.30;
+
+import {IDiamondCut} from "@compose-protocol/diamond-sdk/src/interfaces/IDiamondCut.sol";
+import {IDiamondLoupe} from "@compose-protocol/diamond-sdk/src/interfaces/IDiamondLoupe.sol";
+import {ExampleDiamond} from "@compose-protocol/diamond-sdk/src/facets/ExampleDiamond.sol";
+
+contract DeployExampleDiamond is IDiamondCut {
+    address public diamondProxy;
+
+    function deploy() public {
+        // Example facet addresses and selectors (replace with actual deployment)
+        address facet1Address = address(0x123);
+        bytes4[] memory facet1Selectors = new bytes4[](1);
+        facet1Selectors[0] = ExampleDiamond.someFunction.selector;
+
+        address facet2Address = address(0x456);
+        bytes4[] memory facet2Selectors = new bytes4[](1);
+        facet2Selectors[0] = ExampleDiamond.anotherFunction.selector;
+
+        // Construct FacetCut data
+        FacetCut[] memory cuts = new FacetCut[](2);
+        cuts[0] = FacetCut({
+            facetAddress: facet1Address,
+            action: FacetCutAction.Add,
+            functionSelectors: facet1Selectors
+        });
+        cuts[1] = FacetCut({
+            facetAddress: facet2Address,
+            action: FacetCutAction.Add,
+            functionSelectors: facet2Selectors
+        });
+
+        // Deploy Diamond Proxy and initialize with facets and owner
+        // Assume ExampleDiamond is the contract implementing the constructor logic for initialization
+        // In a real scenario, you would deploy a DiamondProxy contract and call its diamondCut function
+        // This example simplifies by directly calling a conceptual constructor-like initializer
+        // diamondProxy = address(new DiamondProxy(cuts, msg.sender)); // Conceptual deployment
+
+        // For demonstration, assume ExampleDiamond itself is being deployed with initialization logic
+        // In practice, this would be a separate DiamondProxy contract
+        // diamondProxy = address(new ExampleDiamond(cuts, msg.sender)); // Conceptual deployment
+    }
+}
+`}
+</ExpandableCode>
+
+## Best Practices
+
+<Callout type="tip" title="Best Practice">
+- Initialize the diamond with all necessary facets and their function selectors during deployment.
+- Ensure the owner is set correctly to manage diamond upgrades and facet additions.
+- The `fallback` and `receive` functions should be handled by the diamond proxy itself, not typically within this facet.
+</Callout>
+
+## Security Considerations
+
+<Callout type="warning" title="Security">
+Access control for ownership and facet management should be robust, typically managed by an `Ownable` pattern or a similar access control mechanism. Ensure that facet addresses provided during initialization are trusted and verified to prevent malicious code injection. Input validation on `FacetCut` data is crucial to prevent errors during initialization.
+</Callout>
+
+<div style={{marginTop: "3rem", paddingTop: "2rem", borderTop: "1px solid var(--ifm-color-emphasis-200)"}}>
+  <WasThisHelpful pageId="ExampleDiamond" />
+</div>
+
+<LastUpdated date="2025-12-21T20:14:56.265Z" />
