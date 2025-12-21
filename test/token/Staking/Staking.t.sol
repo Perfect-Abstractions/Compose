@@ -288,4 +288,32 @@ contract StakingTest is Test {
         vm.expectRevert(abi.encodeWithSelector(StakingMod.StakingUnsupportedToken.selector, unsupportedToken));
         staking.stakeERC20(unsupportedToken, 100 ether);
     }
+
+    function test_FixedPoint_IntegerPower() public {
+        uint256 result = staking.rPow(2e18, 3); // 2^3 = 8
+        assertEq(result, 8e18);
+
+        result = staking.rPow(5e18, 0); // 5^0 = 1
+        assertEq(result, 1e18);
+
+        result = staking.rPow(1e18, 10); // 1^10 = 1
+        assertEq(result, 1e18);
+
+        result = staking.rPow(3e18, 4); // 3^4 = 81
+        assertEq(result, 81e18);
+    }
+
+    function test_FixedPoint_Multiply() public {
+        uint256 result = staking.rMul(2e18, 3e18); // 2 * 3 = 6
+        assertEq(result, 6e18);
+
+        result = staking.rMul(5e18, 0e18); // 5 * 0 = 0
+        assertEq(result, 0);
+
+        result = staking.rMul(1e18, 10e18); // 1 * 10 = 10
+        assertEq(result, 10e18);
+
+        result = staking.rMul(3e18, 4e18); // 3 * 4 = 12
+        assertEq(result, 12e18);
+    }
 }

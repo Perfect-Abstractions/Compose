@@ -89,4 +89,18 @@ contract LibStakingHarness {
     function isTokenSupported(address _tokenAddress) external view returns (bool) {
         return StakingMod.isTokenSupported(_tokenAddress);
     }
+
+    /**
+     * @notice Exposes StakingMod.rpow as an external function
+     */
+    function rPow(uint256 _base, uint256 _exp) external pure returns (uint256) {
+        return StakingMod.rpow(_base, _exp);
+    }
+
+    /**
+     * @notice Exposes StakingMod.rmul as an external function
+     */
+    function rMul(uint256 _a, uint256 _b) external pure returns (uint256) {
+        return StakingMod.rmul(_a, _b);
+    }
 }

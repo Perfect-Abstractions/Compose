@@ -457,7 +457,54 @@ contract StakingFacetTest is Test {
         vm.stopPrank();
     }
 
-    function testFuzz_RewardDecayMath(uint256 stakedSeconds, uint256 decayRate, uint256 compoundFreq) public {
+    // Fuzz Tests for ERC-20 Staking
+    function testFuzz_StakeAmount(uint256 stakeAmount) public {
+        stakeAmount = bound(stakeAmount, 1e18, 1_000_000e18); // Clamp between 1 and 1,000,000 tokens
+
+        vm.startPrank(owner);
+        facet.addSupportedToken(address(erc20Token), true, false, false);
+        facet.addSupportedToken(address(rewardToken), true, false, false);
+        facet.setStakingParameters(1000, 1e18, 1 days, address(rewardToken), 0, 1e18, type(uint256).max);
+        vm.stopPrank();
+
+        erc20Token.mint(alice, stakeAmount);
+        rewardToken.mint(address(facet), 1_000_000 ether);
+
+        vm.startPrank(alice);
+        erc20Token.approve(address(facet), stakeAmount);
+        facet.stakeToken(address(erc20Token), 0, stakeAmount);
+
+        (uint256 amount,,,) = facet.getStakedTokenInfo(address(erc20Token), 0);
+        assertEq(amount, stakeAmount);
+        vm.stopPrank();
+    }
+
+    // Fuzz Test for long staking durations
+    function testFuzz_RewardAfterTime(uint256 daysStaked) public {
+        daysStaked = bound(daysStaked, 1, 3650); // 1 day to 10 years
+
+        vm.startPrank(owner);
+        facet.addSupportedToken(address(erc20Token), true, false, false);
+        facet.addSupportedToken(address(rewardToken), true, false, false);
+        facet.setStakingParameters(1000, 1e18, 1 days, address(rewardToken), 0, 1e18, type(uint256).max);
+        vm.stopPrank();
+
+        erc20Token.mint(alice, 100 ether);
+        rewardToken.mint(address(facet), 1_000_000 ether);
+
+        vm.startPrank(alice);
+        erc20Token.approve(address(facet), 100 ether);
+        facet.stakeToken(address(erc20Token), 0, 100 ether);
+
+        vm.warp(block.timestamp + (daysStaked * 1 days));
+        uint256 rewards = facet.calculateRewardsForToken(address(erc20Token), 0);
+
+        assertGt(rewards, 0);
+        assertLe(rewards, 1_000_000 ether); // Should not exceed total reward pool
+        vm.stopPrank();
+    }
+
+    function testFuzz_RewardDecay(uint256 stakedSeconds, uint256 decayRate, uint256 compoundFreq) public {
         vm.startPrank(owner);
         // Clamp fuzzed values to safe bounds
         stakedSeconds = bound(stakedSeconds, 1 days, 3650 days); // 1 day to 10 years
@@ -497,6 +544,40 @@ contract StakingFacetTest is Test {
             emit log_named_uint("Staked Seconds", stakedSeconds);
             emit log_named_uint("Calculated Rewards", rewards);
         }
+    }
+
+    function testFuzz_StakeUnstake(uint256 stakeAmount, uint256 waitDays) public {
+        stakeAmount = bound(stakeAmount, 1e18, 1_000e18); // 1 to 1,000 tokens
+        waitDays = bound(waitDays, 1, 365); // 1 to 365 days
+
+        vm.startPrank(owner);
+        facet.addSupportedToken(address(erc20Token), true, false, false);
+        facet.addSupportedToken(address(rewardToken), true, false, false);
+        facet.setStakingParameters(1000, 1e18, 1 days, address(rewardToken), 1 days, 1e18, type(uint256).max);
+        vm.stopPrank();
+
+        erc20Token.mint(alice, stakeAmount);
+        rewardToken.mint(address(facet), 1_000_000 ether);
+
+        vm.startPrank(alice);
+        erc20Token.approve(address(facet), stakeAmount);
+        facet.stakeToken(address(erc20Token), 0, stakeAmount);
+
+        vm.warp(block.timestamp + (waitDays * 1 days) + COOLDOWN_PERIOD + 1);
+
+        facet.unstakeToken(address(erc20Token), 0);
+        (uint256 amount,,,) = facet.getStakedTokenInfo(address(erc20Token), 0);
+        assertEq(amount, 0);
+        vm.stopPrank();
+    }
+
+    function testFuzz_UnsupportedToken(address randomToken) public {
+        vm.assume(randomToken != address(erc20Token) && randomToken != address(0));
+
+        vm.startPrank(alice);
+        vm.expectRevert(abi.encodeWithSelector(StakingFacet.StakingUnsupportedToken.selector, randomToken));
+        facet.stakeToken(randomToken, 0, 100 ether);
+        vm.stopPrank();
     }
 
     function test_FixedPoint_IntegerPower() public {

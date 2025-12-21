@@ -340,7 +340,7 @@ contract StakingFacet {
         }
 
         if (s.minStakeAmount > 0) {
-            if (isTokenERC20 && _amount <= s.minStakeAmount) {
+            if (isTokenERC20 && _amount < s.minStakeAmount) {
                 revert StakingAmountBelowMinimum(_amount, s.minStakeAmount);
             }
         }
