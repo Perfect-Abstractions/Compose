@@ -1,8 +1,8 @@
 ---
 sidebar_position: 99
 title: "ExampleDiamond"
-description: "Example Diamond for Compose framework"
-gitSource: "https://github.com/maxnorm/Compose/blob/fc8e8677d3c3fe32a459f173c58ec546dfcb9e13/src/diamond/example/ExampleDiamond.sol"
+description: "Diamond proxy for routing external calls to facets"
+gitSource: "https://github.com/maxnorm/Compose/blob/2dfa9eb69851162421010a7e56bd0fa891a9311a/src/diamond/example/ExampleDiamond.sol"
 ---
 
 import DocSubtitle  from '@site/src/components/docs/DocSubtitle';
@@ -21,18 +21,18 @@ import GradientText from '@site/src/components/ui/GradientText';
 import GradientButton from '@site/src/components/ui/GradientButton';
 
 <DocSubtitle>
-Example Diamond for Compose framework
+Diamond proxy for routing external calls to facets
 </DocSubtitle>
 
 <Callout type="info" title="Key Features">
-- Manages facet registration and function selector mapping.
-- Supports diamond cut operations for dynamic facet updates.
-- Acts as a foundational example for Compose diamond deployments.
+- Centralized function routing via delegatecall.
+- Supports modularity by allowing dynamic addition/removal of functionality (facets).
+- Enables upgradeability by replacing facet implementations without changing the diamond proxy address.
 </Callout>
 
 ## Overview
 
-The ExampleDiamond serves as a foundational contract within the Compose framework, demonstrating diamond proxy functionality. It manages facet registrations and routes calls to appropriate implementation contracts, showcasing the core composability principles.
+The ExampleDiamond acts as a central proxy, managing function routing to various facets. It initializes the diamond by mapping function selectors to their corresponding facet addresses, enabling modular and upgradeable smart contract logic.
 
 ---
 
@@ -85,26 +85,31 @@ Struct to hold facet address and its function selectors. struct FacetCut &#123; 
 <ExpandableCode language="solidity" maxLines={20} title="Example Implementation">
 {`pragma solidity ^0.8.30;
 
-import {ExampleDiamond} from "@compose-protocol/diamond/contracts/ExampleDiamond.sol";
+import {IDiamondCut} from "@compose/diamond/contracts/IDiamondCut.sol";
+import {IDiamondLoupe} from "@compose/diamond/contracts/IDiamondLoupe.sol";
 
-contract DeployExampleDiamond {
-    ExampleDiamond public diamond;
+// Assume ExampleDiamond is deployed and initialized
+contract Consumer {
+    IDiamondCut internal immutable diamondCut;
+    IDiamondLoupe internal immutable diamondLoupe;
 
-    function deploy() public {
-        // Assuming facet addresses and selectors are defined elsewhere
-        // Example: address facetAddress = address(new MyFacet());
-        // Example: bytes4[] memory selectors = new bytes4[](1);
-        // selectors[0] = MyFacet.myFunction.selector;
-        // FacetCut[] memory facets = new FacetCut[](1);
-        // facets[0] = ExampleDiamond.FacetCut({
-        //     facetAddress: facetAddress,
-        //     action: ExampleDiamond.FacetCutAction.Add,
-        //     functionSelectors: selectors
-        // });
+    constructor(address _diamondAddress) {
+        diamondCut = IDiamondCut(_diamondAddress);
+        diamondLoupe = IDiamondLoupe(_diamondAddress);
+    }
 
-        // In a real scenario, you would pass actual facet data
-        diamond = new ExampleDiamond();
-        // diamond.diamondCut(facets, address(0), ""); // Example cut call
+    function addFacet(address _facetAddress, bytes4[] memory _selectors) external {
+        // Call the diamond's cut function to add a new facet
+        // Requires owner permissions on the diamond
+        diamondCut.diamondCut([IDiamondCut.FacetCut({
+            facetAddress: _facetAddress,
+            action: IDiamondCut.FacetCutAction.Add,
+            functionSelectors: _selectors
+        })], address(0), "");
+    }
+
+    function getFacetAddress(bytes4 _selector) external view returns (address) {
+        return diamondLoupe.facetAddress(_selector);
     }
 }`}
 </ExpandableCode>
@@ -112,19 +117,19 @@ contract DeployExampleDiamond {
 ## Best Practices
 
 <Callout type="tip" title="Best Practice">
-- Use the `constructor` to initialize the diamond with initial facets and set the owner.
-- Leverage `diamondCut` for adding, replacing, or removing facets post-deployment.
-- Ensure facet addresses and their associated function selectors are correctly managed during cuts.
+- Initialize the diamond with owner and initial facets during deployment.
+- Use the `diamondCut` interface for adding, replacing, or removing facets.
+- Grant necessary permissions to the entity responsible for managing facet additions/removals.
 </Callout>
 
 ## Security Considerations
 
 <Callout type="warning" title="Security">
-Access control for diamond cut operations should be strictly managed to prevent unauthorized facet modifications. Ensure that facet addresses provided during initialization or cuts are trusted implementations.
+Ensure that only authorized addresses can call `diamondCut` to prevent unauthorized facet manipulation. Input validation for facet addresses and selectors is crucial. Be mindful of state coupling between facets that might share storage slots.
 </Callout>
 
 <div style={{marginTop: "3rem", paddingTop: "2rem", borderTop: "1px solid var(--ifm-color-emphasis-200)"}}>
   <WasThisHelpful pageId="ExampleDiamond" />
 </div>
 
-<LastUpdated date="2025-12-21T21:26:36.973Z" />
+<LastUpdated date="2025-12-21T21:45:29.249Z" />

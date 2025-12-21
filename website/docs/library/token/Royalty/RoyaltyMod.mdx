@@ -1,8 +1,8 @@
 ---
 sidebar_position: 99
 title: "RoyaltyMod"
-description: "Manages ERC-2981 royalties with token-specific and default settings."
-gitSource: "https://github.com/maxnorm/Compose/blob/fc8e8677d3c3fe32a459f173c58ec546dfcb9e13/src/token/Royalty/RoyaltyMod.sol"
+description: "Manages ERC-2981 royalties for tokens and defaults."
+gitSource: "https://github.com/maxnorm/Compose/blob/2dfa9eb69851162421010a7e56bd0fa891a9311a/src/token/Royalty/RoyaltyMod.sol"
 ---
 
 import DocSubtitle  from '@site/src/components/docs/DocSubtitle';
@@ -21,12 +21,12 @@ import GradientText from '@site/src/components/ui/GradientText';
 import GradientButton from '@site/src/components/ui/GradientButton';
 
 <DocSubtitle>
-Manages ERC-2981 royalties with token-specific and default settings.
+Manages ERC-2981 royalties for tokens and defaults.
 </DocSubtitle>
 
 <Callout type="info" title="Key Features">
 - Supports both default and token-specific royalty configurations.
-- Implements ERC-2981 `royaltyInfo` function logic, including fallback to default settings.
+- Implements ERC-2981 `royaltyInfo` function logic, including fallback to defaults.
 - Provides functions to set, delete, and reset royalty information.
 </Callout>
 
@@ -36,7 +36,7 @@ This module provides internal functions for use in your custom facets. Import it
 
 ## Overview
 
-This module provides a robust implementation for ERC-2981 royalty standards, enabling both default royalty settings and token-specific overrides. It ensures that royalty information is always retrievable, either from token-specific configurations or a fallback default, enhancing composability for NFT marketplaces and secondary sales.
+This module provides robust ERC-2981 royalty enforcement by managing both default and token-specific royalty configurations. It allows setting, retrieving, and deleting royalty information, ensuring compliance with the standard and enabling revenue sharing for NFTs.
 
 ---
 
@@ -299,36 +299,26 @@ error ERC2981InvalidTokenRoyaltyReceiver(uint256 _tokenId, address _receiver);
 <ExpandableCode language="solidity" maxLines={20} title="Example Implementation">
 {`pragma solidity ^0.8.30;
 
-import {IRoyaltyMod} from "./interfaces/IRoyaltyMod.sol";
+import {IRoyaltyMod} from "@compose/diamond-contracts/contracts/modules/royalty/IRoyaltyMod.sol";
+import {IERC2981} from "@openzeppelin/contracts/interfaces/IERC2981.sol";
 
-contract RoyaltyConsumerFacet {
-    address immutable DIAMOND_ADDRESS;
-    IRoyaltyMod immutable royaltyMod;
+contract MyFacet is IRoyaltyMod {
+    address immutable _diamondAddress;
 
     constructor(address diamondAddress) {
-        DIAMOND_ADDRESS = diamondAddress;
-        royaltyMod = IRoyaltyMod(diamondAddress);
+        _diamondAddress = diamondAddress;
     }
 
-    /**
-     * @notice Sets a royalty for a specific token.
-     * @param _tokenId The ID of the token.
-     * @param _receiver The address to receive royalties.
-     * @param _feeBasisPoints The royalty fee in basis points.
-     */
-    function setTokenRoyalty(uint256 _tokenId, address _receiver, uint16 _feeBasisPoints) external {
-        royaltyMod.setTokenRoyalty(_tokenId, _receiver, _feeBasisPoints);
+    function _getRoyaltyMod() internal view returns (IRoyaltyMod) {
+        return IRoyaltyMod(_diamondAddress);
     }
 
-    /**
-     * @notice Gets royalty information for a token.
-     * @param _tokenId The ID of the token.
-     * @param _salePrice The sale price of the token.
-     * @return receiver The address receiving royalties.
-     * @return feeAmount The amount of royalties to be paid.
-     */
-    function getRoyaltyInfo(uint256 _tokenId, uint256 _salePrice) external view returns (address receiver, uint256 feeAmount) {
-        return royaltyMod.royaltyInfo(_tokenId, _salePrice);
+    function exampleSetRoyalty(uint256 tokenId, address receiver, uint16 basisPoints) external {
+        _getRoyaltyMod().setTokenRoyalty(tokenId, receiver, basisPoints);
+    }
+
+    function exampleRoyaltyInfo(uint256 tokenId, uint256 salePrice) external view returns (address receiver, uint16 basisPoints) {
+        return _getRoyaltyMod().royaltyInfo(tokenId, salePrice);
     }
 }`}
 </ExpandableCode>
@@ -336,19 +326,19 @@ contract RoyaltyConsumerFacet {
 ## Best Practices
 
 <Callout type="tip" title="Best Practice">
-- Ensure receiver addresses are validated before setting royalties to prevent unintended distributions.
-- Utilize `deleteDefaultRoyalty` and `resetTokenRoyalty` judiciously to manage royalty configurations effectively.
-- Be aware that royalty information is accessed via the diamond proxy, ensuring consistent behavior across facet upgrades.
+- Use `setDefaultRoyalty` for global royalty settings and `setTokenRoyalty` for specific exceptions.
+- Validate receiver addresses and basis points before setting royalties to prevent errors.
+- Be aware that `resetTokenRoyalty` will revert token-specific settings to the default.
 </Callout>
 
 ## Integration Notes
 
 <Callout type="success" title="Shared Storage">
-The RoyaltyMod stores its state in a dedicated slot within the diamond's storage. The `getStorage` function provides direct access to this storage struct. Facets can interact with royalty logic by calling the external functions exposed by this module through the diamond proxy. Changes to default or token-specific royalties are immediately reflected in subsequent calls to `royaltyInfo`.
+The RoyaltyMod utilizes a predefined storage slot to store its royalty configuration. The `getStorage` function provides direct access to this storage struct. Facets interacting with royalty logic should call the functions defined in `IRoyaltyMod` to ensure proper interaction with the diamond's storage and maintain consistency.
 </Callout>
 
 <div style={{marginTop: "3rem", paddingTop: "2rem", borderTop: "1px solid var(--ifm-color-emphasis-200)"}}>
   <WasThisHelpful pageId="RoyaltyMod" />
 </div>
 
-<LastUpdated date="2025-12-21T21:26:21.335Z" />
+<LastUpdated date="2025-12-21T21:45:13.132Z" />
