@@ -5,6 +5,7 @@
   "collapsed": true,
   "link": {
     "type": "generated-index",
-    "description": "ERC-1155 multi-token implementations."
+    "description": "ERC-1155 multi-token implementations.",
+    "slug": "/docs/contracts/token/ERC1155"
   }
 }

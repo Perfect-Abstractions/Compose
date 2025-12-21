@@ -5,6 +5,7 @@
   "collapsed": true,
   "link": {
     "type": "generated-index",
-    "description": "ERC-20 Permit extension for ERC-20 tokens."
+    "description": "ERC-20 Permit extension for ERC-20 tokens.",
+    "slug": "/docs/contracts/token/ERC20/ERC20Permit"
   }
 }

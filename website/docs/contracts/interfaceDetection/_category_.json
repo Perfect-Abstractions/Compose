@@ -5,6 +5,7 @@
   "collapsed": false,
   "link": {
     "type": "generated-index",
-    "description": "ERC-165 interface detection support."
+    "description": "ERC-165 interface detection support.",
+    "slug": "/docs/contracts/interfaceDetection"
   }
 }

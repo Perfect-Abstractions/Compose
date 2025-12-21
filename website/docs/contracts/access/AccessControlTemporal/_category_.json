@@ -5,6 +5,7 @@
   "collapsed": true,
   "link": {
     "type": "generated-index",
-    "description": "Time-limited role-based access control."
+    "description": "Time-limited role-based access control.",
+    "slug": "/docs/contracts/access/AccessControlTemporal"
   }
 }

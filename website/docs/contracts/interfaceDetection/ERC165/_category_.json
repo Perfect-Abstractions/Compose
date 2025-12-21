@@ -5,6 +5,7 @@
   "collapsed": true,
   "link": {
     "type": "generated-index",
-    "description": "ERC-165 components for Compose diamonds."
+    "description": "ERC-165 components for Compose diamonds.",
+    "slug": "/docs/contracts/interfaceDetection/ERC165"
   }
 }

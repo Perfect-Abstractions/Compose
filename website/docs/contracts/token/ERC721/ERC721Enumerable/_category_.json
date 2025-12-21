@@ -5,6 +5,7 @@
   "collapsed": true,
   "link": {
     "type": "generated-index",
-    "description": "ERC-721 Enumerable extension for ERC-721 tokens."
+    "description": "ERC-721 Enumerable extension for ERC-721 tokens.",
+    "slug": "/docs/contracts/token/ERC721/ERC721Enumerable"
   }
 }

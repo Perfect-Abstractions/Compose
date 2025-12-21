@@ -5,6 +5,7 @@
   "collapsed": false,
   "link": {
     "type": "generated-index",
-    "description": "Access control patterns for permission management in Compose diamonds."
+    "description": "Access control patterns for permission management in Compose diamonds.",
+    "slug": "/docs/contracts/access"
   }
 }

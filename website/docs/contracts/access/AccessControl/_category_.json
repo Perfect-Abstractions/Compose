@@ -5,6 +5,7 @@
   "collapsed": true,
   "link": {
     "type": "generated-index",
-    "description": "Role-based access control (RBAC) pattern."
+    "description": "Role-based access control (RBAC) pattern.",
+    "slug": "/docs/contracts/access/AccessControl"
   }
 }

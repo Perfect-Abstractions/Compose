@@ -5,6 +5,7 @@
   "collapsed": false,
   "link": {
     "type": "generated-index",
-    "description": "Core diamond proxy functionality for ERC-2535 diamonds."
+    "description": "Core diamond proxy functionality for ERC-2535 diamonds.",
+    "slug": "/docs/contracts/diamond"
   }
 }

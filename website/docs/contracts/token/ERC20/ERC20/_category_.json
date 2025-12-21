@@ -5,6 +5,7 @@
   "collapsed": true,
   "link": {
     "type": "generated-index",
-    "description": "ERC-20 fungible token implementations."
+    "description": "ERC-20 fungible token implementations.",
+    "slug": "/docs/contracts/token/ERC20/ERC20"
   }
 }

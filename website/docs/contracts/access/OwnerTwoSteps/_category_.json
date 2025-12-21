@@ -5,6 +5,7 @@
   "collapsed": true,
   "link": {
     "type": "generated-index",
-    "description": "Two-step ownership transfer pattern."
+    "description": "Two-step ownership transfer pattern.",
+    "slug": "/docs/contracts/access/OwnerTwoSteps"
   }
 }

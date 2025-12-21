@@ -5,6 +5,7 @@
   "collapsed": true,
   "link": {
     "type": "generated-index",
-    "description": "RBAC with pause functionality."
+    "description": "RBAC with pause functionality.",
+    "slug": "/docs/contracts/access/AccessControlPausable"
   }
 }

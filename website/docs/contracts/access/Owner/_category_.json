@@ -5,6 +5,7 @@
   "collapsed": true,
   "link": {
     "type": "generated-index",
-    "description": "Single-owner access control pattern."
+    "description": "Single-owner access control pattern.",
+    "slug": "/docs/contracts/access/Owner"
   }
 }
