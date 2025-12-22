@@ -319,6 +319,27 @@
   color: #93c5fd;
 }
 
+/* Inline code in descriptions */
+.descriptionCell .inlineCode {
+  font-family: var(--ifm-font-family-monospace);
+  font-size: 0.8125rem;
+  font-weight: 500;
+  background: var(--ifm-color-emphasis-100);
+  padding: 0.25rem 0.5rem;
+  border-radius: 0.375rem;
+  color: var(--ifm-color-primary);
+  border: 1px solid var(--ifm-color-emphasis-200);
+  display: inline-block;
+  line-height: 1.4;
+  margin: 0 0.125rem;
+}
+
+[data-theme='dark'] .descriptionCell .inlineCode {
+  background: rgba(59, 130, 246, 0.1);
+  border-color: rgba(59, 130, 246, 0.2);
+  color: #93c5fd;
+}
+
 /* Responsive Design */
 @media (max-width: 996px) {
   .propertyTable {
