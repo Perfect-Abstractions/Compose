@@ -1,14 +1,12 @@
 // SPDX-License-Identifier: MIT
 pragma solidity >=0.8.30;
 
-import {Test, console} from "forge-std/Test.sol";
+import {Test} from "forge-std/Test.sol";
 import {LibStakingHarness} from "./harnesses/LibStakingHarness.sol";
-import {ERC20FacetHarness} from "../ERC20//ERC20/harnesses/ERC20FacetHarness.sol";
+import {ERC20FacetHarness} from "../ERC20/ERC20/harnesses/ERC20FacetHarness.sol";
 import {ERC721FacetHarness} from "../ERC721/ERC721/harnesses/ERC721FacetHarness.sol";
 import {ERC1155FacetHarness} from "../ERC1155/ERC1155/harnesses/ERC1155FacetHarness.sol";
 import "../../../src/token/Staking/StakingMod.sol" as StakingMod;
-
-// import "forge-std/console.sol";
 
 contract StakingTest is Test {
     ERC20FacetHarness erc20Token;
@@ -33,8 +31,8 @@ contract StakingTest is Test {
     uint256 constant TOKEN_ID_1 = 1;
     uint256 constant TOKEN_ID_2 = 2;
 
-    uint256 constant BASE_APR = 500; // 5%
-    uint256 constant REWARD_DECAY_RATE = 50; // 0.5%
+    uint256 constant BASE_APR = 500;
+    uint256 constant REWARD_DECAY_RATE = 50;
     uint256 constant COMPOUND_FREQUENCY = 1 days;
     uint256 constant COOLDOWN_PERIOD = 7 days;
     uint256 constant MIN_STAKE_AMOUNT = 1 ether;
@@ -106,7 +104,6 @@ contract StakingTest is Test {
     }
 
     function test_VerifySupportedTokens() public {
-        // Supported tokens
         bool isERC20Supported = staking.isTokenSupported(address(erc20Token));
         bool isERC721Supported = staking.isTokenSupported(address(erc721Token));
         bool isERC1155Supported = staking.isTokenSupported(address(erc1155Token));
@@ -117,7 +114,6 @@ contract StakingTest is Test {
         assertTrue(isERC1155Supported);
         assertTrue(isRewardTokenSupported);
 
-        // Unsupported token
         address unsupportedToken = makeAddr("unsupportedToken");
         bool isUnsupportedTokenSupported = staking.isTokenSupported(unsupportedToken);
         assertFalse(isUnsupportedTokenSupported);
@@ -129,7 +125,6 @@ contract StakingTest is Test {
 
         erc20Token.approve(address(staking), stakeAmount);
 
-        // Stake ERC-20 tokens
         staking.stakeERC20(address(erc20Token), stakeAmount);
 
         (uint256 amount,,,) = staking.getStakedTokenInfo(address(erc20Token), 0);
@@ -141,11 +136,9 @@ contract StakingTest is Test {
     function test_StakeERC721UpdatesState() public {
         vm.startPrank(alice);
 
-        // Stake ERC-721 token
         staking.stakeERC721(address(erc721Token), TOKEN_ID_1);
 
         (uint256 amount,,,) = staking.getStakedTokenInfo(address(erc721Token), TOKEN_ID_1);
-        console.log("Staked amount:", amount);
 
         assertEq(amount, 1);
         vm.stopPrank();
@@ -157,11 +150,9 @@ contract StakingTest is Test {
 
         erc1155Token.setApprovalForAll(address(staking), true);
 
-        // Stake ERC-1155 tokens
         staking.stakeERC1155(address(erc1155Token), TOKEN_ID_2, stakeAmount);
 
         (uint256 amount,,,) = staking.getStakedTokenInfo(address(erc1155Token), TOKEN_ID_2);
-        console.log("Staked amount:", amount);
 
         assertEq(amount, stakeAmount);
         vm.stopPrank();
@@ -175,30 +166,30 @@ contract StakingTest is Test {
     }
 
     function test_FixedPoint_IntegerPower() public {
-        uint256 result = staking.rPow(2e18, 3); // 2^3 = 8
+        uint256 result = staking.rPow(2e18, 3);
         assertEq(result, 8e18);
 
-        result = staking.rPow(5e18, 0); // 5^0 = 1
+        result = staking.rPow(5e18, 0);
         assertEq(result, 1e18);
 
-        result = staking.rPow(1e18, 10); // 1^10 = 1
+        result = staking.rPow(1e18, 10);
         assertEq(result, 1e18);
 
-        result = staking.rPow(3e18, 4); // 3^4 = 81
+        result = staking.rPow(3e18, 4);
         assertEq(result, 81e18);
     }
 
     function test_FixedPoint_Multiply() public {
-        uint256 result = staking.rMul(2e18, 3e18); // 2 * 3 = 6
+        uint256 result = staking.rMul(2e18, 3e18);
         assertEq(result, 6e18);
 
-        result = staking.rMul(5e18, 0e18); // 5 * 0 = 0
+        result = staking.rMul(5e18, 0e18);
         assertEq(result, 0);
 
-        result = staking.rMul(1e18, 10e18); // 1 * 10 = 10
+        result = staking.rMul(1e18, 10e18);
         assertEq(result, 10e18);
 
-        result = staking.rMul(3e18, 4e18); // 3 * 4 = 12
+        result = staking.rMul(3e18, 4e18);
         assertEq(result, 12e18);
     }
 }

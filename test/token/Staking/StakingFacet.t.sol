@@ -4,7 +4,7 @@ pragma solidity >=0.8.30;
 import {Test} from "forge-std/Test.sol";
 import {StakingFacetHarness} from "./harnesses/StakingFacetHarness.sol";
 import {StakingFacet} from "../../../src/token/Staking/StakingFacet.sol";
-import {ERC20FacetHarness} from "../ERC20//ERC20/harnesses/ERC20FacetHarness.sol";
+import {ERC20FacetHarness} from "../ERC20/ERC20/harnesses/ERC20FacetHarness.sol";
 import {ERC721FacetHarness} from "../ERC721/ERC721/harnesses/ERC721FacetHarness.sol";
 import {ERC1155FacetHarness} from "../ERC1155/ERC1155/harnesses/ERC1155FacetHarness.sol";
 import {IERC721Receiver} from "../../../src/interfaces/IERC721Receiver.sol";
@@ -34,8 +34,8 @@ contract StakingFacetTest is Test {
     uint256 constant TOKEN_ID_1 = 1;
     uint256 constant TOKEN_ID_2 = 2;
 
-    uint256 constant BASE_APR = 10; // 10%
-    uint256 constant REWARD_DECAY_RATE = 0; // no decay
+    uint256 constant BASE_APR = 10;
+    uint256 constant REWARD_DECAY_RATE = 0;
     uint256 constant COMPOUND_FREQUENCY = 365 days;
     uint256 constant COOLDOWN_PERIOD = 1 days;
     uint256 constant MIN_STAKE_AMOUNT = 1 ether;
@@ -477,7 +477,6 @@ contract StakingFacetTest is Test {
         facet.addSupportedToken(address(erc20Token), true, false, false);
         facet.addSupportedToken(address(rewardToken), true, false, false);
 
-        // set the staking parameters
         facet.setStakingParameters(
             1000, decayRate, compoundFreq, address(rewardToken), COOLDOWN_PERIOD, 1, type(uint256).max
         );

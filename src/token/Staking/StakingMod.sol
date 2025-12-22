@@ -193,16 +193,13 @@ function calculateRewards(address _tokenAddress, uint256 _tokenId) view returns 
     StakingStorage storage s = getStorage();
     StakedTokenInfo storage stake = s.stakedTokens[msg.sender][_tokenAddress][_tokenId];
 
-    // Calculate staking duration
     uint256 stakedDuration = block.timestamp - stake.lastClaimedAt;
     if (stakedDuration == 0 || stake.amount == 0) {
         return 0;
     }
 
-    // Base reward rate with decay
     uint256 baseReward = (stake.amount * s.baseAPR * stakedDuration) / (365 days * 100);
 
-    // Apply decay factor based on staking duration and compound frequency
     uint256 decayFactor;
     if (s.rewardDecayRate > 0 && s.compoundFrequency > 0) {
         uint256 exponent = stakedDuration / s.compoundFrequency;

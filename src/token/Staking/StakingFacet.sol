@@ -373,6 +373,7 @@ contract StakingFacet {
 
         bool isSupported = isTokenSupported(_tokenAddress);
         bool isTokenERC20 = s.supportedTokens[_tokenAddress].isERC20;
+        bool isTokenERC1155 = s.supportedTokens[_tokenAddress].isERC1155;
 
         if (!isSupported) {
             revert StakingUnsupportedToken(_tokenAddress);
@@ -602,16 +603,13 @@ contract StakingFacet {
         StakingStorage storage s = getStorage();
         StakedTokenInfo storage stake = s.stakedTokens[msg.sender][_tokenAddress][_tokenId];
 
-        // Calculate staking duration
         uint256 stakedDuration = block.timestamp - stake.lastClaimedAt;
         if (stakedDuration == 0 || stake.amount == 0) {
             return 0;
         }
 
-        // Base reward rate with decay
         uint256 baseReward = (stake.amount * s.baseAPR * stakedDuration) / (365 days * 100);
 
-        // Apply decay factor based on staking duration and compound frequency
         uint256 decayFactor;
         if (s.rewardDecayRate > 0 && s.compoundFrequency > 0) {
             uint256 exponent = stakedDuration / s.compoundFrequency;
@@ -679,7 +677,7 @@ contract StakingFacet {
      * @return result Fixed-point result of base^exp, scaled by 1e18.
      */
     function rpow(uint256 _base, uint256 _exp) internal pure returns (uint256 result) {
-        result = 1e18; // Initialize result as 1 in 1e18 fixed-point
+        result = 1e18;
         uint256 base = _base;
 
         while (_exp > 0) {
@@ -725,9 +723,11 @@ contract StakingFacet {
         return interfaceId == type(IERC721Receiver).interfaceId || interfaceId == type(IERC1155Receiver).interfaceId;
     }
 
-    /// @notice Handle the receipt of an NFT
-    /// @dev The ERC721 smart contract calls this on the recipient after a `safeTransfer`.
-    /// @return The selector to confirm token transfer. If any other value is returned or the interface is not implemented by the recipient, the transfer will be reverted.
+    /**
+     * @notice Handle the receipt of an NFT
+     * @dev The ERC721 smart contract calls this on the recipient after a `safeTransfer`.
+     * @return The selector to confirm token transfer. If any other value is returned or the interface is not implemented by the recipient, the transfer will be reverted.
+     */
     function onERC721Received(address operator, address from, uint256 tokenId, bytes calldata data)
         external
         pure
@@ -736,9 +736,11 @@ contract StakingFacet {
         return IERC721Receiver.onERC721Received.selector;
     }
 
-    /// @notice Handle the receipt of a single ERC1155 token type
-    /// @dev The ERC1155 smart contract calls this on the recipient after a `safeTransferFrom`.
-    /// @return The selector to confirm token transfer. If any other value is returned or the interface is not implemented by the recipient, the transfer will be reverted.
+    /**
+     * @notice Handle the receipt of a single ERC1155 token type
+     * @dev The ERC1155 smart contract calls this on the recipient after a `safeTransferFrom`.
+     * @return The selector to confirm token transfer. If any other value is returned or the interface is not implemented by the recipient, the transfer will be reverted.
+     */
     function onERC1155Received(address operator, address from, uint256 id, uint256 value, bytes calldata data)
         external
         pure
