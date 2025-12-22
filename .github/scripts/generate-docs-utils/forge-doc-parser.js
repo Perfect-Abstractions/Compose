@@ -3,6 +3,8 @@
  * Extracts structured data from forge-generated markdown files
  */
 
+const config = require('./config');
+
 /**
  * Parse forge doc markdown output into structured data
  * @param {string} content - Markdown content from forge doc
@@ -44,7 +46,7 @@ function parseForgeDocMarkdown(content, filePath) {
     if (trimmedLine.startsWith('[Git Source]')) {
       const match = trimmedLine.match(/\[Git Source\]\((.*?)\)/);
       if (match) {
-        data.gitSource = match[1];
+        data.gitSource = config.normalizeGitSource(match[1]);
       }
       continue;
     }
@@ -422,7 +424,7 @@ function parseIndividualItemFile(content, filePath) {
     if (trimmedLine.startsWith('[Git Source]')) {
       const match = trimmedLine.match(/\[Git Source\]\((.*?)\)/);
       if (match) {
-        gitSource = match[1];
+        gitSource = config.normalizeGitSource(match[1]);
       }
       continue;
     }
@@ -668,7 +670,7 @@ function aggregateParsedItems(parsedItems, sourceFilePath) {
   // Extract git source from first item
   for (const parsed of parsedItems) {
     if (parsed && parsed.gitSource) {
-      data.gitSource = parsed.gitSource;
+      data.gitSource = config.normalizeGitSource(parsed.gitSource);
       break;
     }
   }

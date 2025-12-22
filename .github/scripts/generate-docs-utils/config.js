@@ -108,4 +108,46 @@ module.exports = {
     NonReentrancyMod: 1,
     ERC165Mod: 1,
   },
+
+  // ============================================================================
+  // Repository Configuration
+  // ============================================================================
+
+  /** Main repository URL - always use this for source links */
+  mainRepoUrl: 'https://github.com/Perfect-Abstractions/Compose',
+
+  /**
+   * Normalize gitSource URL to always point to the main repository's main branch
+   * Replaces any fork or incorrect repository URLs with the main repo URL
+   * Converts blob URLs to tree URLs pointing to main branch
+   * @param {string} gitSource - Original gitSource URL from forge doc
+   * @returns {string} Normalized gitSource URL
+   */
+  normalizeGitSource(gitSource) {
+    if (!gitSource) return gitSource;
+    
+    // Pattern: https://github.com/USER/Compose/blob/COMMIT/src/path/to/file.sol
+    // Convert to: https://github.com/Perfect-Abstractions/Compose/tree/main/src/path/to/file.sol
+    const githubUrlPattern = /https:\/\/github\.com\/[^\/]+\/Compose\/(?:blob|tree)\/[^\/]+\/(.+)/;
+    const match = gitSource.match(githubUrlPattern);
+    
+    if (match) {
+      // Extract the path after the repo name (should start with src/)
+      const pathPart = match[1];
+      // Ensure it starts with src/ (remove any leading src/ if duplicated)
+      const normalizedPath = pathPart.startsWith('src/') ? pathPart : `src/${pathPart}`;
+      return `${this.mainRepoUrl}/tree/main/${normalizedPath}`;
+    }
+    
+    // If it doesn't match the pattern, try to construct from the main repo
+    // Extract just the file path if it's a relative path or partial URL
+    if (gitSource.includes('/src/')) {
+      const srcIndex = gitSource.indexOf('/src/');
+      const pathAfterSrc = gitSource.substring(srcIndex + 1);
+      return `${this.mainRepoUrl}/tree/main/${pathAfterSrc}`;
+    }
+    
+    // If it doesn't match any pattern, return as-is (might be a different format)
+    return gitSource;
+  },
 };
