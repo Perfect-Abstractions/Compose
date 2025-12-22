@@ -25,26 +25,6 @@ error StakingZeroStakeAmount();
 error StakingOverflow();
 
 /**
- * @notice Emitted when staking parameters are updated.
- * @param baseAPR The base annual percentage rate for rewards.
- * @param rewardDecayRate The decay rate for rewards over time.
- * @param compoundFrequency The frequency at which rewards are compounded.
- * @param rewardToken The address of the token used for rewards.
- * @param cooldownPeriod The cooldown period before unstaking is allowed.
- * @param minStakeAmount The minimum amount required to stake.
- * @param maxStakeAmount The maximum amount allowed to stake.
- */
-event StakingParametersUpdated(
-    uint256 baseAPR,
-    uint256 rewardDecayRate,
-    uint256 compoundFrequency,
-    address rewardToken,
-    uint256 cooldownPeriod,
-    uint256 minStakeAmount,
-    uint256 maxStakeAmount
-);
-
-/**
  * @notice Emitted when supported token types are added.
  */
 event SupportedTokenAdded(address indexed tokenAddress, bool isERC20, bool isERC721, bool isERC1155);
@@ -128,51 +108,6 @@ function addSupportedToken(address _tokenAddress, bool _isERC20, bool _isERC721,
 }
 
 /**
- * @notice An admin function to set staking parameters.
- * @param _baseAPR The base annual percentage rate for rewards.
- * @param _rewardDecayRate The decay rate for rewards over time.
- * @param _compoundFrequency The frequency at which rewards are compounded.
- * @param _rewardToken The address of the token used for rewards.
- * @param _cooldownPeriod The cooldown period before unstaking is allowed.
- * @param _minStakeAmount The minimum amount required to stake.
- * @param _maxStakeAmount The maximum amount allowed to stake.
- * @dev This function should be restricted to admin use only.
- * @dev Emits a StakingParametersUpdated event upon successful update.
- */
-function setStakingParameters(
-    uint256 _baseAPR,
-    uint256 _rewardDecayRate,
-    uint256 _compoundFrequency,
-    address _rewardToken,
-    uint256 _cooldownPeriod,
-    uint256 _minStakeAmount,
-    uint256 _maxStakeAmount
-) {
-    StakingStorage storage s = getStorage();
-
-    bool isSupported = isTokenSupported(_rewardToken);
-    if (!isSupported) {
-        revert StakingUnsupportedToken(_rewardToken);
-    }
-
-    if (_minStakeAmount == 0 || _maxStakeAmount == 0) {
-        revert StakingZeroStakeAmount();
-    }
-
-    s.baseAPR = _baseAPR;
-    s.rewardDecayRate = _rewardDecayRate;
-    s.compoundFrequency = _compoundFrequency;
-    s.rewardToken = _rewardToken;
-    s.cooldownPeriod = _cooldownPeriod;
-    s.minStakeAmount = _minStakeAmount;
-    s.maxStakeAmount = _maxStakeAmount;
-
-    emit StakingParametersUpdated(
-        _baseAPR, _rewardDecayRate, _compoundFrequency, _rewardToken, _cooldownPeriod, _minStakeAmount, _maxStakeAmount
-    );
-}
-
-/**
  * @notice Stake ERC-20 tokens
  * @dev Transfers token from the user and updates the amount staked and staking info.
  * @param _tokenAddress The address of the ERC-20 token to stake.
@@ -246,37 +181,48 @@ function stakeERC1155(address _tokenAddress, uint256 _tokenId, uint256 _value) {
 }
 
 /**
- * @notice Retrieve staking parameters
- * @return baseAPR The base annual percentage rate for rewards.
- * @return rewardDecayRate The decay rate for rewards over time.
- * @return compoundFrequency The frequency at which rewards are compounded.
- * @return rewardToken The address of the token used for rewards.
- * @return cooldownPeriod The cooldown period before unstaking is allowed.
- * @return minStakeAmount The minimum amount required to stake.
- * @return maxStakeAmount The maximum amount allowed to stake.
+ * @notice Calculates the rewards for a staked token.
+ * @dev Uses base APR, decay rate, and compounding frequency to compute rewards.
+ * @dev Rewards are calculated based on the time since last claim.
+ * @dev Uses fixed-point arithmetic with 1e18 precision.
+ * @param _tokenAddress The address of the staked token.
+ * @param _tokenId The ID of the staked token.
+ * @return finalReward The calculated reward amount.
  */
-function getStakingParameters()
-    view
-    returns (
-        uint256 baseAPR,
-        uint256 rewardDecayRate,
-        uint256 compoundFrequency,
-        address rewardToken,
-        uint256 cooldownPeriod,
-        uint256 minStakeAmount,
-        uint256 maxStakeAmount
-    )
-{
+function calculateRewards(address _tokenAddress, uint256 _tokenId) view returns (uint256) {
     StakingStorage storage s = getStorage();
-    return (
-        s.baseAPR,
-        s.rewardDecayRate,
-        s.compoundFrequency,
-        s.rewardToken,
-        s.cooldownPeriod,
-        s.minStakeAmount,
-        s.maxStakeAmount
-    );
+    StakedTokenInfo storage stake = s.stakedTokens[msg.sender][_tokenAddress][_tokenId];
+
+    // Calculate staking duration
+    uint256 stakedDuration = block.timestamp - stake.lastClaimedAt;
+    if (stakedDuration == 0 || stake.amount == 0) {
+        return 0;
+    }
+
+    // Base reward rate with decay
+    uint256 baseReward = (stake.amount * s.baseAPR * stakedDuration) / (365 days * 100);
+
+    // Apply decay factor based on staking duration and compound frequency
+    uint256 decayFactor;
+    if (s.rewardDecayRate > 0 && s.compoundFrequency > 0) {
+        uint256 exponent = stakedDuration / s.compoundFrequency;
+
+        /**
+         * Cap exponent to prevent overflow
+         * With max exponent of 125, even 2e18^125 is manageable with rpow
+         */
+        if (exponent > 125) {
+            exponent = 125;
+        }
+
+        decayFactor = rpow(s.rewardDecayRate, exponent);
+    } else {
+        decayFactor = 1e18;
+    }
+
+    uint256 finalReward = (baseReward * decayFactor) / (10 ** 18);
+
+    return finalReward;
 }
 
 /**

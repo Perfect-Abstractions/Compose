@@ -10,30 +10,6 @@ import "../../../../src/token/Staking/StakingMod.sol" as StakingMod;
  */
 contract LibStakingHarness {
     /**
-     * @notice Initialize the staking storage for testing
-     * @dev Only used for testing purposes
-     */
-    function initialize(
-        uint256 _baseAPR,
-        uint256 _rewardDecayRate,
-        uint256 _compoundFrequency,
-        address _rewardToken,
-        uint256 _cooldownPeriod,
-        uint256 _minStakeAmount,
-        uint256 _maxStakeAmount
-    ) external {
-        StakingMod.setStakingParameters(
-            _baseAPR,
-            _rewardDecayRate,
-            _compoundFrequency,
-            _rewardToken,
-            _cooldownPeriod,
-            _minStakeAmount,
-            _maxStakeAmount
-        );
-    }
-
-    /**
      * @notice Exposes StakingMod.addSupportedToken as an external function
      */
     function addSupportedToken(address _tokenAddress, bool _isERC20, bool _isERC721, bool _isERC1155) external {
@@ -59,17 +35,6 @@ contract LibStakingHarness {
      */
     function stakeERC1155(address _tokenAddress, uint256 _tokenId, uint256 _value) external {
         StakingMod.stakeERC1155(_tokenAddress, _tokenId, _value);
-    }
-
-    /**
-     * @notice Exposes StakingMod.getStakingParameters as an external function
-     */
-    function getStakingParameters()
-        external
-        view
-        returns (uint256, uint256, uint256, address, uint256, uint256, uint256)
-    {
-        return StakingMod.getStakingParameters();
     }
 
     /**
