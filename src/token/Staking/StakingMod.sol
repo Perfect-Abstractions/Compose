@@ -187,11 +187,13 @@ function stakeERC20(address _tokenAddress, uint256 _value) {
         revert StakingUnsupportedToken(_tokenAddress);
     }
 
-    stake.amount += _value;
-    stake.stakedAt = block.timestamp;
-    stake.lastClaimedAt = block.timestamp;
+    unchecked {
+        stake.amount += _value;
+        stake.stakedAt = block.timestamp;
+        stake.lastClaimedAt = block.timestamp;
 
-    s.totalStakedPerToken[_tokenAddress] += _value;
+        s.totalStakedPerToken[_tokenAddress] += _value;
+    }
 }
 
 /**
@@ -209,11 +211,13 @@ function stakeERC721(address _tokenAddress, uint256 _tokenId) {
         revert StakingUnsupportedToken(_tokenAddress);
     }
 
-    stake.amount = 1;
-    stake.stakedAt = block.timestamp;
-    stake.lastClaimedAt = block.timestamp;
+    unchecked {
+        stake.amount = 1;
+        stake.stakedAt = block.timestamp;
+        stake.lastClaimedAt = block.timestamp;
 
-    s.totalStakedPerToken[_tokenAddress] += 1;
+        s.totalStakedPerToken[_tokenAddress] += 1;
+    }
 }
 
 /**
@@ -232,11 +236,13 @@ function stakeERC1155(address _tokenAddress, uint256 _tokenId, uint256 _value) {
         revert StakingUnsupportedToken(_tokenAddress);
     }
 
-    stake.amount += _value;
-    stake.stakedAt = block.timestamp;
-    stake.lastClaimedAt = block.timestamp;
+    unchecked {
+        stake.amount += _value;
+        stake.stakedAt = block.timestamp;
+        stake.lastClaimedAt = block.timestamp;
 
-    s.totalStakedPerToken[_tokenAddress] += _value;
+        s.totalStakedPerToken[_tokenAddress] += _value;
+    }
 }
 
 /**

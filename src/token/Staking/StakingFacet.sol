@@ -531,11 +531,13 @@ contract StakingFacet {
             revert StakingUnsupportedToken(_tokenAddress);
         }
 
-        stake.amount += _value;
-        stake.stakedAt = block.timestamp;
-        stake.lastClaimedAt = block.timestamp;
+        unchecked {
+            stake.amount += _value;
+            stake.stakedAt = block.timestamp;
+            stake.lastClaimedAt = block.timestamp;
 
-        s.totalStakedPerToken[_tokenAddress] += _value;
+            s.totalStakedPerToken[_tokenAddress] += _value;
+        }
     }
 
     /**
@@ -553,11 +555,13 @@ contract StakingFacet {
             revert StakingUnsupportedToken(_tokenAddress);
         }
 
-        stake.amount = 1;
-        stake.stakedAt = block.timestamp;
-        stake.lastClaimedAt = block.timestamp;
+        unchecked {
+            stake.amount = 1;
+            stake.stakedAt = block.timestamp;
+            stake.lastClaimedAt = block.timestamp;
 
-        s.totalStakedPerToken[_tokenAddress] += 1;
+            s.totalStakedPerToken[_tokenAddress] += 1;
+        }
     }
 
     /**
@@ -576,11 +580,13 @@ contract StakingFacet {
             revert StakingUnsupportedToken(_tokenAddress);
         }
 
-        stake.amount += _value;
-        stake.stakedAt = block.timestamp;
-        stake.lastClaimedAt = block.timestamp;
+        unchecked {
+            stake.amount += _value;
+            stake.stakedAt = block.timestamp;
+            stake.lastClaimedAt = block.timestamp;
 
-        s.totalStakedPerToken[_tokenAddress] += _value;
+            s.totalStakedPerToken[_tokenAddress] += _value;
+        }
     }
 
     /**
