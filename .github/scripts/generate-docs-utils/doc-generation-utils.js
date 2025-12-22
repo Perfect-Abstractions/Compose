@@ -112,23 +112,21 @@ function findForgeDocFiles(solFilePath) {
 /**
  * Determine if a contract is an interface
  * Interfaces should be skipped from documentation generation
+ * Only checks the naming pattern (I[A-Z]) to avoid false positives
  * @param {string} title - Contract title/name
- * @param {string} content - File content (forge doc markdown)
+ * @param {string} content - File content (forge doc markdown) - unused but kept for API compatibility
  * @returns {boolean} True if this is an interface
  */
 function isInterface(title, content) {
-  // Check if title follows interface naming convention: starts with "I" followed by uppercase
+  // Only check if title follows interface naming convention: starts with "I" followed by uppercase
+  // This is the most reliable indicator and avoids false positives from content that mentions "interface"
   if (title && /^I[A-Z]/.test(title)) {
     return true;
   }
 
-  // Check if content indicates it's an interface
-  if (content) {
-    const firstLines = content.split('\n').slice(0, 20).join('\n').toLowerCase();
-    if (firstLines.includes('interface ') || firstLines.includes('*interface*')) {
-      return true;
-    }
-  }
+  // Removed content-based check to avoid false positives
+  // Facets and contracts often mention "interface" in their descriptions
+  // (e.g., "ERC-165 Standard Interface Detection Facet") which would incorrectly filter them
 
   return false;
 }

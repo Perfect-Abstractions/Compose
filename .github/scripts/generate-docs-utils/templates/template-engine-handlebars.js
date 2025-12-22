@@ -23,6 +23,13 @@ function registerHelpers() {
   // Register escape helpers
   Handlebars.registerHelper('escapeYaml', helpers.escapeYaml);
   Handlebars.registerHelper('escapeJsx', helpers.escapeJsx);
+  // Helper to escape JSX strings while preserving backticks for code formatting
+  Handlebars.registerHelper('escapeJsxPreserveBackticks', function(value) {
+    if (!value) return '';
+    const escaped = helpers.escapeJsxPreserveBackticks(value);
+    // Return as SafeString to prevent Handlebars from HTML-escaping backticks
+    return new Handlebars.SafeString(escaped);
+  });
   Handlebars.registerHelper('sanitizeMdx', helpers.sanitizeMdx);
   Handlebars.registerHelper('escapeMarkdownTable', helpers.escapeMarkdownTable);
   // Helper to escape value for JavaScript strings in JSX object literals

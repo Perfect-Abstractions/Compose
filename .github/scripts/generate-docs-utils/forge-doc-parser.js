@@ -129,6 +129,27 @@ function parseForgeDocMarkdown(content, filePath) {
           }
         } else if (currentSection === 'structs') {
           currentItem.definition = codeContent;
+        } else if (currentSection === 'stateVariables') {
+          // Extract type and value from constant definition
+          // Format: "bytes32 constant NAME = value;" or "bytes32 NAME = value;"
+          // Handle both with and without "constant" keyword
+          // Note: name is already known from the ### heading, so we just need type and value
+          const constantMatch = codeContent.match(/(\w+(?:\s*\d+)?)\s+(?:constant\s+)?\w+\s*=\s*(.+?)(?:\s*;)?$/);
+          if (constantMatch) {
+            currentItem.type = constantMatch[1];
+            currentItem.value = constantMatch[2].trim();
+          } else {
+            // Fallback: try to extract just the value part if it's a simple assignment
+            const simpleMatch = codeContent.match(/=\s*(.+?)(?:\s*;)?$/);
+            if (simpleMatch) {
+              currentItem.value = simpleMatch[1].trim();
+            }
+            // Try to extract type from the beginning
+            const typeMatch = codeContent.match(/^(\w+(?:\s*\d+)?)\s+/);
+            if (typeMatch) {
+              currentItem.type = typeMatch[1];
+            }
+          }
         }
         continue;
       }

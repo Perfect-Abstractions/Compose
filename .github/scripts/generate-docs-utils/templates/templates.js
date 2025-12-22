@@ -560,12 +560,33 @@ function prepareBaseData(data, position = 99) {
     hasStructs: (data.structs || []).length > 0,
     
     // State variables (for modules) - with fallback description generation
-    stateVariables: (data.stateVariables || []).map(v => ({
-      name: v.name,
-      type: v.type || '',
-      value: v.value || '',
-      description: v.description || generateStateVariableDescription(v.name, data.title),
-    })),
+    stateVariables: (data.stateVariables || []).map(v => {
+      const baseDescription = v.description || generateStateVariableDescription(v.name, data.title);
+      let description = baseDescription;
+      
+      // Append value to description if it exists and isn't already included
+      if (v.value && v.value.trim()) {
+        const valueStr = v.value.trim();
+        // Check if value is already in description (case-insensitive)
+        // Escape special regex characters in valueStr
+        const escapedValue = valueStr.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+        // Pattern matches "(Value: `...`)" or "(Value: ...)" format
+        const valuePattern = new RegExp('\\(Value:\\s*[`]?[^`)]*' + escapedValue + '[^`)]*[`]?\\)', 'i');
+        if (!valuePattern.test(description)) {
+          // Format the value for display with backticks
+          // Use string concatenation to avoid template literal backtick issues
+          const valuePart = '(Value: `' + valueStr + '`)';
+          description = baseDescription ? baseDescription + ' ' + valuePart : valuePart;
+        }
+      }
+      
+      return {
+        name: v.name,
+        type: v.type || '',
+        value: v.value || '',
+        description: description,
+      };
+    }),
     hasStateVariables: (data.stateVariables || []).length > 0,
     hasStorage: Boolean(data.storageInfo || (data.stateVariables && data.stateVariables.length > 0)),
   };

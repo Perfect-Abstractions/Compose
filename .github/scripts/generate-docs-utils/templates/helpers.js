@@ -73,6 +73,7 @@ function escapeJsx(str) {
     .replace(/\n/g, ' ')
     .replace(/\{/g, '&#123;')
     .replace(/\}/g, '&#125;')
+    // Don't escape backticks - they should be preserved for code formatting
     .trim();
 }
 
@@ -108,6 +109,7 @@ function escapeHtml(str) {
 /**
  * Escape string for use in JavaScript/JSX object literal values
  * Escapes quotes and backslashes for JavaScript strings (not HTML entities)
+ * Preserves backticks for code formatting
  * @param {string} str - String to escape
  * @returns {string} Escaped string safe for JavaScript string literals
  */
@@ -120,11 +122,35 @@ function escapeJsString(str) {
     .replace(/\n/g, '\\n')    // Escape newlines
     .replace(/\r/g, '\\r')    // Escape carriage returns
     .replace(/\t/g, '\\t');   // Escape tabs
+    // Note: Backticks are preserved for code formatting in descriptions
+}
+
+/**
+ * Escape string for JSX string attributes, preserving backticks for code formatting
+ * This is specifically for descriptions that may contain code with backticks
+ * @param {string} str - String to escape
+ * @returns {string} Escaped string safe for JSX string attributes with preserved backticks
+ */
+function escapeJsxPreserveBackticks(str) {
+  if (!str) return '';
+  
+  // Don't use sanitizeForMdx as it might HTML-escape things
+  // Just escape what's needed for JSX string attributes
+  return String(str)
+    .replace(/\\/g, '\\\\')  // Escape backslashes first
+    .replace(/"/g, '\\"')     // Escape double quotes for JSX strings
+    .replace(/'/g, "\\'")     // Escape single quotes
+    .replace(/\n/g, ' ')      // Replace newlines with spaces
+    .replace(/\{/g, '&#123;')  // Escape curly braces for JSX
+    .replace(/\}/g, '&#125;') // Escape curly braces for JSX
+    // Preserve backticks - don't escape them, they're needed for code formatting
+    .trim();
 }
 
 module.exports = {
   escapeYaml,
   escapeJsx,
+  escapeJsxPreserveBackticks,
   sanitizeForMdx,
   sanitizeMdx: sanitizeForMdx, // Alias for template usage
   toJsxExpression,
