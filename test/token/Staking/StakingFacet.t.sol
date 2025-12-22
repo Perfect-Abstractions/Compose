@@ -148,7 +148,6 @@ contract StakingFacetTest is Test {
 
         facet.addSupportedToken(address(rewardToken), true, false, false);
 
-        // Expect event
         vm.expectEmit(true, true, true, true);
         emit StakingParametersUpdated(
             BASE_APR,
@@ -160,7 +159,6 @@ contract StakingFacetTest is Test {
             MAX_STAKE_AMOUNT
         );
 
-        // Re-initialize to trigger event
         facet.setStakingParameters(
             BASE_APR,
             REWARD_DECAY_RATE,
@@ -177,18 +175,12 @@ contract StakingFacetTest is Test {
     function test_StakeERC20Token() public {
         vm.startPrank(alice);
 
-        // Approve the staking contract to spend Alice's tokens
         erc20Token.approve(address(facet), 500 ether);
 
-        // Stake tokens
         facet.stakeToken(address(erc20Token), 0, 500 ether);
 
-        // Verify staking state
         (uint256 amount, uint256 stakedAt, uint256 lastClaimedAt, uint256 accumulatedRewards) =
-            facet.getStakedTokenInfo(
-                address(erc20Token),
-                0 // Token ID is 0 for ERC-20 staking
-            );
+            facet.getStakedTokenInfo(address(erc20Token), 0);
 
         assertEq(amount, 500 ether);
         assertGt(stakedAt, 0);
@@ -201,13 +193,10 @@ contract StakingFacetTest is Test {
     function test_StakeERC721Token() public {
         vm.startPrank(bob);
 
-        // Approve the staking contract to transfer Bob's NFT
         erc721Token.approve(address(facet), TOKEN_ID_2);
 
-        // Stake NFT
         facet.stakeToken(address(erc721Token), TOKEN_ID_2, 1);
 
-        // Verify staking state
         (uint256 amount, uint256 stakedAt, uint256 lastClaimedAt, uint256 accumulatedRewards) =
             facet.getStakedTokenInfo(address(erc721Token), TOKEN_ID_2);
 
@@ -222,13 +211,10 @@ contract StakingFacetTest is Test {
     function test_StakeERC1155Token() public {
         vm.startPrank(alice);
 
-        // Approve the staking contract to transfer Alice's ERC-1155 tokens
         erc1155Token.setApprovalForAll(address(facet), true);
 
-        // Stake ERC-1155 tokens
         facet.stakeToken(address(erc1155Token), TOKEN_ID_1, 5);
 
-        // Verify staking state
         (uint256 amount, uint256 stakedAt, uint256 lastClaimedAt, uint256 accumulatedRewards) =
             facet.getStakedTokenInfo(address(erc1155Token), TOKEN_ID_1);
 
@@ -243,14 +229,11 @@ contract StakingFacetTest is Test {
     function test_StakeToken_EmitTokensStakedEvent() public {
         vm.startPrank(alice);
 
-        // Approve the staking contract to spend Alice's tokens
         erc20Token.approve(address(facet), 500 ether);
 
-        // Expect event
         vm.expectEmit(true, true, true, true);
         emit TokensStaked(alice, address(erc20Token), 0, 500 ether);
 
-        // Stake tokens
         facet.stakeToken(address(erc20Token), 0, 500 ether);
 
         vm.stopPrank();
@@ -292,7 +275,6 @@ contract StakingFacetTest is Test {
     function test_StakeERC721Token_RevertsIfNotOwner() public {
         vm.startPrank(bob);
 
-        // Bob tries to stake Alice's NFT
         vm.expectRevert(
             abi.encodeWithSelector(StakingFacet.StakingNotTokenOwner.selector, bob, address(erc721Token), TOKEN_ID_1)
         );
@@ -304,7 +286,6 @@ contract StakingFacetTest is Test {
     function test_StakeERC1155Token_RevertsIfNotEnoughBalance() public {
         vm.startPrank(bob);
 
-        // Bob tries to stake more ERC-1155 tokens than he owns
         vm.expectRevert(abi.encodeWithSelector(StakingFacet.StakingInsufficientBalance.selector, bob, 10, 20));
         facet.stakeToken(address(erc1155Token), TOKEN_ID_2, 20);
 
@@ -314,17 +295,13 @@ contract StakingFacetTest is Test {
     function test_UnstakeERC20Token() public {
         vm.startPrank(alice);
 
-        // Approve and stake tokens
         erc20Token.approve(address(facet), 500 ether);
         facet.stakeToken(address(erc20Token), 0, 500 ether);
 
-        // Warp time to pass cooldown period
         vm.warp(block.timestamp + COOLDOWN_PERIOD + 1);
 
-        // Unstake tokens
         facet.unstakeToken(address(erc20Token), 0);
 
-        // Verify staking state is reset
         (uint256 amount,,,) = facet.getStakedTokenInfo(address(erc20Token), 0);
         assertEq(amount, 0);
 
@@ -334,17 +311,13 @@ contract StakingFacetTest is Test {
     function test_UnstakeERC721Token() public {
         vm.startPrank(bob);
 
-        // Approve and stake NFT
         erc721Token.approve(address(facet), TOKEN_ID_2);
         facet.stakeToken(address(erc721Token), TOKEN_ID_2, 1);
 
-        // Warp time to pass cooldown period
         vm.warp(block.timestamp + COOLDOWN_PERIOD + 1);
 
-        // Unstake NFT
         facet.unstakeToken(address(erc721Token), TOKEN_ID_2);
 
-        // Verify staking state is reset
         (uint256 amount,,,) = facet.getStakedTokenInfo(address(erc721Token), TOKEN_ID_2);
         assertEq(amount, 0);
 
@@ -354,17 +327,13 @@ contract StakingFacetTest is Test {
     function test_UnstakeERC1155Token() public {
         vm.startPrank(alice);
 
-        // Approve and stake ERC-1155 tokens
         erc1155Token.setApprovalForAll(address(facet), true);
         facet.stakeToken(address(erc1155Token), TOKEN_ID_1, 5);
 
-        // Warp time to pass cooldown period
         vm.warp(block.timestamp + COOLDOWN_PERIOD + 1);
 
-        // Unstake ERC-1155 tokens
         facet.unstakeToken(address(erc1155Token), TOKEN_ID_1);
 
-        // Verify staking state is reset
         (uint256 amount,,,) = facet.getStakedTokenInfo(address(erc1155Token), TOKEN_ID_1);
         assertEq(amount, 0);
 
@@ -374,18 +343,14 @@ contract StakingFacetTest is Test {
     function test_UnstakeToken_EmitTokensUnstakedEvent() public {
         vm.startPrank(alice);
 
-        // Approve and stake tokens
         erc20Token.approve(address(facet), 500 ether);
         facet.stakeToken(address(erc20Token), 0, 500 ether);
 
-        // Warp time to pass cooldown period
         vm.warp(block.timestamp + COOLDOWN_PERIOD + 1);
 
-        // Expect event
         vm.expectEmit(true, true, true, true);
         emit TokensUnstaked(alice, address(erc20Token), 0, 500 ether);
 
-        // Unstake tokens
         facet.unstakeToken(address(erc20Token), 0);
 
         vm.stopPrank();
@@ -431,7 +396,7 @@ contract StakingFacetTest is Test {
 
         uint256 calculatedRewards = facet.calculateRewardsForToken(address(erc20Token), 0);
 
-        assertGt(calculatedRewards, 0); //  1000 ether * 10% * 1 year = 100 ether
+        assertGt(calculatedRewards, 0);
         vm.stopPrank();
     }
 
@@ -450,16 +415,15 @@ contract StakingFacetTest is Test {
         (uint256 amount, uint256 stakedAt, uint256 lastClaimedAt, uint256 accumulatedRewards) =
             facet.getStakedTokenInfo(address(erc20Token), 0);
 
-        assertGt(rewardsBalanceAfter, rewardsBalanceBefore); // Alice should have received rewards
+        assertGt(rewardsBalanceAfter, rewardsBalanceBefore);
         assertEq(accumulatedRewards, rewardsBalanceAfter - rewardsBalanceBefore);
         assertEq(lastClaimedAt, block.timestamp);
-        assertEq(amount, 1000 ether); // Staked amount should remain unchanged
+        assertEq(amount, 1000 ether);
         vm.stopPrank();
     }
 
-    // Fuzz Tests for ERC-20 Staking
     function testFuzz_StakeAmount(uint256 stakeAmount) public {
-        stakeAmount = bound(stakeAmount, 1e18, 1_000_000e18); // Clamp between 1 and 1,000,000 tokens
+        stakeAmount = bound(stakeAmount, 1e18, 1_000_000e18);
 
         vm.startPrank(owner);
         facet.addSupportedToken(address(erc20Token), true, false, false);
@@ -479,9 +443,8 @@ contract StakingFacetTest is Test {
         vm.stopPrank();
     }
 
-    // Fuzz Test for long staking durations
     function testFuzz_RewardAfterTime(uint256 daysStaked) public {
-        daysStaked = bound(daysStaked, 1, 3650); // 1 day to 10 years
+        daysStaked = bound(daysStaked, 1, 3650);
 
         vm.startPrank(owner);
         facet.addSupportedToken(address(erc20Token), true, false, false);
@@ -500,16 +463,16 @@ contract StakingFacetTest is Test {
         uint256 rewards = facet.calculateRewardsForToken(address(erc20Token), 0);
 
         assertGt(rewards, 0);
-        assertLe(rewards, 1_000_000 ether); // Should not exceed total reward pool
+        assertLe(rewards, 1_000_000 ether);
         vm.stopPrank();
     }
 
     function testFuzz_RewardDecay(uint256 stakedSeconds, uint256 decayRate, uint256 compoundFreq) public {
         vm.startPrank(owner);
-        // Clamp fuzzed values to safe bounds
-        stakedSeconds = bound(stakedSeconds, 1 days, 3650 days); // 1 day to 10 years
-        decayRate = bound(decayRate, 0.5e18, 1.5e18); // 50% to 150%
-        compoundFreq = bound(compoundFreq, 1 days, 365 days); // 1 day to 1 year
+
+        stakedSeconds = bound(stakedSeconds, 1 days, 3650 days);
+        decayRate = bound(decayRate, 0.5e18, 1.5e18);
+        compoundFreq = bound(compoundFreq, 1 days, 365 days);
 
         facet.addSupportedToken(address(erc20Token), true, false, false);
         facet.addSupportedToken(address(rewardToken), true, false, false);
@@ -547,8 +510,8 @@ contract StakingFacetTest is Test {
     }
 
     function testFuzz_StakeUnstake(uint256 stakeAmount, uint256 waitDays) public {
-        stakeAmount = bound(stakeAmount, 1e18, 1_000e18); // 1 to 1,000 tokens
-        waitDays = bound(waitDays, 1, 365); // 1 to 365 days
+        stakeAmount = bound(stakeAmount, 1e18, 1_000e18);
+        waitDays = bound(waitDays, 1, 365);
 
         vm.startPrank(owner);
         facet.addSupportedToken(address(erc20Token), true, false, false);
@@ -581,30 +544,30 @@ contract StakingFacetTest is Test {
     }
 
     function test_FixedPoint_IntegerPower() public {
-        uint256 result = facet.rPow(2e18, 3); // 2^3 = 8
+        uint256 result = facet.rPow(2e18, 3);
         assertEq(result, 8e18);
 
-        result = facet.rPow(5e18, 0); // 5^0 = 1
+        result = facet.rPow(5e18, 0);
         assertEq(result, 1e18);
 
-        result = facet.rPow(1e18, 10); // 1^10 = 1
+        result = facet.rPow(1e18, 10);
         assertEq(result, 1e18);
 
-        result = facet.rPow(3e18, 4); // 3^4 = 81
+        result = facet.rPow(3e18, 4);
         assertEq(result, 81e18);
     }
 
     function test_FixedPoint_Multiply() public {
-        uint256 result = facet.rMul(2e18, 3e18); // 2 * 3 = 6
+        uint256 result = facet.rMul(2e18, 3e18);
         assertEq(result, 6e18);
 
-        result = facet.rMul(5e18, 0e18); // 5 * 0 = 0
+        result = facet.rMul(5e18, 0e18);
         assertEq(result, 0);
 
-        result = facet.rMul(1e18, 10e18); // 1 * 10 = 10
+        result = facet.rMul(1e18, 10e18);
         assertEq(result, 10e18);
 
-        result = facet.rMul(3e18, 4e18); // 3 * 4 = 12
+        result = facet.rMul(3e18, 4e18);
         assertEq(result, 12e18);
     }
 }
