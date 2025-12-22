@@ -170,18 +170,6 @@ contract StakingFacet {
     error StakingInsufficientBalance(address _sender, uint256 _balance, uint256 _needed);
 
     /**
-     * @notice Thrown when the sender address is invalid (e.g., zero address).
-     * @param _sender Invalid sender address.
-     */
-    error StakingInvalidSender(address _sender);
-
-    /**
-     * @notice Thrown when the receiver address is invalid (e.g., zero address).
-     * @param _receiver Invalid receiver address.
-     */
-    error StakingInvalidReceiver(address _receiver);
-
-    /**
      * @notice Thrown when a spender tries to use more than the approved allowance.
      * @param _spender Address attempting to spend.
      * @param _allowance Current allowance for the spender.
@@ -248,23 +236,6 @@ contract StakingFacet {
         address indexed staker, address indexed tokenAddress, uint256 indexed tokenId, uint256 rewardAmount
     );
 
-    /**
-     * @notice Emitted when an approval is made for a spender by an owner.
-     * @param _owner The address granting the allowance.
-     * @param _spender The address receiving the allowance.
-     * @param _oldValue The previous allowance amount.
-     * @param _newValue The new allowance amount.
-     */
-    event Approval(address indexed _owner, address indexed _spender, uint256 _oldValue, uint256 _newValue);
-
-    /**
-     * @notice Emitted when tokens are transferred between two addresses.
-     * @param _from Address sending the tokens.
-     * @param _to Address receiving the tokens.
-     * @param _value Amount of tokens transferred.
-     */
-    event Transfer(address indexed _from, address indexed _to, uint256 _value);
-
     bytes32 constant STAKING_STORAGE_POSITION = keccak256("compose.staking");
 
     /**
@@ -320,6 +291,74 @@ contract StakingFacet {
         assembly {
             s.slot := position
         }
+    }
+
+    /**
+     * @notice An admin function to support a new token type for staking.
+     * @param _tokenAddress The address of the token to support.
+     * @param _isERC20 Boolean indicating if the token is ERC-20.
+     * @param _isERC721 Boolean indicating if the token is ERC-721.
+     * @param _isERC1155 Boolean indicating if the token is ERC-1155
+     * @dev This function should be restricted to admin use only.
+     */
+    function addSupportedToken(address _tokenAddress, bool _isERC20, bool _isERC721, bool _isERC1155)
+        external
+        returns (bool)
+    {
+        StakingStorage storage s = getStorage();
+        s.supportedTokens[_tokenAddress] = TokenType({isERC20: _isERC20, isERC721: _isERC721, isERC1155: _isERC1155});
+        emit SupportedTokenAdded(_tokenAddress, _isERC20, _isERC721, _isERC1155);
+        return true;
+    }
+
+    /**
+     * @notice An admin function to set staking parameters.
+     * @param _baseAPR The base annual percentage rate for rewards.
+     * @param _rewardDecayRate The decay rate for rewards over time.
+     * @param _compoundFrequency The frequency at which rewards are compounded.
+     * @param _rewardToken The address of the token used for rewards.
+     * @param _cooldownPeriod The cooldown period before unstaking is allowed.
+     * @param _minStakeAmount The minimum amount required to stake.
+     * @param _maxStakeAmount The maximum amount allowed to stake.
+     * @dev This function should be restricted to admin use only.
+     */
+    function setStakingParameters(
+        uint256 _baseAPR,
+        uint256 _rewardDecayRate,
+        uint256 _compoundFrequency,
+        address _rewardToken,
+        uint256 _cooldownPeriod,
+        uint256 _minStakeAmount,
+        uint256 _maxStakeAmount
+    ) external {
+        StakingStorage storage s = getStorage();
+
+        bool isSupported = isTokenSupported(_rewardToken);
+        if (!isSupported) {
+            revert StakingUnsupportedToken(_rewardToken);
+        }
+
+        if (_minStakeAmount == 0 || _maxStakeAmount == 0) {
+            revert StakingZeroStakeAmount();
+        }
+
+        s.baseAPR = _baseAPR;
+        s.rewardDecayRate = _rewardDecayRate;
+        s.compoundFrequency = _compoundFrequency;
+        s.rewardToken = _rewardToken;
+        s.cooldownPeriod = _cooldownPeriod;
+        s.minStakeAmount = _minStakeAmount;
+        s.maxStakeAmount = _maxStakeAmount;
+
+        emit StakingParametersUpdated(
+            _baseAPR,
+            _rewardDecayRate,
+            _compoundFrequency,
+            _rewardToken,
+            _cooldownPeriod,
+            _minStakeAmount,
+            _maxStakeAmount
+        );
     }
 
     /**
@@ -411,74 +450,6 @@ contract StakingFacet {
         emit TokensUnstaked(msg.sender, _tokenAddress, _tokenId, amount);
 
         delete s.stakedTokens[msg.sender][_tokenAddress][_tokenId];
-    }
-
-    /**
-     * @notice An admin function to support a new token type for staking.
-     * @param _tokenAddress The address of the token to support.
-     * @param _isERC20 Boolean indicating if the token is ERC-20.
-     * @param _isERC721 Boolean indicating if the token is ERC-721.
-     * @param _isERC1155 Boolean indicating if the token is ERC-1155
-     * @dev This function should be restricted to admin use only.
-     */
-    function addSupportedToken(address _tokenAddress, bool _isERC20, bool _isERC721, bool _isERC1155)
-        external
-        returns (bool)
-    {
-        StakingStorage storage s = getStorage();
-        s.supportedTokens[_tokenAddress] = TokenType({isERC20: _isERC20, isERC721: _isERC721, isERC1155: _isERC1155});
-        emit SupportedTokenAdded(_tokenAddress, _isERC20, _isERC721, _isERC1155);
-        return true;
-    }
-
-    /**
-     * @notice An admin function to set staking parameters.
-     * @param _baseAPR The base annual percentage rate for rewards.
-     * @param _rewardDecayRate The decay rate for rewards over time.
-     * @param _compoundFrequency The frequency at which rewards are compounded.
-     * @param _rewardToken The address of the token used for rewards.
-     * @param _cooldownPeriod The cooldown period before unstaking is allowed.
-     * @param _minStakeAmount The minimum amount required to stake.
-     * @param _maxStakeAmount The maximum amount allowed to stake.
-     * @dev This function should be restricted to admin use only.
-     */
-    function setStakingParameters(
-        uint256 _baseAPR,
-        uint256 _rewardDecayRate,
-        uint256 _compoundFrequency,
-        address _rewardToken,
-        uint256 _cooldownPeriod,
-        uint256 _minStakeAmount,
-        uint256 _maxStakeAmount
-    ) external {
-        StakingStorage storage s = getStorage();
-
-        bool isSupported = isTokenSupported(_rewardToken);
-        if (!isSupported) {
-            revert StakingUnsupportedToken(_rewardToken);
-        }
-
-        if (_minStakeAmount == 0 || _maxStakeAmount == 0) {
-            revert StakingZeroStakeAmount();
-        }
-
-        s.baseAPR = _baseAPR;
-        s.rewardDecayRate = _rewardDecayRate;
-        s.compoundFrequency = _compoundFrequency;
-        s.rewardToken = _rewardToken;
-        s.cooldownPeriod = _cooldownPeriod;
-        s.minStakeAmount = _minStakeAmount;
-        s.maxStakeAmount = _maxStakeAmount;
-
-        emit StakingParametersUpdated(
-            _baseAPR,
-            _rewardDecayRate,
-            _compoundFrequency,
-            _rewardToken,
-            _cooldownPeriod,
-            _minStakeAmount,
-            _maxStakeAmount
-        );
     }
 
     /**
