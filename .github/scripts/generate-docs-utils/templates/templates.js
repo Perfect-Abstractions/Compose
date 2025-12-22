@@ -252,6 +252,20 @@ function filterAndNormalizeParams(params, functionName) {
 }
 
 /**
+ * Check if a function is internal by examining its signature
+ * @param {object} fn - Function data with signature property
+ * @returns {boolean} True if function is internal
+ */
+function isInternalFunction(fn) {
+  if (!fn || !fn.signature) return false;
+  
+  // Check if signature contains "internal" as a whole word
+  // Use word boundary regex to avoid matching "internalTransferFrom" etc.
+  const internalPattern = /\binternal\b/;
+  return internalPattern.test(fn.signature);
+}
+
+/**
  * Prepare function data for template rendering (shared between facet and module)
  * @param {object} fn - Function data
  * @param {string} sourceFilePath - Path to the Solidity source file
@@ -602,6 +616,9 @@ function prepareFacetData(data, position = 99) {
   const baseData = prepareBaseData(data, position);
   const sourceFilePath = data.sourceFilePath;
   
+  // Filter out internal functions for facets (they act as pre-deploy logic blocks)
+  const publicFunctions = (data.functions || []).filter(fn => !isInternalFunction(fn));
+  
   return {
     ...baseData,
     // Contract type flags for unified template
@@ -609,8 +626,9 @@ function prepareFacetData(data, position = 99) {
     isModule: false,
     contractType: 'facet',
     // Functions with APIReference-compatible format (no source extraction for facets)
-    functions: (data.functions || []).map(fn => prepareFunctionData(fn, sourceFilePath, false)),
-    hasFunctions: (data.functions || []).length > 0,
+    // Only include non-internal functions since facets are pre-deploy logic blocks
+    functions: publicFunctions.map(fn => prepareFunctionData(fn, sourceFilePath, false)),
+    hasFunctions: publicFunctions.length > 0,
   };
 }
 
