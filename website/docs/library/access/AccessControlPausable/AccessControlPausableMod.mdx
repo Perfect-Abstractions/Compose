@@ -1,8 +1,8 @@
 ---
 sidebar_position: 99
 title: "AccessControlPausableMod"
-description: "Manages role-based access control with pausing capabilities."
-gitSource: "https://github.com/maxnorm/Compose/blob/5736454575f67743dd05ba6cb1265bc06d0c1422/src/access/AccessControlPausable/AccessControlPausableMod.sol"
+description: "Manage role-based access control with pause functionality."
+gitSource: "https://github.com/Perfect-Abstractions/Compose/tree/main/src/access/AccessControlPausable/AccessControlPausableMod.sol"
 ---
 
 import DocSubtitle  from '@site/src/components/docs/DocSubtitle';
@@ -21,13 +21,13 @@ import GradientText from '@site/src/components/ui/GradientText';
 import GradientButton from '@site/src/components/ui/GradientButton';
 
 <DocSubtitle>
-Manages role-based access control with pausing capabilities.
+Manage role-based access control with pause functionality.
 </DocSubtitle>
 
 <Callout type="info" title="Key Features">
-- Role-specific pausing: Temporarily disable functionality tied to specific roles.
-- Permission enforcement: `requireRoleNotPaused` checks both role membership and pause status.
-- Diamond storage integration: Leverages the diamond's storage for persistent pause states.
+- Role-specific pausing: Allows granular control over which roles can execute functions.
+- Pause/unpause functionality: Enables temporary suspension and resumption of role-based operations.
+- Integrated access control checks: `requireRoleNotPaused` verifies both role membership and pause status.
 </Callout>
 
 <Callout type="info" title="Module Usage">
@@ -36,7 +36,7 @@ This module provides internal functions for use in your custom facets. Import it
 
 ## Overview
 
-This module enhances role-based access control by introducing the ability to pause specific roles. This allows for temporarily halting operations associated with a role without revoking permissions. It integrates seamlessly with the diamond's storage pattern, making paused states visible and manageable across facets.
+This module extends role-based access control by introducing pause functionality for specific roles. It allows administrators to temporarily halt operations associated with a role, enhancing safety and control during critical operations or upgrades. This composable module integrates seamlessly into the Compose diamond storage pattern.
 
 ---
 
@@ -330,22 +330,28 @@ error AccessControlUnauthorizedAccount(address _account, bytes32 _role);
 <ExpandableCode language="solidity" maxLines={20} title="Example Implementation">
 {`pragma solidity ^0.8.30;
 
-import {IAccessControlPausableMod} from "./interfaces/IAccessControlPausableMod.sol";
+import {IAccessControlPausableMod} from "@compose/modules/AccessControlPausableMod.sol";
 
 contract MyFacet {
-    IAccessControlPausableMod public constant ACCESS_CONTROL_PAUSABLE_MOD = IAccessControlPausableMod(<address>);
+    IAccessControlPausableMod internal accessControlPausableMod;
 
-    function _someProtectedAction() internal view {
-        ACCESS_CONTROL_PAUSABLE_MOD.requireRoleNotPaused(msg.sender, IAccessControlBase.Role.OPERATOR);
-        // ... proceed with action
+    function initialize(address _accessControlPausableModAddress) external {
+        accessControlPausableMod = IAccessControlPausableMod(_accessControlPausableModAddress);
     }
 
-    function _pauseOperatorRole() external {
-        ACCESS_CONTROL_PAUSABLE_MOD.pauseRole(IAccessControlBase.Role.OPERATOR);
+    function grantRoleAndPause(bytes32 _role) external {
+        // Assuming role granting is handled by another facet or module
+        // accessControlPausableMod.grantRole(_role, msg.sender); // Example, actual grant function may differ
+        accessControlPausableMod.pauseRole(_role);
     }
 
-    function _unpauseOperatorRole() external {
-        ACCESS_CONTROL_PAUSABLE_MOD.unpauseRole(IAccessControlBase.Role.OPERATOR);
+    function performSensitiveOperation(bytes32 _role) external {
+        accessControlPausableMod.requireRoleNotPaused(_role, msg.sender);
+        // Proceed with operation
+    }
+
+    function unpauseSensitiveRole(bytes32 _role) external {
+        accessControlPausableMod.unpauseRole(_role);
     }
 }`}
 </ExpandableCode>
@@ -353,19 +359,19 @@ contract MyFacet {
 ## Best Practices
 
 <Callout type="tip" title="Best Practice">
-- Use `requireRoleNotPaused` to enforce role presence and ensure the role is not currently paused before executing sensitive actions.
-- Implement pausing and unpausing logic carefully, ensuring only authorized entities can call these functions.
-- Be aware that pausing a role affects all facets that rely on that role's active status.
+- Ensure `requireRoleNotPaused` is called before critical operations to prevent execution when a role is paused.
+- Implement role management (granting/revoking) in a separate, dedicated facet for clarity and separation of concerns.
+- Use custom errors `AccessControlRolePaused` and `AccessControlUnauthorizedAccount` for clear revert reasons.
 </Callout>
 
 ## Integration Notes
 
 <Callout type="success" title="Shared Storage">
-This module interacts with the diamond's storage to track the paused status of roles. Facets can query `isRolePaused` or use `requireRoleNotPaused` to ensure operations are permitted. The `AccessControlPausableMod` contract is expected to reside at a known address within the diamond's facet registry. Changes to role pause states are immediately reflected across all interacting facets.
+The `AccessControlPausableMod` module manages its state within its own storage slots, separate from other facets. Facets interacting with this module must obtain its address and call its functions. The `requireRoleNotPaused` function enforces invariants by reverting if the calling account lacks the specified role or if the role is currently paused. The module's storage is accessible via `getAccessControlStorage` and `getStorage` for auditing or debugging purposes, but direct modification is not recommended.
 </Callout>
 
 <div style={{marginTop: "3rem", paddingTop: "2rem", borderTop: "1px solid var(--ifm-color-emphasis-200)"}}>
   <WasThisHelpful pageId="AccessControlPausableMod" />
 </div>
 
-<LastUpdated date="2025-12-21T22:04:24.168Z" />
+<LastUpdated date="2025-12-23T00:00:15.279Z" />

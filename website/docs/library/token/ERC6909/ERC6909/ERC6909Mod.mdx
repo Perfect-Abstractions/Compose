@@ -1,8 +1,8 @@
 ---
 sidebar_position: 99
 title: "ERC6909Mod"
-description: "Implements ERC-6909 minimal multi-token functionality."
-gitSource: "https://github.com/maxnorm/Compose/blob/5736454575f67743dd05ba6cb1265bc06d0c1422/src/token/ERC6909/ERC6909/ERC6909Mod.sol"
+description: "Implements ERC-6909 minimal multi-token logic."
+gitSource: "https://github.com/Perfect-Abstractions/Compose/tree/main/src/token/ERC6909/ERC6909/ERC6909Mod.sol"
 ---
 
 import DocSubtitle  from '@site/src/components/docs/DocSubtitle';
@@ -21,13 +21,13 @@ import GradientText from '@site/src/components/ui/GradientText';
 import GradientButton from '@site/src/components/ui/GradientButton';
 
 <DocSubtitle>
-Implements ERC-6909 minimal multi-token functionality.
+Implements ERC-6909 minimal multi-token logic.
 </DocSubtitle>
 
 <Callout type="info" title="Key Features">
-- Supports standard ERC-6909 token operations (transfer, approve, burn, mint).
-- Enables operator functionality to bypass allowance checks.
-- Provides direct access to internal storage via `getStorage` for advanced interactions.
+- Supports standard ERC-6909 token operations: mint, burn, transfer, approve.
+- Manages operator relationships for delegated spending.
+- Utilizes the diamond storage pattern for state management via `getStorage`.
 </Callout>
 
 <Callout type="info" title="Module Usage">
@@ -36,7 +36,7 @@ This module provides internal functions for use in your custom facets. Import it
 
 ## Overview
 
-This module provides the core logic and storage for the ERC-6909 standard, enabling diamonds to manage multiple token types with standard transfer, approval, and operator functionalities. It adheres to Compose's storage pattern for safe upgrades and composability.
+The ERC6909Mod provides the core logic and storage structure for implementing the ERC-6909 standard. It enables managing multiple token types with standard transfer, approval, and operator functionalities within a diamond. This module ensures composability by adhering to the diamond storage pattern for its state.
 
 ---
 
@@ -477,59 +477,58 @@ error ERC6909InvalidSpender(address _spender);
 <ExpandableCode language="solidity" maxLines={20} title="Example Implementation">
 {`pragma solidity ^0.8.30;
 
-import {IERC6909Mod} from "./interfaces/IERC6909Mod.sol";
+import {IERC6909Mod} from "./IERC6909Mod.sol";
+import {ERC6909Storage} from "./ERC6909Storage.sol";
 
-contract MyERC6909Facet {
-    address immutable DIAMOND_ADDRESS;
-    IERC6909Mod private constant _erc6909 = IERC6909Mod(DIAMOND_ADDRESS);
+contract ERC6909Facet {
+    // Assume STORAGE_POSITION is defined and accessible
+    uint256 private constant STORAGE_POSITION = 1; // Example slot
 
-    // ... other facet storage
-
-    constructor(address diamondAddress) {
-        DIAMOND_ADDRESS = diamondAddress;
-    }
-
-    /**
-     * @notice Transfers tokens from the caller.
-     * @param _id The token ID to transfer.
-     * @param _from The address to transfer from.
-     * @param _to The address to transfer to.
-     * @param _amount The amount to transfer.
-     */
-    function transferFrom(uint256 _id, address _from, address _to, uint256 _amount) external {
-        _erc6909.transfer(_id, _from, _to, _amount);
-    }
-
-    /**
-     * @notice Approves a spender for a token ID.
-     * @param _id The token ID.
-     * @param _spender The address to approve.
-     * @param _amount The amount to approve.
-     */
     function approve(uint256 _id, address _spender, uint256 _amount) external {
-        _erc6909.approve(_id, _spender, _amount);
+        IERC6909Mod(address(this)).approve(_id, _spender, _amount);
     }
 
-    // ... other functions
+    function transfer(address _from, address _to, uint256 _id, uint256 _amount) external {
+        IERC6909Mod(address(this)).transfer(_from, _to, _id, _amount);
+    }
+
+    function mint(address _to, uint256 _id, uint256 _amount) external {
+        IERC6909Mod(address(this)).mint(_to, _id, _amount);
+    }
+
+    function burn(address _from, uint256 _id, uint256 _amount) external {
+        IERC6909Mod(address(this)).burn(_from, _id, _amount);
+    }
+
+    function setOperator(address _operator, bool _approved) external {
+        IERC6909Mod(address(this)).setOperator(_operator, _approved);
+    }
+
+    function getStorage() internal view returns (ERC6909Storage storage s) {
+        bytes32 position = keccak256(abi.encodePacked(STORAGE_POSITION));
+        assembly {
+            s := sload(position)
+        }
+    }
 }`}
 </ExpandableCode>
 
 ## Best Practices
 
 <Callout type="tip" title="Best Practice">
-- Ensure the `ERC6909Mod` facet is correctly initialized with the appropriate storage slot.
-- Handle custom errors like `ERC6909InsufficientBalance` and `ERC6909InsufficientAllowance` gracefully in your facet logic.
-- Be aware that operators bypass allowance checks for transfers, so manage operator roles carefully.
+- Ensure the `ERC6909Storage` struct is correctly defined and placed in storage according to the `STORAGE_POSITION`.
+- Handle `ERC6909InsufficientAllowance` and `ERC6909InsufficientBalance` errors appropriately in calling facets.
+- Be mindful of operator status when performing transfers, as it bypasses allowance checks.
 </Callout>
 
 ## Integration Notes
 
 <Callout type="success" title="Shared Storage">
-The `ERC6909Mod` relies on a dedicated storage slot for its internal `ERC6909Storage` struct. Facets interacting with this module should use the `getStorage` function to obtain a pointer to this struct. Ensure the `ERC6909Mod` facet is added to the diamond and its functions are correctly routed. The module's operations directly modify the shared diamond storage.
+The ERC6909Mod relies on a specific storage slot defined by `STORAGE_POSITION` to hold its `ERC6909Storage` struct. Facets interacting with this module must ensure this slot is correctly allocated and that the `ERC6909Storage` struct is compatible. The `getStorage` function provides an assembly-based method to access this struct, maintaining the diamond's storage pattern. Any changes to the ERC6909Storage struct layout in future versions must be handled with care to maintain backward compatibility, especially regarding trailing fields.
 </Callout>
 
 <div style={{marginTop: "3rem", paddingTop: "2rem", borderTop: "1px solid var(--ifm-color-emphasis-200)"}}>
   <WasThisHelpful pageId="ERC6909Mod" />
 </div>
 
-<LastUpdated date="2025-12-21T22:05:36.105Z" />
+<LastUpdated date="2025-12-23T00:01:27.212Z" />

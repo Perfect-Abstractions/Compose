@@ -1,8 +1,8 @@
 ---
 sidebar_position: 99
 title: "AccessControlPausableFacet"
-description: "Manage roles and pausing functionality within a diamond."
-gitSource: "https://github.com/maxnorm/Compose/blob/5736454575f67743dd05ba6cb1265bc06d0c1422/src/access/AccessControlPausable/AccessControlPausableFacet.sol"
+description: "Manage role pausing and access control within a diamond."
+gitSource: "https://github.com/Perfect-Abstractions/Compose/tree/main/src/access/AccessControlPausable/AccessControlPausableFacet.sol"
 ---
 
 import DocSubtitle  from '@site/src/components/docs/DocSubtitle';
@@ -21,18 +21,18 @@ import GradientText from '@site/src/components/ui/GradientText';
 import GradientButton from '@site/src/components/ui/GradientButton';
 
 <DocSubtitle>
-Manage roles and pausing functionality within a diamond.
+Manage role pausing and access control within a diamond.
 </DocSubtitle>
 
 <Callout type="info" title="Key Features">
-- Role-specific pausing and unpausing capabilities.
-- Integration with existing diamond access control mechanisms.
-- Prevents execution of role-restricted functions when a role is paused.
+- Allows temporary suspension of specific roles.
+- Integrates seamlessly with existing Compose access control mechanisms.
+- Provides explicit revert reasons for unauthorized access and paused roles.
 </Callout>
 
 ## Overview
 
-This facet provides granular control over role-based access and the ability to temporarily pause specific roles. It integrates with the diamond's access control system to enforce role restrictions and prevent execution when roles are paused, enhancing security and operational flexibility.
+This facet provides granular control over role execution by allowing roles to be temporarily paused. It integrates with the diamond's access control system, ensuring that only authorized accounts can perform actions and that these actions can be suspended when a role is paused.
 
 ---
 
@@ -76,50 +76,6 @@ This facet provides granular control over role-based access and the ability to t
 
 ## Functions
 
-### getAccessControlStorage
-
-Returns the storage for AccessControl.
-
-<ExpandableCode language="solidity" maxLines={8}>
-{`function getAccessControlStorage() internal pure returns (AccessControlStorage storage s);`}
-</ExpandableCode>
-
-**Returns:**
-
-<PropertyTable
-  properties={[
-    {
-      name: "s",
-      type: "AccessControlStorage",
-      description: "The AccessControl storage struct."
-    }
-  ]}
-  showRequired={false}
-/>
-
----
-### getStorage
-
-Returns the storage for AccessControlPausable.
-
-<ExpandableCode language="solidity" maxLines={8}>
-{`function getStorage() internal pure returns (AccessControlPausableStorage storage s);`}
-</ExpandableCode>
-
-**Returns:**
-
-<PropertyTable
-  properties={[
-    {
-      name: "s",
-      type: "AccessControlPausableStorage",
-      description: "The AccessControlPausable storage struct."
-    }
-  ]}
-  showRequired={false}
-/>
-
----
 ### isRolePaused
 
 Returns if a role is paused.
@@ -326,34 +282,31 @@ error AccessControlRolePaused(bytes32 _role);
 <ExpandableCode language="solidity" maxLines={20} title="Example Implementation">
 {`pragma solidity ^0.8.30;
 
-import {IAccessControlPausableFacet} from "@compose/diamond/facets/AccessControlPausable/IAccessControlPausableFacet.sol";
+import {IDiamondCut, IDiamondLoupe} from "@compose/diamond-contracts/contracts/interfaces/IDiamond.sol";
 
-contract ExampleUsage {
-    IAccessControlPausableFacet accessControlPausableFacet;
+import {AccessControlPausableFacet} from "@compose/diamond-contracts/contracts/facets/AccessControl/AccessControlPausableFacet.sol";
 
-    constructor(address _diamondAddress) {
-        // Assume accessControlPausableFacet is a registered facet on the diamond
-        accessControlPausableFacet = IAccessControlPausableFacet(_diamondAddress);
-    }
+contract DeployDiamond {
+    // ... deployment setup ...
 
-    function checkRolePaused(bytes32 _role) public view {
-        bool paused = accessControlPausableFacet.isRolePaused(_role);
-        // Use 'paused' variable
-    }
+    function deploy() public {
+        // ... deploy other facets ...
 
-    function pauseMyRole(bytes32 _role) public {
-        // Caller must be the admin of _role
-        accessControlPausableFacet.pauseRole(_role);
-    }
+        AccessControlPausableFacet accessControlPausableFacet = new AccessControlPausableFacet();
 
-    function unpauseMyRole(bytes32 _role) public {
-        // Caller must be the admin of _role
-        accessControlPausableFacet.unpauseRole(_role);
-    }
+        // Add AccessControlPausableFacet to the diamond
+        // ... diamond cut call ...
 
-    function ensureRoleActive(bytes32 _role) public {
-        // Reverts if caller is not authorized for _role or if _role is paused
-        accessControlPausableFacet.requireRoleNotPaused(_role);
+        // Example: Pausing a role
+        bytes32 pauseRoleSelector = AccessControlPausableFacet.pauseRole.selector;
+        // Assuming 'adminAccount' is the caller and has the admin role for the target role
+        (bool success, ) = address(diamond).call(abi.encodeWithSelector(pauseRoleSelector, _roleToPause));
+        require(success, "Failed to pause role");
+
+        // Example: Checking if a role is paused
+        bytes4 isRolePausedSelector = AccessControlPausableFacet.isRolePaused.selector;
+        (success, ) = address(diamond).call(abi.encodeWithSelector(isRolePausedSelector, _roleToCheck));
+        // ... check result ...
     }
 }`}
 </ExpandableCode>
@@ -361,19 +314,19 @@ contract ExampleUsage {
 ## Best Practices
 
 <Callout type="tip" title="Best Practice">
-- Ensure the `AccessControlPausableFacet` is correctly initialized and its functions are accessible via the diamond proxy.
-- Grant the `PAUSER_ROLE` and `ROLE_ADMIN_ROLE` (or equivalent roles defined by your access control implementation) judiciously, as they control pausing and unpausing operations.
-- Use `requireRoleNotPaused` proactively within other facets to prevent execution when a role's functionality is temporarily suspended.
+- Integrate this facet into your diamond to add role-specific pausing capabilities to your access control.
+- Ensure the caller has the appropriate administrative role before attempting to pause or unpause a role.
+- Use `requireRoleNotPaused` within your facet functions that are subject to role pausing to enforce the active state of a role.
 </Callout>
 
 ## Security Considerations
 
 <Callout type="warning" title="Security">
-Access to `pauseRole` and `unpauseRole` functions is restricted to the administrative role of the specific role being managed. Ensure that the administrative roles are themselves secured appropriately. Reentrancy is not a direct concern for `pauseRole` and `unpauseRole` as they only modify state, but calls within other facets that rely on `requireRoleNotPaused` should be audited for reentrancy risks.
+Access to `pauseRole` and `unpauseRole` is restricted to the administrator of the specific role, preventing unauthorized pausing or unpausing. The `requireRoleNotPaused` function ensures that calls to role-protected functions will revert if the role is currently paused, preventing unintended execution.
 </Callout>
 
 <div style={{marginTop: "3rem", paddingTop: "2rem", borderTop: "1px solid var(--ifm-color-emphasis-200)"}}>
   <WasThisHelpful pageId="AccessControlPausableFacet" />
 </div>
 
-<LastUpdated date="2025-12-21T22:04:28.547Z" />
+<LastUpdated date="2025-12-23T00:00:19.459Z" />

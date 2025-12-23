@@ -1,8 +1,8 @@
 ---
 sidebar_position: 99
 title: "ERC20BurnFacet"
-description: "Burn ERC20 tokens within a Compose diamond."
-gitSource: "https://github.com/maxnorm/Compose/blob/5736454575f67743dd05ba6cb1265bc06d0c1422/src/token/ERC20/ERC20/ERC20BurnFacet.sol"
+description: "Burn ERC-20 tokens from caller or delegated accounts."
+gitSource: "https://github.com/Perfect-Abstractions/Compose/tree/main/src/token/ERC20/ERC20/ERC20BurnFacet.sol"
 ---
 
 import DocSubtitle  from '@site/src/components/docs/DocSubtitle';
@@ -21,19 +21,18 @@ import GradientText from '@site/src/components/ui/GradientText';
 import GradientButton from '@site/src/components/ui/GradientButton';
 
 <DocSubtitle>
-Burn ERC20 tokens within a Compose diamond.
+Burn ERC-20 tokens from caller or delegated accounts.
 </DocSubtitle>
 
 <Callout type="info" title="Key Features">
-- Allows burning of ERC20 tokens from the caller's balance.
-- Supports burning ERC20 tokens from another account using allowances.
-- Emits `Transfer` events to the zero address upon successful burns, conforming to ERC20 standards.
-- Integrates with the Compose diamond storage pattern.
+- Enables reduction of total token supply.
+- Supports burning from the caller's balance.
+- Supports burning from another account using allowances.
 </Callout>
 
 ## Overview
 
-The ERC20BurnFacet provides the functionality to burn ERC20 tokens directly within a Compose diamond. It allows users to decrease their own token balances or burn tokens on behalf of others, provided they have the necessary allowances. This facet integrates with the diamond's storage pattern to manage ERC20 state.
+The ERC20BurnFacet provides functionality to reduce the total supply of an ERC-20 token. It allows token holders to burn their own tokens or burn tokens on behalf of another account if they have sufficient allowance.
 
 ---
 
@@ -64,28 +63,6 @@ The ERC20BurnFacet provides the functionality to burn ERC20 tokens directly with
 
 ## Functions
 
-### getStorage
-
-Returns the ERC20 storage struct from the predefined diamond storage slot. Uses inline assembly to set the storage slot reference.
-
-<ExpandableCode language="solidity" maxLines={8}>
-{`function getStorage() internal pure returns (ERC20Storage storage s);`}
-</ExpandableCode>
-
-**Returns:**
-
-<PropertyTable
-  properties={[
-    {
-      name: "s",
-      type: "ERC20Storage",
-      description: "The ERC20 storage struct reference."
-    }
-  ]}
-  showRequired={false}
-/>
-
----
 ### burn
 
 Burns (destroys) a specific amount of tokens from the caller's balance. Emits a Transfer event to the zero address.
@@ -209,46 +186,39 @@ error ERC20InsufficientAllowance(address _spender, uint256 _allowance, uint256 _
 <ExpandableCode language="solidity" maxLines={20} title="Example Implementation">
 {`pragma solidity ^0.8.30;
 
-import {IERC20BurnFacet} from "@compose/contracts/facets/ERC20/IERC20BurnFacet.sol";
-import {DiamondABI} from "@compose/contracts/DiamondABI.sol";
+import {DiamondLoupeFacet} from "@compose/diamond-loupe/DiamondLoupeFacet.sol";
+import {ERC20BurnFacet} from "@compose/erc20/facets/ERC20BurnFacet.sol";
 
-contract ERC20BurnConsumer {
-    address immutable DIAMOND_ADDRESS;
+contract MyDiamond is DiamondLoupeFacet {
+    // ... other facets
 
-    constructor(address _diamondAddress) {
-        DIAMOND_ADDRESS = _diamondAddress;
+    function burn(uint256 _amount) external {
+        ERC20BurnFacet(address(this)).burn(_amount);
     }
 
-    function burnMyTokens(address _tokenAddress, uint256 _amount) external {
-        bytes4 selector = IERC20BurnFacet.burn.selector;
-        (bool success, bytes memory data) = DIAMOND_ADDRESS.call(abi.encodeWithSelector(selector, _tokenAddress, _amount));
-        require(success, "Burn failed");
+    function burnFrom(address _from, uint256 _amount) external {
+        ERC20BurnFacet(address(this)).burnFrom(_from, _amount);
     }
 
-    function burnTokensFromOthers(address _tokenAddress, address _from, uint256 _amount) external {
-        bytes4 selector = IERC20BurnFacet.burnFrom.selector;
-        (bool success, bytes memory data) = DIAMOND_ADDRESS.call(abi.encodeWithSelector(selector, _tokenAddress, _from, _amount));
-        require(success, "Burn from failed");
-    }
+    // ... other diamond functions
 }`}
 </ExpandableCode>
 
 ## Best Practices
 
 <Callout type="tip" title="Best Practice">
-- Ensure the ERC20BurnFacet is correctly added to your diamond and its functions are properly routed.
-- Manage token allowances carefully before calling `burnFrom` to prevent unintended token loss.
-- The `getStorage` function can be used to inspect ERC20 storage directly if needed, but direct manipulation is not recommended.
+- Ensure the ERC20BurnFacet is correctly added to the diamond proxy during deployment.
+- Use `burn` to reduce your own token balance and `burnFrom` to reduce another account's balance when you have been granted allowance.
 </Callout>
 
 ## Security Considerations
 
 <Callout type="warning" title="Security">
-This facet relies on the underlying ERC20 token's transfer logic and allowance mechanism. Ensure the token contract itself is secure. The `burnFrom` function requires the caller to have sufficient allowance, and the `burn` function requires the caller to have sufficient balance. Incorrect allowances or balances will revert with `ERC20InsufficientAllowance` or `ERC20InsufficientBalance` respectively. Reentrancy is not a concern as these are state-mutating calls that do not yield control back to external contracts before state changes are finalized.
+The `burnFrom` function requires that the caller has been granted sufficient allowance by the `_from` address. Ensure appropriate allowance management mechanisms are in place to prevent unintended token burning. The `Transfer` event is emitted to the zero address when tokens are burned, as per ERC-20 standards.
 </Callout>
 
 <div style={{marginTop: "3rem", paddingTop: "2rem", borderTop: "1px solid var(--ifm-color-emphasis-200)"}}>
   <WasThisHelpful pageId="ERC20BurnFacet" />
 </div>
 
-<LastUpdated date="2025-12-21T22:05:12.761Z" />
+<LastUpdated date="2025-12-23T00:01:02.310Z" />

@@ -1,8 +1,8 @@
 ---
 sidebar_position: 99
 title: "NonReentrancyMod"
-description: "Prevent reentrant calls within diamond functions."
-gitSource: "https://github.com/maxnorm/Compose/blob/5736454575f67743dd05ba6cb1265bc06d0c1422/src/libraries/NonReentrancyMod.sol"
+description: "Enforce non-reentrant execution within facets."
+gitSource: "https://github.com/Perfect-Abstractions/Compose/tree/main/src/libraries/NonReentrancyMod.sol"
 ---
 
 import DocSubtitle  from '@site/src/components/docs/DocSubtitle';
@@ -21,13 +21,13 @@ import GradientText from '@site/src/components/ui/GradientText';
 import GradientButton from '@site/src/components/ui/GradientButton';
 
 <DocSubtitle>
-Prevent reentrant calls within diamond functions.
+Enforce non-reentrant execution within facets.
 </DocSubtitle>
 
 <Callout type="info" title="Key Features">
-- Provides `enter()` and `exit()` functions to manage a reentrancy lock.
-- Uses a simple `uint256` as a flag for the reentrancy state, minimizing storage impact.
-- Can be used as a library (`using LibNonReentrancy for uint256;`) within any facet.
+- Prevents reentrant function calls, enhancing security.
+- Simple and explicit `enter`/`exit` pattern for easy integration.
+- Utilizes a single storage slot for the reentrancy guard.
 </Callout>
 
 <Callout type="info" title="Module Usage">
@@ -36,7 +36,7 @@ This module provides internal functions for use in your custom facets. Import it
 
 ## Overview
 
-The NonReentrancy module provides essential guards to prevent reentrant function calls, a common vulnerability in smart contracts. By integrating these functions into your facets, you ensure that sensitive operations are executed atomically and securely, maintaining the integrity of your diamond's state.
+The NonReentrancyMod provides essential functions to prevent reentrant calls, ensuring the integrity and predictable execution of your diamond's facets. By managing reentrancy guards, this module safeguards against common vulnerabilities and unexpected state changes during complex transactions.
 
 ---
 
@@ -96,34 +96,29 @@ error Reentrancy();
 <ExpandableCode language="solidity" maxLines={20} title="Example Implementation">
 {`pragma solidity ^0.8.30;
 
-import {LibNonReentrancy} from "@compose/modules/NonReentrancy/LibNonReentrancy.sol";
+import {LibNonReentrancy} from "@compose/diamond-proxy/contracts/modules/nonReentrancy/LibNonReentrancy.sol";
 
 contract MyFacet {
     using LibNonReentrancy for uint256;
 
-    uint256 private _lock;
+    uint256 private _reentrancyGuard;
 
-    /**
-     * @notice Performs a protected operation.
-     */
-    function protectedOperation() external {
-        // Lock the reentrancy guard before execution.
-        _lock.enter();
+    function sensitiveOperation() external {
+        // Lock reentrancy before executing sensitive logic
+        _reentrancyGuard.enter();
 
-        // Perform sensitive operations here...
-        // For example: interacting with external contracts, transferring tokens.
+        // ... sensitive logic ...
 
-        // Unlock the reentrancy guard after execution.
-        _lock.exit();
+        // Unlock reentrancy after execution
+        _reentrancyGuard.exit();
     }
 
-    /**
-     * @notice Example of a function that might be called internally by a protected operation.
-     * This function should not be callable directly if reentrancy is a concern.
-     */
-    function _internalOperation() internal {
-        // This function would be called within protectedOperation.
-        // It does not need to manage the lock itself, as the caller does.
+    function _beforeAll() internal override {
+        // Initialize the reentrancy guard in the diamond storage
+        // Assuming diamond storage has a slot for the guard, e.g., \`uint256 reentrancyGuard;\`
+        // This initialization would typically happen once during diamond deployment or upgrade.
+        // For example, if \`LibNonReentrancy.storage(LibNonReentrancy.nonReentrancyStorageSlot()).reentrancyGuard\` is accessible:
+        // LibNonReentrancy.storage(LibNonReentrancy.nonReentrancyStorageSlot()).reentrancyGuard = 1; // Initialized state
     }
 }`}
 </ExpandableCode>
@@ -131,19 +126,18 @@ contract MyFacet {
 ## Best Practices
 
 <Callout type="tip" title="Best Practice">
-- Always pair `enter()` with `exit()` to ensure the reentrancy lock is released, even in the event of an error before `exit()` is reached (e.g., using `try/catch` if necessary or ensuring `exit()` is the last statement before returning).
-- Use `delete _lock;` in the facet's initializer to reset the lock state when the facet is deployed.
-- Consider the scope of the lock; a single `uint256` variable is sufficient for one facet's reentrancy protection.
+- Always call `enter()` at the beginning and `exit()` at the end of any function susceptible to reentrancy.
+- Ensure the reentrancy guard is correctly initialized within the diamond's storage during deployment or upgrade.
 </Callout>
 
 ## Integration Notes
 
 <Callout type="success" title="Shared Storage">
-This module is designed to be integrated directly into a facet's implementation. The `LibNonReentrancy` library operates on a `uint256` variable within the facet's storage. This variable acts as the reentrancy guard flag. When a facet is deployed, this `uint256` storage slot should be initialized to `0` (its default state) to indicate that reentrancy is not currently active. The `enter` function will revert if the flag is already set (indicating reentrancy), and `exit` will reset the flag. Ensure the `uint256` variable used for the lock is declared in the facet and is not used for other purposes.
+This module manages a reentrancy guard, typically stored as a `uint256` within the diamond's shared storage. The `enter()` function increments the guard, and `exit()` decrements it. A non-zero guard indicates the function is currently executing, preventing reentrant calls. Ensure the diamond's storage layout accommodates this guard, and that it is initialized to a non-zero value (e.g., 1) to signify the initial locked state before any function call. The `LibNonReentrancy.storage()` helper function is used to access the guard variable within the diamond's storage.
 </Callout>
 
 <div style={{marginTop: "3rem", paddingTop: "2rem", borderTop: "1px solid var(--ifm-color-emphasis-200)"}}>
   <WasThisHelpful pageId="NonReentrancyMod" />
 </div>
 
-<LastUpdated date="2025-12-21T22:06:41.039Z" />
+<LastUpdated date="2025-12-23T00:02:35.058Z" />

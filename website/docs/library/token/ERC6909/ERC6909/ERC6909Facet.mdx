@@ -1,8 +1,8 @@
 ---
 sidebar_position: 99
 title: "ERC6909Facet"
-description: "Manage ERC-6909 tokens and operator roles."
-gitSource: "https://github.com/maxnorm/Compose/blob/5736454575f67743dd05ba6cb1265bc06d0c1422/src/token/ERC6909/ERC6909/ERC6909Facet.sol"
+description: "Manage ERC-6909 token balances and operator permissions."
+gitSource: "https://github.com/Perfect-Abstractions/Compose/tree/main/src/token/ERC6909/ERC6909/ERC6909Facet.sol"
 ---
 
 import DocSubtitle  from '@site/src/components/docs/DocSubtitle';
@@ -21,18 +21,18 @@ import GradientText from '@site/src/components/ui/GradientText';
 import GradientButton from '@site/src/components/ui/GradientButton';
 
 <DocSubtitle>
-Manage ERC-6909 tokens and operator roles.
+Manage ERC-6909 token balances and operator permissions.
 </DocSubtitle>
 
 <Callout type="info" title="Key Features">
-- Implements the ERC-6909 token standard interface.
-- Supports both direct transfers and transfers via approved operators.
-- Manages explicit operator approvals for token IDs.
+- Implements ERC-6909 standard for fungible tokens.
+- Supports direct token transfers and transfers via approved spenders.
+- Enables management of operator relationships for token management.
 </Callout>
 
 ## Overview
 
-The ERC6909Facet implements the ERC-6909 standard, enabling token transfers and operator management within a Compose diamond. It provides functions for checking balances, allowances, and managing operator approvals, facilitating composable token interactions.
+This facet implements the ERC-6909 standard, enabling fungible token transfers and operator management within a Compose diamond. It provides essential functions for checking balances, allowances, and managing operator relationships, integrating seamlessly with the diamond's storage pattern.
 
 ---
 
@@ -63,28 +63,6 @@ The ERC6909Facet implements the ERC-6909 standard, enabling token transfers and 
 
 ## Functions
 
-### getStorage
-
-Returns a pointer to the ERC-6909 storage struct. Uses inline assembly to access the storage slot defined by STORAGE_POSITION.
-
-<ExpandableCode language="solidity" maxLines={8}>
-{`function getStorage() internal pure returns (ERC6909Storage storage s);`}
-</ExpandableCode>
-
-**Returns:**
-
-<PropertyTable
-  properties={[
-    {
-      name: "s",
-      type: "ERC6909Storage",
-      description: "The ERC6909Storage struct in storage."
-    }
-  ]}
-  showRequired={false}
-/>
-
----
 ### balanceOf
 
 Owner balance of an id.
@@ -481,26 +459,26 @@ error ERC6909InvalidSpender(address _spender);
 <ExpandableCode language="solidity" maxLines={20} title="Example Implementation">
 {`pragma solidity ^0.8.30;
 
-import {IDiamondCut} from "@compose/diamond-proxy/src/interfaces/IDiamondCut.sol";
-import {IERC6909Facet} from "./interfaces/IERC6909Facet.sol";
+import {IERC6909Facet} from "@compose/core/src/facets/ERC6909/IERC6909Facet.sol";
 
-contract Deployer {
-    address immutable diamondAddress;
+contract ERC6909Consumer {
+    // Assume diamond interface is available
+    IERC6909Facet internal immutable erc6909Facet;
 
     constructor(address _diamondAddress) {
-        diamondAddress = _diamondAddress;
+        erc6909Facet = IERC6909Facet(_diamondAddress);
     }
 
-    function grantOperator(address _operator, uint256 _tokenId) external {
-        bytes4 selector = IERC6909Facet.setOperator.selector;
-        (bool success, ) = diamondAddress.call(abi.encodeWithSelector(selector, _operator, true, _tokenId));
-        require(success, "Failed to grant operator");
+    function getBalance(address _owner, uint256 _id) public view returns (uint256) {
+        return erc6909Facet.balanceOf(_owner, _id);
     }
 
-    function transferTokens(address _to, uint256 _tokenId, uint256 _amount) external {
-        bytes4 selector = IERC6909Facet.transfer.selector;
-        (bool success, ) = diamondAddress.call(abi.encodeWithSelector(selector, _to, _tokenId, _amount));
-        require(success, "Failed to transfer tokens");
+    function transferTokens(address _to, uint256 _id, uint256 _amount) public {
+        erc6909Facet.transfer(_to, _id, _amount);
+    }
+
+    function approveSpender(address _spender, uint256 _id, uint256 _amount) public {
+        erc6909Facet.approve(_spender, _id, _amount);
     }
 }`}
 </ExpandableCode>
@@ -508,19 +486,19 @@ contract Deployer {
 ## Best Practices
 
 <Callout type="tip" title="Best Practice">
-- Initialize operator roles and token approvals using the `setOperator` and `approve` functions respectively.
-- Utilize `transfer` and `transferFrom` for token movements, ensuring sufficient balances and allowances are met.
-- Access the facet's internal storage pointer via `getStorage` for advanced diagnostics or custom logic integration.
+- Initialize the facet correctly within the diamond deployment process.
+- Ensure adequate access control is implemented at the diamond level for sensitive functions like `setOperator` if required by your application logic.
+- When upgrading, preserve storage layout compatibility as per Compose guidelines.
 </Callout>
 
 ## Security Considerations
 
 <Callout type="warning" title="Security">
-Ensure that `approve` and `setOperator` calls are appropriately authorized by the token owner. `transfer` and `transferFrom` will revert on insufficient balance or allowance, preventing unauthorized token movements. Input validation is handled internally by the facet to prevent invalid receiver or sender addresses.
+Functions like `transfer` and `transferFrom` should have appropriate checks for sufficient balance and allowance to prevent underflows and unauthorized spending. The `setOperator` function should be guarded if its usage requires specific permissions. Input validation on `_id`, `_amount`, `_owner`, `_receiver`, `_sender`, and `_spender` is crucial to prevent unexpected behavior and potential exploits.
 </Callout>
 
 <div style={{marginTop: "3rem", paddingTop: "2rem", borderTop: "1px solid var(--ifm-color-emphasis-200)"}}>
   <WasThisHelpful pageId="ERC6909Facet" />
 </div>
 
-<LastUpdated date="2025-12-21T22:05:32.432Z" />
+<LastUpdated date="2025-12-23T00:01:22.963Z" />

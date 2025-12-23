@@ -1,8 +1,8 @@
 ---
 sidebar_position: 99
 title: "ERC20PermitFacet"
-description: "Enables EIP-2612 permit functionality for ERC-20 tokens."
-gitSource: "https://github.com/maxnorm/Compose/blob/5736454575f67743dd05ba6cb1265bc06d0c1422/src/token/ERC20/ERC20Permit/ERC20PermitFacet.sol"
+description: "Manage ERC-20 token allowances via EIP-2612 permit signatures."
+gitSource: "https://github.com/Perfect-Abstractions/Compose/tree/main/src/token/ERC20/ERC20Permit/ERC20PermitFacet.sol"
 ---
 
 import DocSubtitle  from '@site/src/components/docs/DocSubtitle';
@@ -21,19 +21,18 @@ import GradientText from '@site/src/components/ui/GradientText';
 import GradientButton from '@site/src/components/ui/GradientButton';
 
 <DocSubtitle>
-Enables EIP-2612 permit functionality for ERC-20 tokens.
+Manage ERC-20 token allowances via EIP-2612 permit signatures.
 </DocSubtitle>
 
 <Callout type="info" title="Key Features">
-- Implements EIP-2612 permit functionality for ERC-20 tokens.
-- Allows token owners to grant allowances via signed messages.
-- Reduces transaction overhead by enabling off-chain signature generation.
-- Provides functions to retrieve nonces and the domain separator for signature construction.
+- Implements EIP-2612 `permit` function for ERC-20 token approvals.
+- Uses signed messages to authorize allowances, reducing on-chain transactions for users.
+- Provides `nonces` and `DOMAIN_SEPARATOR` for signature verification.
 </Callout>
 
 ## Overview
 
-The ERC20PermitFacet integrates EIP-2612's permit functionality into a Compose diamond. It allows token owners to grant allowances to spenders via a signed message, removing the need for an explicit `approve` transaction. This enhances user experience by reducing transaction costs and improving efficiency.
+The ERC20PermitFacet enables EIP-2612 compliant meta-transactions for ERC-20 token approvals. It allows users to grant allowances to spenders without directly interacting with the ERC-20 token contract, leveraging signed messages for off-chain authorization. This enhances user experience by reducing gas costs and simplifying the approval process.
 
 ---
 
@@ -80,20 +79,6 @@ The ERC20PermitFacet integrates EIP-2612's permit functionality into a Compose d
 
 ## Functions
 
-### getERC20Storage
-
-<ExpandableCode language="solidity" maxLines={8}>
-{`function getERC20Storage() internal pure returns (ERC20Storage storage s);`}
-</ExpandableCode>
-
----
-### getStorage
-
-<ExpandableCode language="solidity" maxLines={8}>
-{`function getStorage() internal pure returns (ERC20PermitStorage storage s);`}
-</ExpandableCode>
-
----
 ### nonces
 
 Returns the current nonce for an owner. This value changes each time a permit is used.
@@ -287,61 +272,58 @@ error ERC20InvalidSpender(address _spender);
 <ExpandableCode language="solidity" maxLines={20} title="Example Implementation">
 {`pragma solidity ^0.8.30;
 
-import {IERC20Permit} from "@openzeppelin/contracts/token/ERC20/extensions/draft-IERC20Permit.sol";
-import {DiamondInterface} from "@compose-protocol/diamond-interface/DiamondInterface.sol";
+import {IERC20Permit, ERC20PermitFacet} from "@compose-protocol/diamond/contracts/facets/ERC20Permit/ERC20PermitFacet.sol";
+import {IDiamondCut, DiamondLoupeFacet} from "@compose-protocol/diamond/contracts/facets/DiamondLoupe/DiamondLoupeFacet.sol";
 
-contract ERC20PermitConsumer {
-    DiamondInterface public diamond;
+contract MyDiamond is IERC20Permit {
+    // ... other facets
 
-    constructor(address _diamondAddress) {
-        diamond = DiamondInterface(_diamondAddress);
+    function addERC20PermitFacet(address _diamondCutFacet) external {
+        ERC20PermitFacet erc20PermitFacet = new ERC20PermitFacet();
+        bytes32[] memory selectors = new bytes32[](5);
+        selectors[0] = ERC20PermitFacet.getERC20Storage.selector;
+        selectors[1] = ERC20PermitFacet.getStorage.selector;
+        selectors[2] = ERC20PermitFacet.nonces.selector;
+        selectors[3] = ERC20PermitFacet.DOMAIN_SEPARATOR.selector;
+        selectors[4] = ERC20PermitFacet.permit.selector;
+
+        IDiamondCut(_diamondCutFacet).diamondCut(new IDiamondCut.FacetCut[](0), erc20PermitFacet, selectors);
     }
 
-    /**
-     * @notice Get the current nonce for a given owner.
-     * @param _owner The address of the token owner.
-     * @return The current nonce.
-     */
-    function getUserNonce(address _owner) external view returns (uint256) {
-        // The selector for nonces function from ERC20PermitFacet
-        bytes4 selector = bytes4(keccak256("nonces(address)"));
-        return abi.decode(diamond.callStatic(selector, abi.encode(_owner)), (uint256));
+    // Implementation of IERC20Permit to route to the facet
+    function nonces(address owner) public view override returns (uint256) {
+        bytes4 selector = ERC20PermitFacet.nonces.selector;
+        (bool success, bytes memory result) = address(this).staticcall(abi.encodeWithSelector(selector, owner));
+        require(success, "Nonces call failed");
+        return abi.decode(result, (uint256));
     }
 
-    /**
-     * @notice Set an allowance using EIP-2612 permit.
-     * @param _owner The address of the token owner.
-     * @param _spender The address to grant allowance to.
-     * @param _value The amount to allow.
-     * @param _deadline The permit deadline.
-     * @param _v The signature v component.
-     * @param _r The signature r component.
-     * @param _s The signature s component.
-     */
-    function permitToken(address _owner, address _spender, uint256 _value, uint256 _deadline, uint8 _v, bytes32 _r, bytes32 _s) external {
-        // The selector for permit function from ERC20PermitFacet
-        bytes4 selector = bytes4(keccak256("permit(address,address,uint256,uint256,uint8,bytes32,bytes32)"));
-        diamond.execute(selector, abi.encode(_owner, _spender, _value, _deadline, _v, _r, _s));
+    function permit(address owner, address spender, uint256 value, uint256 deadline, uint8 v, bytes32 r, bytes32 s) public override {
+        bytes4 selector = ERC20PermitFacet.permit.selector;
+        (bool success, ) = address(this).call(abi.encodeWithSelector(selector, owner, spender, value, deadline, v, r, s));
+        require(success, "Permit call failed");
     }
+
+    // ... other IERC20Permit functions
 }`}
 </ExpandableCode>
 
 ## Best Practices
 
 <Callout type="tip" title="Best Practice">
-- Ensure the ERC20PermitFacet is correctly initialized with the appropriate domain separator and chain ID during diamond deployment.
-- Validate the permit deadline to prevent expired permits from being used.
-- Use the `nonces` function to track the usage of permits and prevent replay attacks.
+- Ensure the `ERC20PermitFacet` is added to the diamond during deployment or upgrade.
+- Users will call the `permit` function via the diamond proxy, which will then route the call to the appropriate facet.
+- Store the `DOMAIN_SEPARATOR` and `nonces` appropriately within the diamond's storage.
 </Callout>
 
 ## Security Considerations
 
 <Callout type="warning" title="Security">
-This facet implements EIP-2612, which relies on cryptographic signatures. Ensure that the signature verification process is robust and that the domain separator is correctly configured to prevent replay attacks across different contracts or chains. Input validation on `_deadline` is crucial to prevent the use of expired permits.
+Users must verify the `deadline` to prevent stale permits from being used. The `DOMAIN_SEPARATOR` prevents replay attacks across different chains or contracts. Ensure the underlying ERC-20 token contract is correctly integrated and accessible for the allowance updates to take effect.
 </Callout>
 
 <div style={{marginTop: "3rem", paddingTop: "2rem", borderTop: "1px solid var(--ifm-color-emphasis-200)"}}>
   <WasThisHelpful pageId="ERC20PermitFacet" />
 </div>
 
-<LastUpdated date="2025-12-21T22:05:01.030Z" />
+<LastUpdated date="2025-12-23T00:00:51.171Z" />

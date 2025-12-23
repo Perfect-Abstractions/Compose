@@ -1,8 +1,8 @@
 ---
 sidebar_position: 99
 title: "OwnerTwoStepsMod"
-description: "Manages contract ownership with a two-step transfer process."
-gitSource: "https://github.com/maxnorm/Compose/blob/5736454575f67743dd05ba6cb1265bc06d0c1422/src/access/OwnerTwoSteps/OwnerTwoStepsMod.sol"
+description: "Manages ERC-173 contract ownership with a two-step transfer process."
+gitSource: "https://github.com/Perfect-Abstractions/Compose/tree/main/src/access/OwnerTwoSteps/OwnerTwoStepsMod.sol"
 ---
 
 import DocSubtitle  from '@site/src/components/docs/DocSubtitle';
@@ -21,13 +21,14 @@ import GradientText from '@site/src/components/ui/GradientText';
 import GradientButton from '@site/src/components/ui/GradientButton';
 
 <DocSubtitle>
-Manages contract ownership with a two-step transfer process.
+Manages ERC-173 contract ownership with a two-step transfer process.
 </DocSubtitle>
 
 <Callout type="info" title="Key Features">
-- Implements a secure two-step ownership transfer via `transferOwnership` and `acceptOwnership`.
-- Provides `owner()` and `pendingOwner()` view functions to query current and pending ownership.
-- Includes `renounceOwnership()` to permanently disable owner-restricted functions.
+- Implements a secure two-step ownership transfer process.
+- Provides functions to view current and pending owners.
+- Includes a `requireOwner` guard for owner-only operations.
+- Supports `renounceOwnership` to disable owner-specific functionality.
 </Callout>
 
 <Callout type="info" title="Module Usage">
@@ -36,7 +37,7 @@ This module provides internal functions for use in your custom facets. Import it
 
 ## Overview
 
-This module implements a secure two-step ownership transfer mechanism, ensuring that ownership changes are deliberate and auditable. By requiring explicit acceptance from the new owner, it mitigates risks associated with accidental or malicious ownership transfers, enhancing the overall safety and composability of your diamond.
+This module provides a secure, two-step ownership transfer mechanism compliant with ERC-173. It ensures that ownership changes can only be finalized by the intended new owner, preventing accidental or malicious transfers. This pattern is crucial for managing administrative functions within a diamond proxy.
 
 ---
 
@@ -252,23 +253,31 @@ error OwnerUnauthorizedAccount();
 <ExpandableCode language="solidity" maxLines={20} title="Example Implementation">
 {`pragma solidity ^0.8.30;
 
-import {OwnerTwoStepsMod} from "../OwnerTwoStepsMod.sol";
+import {IOwnerTwoSteps} from "@compose/contracts/modules/owner/IOwnerTwoSteps.sol";
 
-contract MyFacet is OwnerTwoStepsMod {
-    // Assume OWNER_STORAGE_POSITION and PENDING_OWNER_STORAGE_POSITION are defined and set
-    // in the diamond deployment.
+contract MyOwnerFacet {
+    IOwnerTwoSteps public ownerFacet;
 
-    function someOwnerRestrictedFunction() external {
-        requireOwner(); // Ensure only the owner can call this function
-        // ... owner-only logic ...
+    // Assuming ownerFacet is initialized elsewhere and points to the OwnerTwoStepsMod
+
+    function transferAdmin(address _newOwner) external {
+        ownerFacet.transferOwnership(_newOwner);
     }
 
-    function initiateOwnershipTransfer(address _newOwner) external {
-        transferOwnership(_newOwner);
+    function acceptAdmin() external {
+        ownerFacet.acceptOwnership();
     }
 
-    function acceptNewOwnership() external {
-        acceptOwnership();
+    function getCurrentOwner() external view returns (address) {
+        return ownerFacet.owner();
+    }
+
+    function getCurrentPendingOwner() external view returns (address) {
+        return ownerFacet.pendingOwner();
+    }
+
+    function renounceAdmin() external {
+        ownerFacet.renounceOwnership();
     }
 }`}
 </ExpandableCode>
@@ -276,19 +285,19 @@ contract MyFacet is OwnerTwoStepsMod {
 ## Best Practices
 
 <Callout type="tip" title="Best Practice">
-- Use `requireOwner()` judiciously to protect critical functions, ensuring only the designated owner can execute sensitive operations.
-- Handle `OwnerUnauthorizedAccount` and `OwnerAlreadyRenounced` errors appropriately in your calling contracts or frontend applications.
-- Be aware that `renounceOwnership()` permanently relinquishes owner privileges; ensure this action is intended and irreversible.
+- Use `transferOwnership` to initiate a transfer, followed by `acceptOwnership` by the new owner.
+- Protect critical administrative functions using `requireOwner` or by checking the `owner()` return value.
+- Be aware that `renounceOwnership` permanently relinquishes ownership, setting the owner to `address(0)`.
 </Callout>
 
 ## Integration Notes
 
 <Callout type="success" title="Shared Storage">
-The `OwnerTwoStepsMod` relies on specific storage slots for its `Owner` and `PendingOwner` state variables. These slots are typically defined as constants (e.g., `OWNER_STORAGE_POSITION`, `PENDING_OWNER_STORAGE_POSITION`) within the diamond's facet deployment. Facets interacting with this module can access the owner information via the `owner()` and `pendingOwner()` view functions. The `requireOwner()` internal function enforces access control by checking against the current owner's address.
+The `OwnerTwoStepsMod` stores ownership data in dedicated storage slots. Facets interacting with this module should use the provided accessor functions (`owner`, `pendingOwner`) to retrieve ownership information. The module's storage layout is fixed and should not be altered by other facets to maintain invariant integrity.
 </Callout>
 
 <div style={{marginTop: "3rem", paddingTop: "2rem", borderTop: "1px solid var(--ifm-color-emphasis-200)"}}>
   <WasThisHelpful pageId="OwnerTwoStepsMod" />
 </div>
 
-<LastUpdated date="2025-12-21T22:04:20.097Z" />
+<LastUpdated date="2025-12-23T00:00:10.202Z" />

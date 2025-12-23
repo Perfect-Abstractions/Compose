@@ -1,8 +1,8 @@
 ---
 sidebar_position: 99
 title: "AccessControlMod"
-description: "Manage role-based access control within a diamond."
-gitSource: "https://github.com/maxnorm/Compose/blob/5736454575f67743dd05ba6cb1265bc06d0c1422/src/access/AccessControl/AccessControlMod.sol"
+description: "Manages role-based access control within a diamond."
+gitSource: "https://github.com/Perfect-Abstractions/Compose/tree/main/src/access/AccessControl/AccessControlMod.sol"
 ---
 
 import DocSubtitle  from '@site/src/components/docs/DocSubtitle';
@@ -21,13 +21,13 @@ import GradientText from '@site/src/components/ui/GradientText';
 import GradientButton from '@site/src/components/ui/GradientButton';
 
 <DocSubtitle>
-Manage role-based access control within a diamond.
+Manages role-based access control within a diamond.
 </DocSubtitle>
 
 <Callout type="info" title="Key Features">
 - Role-based access control for granular permission management.
-- Functions for granting, revoking, and checking role assignments.
-- Ability to define and manage administrative roles for other roles.
+- Functions to grant, revoke, and check roles for any account.
+- Ability to set administrative roles for other roles, enabling hierarchical control.
 </Callout>
 
 <Callout type="info" title="Module Usage">
@@ -36,7 +36,7 @@ This module provides internal functions for use in your custom facets. Import it
 
 ## Overview
 
-This module provides a robust framework for implementing role-based access control (RBAC) within Compose diamonds. It allows for granular permission management by assigning roles to accounts, ensuring that only authorized users can execute specific functions. By adhering to Compose's storage pattern, it integrates seamlessly with diamond upgrades.
+The AccessControl module provides a robust system for managing roles and permissions within your Compose diamond. It allows for granular control over which accounts can perform specific actions by assigning them roles. This module is essential for building secure and auditable decentralized applications, ensuring that only authorized entities can execute sensitive functions.
 
 ---
 
@@ -401,51 +401,53 @@ error AccessControlUnauthorizedAccount(address _account, bytes32 _role);
 <ExpandableCode language="solidity" maxLines={20} title="Example Implementation">
 {`pragma solidity ^0.8.30;
 
-import {IAccessControlMod} from "@compose/modules/access-control/IAccessControlMod.sol";
+import {IAccessControlMod} from "@compose-protocol/diamond-contracts/contracts/modules/access-control/AccessControlMod.sol";
 
 contract MyFacet {
-    IAccessControlMod internal accessControlMod;
+    IAccessControlMod internal immutable accessControl;
 
-    constructor(address _accessControlModAddress) {
-        accessControlMod = IAccessControlMod(_accessControlModAddress);
+    constructor(address _diamondAddress) {
+        accessControl = IAccessControlMod(_diamondAddress);
     }
 
-    function someRestrictedFunction() external {
-        address sender = msg.sender;
-        bytes32 ownerRole = keccak256("OWNER_ROLE");
-
-        accessControlMod.requireRole(ownerRole, sender);
-
-        // ... execute restricted logic ...
+    /**
+     * @notice Grants the DEFAULT_ADMIN_ROLE to the caller.
+     */
+    function grantDefaultAdmin() external {
+        address caller = msg.sender;
+        bytes32 adminRole = accessControl.DEFAULT_ADMIN_ROLE(); // Assuming DEFAULT_ADMIN_ROLE is accessible or defined
+        accessControl.grantRole(adminRole, caller);
     }
 
-    function grantOwnerRole(address _account) external {
-        address sender = msg.sender;
-        bytes32 ownerRole = keccak256("OWNER_ROLE");
-        bytes32 adminRole = keccak256("DEFAULT_ADMIN_ROLE");
-
-        accessControlMod.requireRole(adminRole, sender);
-        accessControlMod.grantRole(ownerRole, _account);
+    /**
+     * @notice Checks if an account has a specific role.
+     * @param _role The role to check.
+     * @param _account The account to check.
+     * @return bool True if the account has the role, false otherwise.
+     */
+    function checkRole(bytes32 _role, address _account) external view returns (bool) {
+        return accessControl.hasRole(_role, _account);
     }
-}`}
+}
+`}
 </ExpandableCode>
 
 ## Best Practices
 
 <Callout type="tip" title="Best Practice">
-- Use `requireRole` to enforce access control checks at the beginning of sensitive functions, reverting with `AccessControlUnauthorizedAccount` if the caller lacks the necessary role.
-- Define roles using `keccak256` hashes for clarity and gas efficiency.
-- Manage role administration carefully by setting appropriate `DEFAULT_ADMIN_ROLE` and using `setRoleAdmin` to control role hierarchy.
+- Define custom roles and manage their administration carefully using `setRoleAdmin`.
+- Use `requireRole` extensively to protect sensitive functions from unauthorized access.
+- Ensure that the `DEFAULT_ADMIN_ROLE` is initially granted to a secure, multi-signature wallet or a trusted entity.
 </Callout>
 
 ## Integration Notes
 
 <Callout type="success" title="Shared Storage">
-The `AccessControlMod` utilizes its own storage slot within the diamond's storage layout. Facets interact with this module through its interface (`IAccessControlMod`). Functions like `grantRole`, `revokeRole`, and `hasRole` directly read from and write to the module's storage. The `requireRole` function acts as a guard, reverting execution if the calling account does not possess the specified role. Ensure the `AccessControlMod` is initialized correctly during the diamond deployment process.
+This module requires dedicated storage slots for its role mapping and role admin mapping. Facets can interact with this module by calling its external functions. The `hasRole` and `requireRole` functions provide immediate feedback on an account's permissions. Changes to role assignments or role administration are persistent and visible across all facets interacting with the diamond.
 </Callout>
 
 <div style={{marginTop: "3rem", paddingTop: "2rem", borderTop: "1px solid var(--ifm-color-emphasis-200)"}}>
   <WasThisHelpful pageId="AccessControlMod" />
 </div>
 
-<LastUpdated date="2025-12-21T22:04:48.539Z" />
+<LastUpdated date="2025-12-23T00:00:39.323Z" />

@@ -1,8 +1,8 @@
 ---
 sidebar_position: 99
 title: "ERC20Facet"
-description: "Standard ERC-20 token functionality for Compose diamonds."
-gitSource: "https://github.com/maxnorm/Compose/blob/5736454575f67743dd05ba6cb1265bc06d0c1422/src/token/ERC20/ERC20/ERC20Facet.sol"
+description: "Implements the ERC-20 token standard for Compose diamonds."
+gitSource: "https://github.com/Perfect-Abstractions/Compose/tree/main/src/token/ERC20/ERC20/ERC20Facet.sol"
 ---
 
 import DocSubtitle  from '@site/src/components/docs/DocSubtitle';
@@ -21,19 +21,18 @@ import GradientText from '@site/src/components/ui/GradientText';
 import GradientButton from '@site/src/components/ui/GradientButton';
 
 <DocSubtitle>
-Standard ERC-20 token functionality for Compose diamonds.
+Implements the ERC-20 token standard for Compose diamonds.
 </DocSubtitle>
 
 <Callout type="info" title="Key Features">
 - Full ERC-20 standard compliance.
-- Standardized interface for token operations within a diamond.
-- Read-only functions for token metadata and balances.
-- State-changing functions for transfers and approvals.
+- Operates via the diamond proxy, enabling upgradeability and composability.
+- Uses a dedicated storage slot for ERC-20 state, ensuring isolation.
 </Callout>
 
 ## Overview
 
-The ERC20Facet provides a complete implementation of the ERC-20 token standard, enabling tokens to be managed within a Compose diamond. It exposes standard read functions and state-changing operations like transfers and approvals, ensuring interoperability and adherence to the widely adopted token standard.
+The ERC20Facet provides a standard interface for fungible tokens within a Compose diamond. It handles core ERC-20 operations like transfers, approvals, and balance inquiries, enabling tokens to be seamlessly integrated and managed by the diamond proxy.
 
 ---
 
@@ -67,28 +66,6 @@ The ERC20Facet provides a complete implementation of the ERC-20 token standard, 
 
 ## Functions
 
-### getStorage
-
-Returns the ERC20 storage struct from the predefined diamond storage slot. Uses inline assembly to set the storage slot reference.
-
-<ExpandableCode language="solidity" maxLines={8}>
-{`function getStorage() internal pure returns (ERC20Storage storage s);`}
-</ExpandableCode>
-
-**Returns:**
-
-<PropertyTable
-  properties={[
-    {
-      name: "s",
-      type: "ERC20Storage",
-      description: "The ERC20 storage struct reference."
-    }
-  ]}
-  showRequired={false}
-/>
-
----
 ### name
 
 Returns the name of the token.
@@ -523,25 +500,25 @@ error ERC20InvalidSpender(address _spender);
 <ExpandableCode language="solidity" maxLines={20} title="Example Implementation">
 {`pragma solidity ^0.8.30;
 
-import {IERC20Facet} from "@compose-protocol/diamond/facets/ERC20/IERC20Facet.sol";
+import {IERC20Facet} from "@compose-protocol/diamond/contracts/facets/ERC20/IERC20Facet.sol";
 
 contract ERC20Consumer {
-    IERC20Facet public erc20Facet;
+    IERC20Facet private erc20Facet;
 
-    constructor(address _diamondAddress) {
-        erc20Facet = IERC20Facet(_diamondAddress);
+    function setERC20Facet(address _diamondProxy) public {
+        erc20Facet = IERC20Facet(_diamondProxy);
     }
 
-    function getTokenName() external view returns (string memory) {
+    function getTokenName() public view returns (string memory) {
         return erc20Facet.name();
     }
 
-    function transferTokens(address _to, uint256 _amount) external {
+    function transferTokens(address _to, uint256 _amount) public {
         erc20Facet.transfer(_to, _amount);
     }
 
-    function approveSpender(address _spender, uint256 _amount) external {
-        erc20Facet.approve(_spender, _amount);
+    function getBalance(address _account) public view returns (uint256) {
+        return erc20Facet.balanceOf(_account);
     }
 }`}
 </ExpandableCode>
@@ -549,19 +526,19 @@ contract ERC20Consumer {
 ## Best Practices
 
 <Callout type="tip" title="Best Practice">
-- Initialize the ERC20Facet with the correct diamond storage slot during diamond deployment.
-- Ensure the `approve` function is used before `transferFrom` to manage token allowances securely.
-- Access token metadata (name, symbol, decimals) via the `external view` functions for off-chain or read-only operations.
+- Initialize the ERC20Facet with the correct diamond storage slot for ERC-20 state.
+- Ensure appropriate access control is configured in the diamond loupe for sensitive functions like `approve` and `transfer` if needed.
+- Store the ERC20Facet's address in consumer contracts to interact with token functionalities.
 </Callout>
 
 ## Security Considerations
 
 <Callout type="warning" title="Security">
-This facet implements standard ERC-20 logic. Ensure proper access control is configured at the diamond level for functions that modify token balances or allowances, especially `transfer` and `approve`. Input validation for addresses and amounts is handled internally by the facet's error conditions. Reentrancy is mitigated by the diamond proxy's reentrancy guard, if implemented.
+Standard ERC-20 security considerations apply, including potential reentrancy risks on `transfer` and `transferFrom` if not handled carefully by the caller. Ensure sufficient allowances are set before calling `transferFrom`. Input validation is handled by custom errors: `ERC20InsufficientBalance`, `ERC20InvalidSender`, `ERC20InvalidReceiver`, `ERC20InsufficientAllowance`, `ERC20InvalidSpender`.
 </Callout>
 
 <div style={{marginTop: "3rem", paddingTop: "2rem", borderTop: "1px solid var(--ifm-color-emphasis-200)"}}>
   <WasThisHelpful pageId="ERC20Facet" />
 </div>
 
-<LastUpdated date="2025-12-21T22:05:04.194Z" />
+<LastUpdated date="2025-12-23T00:00:54.690Z" />

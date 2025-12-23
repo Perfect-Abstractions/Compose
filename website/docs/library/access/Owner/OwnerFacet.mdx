@@ -1,8 +1,8 @@
 ---
 sidebar_position: 99
 title: "OwnerFacet"
-description: "Manages contract ownership and transfers."
-gitSource: "https://github.com/maxnorm/Compose/blob/5736454575f67743dd05ba6cb1265bc06d0c1422/src/access/Owner/OwnerFacet.sol"
+description: "Manages diamond ownership and transfers."
+gitSource: "https://github.com/Perfect-Abstractions/Compose/tree/main/src/access/Owner/OwnerFacet.sol"
 ---
 
 import DocSubtitle  from '@site/src/components/docs/DocSubtitle';
@@ -21,18 +21,18 @@ import GradientText from '@site/src/components/ui/GradientText';
 import GradientButton from '@site/src/components/ui/GradientButton';
 
 <DocSubtitle>
-Manages contract ownership and transfers.
+Manages diamond ownership and transfers.
 </DocSubtitle>
 
 <Callout type="info" title="Key Features">
-- Standard ERC-173 ownership pattern implementation.
-- Provides explicit functions for owner retrieval, transfer, and renunciation.
-- Supports ownership transfer to `address(0)` for renunciation.
+- Provides owner address retrieval.
+- Supports ownership transfer to a new address.
+- Allows for the renunciation of ownership.
 </Callout>
 
 ## Overview
 
-The OwnerFacet provides standard ownership management functions for a Compose diamond. It allows for the retrieval of the current owner, the transfer of ownership to a new address, and the renunciation of ownership. This facet is crucial for controlling administrative functions within the diamond.
+The OwnerFacet provides essential functions for managing the ownership of a Compose diamond. It allows querying the current owner, transferring ownership to a new address, and renouncing ownership entirely. This facet is crucial for controlling administrative actions within the diamond.
 
 ---
 
@@ -61,28 +61,6 @@ The OwnerFacet provides standard ownership management functions for a Compose di
 
 ## Functions
 
-### getStorage
-
-Returns a pointer to the owner storage struct. Uses inline assembly to access the storage slot defined by STORAGE_POSITION.
-
-<ExpandableCode language="solidity" maxLines={8}>
-{`function getStorage() internal pure returns (OwnerStorage storage s);`}
-</ExpandableCode>
-
-**Returns:**
-
-<PropertyTable
-  properties={[
-    {
-      name: "s",
-      type: "OwnerStorage",
-      description: "The OwnerStorage struct in storage."
-    }
-  ]}
-  showRequired={false}
-/>
-
----
 ### owner
 
 Get the address of the owner
@@ -167,24 +145,24 @@ error OwnerUnauthorizedAccount();
 <ExpandableCode language="solidity" maxLines={20} title="Example Implementation">
 {`pragma solidity ^0.8.30;
 
-import {IOwnerFacet} from "@compose/facets/owner/IOwnerFacet.sol";
+import {IOwnerFacet} from "../interfaces/IOwnerFacet.sol";
 
-contract OwnerConsumer {
-    IOwnerFacet public ownerFacet;
-
-    constructor(address _ownerFacetAddress) {
-        ownerFacet = IOwnerFacet(_ownerFacetAddress);
-    }
+contract Deployer {
+    // Assume diamondAbi is the ABI of your diamond
+    // Assume diamondAddress is the address of your deployed diamond
+    IOwnerFacet ownerFacet = IOwnerFacet(diamondAddress);
 
     function getCurrentOwner() external view returns (address) {
         return ownerFacet.owner();
     }
 
     function transferDiamondOwnership(address _newOwner) external {
+        // Ensure you have the necessary permissions to call this function
         ownerFacet.transferOwnership(_newOwner);
     }
 
     function renounceDiamondOwnership() external {
+        // Ensure you have the necessary permissions to call this function
         ownerFacet.renounceOwnership();
     }
 }`}
@@ -193,19 +171,19 @@ contract OwnerConsumer {
 ## Best Practices
 
 <Callout type="tip" title="Best Practice">
-- Initialize ownership during diamond deployment to a trusted address.
-- Only transfer ownership to addresses that are prepared to manage the diamond's administrative functions.
-- Use `renounceOwnership` with extreme caution, as it permanently removes the owner.
+- Use `transferOwnership` to safely delegate control by setting a new owner.
+- Call `renounceOwnership` with extreme caution, as it makes the diamond effectively un-administerable.
+- Ensure that only authorized entities can call `transferOwnership` and `renounceOwnership`.
 </Callout>
 
 ## Security Considerations
 
 <Callout type="warning" title="Security">
-Ownership is a critical administrative role. Ensure that ownership transfers are authorized and that the new owner is a secure and trusted address. The `transferOwnership` function can be used to renounce ownership by setting the `_newOwner` to `address(0)`. Unauthorized access to ownership transfer functions could lead to a loss of control over the diamond.
+Ownership transfer functions (`transferOwnership`, `renounceOwnership`) are highly sensitive. Ensure that calls to these functions are restricted to the current owner or a designated administrative role to prevent unauthorized control of the diamond. The `transferOwnership` function allows setting the new owner to `address(0)` to effectively renounce ownership, which should be handled with care.
 </Callout>
 
 <div style={{marginTop: "3rem", paddingTop: "2rem", borderTop: "1px solid var(--ifm-color-emphasis-200)"}}>
   <WasThisHelpful pageId="OwnerFacet" />
 </div>
 
-<LastUpdated date="2025-12-21T22:04:39.630Z" />
+<LastUpdated date="2025-12-23T00:00:30.452Z" />

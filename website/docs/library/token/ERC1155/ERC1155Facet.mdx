@@ -1,8 +1,8 @@
 ---
 sidebar_position: 99
 title: "ERC1155Facet"
-description: "Manages fungible and non-fungible tokens via ERC-1155 standard."
-gitSource: "https://github.com/maxnorm/Compose/blob/5736454575f67743dd05ba6cb1265bc06d0c1422/src/token/ERC1155/ERC1155Facet.sol"
+description: "Manages ERC-1155 fungible and non-fungible tokens."
+gitSource: "https://github.com/Perfect-Abstractions/Compose/tree/main/src/token/ERC1155/ERC1155Facet.sol"
 ---
 
 import DocSubtitle  from '@site/src/components/docs/DocSubtitle';
@@ -21,18 +21,18 @@ import GradientText from '@site/src/components/ui/GradientText';
 import GradientButton from '@site/src/components/ui/GradientButton';
 
 <DocSubtitle>
-Manages fungible and non-fungible tokens via ERC-1155 standard.
+Manages ERC-1155 fungible and non-fungible tokens.
 </DocSubtitle>
 
 <Callout type="info" title="Key Features">
-- Supports ERC-1155 multi-token standard.
-- Provides batch transfer and balance checking capabilities.
-- Manages token approvals for operators.
+- Supports both fungible and non-fungible token types under the ERC-1155 standard.
+- Implements batched operations (`balanceOfBatch`, `safeBatchTransferFrom`) for improved efficiency.
+- Provides URI resolution for token metadata, allowing for both base URIs and token-specific URIs.
 </Callout>
 
 ## Overview
 
-The ERC1155Facet implements the ERC-1155 multi-token standard, enabling a diamond to manage both fungible and non-fungible tokens. It provides core functionalities for balance tracking, approvals, and transfers, facilitating a unified token management system within the diamond.
+The ERC1155Facet provides a standard interface for managing multi-token standards within a Compose diamond. It supports both fungible and non-fungible tokens, enabling batched operations for transfers and balance checks, enhancing efficiency for complex interactions.
 
 ---
 
@@ -65,28 +65,6 @@ The ERC1155Facet implements the ERC-1155 multi-token standard, enabling a diamon
 
 ## Functions
 
-### getStorage
-
-Returns the ERC-1155 storage struct from the predefined diamond storage slot. Uses inline assembly to set the storage slot reference.
-
-<ExpandableCode language="solidity" maxLines={8}>
-{`function getStorage() internal pure returns (ERC1155Storage storage s);`}
-</ExpandableCode>
-
-**Returns:**
-
-<PropertyTable
-  properties={[
-    {
-      name: "s",
-      type: "ERC1155Storage",
-      description: "The ERC-1155 storage struct reference."
-    }
-  ]}
-  showRequired={false}
-/>
-
----
 ### uri
 
 Returns the URI for token type `_id`. If a token-specific URI is set in tokenURIs[_id], returns the concatenation of baseURI and tokenURIs[_id]. Note that baseURI is empty by default and must be set explicitly if concatenation is desired. If no token-specific URI is set, returns the default URI which applies to all token types. The default URI may contain the substring `&#123;id&#125;` which clients should replace with the actual token ID.
@@ -625,23 +603,24 @@ error ERC1155InvalidArrayLength(uint256 _idsLength, uint256 _valuesLength);
 
 import {IERC1155Facet} from "@compose/contracts/src/facets/ERC1155/IERC1155Facet.sol";
 
-contract ERC1155Consumer {
-    IERC1155Facet private immutable _erc1155Facet;
+contract MyERC1155Consumer {
+    IERC1155Facet public erc1155Facet;
 
     constructor(address _diamondAddress) {
-        _erc1155Facet = IERC1155Facet(_diamondAddress);
+        erc1155Facet = IERC1155Facet(_diamondAddress);
     }
 
-    function getTokenBalance(address _account, uint256 _id) external view returns (uint256) {
-        return _erc1155Facet.balanceOf(_account, _id);
-    }
+    function consumeERC1155() external {
+        address owner = msg.sender;
+        uint256 tokenId = 1;
+        uint256 amount = 10;
 
-    function getTokenUri(uint256 _id) external view returns (string memory) {
-        return _erc1155Facet.uri(_id);
-    }
+        // Example: Check balance
+        uint256 balance = erc1155Facet.balanceOf(owner, tokenId);
 
-    function transferSingleToken(address _from, address _to, uint256 _id, uint256 _value) external {
-        _erc1155Facet.safeTransferFrom(_from, _to, _id, _value, "");
+        // Example: Transfer tokens (assuming caller has approved operator or is owner)
+        // Note: This requires proper approval setup or calling from an authorized address.
+        // erc1155Facet.safeTransferFrom(owner, address(this), tokenId, amount, "");
     }
 }`}
 </ExpandableCode>
@@ -649,19 +628,19 @@ contract ERC1155Consumer {
 ## Best Practices
 
 <Callout type="tip" title="Best Practice">
-- Initialize the ERC1155Facet with the diamond proxy address before interaction.
-- Ensure necessary approvals are set using `setApprovalForAll` before performing transfers on behalf of another account.
-- Handle token URIs carefully, considering both base URI concatenation and the `&#123;id&#125;` placeholder.
+- Initialize the ERC1155 facet with a unique storage slot using the diamond proxy's initializer functions.
+- Implement explicit access control mechanisms for functions like `safeTransferFrom` and `safeBatchTransferFrom` if necessary, beyond the standard ERC-1155 approval patterns.
+- Utilize `balanceOfBatch` and `safeBatchTransferFrom` for gas efficiency when performing operations on multiple token IDs or accounts.
 </Callout>
 
 ## Security Considerations
 
 <Callout type="warning" title="Security">
-Ensure sufficient balance before initiating transfers to prevent `ERC1155InsufficientBalance` errors. Validate `_from`, `_to`, and `_id` parameters to prevent unintended state changes or errors. Approvals should be managed carefully to prevent unauthorized token movements. The `safeTransferFrom` and `safeBatchTransferFrom` functions include checks to ensure the recipient contract implements the `onERC1155Received` hook if applicable.
+Ensure that the `operator` address has been granted approval via `setApprovalForAll` before calling transfer functions. Validate `from`, `to`, and `id` parameters to prevent unintended transfers. Be aware of potential reentrancy if external contracts are called within custom logic that interacts with this facet.
 </Callout>
 
 <div style={{marginTop: "3rem", paddingTop: "2rem", borderTop: "1px solid var(--ifm-color-emphasis-200)"}}>
   <WasThisHelpful pageId="ERC1155Facet" />
 </div>
 
-<LastUpdated date="2025-12-21T22:05:28.387Z" />
+<LastUpdated date="2025-12-23T00:01:18.987Z" />

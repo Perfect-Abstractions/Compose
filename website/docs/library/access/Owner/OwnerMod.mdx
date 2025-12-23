@@ -1,8 +1,8 @@
 ---
 sidebar_position: 99
 title: "OwnerMod"
-description: "Manages contract ownership according to ERC-173."
-gitSource: "https://github.com/maxnorm/Compose/blob/5736454575f67743dd05ba6cb1265bc06d0c1422/src/access/Owner/OwnerMod.sol"
+description: "Manages ERC-173 contract ownership and access control."
+gitSource: "https://github.com/Perfect-Abstractions/Compose/tree/main/src/access/Owner/OwnerMod.sol"
 ---
 
 import DocSubtitle  from '@site/src/components/docs/DocSubtitle';
@@ -21,14 +21,13 @@ import GradientText from '@site/src/components/ui/GradientText';
 import GradientButton from '@site/src/components/ui/GradientButton';
 
 <DocSubtitle>
-Manages contract ownership according to ERC-173.
+Manages ERC-173 contract ownership and access control.
 </DocSubtitle>
 
 <Callout type="info" title="Key Features">
-- Implements ERC-173 standard for contract ownership.
-- Provides `owner()` view function to retrieve the current owner.
-- Includes `requireOwner()` for access control, reverting if the caller is not the owner.
-- Supports ownership transfer and renouncement via `transferOwnership()`.
+- ERC-173 compliant ownership tracking.
+- Functions for retrieving, transferring, and renouncing ownership.
+- Access control enforcement via `requireOwner`.
 </Callout>
 
 <Callout type="info" title="Module Usage">
@@ -37,7 +36,7 @@ This module provides internal functions for use in your custom facets. Import it
 
 ## Overview
 
-The OwnerMod provides the foundational storage and functions for ERC-173 contract ownership. It enables secure owner management, including transferring ownership and renouncing it. This module is crucial for establishing administrative control within a diamond, ensuring that critical operations can be restricted to authorized entities.
+The OwnerMod provides essential functionality for managing contract ownership according to the ERC-173 standard. It defines storage for the owner's address and offers functions to retrieve, transfer, and enforce ownership, crucial for secure administrative operations within a Compose diamond.
 
 ---
 
@@ -208,28 +207,28 @@ error OwnerUnauthorizedAccount();
 <ExpandableCode language="solidity" maxLines={20} title="Example Implementation">
 {`pragma solidity ^0.8.30;
 
-import {IOwnerMod} from "@compose/modules/owner/IOwnerMod.sol";
-import {OwnerStorage} from "@compose/modules/owner/OwnerStorage.sol";
+import {IOwnerMod} from "@compose/modules/OwnerMod/IOwnerMod.sol";
+import {OwnerStorage} from "@compose/modules/OwnerMod/OwnerStorage.sol";
 
 contract MyOwnerFacet {
-    // Assuming OwnerMod storage is deployed at STORAGE_POSITION
-    uint256 constant STORAGE_POSITION = 1;
+    uint256 constant OWNER_STORAGE_POSITION = 1; // Example storage slot
 
-    function getOwner() external view returns (address) {
-        OwnerStorage storage storageSlot = OwnerStorage(STORAGE_POSITION);
-        return storageSlot.owner;
+    function getOwner() public view returns (address) {
+        // Access storage directly or via a helper if provided by the module
+        // This example assumes direct access to storage for demonstration
+        OwnerStorage storage ownerStorage = OwnerStorage(OWNER_STORAGE_POSITION);
+        return ownerStorage.owner;
     }
 
-    function transferContractOwnership(address _newOwner) external {
-        IOwnerMod(msg.sender).transferOwnership(_newOwner);
+    function transferOwner(address _newOwner) external {
+        // Assuming OwnerMod provides an interface or direct access
+        // This is a conceptual call, actual implementation depends on module's facet interface
+        IOwnerMod(OWNER_STORAGE_POSITION).transferOwnership(_newOwner);
     }
 
-    function renounceContractOwnership() external {
-        IOwnerMod(msg.sender).transferOwnership(address(0));
-    }
-
-    function requireCallerIsOwner() external view {
-        IOwnerMod(msg.sender).requireOwner();
+    function requireIsOwner() external view {
+        // Assuming OwnerMod provides an interface or direct access
+        IOwnerMod(OWNER_STORAGE_POSITION).requireOwner();
     }
 }`}
 </ExpandableCode>
@@ -237,19 +236,19 @@ contract MyOwnerFacet {
 ## Best Practices
 
 <Callout type="tip" title="Best Practice">
-- Only the current owner should be able to call `transferOwnership` or renounce ownership.
-- Use `transferOwnership` with `address(0)` to safely renounce ownership, preventing accidental lockouts.
-- Facets interacting with ownership should explicitly check the owner using `requireOwner` or by reading the owner address.
+- Use `transferOwnership` to safely transfer ownership, setting the new owner's address.
+- Set the owner to `address(0)` to renounce ownership when necessary, making the contract permissionless.
+- Utilize `requireOwner` within administrative functions to enforce access control and prevent unauthorized actions.
 </Callout>
 
 ## Integration Notes
 
 <Callout type="success" title="Shared Storage">
-The OwnerMod utilizes a dedicated storage slot (defined by `STORAGE_POSITION` in `OwnerStorage.sol`) to store the `OwnerStorage` struct. Any facet that needs to interact with ownership functions or check the owner's address must be aware of this storage layout and access it appropriately, typically by referencing the `IOwnerMod` interface and ensuring the module is deployed at the correct slot within the diamond's storage map.
+The OwnerMod reserves a specific storage slot (defined by `STORAGE_POSITION`) for its `OwnerStorage` struct. Facets interacting with ownership should access this storage slot. Changes to the owner address are immediately visible to all facets through this shared storage. The `setContractOwner` function is intended for initial deployment or specific administrative scenarios, while `transferOwnership` is the standard method for ongoing ownership management.
 </Callout>
 
 <div style={{marginTop: "3rem", paddingTop: "2rem", borderTop: "1px solid var(--ifm-color-emphasis-200)"}}>
   <WasThisHelpful pageId="OwnerMod" />
 </div>
 
-<LastUpdated date="2025-12-21T22:04:44.553Z" />
+<LastUpdated date="2025-12-23T00:00:34.984Z" />

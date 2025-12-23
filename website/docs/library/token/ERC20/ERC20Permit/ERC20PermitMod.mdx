@@ -1,8 +1,8 @@
 ---
 sidebar_position: 99
 title: "ERC20PermitMod"
-description: "ERC-2612 Permit logic and domain separator"
-gitSource: "https://github.com/maxnorm/Compose/blob/5736454575f67743dd05ba6cb1265bc06d0c1422/src/token/ERC20/ERC20Permit/ERC20PermitMod.sol"
+description: "ERC-2612 Permit and Domain Separator Logic"
+gitSource: "https://github.com/Perfect-Abstractions/Compose/tree/main/src/token/ERC20/ERC20Permit/ERC20PermitMod.sol"
 ---
 
 import DocSubtitle  from '@site/src/components/docs/DocSubtitle';
@@ -21,13 +21,13 @@ import GradientText from '@site/src/components/ui/GradientText';
 import GradientButton from '@site/src/components/ui/GradientButton';
 
 <DocSubtitle>
-ERC-2612 Permit logic and domain separator
+ERC-2612 Permit and Domain Separator Logic
 </DocSubtitle>
 
 <Callout type="info" title="Key Features">
-- Implements ERC-2612 permit functionality for gasless allowance grants.
-- Manages the domain separator for signature validation, ensuring chain and contract uniqueness.
-- Provides a standardized interface for permit operations.
+- Generates the domain separator required for ERC-2612 signatures.
+- Validates owner signatures for token approvals.
+- Allows for gasless token approvals by enabling off-chain signing.
 </Callout>
 
 <Callout type="info" title="Module Usage">
@@ -36,7 +36,7 @@ This module provides internal functions for use in your custom facets. Import it
 
 ## Overview
 
-This module provides the necessary logic and storage structures for implementing ERC-2612 permit functionality. It allows users to grant allowances via signed messages, enhancing gas efficiency and user experience. Integrating this module enables standard permit flows within your diamond.
+This module provides the core logic for implementing the ERC-2612 Permit functionality. It handles domain separator generation and permit signature validation, enabling gasless token approvals for users. Integrating this module allows your diamond to support off-chain signature approvals for ERC-20 tokens.
 
 ---
 
@@ -153,7 +153,7 @@ Validates a permit signature and sets allowance. Emits Approval event; must be e
     {
       name: "_deadline",
       type: "uint256",
-      description: "Permit\&#x27;s time deadline."
+      description: "Permit\'s time deadline."
     }
   ]}
   showRequired={false}
@@ -236,43 +236,43 @@ address _owner, address _spender, uint256 _value, uint256 _deadline, uint8 _v, b
 <ExpandableCode language="solidity" maxLines={20} title="Example Implementation">
 {`pragma solidity ^0.8.30;
 
-import {IERC20PermitMod, ERC20InvalidSpender, ERC2612InvalidSignature} from "@compose/modules/erc20-permit/src/ERC20PermitMod.sol";
+import {IERC20PermitMod} from "@compose/modules/ERC20PermitMod.sol";
 
 contract MyERC20Facet {
-    using ERC20PermitMod for ERC20PermitMod.PermitStorage;
+    IERC20PermitMod private immutable _erc20PermitMod;
 
-    ERC20PermitMod.PermitStorage public permitStorage;
+    constructor(address _erc20PermitModAddress) {
+        _erc20PermitMod = IERC20PermitMod(_erc20PermitModAddress);
+    }
 
     function permit(address owner, address spender, uint256 value, uint256 deadline, uint8 v, bytes32 r, bytes32 s) external {
-        // Ensure this function is callable and correctly routed within the diamond.
-        // The module's permit function will validate the signature and update allowances.
-        permitStorage.permit(owner, spender, value, deadline, v, r, s);
+        // Delegate permit validation and allowance setting to the module.
+        // The module requires the diamond's address to generate the correct domain separator.
+        // The calling facet must emit the Approval event as per ERC-20 and ERC-2612 standards.
+        _erc20PermitMod.permit(owner, spender, value, deadline, v, r, s, address(this));
+        emit Approval(owner, spender, value);
     }
 
-    function DOMAIN_SEPARATOR() external view returns (bytes32) {
-        return permitStorage.DOMAIN_SEPARATOR();
-    }
-
-    // Other ERC20 functions like allowance, approve, etc.
+    // ... other ERC-20 functions
 }`}
 </ExpandableCode>
 
 ## Best Practices
 
 <Callout type="tip" title="Best Practice">
-- Ensure the `permit` function is correctly accessible through the diamond proxy.
-- The `Approval` event must be emitted by the facet calling the module's `permit` function, not the module itself.
-- Validate `deadline` to prevent stale permits.
+- Ensure the `permit` function in your facet correctly emits the `Approval` event after calling the module's `permit` function.
+- Verify that the `DOMAIN_SEPARATOR` is correctly calculated and utilized by the module; this is crucial for signature validity.
+- Implement appropriate access control for functions that might interact with or trigger the permit logic, if necessary, though permit itself is permissionless for the owner.
 </Callout>
 
 ## Integration Notes
 
 <Callout type="success" title="Shared Storage">
-This module manages its own `PermitStorage` struct. Facets integrating this module should declare a `PermitStorage` variable and use the `ERC20PermitMod` library to interact with it. The `permit` function within the module validates the signature and updates allowances. The `Approval` event, however, must be emitted by the calling facet after the module's `permit` function successfully executes. The `DOMAIN_SEPARATOR` function should be exposed by the facet to allow clients to construct valid permit messages.
+The `ERC20PermitMod` library requires access to the diamond's address to correctly compute the domain separator. The `permit` function in this module validates the signature and updates the allowance, but it does not emit the `Approval` event. The facet calling the module's `permit` function must emit the `Approval` event to comply with ERC-20 and ERC-2612 standards. Storage for allowances is assumed to be managed by another facet that the `ERC20PermitMod` can interact with or that the calling facet updates based on the module's validation.
 </Callout>
 
 <div style={{marginTop: "3rem", paddingTop: "2rem", borderTop: "1px solid var(--ifm-color-emphasis-200)"}}>
   <WasThisHelpful pageId="ERC20PermitMod" />
 </div>
 
-<LastUpdated date="2025-12-21T22:04:55.890Z" />
+<LastUpdated date="2025-12-23T00:00:47.302Z" />
