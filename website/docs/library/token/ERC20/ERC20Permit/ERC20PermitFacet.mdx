@@ -1,0 +1,339 @@
+---
+sidebar_position: 99
+title: "ERC20PermitFacet"
+description: "EIP-2612 compliant ERC-20 permit functionality."
+gitSource: "https://github.com/Perfect-Abstractions/Compose/tree/main/src/token/ERC20/ERC20Permit/ERC20PermitFacet.sol"
+---
+
+import DocSubtitle  from '@site/src/components/docs/DocSubtitle';
+import Badge from '@site/src/components/ui/Badge';
+import Callout from '@site/src/components/ui/Callout';
+import CalloutBox from '@site/src/components/ui/CalloutBox';
+import Accordion, { AccordionGroup } from '@site/src/components/ui/Accordion';
+import PropertyTable from '@site/src/components/api/PropertyTable';
+import ExpandableCode from '@site/src/components/code/ExpandableCode';
+import CodeShowcase from '@site/src/components/code/CodeShowcase';
+import RelatedDocs from '@site/src/components/docs/RelatedDocs';
+import WasThisHelpful from '@site/src/components/docs/WasThisHelpful';
+import LastUpdated from '@site/src/components/docs/LastUpdated';
+import ReadingTime from '@site/src/components/docs/ReadingTime';
+import GradientText from '@site/src/components/ui/GradientText';
+import GradientButton from '@site/src/components/ui/GradientButton';
+
+<DocSubtitle>
+EIP-2612 compliant ERC-20 permit functionality.
+</DocSubtitle>
+
+<Callout type="info" title="Key Features">
+- Implements EIP-2612 permit functionality for ERC-20 tokens.
+- Enables gasless approvals by allowing users to sign allowance requests off-chain.
+- Utilizes nonces and domain separators to prevent replay attacks and ensure signature validity.
+</Callout>
+
+## Overview
+
+The ERC20PermitFacet enables gasless approvals for ERC-20 tokens by implementing EIP-2612's permit functionality. Users can grant allowances to spenders via signed messages, which can then be submitted by any party to the diamond, bypassing the need for the user to pay gas for the approval transaction.
+
+---
+
+## Storage
+
+### ERC20Storage
+
+<ExpandableCode language="solidity" maxLines={15} title="Definition">
+{`struct ERC20Storage {
+    mapping(address owner => uint256 balance) balanceOf;
+    uint256 totalSupply;
+    mapping(address owner => mapping(address spender => uint256 allowance)) allowance;
+    uint8 decimals;
+    string name;
+}`}
+</ExpandableCode>
+
+---
+### ERC20PermitStorage
+
+<ExpandableCode language="solidity" maxLines={15} title="Definition">
+{`struct ERC20PermitStorage {
+    mapping(address owner => uint256) nonces;
+}`}
+</ExpandableCode>
+
+### State Variables
+
+<PropertyTable
+  properties={[
+    {
+      name: "ERC20_STORAGE_POSITION",
+      type: "bytes32",
+      description: "Diamond storage slot position for this module (Value: `keccak256(\"compose.erc20\")`)"
+    },
+    {
+      name: "STORAGE_POSITION",
+      type: "bytes32",
+      description: "Diamond storage slot position for this module (Value: `keccak256(\"compose.erc20.permit\")`)"
+    }
+  ]}
+  showRequired={false}
+/>
+
+## Functions
+
+### nonces
+
+Returns the current nonce for an owner. This value changes each time a permit is used.
+
+<ExpandableCode language="solidity" maxLines={8}>
+{`function nonces(address _owner) external view returns (uint256);`}
+</ExpandableCode>
+
+**Parameters:**
+
+<PropertyTable
+  properties={[
+    {
+      name: "_owner",
+      type: "address",
+      description: "The address of the owner."
+    }
+  ]}
+  showRequired={false}
+/>
+
+**Returns:**
+
+<PropertyTable
+  properties={[
+    {
+      name: "-",
+      type: "uint256",
+      description: "The current nonce."
+    }
+  ]}
+  showRequired={false}
+/>
+
+---
+### DOMAIN_SEPARATOR
+
+Returns the domain separator used in the encoding of the signature for permit. This value is unique to a contract and chain ID combination to prevent replay attacks.
+
+<ExpandableCode language="solidity" maxLines={8}>
+{`function DOMAIN_SEPARATOR() external view returns (bytes32);`}
+</ExpandableCode>
+
+**Returns:**
+
+<PropertyTable
+  properties={[
+    {
+      name: "-",
+      type: "bytes32",
+      description: "The domain separator."
+    }
+  ]}
+  showRequired={false}
+/>
+
+---
+### permit
+
+Sets the allowance for a spender via a signature. This function implements EIP-2612 permit functionality.
+
+<ExpandableCode language="solidity" maxLines={8}>
+{`function permit(
+    address _owner,
+    address _spender,
+    uint256 _value,
+    uint256 _deadline,
+    uint8 _v,
+    bytes32 _r,
+    bytes32 _s
+) external;`}
+</ExpandableCode>
+
+**Parameters:**
+
+<PropertyTable
+  properties={[
+    {
+      name: "_owner",
+      type: "address",
+      description: "The address of the token owner."
+    },
+    {
+      name: "_spender",
+      type: "address",
+      description: "The address of the spender."
+    },
+    {
+      name: "_value",
+      type: "uint256",
+      description: "The amount of tokens to approve."
+    },
+    {
+      name: "_deadline",
+      type: "uint256",
+      description: "The deadline for the permit (timestamp)."
+    },
+    {
+      name: "_v",
+      type: "uint8",
+      description: "The recovery byte of the signature."
+    },
+    {
+      name: "_r",
+      type: "bytes32",
+      description: "The r value of the signature."
+    },
+    {
+      name: "_s",
+      type: "bytes32",
+      description: "The s value of the signature."
+    }
+  ]}
+  showRequired={false}
+/>
+
+## Events
+
+<AccordionGroup>
+  <Accordion title="Approval" defaultOpen={false}>
+    <div style={{marginBottom: "1rem"}}>
+      Emitted when an approval is made for a spender by an owner.
+    </div>
+
+    <div style={{marginBottom: "1rem"}}>
+      <strong>Signature:</strong>
+      <ExpandableCode language="solidity" maxLines={5}>
+{`event Approval(address indexed _owner, address indexed _spender, uint256 _value);`}
+      </ExpandableCode>
+    </div>
+
+    <div style={{marginBottom: "1rem"}}>
+      <strong>Parameters:</strong>
+      <PropertyTable
+        properties={[
+          {
+            name: "_owner",
+            type: "address",
+            description: "The address granting the allowance."
+          },
+          {
+            name: "_spender",
+            type: "address",
+            description: "The address receiving the allowance."
+          },
+          {
+            name: "_value",
+            type: "uint256",
+            description: "The amount approved."
+          }
+        ]}
+        showRequired={false}
+      />
+    </div>
+  </Accordion>
+</AccordionGroup>
+
+## Errors
+
+<AccordionGroup>
+  <Accordion title="ERC2612InvalidSignature" defaultOpen={false}>
+    <div style={{marginBottom: "1rem"}}>
+      Thrown when a permit signature is invalid or expired.
+    </div>
+
+    <div>
+      <strong>Signature:</strong>
+      <ExpandableCode language="solidity" maxLines={5}>
+error ERC2612InvalidSignature(
+    address _owner, address _spender, uint256 _value, uint256 _deadline, uint8 _v, bytes32 _r, bytes32 _s
+);
+      </ExpandableCode>
+    </div>
+  </Accordion>
+  <Accordion title="ERC20InvalidSpender" defaultOpen={false}>
+    <div style={{marginBottom: "1rem"}}>
+      Thrown when the spender address is invalid (e.g., zero address).
+    </div>
+
+    <div>
+      <strong>Signature:</strong>
+      <ExpandableCode language="solidity" maxLines={5}>
+error ERC20InvalidSpender(address _spender);
+      </ExpandableCode>
+    </div>
+  </Accordion>
+</AccordionGroup>
+
+## Usage Example
+
+<ExpandableCode language="solidity" maxLines={20} title="Example Implementation">
+{`pragma solidity ^0.8.30;
+
+import {IERC20Permit } from "@openzeppelin/contracts/token/ERC20/extensions/IERC20Permit.sol";
+import { DiamondLoupeFacet } from "@openzeppelin/contracts/facets/DiamondLoupeFacet.sol";
+import { FacetNames } from "@openzeppelin/contracts/facets/FacetNames.sol";
+
+// Assume Diamond interface and DiamondProxy are deployed elsewhere
+interface IDiamond {
+    function diamondCut(FacetCut[] calldata _diamondCut, address _init, bytes calldata _calldata) external;
+    function facetAddress(bytes4 _functionSelector) external view returns (address _facetAddress);
+    function facetFunctionSelectors(address _facet) external view returns (bytes4[] memory _selectors);
+    function facets() external view returns (Facet[] memory _facets);
+}
+
+interface IERC20PermitFacet {
+    function permit(address owner, address spender, uint256 value, uint256 deadline, uint8 v, bytes32 r, bytes32 s) external;
+    function nonces(address owner) external view returns (uint256);
+    function DOMAIN_SEPARATOR() external view returns (bytes32);
+}
+
+contract ERC20PermitDeployer {
+    // ... deployment logic ...
+
+    function grantPermit(address _diamondProxyAddress, address _tokenAddress, address _spender, uint256 _amount, uint256 _deadline) public {
+        // Fetch nonce and domain separator from the diamond
+        IERC20PermitFacet permitFacet = IERC20PermitFacet(_diamondProxyAddress);
+        bytes32 domainSeparator = permitFacet.DOMAIN_SEPARATOR();
+        uint256 nonce = permitFacet.nonces(msg.sender);
+
+        // Construct the permit message hash
+        bytes32 digest = keccak256(
+            abi.encode( IERC20Permit.permitHash(), msg.sender, _spender, _amount, nonce, _deadline)
+        );
+
+        // Sign the digest (this would typically be done off-chain)
+        // For demonstration, assume \`v\`, \`r\`, \`s\` are obtained from an external signature
+        uint8 v;
+        bytes32 r;
+        bytes32 s;
+
+        // Submit the permit to the diamond
+        // Note: This assumes the ERC20 token contract is accessible and has an \`approve\` function
+        // and that the diamond proxy is configured to route permit calls to the ERC20PermitFacet.
+        permitFacet.permit(_tokenAddress, _spender, _amount, _deadline, v, r, s);
+    }
+}`}
+</ExpandableCode>
+
+## Best Practices
+
+<Callout type="tip" title="Best Practice">
+- Integrate the `ERC20PermitFacet` into your diamond, ensuring its function selectors are correctly routed.
+- Store the `DOMAIN_SEPARATOR` and `nonces` mapping within the diamond's storage or a dedicated facet for consistent access.
+- Off-chain signing of permit messages is crucial for enabling gasless approvals. The signed data is then submitted on-chain by any party.
+</Callout>
+
+## Security Considerations
+
+<Callout type="warning" title="Security">
+Ensure the `DOMAIN_SEPARATOR` is correctly computed and unique per chain ID and contract instance. The `nonces` mapping must be managed carefully to prevent permit reuse. Validate the signature parameters (`v`, `r`, `s`) and the `owner` address before setting allowances. Access to the `permit` function should be controlled if necessary, although typically it's intended to be permissionless once the signature is valid.
+</Callout>
+
+<div style={{marginTop: "3rem", paddingTop: "2rem", borderTop: "1px solid var(--ifm-color-emphasis-200)"}}>
+  <WasThisHelpful pageId="ERC20PermitFacet" />
+</div>
+
+<LastUpdated date="2025-12-23T00:26:50.417Z" />

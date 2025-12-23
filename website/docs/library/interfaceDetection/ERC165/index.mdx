@@ -1,0 +1,30 @@
+---
+title: "ERC-165"
+description: "ERC-165 components for Compose diamonds."
+sidebar_class_name: hidden
+---
+
+import DocCard, { DocCardGrid } from '@site/src/components/docs/DocCard';
+import DocSubtitle from '@site/src/components/docs/DocSubtitle';
+import Icon from '@site/src/components/ui/Icon';
+
+<DocSubtitle>
+  ERC-165 components for Compose diamonds.
+</DocSubtitle>
+
+<DocCardGrid columns={2}>
+  <DocCard
+    title="ERC165Facet"
+    description={"Implements ERC-165 interface detection for diamond contracts."}
+    href="/docs/library/interfaceDetection/ERC165/ERC165Facet"
+    icon={<Icon name="book" size={28} />}
+    size="medium"
+  />
+  <DocCard
+    title="ERC165Mod"
+    description={"ERC-165 interface detection and registration."}
+    href="/docs/library/interfaceDetection/ERC165/ERC165Mod"
+    icon={<Icon name="book" size={28} />}
+    size="medium"
+  />
+</DocCardGrid>
