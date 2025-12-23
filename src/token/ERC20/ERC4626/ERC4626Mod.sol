@@ -332,7 +332,7 @@ function maxMint(
     view
     returns (uint256 maxShares)
 {
-    maxShares =type(uint256).max;
+    maxShares = type(uint256).max;
     return maxShares;
 }
 
