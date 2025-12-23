@@ -31,12 +31,21 @@ contract ERC4626Facet {
     error ERC4626InsufficientAssets();
 
     /**
-     * @notice Emitted when assets are deposited and shares issued.
+     * @notice Emitted when assets are deposited into the vault and corresponding shares issued.
+     * @param sender The address initiating the deposit (msg.sender)
+     * @param owner The account that will receive the shares
+     * @param assets The amount of asset tokens deposited
+     * @param shares The amount of vault shares minted
      */
     event Deposit(address indexed sender, address indexed owner, uint256 assets, uint256 shares);
 
     /**
-     * @notice Emitted when assets are withdrawn and shares burned.
+     * @notice Emitted when shares are withdrawn (burned) from the vault in exchange for assets.
+     * @param sender The address initiating the withdrawal (msg.sender)
+     * @param receiver The address receiving the withdrawn assets
+     * @param owner The account whose shares were burned
+     * @param assets The amount of asset tokens withdrawn
+     * @param shares The amount of shares burned for the withdrawal
      */
     event Withdraw(
         address indexed sender, address indexed receiver, address indexed owner, uint256 assets, uint256 shares
@@ -88,7 +97,8 @@ contract ERC4626Facet {
     }
 
     /**
-     * @notice Returns the address of the underlying asset.
+     * @notice Returns the address of the vault's underlying asset.
+     * @return assetTokenAddress The ERC20 token used for deposits/withdrawals
      */
     function asset() external view returns (address assetTokenAddress) {
         ERC4626Storage storage s = getStorage();
@@ -97,7 +107,9 @@ contract ERC4626Facet {
     }
 
     /**
-     * @notice Returns the total amount of underlying assets in the vault.
+     * @notice Returns the total underlying assets managed by the vault.
+     * @return totalManagedAssets Assets (in asset token) currently held by the vault,
+     *         including virtual buffering.
      */
     function totalAssets() external view returns (uint256 totalManagedAssets) {
         ERC4626Storage storage s = getStorage();
@@ -264,7 +276,12 @@ contract ERC4626Facet {
     }
 
     /**
-     * @dev Safe ERC20 transferFrom wrapper supporting non-standard tokens.
+     * @dev Safely calls IERC20.transferFrom accounting for non-standard ERC20s.
+     * @param token Token to transfer
+     * @param from Source address
+     * @param to Target address
+     * @param amount Value to transfer
+     * @return Whether the call succeeded (true for success)
      */
     function _safeTransferFrom(IERC20 token, address from, address to, uint256 amount) internal returns (bool) {
         if (address(token).code.length == 0) return false;
@@ -281,7 +298,11 @@ contract ERC4626Facet {
     }
 
     /**
-     * @dev Safe ERC20 transfer wrapper supporting non-standard tokens.
+     * @dev Safely calls IERC20.transfer accounting for non-standard ERC20s.
+     * @param token Token to transfer
+     * @param to Target address
+     * @param amount Value to transfer
+     * @return Whether the call succeeded (true for success)
      */
     function _safeTransfer(IERC20 token, address to, uint256 amount) internal returns (bool) {
         if (address(token).code.length == 0) return false;
@@ -298,8 +319,10 @@ contract ERC4626Facet {
     }
 
     /**
-     * @notice Converts a given amount of assets to the equivalent shares.
-     * @param assets Amount of assets to convert.
+     * @notice Converts a specified amount of assets to the corresponding amount of shares,
+     *         using current total assets and shares.
+     * @param assets The amount of asset tokens to convert
+     * @return shares Amount of vault shares representing the supplied assets
      */
     function convertToShares(uint256 assets) external view returns (uint256 shares) {
         ERC20Storage storage erc20s = getERC20Storage();
@@ -311,8 +334,10 @@ contract ERC4626Facet {
     }
 
     /**
-     * @notice Converts a given amount of shares to the equivalent assets.
-     * @param shares Amount of shares to convert.
+     * @notice Converts a specified amount of shares to the corresponding amount of underlying assets,
+     *         using current total assets and shares.
+     * @param shares Amount of vault shares to convert
+     * @return assets Amount of asset tokens represented by the shares
      */
     function convertToAssets(uint256 shares) external view returns (uint256 assets) {
         ERC20Storage storage erc20s = getERC20Storage();
@@ -324,7 +349,9 @@ contract ERC4626Facet {
     }
 
     /**
-     * @notice Returns the maximum depositable amount.
+     * @notice Returns the maximum amount of assets that may be deposited for an account.
+     * @dev Per ERC4626, this may be unlimited. No per-account logic here.
+     * @return maxAssets The maximum deposit amount (uint256 max)
      */
     function maxDeposit(
         /**
@@ -340,8 +367,9 @@ contract ERC4626Facet {
     }
 
     /**
-     * @notice Returns the number of shares that would be received for `assets` deposited.
-     * @param assets Amount of assets to preview.
+     * @notice Returns the number of shares that would be minted by depositing the given `assets`.
+     * @param assets Amount of asset tokens to deposit
+     * @return shares Amount of vault shares that would be minted
      */
     function previewDeposit(uint256 assets) external view returns (uint256 shares) {
         ERC20Storage storage erc20s = getERC20Storage();
@@ -379,7 +407,9 @@ contract ERC4626Facet {
     }
 
     /**
-     * @notice Returns the maximum shares that can be minted.
+     * @notice Returns the maximum number of shares that may be minted for an account.
+     * @dev Per ERC4626, this may be unlimited. No per-account logic here.
+     * @return maxShares The maximum mintable shares (uint256 max)
      */
     function maxMint(
         /**
@@ -395,8 +425,9 @@ contract ERC4626Facet {
     }
 
     /**
-     * @notice Returns the asset cost of minting `shares` shares.
-     * @param shares Amount of shares to preview.
+     * @notice Returns the amount of assets required to mint `shares` shares, rounded up if necessary.
+     * @param shares Amount of shares to mint
+     * @return assets Asset tokens that must be deposited to mint the given shares
      */
     function previewMint(uint256 shares) external view returns (uint256 assets) {
         ERC20Storage storage erc20s = getERC20Storage();
@@ -434,8 +465,9 @@ contract ERC4626Facet {
     }
 
     /**
-     * @notice Returns the max withdrawable amount of assets for an owner.
-     * @param owner The address to check.
+     * @notice Returns the maximum amount of assets that can be withdrawn for the given owner.
+     * @param owner The address to check withdrawable assets for
+     * @return maxAssets Max withdrawable amount in asset tokens for the owner
      */
     function maxWithdraw(address owner) external view returns (uint256 maxAssets) {
         ERC20Storage storage erc20s = getERC20Storage();
@@ -448,8 +480,9 @@ contract ERC4626Facet {
     }
 
     /**
-     * @notice Returns the required shares needed to withdraw a given amount of assets.
-     * @param assets Amount of assets to withdraw.
+     * @notice Returns the number of shares that must be burned to withdraw `assets`, rounded up.
+     * @param assets Amount of asset tokens to be withdrawn
+     * @return shares Shares required to burn for withdrawal
      */
     function previewWithdraw(uint256 assets) external view returns (uint256 shares) {
         ERC20Storage storage erc20s = getERC20Storage();
@@ -498,8 +531,9 @@ contract ERC4626Facet {
     }
 
     /**
-     * @notice Returns how many shares can be redeemed by an owner.
-     * @param owner The address to check.
+     * @notice Returns the maximum number of shares that an owner may redeem from the vault.
+     * @param owner The address to check redeemable shares for
+     * @return maxShares Number of redeemable shares for the owner
      */
     function maxRedeem(address owner) external view returns (uint256 maxShares) {
         ERC20Storage storage erc20s = getERC20Storage();
@@ -508,8 +542,9 @@ contract ERC4626Facet {
     }
 
     /**
-     * @notice Returns the amount of assets that would be received for redeeming shares.
-     * @param shares Amount of shares to preview.
+     * @notice Returns the amount of assets that would be received for redeeming the given `shares`.
+     * @param shares Amount of shares to redeem
+     * @return assets Asset tokens returned by redeeming the shares
      */
     function previewRedeem(uint256 shares) external view returns (uint256 assets) {
         ERC20Storage storage erc20s = getERC20Storage();

@@ -25,12 +25,21 @@ error ERC4626InsufficientShares();
 error ERC4626InsufficientAssets();
 
 /**
- * @dev Fires on deposits (assets in, shares out).
+ * @dev Emitted when assets are deposited and shares are minted.
+ * @param sender The address that initiated the deposit.
+ * @param owner The address receiving the shares.
+ * @param assets Amount of assets deposited.
+ * @param shares Amount of shares minted.
  */
 event Deposit(address indexed sender, address indexed owner, uint256 assets, uint256 shares);
 
 /**
- * @dev Fires on withdrawals (assets out, shares burned).
+ * @dev Emitted when assets are withdrawn and shares are burned.
+ * @param sender The address that initiated the withdrawal.
+ * @param receiver The address receiving the withdrawn assets.
+ * @param owner The address whose shares are burnt.
+ * @param assets Amount of assets withdrawn.
+ * @param shares Amount of shares burned.
  */
 event Withdraw(address indexed sender, address indexed receiver, address indexed owner, uint256 assets, uint256 shares);
 
@@ -80,7 +89,8 @@ function getStorage() pure returns (ERC4626Storage storage s) {
 }
 
 /**
- * @dev Get the address of the asset used by the vault.
+ * @notice Returns the address of the underlying ERC20 asset token.
+ * @return assetTokenAddress The asset's contract address.
  */
 function asset() view returns (address assetTokenAddress) {
     ERC4626Storage storage s = getStorage();
@@ -89,7 +99,8 @@ function asset() view returns (address assetTokenAddress) {
 }
 
 /**
- * @dev Get the current total assets in the vault contract.
+ * @notice Returns the total amount of the underlying asset managed by the vault.
+ * @return totalManagedAssets The total managed assets, including virtual assets.
  */
 function totalAssets() view returns (uint256 totalManagedAssets) {
     ERC4626Storage storage s = getStorage();
@@ -211,6 +222,7 @@ function convertToShares(uint256 assets) view returns (uint256 shares) {
 /**
  * @dev Convert shares to the corresponding asset amount.
  * @param shares The number of shares to convert.
+ * @return assets The equivalent asset amount.
  */
 function convertToAssets(uint256 shares) view returns (uint256 assets) {
     ERC20Storage storage erc20s = getERC20Storage();
@@ -226,7 +238,9 @@ function convertToAssets(uint256 shares) view returns (uint256 assets) {
 }
 
 /**
- * @dev Maximum possible deposit allowed for this vault.
+ * @notice Returns the maximum assets allowed for deposit by a receiver.
+ * @dev Always returns the maximum possible uint256 value.
+ * @return maxAssets The max depositable asset amount.
  */
 function maxDeposit(
     /**
@@ -241,8 +255,9 @@ function maxDeposit(
 }
 
 /**
- * @dev Calculate shares to issue for a potential deposit of given assets.
- * @param assets Assets input for previewing shares minted.
+ * @notice Preview the number of shares that would be minted by depositing a given amount of assets.
+ * @param assets Asset quantity to preview.
+ * @return shares Estimated shares that would be minted.
  */
 function previewDeposit(uint256 assets) view returns (uint256 shares) {
     ERC20Storage storage erc20s = getERC20Storage();
@@ -258,7 +273,13 @@ function previewDeposit(uint256 assets) view returns (uint256 shares) {
 }
 
 /**
- * @dev Safe ERC20 transferFrom wrapper supporting non-standard tokens.
+ * @notice Executes a safe ERC20 transferFrom, supporting tokens that do not return a value.
+ * @dev Returns true if the call succeeded, false otherwise.
+ * @param token The ERC20 token contract.
+ * @param from Source address.
+ * @param to Destination address.
+ * @param amount Value to transfer.
+ * @return True if the operation succeeded, false otherwise.
  */
 function _safeTransferFrom(IERC20 token, address from, address to, uint256 amount) returns (bool) {
     if (address(token).code.length == 0) return false;
@@ -275,7 +296,12 @@ function _safeTransferFrom(IERC20 token, address from, address to, uint256 amoun
 }
 
 /**
- * @dev Safe ERC20 transfer wrapper supporting non-standard tokens.
+ * @notice Executes a safe ERC20 transfer, supporting tokens that do not return a value.
+ * @dev Returns true if the call succeeded, false otherwise.
+ * @param token The ERC20 token contract.
+ * @param to Destination address.
+ * @param amount Value to transfer.
+ * @return True if the operation succeeded, false otherwise.
  */
 function _safeTransfer(IERC20 token, address to, uint256 amount) returns (bool) {
     if (address(token).code.length == 0) return false;
@@ -292,10 +318,11 @@ function _safeTransfer(IERC20 token, address to, uint256 amount) returns (bool) 
 }
 
 /**
- * @dev Effect actual deposit, minting shares for the receiver.
- * @param assets Asset amount sent in.
- * @param receiver Address to receive the minted shares.
- * @return shares The number of shares minted as a result.
+ * @notice Deposit assets into the vault and mint shares for a receiver.
+ * @dev Transfers assets from msg.sender and mints shares for receiver.
+ * @param assets Amount of underlying assets to deposit.
+ * @param receiver Account to receive shares.
+ * @return shares Number of shares minted for the deposit.
  */
 function deposit(uint256 assets, address receiver) returns (uint256 shares) {
     if (receiver == address(0)) revert ERC4626InvalidAddress();
@@ -322,7 +349,9 @@ function deposit(uint256 assets, address receiver) returns (uint256 shares) {
 }
 
 /**
- * @dev Return the max number of shares that can be minted.
+ * @notice Returns the maximum number of shares that can be minted to a receiver.
+ * @dev Always returns the maximum possible uint256 value.
+ * @return maxShares The maximum shares that may be minted.
  */
 function maxMint(
     /**
@@ -337,8 +366,9 @@ function maxMint(
 }
 
 /**
- * @dev Preview the asset amount required for minting a number of shares.
- * @param shares The desired number of shares to mint.
+ * @notice Preview the required asset amount to mint a specific number of shares.
+ * @param shares Number of shares to mint.
+ * @return assets Assets needed to mint the given shares (rounded up).
  */
 function previewMint(uint256 shares) view returns (uint256 assets) {
     ERC20Storage storage erc20s = getERC20Storage();
@@ -356,8 +386,8 @@ function previewMint(uint256 shares) view returns (uint256 assets) {
 /**
  * @dev Mint exact shares in exchange for assets, assigning to receiver.
  * @param shares Number of shares to mint.
- * @param receiver Who receives these shares.
- * @return assets Asset quantity paid for minting.
+ * @param receiver Account to receive minted shares.
+ * @return assets Amount of assets provided for minting.
  */
 function mint(uint256 shares, address receiver) returns (uint256 assets) {
     if (receiver == address(0)) revert ERC4626InvalidAddress();
@@ -384,8 +414,9 @@ function mint(uint256 shares, address receiver) returns (uint256 assets) {
 }
 
 /**
- * @dev Get the max asset withdrawal allowed for the given owner.
- * @param owner Account address to check.
+ * @notice Returns the maximum amount of assets that an owner can withdraw.
+ * @param owner Address for which the maximum withdrawal is calculated.
+ * @return maxAssets Maximum withdrawable assets for the given owner.
  */
 function maxWithdraw(address owner) view returns (uint256 maxAssets) {
     ERC20Storage storage erc20s = getERC20Storage();
@@ -402,8 +433,9 @@ function maxWithdraw(address owner) view returns (uint256 maxAssets) {
 }
 
 /**
- * @dev Preview required shares for a withdrawal of the given asset amount.
- * @param assets Desired withdrawal quantity.
+ * @notice Preview the number of shares required to withdraw a given asset amount.
+ * @param assets Amount of underlying assets to withdraw.
+ * @return shares Number of shares that would be burned for the withdrawal (rounded up).
  */
 function previewWithdraw(uint256 assets) view returns (uint256 shares) {
     ERC20Storage storage erc20s = getERC20Storage();
@@ -419,11 +451,12 @@ function previewWithdraw(uint256 assets) view returns (uint256 shares) {
 }
 
 /**
- * @dev Burn owner's shares to release assets to the given receiver address.
- * @param assets Number of assets to withdraw.
- * @param receiver Address to receive assets.
- * @param owner The address whose shares are spent.
- * @return shares Amount of shares burned.
+ * @notice Withdraws a given amount of assets to receiver, burning appropriate shares from owner.
+ * @dev Transfers assets and burns shares; handles allowances if needed.
+ * @param assets Amount of assets to withdraw.
+ * @param receiver Address to receive withdrawn assets.
+ * @param owner Address whose shares will be burned.
+ * @return shares Number of shares burned as a result of withdrawal.
  */
 function withdraw(uint256 assets, address receiver, address owner) returns (uint256 shares) {
     if (receiver == address(0) || owner == address(0)) {
@@ -460,8 +493,9 @@ function withdraw(uint256 assets, address receiver, address owner) returns (uint
 }
 
 /**
- * @dev Find how many shares can currently be redeemed by the owner.
- * @param owner Whose shares are inquired.
+ * @notice Returns the maximum number of shares an owner can redeem at the current time.
+ * @param owner The address to query.
+ * @return maxShares Current share balance of the owner.
  */
 function maxRedeem(address owner) view returns (uint256 maxShares) {
     ERC20Storage storage erc20s = getERC20Storage();
@@ -470,8 +504,9 @@ function maxRedeem(address owner) view returns (uint256 maxShares) {
 }
 
 /**
- * @dev Show the resulting assets for redeeming the given share count.
- * @param shares Share count to be redeemed.
+ * @notice Preview assets that would be returned for redeeming a given number of shares.
+ * @param shares Amount of shares to redeem.
+ * @return assets Amount of assets to be returned for given shares.
  */
 function previewRedeem(uint256 shares) view returns (uint256 assets) {
     ERC20Storage storage erc20s = getERC20Storage();
@@ -487,11 +522,12 @@ function previewRedeem(uint256 shares) view returns (uint256 assets) {
 }
 
 /**
- * @dev Redeem shares from given owner, transferring assets to receiver.
- * @param shares Number of shares to redeem.
- * @param receiver Destination address for asset withdrawal.
- * @param owner User whose shares are spent in redemption.
- * @return assets Amount of assets delivered to receiver.
+ * @notice Redeems shares from an owner and sends the corresponding assets to a receiver.
+ * @dev Transfers assets and burns shares; handles allowances if needed.
+ * @param shares Amount of shares to redeem.
+ * @param receiver Address to receive redeemed assets.
+ * @param owner Shares owner's address to burn from.
+ * @return assets Amount of assets received for redemption.
  */
 function redeem(uint256 shares, address receiver, address owner) returns (uint256 assets) {
     if (receiver == address(0) || owner == address(0)) {
