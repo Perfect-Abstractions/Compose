@@ -1,8 +1,8 @@
 ---
 sidebar_position: 99
 title: "ERC721Facet"
-description: "Manages ERC-721 token standard operations within a diamond."
-gitSource: "https://github.com/maxnorm/Compose/blob/5736454575f67743dd05ba6cb1265bc06d0c1422/src/token/ERC721/ERC721/ERC721Facet.sol"
+description: "Manages ERC721 token ownership, transfers, and approvals."
+gitSource: "https://github.com/Perfect-Abstractions/Compose/tree/main/src/token/ERC721/ERC721/ERC721Facet.sol"
 ---
 
 import DocSubtitle  from '@site/src/components/docs/DocSubtitle';
@@ -21,18 +21,18 @@ import GradientText from '@site/src/components/ui/GradientText';
 import GradientButton from '@site/src/components/ui/GradientButton';
 
 <DocSubtitle>
-Manages ERC-721 token standard operations within a diamond.
+Manages ERC721 token ownership, transfers, and approvals.
 </DocSubtitle>
 
 <Callout type="info" title="Key Features">
-- Implements core ERC-721 functions: `name`, `symbol`, `tokenURI`, `balanceOf`, `ownerOf`, `getApproved`, `isApprovedForAll`.
-- Supports token transfers via `transferFrom` and `safeTransferFrom` (with and without data).
-- Manages approvals for individual tokens and for all tokens owned by an address.
+- Implements core ERC721 token management functions.
+- Supports token transfers with and without `data` payload for safe transfers.
+- Provides mechanisms for approving individual token transfers and operator approvals.
 </Callout>
 
 ## Overview
 
-The ERC721Facet provides the core functionality for managing non-fungible tokens (NFTs) on-chain, adhering to the ERC-721 standard. It handles token ownership, transfers, approvals, and metadata retrieval, enabling composability for NFT marketplaces and games within a Compose diamond.
+The ERC721Facet provides standard ERC721 functionality for token collections within a Compose diamond. It handles token ownership, metadata URIs, balance queries, and approval workflows, enabling composability with other facets.
 
 ---
 
@@ -67,28 +67,6 @@ The ERC721Facet provides the core functionality for managing non-fungible tokens
 
 ## Functions
 
-### getStorage
-
-Returns a pointer to the ERC-721 storage struct. Uses inline assembly to access the storage slot defined by STORAGE_POSITION.
-
-<ExpandableCode language="solidity" maxLines={8}>
-{`function getStorage() internal pure returns (ERC721Storage storage s);`}
-</ExpandableCode>
-
-**Returns:**
-
-<PropertyTable
-  properties={[
-    {
-      name: "s",
-      type: "ERC721Storage",
-      description: "The ERC721Storage struct in storage."
-    }
-  ]}
-  showRequired={false}
-/>
-
----
 ### name
 
 Returns the token collection name.
@@ -196,7 +174,7 @@ Returns the number of tokens owned by a given address.
     {
       name: "-",
       type: "uint256",
-      description: "The balance (number of tokens) owned by &#x60;_owner&#x60;."
+      description: "The balance (number of tokens) owned by `_owner`."
     }
   ]}
   showRequired={false}
@@ -361,38 +339,6 @@ Approves or revokes permission for an operator to manage all caller's assets.
       name: "_approved",
       type: "bool",
       description: "True to approve, false to revoke."
-    }
-  ]}
-  showRequired={false}
-/>
-
----
-### internalTransferFrom
-
-Internal function to transfer a token, checking for ownership and approval.
-
-<ExpandableCode language="solidity" maxLines={8}>
-{`function internalTransferFrom(address _from, address _to, uint256 _tokenId) internal;`}
-</ExpandableCode>
-
-**Parameters:**
-
-<PropertyTable
-  properties={[
-    {
-      name: "_from",
-      type: "address",
-      description: "The current owner of the token."
-    },
-    {
-      name: "_to",
-      type: "address",
-      description: "The address to receive the token."
-    },
-    {
-      name: "_tokenId",
-      type: "uint256",
-      description: "The token ID to transfer."
     }
   ]}
   showRequired={false}
@@ -616,7 +562,7 @@ error ERC721InvalidOperator(address _operator);
 <ExpandableCode language="solidity" maxLines={20} title="Example Implementation">
 {`pragma solidity ^0.8.30;
 
-import {IERC721Facet} from "@compose/contracts/src/facets/ERC721Facet.sol";
+import {IERC721Facet} from "@compose-protocol/core/contracts/facets/ERC721/IERC721Facet.sol";
 
 contract ERC721Consumer {
     IERC721Facet public immutable erc721Facet;
@@ -637,9 +583,9 @@ contract ERC721Consumer {
         return erc721Facet.ownerOf(tokenId);
     }
 
-    function transferToken(address from, address to, uint256 tokenId) external {
-        // Ensure appropriate approvals or ownership before calling
-        erc721Facet.transferFrom(from, to, tokenId);
+    function transferToken(address to, uint256 tokenId) external {
+        // Assumes caller is owner or approved
+        erc721Facet.transferFrom(msg.sender, to, tokenId);
     }
 }`}
 </ExpandableCode>
@@ -647,19 +593,19 @@ contract ERC721Consumer {
 ## Best Practices
 
 <Callout type="tip" title="Best Practice">
-- Initialize the `ERC721Facet` with correct storage slot configurations during diamond deployment.
-- Ensure proper access control is implemented at the diamond level or within calling facets for sensitive operations like transfers and approvals.
-- Leverage `safeTransferFrom` when interacting with potentially unknown receiver contracts to ensure ERC-721 compliance.
+- Ensure the caller has the necessary approval or ownership before invoking transfer functions.
+- Utilize `safeTransferFrom` when transferring to contracts to ensure receiver compatibility.
+- Store the ERC721Facet's address in a read-only or immutable variable for consistent access.
 </Callout>
 
 ## Security Considerations
 
 <Callout type="warning" title="Security">
-Ensure that calls to `approve`, `setApprovalForAll`, `transferFrom`, and `safeTransferFrom` are guarded by appropriate access control mechanisms to prevent unauthorized actions. The internal `internalTransferFrom` function includes necessary checks for ownership and approvals, but the facet itself does not enforce external authorization beyond ERC-721 standard requirements.
+Ensure proper access control checks are performed by the caller before invoking transfer functions. Use `safeTransferFrom` to prevent reentrancy issues when transferring to unknown contract addresses. Validate `to` and `from` addresses in transfer functions to prevent unexpected behavior.
 </Callout>
 
 <div style={{marginTop: "3rem", paddingTop: "2rem", borderTop: "1px solid var(--ifm-color-emphasis-200)"}}>
   <WasThisHelpful pageId="ERC721Facet" />
 </div>
 
-<LastUpdated date="2025-12-21T22:06:00.369Z" />
+<LastUpdated date="2025-12-23T00:01:50.647Z" />

@@ -2,7 +2,7 @@
 sidebar_position: 99
 title: "OwnerTwoStepsFacet"
 description: "Manages contract ownership with a two-step transfer process."
-gitSource: "https://github.com/maxnorm/Compose/blob/5736454575f67743dd05ba6cb1265bc06d0c1422/src/access/OwnerTwoSteps/OwnerTwoStepsFacet.sol"
+gitSource: "https://github.com/Perfect-Abstractions/Compose/tree/main/src/access/OwnerTwoSteps/OwnerTwoStepsFacet.sol"
 ---
 
 import DocSubtitle  from '@site/src/components/docs/DocSubtitle';
@@ -26,13 +26,14 @@ Manages contract ownership with a two-step transfer process.
 
 <Callout type="info" title="Key Features">
 - Two-step ownership transfer process for enhanced security.
-- `owner()` and `pendingOwner()` view functions to check current and proposed owners.
-- `renounceOwnership()` function to remove ownership entirely.
+- Explicit `acceptOwnership` call by the new owner.
+- `renounceOwnership` function to remove ownership.
+- Direct storage access via inline assembly for efficiency.
 </Callout>
 
 ## Overview
 
-This facet provides a robust ownership management system for Compose diamonds, enforcing a two-step transfer process to prevent accidental ownership loss. It allows the current owner to initiate a transfer and requires the new owner to explicitly accept it, ensuring secure control over critical diamond functions.
+This facet provides a secure, two-step ownership transfer mechanism, preventing accidental or malicious takeover of the diamond. It allows the current owner to initiate a transfer and requires the new owner to accept it, ensuring explicit confirmation.
 
 ---
 
@@ -75,50 +76,6 @@ This facet provides a robust ownership management system for Compose diamonds, e
 
 ## Functions
 
-### getOwnerStorage
-
-Returns a pointer to the Owner storage struct. Uses inline assembly to access the storage slot defined by OWNER_STORAGE_POSITION.
-
-<ExpandableCode language="solidity" maxLines={8}>
-{`function getOwnerStorage() internal pure returns (OwnerStorage storage s);`}
-</ExpandableCode>
-
-**Returns:**
-
-<PropertyTable
-  properties={[
-    {
-      name: "s",
-      type: "OwnerStorage",
-      description: "The OwnerStorage struct in storage."
-    }
-  ]}
-  showRequired={false}
-/>
-
----
-### getPendingOwnerStorage
-
-Returns a pointer to the PendingOwner storage struct. Uses inline assembly to access the storage slot defined by PENDING_OWNER_STORAGE_POSITION.
-
-<ExpandableCode language="solidity" maxLines={8}>
-{`function getPendingOwnerStorage() internal pure returns (PendingOwnerStorage storage s);`}
-</ExpandableCode>
-
-**Returns:**
-
-<PropertyTable
-  properties={[
-    {
-      name: "s",
-      type: "PendingOwnerStorage",
-      description: "The PendingOwnerStorage struct in storage."
-    }
-  ]}
-  showRequired={false}
-/>
-
----
 ### owner
 
 Get the address of the owner
@@ -242,27 +199,28 @@ error OwnerUnauthorizedAccount();
 <ExpandableCode language="solidity" maxLines={20} title="Example Implementation">
 {`pragma solidity ^0.8.30;
 
-import {IOwnerTwoStepsFacet} from "@compose/facets/OwnerTwoStepsFacet.sol";
+import {IOwnerTwoStepsFacet} from "@compose/contracts/src/facets/owner/IOwnerTwoStepsFacet.sol";
 
-contract MyDiamond {
-    IOwnerTwoStepsFacet ownerFacet;
+contract OwnerConsumer {
+    IOwnerTwoStepsFacet public ownerFacet;
 
-    // Assume ownerFacet is initialized and its selector is registered
+    constructor(address _ownerFacetAddress) {
+        ownerFacet = IOwnerTwoStepsFacet(_ownerFacetAddress);
+    }
 
-    function proposeNewOwner(address _newOwner) external {
+    function initiateOwnershipTransfer(address _newOwner) external {
+        // Assumes caller is the current owner
         ownerFacet.transferOwnership(_newOwner);
     }
 
     function acceptNewOwnership() external {
+        // Assumes caller is the pending owner
         ownerFacet.acceptOwnership();
     }
 
-    function getCurrentOwner() external view returns (address) {
-        return ownerFacet.owner();
-    }
-
-    function getPendingOwnerAddress() external view returns (address) {
-        return ownerFacet.pendingOwner();
+    function renounceContractOwnership() external {
+        // Assumes caller is the current owner
+        ownerFacet.renounceOwnership();
     }
 }`}
 </ExpandableCode>
@@ -270,19 +228,19 @@ contract MyDiamond {
 ## Best Practices
 
 <Callout type="tip" title="Best Practice">
-- Initialize the `OwnerTwoStepsFacet` with the desired initial owner address during diamond deployment.
-- Use the `transferOwnership` function to initiate a change, and ensure the new owner calls `acceptOwnership` to finalize the transfer.
-- Store the `OwnerTwoStepsFacet` interface in your diamond contract or a dedicated facets registry for easy access.
+- Only the current owner should call `transferOwnership` and `renounceOwnership`.
+- Only the pending owner should call `acceptOwnership`.
+- Store the `OWNER_STORAGE_POSITION` and `PENDING_OWNER_STORAGE_POSITION` constants securely and ensure they are correctly set during deployment.
 </Callout>
 
 ## Security Considerations
 
 <Callout type="warning" title="Security">
-Only the current owner can initiate ownership transfers. Any account can accept a pending ownership transfer. Ensure that the address calling `transferOwnership` is indeed the intended owner. Consider the implications of `renounceOwnership` as it makes the contract ownership unrecoverable.
+Ensure that the `transferOwnership` function is only callable by the current owner. The `acceptOwnership` function must only be callable by the pending owner. Incorrect access control could lead to unauthorized ownership changes. The inline assembly for storage access relies on the correct definition and immutability of `OWNER_STORAGE_POSITION` and `PENDING_OWNER_STORAGE_POSITION`; any change to these slots could break ownership management.
 </Callout>
 
 <div style={{marginTop: "3rem", paddingTop: "2rem", borderTop: "1px solid var(--ifm-color-emphasis-200)"}}>
   <WasThisHelpful pageId="OwnerTwoStepsFacet" />
 </div>
 
-<LastUpdated date="2025-12-21T22:04:15.319Z" />
+<LastUpdated date="2025-12-23T00:00:06.959Z" />

@@ -1,8 +1,8 @@
 ---
 sidebar_position: 99
 title: "DiamondCutMod"
-description: "Manages diamond facet additions, replacements, and removals."
-gitSource: "https://github.com/maxnorm/Compose/blob/5736454575f67743dd05ba6cb1265bc06d0c1422/src/diamond/DiamondCutMod.sol"
+description: "Manage diamond facets and function registrations."
+gitSource: "https://github.com/Perfect-Abstractions/Compose/tree/main/src/diamond/DiamondCutMod.sol"
 ---
 
 import DocSubtitle  from '@site/src/components/docs/DocSubtitle';
@@ -21,13 +21,13 @@ import GradientText from '@site/src/components/ui/GradientText';
 import GradientButton from '@site/src/components/ui/GradientButton';
 
 <DocSubtitle>
-Manages diamond facet additions, replacements, and removals.
+Manage diamond facets and function registrations.
 </DocSubtitle>
 
 <Callout type="info" title="Key Features">
-- Atomically adds, replaces, or removes multiple functions in a single transaction.
-- Supports optional delegatecall execution of an initialization function after the cut.
-- Enforces restrictions against modifying immutable functions and prevents redundant operations.
+- Atomic `diamondCut` for adding, replacing, and removing multiple functions in a single transaction.
+- Supports delegatecalling an initialization function during a diamond cut operation.
+- Emits a `DiamondCut` event upon successful execution of facet modifications.
 </Callout>
 
 <Callout type="info" title="Module Usage">
@@ -36,7 +36,7 @@ This module provides internal functions for use in your custom facets. Import it
 
 ## Overview
 
-The DiamondCutMod provides essential functions for managing the facets of a Compose diamond. It allows for controlled addition, replacement, and removal of functions, ensuring the diamond's logic can be upgraded and extended safely. This module is critical for maintaining the diamond's integrity during upgrades.
+The DiamondCutMod provides essential functions for managing the diamond's facets. It allows for the addition, replacement, and removal of function selectors, enabling dynamic upgrades and modifications to the diamond's capabilities. This module is crucial for maintaining and evolving the diamond's functionality post-deployment.
 
 ---
 
@@ -334,41 +334,42 @@ error RemoveFacetAddressMustBeZeroAddress(address _facet);
 <ExpandableCode language="solidity" maxLines={20} title="Example Implementation">
 {`pragma solidity ^0.8.30;
 
-import {IDiamondCut} from "@compose-protocol/diamond-contracts/contracts/facets/DiamondCutMod.sol";
+import {DiamondCutMod} from "@compose/diamond-proxy/modules/diamond-cut/DiamondCutMod.sol";
+import {IDiamondCut} from "@compose/diamond-proxy/interfaces/IDiamondCut.sol";
 
 contract MyFacet {
-    // ... other facet logic ...
+    // Assume DiamondCutMod is already added to the diamond
 
-    function upgradeDiamond(address _diamondAddress) external {
-        address[] memory facetAddresses = new address[](1);
-        facetAddresses[0] = address(this); // Assuming this contract is the new facet
-
-        bytes[] memory functionSigs = new bytes[](1);
-        functionSigs[0] = bytes4(keccak256(\"myNewFunction(uint256)\")); // Example selector
-
-        IDiamondCut(_diamondAddress).diamondCut(facetAddresses, address(0), functionSigs, address(0), \"\");
+    function upgradeDiamond(address _diamondCutAddress) external {
+        // Example: Add a new function
+        IDiamondCut(_diamondCutAddress).addFunctions(
+            address(this),
+            bytes4[](uint256(0), IDiamondCut.myNewFunction.selector)
+        );
     }
 
-    // ... other facet logic ...
+    function myNewFunction() external pure {
+        // ... implementation ...
+    }
 }`}
 </ExpandableCode>
 
 ## Best Practices
 
 <Callout type="tip" title="Best Practice">
-- Use `diamondCut` carefully; ensure all function selectors are correctly identified to avoid unintended logic changes or access control bypasses.
-- Always verify that the facet addresses provided are deployed and contain the intended bytecode before executing `diamondCut`.
-- Handle potential `InitializationFunctionReverted` errors by ensuring any initialization logic within the cut is robust and correctly implemented.
+- Use `diamondCut` for all facet and function management operations to ensure atomicity and proper event emission.
+- Be aware of the `CannotRemoveImmutableFunction` error and ensure you do not attempt to remove functions marked as immutable.
+- Thoroughly test facet additions and removals in a staging environment before applying to production diamonds.
 </Callout>
 
 ## Integration Notes
 
 <Callout type="success" title="Shared Storage">
-The DiamondCutMod directly manipulates the diamond's function selector to facet address mapping. Any changes made via `diamondCut` are immediately reflected in the diamond proxy's routing logic. Facets interact with this module by calling its external functions, typically during upgrade processes. The `DiamondCut` event is emitted upon successful completion of a diamond cut operation, providing an audit trail of changes.
+The DiamondCutMod interacts directly with the diamond's storage to register and unregister function selectors. Facets added or modified through this module become immediately available via the diamond proxy. Ensure that the DiamondCutMod is initialized correctly and that its storage slot is not conflicted with by other modules. The order of operations within a single `diamondCut` call is important for managing dependencies between facet additions and removals.
 </Callout>
 
 <div style={{marginTop: "3rem", paddingTop: "2rem", borderTop: "1px solid var(--ifm-color-emphasis-200)"}}>
   <WasThisHelpful pageId="DiamondCutMod" />
 </div>
 
-<LastUpdated date="2025-12-21T22:06:20.158Z" />
+<LastUpdated date="2025-12-23T00:02:14.818Z" />

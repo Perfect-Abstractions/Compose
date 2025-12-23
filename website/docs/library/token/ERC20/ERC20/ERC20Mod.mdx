@@ -1,8 +1,8 @@
 ---
 sidebar_position: 99
 title: "ERC20Mod"
-description: "ERC-20 token standard implementation."
-gitSource: "https://github.com/maxnorm/Compose/blob/5736454575f67743dd05ba6cb1265bc06d0c1422/src/token/ERC20/ERC20/ERC20Mod.sol"
+description: "ERC-20 token logic with mint, burn, and transfer capabilities."
+gitSource: "https://github.com/Perfect-Abstractions/Compose/tree/main/src/token/ERC20/ERC20/ERC20Mod.sol"
 ---
 
 import DocSubtitle  from '@site/src/components/docs/DocSubtitle';
@@ -21,13 +21,13 @@ import GradientText from '@site/src/components/ui/GradientText';
 import GradientButton from '@site/src/components/ui/GradientButton';
 
 <DocSubtitle>
-ERC-20 token standard implementation.
+ERC-20 token logic with mint, burn, and transfer capabilities.
 </DocSubtitle>
 
 <Callout type="info" title="Key Features">
-- Implements standard ERC-20 functions: `transfer`, `approve`, `transferFrom`.
-- Supports token minting and burning operations.
-- Provides access to ERC-20 specific storage via `getStorage`.
+- Implements core ERC-20 functions: transfer, transferFrom, approve, mint, burn.
+- Manages token balances and allowances internally.
+- Provides a `getStorage` function for direct access to internal storage, useful for read-only operations or specific integrations.
 </Callout>
 
 <Callout type="info" title="Module Usage">
@@ -36,7 +36,7 @@ This module provides internal functions for use in your custom facets. Import it
 
 ## Overview
 
-This module provides the core logic and storage for the ERC-20 token standard. It enables standard token operations like transfers, approvals, minting, and burning, making it a fundamental building block for any fungible token within a Compose diamond.
+This module provides the core logic for ERC-20 token functionality within a Compose diamond. It manages token balances, allowances, and total supply, enabling standard token operations like minting, burning, and transfers. Implementing this module ensures compatibility with the ERC-20 standard while leveraging the diamond's composable architecture.
 
 ---
 
@@ -378,30 +378,30 @@ error ERC20InvalidSpender(address _spender);
 <ExpandableCode language="solidity" maxLines={20} title="Example Implementation">
 {`pragma solidity ^0.8.30;
 
-import {IERC20Mod } from "./IERC20Mod.sol";
-import { ERC20Storage } from "./ERC20Storage.sol";
+import {IERC20Mod } from "../facets/ERC20Mod.sol";
+import { IDiamondProxy } from "../diamond/IDiamondProxy.sol";
 
-contract ERC20Facet {
-    ERC20Storage private immutable _storage;
+contract ERC20Consumer {
+    IDiamondProxy public immutable diamondProxy;
 
-    constructor(address _diamondAddress) {
-        // Bind storage to the diamond's storage slot
-        _storage = ERC20Storage(_diamondAddress);
+    constructor(address _diamondProxyAddress) {
+        diamondProxy = IDiamondProxy(_diamondProxyAddress);
     }
 
-    function transfer(address _to, uint256 _value) external returns (bool) {
-        // Call the internal transfer function from the module
-        return IERC20Mod(_storage).transfer(_to, _value);
-    }
+    function consumeERC20() external {
+        IERC20Mod erc20Facet = IERC20Mod(address(diamondProxy));
 
-    function approve(address _spender, uint256 _value) external returns (bool) {
-        // Call the internal approve function from the module
-        return IERC20Mod(_storage).approve(_spender, _value);
-    }
+        // Example: Transfer tokens
+        erc20Facet.transfer(msg.sender, 100);
 
-    function transferFrom(address _from, address _to, uint256 _value) external returns (bool) {
-        // Call the internal transferFrom function from the module
-        return IERC20Mod(_storage).transferFrom(_from, _to, _value);
+        // Example: Approve a spender
+        erc20Facet.approve(address(this), 50);
+
+        // Example: Mint tokens (requires appropriate permissions)
+        // erc20Facet.mint(msg.sender, 1000);
+
+        // Example: Burn tokens
+        // erc20Facet.burn(50);
     }
 }`}
 </ExpandableCode>
@@ -409,19 +409,19 @@ contract ERC20Facet {
 ## Best Practices
 
 <Callout type="tip" title="Best Practice">
-- Use `transfer` and `transferFrom` for token movements, ensuring sufficient balances and allowances are checked.
-- Implement `approve` carefully to manage token delegation, and be aware of potential reentrancy risks if interacting with external contracts in `transferFrom`.
-- Utilize custom errors for clear revert reasons, such as `ERC20InsufficientBalance` or `ERC20InsufficientAllowance`.
+- Ensure the ERC20Mod facet is correctly initialized and added to the diamond proxy.
+- Implement appropriate access control for mint and burn functions if they are intended for specific roles.
+- Handle potential errors such as insufficient balance, allowance, or invalid addresses.
 </Callout>
 
 ## Integration Notes
 
 <Callout type="success" title="Shared Storage">
-The ERC20Mod module utilizes a fixed storage slot for its `ERC20Storage` struct. Facets interacting with this module must bind to this storage slot using `ERC20Storage(_diamondAddress)` and call the module's functions via the `IERC20Mod` interface. The module maintains invariants for token balances, allowances, and total supply, which are updated atomically during its operations.
+The ERC20Mod facet interacts with a dedicated storage slot for ERC-20 state, including balances, allowances, and total supply. Facets that interact with ERC-20 tokens should call functions on the ERC20Mod facet via the diamond proxy. The `getStorage` function provides a mechanism to retrieve a pointer to the ERC-20 storage struct, enabling direct access to its state, but this should be done with caution to maintain data integrity and consider diamond upgrade scenarios.
 </Callout>
 
 <div style={{marginTop: "3rem", paddingTop: "2rem", borderTop: "1px solid var(--ifm-color-emphasis-200)"}}>
   <WasThisHelpful pageId="ERC20Mod" />
 </div>
 
-<LastUpdated date="2025-12-21T22:05:08.061Z" />
+<LastUpdated date="2025-12-23T00:00:59.216Z" />

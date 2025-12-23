@@ -1,6 +1,7 @@
 ---
 title: "Owner"
 description: "Single-owner access control pattern."
+sidebar_class_name: hidden
 ---
 
 import DocCard, { DocCardGrid } from '@site/src/components/docs/DocCard';
@@ -14,14 +15,14 @@ import Icon from '@site/src/components/ui/Icon';
 <DocCardGrid columns={2}>
   <DocCard
     title="OwnerFacet"
-    description={"Manages contract ownership and transfers."}
+    description={"Manages diamond ownership and transfers."}
     href="/docs/library/access/Owner/OwnerFacet"
     icon={<Icon name="book" size={28} />}
     size="medium"
   />
   <DocCard
     title="OwnerMod"
-    description={"Manages contract ownership according to ERC-173."}
+    description={"Manages ERC-173 contract ownership and access control."}
     href="/docs/library/access/Owner/OwnerMod"
     icon={<Icon name="book" size={28} />}
     size="medium"
