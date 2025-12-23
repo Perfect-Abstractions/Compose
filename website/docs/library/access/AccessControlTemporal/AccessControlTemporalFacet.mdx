@@ -1,0 +1,405 @@
+---
+sidebar_position: 99
+title: "AccessControlTemporalFacet"
+description: "Manages time-bound role assignments within a diamond."
+gitSource: "https://github.com/Perfect-Abstractions/Compose/tree/main/src/access/AccessControlTemporal/AccessControlTemporalFacet.sol"
+---
+
+import DocSubtitle  from '@site/src/components/docs/DocSubtitle';
+import Badge from '@site/src/components/ui/Badge';
+import Callout from '@site/src/components/ui/Callout';
+import CalloutBox from '@site/src/components/ui/CalloutBox';
+import Accordion, { AccordionGroup } from '@site/src/components/ui/Accordion';
+import PropertyTable from '@site/src/components/api/PropertyTable';
+import ExpandableCode from '@site/src/components/code/ExpandableCode';
+import CodeShowcase from '@site/src/components/code/CodeShowcase';
+import RelatedDocs from '@site/src/components/docs/RelatedDocs';
+import WasThisHelpful from '@site/src/components/docs/WasThisHelpful';
+import LastUpdated from '@site/src/components/docs/LastUpdated';
+import ReadingTime from '@site/src/components/docs/ReadingTime';
+import GradientText from '@site/src/components/ui/GradientText';
+import GradientButton from '@site/src/components/ui/GradientButton';
+
+<DocSubtitle>
+Manages time-bound role assignments within a diamond.
+</DocSubtitle>
+
+<Callout type="info" title="Key Features">
+- Grants roles with specific expiry timestamps.
+- Automatically enforces role expiry, revoking access upon expiration.
+- Provides granular control over time-bound permissions.
+</Callout>
+
+## Overview
+
+The AccessControlTemporalFacet extends the diamond's access control capabilities by introducing time-bound role assignments. This facet allows administrators to grant roles that automatically expire, enhancing security and operational flexibility. It provides functions to manage these temporal roles and check their validity.
+
+---
+
+## Storage
+
+### AccessControlStorage
+
+<ExpandableCode language="solidity" maxLines={15} title="Definition">
+{`struct AccessControlStorage {
+    mapping(address account => mapping(bytes32 role => bool hasRole)) hasRole;
+    mapping(bytes32 role => bytes32 adminRole) adminRole;
+}`}
+</ExpandableCode>
+
+---
+### AccessControlTemporalStorage
+
+<ExpandableCode language="solidity" maxLines={15} title="Definition">
+{`struct AccessControlTemporalStorage {
+    mapping(address account => mapping(bytes32 role => uint256 expiryTimestamp)) roleExpiry;
+}`}
+</ExpandableCode>
+
+### State Variables
+
+<PropertyTable
+  properties={[
+    {
+      name: "ACCESS_CONTROL_STORAGE_POSITION",
+      type: "bytes32",
+      description: "Diamond storage slot position for this module (Value: `keccak256(\"compose.accesscontrol\")`)"
+    },
+    {
+      name: "TEMPORAL_STORAGE_POSITION",
+      type: "bytes32",
+      description: "Diamond storage slot position for this module (Value: `keccak256(\"compose.accesscontrol.temporal\")`)"
+    }
+  ]}
+  showRequired={false}
+/>
+
+## Functions
+
+### getRoleExpiry
+
+Returns the expiry timestamp for a role assignment.
+
+<ExpandableCode language="solidity" maxLines={8}>
+{`function getRoleExpiry(bytes32 _role, address _account) external view returns (uint256);`}
+</ExpandableCode>
+
+**Parameters:**
+
+<PropertyTable
+  properties={[
+    {
+      name: "_role",
+      type: "bytes32",
+      description: "The role to check."
+    },
+    {
+      name: "_account",
+      type: "address",
+      description: "The account to check."
+    }
+  ]}
+  showRequired={false}
+/>
+
+**Returns:**
+
+<PropertyTable
+  properties={[
+    {
+      name: "-",
+      type: "uint256",
+      description: "The expiry timestamp, or 0 if no expiry is set."
+    }
+  ]}
+  showRequired={false}
+/>
+
+---
+### isRoleExpired
+
+Checks if a role assignment has expired.
+
+<ExpandableCode language="solidity" maxLines={8}>
+{`function isRoleExpired(bytes32 _role, address _account) external view returns (bool);`}
+</ExpandableCode>
+
+**Parameters:**
+
+<PropertyTable
+  properties={[
+    {
+      name: "_role",
+      type: "bytes32",
+      description: "The role to check."
+    },
+    {
+      name: "_account",
+      type: "address",
+      description: "The account to check."
+    }
+  ]}
+  showRequired={false}
+/>
+
+**Returns:**
+
+<PropertyTable
+  properties={[
+    {
+      name: "-",
+      type: "bool",
+      description: "True if the role has expired or doesn\'t exist, false if still valid."
+    }
+  ]}
+  showRequired={false}
+/>
+
+---
+### grantRoleWithExpiry
+
+Grants a role to an account with an expiry timestamp. Only the admin of the role can grant it with expiry. Emits a RoleGrantedWithExpiry event. Reverts with AccessControlUnauthorizedAccount If the caller is not the admin of the role.
+
+<ExpandableCode language="solidity" maxLines={8}>
+{`function grantRoleWithExpiry(bytes32 _role, address _account, uint256 _expiresAt) external;`}
+</ExpandableCode>
+
+**Parameters:**
+
+<PropertyTable
+  properties={[
+    {
+      name: "_role",
+      type: "bytes32",
+      description: "The role to grant."
+    },
+    {
+      name: "_account",
+      type: "address",
+      description: "The account to grant the role to."
+    },
+    {
+      name: "_expiresAt",
+      type: "uint256",
+      description: "The timestamp when the role should expire (must be in the future)."
+    }
+  ]}
+  showRequired={false}
+/>
+
+---
+### revokeTemporalRole
+
+Revokes a temporal role from an account. Only the admin of the role can revoke it. Emits a TemporalRoleRevoked event. Reverts with AccessControlUnauthorizedAccount If the caller is not the admin of the role.
+
+<ExpandableCode language="solidity" maxLines={8}>
+{`function revokeTemporalRole(bytes32 _role, address _account) external;`}
+</ExpandableCode>
+
+**Parameters:**
+
+<PropertyTable
+  properties={[
+    {
+      name: "_role",
+      type: "bytes32",
+      description: "The role to revoke."
+    },
+    {
+      name: "_account",
+      type: "address",
+      description: "The account to revoke the role from."
+    }
+  ]}
+  showRequired={false}
+/>
+
+---
+### requireValidRole
+
+Checks if an account has a valid (non-expired) role. - Reverts with AccessControlUnauthorizedAccount If the account does not have the role. - Reverts with AccessControlRoleExpired If the role has expired.
+
+<ExpandableCode language="solidity" maxLines={8}>
+{`function requireValidRole(bytes32 _role, address _account) external view;`}
+</ExpandableCode>
+
+**Parameters:**
+
+<PropertyTable
+  properties={[
+    {
+      name: "_role",
+      type: "bytes32",
+      description: "The role to check."
+    },
+    {
+      name: "_account",
+      type: "address",
+      description: "The account to check the role for."
+    }
+  ]}
+  showRequired={false}
+/>
+
+## Events
+
+<AccordionGroup>
+  <Accordion title="RoleGrantedWithExpiry" defaultOpen={false}>
+    <div style={{marginBottom: "1rem"}}>
+      Event emitted when a role is granted with an expiry timestamp.
+    </div>
+
+    <div style={{marginBottom: "1rem"}}>
+      <strong>Signature:</strong>
+      <ExpandableCode language="solidity" maxLines={5}>
+{`event RoleGrantedWithExpiry(
+    bytes32 indexed _role, address indexed _account, uint256 _expiresAt, address indexed _sender
+);`}
+      </ExpandableCode>
+    </div>
+
+    <div style={{marginBottom: "1rem"}}>
+      <strong>Parameters:</strong>
+      <PropertyTable
+        properties={[
+          {
+            name: "_role",
+            type: "bytes32",
+            description: "The role that was granted."
+          },
+          {
+            name: "_account",
+            type: "address",
+            description: "The account that was granted the role."
+          },
+          {
+            name: "_expiresAt",
+            type: "uint256",
+            description: "The timestamp when the role expires."
+          },
+          {
+            name: "_sender",
+            type: "address",
+            description: "The account that granted the role."
+          }
+        ]}
+        showRequired={false}
+      />
+    </div>
+  </Accordion>
+  <Accordion title="TemporalRoleRevoked" defaultOpen={false}>
+    <div style={{marginBottom: "1rem"}}>
+      Event emitted when a temporal role is revoked.
+    </div>
+
+    <div style={{marginBottom: "1rem"}}>
+      <strong>Signature:</strong>
+      <ExpandableCode language="solidity" maxLines={5}>
+{`event TemporalRoleRevoked(bytes32 indexed _role, address indexed _account, address indexed _sender);`}
+      </ExpandableCode>
+    </div>
+
+    <div style={{marginBottom: "1rem"}}>
+      <strong>Parameters:</strong>
+      <PropertyTable
+        properties={[
+          {
+            name: "_role",
+            type: "bytes32",
+            description: "The role that was revoked."
+          },
+          {
+            name: "_account",
+            type: "address",
+            description: "The account from which the role was revoked."
+          },
+          {
+            name: "_sender",
+            type: "address",
+            description: "The account that revoked the role."
+          }
+        ]}
+        showRequired={false}
+      />
+    </div>
+  </Accordion>
+</AccordionGroup>
+
+## Errors
+
+<AccordionGroup>
+  <Accordion title="AccessControlUnauthorizedAccount" defaultOpen={false}>
+    <div style={{marginBottom: "1rem"}}>
+      Thrown when the account does not have a specific role.
+    </div>
+
+    <div>
+      <strong>Signature:</strong>
+      <ExpandableCode language="solidity" maxLines={5}>
+error AccessControlUnauthorizedAccount(address _account, bytes32 _role);
+      </ExpandableCode>
+    </div>
+  </Accordion>
+  <Accordion title="AccessControlRoleExpired" defaultOpen={false}>
+    <div style={{marginBottom: "1rem"}}>
+      Thrown when a role has expired.
+    </div>
+
+    <div>
+      <strong>Signature:</strong>
+      <ExpandableCode language="solidity" maxLines={5}>
+error AccessControlRoleExpired(bytes32 _role, address _account);
+      </ExpandableCode>
+    </div>
+  </Accordion>
+</AccordionGroup>
+
+## Usage Example
+
+<ExpandableCode language="solidity" maxLines={20} title="Example Implementation">
+{`pragma solidity ^0.8.30;
+
+import {IDiamondLoupe} from "@compose/diamond-loupe/src/IDiamondLoupe.sol";
+import {AccessControlTemporalFacet as Facet} from "@compose/access-control-temporal/src/AccessControlTemporalFacet.sol";
+import {IERC165} from "@openzeppelin/contracts/utils/introspection/IERC165.sol";
+
+contract MyDiamond is IDiamondLoupe, IERC165 {
+    // ... other facets
+
+    function getAccessControlTemporalFacet() public view returns (Facet instance) {
+        bytes4 selector = Facet.grantRoleWithExpiry.selector;
+        address facetAddress = diamond.facetAddress(selector);
+        return Facet(facetAddress);
+    }
+
+    function grantAdminRoleWithExpiry(address _account, bytes32 _role, uint64 _expiry) external {
+        Facet(diamond.facetAddress(Facet.grantRoleWithExpiry.selector)).grantRoleWithExpiry(_account, _role, _expiry);
+    }
+
+    function isRoleCurrentlyValid(address _account, bytes32 _role) public view returns (bool) {
+        return !AccessControlRoleExpired.selector.is mencegahRoleExpired(_account, _role);
+    }
+
+    // ... other diamond logic
+}`}
+</ExpandableCode>
+
+## Best Practices
+
+<Callout type="tip" title="Best Practice">
+- Initialize temporal roles with appropriate expiry timestamps to prevent indefinite access.
+- Regularly audit temporal role grants to ensure they align with current security policies.
+- Utilize `revokeTemporalRole` for immediate revocation of expired or unnecessary temporal roles.
+</Callout>
+
+## Security Considerations
+
+<Callout type="warning" title="Security">
+Ensure that the caller invoking `grantRoleWithExpiry` and `revokeTemporalRole` possesses the necessary administrative privileges for the target role to prevent unauthorized role management. Input validation for `_expiry` should be handled by the caller or a higher-level access control mechanism to prevent setting invalid or future-dated expiry times incorrectly. The facet relies on the underlying diamond's access control for initial authorization of administrative actions.
+</Callout>
+
+<div style={{marginTop: "3rem", paddingTop: "2rem", borderTop: "1px solid var(--ifm-color-emphasis-200)"}}>
+  <WasThisHelpful pageId="AccessControlTemporalFacet" />
+</div>
+
+<LastUpdated date="2025-12-23T00:26:19.903Z" />

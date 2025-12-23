@@ -1,0 +1,197 @@
+---
+sidebar_position: 99
+title: "OwnerFacet"
+description: "Manages contract ownership and transfer."
+gitSource: "https://github.com/Perfect-Abstractions/Compose/tree/main/src/access/Owner/OwnerFacet.sol"
+---
+
+import DocSubtitle  from '@site/src/components/docs/DocSubtitle';
+import Badge from '@site/src/components/ui/Badge';
+import Callout from '@site/src/components/ui/Callout';
+import CalloutBox from '@site/src/components/ui/CalloutBox';
+import Accordion, { AccordionGroup } from '@site/src/components/ui/Accordion';
+import PropertyTable from '@site/src/components/api/PropertyTable';
+import ExpandableCode from '@site/src/components/code/ExpandableCode';
+import CodeShowcase from '@site/src/components/code/CodeShowcase';
+import RelatedDocs from '@site/src/components/docs/RelatedDocs';
+import WasThisHelpful from '@site/src/components/docs/WasThisHelpful';
+import LastUpdated from '@site/src/components/docs/LastUpdated';
+import ReadingTime from '@site/src/components/docs/ReadingTime';
+import GradientText from '@site/src/components/ui/GradientText';
+import GradientButton from '@site/src/components/ui/GradientButton';
+
+<DocSubtitle>
+Manages contract ownership and transfer.
+</DocSubtitle>
+
+<Callout type="info" title="Key Features">
+- Defines and manages the owner of the diamond.
+- Supports transferring ownership to a new address.
+- Allows for renouncing ownership, making the diamond effectively immutable from an owner perspective.
+</Callout>
+
+## Overview
+
+The OwnerFacet provides essential ownership management capabilities for a Compose diamond. It allows an owner to transfer ownership to a new address or renounce ownership entirely, ensuring control and security over the diamond's administrative functions.
+
+---
+
+## Storage
+
+### OwnerStorage
+
+<ExpandableCode language="solidity" maxLines={15} title="Definition">
+{`struct OwnerStorage {
+    address owner;
+}`}
+</ExpandableCode>
+
+### State Variables
+
+<PropertyTable
+  properties={[
+    {
+      name: "STORAGE_POSITION",
+      type: "bytes32",
+      description: "Diamond storage slot position for this module (Value: `keccak256(\"compose.owner\")`)"
+    }
+  ]}
+  showRequired={false}
+/>
+
+## Functions
+
+### owner
+
+Get the address of the owner
+
+<ExpandableCode language="solidity" maxLines={8}>
+{`function owner() external view returns (address);`}
+</ExpandableCode>
+
+**Returns:**
+
+<PropertyTable
+  properties={[
+    {
+      name: "-",
+      type: "address",
+      description: "The address of the owner."
+    }
+  ]}
+  showRequired={false}
+/>
+
+---
+### transferOwnership
+
+Set the address of the new owner of the contract Set _newOwner to address(0) to renounce any ownership.
+
+<ExpandableCode language="solidity" maxLines={8}>
+{`function transferOwnership(address _newOwner) external;`}
+</ExpandableCode>
+
+**Parameters:**
+
+<PropertyTable
+  properties={[
+    {
+      name: "_newOwner",
+      type: "address",
+      description: "The address of the new owner of the contract"
+    }
+  ]}
+  showRequired={false}
+/>
+
+---
+### renounceOwnership
+
+<ExpandableCode language="solidity" maxLines={8}>
+{`function renounceOwnership() external;`}
+</ExpandableCode>
+
+## Events
+
+<AccordionGroup>
+  <Accordion title="OwnershipTransferred" defaultOpen={false}>
+
+    <div style={{marginBottom: "1rem"}}>
+      <strong>Signature:</strong>
+      <ExpandableCode language="solidity" maxLines={5}>
+{`event OwnershipTransferred(address indexed previousOwner, address indexed newOwner);`}
+      </ExpandableCode>
+    </div>
+
+  </Accordion>
+</AccordionGroup>
+
+## Errors
+
+<AccordionGroup>
+  <Accordion title="OwnerUnauthorizedAccount" defaultOpen={false}>
+
+    <div>
+      <strong>Signature:</strong>
+      <ExpandableCode language="solidity" maxLines={5}>
+error OwnerUnauthorizedAccount();
+      </ExpandableCode>
+    </div>
+  </Accordion>
+</AccordionGroup>
+
+## Usage Example
+
+<ExpandableCode language="solidity" maxLines={20} title="Example Implementation">
+{`pragma solidity ^0.8.30;
+
+import {IOwnerFacet} from "../facets/owner/IOwnerFacet.sol";
+
+contract OwnerFacetDeployer {
+    // Assuming the diamond proxy address is known
+    address immutable DIAMOND_PROXY_ADDRESS;
+
+    constructor(address _diamondProxyAddress) {
+        DIAMOND_PROXY_ADDRESS = _diamondProxyAddress;
+    }
+
+    function getOwner() public view returns (address) {
+        bytes4 selector = IOwnerFacet.owner.selector;
+        (bool success, bytes memory data) = DIAMOND_PROXY_ADDRESS.call(abi.encodeWithSelector(selector));
+        require(success, "Failed to get owner");
+        return abi.decode(data, (address));
+    }
+
+    function transferOwnership(address _newOwner) public {
+        bytes4 selector = IOwnerFacet.transferOwnership.selector;
+        (bool success, ) = DIAMOND_PROXY_ADDRESS.call(abi.encodeWithSelector(selector, _newOwner));
+        require(success, "Failed to transfer ownership");
+    }
+
+    function renounceOwnership() public {
+        bytes4 selector = IOwnerFacet.renounceOwnership.selector;
+        (bool success, ) = DIAMOND_PROXY_ADDRESS.call(abi.encodeWithSelector(selector));
+        require(success, "Failed to renounce ownership");
+    }
+}`}
+</ExpandableCode>
+
+## Best Practices
+
+<Callout type="tip" title="Best Practice">
+- Initialize ownership during diamond deployment, typically to the deployer address.
+- Use `transferOwnership` to delegate administrative control to another address.
+- Consider using `renounceOwnership` only when administrative control is no longer required and the diamond should be immutable.
+</Callout>
+
+## Security Considerations
+
+<Callout type="warning" title="Security">
+Access to `transferOwnership` and `renounceOwnership` is restricted to the current owner. Ensure the owner's private key is secured to prevent unauthorized changes. Setting the new owner to `address(0)` is the mechanism for renouncing ownership; this action is irreversible. The `owner` function is public and can be called by any address.
+</Callout>
+
+<div style={{marginTop: "3rem", paddingTop: "2rem", borderTop: "1px solid var(--ifm-color-emphasis-200)"}}>
+  <WasThisHelpful pageId="OwnerFacet" />
+</div>
+
+<LastUpdated date="2025-12-23T00:26:27.852Z" />

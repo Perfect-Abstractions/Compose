@@ -1,0 +1,270 @@
+---
+sidebar_position: {{position}}
+title: "{{escapeYaml title}}"
+description: "{{escapeYaml description}}"
+{{#if gitSource}}
+gitSource: "{{gitSource}}"
+{{/if}}
+---
+
+import DocSubtitle  from '@site/src/components/docs/DocSubtitle';
+import Badge from '@site/src/components/ui/Badge';
+import Callout from '@site/src/components/ui/Callout';
+import CalloutBox from '@site/src/components/ui/CalloutBox';
+import Accordion, { AccordionGroup } from '@site/src/components/ui/Accordion';
+import PropertyTable from '@site/src/components/api/PropertyTable';
+import ExpandableCode from '@site/src/components/code/ExpandableCode';
+import CodeShowcase from '@site/src/components/code/CodeShowcase';
+import RelatedDocs from '@site/src/components/docs/RelatedDocs';
+import WasThisHelpful from '@site/src/components/docs/WasThisHelpful';
+import LastUpdated from '@site/src/components/docs/LastUpdated';
+import ReadingTime from '@site/src/components/docs/ReadingTime';
+import GradientText from '@site/src/components/ui/GradientText';
+import GradientButton from '@site/src/components/ui/GradientButton';
+
+
+<DocSubtitle>
+{{escapeYaml description}}
+</DocSubtitle>
+
+{{#if keyFeatures}}
+<Callout type="info" title="Key Features">
+{{{sanitizeMdx keyFeatures}}}
+</Callout>
+{{/if}}
+
+{{#if isModule}}
+<Callout type="info" title="Module Usage">
+This module provides internal functions for use in your custom facets. Import it to access shared logic and storage.
+</Callout>
+{{/if}}
+
+## Overview
+
+{{{sanitizeMdx overview}}}
+
+---
+
+## Storage
+
+{{#if hasStructs}}
+{{#each structs}}
+### {{name}}
+
+{{#if description}}
+{{{sanitizeMdx description}}}
+{{/if}}
+
+{{#if definition}}
+<ExpandableCode language="solidity" maxLines={15} title="Definition">
+{{{codeContent definition}}}
+</ExpandableCode>
+{{/if}}
+
+{{#unless @last}}
+---
+{{/unless}}
+{{/each}}
+{{/if}}
+
+{{#if hasStorage}}
+
+{{#if hasStateVariables}}
+### State Variables
+
+<PropertyTable
+  properties={[
+{{#each stateVariables}}
+    {
+      name: "{{name}}",
+      type: "{{#if type}}{{type}}{{else}}constant{{/if}}",
+      description: "{{#if description}}{{escapeJsxPreserveBackticks description}}{{/if}}"
+    }{{#unless @last}},{{/unless}}
+{{/each}}
+  ]}
+  showRequired={false}
+/>
+{{/if}}
+{{/if}}
+
+{{#if hasFunctions}}
+## Functions
+
+{{#each functions}}
+### {{name}}
+
+{{#if description}}
+{{{sanitizeMdx description}}}
+{{/if}}
+
+{{#if signature}}
+<ExpandableCode language="solidity" maxLines={8}>
+{{{codeContent signature}}}
+</ExpandableCode>
+{{/if}}
+
+{{#if hasParams}}
+**Parameters:**
+
+<PropertyTable
+  properties={[
+{{#each params}}
+    {
+      name: "{{name}}",
+      type: "{{type}}",
+      description: "{{#if description}}{{escapeJsxPreserveBackticks description}}{{/if}}"
+    }{{#unless @last}},{{/unless}}
+{{/each}}
+  ]}
+  showRequired={false}
+/>
+{{/if}}
+
+{{#if hasReturns}}
+**Returns:**
+
+<PropertyTable
+  properties={[
+{{#each returns}}
+    {
+      name: "{{name}}",
+      type: "{{type}}",
+      description: "{{#if description}}{{escapeJsxPreserveBackticks description}}{{/if}}"
+    }{{#unless @last}},{{/unless}}
+{{/each}}
+  ]}
+  showRequired={false}
+/>
+{{/if}}
+
+{{#unless @last}}
+---
+{{/unless}}
+{{/each}}
+{{/if}}
+
+{{#if hasEvents}}
+## Events
+
+<AccordionGroup>
+{{#each events}}
+  <Accordion title="{{name}}" defaultOpen={false}>
+    {{#if description}}
+    <div style={{{styleLiteral "margin-bottom: 1rem"}}}>
+      {{{sanitizeMdx description}}}
+    </div>
+    {{/if}}
+
+    {{#if signature}}
+    <div style={{{styleLiteral "margin-bottom: 1rem"}}}>
+      <strong>Signature:</strong>
+      <ExpandableCode language="solidity" maxLines={5}>
+{{{codeContent signature}}}
+      </ExpandableCode>
+    </div>
+    {{/if}}
+
+    {{#if hasParams}}
+    <div style={{{styleLiteral "margin-bottom: 1rem"}}}>
+      <strong>Parameters:</strong>
+      <PropertyTable
+        properties={[
+{{#each params}}
+          {
+            name: "{{name}}",
+            type: "{{type}}",
+            description: "{{#if description}}{{escapeJsxPreserveBackticks description}}{{/if}}"
+          }{{#unless @last}},{{/unless}}
+{{/each}}
+        ]}
+        showRequired={false}
+      />
+    </div>
+    {{/if}}
+  </Accordion>
+{{/each}}
+</AccordionGroup>
+{{/if}}
+
+{{#if hasErrors}}
+## Errors
+
+<AccordionGroup>
+{{#each errors}}
+  <Accordion title="{{name}}" defaultOpen={false}>
+    {{#if description}}
+    <div style={{{styleLiteral "margin-bottom: 1rem"}}}>
+      {{{sanitizeMdx description}}}
+    </div>
+    {{/if}}
+
+    {{#if signature}}
+    <div>
+      <strong>Signature:</strong>
+      <ExpandableCode language="solidity" maxLines={5}>
+{{signature}}
+      </ExpandableCode>
+    </div>
+    {{/if}}
+  </Accordion>
+{{/each}}
+</AccordionGroup>
+{{/if}}
+
+{{#if usageExample}}
+## Usage Example
+
+<ExpandableCode language="solidity" maxLines={20} title="Example Implementation">
+{{{codeContent usageExample}}}
+</ExpandableCode>
+{{/if}}
+
+{{#if bestPractices}}
+## Best Practices
+
+<Callout type="tip" title="Best Practice">
+{{{sanitizeMdx bestPractices}}}
+</Callout>
+{{/if}}
+
+{{#if isFacet}}
+{{#if securityConsiderations}}
+## Security Considerations
+
+<Callout type="warning" title="Security">
+{{{sanitizeMdx securityConsiderations}}}
+</Callout>
+{{/if}}
+{{/if}}
+
+{{#if isModule}}
+{{#if integrationNotes}}
+## Integration Notes
+
+<Callout type="success" title="Shared Storage">
+{{{sanitizeMdx integrationNotes}}}
+</Callout>
+{{/if}}
+{{/if}}
+
+<div style={{{styleLiteral "margin-top: 3rem; padding-top: 2rem; border-top: 1px solid var(--ifm-color-emphasis-200)"}}}>
+  <WasThisHelpful pageId="{{title}}" />
+</div>
+
+<LastUpdated date="{{generatedDate}}" />
+
+{{#if relatedDocs}}
+<RelatedDocs 
+  items={[
+{{#each relatedDocs}}
+    {
+      title: "{{title}}",
+      href: "{{href}}",
+      description: "{{description}}",
+      icon: "{{icon}}"
+    }{{#unless @last}},{{/unless}}
+{{/each}}
+  ]}
+  title="Related Documentation"
+/>
+{{/if}}

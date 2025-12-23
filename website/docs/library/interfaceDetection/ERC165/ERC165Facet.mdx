@@ -1,0 +1,152 @@
+---
+sidebar_position: 99
+title: "ERC165Facet"
+description: "Implements ERC-165 interface detection for diamond contracts."
+gitSource: "https://github.com/Perfect-Abstractions/Compose/tree/main/src/interfaceDetection/ERC165/ERC165Facet.sol"
+---
+
+import DocSubtitle  from '@site/src/components/docs/DocSubtitle';
+import Badge from '@site/src/components/ui/Badge';
+import Callout from '@site/src/components/ui/Callout';
+import CalloutBox from '@site/src/components/ui/CalloutBox';
+import Accordion, { AccordionGroup } from '@site/src/components/ui/Accordion';
+import PropertyTable from '@site/src/components/api/PropertyTable';
+import ExpandableCode from '@site/src/components/code/ExpandableCode';
+import CodeShowcase from '@site/src/components/code/CodeShowcase';
+import RelatedDocs from '@site/src/components/docs/RelatedDocs';
+import WasThisHelpful from '@site/src/components/docs/WasThisHelpful';
+import LastUpdated from '@site/src/components/docs/LastUpdated';
+import ReadingTime from '@site/src/components/docs/ReadingTime';
+import GradientText from '@site/src/components/ui/GradientText';
+import GradientButton from '@site/src/components/ui/GradientButton';
+
+<DocSubtitle>
+Implements ERC-165 interface detection for diamond contracts.
+</DocSubtitle>
+
+<Callout type="info" title="Key Features">
+- Implements the `supportsInterface` function as required by ERC-165.
+- Utilizes inline assembly for efficient access to ERC-165 storage.
+</Callout>
+
+## Overview
+
+The ERC165Facet enables diamond contracts to comply with the ERC-165 standard, allowing external contracts to query which interfaces the diamond supports. This facet is crucial for discoverability and interoperability within the Ethereum ecosystem.
+
+---
+
+## Storage
+
+### ERC165Storage
+
+<ExpandableCode language="solidity" maxLines={15} title="Definition">
+{`struct ERC165Storage {
+    /**
+    * @notice Mapping of interface IDs to whether they are supported
+    */
+    mapping(bytes4 => bool) supportedInterfaces;
+}`}
+</ExpandableCode>
+
+### State Variables
+
+<PropertyTable
+  properties={[
+    {
+      name: "STORAGE_POSITION",
+      type: "bytes32",
+      description: "Diamond storage slot position for this module (Value: `keccak256(\"compose.erc165\")`)"
+    }
+  ]}
+  showRequired={false}
+/>
+
+## Functions
+
+### supportsInterface
+
+Query if a contract implements an interface This function checks if the diamond supports the given interface ID
+
+<ExpandableCode language="solidity" maxLines={8}>
+{`function supportsInterface(bytes4 _interfaceId) external view returns (bool);`}
+</ExpandableCode>
+
+**Parameters:**
+
+<PropertyTable
+  properties={[
+    {
+      name: "_interfaceId",
+      type: "bytes4",
+      description: "The interface identifier, as specified in ERC-165"
+    }
+  ]}
+  showRequired={false}
+/>
+
+**Returns:**
+
+<PropertyTable
+  properties={[
+    {
+      name: "-",
+      type: "bool",
+      description: "`true` if the contract implements `_interfaceId` and `_interfaceId` is not 0xffffffff, `false` otherwise"
+    }
+  ]}
+  showRequired={false}
+/>
+
+## Usage Example
+
+<ExpandableCode language="solidity" maxLines={20} title="Example Implementation">
+{`pragma solidity ^0.8.30;
+
+import {ERC165Facet} from "@compose/contracts/src/facets/ERC165Facet.sol";
+import {IDiamondCut} from "@compose/contracts/src/interfaces/IDiamondCut.sol";
+
+contract MyDiamond is IDiamondCut {
+    // ... other facet deployments and cuts ...
+
+    function upgrade() external payable {
+        // ... other facet cuts ...
+
+        address[] memory facetsToAddAddresses = new address[](1);
+        bytes[] memory facetToAddABIs = new bytes[](1);
+
+        facetsToAddAddresses[0] = address(new ERC165Facet());
+        facetToAddABIs[0] = abi.encodeCall(ERC165Facet.supportsInterface, (bytes4(keccak256("supportsInterface(bytes4)"))));
+
+        IDiamondCut.FacetCut[] memory cuts = new IDiamondCut.FacetCut[](1);
+        cuts[0] = IDiamondCut.FacetCut({
+            facetAddress: facetsToAddAddresses[0],
+            action: IDiamondCut.FacetCutAction.ADD,
+            isConstructor: false,
+            functionSelectors: facetToAddABIs[0]
+        });
+
+        diamondCut(cuts, address(0), "");
+    }
+
+    // ... other diamond functions ...
+}`}
+</ExpandableCode>
+
+## Best Practices
+
+<Callout type="tip" title="Best Practice">
+- Ensure the ERC165Facet is added to the diamond during initial deployment or upgrades.
+- Correctly populate the diamond's storage with supported interface IDs to be queried by `supportsInterface`.
+</Callout>
+
+## Security Considerations
+
+<Callout type="warning" title="Security">
+This facet is read-only and does not directly handle asset transfers or critical state changes, minimizing reentrancy risks. Ensure that the interface IDs registered in the diamond's storage accurately reflect the implemented functionalities.
+</Callout>
+
+<div style={{marginTop: "3rem", paddingTop: "2rem", borderTop: "1px solid var(--ifm-color-emphasis-200)"}}>
+  <WasThisHelpful pageId="ERC165Facet" />
+</div>
+
+<LastUpdated date="2025-12-23T00:28:04.914Z" />

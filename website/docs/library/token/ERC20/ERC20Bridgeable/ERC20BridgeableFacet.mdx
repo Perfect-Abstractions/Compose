@@ -1,0 +1,390 @@
+---
+sidebar_position: 99
+title: "ERC20BridgeableFacet"
+description: "Manages cross-chain ERC20 token transfers and minting/burning."
+gitSource: "https://github.com/Perfect-Abstractions/Compose/tree/main/src/token/ERC20/ERC20Bridgeable/ERC20BridgeableFacet.sol"
+---
+
+import DocSubtitle  from '@site/src/components/docs/DocSubtitle';
+import Badge from '@site/src/components/ui/Badge';
+import Callout from '@site/src/components/ui/Callout';
+import CalloutBox from '@site/src/components/ui/CalloutBox';
+import Accordion, { AccordionGroup } from '@site/src/components/ui/Accordion';
+import PropertyTable from '@site/src/components/api/PropertyTable';
+import ExpandableCode from '@site/src/components/code/ExpandableCode';
+import CodeShowcase from '@site/src/components/code/CodeShowcase';
+import RelatedDocs from '@site/src/components/docs/RelatedDocs';
+import WasThisHelpful from '@site/src/components/docs/WasThisHelpful';
+import LastUpdated from '@site/src/components/docs/LastUpdated';
+import ReadingTime from '@site/src/components/docs/ReadingTime';
+import GradientText from '@site/src/components/ui/GradientText';
+import GradientButton from '@site/src/components/ui/GradientButton';
+
+<DocSubtitle>
+Manages cross-chain ERC20 token transfers and minting/burning.
+</DocSubtitle>
+
+<Callout type="info" title="Key Features">
+- Enables cross-chain minting and burning of ERC20 tokens.
+- Restricts `crosschainMint` and `crosschainBurn` functions to addresses with the `trusted-bridge` role.
+- Utilizes inline assembly for efficient storage access via the diamond storage pattern.
+</Callout>
+
+## Overview
+
+The ERC20BridgeableFacet enables secure cross-chain operations for ERC20 tokens. It allows trusted bridges to mint tokens on one chain and burn them on another. This facet leverages the diamond's storage pattern for efficient access to ERC20 and access control configurations.
+
+---
+
+## Storage
+
+### ERC20Storage
+
+<ExpandableCode language="solidity" maxLines={15} title="Definition">
+{`struct ERC20Storage {
+    mapping(address owner => uint256 balance) balanceOf;
+    uint256 totalSupply;
+}`}
+</ExpandableCode>
+
+---
+### AccessControlStorage
+
+<ExpandableCode language="solidity" maxLines={15} title="Definition">
+{`struct AccessControlStorage {
+    mapping(address account => mapping(bytes32 role => bool hasRole)) hasRole;
+}`}
+</ExpandableCode>
+
+### State Variables
+
+<PropertyTable
+  properties={[
+    {
+      name: "ERC20_STORAGE_POSITION",
+      type: "bytes32",
+      description: "Diamond storage slot position for this module (Value: `keccak256(\"compose.erc20\")`)"
+    },
+    {
+      name: "ACCESS_STORAGE_POSITION",
+      type: "bytes32",
+      description: "Diamond storage slot position for this module (Value: `keccak256(\"compose.accesscontrol\")`)"
+    }
+  ]}
+  showRequired={false}
+/>
+
+## Functions
+
+### crosschainMint
+
+Cross-chain mint — callable only by an address having the `trusted-bridge` role.
+
+<ExpandableCode language="solidity" maxLines={8}>
+{`function crosschainMint(address _account, uint256 _value) external;`}
+</ExpandableCode>
+
+**Parameters:**
+
+<PropertyTable
+  properties={[
+    {
+      name: "_account",
+      type: "address",
+      description: "The account to mint tokens to."
+    },
+    {
+      name: "_value",
+      type: "uint256",
+      description: "The amount to mint."
+    }
+  ]}
+  showRequired={false}
+/>
+
+---
+### crosschainBurn
+
+Cross-chain burn — callable only by an address having the `trusted-bridge` role.
+
+<ExpandableCode language="solidity" maxLines={8}>
+{`function crosschainBurn(address _from, uint256 _value) external;`}
+</ExpandableCode>
+
+**Parameters:**
+
+<PropertyTable
+  properties={[
+    {
+      name: "_from",
+      type: "address",
+      description: "The account to burn tokens from."
+    },
+    {
+      name: "_value",
+      type: "uint256",
+      description: "The amount to burn."
+    }
+  ]}
+  showRequired={false}
+/>
+
+---
+### checkTokenBridge
+
+Internal check to check if the bridge (caller) is trusted. Reverts if caller is zero or not in the AccessControl `trusted-bridge` role.
+
+<ExpandableCode language="solidity" maxLines={8}>
+{`function checkTokenBridge(address _caller) external view;`}
+</ExpandableCode>
+
+**Parameters:**
+
+<PropertyTable
+  properties={[
+    {
+      name: "_caller",
+      type: "address",
+      description: "The address to validate"
+    }
+  ]}
+  showRequired={false}
+/>
+
+## Events
+
+<AccordionGroup>
+  <Accordion title="CrosschainMint" defaultOpen={false}>
+    <div style={{marginBottom: "1rem"}}>
+      Emitted when tokens are minted via a cross-chain bridge.
+    </div>
+
+    <div style={{marginBottom: "1rem"}}>
+      <strong>Signature:</strong>
+      <ExpandableCode language="solidity" maxLines={5}>
+{`event CrosschainMint(address indexed _to, uint256 _amount, address indexed _sender);`}
+      </ExpandableCode>
+    </div>
+
+    <div style={{marginBottom: "1rem"}}>
+      <strong>Parameters:</strong>
+      <PropertyTable
+        properties={[
+          {
+            name: "_to",
+            type: "address",
+            description: "The recipient of minted tokens."
+          },
+          {
+            name: "_amount",
+            type: "uint256",
+            description: "The amount minted."
+          },
+          {
+            name: "_sender",
+            type: "address",
+            description: "The bridge account that triggered the mint (msg.sender)."
+          }
+        ]}
+        showRequired={false}
+      />
+    </div>
+  </Accordion>
+  <Accordion title="CrosschainBurn" defaultOpen={false}>
+    <div style={{marginBottom: "1rem"}}>
+      Emitted when a crosschain transfer burns tokens.
+    </div>
+
+    <div style={{marginBottom: "1rem"}}>
+      <strong>Signature:</strong>
+      <ExpandableCode language="solidity" maxLines={5}>
+{`event CrosschainBurn(address indexed _from, uint256 _amount, address indexed _sender);`}
+      </ExpandableCode>
+    </div>
+
+    <div style={{marginBottom: "1rem"}}>
+      <strong>Parameters:</strong>
+      <PropertyTable
+        properties={[
+          {
+            name: "_from",
+            type: "address",
+            description: "Address of the account tokens are being burned from."
+          },
+          {
+            name: "_amount",
+            type: "uint256",
+            description: "Amount of tokens burned."
+          },
+          {
+            name: "_sender",
+            type: "address",
+            description: "Address of the caller (msg.sender) who invoked crosschainBurn."
+          }
+        ]}
+        showRequired={false}
+      />
+    </div>
+  </Accordion>
+  <Accordion title="Transfer" defaultOpen={false}>
+    <div style={{marginBottom: "1rem"}}>
+      Emitted when tokens are transferred between two addresses.
+    </div>
+
+    <div style={{marginBottom: "1rem"}}>
+      <strong>Signature:</strong>
+      <ExpandableCode language="solidity" maxLines={5}>
+{`event Transfer(address indexed _from, address indexed _to, uint256 _value);`}
+      </ExpandableCode>
+    </div>
+
+    <div style={{marginBottom: "1rem"}}>
+      <strong>Parameters:</strong>
+      <PropertyTable
+        properties={[
+          {
+            name: "_from",
+            type: "address",
+            description: "Address sending the tokens."
+          },
+          {
+            name: "_to",
+            type: "address",
+            description: "Address receiving the tokens."
+          },
+          {
+            name: "_value",
+            type: "uint256",
+            description: "Amount of tokens transferred."
+          }
+        ]}
+        showRequired={false}
+      />
+    </div>
+  </Accordion>
+</AccordionGroup>
+
+## Errors
+
+<AccordionGroup>
+  <Accordion title="ERC20InvalidReciever" defaultOpen={false}>
+    <div style={{marginBottom: "1rem"}}>
+      Revert when a provided receiver is invalid(e.g,zero address) .
+    </div>
+
+    <div>
+      <strong>Signature:</strong>
+      <ExpandableCode language="solidity" maxLines={5}>
+error ERC20InvalidReciever(address _receiver);
+      </ExpandableCode>
+    </div>
+  </Accordion>
+  <Accordion title="ERC20InvalidSender" defaultOpen={false}>
+    <div style={{marginBottom: "1rem"}}>
+      Thrown when the sender address is invalid (e.g., zero address).
+    </div>
+
+    <div>
+      <strong>Signature:</strong>
+      <ExpandableCode language="solidity" maxLines={5}>
+error ERC20InvalidSender(address _sender);
+      </ExpandableCode>
+    </div>
+  </Accordion>
+  <Accordion title="ERC20InvalidBridgeAccount" defaultOpen={false}>
+    <div style={{marginBottom: "1rem"}}>
+      Revert when caller is not a trusted bridge.
+    </div>
+
+    <div>
+      <strong>Signature:</strong>
+      <ExpandableCode language="solidity" maxLines={5}>
+error ERC20InvalidBridgeAccount(address _caller);
+      </ExpandableCode>
+    </div>
+  </Accordion>
+  <Accordion title="ERC20InvalidCallerAddress" defaultOpen={false}>
+    <div style={{marginBottom: "1rem"}}>
+      Revert when caller address is invalid.
+    </div>
+
+    <div>
+      <strong>Signature:</strong>
+      <ExpandableCode language="solidity" maxLines={5}>
+error ERC20InvalidCallerAddress(address _caller);
+      </ExpandableCode>
+    </div>
+  </Accordion>
+  <Accordion title="AccessControlUnauthorizedAccount" defaultOpen={false}>
+    <div style={{marginBottom: "1rem"}}>
+      Thrown when the account does not have a specific role.
+    </div>
+
+    <div>
+      <strong>Signature:</strong>
+      <ExpandableCode language="solidity" maxLines={5}>
+error AccessControlUnauthorizedAccount(address _account, bytes32 _role);
+      </ExpandableCode>
+    </div>
+  </Accordion>
+  <Accordion title="ERC20InsufficientBalance" defaultOpen={false}>
+
+    <div>
+      <strong>Signature:</strong>
+      <ExpandableCode language="solidity" maxLines={5}>
+error ERC20InsufficientBalance(address _from, uint256 _accountBalance, uint256 _value);
+      </ExpandableCode>
+    </div>
+  </Accordion>
+</AccordionGroup>
+
+## Usage Example
+
+<ExpandableCode language="solidity" maxLines={20} title="Example Implementation">
+{`pragma solidity ^0.8.30;
+
+import {IERC20BridgeableFacet} from "./interfaces/IERC20BridgeableFacet.sol";
+
+contract Deployer {
+    // Assume diamond is deployed and selectors are registered
+    address internal immutable diamondAddress;
+
+    constructor(address _diamondAddress) {
+        diamondAddress = _diamondAddress;
+    }
+
+    function mintCrosschain(address _token, address _to, uint256 _amount) external {
+        bytes4 selector = IERC20BridgeableFacet.crosschainMint.selector;
+        // Call through the diamond proxy
+        (bool success, ) = diamondAddress.call(abi.encodeWithSelector(selector, _token, _to, _amount));
+        require(success, "Crosschain mint failed");
+    }
+
+    function burnCrosschain(address _token, address _from, uint256 _amount) external {
+        bytes4 selector = IERC20BridgeableFacet.crosschainBurn.selector;
+        // Call through the diamond proxy
+        (bool success, ) = diamondAddress.call(abi.encodeWithSelector(selector, _token, _from, _amount));
+        require(success, "Crosschain burn failed");
+    }
+}`}
+</ExpandableCode>
+
+## Best Practices
+
+<Callout type="tip" title="Best Practice">
+- Initialize the `trusted-bridge` role in AccessControl for addresses authorized to call `crosschainMint` and `crosschainBurn`.
+- Ensure that the ERC20 token contract is correctly deployed and accessible to the diamond.
+- Use `getERC20Storage` and `getAccessControlStorage` to retrieve necessary configuration data.
+</Callout>
+
+## Security Considerations
+
+<Callout type="warning" title="Security">
+The `crosschainMint` and `crosschainBurn` functions are protected by the `trusted-bridge` role, preventing unauthorized cross-chain operations. Input validation is performed by internal checks, including verifying the caller's role and ensuring valid recipient/sender addresses. Reentrancy is not a direct concern as these functions do not make external calls to untrusted contracts.
+</Callout>
+
+<div style={{marginTop: "3rem", paddingTop: "2rem", borderTop: "1px solid var(--ifm-color-emphasis-200)"}}>
+  <WasThisHelpful pageId="ERC20BridgeableFacet" />
+</div>
+
+<LastUpdated date="2025-12-23T00:27:09.541Z" />

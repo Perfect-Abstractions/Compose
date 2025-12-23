@@ -1,0 +1,30 @@
+---
+title: "ERC-20 Bridgeable"
+description: "ERC-20 Bridgeable extension for ERC-20 tokens."
+sidebar_class_name: hidden
+---
+
+import DocCard, { DocCardGrid } from '@site/src/components/docs/DocCard';
+import DocSubtitle from '@site/src/components/docs/DocSubtitle';
+import Icon from '@site/src/components/ui/Icon';
+
+<DocSubtitle>
+  ERC-20 Bridgeable extension for ERC-20 tokens.
+</DocSubtitle>
+
+<DocCardGrid columns={2}>
+  <DocCard
+    title="ERC20BridgeableFacet"
+    description={"Manages cross-chain ERC20 token transfers and minting/burning."}
+    href="/docs/library/token/ERC20/ERC20Bridgeable/ERC20BridgeableFacet"
+    icon={<Icon name="book" size={28} />}
+    size="medium"
+  />
+  <DocCard
+    title="ERC20BridgeableMod"
+    description={"Enables cross-chain token transfers and management."}
+    href="/docs/library/token/ERC20/ERC20Bridgeable/ERC20BridgeableMod"
+    icon={<Icon name="book" size={28} />}
+    size="medium"
+  />
+</DocCardGrid>

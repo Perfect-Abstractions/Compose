@@ -3,7 +3,8 @@
   "position": 5,
   "link": {
     "type": "generated-index",
-    "description": "Learn how to contribute to Compose"
+    "description": "Learn how to contribute to Compose",
+    "slug": "/docs/contribution"
   },
   "collapsible": true,
   "collapsed": true
