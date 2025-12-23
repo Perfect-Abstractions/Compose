@@ -1,0 +1,171 @@
+---
+sidebar_position: 99
+title: "RoyaltyFacet"
+description: "Manages token royalties according to ERC-2981."
+gitSource: "https://github.com/Perfect-Abstractions/Compose/tree/main/src/token/Royalty/RoyaltyFacet.sol"
+---
+
+import DocSubtitle  from '@site/src/components/docs/DocSubtitle';
+import Badge from '@site/src/components/ui/Badge';
+import Callout from '@site/src/components/ui/Callout';
+import CalloutBox from '@site/src/components/ui/CalloutBox';
+import Accordion, { AccordionGroup } from '@site/src/components/ui/Accordion';
+import PropertyTable from '@site/src/components/api/PropertyTable';
+import ExpandableCode from '@site/src/components/code/ExpandableCode';
+import CodeShowcase from '@site/src/components/code/CodeShowcase';
+import RelatedDocs from '@site/src/components/docs/RelatedDocs';
+import WasThisHelpful from '@site/src/components/docs/WasThisHelpful';
+import LastUpdated from '@site/src/components/docs/LastUpdated';
+import ReadingTime from '@site/src/components/docs/ReadingTime';
+import GradientText from '@site/src/components/ui/GradientText';
+import GradientButton from '@site/src/components/ui/GradientButton';
+
+<DocSubtitle>
+Manages token royalties according to ERC-2981.
+</DocSubtitle>
+
+<Callout type="info" title="Key Features">
+- Implements ERC-2981 `royaltyInfo` function.
+- Supports token-specific royalty configurations.
+- Falls back to a default royalty setting when token-specific royalties are not defined.
+- Royalty calculation based on sale price in basis points.
+</Callout>
+
+## Overview
+
+The RoyaltyFacet implements the ERC-2981 standard, allowing tokens to specify royalty payments on secondary sales. It provides functions to retrieve royalty information for a given token ID and sale price, supporting both token-specific and default royalty configurations.
+
+---
+
+## Storage
+
+### RoyaltyInfo
+
+<ExpandableCode language="solidity" maxLines={15} title="Definition">
+{`struct RoyaltyInfo {
+    address receiver;
+    uint96 royaltyFraction;
+}`}
+</ExpandableCode>
+
+---
+### RoyaltyStorage
+
+<ExpandableCode language="solidity" maxLines={15} title="Definition">
+{`struct RoyaltyStorage {
+    RoyaltyInfo defaultRoyaltyInfo;
+    mapping(uint256 tokenId => RoyaltyInfo) tokenRoyaltyInfo;
+}`}
+</ExpandableCode>
+
+### State Variables
+
+<PropertyTable
+  properties={[
+    {
+      name: "STORAGE_POSITION",
+      type: "bytes32",
+      description: "Diamond storage slot position for this module (Value: `keccak256(\"compose.erc2981\")`)"
+    },
+    {
+      name: "FEE_DENOMINATOR",
+      type: "uint96",
+      description: "(Value: `10000`)"
+    }
+  ]}
+  showRequired={false}
+/>
+
+## Functions
+
+### royaltyInfo
+
+Returns royalty information for a given token and sale price. Returns token-specific royalty if set, otherwise falls back to default royalty. Royalty amount is calculated as a percentage of the sale price using basis points. Implements the ERC-2981 royaltyInfo function.
+
+<ExpandableCode language="solidity" maxLines={8}>
+{`function royaltyInfo(uint256 _tokenId, uint256 _salePrice)
+    external
+    view
+    returns (address receiver, uint256 royaltyAmount);`}
+</ExpandableCode>
+
+**Parameters:**
+
+<PropertyTable
+  properties={[
+    {
+      name: "_tokenId",
+      type: "uint256",
+      description: "The NFT asset queried for royalty information."
+    },
+    {
+      name: "_salePrice",
+      type: "uint256",
+      description: "The sale price of the NFT asset specified by _tokenId."
+    }
+  ]}
+  showRequired={false}
+/>
+
+**Returns:**
+
+<PropertyTable
+  properties={[
+    {
+      name: "receiver",
+      type: "address",
+      description: "The address designated to receive the royalty payment."
+    },
+    {
+      name: "royaltyAmount",
+      type: "uint256",
+      description: "The royalty payment amount for _salePrice."
+    }
+  ]}
+  showRequired={false}
+/>
+
+## Usage Example
+
+<ExpandableCode language="solidity" maxLines={20} title="Example Implementation">
+{`pragma solidity ^0.8.30;
+
+import {IRoyaltyFacet} from "@compose-protocol/diamond-contracts/contracts/facets/RoyaltyFacet.sol";
+import {IDiamondProxy} from "@compose-protocol/diamond-contracts/contracts/interfaces/IDiamondProxy.sol";
+
+contract RoyaltyConsumer {
+    address immutable diamondProxy;
+    bytes4 private constant ROYALTY_INFO_SELECTOR = IRoyaltyFacet.royaltyInfo.selector;
+
+    constructor(address _diamondProxy) {
+        diamondProxy = _diamondProxy;
+    }
+
+    function getTokenRoyalty(uint256 _tokenId, uint256 _salePrice) external view returns (address receiver, uint256 royaltyAmount) {
+        (bool success, bytes memory data) = diamondProxy.call(abi.encodeWithSelector(ROYALTY_INFO_SELECTOR, _tokenId, _salePrice));
+        require(success, "RoyaltyFacet: royaltyInfo call failed");
+        (receiver, royaltyAmount) = abi.decode(data, (address, uint256));
+        return (receiver, royaltyAmount);
+    }
+}`}
+</ExpandableCode>
+
+## Best Practices
+
+<Callout type="tip" title="Best Practice">
+- Initialize the RoyaltyFacet with default royalty settings during diamond deployment.
+- Ensure appropriate access control is configured for setting default royalties if applicable.
+- When upgrading, ensure the storage layout of the RoyaltyFacet remains compatible.
+</Callout>
+
+## Security Considerations
+
+<Callout type="warning" title="Security">
+The `royaltyInfo` function is read-only and does not pose reentrancy risks. Access control for setting default royalties should be strictly managed to prevent unauthorized modifications. Ensure the `STORAGE_POSITION` for royalty storage is unique and not conflicting with other facets.
+</Callout>
+
+<div style={{marginTop: "3rem", paddingTop: "2rem", borderTop: "1px solid var(--ifm-color-emphasis-200)"}}>
+  <WasThisHelpful pageId="RoyaltyFacet" />
+</div>
+
+<LastUpdated date="2025-12-23T00:27:52.929Z" />
