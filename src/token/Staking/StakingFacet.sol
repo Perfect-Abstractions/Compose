@@ -373,7 +373,6 @@ contract StakingFacet {
 
         bool isSupported = isTokenSupported(_tokenAddress);
         bool isTokenERC20 = s.supportedTokens[_tokenAddress].isERC20;
-        bool isTokenERC1155 = s.supportedTokens[_tokenAddress].isERC1155;
 
         if (!isSupported) {
             revert StakingUnsupportedToken(_tokenAddress);
