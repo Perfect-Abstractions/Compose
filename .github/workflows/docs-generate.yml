@@ -166,7 +166,10 @@ jobs:
           git reset
           
           # Only stage website documentation files (force add in case they're ignored)
-          git add -f website/docs/contracts/
+          # Use library directory (the actual output directory) instead of contracts
+          if [ -d "website/docs/library" ]; then
+            git add -f website/docs/library/
+          fi
 
       - name: Create Pull Request
         if: steps.check-generated.outputs.has_generated == 'true'
