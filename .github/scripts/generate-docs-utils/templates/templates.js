@@ -6,6 +6,7 @@
 const { loadAndRenderTemplate } = require('./template-engine-handlebars');
 const { sanitizeForMdx } = require('./helpers');
 const { readFileSafe } = require('../../workflow-utils');
+const { enrichWithRelationships } = require('../doc-generation-utils');
 
 /**
  * Extract function parameters directly from Solidity source file
@@ -610,16 +611,18 @@ function prepareBaseData(data, position = 99) {
  * Prepare data for facet template rendering
  * @param {object} data - Documentation data
  * @param {number} position - Sidebar position
+ * @param {object} pathInfo - Output path information (optional)
+ * @param {object} registry - Contract registry (optional)
  * @returns {object} Prepared data for facet template
  */
-function prepareFacetData(data, position = 99) {
+function prepareFacetData(data, position = 99, pathInfo = null, registry = null) {
   const baseData = prepareBaseData(data, position);
   const sourceFilePath = data.sourceFilePath;
   
   // Filter out internal functions for facets (they act as pre-deploy logic blocks)
   const publicFunctions = (data.functions || []).filter(fn => !isInternalFunction(fn));
   
-  return {
+  const preparedData = {
     ...baseData,
     // Contract type flags for unified template
     isFacet: true,
@@ -630,19 +633,28 @@ function prepareFacetData(data, position = 99) {
     functions: publicFunctions.map(fn => prepareFunctionData(fn, sourceFilePath, false)),
     hasFunctions: publicFunctions.length > 0,
   };
+  
+  // Enrich with relationships if registry and pathInfo provided
+  if (registry && pathInfo) {
+    return enrichWithRelationships(preparedData, pathInfo, registry);
+  }
+  
+  return preparedData;
 }
 
 /**
  * Prepare data for module template rendering
  * @param {object} data - Documentation data
  * @param {number} position - Sidebar position
+ * @param {object} pathInfo - Output path information (optional)
+ * @param {object} registry - Contract registry (optional)
  * @returns {object} Prepared data for module template
  */
-function prepareModuleData(data, position = 99) {
+function prepareModuleData(data, position = 99, pathInfo = null, registry = null) {
   const baseData = prepareBaseData(data, position);
   const sourceFilePath = data.sourceFilePath;
   
-  return {
+  const preparedData = {
     ...baseData,
     // Contract type flags for unified template
     isFacet: false,
@@ -652,6 +664,13 @@ function prepareModuleData(data, position = 99) {
     functions: (data.functions || []).map(fn => prepareFunctionData(fn, sourceFilePath, true)),
     hasFunctions: (data.functions || []).length > 0,
   };
+  
+  // Enrich with relationships if registry and pathInfo provided
+  if (registry && pathInfo) {
+    return enrichWithRelationships(preparedData, pathInfo, registry);
+  }
+  
+  return preparedData;
 }
 
 /**
@@ -659,10 +678,12 @@ function prepareModuleData(data, position = 99) {
  * Uses the unified contract template with isFacet=true
  * @param {object} data - Documentation data
  * @param {number} position - Sidebar position
+ * @param {object} pathInfo - Output path information (optional)
+ * @param {object} registry - Contract registry (optional)
  * @returns {string} Complete MDX document
  */
-function generateFacetDoc(data, position = 99) {
-  const preparedData = prepareFacetData(data, position);
+function generateFacetDoc(data, position = 99, pathInfo = null, registry = null) {
+  const preparedData = prepareFacetData(data, position, pathInfo, registry);
   return loadAndRenderTemplate('contract', preparedData);
 }
 
@@ -671,10 +692,12 @@ function generateFacetDoc(data, position = 99) {
  * Uses the unified contract template with isModule=true
  * @param {object} data - Documentation data
  * @param {number} position - Sidebar position
+ * @param {object} pathInfo - Output path information (optional)
+ * @param {object} registry - Contract registry (optional)
  * @returns {string} Complete MDX document
  */
-function generateModuleDoc(data, position = 99) {
-  const preparedData = prepareModuleData(data, position);
+function generateModuleDoc(data, position = 99, pathInfo = null, registry = null) {
+  const preparedData = prepareModuleData(data, position, pathInfo, registry);
   return loadAndRenderTemplate('contract', preparedData);
 }
 

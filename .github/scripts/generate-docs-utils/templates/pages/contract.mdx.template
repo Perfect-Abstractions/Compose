@@ -247,24 +247,25 @@ This module provides internal functions for use in your custom facets. Import it
 {{/if}}
 {{/if}}
 
+{{#if relatedDocs}}
+<div style={{{styleLiteral "margin-top: 3rem; padding-top: 2rem; border-top: 1px solid var(--ifm-color-emphasis-200)"}}}>
+  <RelatedDocs 
+    items={[
+{{#each relatedDocs}}
+      {
+        title: "{{title}}",
+        href: "{{href}}",
+        description: "{{description}}",
+        icon: "{{icon}}"
+      }{{#unless @last}},{{/unless}}
+{{/each}}
+    ]}
+  />
+</div>
+{{/if}}
+
 <div style={{{styleLiteral "margin-top: 3rem; padding-top: 2rem; border-top: 1px solid var(--ifm-color-emphasis-200)"}}}>
   <WasThisHelpful pageId="{{title}}" />
 </div>
 
 <LastUpdated date="{{generatedDate}}" />
-
-{{#if relatedDocs}}
-<RelatedDocs 
-  items={[
-{{#each relatedDocs}}
-    {
-      title: "{{title}}",
-      href: "{{href}}",
-      description: "{{description}}",
-      icon: "{{icon}}"
-    }{{#unless @last}},{{/unless}}
-{{/each}}
-  ]}
-  title="Related Documentation"
-/>
-{{/if}}

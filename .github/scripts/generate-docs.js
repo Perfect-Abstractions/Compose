@@ -27,6 +27,9 @@ const {
   extractModuleNameFromPath,
   extractModuleDescriptionFromSource,
   generateDescriptionFromName,
+  registerContract,
+  getContractRegistry,
+  clearContractRegistry,
 } = require('./generate-docs-utils/doc-generation-utils');
 const { readFileSafe, writeFileSafe } = require('./workflow-utils');
 const {
@@ -126,8 +129,17 @@ async function processForgeDocFile(forgeDocFile, solFilePath) {
   // Get output path (mirrors src/ structure)
   const pathInfo = getOutputPath(solFilePath, contractType);
 
-  // Get smart sidebar position
-  data.position = getSidebarPosition(data.title);
+  // Get registry for relationship detection
+  const registry = getContractRegistry();
+
+  // Get smart sidebar position (uses registry if available)
+  data.position = getSidebarPosition(data.title, contractType, pathInfo.category, registry);
+
+  // Set contract type for registry (before registering)
+  data.contractType = contractType;
+
+  // Register contract in registry (before AI enhancement so it's available for relationship detection)
+  registerContract(data, pathInfo);
 
   // Check if we should skip AI enhancement
   const skipAIEnhancement = shouldSkipEnhancement(data) || process.env.SKIP_ENHANCEMENT === 'true';
@@ -137,13 +149,19 @@ async function processForgeDocFile(forgeDocFile, solFilePath) {
   if (!skipAIEnhancement) {
     const token = process.env.GITHUB_TOKEN;
     enhancedData = await enhanceWithAI(data, contractType, token);
+    // Ensure contractType is preserved after AI enhancement
+    enhancedData.contractType = contractType;
   } else {
     console.log(`Skipping AI enhancement for ${data.title}`);
     enhancedData = addFallbackContent(data, contractType);
+    // Ensure contractType is preserved
+    enhancedData.contractType = contractType;
   }
 
-  // Generate MDX content
-  const mdxContent = contractType === 'module' ? generateModuleDoc(enhancedData) : generateFacetDoc(enhancedData);
+  // Generate MDX content with registry for relationship detection
+  const mdxContent = contractType === 'module' 
+    ? generateModuleDoc(enhancedData, enhancedData.position, pathInfo, registry)
+    : generateFacetDoc(enhancedData, enhancedData.position, pathInfo, registry);
 
   // Ensure output directory exists
   fs.mkdirSync(pathInfo.outputDir, { recursive: true });
@@ -264,8 +282,17 @@ async function processAggregatedFiles(forgeDocFiles, solFilePath) {
   // Get output path (mirrors src/ structure)
   const pathInfo = getOutputPath(solFilePath, contractType);
 
-  // Get smart sidebar position
-  data.position = getSidebarPosition(data.title);
+  // Get registry for relationship detection
+  const registry = getContractRegistry();
+
+  // Get smart sidebar position (uses registry if available)
+  data.position = getSidebarPosition(data.title, contractType, pathInfo.category, registry);
+
+  // Set contract type for registry (before registering)
+  data.contractType = contractType;
+
+  // Register contract in registry (before AI enhancement so it's available for relationship detection)
+  registerContract(data, pathInfo);
 
   const skipAIEnhancement = shouldSkipEnhancement(data) || process.env.SKIP_ENHANCEMENT === 'true';
 
@@ -273,13 +300,19 @@ async function processAggregatedFiles(forgeDocFiles, solFilePath) {
   if (!skipAIEnhancement) {
     const token = process.env.GITHUB_TOKEN;
     enhancedData = await enhanceWithAI(data, contractType, token);
+    // Ensure contractType is preserved after AI enhancement
+    enhancedData.contractType = contractType;
   } else {
     console.log(`Skipping AI enhancement for ${data.title}`);
     enhancedData = addFallbackContent(data, contractType);
+    // Ensure contractType is preserved
+    enhancedData.contractType = contractType;
   }
 
-  // Generate MDX content
-  const mdxContent = contractType === 'module' ? generateModuleDoc(enhancedData) : generateFacetDoc(enhancedData);
+  // Generate MDX content with registry for relationship detection
+  const mdxContent = contractType === 'module' 
+    ? generateModuleDoc(enhancedData, enhancedData.position, pathInfo, registry)
+    : generateFacetDoc(enhancedData, enhancedData.position, pathInfo, registry);
 
   // Ensure output directory exists
   fs.mkdirSync(pathInfo.outputDir, { recursive: true });
@@ -393,6 +426,9 @@ function writeSummaryFile() {
  */
 async function main() {
   console.log('Compose Documentation Generator\n');
+
+  // Step 0: Clear contract registry
+  clearContractRegistry();
 
   // Step 1: Sync docs structure with src structure
   console.log('📁 Syncing documentation structure with source...');

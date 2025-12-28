@@ -19,6 +19,71 @@ const {
 } = require('./category/category-generator');
 
 // ============================================================================
+// Contract Registry System
+// ============================================================================
+
+/**
+ * Global registry to track all contracts for relationship detection
+ * This allows us to find related contracts and generate cross-references
+ */
+const contractRegistry = {
+  byName: new Map(),
+  byCategory: new Map(),
+  byType: { modules: [], facets: [] }
+};
+
+/**
+ * Register a contract in the global registry
+ * @param {object} contractData - Contract documentation data
+ * @param {object} outputPath - Output path information from getOutputPath
+ * @returns {object} Registered contract entry
+ */
+function registerContract(contractData, outputPath) {
+  const entry = {
+    name: contractData.title,
+    type: contractData.contractType, // 'module' or 'facet'
+    category: outputPath.category,
+    path: outputPath.relativePath,
+    sourcePath: contractData.sourceFilePath,
+    functions: contractData.functions || [],
+    storagePosition: contractData.storageInfo?.storagePosition
+  };
+  
+  contractRegistry.byName.set(contractData.title, entry);
+  
+  if (!contractRegistry.byCategory.has(outputPath.category)) {
+    contractRegistry.byCategory.set(outputPath.category, []);
+  }
+  contractRegistry.byCategory.get(outputPath.category).push(entry);
+  
+  if (contractData.contractType === 'module') {
+    contractRegistry.byType.modules.push(entry);
+  } else {
+    contractRegistry.byType.facets.push(entry);
+  }
+  
+  return entry;
+}
+
+/**
+ * Get the contract registry
+ * @returns {object} The contract registry
+ */
+function getContractRegistry() {
+  return contractRegistry;
+}
+
+/**
+ * Clear the contract registry (useful for testing or reset)
+ */
+function clearContractRegistry() {
+  contractRegistry.byName.clear();
+  contractRegistry.byCategory.clear();
+  contractRegistry.byType.modules = [];
+  contractRegistry.byType.facets = [];
+}
+
+// ============================================================================
 // Git Integration
 // ============================================================================
 
@@ -188,15 +253,161 @@ function getOutputPath(solFilePath, contractType) {
 }
 
 /**
+ * Find related contracts for a given contract
+ * @param {string} contractName - Name of the contract
+ * @param {string} contractType - Type of contract ('module' or 'facet')
+ * @param {string} category - Category of the contract
+ * @param {object} registry - Contract registry (optional, uses global if not provided)
+ * @returns {Array} Array of related contract objects with title, href, description, icon
+ */
+function findRelatedContracts(contractName, contractType, category, registry = null) {
+  const reg = registry || contractRegistry;
+  const related = [];
+  const contract = reg.byName.get(contractName);
+  if (!contract) return related;
+  
+  // 1. Find corresponding module/facet pair
+  if (contractType === 'facet') {
+    const moduleName = contractName.replace('Facet', 'Mod');
+    const module = reg.byName.get(moduleName);
+    if (module) {
+      related.push({
+        title: moduleName,
+        href: `/docs/library/${module.path}`,
+        description: `Module used by ${contractName}`,
+        icon: '📦'
+      });
+    }
+  } else if (contractType === 'module') {
+    const facetName = contractName.replace('Mod', 'Facet');
+    const facet = reg.byName.get(facetName);
+    if (facet) {
+      related.push({
+        title: facetName,
+        href: `/docs/library/${facet.path}`,
+        description: `Facet using ${contractName}`,
+        icon: '💎'
+      });
+    }
+  }
+  
+  // 2. Find related contracts in same category (excluding self)
+  const sameCategory = reg.byCategory.get(category) || [];
+  sameCategory.forEach(c => {
+    if (c.name !== contractName && c.type === contractType) {
+      related.push({
+        title: c.name,
+        href: `/docs/library/${c.path}`,
+        description: `Related ${contractType} in ${category}`,
+        icon: contractType === 'module' ? '📦' : '💎'
+      });
+    }
+  });
+  
+  // 3. Find extension contracts (e.g., ERC20Facet → ERC20BurnFacet)
+  if (contractType === 'facet') {
+    const baseName = contractName.replace(/BurnFacet$|PermitFacet$|BridgeableFacet$|EnumerableFacet$/, 'Facet');
+    if (baseName !== contractName) {
+      const base = reg.byName.get(baseName);
+      if (base) {
+        related.push({
+          title: baseName,
+          href: `/docs/library/${base.path}`,
+          description: `Base facet for ${contractName}`,
+          icon: '💎'
+        });
+      }
+    }
+  }
+  
+  // 4. Find core dependencies (e.g., all facets depend on DiamondCutFacet)
+  if (contractType === 'facet' && contractName !== 'DiamondCutFacet') {
+    const diamondCut = reg.byName.get('DiamondCutFacet');
+    if (diamondCut) {
+      related.push({
+        title: 'DiamondCutFacet',
+        href: `/docs/library/${diamondCut.path}`,
+        description: 'Required for adding facets to diamonds',
+        icon: '🔧'
+      });
+    }
+  }
+  
+  return related.slice(0, 6); // Limit to 6 related items
+}
+
+/**
+ * Enrich contract data with relationship information
+ * @param {object} data - Contract documentation data
+ * @param {object} pathInfo - Output path information
+ * @param {object} registry - Contract registry (optional, uses global if not provided)
+ * @returns {object} Enriched data with relatedDocs property
+ */
+function enrichWithRelationships(data, pathInfo, registry = null) {
+  const relatedDocs = findRelatedContracts(
+    data.title,
+    data.contractType,
+    pathInfo.category,
+    registry
+  );
+  
+  return {
+    ...data,
+    relatedDocs: relatedDocs.length > 0 ? relatedDocs : null
+  };
+}
+
+/**
  * Get sidebar position for a contract
  * @param {string} contractName - Name of the contract
+ * @param {string} contractType - Type of contract ('module' or 'facet')
+ * @param {string} category - Category of the contract
+ * @param {object} registry - Contract registry (optional, uses global if not provided)
  * @returns {number} Sidebar position
  */
-function getSidebarPosition(contractName) {
+function getSidebarPosition(contractName, contractType = null, category = null, registry = null) {
+  // First check explicit config
   if (CONFIG.contractPositions && CONFIG.contractPositions[contractName] !== undefined) {
     return CONFIG.contractPositions[contractName];
   }
-  return CONFIG.defaultSidebarPosition || 50;
+  
+  // If we don't have enough info, use default
+  if (!contractType || !category) {
+    return CONFIG.defaultSidebarPosition || 50;
+  }
+  
+  // Calculate smart position based on:
+  // 1. Category base offset
+  const categoryOffsets = {
+    diamond: 0,
+    access: 100,
+    token: 200,
+    utils: 300,
+    interfaceDetection: 400
+  };
+  
+  let basePosition = categoryOffsets[category] || 500;
+  
+  // 2. Contract type offset (modules before facets)
+  const typeOffset = contractType === 'module' ? 0 : 10;
+  basePosition += typeOffset;
+  
+  // 3. Position within category based on dependencies
+  const reg = registry || contractRegistry;
+  if (reg && reg.byCategory.has(category)) {
+    const categoryContracts = reg.byCategory.get(category) || [];
+    const sameTypeContracts = categoryContracts.filter(c => c.type === contractType);
+    
+    // Sort by name for consistent ordering
+    sameTypeContracts.sort((a, b) => a.name.localeCompare(b.name));
+    
+    const index = sameTypeContracts.findIndex(c => c.name === contractName);
+    if (index !== -1) {
+      basePosition += index;
+    }
+  }
+  
+  return basePosition;
 }
 
 // ============================================================================
@@ -425,4 +636,11 @@ module.exports = {
   extractModuleNameFromPath,
   extractModuleDescriptionFromSource,
   generateDescriptionFromName,
+
+  // Contract registry system
+  registerContract,
+  getContractRegistry,
+  clearContractRegistry,
+  findRelatedContracts,
+  enrichWithRelationships,
 };
