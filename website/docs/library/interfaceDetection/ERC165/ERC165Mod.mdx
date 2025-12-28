@@ -1,7 +1,7 @@
 ---
-sidebar_position: 99
+sidebar_position: 1
 title: "ERC165Mod"
-description: "ERC-165 standard interface detection for diamonds."
+description: "Implement ERC-165 interface detection."
 gitSource: "https://github.com/Perfect-Abstractions/Compose/tree/main/src/interfaceDetection/ERC165/ERC165Mod.sol"
 ---
 
@@ -21,13 +21,13 @@ import GradientText from '@site/src/components/ui/GradientText';
 import GradientButton from '@site/src/components/ui/GradientButton';
 
 <DocSubtitle>
-ERC-165 standard interface detection for diamonds.
+Implement ERC-165 interface detection.
 </DocSubtitle>
 
 <Callout type="info" title="Key Features">
-- Implements ERC-165 standard interface detection.
-- Uses inline assembly to access a fixed storage slot for interface support flags.
-- Facilitates interoperability by allowing external querying of supported interfaces.
+- Implements the ERC-165 standard for interface detection.
+- Allows facets to declare support for specific interfaces.
+- Facilitates dynamic discovery of facet capabilities within a diamond.
 </Callout>
 
 <Callout type="info" title="Module Usage">
@@ -36,7 +36,7 @@ This module provides internal functions for use in your custom facets. Import it
 
 ## Overview
 
-The ERC165Mod provides the necessary internal functions and storage layout for implementing the ERC-165 standard interface detection within a Compose diamond. This allows other contracts to query which interfaces the diamond supports, promoting interoperability and adherence to standards.
+The ERC165Mod provides the necessary storage and internal functions to comply with the ERC-165 standard for interface detection. By registering supported interfaces during initialization, facets can leverage this module to declare their capabilities, enhancing composability and discoverability within the diamond.
 
 ---
 
@@ -116,15 +116,15 @@ Register that a contract supports an interface Call this function during initial
 <ExpandableCode language="solidity" maxLines={20} title="Example Implementation">
 {`pragma solidity ^0.8.30;
 
-import {LibERC165} from "@compose-protocol/diamond-contracts/contracts/modules/ERC165/LibERC165.sol";
-import {IERC165} from "@openzeppelin/contracts/interfaces/IERC165.sol";
+import {LibERC165, IERC165} from "@compose/modules/erc165/LibERC165.sol";
 
 contract MyFacet {
     function initialize() external {
+        // Register ERC721 interface support during facet initialization
         LibERC165.registerInterface(type(IERC721).interfaceId);
     }
 
-    function supportsInterface(bytes4 interfaceId) external view returns (bool) {
+    function supportsInterface(bytes4 interfaceId) external view override(IERC165) returns (bool) {
         return LibERC165.supportsInterface(interfaceId);
     }
 }`}
@@ -133,18 +133,19 @@ contract MyFacet {
 ## Best Practices
 
 <Callout type="tip" title="Best Practice">
-- Call `LibERC165.registerInterface` during facet initialization to declare supported interfaces.
-- Use `LibERC165.supportsInterface` to implement the ERC-165 `supportsInterface` function in your facet.
+- Register all supported interfaces during facet initialization to ensure accurate reporting.
+- Call `supportsInterface` to check for interface support, leveraging the module's internal logic.
+- Ensure the `ERC165Mod` storage is correctly positioned and initialized within the diamond's deployment process.
 </Callout>
 
 ## Integration Notes
 
 <Callout type="success" title="Shared Storage">
-The ERC165Mod utilizes a dedicated storage slot for its internal `ERC165Storage` struct. Facets must call `LibERC165.registerInterface` during their initialization to populate this storage. The `LibERC165.supportsInterface` function reads from this storage to respond to interface ID queries.
+The ERC165Mod utilizes a dedicated storage slot for its `ERC165Storage` struct. Facets can access this storage via the `getStorage` internal function. Interface IDs are registered using `LibERC165.registerInterface` during facet initialization. The `supportsInterface` function checks against the registered interfaces, including the diamond's own capabilities if it inherits from `IDiamondCut`.
 </Callout>
 
 <div style={{marginTop: "3rem", paddingTop: "2rem", borderTop: "1px solid var(--ifm-color-emphasis-200)"}}>
   <WasThisHelpful pageId="ERC165Mod" />
 </div>
 
-<LastUpdated date="2025-12-28T04:29:35.845Z" />
+<LastUpdated date="2025-12-28T04:48:51.185Z" />

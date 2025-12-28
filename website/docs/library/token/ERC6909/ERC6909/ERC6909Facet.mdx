@@ -1,7 +1,7 @@
 ---
-sidebar_position: 99
+sidebar_position: 2
 title: "ERC6909Facet"
-description: "Manages token balances and operator approvals via ERC-6909."
+description: "Manages ERC-6909 token balances, allowances, and operator status."
 gitSource: "https://github.com/Perfect-Abstractions/Compose/tree/main/src/token/ERC6909/ERC6909/ERC6909Facet.sol"
 ---
 
@@ -21,18 +21,19 @@ import GradientText from '@site/src/components/ui/GradientText';
 import GradientButton from '@site/src/components/ui/GradientButton';
 
 <DocSubtitle>
-Manages token balances and operator approvals via ERC-6909.
+Manages ERC-6909 token balances, allowances, and operator status.
 </DocSubtitle>
 
 <Callout type="info" title="Key Features">
-- Implements ERC-6909 standard for token management.
-- Supports `balanceOf`, `allowance`, `transfer`, `transferFrom`, `approve`, and `setOperator` functions.
-- Enables checking operator status for delegated authority.
+- Implements ERC-6909 token standard for advanced token management.
+- Supports checking balances, allowances, and operator status.
+- Enables granular control over token transfers through `transfer`, `transferFrom`, and `approve` functions.
+- Allows setting and removing operators for delegated management.
 </Callout>
 
 ## Overview
 
-The ERC6909Facet implements the ERC-6909 standard, enabling flexible token management within a Compose diamond. It provides functions for checking balances, allowances, and operator status, alongside core transfer and approval operations, and allows setting operators for simplified transfers.
+The ERC6909Facet implements the ERC-6909 standard, enabling advanced token management within a Compose diamond. It provides functions for checking balances, allowances, operator status, and executing token transfers and approvals, along with granular operator delegation.
 
 ---
 
@@ -459,29 +460,28 @@ error ERC6909InvalidSpender(address _spender);
 <ExpandableCode language="solidity" maxLines={20} title="Example Implementation">
 {`pragma solidity ^0.8.30;
 
-import {IERC6909Facet} from "@compose-protocol/diamond/facets/ERC6909/IERC6909Facet.sol";
-import {IDiamond} from "@compose-protocol/diamond/contracts/IDiamond.sol";
+import {IERC6909Facet} from "@compose-protocol/diamond/contracts/facets/ERC6909/IERC6909Facet.sol";
 
 contract ERC6909Consumer {
-    IDiamond immutable diamond;
-    IERC6909Facet immutable erc6909Facet;
-
-    bytes32 constant ERC6909_FACET_ID = keccak256("erc6909.facet");
+    address immutable diamondAddress;
 
     constructor(address _diamondAddress) {
-        diamond = IDiamond(_diamondAddress);
-        erc6909Facet = IERC6909Facet(address(diamond));
+        diamondAddress = _diamondAddress;
     }
 
-    function consumeERC6909() external {
-        // Example: Check balance
-        uint256 balance = erc6909Facet.balanceOf(ERC6909_FACET_ID, msg.sender);
+    function getTokenBalance(uint256 _tokenId) external view returns (uint256) {
+        // Selector for ERC6909Facet.balanceOf
+        bytes4 selector = IERC6909Facet.balanceOf.selector;
+        (bool success, bytes memory data) = diamondAddress.staticcall(abi.encodeWithSelector(selector, _tokenId));
+        require(success, "ERC6909Consumer: balanceOf call failed");
+        return abi.decode(data, (uint256));
+    }
 
-        // Example: Approve allowance
-        erc6909Facet.approve(ERC6909_FACET_ID, address(this), 100);
-
-        // Example: Transfer tokens
-        erc6909Facet.transferFrom(ERC6909_FACET_ID, msg.sender, address(this), 50);
+    function transferTokens(uint256 _tokenId, address _to, uint256 _amount) external {
+        // Selector for ERC6909Facet.transfer
+        bytes4 selector = IERC6909Facet.transfer.selector;
+        (bool success, ) = diamondAddress.call(abi.encodeWithSelector(selector, _tokenId, _to, _amount));
+        require(success, "ERC6909Consumer: transfer call failed");
     }
 }`}
 </ExpandableCode>
@@ -489,19 +489,56 @@ contract ERC6909Consumer {
 ## Best Practices
 
 <Callout type="tip" title="Best Practice">
-- Initialize the ERC6909Facet with appropriate token IDs and initial supply during diamond deployment.
-- Access the facet's functions via the diamond proxy address, using the facet's selector.
-- Ensure proper access control is implemented at the diamond level for sensitive operations like `transferFrom` if required by your specific token logic.
+- Initialize the facet via the diamond proxy's `diamondCut` function during deployment or upgrades.
+- Access the facet's storage directly for efficiency when retrieving the storage pointer using `getStorage`.
+- Ensure proper access control is implemented at the diamond proxy level or within calling facets.
 </Callout>
 
 ## Security Considerations
 
 <Callout type="warning" title="Security">
-Ensure that the `STORAGE_POSITION` for ERC6909 storage is unique and not conflicting with other facets. Input validation for amounts, sender, receiver, and spender addresses is crucial to prevent unintended token movements or denial-of-service. Access control for `transferFrom` and `setOperator` should be carefully managed at the diamond level to prevent unauthorized actions.
+The `transfer` and `transferFrom` functions should be called with validated `_tokenId`, `_to`, and `_amount` parameters to prevent issues like insufficient balance or allowance. Ensure that the caller has the necessary permissions to perform transfers or set operators. Reentrancy is mitigated by the diamond proxy pattern; however, any custom logic within facets interacting with this facet should be carefully audited.
 </Callout>
+
+<div style={{marginTop: "3rem", paddingTop: "2rem", borderTop: "1px solid var(--ifm-color-emphasis-200)"}}>
+  <RelatedDocs
+    items={[
+      {
+        title: "ERC20PermitFacet",
+        href: "/docs/library/token/ERC20/ERC20Permit",
+        description: "Related facet in token",
+        icon: "💎"
+      },
+      {
+        title: "ERC20Facet",
+        href: "/docs/library/token/ERC20/ERC20",
+        description: "Related facet in token",
+        icon: "💎"
+      },
+      {
+        title: "ERC20BurnFacet",
+        href: "/docs/library/token/ERC20/ERC20",
+        description: "Related facet in token",
+        icon: "💎"
+      },
+      {
+        title: "ERC20BridgeableFacet",
+        href: "/docs/library/token/ERC20/ERC20Bridgeable",
+        description: "Related facet in token",
+        icon: "💎"
+      },
+      {
+        title: "ERC1155Facet",
+        href: "/docs/library/token/ERC1155",
+        description: "Related facet in token",
+        icon: "💎"
+      }
+    ]}
+  />
+</div>
 
 <div style={{marginTop: "3rem", paddingTop: "2rem", borderTop: "1px solid var(--ifm-color-emphasis-200)"}}>
   <WasThisHelpful pageId="ERC6909Facet" />
 </div>
 
-<LastUpdated date="2025-12-28T04:28:56.761Z" />
+<LastUpdated date="2025-12-28T04:48:12.417Z" />

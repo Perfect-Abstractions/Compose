@@ -1,7 +1,7 @@
 ---
-sidebar_position: 99
+sidebar_position: 1
 title: "NonReentrancyMod"
-description: "Prevent reentrant calls within facets."
+description: "Guard against reentrant calls within facets."
 gitSource: "https://github.com/Perfect-Abstractions/Compose/tree/main/src/libraries/NonReentrancyMod.sol"
 ---
 
@@ -21,13 +21,13 @@ import GradientText from '@site/src/components/ui/GradientText';
 import GradientButton from '@site/src/components/ui/GradientButton';
 
 <DocSubtitle>
-Prevent reentrant calls within facets.
+Guard against reentrant calls within facets.
 </DocSubtitle>
 
 <Callout type="info" title="Key Features">
-- Prevents reentrant function calls to safeguard state integrity.
-- Provides explicit `enter` and `exit` functions for clear control flow.
-- Utilizes a simple state variable (typically a `uint256`) for managing the reentrancy lock.
+- Prevents recursive calls to functions within the same facet or other facets if shared state is used.
+- Utilizes a simple state variable to track reentrancy status.
+- Offers explicit `enter` and `exit` functions for fine-grained control.
 </Callout>
 
 <Callout type="info" title="Module Usage">
@@ -36,7 +36,7 @@ This module provides internal functions for use in your custom facets. Import it
 
 ## Overview
 
-The NonReentrancyMod provides a mechanism to prevent reentrant function calls, ensuring the integrity and predictable execution of your diamond's logic. By using `enter` and `exit` functions, facets can safeguard critical operations from being invoked multiple times before the initial execution completes, which is crucial for state management and security.
+The NonReentrancy module provides essential functions to prevent reentrant function calls, a common vulnerability in smart contracts. By using its `enter` and `exit` mechanisms, facets can ensure that sensitive operations are not interrupted by unexpected recursive calls, maintaining state integrity and security.
 
 ---
 
@@ -96,27 +96,25 @@ error Reentrancy();
 <ExpandableCode language="solidity" maxLines={20} title="Example Implementation">
 {`pragma solidity ^0.8.30;
 
-import {LibNonReentrancy} from "@compose/modules/NonReentrancyMod.sol";
+import {LibNonReentrancy} from "@compose/contracts/src/modules/non-reentrancy/LibNonReentrancy.sol";
 
 contract MyFacet {
-    using LibNonReentrancy for uint256; // Assuming uint256 is used for the reentrancy guard state
+    using LibNonReentrancy for uint256;
 
-    function performAction() external {
-        // Use the reentrancy guard
-        uint256 guard = 0; // Initialize guard state
-        guard.enter(); // Lock execution
+    uint256 internal _nonReentrancyState;
 
-        try LibNonReentrancy.exit(guard) { // Ensure exit is called even if errors occur
-            // ... perform critical operations ...
-            // Revert if reentrancy is detected by the guard
-            if (!guard.isNotReentrant()) {
-                revert LibNonReentrancy.Reentrancy();
-            }
-        } catch {
-            // Ensure exit is called on revert as well
-            LibNonReentrancy.exit(guard);
-            revert;
-        }
+    function sensitiveOperation() external {
+        _nonReentrancyState.enter(); // Lock reentrancy
+
+        // Perform sensitive operations here
+        // ...
+
+        _nonReentrancyState.exit(); // Unlock reentrancy
+    }
+
+    function anotherOperation() external {
+        // This function can be called reentrantly without issue if not guarded.
+        // If it needs protection, it should also use .enter() and .exit()
     }
 }`}
 </ExpandableCode>
@@ -124,19 +122,19 @@ contract MyFacet {
 ## Best Practices
 
 <Callout type="tip" title="Best Practice">
-- Always pair `enter` calls with a corresponding `exit` call, preferably using a `try...catch` block to ensure the guard is released even if errors occur within the protected section.
-- Initialize the reentrancy guard state (e.g., a `uint256`) to `0` before calling `enter`.
-- Consider the scope of your reentrancy protection; `enter` and `exit` should encompass the entire critical section of code.
+- Always pair `_nonReentrancyState.enter()` with a corresponding `_nonReentrancyState.exit()` call within the same function execution path.
+- Ensure `exit()` is called even if an error occurs, typically by using a `try...finally` block or by placing `exit()` after all core logic but before any external calls that might trigger reentrancy.
+- Consider using the `LibNonReentrancy.Reentrancy` custom error to clearly indicate reentrancy violations.
 </Callout>
 
 ## Integration Notes
 
 <Callout type="success" title="Shared Storage">
-The `NonReentrancyMod` operates by managing a state variable (e.g., a `uint256` slot) that tracks whether a function is currently executing. Facets interact with this module by calling `LibNonReentrancy.enter()` at the beginning of a protected function and `LibNonReentrancy.exit()` at the end. The module itself does not require direct integration into diamond storage; rather, facets would manage their own storage slot for the reentrancy guard and use the library's functions to operate on it. This allows for flexible deployment and composition.
+This module relies on a state variable (typically a `uint256` or similar) to track the reentrancy lock. Facets integrating this module must ensure they have access to and correctly manage this shared state variable. The `enter` function increments a counter, and `exit` decrements it. A reentrancy violation occurs if `enter` is called when the counter is already greater than zero. The diamond's storage layout must accommodate the `_nonReentrancyState` variable, and facets must be aware of its slot and type. Ensure the state variable is initialized correctly during deployment.
 </Callout>
 
 <div style={{marginTop: "3rem", paddingTop: "2rem", borderTop: "1px solid var(--ifm-color-emphasis-200)"}}>
   <WasThisHelpful pageId="NonReentrancyMod" />
 </div>
 
-<LastUpdated date="2025-12-28T04:30:09.410Z" />
+<LastUpdated date="2025-12-28T04:49:24.472Z" />

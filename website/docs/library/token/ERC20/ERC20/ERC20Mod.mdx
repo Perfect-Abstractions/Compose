@@ -1,7 +1,7 @@
 ---
-sidebar_position: 99
+sidebar_position: 1
 title: "ERC20Mod"
-description: "ERC-20 token implementation and storage"
+description: "ERC-20 token implementation with standard functions."
 gitSource: "https://github.com/Perfect-Abstractions/Compose/tree/main/src/token/ERC20/ERC20/ERC20Mod.sol"
 ---
 
@@ -21,13 +21,13 @@ import GradientText from '@site/src/components/ui/GradientText';
 import GradientButton from '@site/src/components/ui/GradientButton';
 
 <DocSubtitle>
-ERC-20 token implementation and storage
+ERC-20 token implementation with standard functions.
 </DocSubtitle>
 
 <Callout type="info" title="Key Features">
-- Implements core ERC-20 functions: transfer, transferFrom, approve, mint, burn.
-- Manages ERC-20 state (balances, allowances, total supply) within the diamond's storage.
-- Provides an internal storage pointer via `getStorage` for direct state access.
+- Implements standard ERC-20 transfer, approve, and transferFrom logic.
+- Supports minting new tokens and burning existing ones.
+- Utilizes a defined storage layout for ERC-20 state variables.
 </Callout>
 
 <Callout type="info" title="Module Usage">
@@ -36,7 +36,7 @@ This module provides internal functions for use in your custom facets. Import it
 
 ## Overview
 
-The ERC20Mod provides essential ERC-20 token functionalities including minting, burning, transfers, and approvals. It manages ERC-20 state directly within the diamond's storage, enabling composable token logic across facets.
+The ERC20Mod provides core ERC-20 functionality, including token transfers, approvals, minting, and burning. It defines the necessary storage layout and internal helper functions, allowing facets to implement the ERC-20 standard within a Compose diamond.
 
 ---
 
@@ -378,25 +378,22 @@ error ERC20InvalidSpender(address _spender);
 <ExpandableCode language="solidity" maxLines={20} title="Example Implementation">
 {`pragma solidity ^0.8.30;
 
-import {IERC20Mod } from "./IERC20Mod.sol";
-import { ERC20Mod } from "./ERC20Mod.sol";
+import {IERC20Mod } from "../modules/ERC20Mod.sol";
+import { DiamondStorage } from "../Diamond.sol";
 
-contract MyERC20Facet {
-    using ERC20Mod for ERC20Mod.ERC20Storage;
+contract ERC20Facet {
+    DiamondStorage internal _diamondStorage;
 
-    function transferTokens(address to, uint256 amount) external {
-        ERC20Mod.ERC20Storage storage storagePtr = ERC20Mod.getStorage();
-        storagePtr.transfer(msg.sender, to, amount);
+    function transfer(address to, uint256 amount) external returns (bool) {
+        return IERC20Mod(_diamondStorage.getModule(IERC20Mod.MODULE_ID)).transfer(msg.sender, to, amount);
     }
 
-    function approveAllowance(address spender, uint256 amount) external {
-        ERC20Mod.ERC20Storage storage storagePtr = ERC20Mod.getStorage();
-        storagePtr.approve(msg.sender, spender, amount);
+    function approve(address spender, uint256 amount) external returns (bool) {
+        return IERC20Mod(_diamondStorage.getModule(IERC20Mod.MODULE_ID)).approve(msg.sender, spender, amount);
     }
 
-    function mintNewTokens(address recipient, uint256 amount) external {
-        ERC20Mod.ERC20Storage storage storagePtr = ERC20Mod.getStorage();
-        storagePtr.mint(recipient, amount);
+    function transferFrom(address from, address to, uint256 amount) external returns (bool) {
+        return IERC20Mod(_diamondStorage.getModule(IERC20Mod.MODULE_ID)).transferFrom(msg.sender, from, to, amount);
     }
 }`}
 </ExpandableCode>
@@ -404,19 +401,38 @@ contract MyERC20Facet {
 ## Best Practices
 
 <Callout type="tip" title="Best Practice">
-- Ensure proper access control for mint and burn functions if they are intended for administrative use.
-- Handle ERC20InsufficientAllowance, ERC20InsufficientBalance, and ERC20InvalidReceiver errors appropriately in consuming facets.
-- Be aware that `transfer` and `transferFrom` directly manipulate balances and allowances within the shared ERC-20 storage.
+- Ensure proper access control is implemented in facets calling ERC20Mod functions.
+- Handle ERC20-specific errors like `ERC20InsufficientBalance` and `ERC20InsufficientAllowance`.
+- Be mindful of total supply changes during mint and burn operations.
 </Callout>
 
 ## Integration Notes
 
 <Callout type="success" title="Shared Storage">
-The ERC20Mod uses a fixed storage slot to manage its ERC20Storage struct. Facets interacting with this module should obtain a pointer to this storage using the `ERC20Mod.getStorage()` internal function. All state modifications (balances, allowances, total supply) are performed directly on this shared storage. The order of ERC-20 state variables within the `ERC20Storage` struct is critical and must be preserved for compatibility with future upgrades or other facets sharing the same storage layout.
+ERC20Mod interacts with the diamond's storage using a fixed storage slot. Facets must use the `getStorage` function or directly reference the module's storage pointer to access and modify ERC-20 state variables such as balances, allowances, and total supply. The module's state is managed independently but accessed through the diamond's storage mechanism.
 </Callout>
+
+<div style={{marginTop: "3rem", paddingTop: "2rem", borderTop: "1px solid var(--ifm-color-emphasis-200)"}}>
+  <RelatedDocs
+    items={[
+      {
+        title: "ERC20Facet",
+        href: "/docs/library/token/ERC20/ERC20",
+        description: "Facet using ERC20Mod",
+        icon: "💎"
+      },
+      {
+        title: "ERC20PermitMod",
+        href: "/docs/library/token/ERC20/ERC20Permit",
+        description: "Related module in token",
+        icon: "📦"
+      }
+    ]}
+  />
+</div>
 
 <div style={{marginTop: "3rem", paddingTop: "2rem", borderTop: "1px solid var(--ifm-color-emphasis-200)"}}>
   <WasThisHelpful pageId="ERC20Mod" />
 </div>
 
-<LastUpdated date="2025-12-28T04:28:31.384Z" />
+<LastUpdated date="2025-12-28T04:47:46.482Z" />

@@ -1,5 +1,5 @@
 ---
-sidebar_position: 99
+sidebar_position: 2
 title: "AccessControlFacet"
 description: "Manages role-based access control within a diamond."
 gitSource: "https://github.com/Perfect-Abstractions/Compose/tree/main/src/access/AccessControl/AccessControlFacet.sol"
@@ -25,15 +25,14 @@ Manages role-based access control within a diamond.
 </DocSubtitle>
 
 <Callout type="info" title="Key Features">
-- Permission management via roles and accounts.
-- Role hierarchy support with administrative roles.
-- Batch operations for granting and revoking roles.
-- Reverts with specific errors for unauthorized actions.
+- Hierarchical role administration: roles can have their own admin roles.
+- Batch operations for granting and revoking multiple roles efficiently.
+- Explicit error messages for unauthorized access attempts.
 </Callout>
 
 ## Overview
 
-The AccessControlFacet provides a robust role-based access control (RBAC) system for Compose diamonds. It allows granular permission management, enabling developers to define roles and assign them to accounts. This facet is crucial for orchestrating secure interactions by enforcing role requirements on sensitive functions.
+The AccessControlFacet provides a robust role-based access control (RBAC) system for Compose diamonds. It enables granular permission management by defining roles, assigning them to accounts, and enforcing role requirements on function calls. This facet is crucial for securing administrative functions and controlling access to sensitive operations.
 
 ---
 
@@ -478,58 +477,92 @@ error AccessControlUnauthorizedSender(address _sender, address _account);
 <ExpandableCode language="solidity" maxLines={20} title="Example Implementation">
 {`pragma solidity ^0.8.30;
 
-import {DiamondLoupeFacet} from "@compose/diamond-loupe/src/DiamondLoupeFacet.sol";
-import {AccessControlFacet} from "@compose/access-control/src/AccessControlFacet.sol";
+import {DiamondABI} from "@compose/diamond-abi/DiamondABI.sol";
+import {DiamondInit ABI} from "@compose/diamond-init/DiamondInitABI.sol";
+import {DiamondCutFacet} from "@compose/diamond-cut/DiamondCutFacet.sol";
+import {AccessControlFacet} from "@compose/access-control/AccessControlFacet.sol";
 
-interface IDiamond {
-    function diamondCut(...) external returns (bytes32);
-    function facetFunction(bytes4 _selector) external view returns (address _facetAddress);
-}
-
+// Example of granting a role
 contract Deployer {
-    // Assume diamond instance is deployed and initialized
-    IDiamond internal diamond;
+    address immutable diamondAddress;
 
     constructor(address _diamondAddress) {
-        diamond = IDiamond(_diamondAddress);
+        diamondAddress = _diamondAddress;
     }
 
-    function grantAdminRole(address _admin, address _member) public {
-        // Assuming 'grantRole' is the selector for AccessControlFacet.grantRole
-        bytes4 grantRoleSelector = AccessControlFacet.grantRole.selector;
-        (bool success, ) = address(diamond).call(abi.encodeWithSelector(grantRoleSelector, keccak256("ADMIN_ROLE"), _admin));
-        require(success, "Failed to grant ADMIN_ROLE");
+    function grantAdminRole() external {
+        bytes4 selector = AccessControlFacet.grantRole.selector;
+        // Assuming DEFAULT_ADMIN_ROLE is 0x00...00
+        bytes memory data = abi.encodeWithSelector(selector, bytes32(0), msg.sender);
 
-        (success, ) = address(diamond).call(abi.encodeWithSelector(grantRoleSelector, keccak256("MEMBER_ROLE"), _member));
-        require(success, "Failed to grant MEMBER_ROLE");
+        // In a real deployment, this would be part of a DiamondCut
+        // For demonstration, directly calling the facet via the diamond proxy
+        diamondAddress.call(data);
     }
 
-    function checkMemberRole(address _account) public view returns (bool) {
-        bytes4 hasRoleSelector = AccessControlFacet.hasRole.selector;
-        (bool success, bytes memory result) = address(diamond).staticcall(abi.encodeWithSelector(hasRoleSelector, keccak256("MEMBER_ROLE"), _account));
-        require(success, "Failed to check MEMBER_ROLE");
+    function checkRole(address _account, bytes32 _role) public view returns (bool) {
+        bytes4 selector = AccessControlFacet.hasRole.selector;
+        bytes memory data = abi.encodeWithSelector(selector, _role, _account);
+        (bool success, bytes memory result) = diamondAddress.staticcall(data);
+        require(success, "checkRole failed");
         return abi.decode(result, (bool));
     }
-}
-`}
+}`}
 </ExpandableCode>
 
 ## Best Practices
 
 <Callout type="tip" title="Best Practice">
-- Initialize roles and grant initial permissions during diamond deployment.
-- Use `grantRoleBatch` and `revokeRoleBatch` for efficient multi-account role management.
-- Design roles with clear administrative hierarchies using `setRoleAdmin`.
+- Initialize roles and their admins during diamond deployment using `DiamondInit`.
+- Grant roles to specific addresses or multisigs, avoiding broad grants to `address(0)`.
+- Use `requireRole` judiciously within other facets to protect sensitive functions.
 </Callout>
 
 ## Security Considerations
 
 <Callout type="warning" title="Security">
-Ensure that the administrative roles are protected to prevent unauthorized role modifications. Sensitive functions should use `requireRole` to enforce access control. Be mindful of gas costs when performing batch operations on very large sets of accounts.
+Ensure that the caller of `setRoleAdmin`, `grantRole`, `revokeRole`, `grantRoleBatch`, and `revokeRoleBatch` is authorized by the role's admin. Be cautious when setting role admins to prevent privilege escalation. Reentrancy is not a direct concern for this facet's core logic, but ensure calling facets properly validate inputs before calling `requireRole`.
 </Callout>
+
+<div style={{marginTop: "3rem", paddingTop: "2rem", borderTop: "1px solid var(--ifm-color-emphasis-200)"}}>
+  <RelatedDocs
+    items={[
+      {
+        title: "AccessControlMod",
+        href: "/docs/library/access/AccessControl",
+        description: "Module used by AccessControlFacet",
+        icon: "📦"
+      },
+      {
+        title: "OwnerTwoStepsFacet",
+        href: "/docs/library/access/OwnerTwoSteps",
+        description: "Related facet in access",
+        icon: "💎"
+      },
+      {
+        title: "AccessControlPausableFacet",
+        href: "/docs/library/access/AccessControlPausable",
+        description: "Related facet in access",
+        icon: "💎"
+      },
+      {
+        title: "AccessControlTemporalFacet",
+        href: "/docs/library/access/AccessControlTemporal",
+        description: "Related facet in access",
+        icon: "💎"
+      },
+      {
+        title: "OwnerFacet",
+        href: "/docs/library/access/Owner",
+        description: "Related facet in access",
+        icon: "💎"
+      }
+    ]}
+  />
+</div>
 
 <div style={{marginTop: "3rem", paddingTop: "2rem", borderTop: "1px solid var(--ifm-color-emphasis-200)"}}>
   <WasThisHelpful pageId="AccessControlFacet" />
 </div>
 
-<LastUpdated date="2025-12-28T04:28:16.357Z" />
+<LastUpdated date="2025-12-28T04:47:31.466Z" />

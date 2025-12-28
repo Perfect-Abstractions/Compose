@@ -1,7 +1,7 @@
 ---
-sidebar_position: 99
+sidebar_position: 1
 title: "OwnerTwoStepsMod"
-description: "Two-step contract ownership transfer and management."
+description: "Manages ownership with a secure two-step transfer process."
 gitSource: "https://github.com/Perfect-Abstractions/Compose/tree/main/src/access/OwnerTwoSteps/OwnerTwoStepsMod.sol"
 ---
 
@@ -21,13 +21,13 @@ import GradientText from '@site/src/components/ui/GradientText';
 import GradientButton from '@site/src/components/ui/GradientButton';
 
 <DocSubtitle>
-Two-step contract ownership transfer and management.
+Manages ownership with a secure two-step transfer process.
 </DocSubtitle>
 
 <Callout type="info" title="Key Features">
 - Secure two-step ownership transfer process.
-- Explicit owner and pending owner state tracking.
-- Built-in access control for owner-restricted functions.
+- Explicit owner and pending owner status checks.
+- Functionality to renounce ownership.
 </Callout>
 
 <Callout type="info" title="Module Usage">
@@ -36,7 +36,7 @@ This module provides internal functions for use in your custom facets. Import it
 
 ## Overview
 
-This module implements a secure, two-step ownership transfer mechanism. It ensures that ownership changes are deliberate and irreversible by requiring explicit acceptance from the new owner, preventing accidental or malicious takeovers.
+This module implements a robust two-step ownership transfer mechanism, enhancing security by preventing accidental ownership loss. It ensures that ownership changes are deliberate and confirmed by the new owner before becoming effective, which is crucial for managing administrative privileges in a diamond.
 
 ---
 
@@ -252,25 +252,25 @@ error OwnerUnauthorizedAccount();
 <ExpandableCode language="solidity" maxLines={20} title="Example Implementation">
 {`pragma solidity ^0.8.30;
 
-import {IOwnerTwoSteps} from "@compose/contracts/src/modules/owner/IOwnerTwoSteps.sol";
+import {IOwnerTwoSteps} from "./interfaces/IOwnerTwoSteps.sol";
 
-contract MyFacet {
-    address immutable _diamondAddress;
+contract MyOwnerFacet {
+    IOwnerTwoSteps private immutable _ownerTwoSteps;
 
-    constructor(address diamondAddress) {
-        _diamondAddress = diamondAddress;
+    constructor(address ownerFacetAddress) {
+        _ownerTwoSteps = IOwnerTwoSteps(ownerFacetAddress);
     }
 
     function transferContractOwnership(address _newOwner) external {
-        IOwnerTwoSteps(_diamondAddress).transferOwnership(_newOwner);
+        _ownerTwoSteps.transferOwnership(_newOwner);
     }
 
     function acceptContractOwnership() external {
-        IOwnerTwoSteps(_diamondAddress).acceptOwnership();
+        _ownerTwoSteps.acceptOwnership();
     }
 
     function getCurrentOwner() external view returns (address) {
-        return IOwnerTwoSteps(_diamondAddress).owner();
+        return _ownerTwoSteps.owner();
     }
 }`}
 </ExpandableCode>
@@ -278,19 +278,32 @@ contract MyFacet {
 ## Best Practices
 
 <Callout type="tip" title="Best Practice">
-- Use `transferOwnership` to initiate a change and `acceptOwnership` to finalize it, ensuring a deliberate handover.
-- Implement `requireOwner` within your facet functions to restrict sensitive operations to the current owner.
-- Call `renounceOwnership` only when intending to permanently relinquish control, as this action cannot be undone.
+- Always use the `transferOwnership` and `acceptOwnership` functions in sequence for secure ownership changes.
+- Implement `requireOwner` checks within your facet's sensitive functions to restrict access to the owner.
+- Be aware that `renounceOwnership` permanently removes owner privileges.
 </Callout>
 
 ## Integration Notes
 
 <Callout type="success" title="Shared Storage">
-This module stores owner and pending owner addresses in dedicated storage slots. Facets can interact with these states via `owner()`, `pendingOwner()`, `transferOwnership()`, and `acceptOwnership()`. Access control checks like `requireOwner()` ensure that only the designated owner can execute critical functions. Ensure that the `OwnerTwoSteps` facet is correctly initialized and its functions are accessible through the diamond proxy.
+The OwnerTwoSteps module manages ownership state in dedicated storage slots. Facets interacting with this module should call its external functions. The `owner()` and `pendingOwner()` functions provide direct access to the current and pending ownership addresses. The `requireOwner()` function can be used to enforce owner-only access within facets. Ownership changes are managed internally by the module and do not require explicit storage slot manipulation by composing facets.
 </Callout>
+
+<div style={{marginTop: "3rem", paddingTop: "2rem", borderTop: "1px solid var(--ifm-color-emphasis-200)"}}>
+  <RelatedDocs
+    items={[
+      {
+        title: "OwnerTwoStepsFacet",
+        href: "/docs/library/access/OwnerTwoSteps",
+        description: "Facet using OwnerTwoStepsMod",
+        icon: "💎"
+      }
+    ]}
+  />
+</div>
 
 <div style={{marginTop: "3rem", paddingTop: "2rem", borderTop: "1px solid var(--ifm-color-emphasis-200)"}}>
   <WasThisHelpful pageId="OwnerTwoStepsMod" />
 </div>
 
-<LastUpdated date="2025-12-28T04:27:43.352Z" />
+<LastUpdated date="2025-12-28T04:46:58.446Z" />

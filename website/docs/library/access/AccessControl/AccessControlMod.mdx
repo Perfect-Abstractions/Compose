@@ -1,5 +1,5 @@
 ---
-sidebar_position: 99
+sidebar_position: 1
 title: "AccessControlMod"
 description: "Manage roles and permissions within a diamond."
 gitSource: "https://github.com/Perfect-Abstractions/Compose/tree/main/src/access/AccessControl/AccessControlMod.sol"
@@ -26,8 +26,9 @@ Manage roles and permissions within a diamond.
 
 <Callout type="info" title="Key Features">
 - Role-based access control for granular permission management.
-- Standardized interface for granting, revoking, and checking roles.
-- Support for defining and assigning admin roles to manage other roles.
+- Functions to grant, revoke, and check for role ownership (`grantRole`, `revokeRole`, `hasRole`).
+- Support for setting and changing the administrative role for any given role (`setRoleAdmin`).
+- Built-in reversion with `AccessControlUnauthorizedAccount` for unauthorized access attempts.
 </Callout>
 
 <Callout type="info" title="Module Usage">
@@ -36,7 +37,7 @@ This module provides internal functions for use in your custom facets. Import it
 
 ## Overview
 
-The AccessControl module provides a robust system for managing roles and permissions within a Compose diamond. It allows for granular control over who can perform specific actions by assigning roles to accounts. This enhances security and enables composability by defining clear access boundaries for different functionalities.
+The AccessControl module provides a robust system for managing roles and permissions within a Compose diamond. It allows for granular control over which accounts can perform specific actions by assigning them roles. This is crucial for maintaining security and ensuring that only authorized entities can interact with sensitive functions.
 
 ---
 
@@ -401,25 +402,24 @@ error AccessControlUnauthorizedAccount(address _account, bytes32 _role);
 <ExpandableCode language="solidity" maxLines={20} title="Example Implementation">
 {`pragma solidity ^0.8.30;
 
-import {IAccessControl} from "@compose/diamond-contracts/contracts/modules/access/IAccessControl.sol";
+import {IAccessControlMod} from "@compose-protocol/diamond-contracts/contracts/modules/access/AccessControlMod.sol";
 
 contract MyFacet {
-    IAccessControl public accessControl;
+    IAccessControlMod internal accessControl;
 
-    // Assume accessControl is initialized elsewhere
-
-    function performAdminAction() external {
-        address caller = _msgSender();
-        bytes32 adminRole = accessControl.getRoleAdmin(AccessControl.DEFAULT_ADMIN_ROLE());
-        accessControl.requireRole(caller, adminRole);
-        // ... perform admin action ...
+    function initialize(address accessControlAddress) external {
+        accessControl = IAccessControlMod(accessControlAddress);
     }
 
-    function grantNewRole(address _account, bytes32 _role) external {
-        address caller = _msgSender();
-        bytes32 adminRole = accessControl.getRoleAdmin(AccessControl.DEFAULT_ADMIN_ROLE());
-        accessControl.requireRole(caller, adminRole);
-        accessControl.grantRole(_role, _account);
+    function grantAdminRoleToUser(address user) external {
+        bytes32 adminRole = accessControl.getStorage().DEFAULT_ADMIN_ROLE;
+        accessControl.grantRole(adminRole, user);
+    }
+
+    function performAdminAction() external {
+        bytes32 adminRole = accessControl.getStorage().DEFAULT_ADMIN_ROLE;
+        accessControl.requireRole(adminRole);
+        // Perform admin action
     }
 }`}
 </ExpandableCode>
@@ -427,19 +427,50 @@ contract MyFacet {
 ## Best Practices
 
 <Callout type="tip" title="Best Practice">
-- Use `requireRole` to enforce access control checks directly within facet functions, reverting with `AccessControlUnauthorizedAccount` if the caller lacks the necessary role.
-- Understand that roles are managed by their designated admin role; ensure the admin role itself is properly secured.
-- When revoking roles, be mindful of the implications for ongoing operations that may rely on that role.
+- Use `requireRole` to enforce access control checks directly within facet functions, reverting with `AccessControlUnauthorizedAccount` on failure.
+- Define custom roles and manage their admin roles using `setRoleAdmin` to maintain a clear hierarchy and control over role assignments.
+- Ensure the AccessControl module is initialized with appropriate default admin roles during diamond deployment.
 </Callout>
 
 ## Integration Notes
 
 <Callout type="success" title="Shared Storage">
-The AccessControl module stores its state within the diamond's storage. Facets interacting with AccessControl should use the `IAccessControl` interface. Functions like `grantRole`, `revokeRole`, and `setRoleAdmin` modify the access control state, which is immediately visible to all facets upon upgrade. The module relies on the diamond's underlying address to function.
+The AccessControl module stores its state within the diamond's storage. Facets interact with this module via its interface. The `getStorage()` function provides direct access to the module's internal storage struct, which contains mappings for roles, role admins, and account role assignments. Any changes made to role assignments or admin roles through the AccessControl module's functions are immediately reflected and accessible to all facets interacting with the diamond.
 </Callout>
+
+<div style={{marginTop: "3rem", paddingTop: "2rem", borderTop: "1px solid var(--ifm-color-emphasis-200)"}}>
+  <RelatedDocs
+    items={[
+      {
+        title: "OwnerTwoStepsMod",
+        href: "/docs/library/access/OwnerTwoSteps",
+        description: "Related module in access",
+        icon: "📦"
+      },
+      {
+        title: "AccessControlPausableMod",
+        href: "/docs/library/access/AccessControlPausable",
+        description: "Related module in access",
+        icon: "📦"
+      },
+      {
+        title: "AccessControlTemporalMod",
+        href: "/docs/library/access/AccessControlTemporal",
+        description: "Related module in access",
+        icon: "📦"
+      },
+      {
+        title: "OwnerMod",
+        href: "/docs/library/access/Owner",
+        description: "Related module in access",
+        icon: "📦"
+      }
+    ]}
+  />
+</div>
 
 <div style={{marginTop: "3rem", paddingTop: "2rem", borderTop: "1px solid var(--ifm-color-emphasis-200)"}}>
   <WasThisHelpful pageId="AccessControlMod" />
 </div>
 
-<LastUpdated date="2025-12-28T04:28:12.206Z" />
+<LastUpdated date="2025-12-28T04:47:27.236Z" />

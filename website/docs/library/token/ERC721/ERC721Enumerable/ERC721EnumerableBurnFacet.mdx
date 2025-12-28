@@ -1,7 +1,7 @@
 ---
-sidebar_position: 99
+sidebar_position: 3
 title: "ERC721EnumerableBurnFacet"
-description: "Burn ERC721 tokens and maintain enumeration."
+description: "Enables burning ERC-721 tokens and maintains enumeration."
 gitSource: "https://github.com/Perfect-Abstractions/Compose/tree/main/src/token/ERC721/ERC721Enumerable/ERC721EnumerableBurnFacet.sol"
 ---
 
@@ -21,18 +21,17 @@ import GradientText from '@site/src/components/ui/GradientText';
 import GradientButton from '@site/src/components/ui/GradientButton';
 
 <DocSubtitle>
-Burn ERC721 tokens and maintain enumeration.
+Enables burning ERC-721 tokens and maintains enumeration.
 </DocSubtitle>
 
 <Callout type="info" title="Key Features">
-- Supports the burning of ERC721 tokens.
-- Maintains enumeration order by removing burned tokens.
-- Emits `Transfer` event for burned tokens, adhering to ERC721 standards.
+- Supports the burning of ERC-721 tokens.
+- Integrates with enumeration logic to maintain accurate token counts and order.
 </Callout>
 
 ## Overview
 
-This facet provides functionality to burn ERC721 tokens within a Compose diamond. It ensures that the token is removed from the contract's state and properly handled within the enumeration tracking mechanisms.
+The ERC721EnumerableBurnFacet provides functionality to burn ERC-721 tokens within a Compose diamond. It ensures that token destruction is correctly reflected in the diamond's state, including the enumeration tracking.
 
 ---
 
@@ -163,19 +162,18 @@ error ERC721InsufficientApproval(address _operator, uint256 _tokenId);
 <ExpandableCode language="solidity" maxLines={20} title="Example Implementation">
 {`pragma solidity ^0.8.30;
 
-import {IERC721EnumerableBurnFacet} from "@compose-protocol/diamond-contracts/contracts/facets/erc721/IERC721EnumerableBurnFacet.sol";
+import {IERC721EnumerableBurn } from "@compose/contracts/facets/ERC721/ERC721EnumerableBurn.sol";
 
-contract ERC721EnumerableBurnFacetConsumer {
-    address immutable DIAMOND_ADDRESS;
+contract Deployer {
+    address diamondAddress;
 
-    constructor(address diamondAddress) {
-        DIAMOND_ADDRESS = diamondAddress;
+    function deploy() public {
+        // Assume diamondAddress is already set to the deployed diamond
+        diamondAddress = address(0x123); // Placeholder
     }
 
-    function burnToken(uint256 tokenId) external {
-        bytes4 selector = IERC721EnumerableBurnFacet.burn.selector;
-        (bool success, ) = DIAMOND_ADDRESS.call(abi.encodeWithSelector(selector, tokenId));
-        require(success, "Burn failed");
+    function burnToken(uint256 tokenId) public {
+        IERC721EnumerableBurn(diamondAddress).burn(tokenId);
     }
 }`}
 </ExpandableCode>
@@ -183,19 +181,61 @@ contract ERC721EnumerableBurnFacetConsumer {
 ## Best Practices
 
 <Callout type="tip" title="Best Practice">
-- Ensure the `Transfer` event is emitted correctly when burning a token to maintain external tracking.
-- Integrate this facet into a diamond that already implements ERC721 functionality and enumeration.
-- Handle potential `ERC721NonexistentToken` and `ERC721InsufficientApproval` errors during token burning.
+- Ensure the `ERC721EnumerableBurnFacet` is correctly added to the diamond's facet registry.
+- Manage access control for the `burn` function appropriately, typically restricted to token owners or authorized agents.
 </Callout>
 
 ## Security Considerations
 
 <Callout type="warning" title="Security">
-The `burn` function requires appropriate access control to be implemented by the diamond proxy. Ensure that only authorized addresses can call the `burn` function. The facet itself does not handle access control; this is the responsibility of the diamond's upgradeable contract or a dedicated access control facet. Input validation for `tokenId` is crucial to prevent unexpected behavior or denial of service.
+The `burn` function should be protected against unauthorized calls. Ensure that only the token owner or an approved operator can initiate a burn. The `ERC721NonexistentToken` and `ERC721InsufficientApproval` errors are used for input validation and authorization checks.
 </Callout>
+
+<div style={{marginTop: "3rem", paddingTop: "2rem", borderTop: "1px solid var(--ifm-color-emphasis-200)"}}>
+  <RelatedDocs
+    items={[
+      {
+        title: "ERC20PermitFacet",
+        href: "/docs/library/token/ERC20/ERC20Permit",
+        description: "Related facet in token",
+        icon: "💎"
+      },
+      {
+        title: "ERC20Facet",
+        href: "/docs/library/token/ERC20/ERC20",
+        description: "Related facet in token",
+        icon: "💎"
+      },
+      {
+        title: "ERC20BurnFacet",
+        href: "/docs/library/token/ERC20/ERC20",
+        description: "Related facet in token",
+        icon: "💎"
+      },
+      {
+        title: "ERC20BridgeableFacet",
+        href: "/docs/library/token/ERC20/ERC20Bridgeable",
+        description: "Related facet in token",
+        icon: "💎"
+      },
+      {
+        title: "ERC1155Facet",
+        href: "/docs/library/token/ERC1155",
+        description: "Related facet in token",
+        icon: "💎"
+      },
+      {
+        title: "ERC6909Facet",
+        href: "/docs/library/token/ERC6909/ERC6909",
+        description: "Related facet in token",
+        icon: "💎"
+      }
+    ]}
+  />
+</div>
 
 <div style={{marginTop: "3rem", paddingTop: "2rem", borderTop: "1px solid var(--ifm-color-emphasis-200)"}}>
   <WasThisHelpful pageId="ERC721EnumerableBurnFacet" />
 </div>
 
-<LastUpdated date="2025-12-28T04:29:08.152Z" />
+<LastUpdated date="2025-12-28T04:48:22.315Z" />
