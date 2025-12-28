@@ -38,8 +38,7 @@ const {
 } = require('./generate-docs-utils/forge-doc-parser');
 const { generateFacetDoc, generateModuleDoc } = require('./generate-docs-utils/templates/templates');
 const { enhanceWithAI, shouldSkipEnhancement, addFallbackContent } = require('./generate-docs-utils/ai-enhancement');
-const { syncDocsStructure, regenerateAllIndexFiles } = require('./generate-docs-utils/category-generator');
-const config = require('./generate-docs-utils/config');
+const { syncDocsStructure, regenerateAllIndexFiles } = require('./generate-docs-utils/category/category-generator');
 
 // ============================================================================
 // Tracking
@@ -252,12 +251,7 @@ async function processAggregatedFiles(forgeDocFiles, solFilePath) {
   }
 
   if (gitSource) {
-    data.gitSource = config.normalizeGitSource(gitSource);
-  }
-  
-  // Also normalize gitSource from aggregated data if present
-  if (data.gitSource) {
-    data.gitSource = config.normalizeGitSource(data.gitSource);
+    data.gitSource = gitSource;
   }
 
   const contractType = getContractType(solFilePath, '');

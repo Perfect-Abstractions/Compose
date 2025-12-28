@@ -116,7 +116,6 @@ function generateIndexMdxContent(label, description, items) {
   let mdxContent = `---
 title: "${escapedLabel}"
 description: "${escapedDescription}"
-sidebar_class_name: hidden
 ---
 
 import DocCard, { DocCardGrid } from '@site/src/components/docs/DocCard';
