@@ -14,7 +14,7 @@ contract ExampleDiamond {
      * struct FacetFunctions {
      *     address facet;
      *     bytes4[] selectors;
-     * }  
+     * }
      */
     /**
      * @notice Initializes the diamond contract with facets, owner and other data.
@@ -23,7 +23,7 @@ contract ExampleDiamond {
      * @param _facets Array of facet addresses and their corresponding function selectors to add to the diamond.
      * @param _diamondOwner Address that will be set as the owner of the diamond contract.
      */
-    constructor(DiamondMod.FacetFunctions[] memory _facets, address _diamondOwner) { 
+    constructor(DiamondMod.FacetFunctions[] memory _facets, address _diamondOwner) {
         DiamondMod.addFacets(_facets);
 
         /*************************************

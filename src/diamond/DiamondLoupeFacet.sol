@@ -38,7 +38,7 @@ contract DiamondLoupeFacet {
         assembly {
             s.slot := position
         }
-    }   
+    }
 
     /**
      * @notice Gets all the function selectors supported by a specific facet.

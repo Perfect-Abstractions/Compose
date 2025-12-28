@@ -39,17 +39,17 @@ function getStorage() pure returns (DiamondStorage storage s) {
 }
 
 /**
-* @notice Emitted when a function is added to a diamond.
-*
-* @param _selector The function selector being added.
-* @param _facet    The facet address that will handle calls to `_selector`.
-*/
+ * @notice Emitted when a function is added to a diamond.
+ *
+ * @param _selector The function selector being added.
+ * @param _facet    The facet address that will handle calls to `_selector`.
+ */
 event DiamondFunctionAdded(bytes4 indexed _selector, address indexed _facet);
 
 struct FacetFunctions {
     address facet;
     bytes4[] selectors;
-}  
+}
 
 error NoBytecodeAtAddress(address _contractAddress);
 error CannotAddFunctionToDiamondThatAlreadyExists(bytes4 _selector);
@@ -78,7 +78,7 @@ function addFacets(FacetFunctions[] memory _facets) {
             selectorPosition++;
             emit DiamondFunctionAdded(selector, facet);
         }
-    }    
+    }
 }
 
 error FunctionNotFound(bytes4 _selector);

@@ -1,4 +1,3 @@
-
 // SPDX-License-Identifier: MIT
 pragma solidity >=0.8.30;
 
@@ -6,7 +5,7 @@ pragma solidity >=0.8.30;
  * @title Reference implementation for upgrade function for
  *        ERC-8109 Diamonds, Simplified
  *
- * @dev Compile this with the Solidity optimizer enabled or you may get a 
+ * @dev Compile this with the Solidity optimizer enabled or you may get a
  *      "stack too deep" error.
  */
 contract DiamondUpgradeFacet {
@@ -35,7 +34,7 @@ contract DiamondUpgradeFacet {
             s.slot := position
         }
     }
-    
+
     bytes32 constant DIAMOND_STORAGE_POSITION = keccak256("erc8109.diamond");
 
     /**
@@ -67,61 +66,54 @@ contract DiamondUpgradeFacet {
     }
 
     /**
-    * @notice Emitted when a function is added to a diamond.
-    *
-    * @param _selector The function selector being added.
-    * @param _facet    The facet address that will handle calls to `_selector`.
-    */
+     * @notice Emitted when a function is added to a diamond.
+     *
+     * @param _selector The function selector being added.
+     * @param _facet    The facet address that will handle calls to `_selector`.
+     */
     event DiamondFunctionAdded(bytes4 indexed _selector, address indexed _facet);
 
     /**
-    * @notice Emitted when changing the facet that will handle calls to a function.
-    * 
-    * @param _selector The function selector being affected.
-    * @param _oldFacet The facet address previously responsible for `_selector`.
-    * @param _newFacet The facet address that will now handle calls to `_selector`.
-    */
-    event DiamondFunctionReplaced(
-        bytes4 indexed _selector,
-        address indexed _oldFacet,
-        address indexed _newFacet
-    );
+     * @notice Emitted when changing the facet that will handle calls to a function.
+     *
+     * @param _selector The function selector being affected.
+     * @param _oldFacet The facet address previously responsible for `_selector`.
+     * @param _newFacet The facet address that will now handle calls to `_selector`.
+     */
+    event DiamondFunctionReplaced(bytes4 indexed _selector, address indexed _oldFacet, address indexed _newFacet);
 
     /**
-    * @notice Emitted when a function is removed from a diamond.
-    *
-    * @param _selector The function selector being removed.
-    * @param _oldFacet The facet address that previously handled `_selector`.
-    */
-    event DiamondFunctionRemoved(
-        bytes4 indexed _selector, 
-        address indexed _oldFacet
-    );
+     * @notice Emitted when a function is removed from a diamond.
+     *
+     * @param _selector The function selector being removed.
+     * @param _oldFacet The facet address that previously handled `_selector`.
+     */
+    event DiamondFunctionRemoved(bytes4 indexed _selector, address indexed _oldFacet);
 
     /**
-    * @notice Emitted when a diamond's constructor function or function from a
-    *         facet makes a `delegatecall`. 
-    * 
-    * @param _delegate     The contract that was delegatecalled.
-    * @param _functionCall The function call, including function selector and 
-    *                      any arguments.
-    */
+     * @notice Emitted when a diamond's constructor function or function from a
+     *         facet makes a `delegatecall`.
+     *
+     * @param _delegate     The contract that was delegatecalled.
+     * @param _functionCall The function call, including function selector and
+     *                      any arguments.
+     */
     event DiamondDelegateCall(address indexed _delegate, bytes _functionCall);
 
     /**
-    * @notice Emitted to record information about a diamond.
-    * @dev    This event records any arbitrary metadata. 
-    *         The format of `_tag` and `_data` are not specified by the 
-    *         standard.
-    *
-    * @param _tag   Arbitrary metadata, such as a release version.
-    * @param _data  Arbitrary metadata.
-    */
+     * @notice Emitted to record information about a diamond.
+     * @dev    This event records any arbitrary metadata.
+     *         The format of `_tag` and `_data` are not specified by the
+     *         standard.
+     *
+     * @param _tag   Arbitrary metadata, such as a release version.
+     * @param _data  Arbitrary metadata.
+     */
     event DiamondMetadata(bytes32 indexed _tag, bytes _data);
 
     /**
-    * @notice The functions below detect and revert with the following errors.
-    */
+     * @notice The functions below detect and revert with the following errors.
+     */
     error NoSelectorsProvidedForFacet(address _facet);
     error NoBytecodeAtAddress(address _contractAddress);
     error CannotAddFunctionToDiamondThatAlreadyExists(bytes4 _selector);
@@ -133,13 +125,12 @@ contract DiamondUpgradeFacet {
     error CannotReplaceImmutableFunction(bytes4 _selector);
     error CannotRemoveImmutableFunction(bytes4 _selector);
 
-
     function addFunctions(address _facet, bytes4[] calldata _functionSelectors) internal {
         DiamondStorage storage s = getDiamondStorage();
         if (_facet.code.length == 0) {
             revert NoBytecodeAtAddress(_facet);
         }
-        if(_functionSelectors.length == 0) {
+        if (_functionSelectors.length == 0) {
             revert NoSelectorsProvidedForFacet(_facet);
         }
         uint32 selectorPosition = uint32(s.selectors.length);
@@ -161,7 +152,7 @@ contract DiamondUpgradeFacet {
         if (_facet.code.length == 0) {
             revert NoBytecodeAtAddress(_facet);
         }
-        if(_functionSelectors.length == 0) {
+        if (_functionSelectors.length == 0) {
             revert NoSelectorsProvidedForFacet(_facet);
         }
         for (uint256 selectorIndex; selectorIndex < _functionSelectors.length; selectorIndex++) {
@@ -213,56 +204,56 @@ contract DiamondUpgradeFacet {
             delete s.facetAndPosition[selector];
             emit DiamondFunctionRemoved(selector, oldFacet);
         }
-    }            
-    
+    }
+
     struct FacetFunctions {
         address facet;
         bytes4[] selectors;
-    }  
+    }
 
     /**
-    * @notice Upgrade the diamond by adding, replacing, or removing functions.
-    *
-    * @dev
-    * ### Function Changes:
-    * - `_addFunctions` maps new selectors to their facet implementations.
-    * - `_replaceFunctions` updates existing selectors to new facet addresses.
-    * - `_removeFunctions` removes selectors from the diamond.
-    *
-    * Functions added first, then replaced, then removed.
-    *
-    * These events are emitted to record changes to functions:
-    * - `DiamondFunctionAdded`
-    * - `DiamondFunctionReplaced`
-    * - `DiamondFunctionRemoved`
-    *
-    * ### DelegateCall:
-    * If `_delegate` is non-zero, the diamond performs a `delegatecall` to
-    * `_delegate` using `_functionCall`. The `DiamondDelegateCall` event is
-    *  emitted. 
-    *
-    * The `delegatecall` is done to alter a diamond's state or to 
-    * initialize, modify, or remove state after an upgrade.
-    *
-    * However, if `_delegate` is zero, no `delegatecall` is made and no 
-    * `DiamondDelegateCall` event is emitted.
-    *
-    * ### Metadata:
-    * If _tag is non-zero or if _metadata.length > 0 then the
-    * `DiamondMetadata` event is emitted.
-    *
-    * @param _addFunctions     Selectors to add, grouped by facet.
-    * @param _replaceFunctions Selectors to replace, grouped by facet.
-    * @param _removeFunctions  Selectors to remove.
-    * @param _delegate         Optional contract to delegatecall (zero address to skip).
-    * @param _functionCall     Optional calldata to execute on `_delegate`.
-    * @param _tag              Optional arbitrary metadata, such as release version.
-    * @param _metadata         Optional arbitrary data.
-    */
+     * @notice Upgrade the diamond by adding, replacing, or removing functions.
+     *
+     * @dev
+     * ### Function Changes:
+     * - `_addFunctions` maps new selectors to their facet implementations.
+     * - `_replaceFunctions` updates existing selectors to new facet addresses.
+     * - `_removeFunctions` removes selectors from the diamond.
+     *
+     * Functions added first, then replaced, then removed.
+     *
+     * These events are emitted to record changes to functions:
+     * - `DiamondFunctionAdded`
+     * - `DiamondFunctionReplaced`
+     * - `DiamondFunctionRemoved`
+     *
+     * ### DelegateCall:
+     * If `_delegate` is non-zero, the diamond performs a `delegatecall` to
+     * `_delegate` using `_functionCall`. The `DiamondDelegateCall` event is
+     *  emitted.
+     *
+     * The `delegatecall` is done to alter a diamond's state or to
+     * initialize, modify, or remove state after an upgrade.
+     *
+     * However, if `_delegate` is zero, no `delegatecall` is made and no
+     * `DiamondDelegateCall` event is emitted.
+     *
+     * ### Metadata:
+     * If _tag is non-zero or if _metadata.length > 0 then the
+     * `DiamondMetadata` event is emitted.
+     *
+     * @param _addFunctions     Selectors to add, grouped by facet.
+     * @param _replaceFunctions Selectors to replace, grouped by facet.
+     * @param _removeFunctions  Selectors to remove.
+     * @param _delegate         Optional contract to delegatecall (zero address to skip).
+     * @param _functionCall     Optional calldata to execute on `_delegate`.
+     * @param _tag              Optional arbitrary metadata, such as release version.
+     * @param _metadata         Optional arbitrary data.
+     */
     function upgradeDiamond(
         FacetFunctions[] calldata _addFunctions,
         FacetFunctions[] calldata _replaceFunctions,
-        bytes4[] calldata _removeFunctions,           
+        bytes4[] calldata _removeFunctions,
         address _delegate,
         bytes calldata _functionCall,
         bytes32 _tag,
@@ -271,14 +262,14 @@ contract DiamondUpgradeFacet {
         if (getOwnerStorage().owner != msg.sender) {
             revert OwnerUnauthorizedAccount();
         }
-        for(uint256 i; i < _addFunctions.length; i++) {
+        for (uint256 i; i < _addFunctions.length; i++) {
             addFunctions(_addFunctions[i].facet, _addFunctions[i].selectors);
         }
-        for(uint256 i; i < _replaceFunctions.length; i++) {
+        for (uint256 i; i < _replaceFunctions.length; i++) {
             replaceFunctions(_replaceFunctions[i].facet, _replaceFunctions[i].selectors);
         }
-        removeFunctions(_removeFunctions);  
-        if(_delegate != address(0)) {
+        removeFunctions(_removeFunctions);
+        if (_delegate != address(0)) {
             if (_delegate.code.length == 0) {
                 revert NoBytecodeAtAddress(_delegate);
             }
@@ -297,8 +288,8 @@ contract DiamondUpgradeFacet {
             }
             emit DiamondDelegateCall(_delegate, _functionCall);
         }
-        if(_tag != 0 || _metadata.length > 0) {
+        if (_tag != 0 || _metadata.length > 0) {
             emit DiamondMetadata(_tag, _metadata);
-        }             
+        }
     }
 }
