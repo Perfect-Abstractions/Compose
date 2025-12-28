@@ -1,7 +1,7 @@
 ---
 sidebar_position: 99
 title: "ERC1155Mod"
-description: "Manages ERC-1155 token transfers, minting, and burning."
+description: "Manages ERC-1155 token balances, transfers, and metadata."
 gitSource: "https://github.com/Perfect-Abstractions/Compose/tree/main/src/token/ERC1155/ERC1155Mod.sol"
 ---
 
@@ -21,13 +21,13 @@ import GradientText from '@site/src/components/ui/GradientText';
 import GradientButton from '@site/src/components/ui/GradientButton';
 
 <DocSubtitle>
-Manages ERC-1155 token transfers, minting, and burning.
+Manages ERC-1155 token balances, transfers, and metadata.
 </DocSubtitle>
 
 <Callout type="info" title="Key Features">
-- Supports both single and batch operations for transfers, minting, and burning.
-- Includes `safeTransferFrom` and `safeBatchTransferFrom` for secure transfers to ERC-1155 compliant receivers.
-- Provides functions to set and retrieve token URIs, enabling metadata management.
+- Supports standard ERC-1155 minting and burning operations for single and batch token types.
+- Implements safe transfer logic, including receiver validation for contract addresses.
+- Allows setting and managing base and token-specific URIs for metadata.
 </Callout>
 
 <Callout type="info" title="Module Usage">
@@ -36,7 +36,7 @@ This module provides internal functions for use in your custom facets. Import it
 
 ## Overview
 
-The ERC1155Mod provides comprehensive functionality for managing ERC-1155 tokens within a Compose diamond. It enables minting, burning, and safe transfers of both single and batch token types, adhering to EIP-1155 standards. This module ensures proper handling of token balances and receiver interactions, crucial for composable NFT and fungible token systems.
+The ERC1155Mod provides essential functionality for managing ERC-1155 tokens within a Compose diamond. It handles minting, burning, safe transfers, and URI management, ensuring compliance with the ERC-1155 standard. By integrating this module, diamonds can support multi-token standards and complex digital asset operations.
 
 ---
 
@@ -561,21 +561,33 @@ error ERC1155MissingApprovalForAll(address _operator, address _owner);
 <ExpandableCode language="solidity" maxLines={20} title="Example Implementation">
 {`pragma solidity ^0.8.30;
 
-import {IERC1155Mod } from "@compose-protocol/diamond/facets/ERC1155/ERC1155Mod.sol";
+import {IERC1155Receiver} from "@openzeppelin/contracts/token/ERC1155/IERC1155Receiver.sol";
+import {ERC1155Mod} from "./ERC1155Mod.sol"; // Assuming ERC1155Mod is accessible
 
-contract MyFacet {
-    address immutable diamondProxy;
+contract MyERC1155Facet {
+    ERC1155Mod private erc1155Mod;
 
-    constructor(address _diamondProxy) {
-        diamondProxy = _diamondProxy;
+    function setERC1155Mod(address _module) external {
+        erc1155Mod = ERC1155Mod(_module);
     }
 
     function mintTokens(address _to, uint256 _id, uint256 _amount) external {
-        IERC1155Mod(diamondProxy).mint(_to, _id, _amount);
+        // Ensure the module is initialized and accessible
+        require(address(erc1155Mod) != address(0), "ERC1155Mod not set");
+
+        erc1155Mod.mint(_to, _id, _amount);
     }
 
     function transferTokens(address _from, address _to, uint256 _id, uint256 _amount) external {
-        IERC1155Mod(diamondProxy).safeTransferFrom(_from, _to, _id, _amount, "");
+        require(address(erc1155Mod) != address(0), "ERC1155Mod not set");
+
+        erc1155Mod.safeTransferFrom(_from, _to, _id, _amount, "");
+    }
+
+    function setTokenURIs(uint256 _id, string memory _uri) external {
+        require(address(erc1155Mod) != address(0), "ERC1155Mod not set");
+
+        erc1155Mod.setTokenURI(_id, _uri);
     }
 }`}
 </ExpandableCode>
@@ -583,19 +595,19 @@ contract MyFacet {
 ## Best Practices
 
 <Callout type="tip" title="Best Practice">
-- Implement robust access control for minting and burning functions if required by your diamond's architecture.
-- Ensure proper validation of receiver addresses, especially when interacting with other contracts, by implementing ERC1155Receiver logic.
-- Always check balances before attempting to transfer or burn tokens to prevent `ERC1155InsufficientBalance` errors.
+- Always validate that the `ERC1155Mod` is correctly initialized before calling its functions.
+- Implement `IERC1155Receiver` in any contract that will receive ERC-1155 tokens via this module to handle `onERC1155Received` or `onERC1155BatchReceived` callbacks.
+- Be mindful of gas costs when performing batch operations (`mintBatch`, `burnBatch`, `safeBatchTransferFrom`) as they involve multiple state changes.
 </Callout>
 
 ## Integration Notes
 
 <Callout type="success" title="Shared Storage">
-The ERC1155Mod utilizes a predefined storage slot within the diamond's storage layout to manage ERC-1155 token balances, approvals, and URI information. Facets interacting with this module should call its functions through the diamond proxy. The `getStorage` function can be used to access the underlying storage struct for read-only operations or for advanced integration, provided the caller understands the storage layout and potential for concurrent modification.
+The `ERC1155Mod` relies on the standard diamond storage pattern for its state, particularly for token balances and URI mappings. Facets interacting with this module can access its storage via the `getStorage` function, which returns a reference to the internal ERC-1155 storage struct. Ensure that this module is initialized with the correct storage slot. Any changes to token balances or URIs are immediately reflected in the diamond's overall state and are visible to all facets.
 </Callout>
 
 <div style={{marginTop: "3rem", paddingTop: "2rem", borderTop: "1px solid var(--ifm-color-emphasis-200)"}}>
   <WasThisHelpful pageId="ERC1155Mod" />
 </div>
 
-<LastUpdated date="2025-12-23T00:27:13.237Z" />
+<LastUpdated date="2025-12-28T04:28:49.475Z" />

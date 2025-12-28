@@ -1,7 +1,7 @@
 ---
 sidebar_position: 99
 title: "ERC721Facet"
-description: "Manage ERC-721 tokens and metadata within a diamond."
+description: "Manages ERC-721 token ownership, transfers, and approvals."
 gitSource: "https://github.com/Perfect-Abstractions/Compose/tree/main/src/token/ERC721/ERC721/ERC721Facet.sol"
 ---
 
@@ -21,19 +21,19 @@ import GradientText from '@site/src/components/ui/GradientText';
 import GradientButton from '@site/src/components/ui/GradientButton';
 
 <DocSubtitle>
-Manage ERC-721 tokens and metadata within a diamond.
+Manages ERC-721 token ownership, transfers, and approvals.
 </DocSubtitle>
 
 <Callout type="info" title="Key Features">
-- Implements the ERC-721 standard for non-fungible tokens.
-- Supports token transfers, ownership tracking, and approvals.
-- Provides `tokenURI` for metadata retrieval.
-- Includes internal transfer logic for robust state management.
+- Implements the full ERC-721 standard including token transfers and ownership tracking.
+- Supports metadata retrieval via `tokenURI` for NFTs.
+- Provides internal and external functions for comprehensive token management.
+- Utilizes inline assembly for efficient storage access.
 </Callout>
 
 ## Overview
 
-The ERC721Facet provides a standard implementation for ERC-721 token functionality. It enables core operations such as token transfers, ownership queries, approvals, and metadata retrieval. This facet can be integrated into a diamond to offer a composable and upgradeable NFT collection.
+The ERC721Facet implements the core ERC-721 standard, enabling NFTs to be managed within a Compose diamond. It handles token ownership, metadata retrieval, and transfer logic, providing a robust foundation for decentralized applications requiring non-fungible assets.
 
 ---
 
@@ -563,53 +563,58 @@ error ERC721InvalidOperator(address _operator);
 <ExpandableCode language="solidity" maxLines={20} title="Example Implementation">
 {`pragma solidity ^0.8.30;
 
-import {IERC721Facet} from "@compose/contracts/src/facets/ERC721/IERC721Facet.sol";
+import {IERC721Facet} from "@compose-protocol/diamond/contracts/facets/ERC721/IERC721Facet.sol";
+import {IDiamondCut} from "@compose-protocol/diamond/contracts/IDiamondCut.sol";
 
-contract MyDiamond is IERC721Facet {
-    // ... other facet interfaces and implementations
+contract Deployer {
+    address diamondAddress;
 
-    address constant ERC721_FACET_ADDRESS = address(0xabc...); // Address where ERC721Facet is deployed
+    // Assume diamondAddress is already set to your deployed diamond proxy
 
-    function name() external view override returns (string memory) {
-        return IERC721Facet(ERC721_FACET_ADDRESS).name();
+    function deployERC721() external {
+        IERC721Facet erc721Facet = new ERC721Facet();
+
+        IDiamondCut.FacetCut[] memory cut = new IDiamondCut.FacetCut[](1);
+        cut[0] = IDiamondCut.FacetCut({
+            facetAddress: address(erc721Facet),
+            action: IDiamondCut.FacetCutAction.ADD,
+            functionSelectors: IDiamondCut.getSelectors(erc721Facet)
+        });
+
+        // Replace with your diamond initializer and admin
+        address diamondAdmin = msg.sender;
+        address diamondInitializer = address(0); // Or your initializer contract
+
+        // Call the diamondCut function on your diamond proxy
+        // (This requires the diamond proxy to have a fallback function or similar mechanism to receive calls)
+        // Example: diamondAddress.diamondCut(cut, diamondInitializer, "");
     }
 
-    function symbol() external view override returns (string memory) {
-        return IERC721Facet(ERC721_FACET_ADDRESS).symbol();
+    function mintToken(uint256 _tokenId, address _to) external {
+        // Assuming ERC721Facet is already added and functions are routed
+        // You would typically call this through your diamond proxy
+        // Example:
+        // IERC721Facet(diamondAddress).mint(_tokenId, _to); // If mint function exists in a separate facet or is added here
     }
-
-    function balanceOf(address _owner) external view override returns (uint256) {
-        return IERC721Facet(ERC721_FACET_ADDRESS).balanceOf(_owner);
-    }
-
-    function ownerOf(uint256 _tokenId) external view override returns (address) {
-        return IERC721Facet(ERC721_FACET_ADDRESS).ownerOf(_tokenId);
-    }
-
-    function transferFrom(address _from, address _to, uint256 _tokenId) external override {
-        IERC721Facet(ERC721_FACET_ADDRESS).transferFrom(_from, _to, _tokenId);
-    }
-
-    // ... other functions
 }`}
 </ExpandableCode>
 
 ## Best Practices
 
 <Callout type="tip" title="Best Practice">
-- Initialize the ERC721Facet with a unique storage slot using `STORAGE_POSITION`.
-- Grant necessary permissions for `approve` and `setApprovalForAll` operations.
-- Ensure the receiver contract implements `onERC721Received` for `safeTransferFrom` if applicable.
+- Initialize the ERC721Facet with necessary parameters (e.g., name, symbol) during diamond deployment or upgrade.
+- Ensure proper access control is implemented at the diamond proxy level for functions like `approve` and `transferFrom` if required.
+- Store the ERC721Facet's storage pointer correctly within the diamond's storage.
 </Callout>
 
 ## Security Considerations
 
 <Callout type="warning" title="Security">
-The `internalTransferFrom` function includes checks for ownership and approvals. `safeTransferFrom` adds a layer of security by verifying receiver contract compatibility. Ensure that access control for `approve` and `setApprovalForAll` functions is correctly managed by the diamond's access control mechanism.
+The `internalTransferFrom` function includes critical checks for ownership and approvals. External callers must ensure that `safeTransferFrom` is used when transferring to contracts to prevent potential reentrancy or unhandled token issues. Input validation is crucial for all parameters, especially token IDs and addresses.
 </Callout>
 
 <div style={{marginTop: "3rem", paddingTop: "2rem", borderTop: "1px solid var(--ifm-color-emphasis-200)"}}>
   <WasThisHelpful pageId="ERC721Facet" />
 </div>
 
-<LastUpdated date="2025-12-23T00:27:48.929Z" />
+<LastUpdated date="2025-12-28T04:29:25.528Z" />

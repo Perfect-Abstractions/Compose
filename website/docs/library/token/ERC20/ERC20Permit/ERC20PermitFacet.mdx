@@ -1,7 +1,7 @@
 ---
 sidebar_position: 99
 title: "ERC20PermitFacet"
-description: "EIP-2612 compliant ERC-20 permit functionality."
+description: "Manages ERC-20 token approvals via EIP-2612 signatures."
 gitSource: "https://github.com/Perfect-Abstractions/Compose/tree/main/src/token/ERC20/ERC20Permit/ERC20PermitFacet.sol"
 ---
 
@@ -21,18 +21,18 @@ import GradientText from '@site/src/components/ui/GradientText';
 import GradientButton from '@site/src/components/ui/GradientButton';
 
 <DocSubtitle>
-EIP-2612 compliant ERC-20 permit functionality.
+Manages ERC-20 token approvals via EIP-2612 signatures.
 </DocSubtitle>
 
 <Callout type="info" title="Key Features">
-- Implements EIP-2612 permit functionality for ERC-20 tokens.
-- Enables gasless approvals by allowing users to sign allowance requests off-chain.
-- Utilizes nonces and domain separators to prevent replay attacks and ensure signature validity.
+- Implements EIP-2612 permit functionality for gasless approvals.
+- Utilizes on-chain signatures to grant allowances without requiring the token owner to pay gas for the approval transaction.
+- Includes `nonces` and `DOMAIN_SEPARATOR` for robust signature validation and replay protection.
 </Callout>
 
 ## Overview
 
-The ERC20PermitFacet enables gasless approvals for ERC-20 tokens by implementing EIP-2612's permit functionality. Users can grant allowances to spenders via signed messages, which can then be submitted by any party to the diamond, bypassing the need for the user to pay gas for the approval transaction.
+The ERC20PermitFacet enables gasless approvals for ERC-20 tokens by allowing token holders to sign off-chain permit messages. These signed messages can then be submitted on-chain to grant allowances to specified spenders, streamlining user experience and reducing transaction costs.
 
 ---
 
@@ -272,48 +272,27 @@ error ERC20InvalidSpender(address _spender);
 <ExpandableCode language="solidity" maxLines={20} title="Example Implementation">
 {`pragma solidity ^0.8.30;
 
-import {IERC20Permit } from "@openzeppelin/contracts/token/ERC20/extensions/IERC20Permit.sol";
-import { DiamondLoupeFacet } from "@openzeppelin/contracts/facets/DiamondLoupeFacet.sol";
-import { FacetNames } from "@openzeppelin/contracts/facets/FacetNames.sol";
+import {IERC20Permit} from "@openzeppelin/contracts/token/ERC20/extensions/draft-IERC20Permit.sol";
 
-// Assume Diamond interface and DiamondProxy are deployed elsewhere
-interface IDiamond {
-    function diamondCut(FacetCut[] calldata _diamondCut, address _init, bytes calldata _calldata) external;
-    function facetAddress(bytes4 _functionSelector) external view returns (address _facetAddress);
-    function facetFunctionSelectors(address _facet) external view returns (bytes4[] memory _selectors);
-    function facets() external view returns (Facet[] memory _facets);
-}
+contract DiamondDeployer {
+    // Assume diamond and facets are deployed and selectors are mapped
+    // address public diamondProxy;
 
-interface IERC20PermitFacet {
-    function permit(address owner, address spender, uint256 value, uint256 deadline, uint8 v, bytes32 r, bytes32 s) external;
-    function nonces(address owner) external view returns (uint256);
-    function DOMAIN_SEPARATOR() external view returns (bytes32);
-}
+    function grantPermit(address _token, address _spender, uint256 _value, uint256 _deadline, bytes calldata _signature) external {
+        // Selector for the permit function on the ERC20PermitFacet
+        bytes4 permitSelector = bytes4(keccak256("permit(address,address,uint256,uint256,uint8,bytes32,bytes32)"));
 
-contract ERC20PermitDeployer {
-    // ... deployment logic ...
-
-    function grantPermit(address _diamondProxyAddress, address _tokenAddress, address _spender, uint256 _amount, uint256 _deadline) public {
-        // Fetch nonce and domain separator from the diamond
-        IERC20PermitFacet permitFacet = IERC20PermitFacet(_diamondProxyAddress);
-        bytes32 domainSeparator = permitFacet.DOMAIN_SEPARATOR();
-        uint256 nonce = permitFacet.nonces(msg.sender);
-
-        // Construct the permit message hash
-        bytes32 digest = keccak256(
-            abi.encode( IERC20Permit.permitHash(), msg.sender, _spender, _amount, nonce, _deadline)
-        );
-
-        // Sign the digest (this would typically be done off-chain)
-        // For demonstration, assume \`v\`, \`r\`, \`s\` are obtained from an external signature
-        uint8 v;
-        bytes32 r;
-        bytes32 s;
-
-        // Submit the permit to the diamond
-        // Note: This assumes the ERC20 token contract is accessible and has an \`approve\` function
-        // and that the diamond proxy is configured to route permit calls to the ERC20PermitFacet.
-        permitFacet.permit(_tokenAddress, _spender, _amount, _deadline, v, r, s);
+        // Call the permit function on the diamond proxy
+        (bool success, ) = address(diamondProxy).call(abi.encodeWithSelector(permitSelector,
+            _token, // The ERC20 token address
+            _spender, // The address to grant allowance to
+            _value, // The amount to allow
+            _deadline, // The permit deadline
+            _signature[0], // v
+            abi.decode(_signature[1:33], (bytes32)), // r
+            abi.decode(_signature[33:65], (bytes32)) // s
+        ));
+        require(success, "Permit call failed");
     }
 }`}
 </ExpandableCode>
@@ -321,19 +300,19 @@ contract ERC20PermitDeployer {
 ## Best Practices
 
 <Callout type="tip" title="Best Practice">
-- Integrate the `ERC20PermitFacet` into your diamond, ensuring its function selectors are correctly routed.
-- Store the `DOMAIN_SEPARATOR` and `nonces` mapping within the diamond's storage or a dedicated facet for consistent access.
-- Off-chain signing of permit messages is crucial for enabling gasless approvals. The signed data is then submitted on-chain by any party.
+- Ensure the `permit` function is correctly implemented and adheres to EIP-2612 standards.
+- Verify the `DOMAIN_SEPARATOR` and `nonce` are used correctly to prevent replay attacks and ensure signature validity.
+- Integrate with an ERC-20 token contract that supports `transferFrom` and `approve` for the allowance to be utilized.
 </Callout>
 
 ## Security Considerations
 
 <Callout type="warning" title="Security">
-Ensure the `DOMAIN_SEPARATOR` is correctly computed and unique per chain ID and contract instance. The `nonces` mapping must be managed carefully to prevent permit reuse. Validate the signature parameters (`v`, `r`, `s`) and the `owner` address before setting allowances. Access to the `permit` function should be controlled if necessary, although typically it's intended to be permissionless once the signature is valid.
+The primary security consideration is the validation of the signature provided to the `permit` function. Incorrect signature verification or manipulation of `nonce` or `DOMAIN_SEPARATOR` could lead to unauthorized allowances being granted. Ensure that the signing process on the client-side correctly encodes the permit message and that the on-chain verification logic is sound. The `permit` function itself does not directly handle token transfers, so its security is tied to the underlying ERC-20 token's `transferFrom` and `approve` implementations.
 </Callout>
 
 <div style={{marginTop: "3rem", paddingTop: "2rem", borderTop: "1px solid var(--ifm-color-emphasis-200)"}}>
   <WasThisHelpful pageId="ERC20PermitFacet" />
 </div>
 
-<LastUpdated date="2025-12-23T00:26:50.417Z" />
+<LastUpdated date="2025-12-28T04:28:24.913Z" />

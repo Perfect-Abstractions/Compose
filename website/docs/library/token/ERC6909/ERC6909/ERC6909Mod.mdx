@@ -25,9 +25,9 @@ Implements ERC-6909 minimal multi-token logic.
 </DocSubtitle>
 
 <Callout type="info" title="Key Features">
-- Supports multiple token IDs within a single contract context.
-- Implements standard ERC-6909 functions for token management.
-- Allows for flexible operator approvals to facilitate trading and management.
+- Supports core ERC-6909 token operations: mint, burn, transfer, and approve.
+- Includes operator authorization functionality via `setOperator`.
+- Provides a `getStorage` function for direct access to the module's storage, enabling custom logic in facets.
 </Callout>
 
 <Callout type="info" title="Module Usage">
@@ -36,7 +36,7 @@ This module provides internal functions for use in your custom facets. Import it
 
 ## Overview
 
-This module provides the core logic and storage for implementing the ERC-6909 standard. It enables the management of multiple token types within a single contract, supporting minting, burning, transfers, and operator approvals. By adhering to the ERC-6909 standard, diamonds can offer flexible and interoperable multi-token functionality.
+The ERC6909Mod provides essential functions and storage for managing multi-token assets according to the ERC-6909 standard. It enables minting, burning, transferring, and approving tokens, with support for operator authorizations, ensuring efficient and composable token management within a diamond.
 
 ---
 
@@ -477,29 +477,24 @@ error ERC6909InvalidSpender(address _spender);
 <ExpandableCode language="solidity" maxLines={20} title="Example Implementation">
 {`pragma solidity ^0.8.30;
 
-import {IERC6909Mod} from "@compose/contracts/modules/erc6909/IERC6909Mod.sol";
-import {ERC6909ModStorage} from "@compose/contracts/modules/erc6909/ERC6909ModStorage.sol";
+import {IERC6909Mod, IERC6909ModStorage} from "../modules/ERC6909Mod.sol";
+import {IDiamondCut, DiamondStorage} from "../diamond/Diamond.sol";
 
-contract MyERC6909Facet {
-
-    function approve(address _spender, uint256 _amount, uint256 _id) external {
-        IERC6909Mod(msg.sender).approve(_spender, _amount, _id);
+contract MyTokenFacet {
+    function _getERC6909Storage() internal view returns (IERC6909ModStorage storage) {
+        uint256 position = 1; // Example storage slot, actual slot defined in ERC6909Mod
+        assembly {
+            storage := add(SSTORE_ADDRESS, mul(position, 0x20))
+        }
     }
 
-    function transfer(address _from, address _to, uint256 _amount, uint256 _id) external {
-        IERC6909Mod(msg.sender).transfer(_from, _to, _amount, _id);
+    function mintTokens(uint256 _id, address _to, uint256 _amount) external {
+        // Assume caller has authority to mint
+        IERC6909Mod(_getERC6909Storage()).mint(_id, _to, _amount);
     }
 
-    function mint(address _to, uint256 _amount, uint256 _id) external {
-        IERC6909Mod(msg.sender).mint(_to, _amount, _id);
-    }
-
-    function burn(address _from, uint256 _amount, uint256 _id) external {
-        IERC6909Mod(msg.sender).burn(_from, _amount, _id);
-    }
-
-    function setOperator(address _operator, bool _approved) external {
-        IERC6909Mod(msg.sender).setOperator(_operator, _approved);
+    function approveToken(address _spender, uint256 _id, uint256 _amount) external {
+        IERC6909Mod(_getERC6909Storage()).approve(_spender, _id, _amount);
     }
 }`}
 </ExpandableCode>
@@ -507,19 +502,19 @@ contract MyERC6909Facet {
 ## Best Practices
 
 <Callout type="tip" title="Best Practice">
-- Ensure appropriate access control is implemented in facets calling `mint` and `burn` functions.
-- Handle custom errors like `ERC6909InsufficientBalance` and `ERC6909InsufficientAllowance` gracefully in calling facets.
-- Be mindful of operator approvals; they grant significant spending power for specific token IDs.
+- Ensure proper access control is implemented in facets calling module functions like `mint` and `setOperator`.
+- Handle custom errors (`ERC6909InsufficientBalance`, `ERC6909InsufficientAllowance`, etc.) returned by module functions to provide clear user feedback.
+- When upgrading facets that interact with this module, be mindful of storage layout compatibility to avoid data corruption.
 </Callout>
 
 ## Integration Notes
 
 <Callout type="success" title="Shared Storage">
-The ERC6909Mod uses a dedicated storage slot defined by `STORAGE_POSITION`. Facets interacting with this module should be aware of the `ERC6909ModStorage` struct layout and ensure no storage collisions occur. The `getStorage` function provides a direct pointer to this storage for internal use by facets. Changes to allowances or balances are managed within this module's storage and are visible to all facets interacting with the diamond.
+The ERC6909Mod utilizes a dedicated storage slot (defined by `STORAGE_POSITION` within the module) for its `ERC6909ModStorage` struct. Facets must correctly calculate and access this slot using inline assembly via the `getStorage` function or by directly referencing the `STORAGE_POSITION` if the storage layout is known. The module's state is directly manipulated, and these changes are persistent within the diamond's storage.
 </Callout>
 
 <div style={{marginTop: "3rem", paddingTop: "2rem", borderTop: "1px solid var(--ifm-color-emphasis-200)"}}>
   <WasThisHelpful pageId="ERC6909Mod" />
 </div>
 
-<LastUpdated date="2025-12-23T00:27:24.885Z" />
+<LastUpdated date="2025-12-28T04:29:00.841Z" />

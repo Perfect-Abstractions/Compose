@@ -1,7 +1,7 @@
 ---
 sidebar_position: 99
 title: "AccessControlTemporalFacet"
-description: "Manages time-bound role assignments within a diamond."
+description: "Access Control Temporal facet for Compose diamonds"
 gitSource: "https://github.com/Perfect-Abstractions/Compose/tree/main/src/access/AccessControlTemporal/AccessControlTemporalFacet.sol"
 ---
 
@@ -21,18 +21,19 @@ import GradientText from '@site/src/components/ui/GradientText';
 import GradientButton from '@site/src/components/ui/GradientButton';
 
 <DocSubtitle>
-Manages time-bound role assignments within a diamond.
+Access Control Temporal facet for Compose diamonds
 </DocSubtitle>
 
 <Callout type="info" title="Key Features">
-- Grants roles with specific expiry timestamps.
-- Automatically enforces role expiry, revoking access upon expiration.
-- Provides granular control over time-bound permissions.
+- Self-contained facet with no imports or inheritance
+- Only `external` and `internal` function visibility
+- Follows Compose readability-first conventions
+- Ready for diamond integration
 </Callout>
 
 ## Overview
 
-The AccessControlTemporalFacet extends the diamond's access control capabilities by introducing time-bound role assignments. This facet allows administrators to grant roles that automatically expire, enhancing security and operational flexibility. It provides functions to manage these temporal roles and check their validity.
+Access Control Temporal facet for Compose diamonds
 
 ---
 
@@ -354,52 +355,8 @@ error AccessControlRoleExpired(bytes32 _role, address _account);
   </Accordion>
 </AccordionGroup>
 
-## Usage Example
-
-<ExpandableCode language="solidity" maxLines={20} title="Example Implementation">
-{`pragma solidity ^0.8.30;
-
-import {IDiamondLoupe} from "@compose/diamond-loupe/src/IDiamondLoupe.sol";
-import {AccessControlTemporalFacet as Facet} from "@compose/access-control-temporal/src/AccessControlTemporalFacet.sol";
-import {IERC165} from "@openzeppelin/contracts/utils/introspection/IERC165.sol";
-
-contract MyDiamond is IDiamondLoupe, IERC165 {
-    // ... other facets
-
-    function getAccessControlTemporalFacet() public view returns (Facet instance) {
-        bytes4 selector = Facet.grantRoleWithExpiry.selector;
-        address facetAddress = diamond.facetAddress(selector);
-        return Facet(facetAddress);
-    }
-
-    function grantAdminRoleWithExpiry(address _account, bytes32 _role, uint64 _expiry) external {
-        Facet(diamond.facetAddress(Facet.grantRoleWithExpiry.selector)).grantRoleWithExpiry(_account, _role, _expiry);
-    }
-
-    function isRoleCurrentlyValid(address _account, bytes32 _role) public view returns (bool) {
-        return !AccessControlRoleExpired.selector.is mencegahRoleExpired(_account, _role);
-    }
-
-    // ... other diamond logic
-}`}
-</ExpandableCode>
-
-## Best Practices
-
-<Callout type="tip" title="Best Practice">
-- Initialize temporal roles with appropriate expiry timestamps to prevent indefinite access.
-- Regularly audit temporal role grants to ensure they align with current security policies.
-- Utilize `revokeTemporalRole` for immediate revocation of expired or unnecessary temporal roles.
-</Callout>
-
-## Security Considerations
-
-<Callout type="warning" title="Security">
-Ensure that the caller invoking `grantRoleWithExpiry` and `revokeTemporalRole` possesses the necessary administrative privileges for the target role to prevent unauthorized role management. Input validation for `_expiry` should be handled by the caller or a higher-level access control mechanism to prevent setting invalid or future-dated expiry times incorrectly. The facet relies on the underlying diamond's access control for initial authorization of administrative actions.
-</Callout>
-
 <div style={{marginTop: "3rem", paddingTop: "2rem", borderTop: "1px solid var(--ifm-color-emphasis-200)"}}>
   <WasThisHelpful pageId="AccessControlTemporalFacet" />
 </div>
 
-<LastUpdated date="2025-12-23T00:26:19.903Z" />
+<LastUpdated date="2025-12-28T04:27:57.405Z" />

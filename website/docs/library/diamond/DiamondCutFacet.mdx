@@ -25,14 +25,14 @@ Manage diamond facets and functions
 </DocSubtitle>
 
 <Callout type="info" title="Key Features">
-- Add, replace, and remove functions atomically using selectors.
-- Supports executing an initialization function during a diamond cut.
-- Manages function mappings and facet addresses within the diamond proxy.
+- Dynamically add, replace, or remove facets from the diamond proxy.
+- Supports batch operations for multiple facet and function updates in a single transaction.
+- Allows for optional execution of an initialization function after the diamond cut.
 </Callout>
 
 ## Overview
 
-The DiamondCutFacet enables programmatic management of a diamond's facets and functions. It allows adding, replacing, and removing functions, as well as executing an initialization function during a cut. This facet is crucial for upgrading and extending the diamond's functionality.
+The DiamondCutFacet provides the core functionality for managing the diamond's upgradeability. It allows adding, replacing, and removing facets, as well as updating the mapping of function selectors to facet addresses. This facet is essential for dynamically extending or modifying the diamond's capabilities.
 
 ---
 
@@ -264,45 +264,65 @@ error InitializationFunctionReverted(address _initializationContractAddress, byt
 <ExpandableCode language="solidity" maxLines={20} title="Example Implementation">
 {`pragma solidity ^0.8.30;
 
-import {IDiamondCut} from "@compose-protocol/diamond/contracts/facets/IDiamondCut.sol";
+import {DiamondCutFacet} from "@compose-protocol/diamond-contracts/contracts/facets/DiamondCutFacet.sol";
 
-contract DiamondManager {
-    address immutable DIAMOND_ADDRESS;
+// Assume diamondProxy is an instance of your diamond contract
+// Assume diamondCutFacet is an instance of DiamondCutFacet deployed and added to the diamond
 
-    constructor(address diamondAddress) {
-        DIAMOND_ADDRESS = diamondAddress;
-    }
+address diamondProxy; // Address of your diamond contract
+DiamondCutFacet diamondCutFacet; // Instance of DiamondCutFacet
 
-    function upgradeDiamond() external {
-        bytes32[] memory selectors = new bytes32[](1);
-        selectors[0] = IDiamondCut.addFunctions.selector;
+function upgradeDiamond() public {
+    // Example: Adding a new facet
+    bytes32[] memory selectorsToAdd = new bytes32[](1);
+    selectorsToAdd[0] = diamondCutFacet.addFunctions.selector; // Selector for a function to add
+    address[] memory facetsToAdd = new address[](1);
+    facetsToAdd[0] = address(diamondCutFacet); // Address where the facet implementation is deployed
 
-        address[] memory facetAddresses = new address[](1);
-        facetAddresses[0] = address(this); // Assuming this contract deploys the new facet
+    // Example: Replacing a function
+    bytes32[] memory selectorsToReplace = new bytes32[](1);
+    selectorsToReplace[0] = diamondCutFacet.getOwnerStorage.selector; // Selector of function to replace
+    address[] memory facetsToReplace = new address[](1);
+    facetsToReplace[0] = address(diamondCutFacet); // New facet address for the replaced function
 
-        IDiamondCut(DIAMOND_ADDRESS).diamondCut(facetCuts, address(0), ""); // Placeholder for actual cuts
-    }
+    // Example: Removing a function
+    bytes32[] memory selectorsToRemove = new bytes32[](1);
+    selectorsToRemove[0] = diamondCutFacet.removeFunctions.selector; // Selector of function to remove
+    address[] memory facetsToRemove = new address[](1);
+    facetsToRemove[0] = address(0); // Address must be zero for removal
 
-    // ... other deployment and upgrade logic ...
-}`}
+    // Execute the diamond cut operation
+    diamondCutFacet.diamondCut(
+        FacetCutAction.Add, facetsToAdd, selectorsToAdd,
+        FacetCutAction.Replace, facetsToReplace, selectorsToReplace,
+        FacetCutAction.Remove, facetsToRemove, selectorsToRemove,
+        address(0) // No initialization function call in this example
+    );
+}
+
+// Function to get the owner storage slot
+function getOwner() public view returns (address) {
+    return diamondCutFacet.getOwnerStorage();
+}
+`}
 </ExpandableCode>
 
 ## Best Practices
 
 <Callout type="tip" title="Best Practice">
-- Use `diamondCut` with extreme care, as it modifies the diamond's core functionality.
-- Ensure new facets are properly initialized if required, and the initialization function is correctly specified.
-- Store the `DIAMOND_ADDRESS` in your deployment scripts or contracts to interact with the `DiamondCutFacet`.
+- Ensure that the owner of the diamond has authorized the caller before performing any diamond cut operations.
+- When adding or replacing facets, verify that the target facet implementation contract is verified and deployed correctly.
+- Carefully manage function selector mappings to prevent unintended overwrites or removals of critical functionality.
 </Callout>
 
 ## Security Considerations
 
 <Callout type="warning" title="Security">
-Access to `diamondCut` should be restricted to authorized addresses (e.g., the diamond's owner) to prevent unauthorized modifications. Incorrectly specified selectors or facet addresses can lead to broken functionality or loss of access. Initialization functions must be carefully audited to prevent reentrancy or state corruption.
+Access to `diamondCut` must be restricted to the diamond's owner or an authorized address to prevent unauthorized modifications. Ensure that function selectors are correctly mapped to facet implementations to avoid routing calls to unintended logic. Reentrancy is not a concern as `diamondCut` performs state changes before external calls. Input validation for addresses and selectors is critical.
 </Callout>
 
 <div style={{marginTop: "3rem", paddingTop: "2rem", borderTop: "1px solid var(--ifm-color-emphasis-200)"}}>
   <WasThisHelpful pageId="DiamondCutFacet" />
 </div>
 
-<LastUpdated date="2025-12-23T00:28:24.875Z" />
+<LastUpdated date="2025-12-28T04:30:01.317Z" />

@@ -1,7 +1,7 @@
 ---
 sidebar_position: 99
 title: "ERC721BurnFacet"
-description: "Burn ERC721 tokens within a Compose diamond."
+description: "Facilitates burning ERC-721 tokens within a diamond."
 gitSource: "https://github.com/Perfect-Abstractions/Compose/tree/main/src/token/ERC721/ERC721/ERC721BurnFacet.sol"
 ---
 
@@ -21,18 +21,18 @@ import GradientText from '@site/src/components/ui/GradientText';
 import GradientButton from '@site/src/components/ui/GradientButton';
 
 <DocSubtitle>
-Burn ERC721 tokens within a Compose diamond.
+Facilitates burning ERC-721 tokens within a diamond.
 </DocSubtitle>
 
 <Callout type="info" title="Key Features">
-- Burns ERC721 tokens, effectively destroying them.
-- Emits standard `Transfer` events for burned tokens (from owner to address(0)).
-- Utilizes inline assembly to access the correct storage slot for ERC721 state.
+- Enables destruction of ERC-721 tokens.
+- Emits standard ERC-721 `Transfer` event upon burning.
+- Integrates with the diamond storage pattern for state management.
 </Callout>
 
 ## Overview
 
-The ERC721BurnFacet provides the functionality to destroy ERC721 tokens. It integrates with the diamond proxy pattern to offer a composable way to manage token lifecycle, specifically the burning of owned tokens. This facet ensures that burned tokens are correctly removed from tracking and associated events are emitted.
+The ERC721BurnFacet provides the functionality to destroy ERC-721 tokens. It integrates with the diamond's storage pattern to manage token states and emit standard ERC-721 events upon successful burning.
 
 ---
 
@@ -148,33 +148,15 @@ error ERC721InsufficientApproval(address _operator, uint256 _tokenId);
 <ExpandableCode language="solidity" maxLines={20} title="Example Implementation">
 {`pragma solidity ^0.8.30;
 
-import {IDiamondCut} from "@compose/diamond/contracts/interfaces/IDiamondCut.sol";
-import {IERC721BurnFacet} from "./interfaces/IERC721BurnFacet.sol";
+import {IERC721BurnFacet} from "@compose/contracts/facets/ERC721/IERC721BurnFacet.sol";
 
-contract Deployer {
-    address immutable diamondAddress;
+contract BurnCaller {
+    address diamondAddress;
 
-    constructor(address _diamondAddress) {
-        diamondAddress = _diamondAddress;
-    }
-
-    function addBurnFacet(address _burnFacetImplementation) external {
-        bytes4[] memory selectors = new bytes4[](2);
-        selectors[0] = IERC721BurnFacet.getStorage.selector;
-        selectors[1] = IERC721BurnFacet.burn.selector;
-
-        IDiamondCut(diamondAddress).diamondCut([
-            IDiamondCut.FacetCut({
-                facetAddress: _burnFacetImplementation,
-                action: IDiamondCut.FacetCutAction.ADD,
-                isUnion: false,
-                selectors: selectors
-            })
-        ], address(0), "");
-    }
-
-    function burnToken(uint256 _tokenId) external {
-        IERC721BurnFacet(diamondAddress).burn(_tokenId);
+    function burnToken(uint256 tokenId) external {
+        IERC721BurnFacet burnFacet = IERC721BurnFacet(diamondAddress);
+        // Ensure caller has approval or is the owner before burning
+        burnFacet.burn(tokenId);
     }
 }`}
 </ExpandableCode>
@@ -182,19 +164,19 @@ contract Deployer {
 ## Best Practices
 
 <Callout type="tip" title="Best Practice">
-- Ensure the `ERC721BurnFacet` is added to the diamond with the correct selectors.
-- Call `burn` only for tokens owned by the caller or for which the caller has sufficient approval.
-- Understand the storage layout by calling `getStorage` if direct interaction with underlying ERC721 state is required.
+- Ensure the ERC721BurnFacet is correctly initialized with the diamond's storage slot.
+- Implement access control to restrict burning to authorized addresses (e.g., token owner or approved address).
+- Verify that the token exists and that the caller has sufficient approval before attempting to burn.
 </Callout>
 
 ## Security Considerations
 
 <Callout type="warning" title="Security">
-The `burn` function requires the caller to be the owner of the token or have explicit approval. Ensure that the diamond's access control mechanisms correctly enforce these ownership and approval checks before allowing the `burn` function to be executed. Reentrancy is not a concern as `burn` does not make external calls before state changes.
+The `burn` function requires careful access control to prevent unauthorized token destruction. The caller must be the owner of the token or have been approved to burn it. The facet should be protected against reentrancy if other facets interact with token state during the burn process.
 </Callout>
 
 <div style={{marginTop: "3rem", paddingTop: "2rem", borderTop: "1px solid var(--ifm-color-emphasis-200)"}}>
   <WasThisHelpful pageId="ERC721BurnFacet" />
 </div>
 
-<LastUpdated date="2025-12-23T00:27:41.008Z" />
+<LastUpdated date="2025-12-28T04:29:15.847Z" />

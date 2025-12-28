@@ -1,7 +1,7 @@
 ---
 sidebar_position: 99
 title: "ERC165Facet"
-description: "Implements ERC-165 interface detection for diamond contracts."
+description: "Implements ERC-165 standard for interface detection."
 gitSource: "https://github.com/Perfect-Abstractions/Compose/tree/main/src/interfaceDetection/ERC165/ERC165Facet.sol"
 ---
 
@@ -21,17 +21,17 @@ import GradientText from '@site/src/components/ui/GradientText';
 import GradientButton from '@site/src/components/ui/GradientButton';
 
 <DocSubtitle>
-Implements ERC-165 interface detection for diamond contracts.
+Implements ERC-165 standard for interface detection.
 </DocSubtitle>
 
 <Callout type="info" title="Key Features">
-- Implements the `supportsInterface` function as required by ERC-165.
-- Utilizes inline assembly for efficient access to ERC-165 storage.
+- Implements the `supportsInterface` function as defined by ERC-165.
+- Allows querying of supported interface IDs directly from the diamond proxy.
 </Callout>
 
 ## Overview
 
-The ERC165Facet enables diamond contracts to comply with the ERC-165 standard, allowing external contracts to query which interfaces the diamond supports. This facet is crucial for discoverability and interoperability within the Ethereum ecosystem.
+This facet provides standard ERC-165 interface detection capabilities for a Compose diamond. It allows external contracts to query which interfaces the diamond proxy supports, enabling robust interoperability and discovery.
 
 ---
 
@@ -102,51 +102,42 @@ Query if a contract implements an interface This function checks if the diamond 
 <ExpandableCode language="solidity" maxLines={20} title="Example Implementation">
 {`pragma solidity ^0.8.30;
 
-import {ERC165Facet} from "@compose/contracts/src/facets/ERC165Facet.sol";
-import {IDiamondCut} from "@compose/contracts/src/interfaces/IDiamondCut.sol";
+import {IERC165} from "@openzeppelin/contracts/utils/introspection/IERC165.sol";
+import {ERC165Facet} from "../facets/ERC165Facet.sol";
 
-contract MyDiamond is IDiamondCut {
-    // ... other facet deployments and cuts ...
+contract MyDiamond is IERC165 {
+    // ... diamond setup ...
 
-    function upgrade() external payable {
-        // ... other facet cuts ...
-
-        address[] memory facetsToAddAddresses = new address[](1);
-        bytes[] memory facetToAddABIs = new bytes[](1);
-
-        facetsToAddAddresses[0] = address(new ERC165Facet());
-        facetToAddABIs[0] = abi.encodeCall(ERC165Facet.supportsInterface, (bytes4(keccak256("supportsInterface(bytes4)"))));
-
-        IDiamondCut.FacetCut[] memory cuts = new IDiamondCut.FacetCut[](1);
-        cuts[0] = IDiamondCut.FacetCut({
-            facetAddress: facetsToAddAddresses[0],
-            action: IDiamondCut.FacetCutAction.ADD,
-            isConstructor: false,
-            functionSelectors: facetToAddABIs[0]
-        });
-
-        diamondCut(cuts, address(0), "");
+    function supportsInterface(bytes4 interfaceId) public view virtual override returns (bool) {
+        // Use the ERC165Facet's implementation
+        return ERC165Facet.supportsInterface(interfaceId);
     }
 
     // ... other diamond functions ...
+
+    // Example of calling supportsInterface from another contract:
+    function checkInterface(address diamondAddress, bytes4 interfaceId) external view returns (bool) {
+        IERC165 diamond = IERC165(diamondAddress);
+        return diamond.supportsInterface(interfaceId);
+    }
 }`}
 </ExpandableCode>
 
 ## Best Practices
 
 <Callout type="tip" title="Best Practice">
-- Ensure the ERC165Facet is added to the diamond during initial deployment or upgrades.
-- Correctly populate the diamond's storage with supported interface IDs to be queried by `supportsInterface`.
+- Ensure the `ERC165Facet` is correctly deployed and added to the diamond proxy.
+- Implement `supportsInterface` in your diamond contract to delegate to the `ERC165Facet`'s function.
 </Callout>
 
 ## Security Considerations
 
 <Callout type="warning" title="Security">
-This facet is read-only and does not directly handle asset transfers or critical state changes, minimizing reentrancy risks. Ensure that the interface IDs registered in the diamond's storage accurately reflect the implemented functionalities.
+This facet is read-only and does not introduce reentrancy risks. Ensure that the diamond proxy correctly delegates calls to this facet for `supportsInterface` to function as expected.
 </Callout>
 
 <div style={{marginTop: "3rem", paddingTop: "2rem", borderTop: "1px solid var(--ifm-color-emphasis-200)"}}>
   <WasThisHelpful pageId="ERC165Facet" />
 </div>
 
-<LastUpdated date="2025-12-23T00:28:04.914Z" />
+<LastUpdated date="2025-12-28T04:29:40.487Z" />
