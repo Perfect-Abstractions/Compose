@@ -2,13 +2,13 @@
 pragma solidity >=0.8.30;
 
 /*
-* @title Diamond Library
+* @title Diamond Module
 * @notice Internal functions and storage for diamond proxy functionality.
 * @dev Follows EIP-2535 Diamond Standard
 * (https://eips.ethereum.org/EIPS/eip-2535)
 */
 
-bytes32 constant DIAMOND_STORAGE_POSITION = keccak256("compose.diamond");
+bytes32 constant DIAMOND_STORAGE_POSITION = keccak256("erc8109.diamond");
 
 /*
 * @notice Data stored for each function selector.
@@ -21,7 +21,7 @@ struct FacetAndPosition {
 }
 
 /**
- * @custom:storage-location erc8042:compose.diamond
+ * @custom:storage-location erc8042:erc8109.diamond
  */
 struct DiamondStorage {
     mapping(bytes4 functionSelector => FacetAndPosition) facetAndPosition;
@@ -39,47 +39,33 @@ function getStorage() pure returns (DiamondStorage storage s) {
 }
 
 /**
- * @dev Add=0, Replace=1, Remove=2
- */
-enum FacetCutAction {
-    Add,
-    Replace,
-    Remove
-}
-
-/*
-* @notice Change in diamond
-* @dev facetAddress, the address of the facet containing the function selectors
-*      action, the type of action to perform on the functions (Add/Replace/Remove)
-*      functionSelectors, the selectors of the functions to add/replace/remove
+* @notice Emitted when a function is added to a diamond.
+*
+* @param _selector The function selector being added.
+* @param _facet    The facet address that will handle calls to `_selector`.
 */
-struct FacetCut {
-    address facetAddress;
-    FacetCutAction action;
-    bytes4[] functionSelectors;
-}
+event DiamondFunctionAdded(bytes4 indexed _selector, address indexed _facet);
 
-event DiamondCut(FacetCut[] _diamondCut, address _init, bytes _calldata);
+struct FacetFunctions {
+    address facet;
+    bytes4[] selectors;
+}  
 
-error NoBytecodeAtAddress(address _contractAddress, string _message);
-error InvalidActionWhenDeployingDiamond(address facetAddress, FacetCutAction action, bytes4[] functionSelectors);
+error NoBytecodeAtAddress(address _contractAddress);
 error CannotAddFunctionToDiamondThatAlreadyExists(bytes4 _selector);
 
 /**
  * @notice Adds facets and their function selectors to the diamond.
  * @dev Only supports adding functions during diamond deployment.
  */
-function addFacets(FacetCut[] memory _facets) {
+function addFacets(FacetFunctions[] memory _facets) {
     DiamondStorage storage s = getStorage();
     uint32 selectorPosition = uint32(s.selectors.length);
     for (uint256 i; i < _facets.length; i++) {
-        address facet = _facets[i].facetAddress;
-        bytes4[] memory functionSelectors = _facets[i].functionSelectors;
-        if (_facets[i].action != FacetCutAction.Add) {
-            revert InvalidActionWhenDeployingDiamond(facet, _facets[i].action, functionSelectors);
-        }
+        address facet = _facets[i].facet;
+        bytes4[] memory functionSelectors = _facets[i].selectors;
         if (facet.code.length == 0) {
-            revert NoBytecodeAtAddress(facet, "ComposeDiamond: Add facet has no code");
+            revert NoBytecodeAtAddress(facet);
         }
         for (uint256 selectorIndex; selectorIndex < functionSelectors.length; selectorIndex++) {
             bytes4 selector = functionSelectors[selectorIndex];
@@ -90,9 +76,9 @@ function addFacets(FacetCut[] memory _facets) {
             s.facetAndPosition[selector] = FacetAndPosition(facet, selectorPosition);
             s.selectors.push(selector);
             selectorPosition++;
+            emit DiamondFunctionAdded(selector, facet);
         }
-    }
-    emit DiamondCut(_facets, address(0), "");
+    }    
 }
 
 error FunctionNotFound(bytes4 _selector);

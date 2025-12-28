@@ -2,13 +2,15 @@
 pragma solidity >=0.8.30;
 
 /**
- * The functions in DiamondLoupeFacet MUST be added to a diamond.
- * The EIP-2535 Diamond standard requires these functions.
  * A loupe is a small magnifying glass used to look at diamonds.
  * These functions look at diamonds.
+ * These functions are required by ERC-2535 Diamonds, but are not required
+ *  for ERC-8109 Diamonds, Simplified.
+ * Note that the `facetAddress` function is not in this file. It is in
+ * DiamondInspectFacet.sol.
  */
 contract DiamondLoupeFacet {
-    bytes32 constant DIAMOND_STORAGE_POSITION = keccak256("compose.diamond");
+    bytes32 constant DIAMOND_STORAGE_POSITION = keccak256("erc8109.diamond");
 
     /**
      * @notice Data stored for each function selector.
@@ -21,7 +23,7 @@ contract DiamondLoupeFacet {
     }
 
     /**
-     * @custom:storage-location erc8042:compose.diamond
+     * @custom:storage-location erc8042:erc8109.diamond
      */
     struct DiamondStorage {
         mapping(bytes4 functionSelector => FacetAndPosition) facetAndPosition;
@@ -36,18 +38,7 @@ contract DiamondLoupeFacet {
         assembly {
             s.slot := position
         }
-    }
-
-    /**
-     * @notice Gets the facet address that supports the given selector.
-     * @dev If facet is not found return address(0).
-     * @param _functionSelector The function selector.
-     * @return facet The facet address.
-     */
-    function facetAddress(bytes4 _functionSelector) external view returns (address facet) {
-        DiamondStorage storage s = getStorage();
-        facet = s.facetAndPosition[_functionSelector].facet;
-    }
+    }   
 
     /**
      * @notice Gets all the function selectors supported by a specific facet.
