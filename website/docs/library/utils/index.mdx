@@ -1,7 +1,6 @@
 ---
 title: "Utilities"
 description: "Utility libraries and helpers for diamond development."
-sidebar_class_name: hidden
 ---
 
 import DocCard, { DocCardGrid } from '@site/src/components/docs/DocCard';
@@ -15,7 +14,7 @@ import Icon from '@site/src/components/ui/Icon';
 <DocCardGrid columns={2}>
   <DocCard
     title="NonReentrancyMod"
-    description={"Enforces non-reentrant execution within diamond functions."}
+    description={"Prevent reentrant calls within facets."}
     href="/docs/library/utils/NonReentrancyMod"
     icon={<Icon name="book" size={28} />}
     size="medium"

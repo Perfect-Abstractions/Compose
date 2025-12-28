@@ -1,7 +1,7 @@
 ---
 sidebar_position: 99
 title: "ERC721EnumerableMod"
-description: "Manages enumerable ERC-721 token state and operations."
+description: "Manages enumerable ERC-721 token state within a diamond."
 gitSource: "https://github.com/Perfect-Abstractions/Compose/tree/main/src/token/ERC721/ERC721Enumerable/ERC721EnumerableMod.sol"
 ---
 
@@ -21,13 +21,13 @@ import GradientText from '@site/src/components/ui/GradientText';
 import GradientButton from '@site/src/components/ui/GradientButton';
 
 <DocSubtitle>
-Manages enumerable ERC-721 token state and operations.
+Manages enumerable ERC-721 token state within a diamond.
 </DocSubtitle>
 
 <Callout type="info" title="Key Features">
-- Manages token ownership and enumeration state for ERC-721 tokens.
-- Supports minting new tokens and burning existing ones, updating enumeration lists accordingly.
-- Handles token transfers by updating sender and receiver enumeration data.
+- Manages internal state for ERC-721 token ownership and enumeration.
+- Provides atomic operations for minting, burning, and transferring tokens.
+- Reverts with specific custom errors for common ERC-721 failure conditions.
 </Callout>
 
 <Callout type="info" title="Module Usage">
@@ -36,7 +36,7 @@ This module provides internal functions for use in your custom facets. Import it
 
 ## Overview
 
-This module provides core logic for enumerable ERC-721 functionality within a Compose diamond. It enables facets to mint, burn, and transfer tokens while maintaining accurate enumeration lists. By centralizing this logic, it ensures consistent state management and simplifies facet development.
+The ERC721EnumerableMod provides the core logic for managing enumerable ERC-721 tokens within a Compose diamond. It handles the internal state updates for minting, burning, and transferring tokens, ensuring that token ownership and enumeration lists are consistently maintained. This modular approach allows custom facets to easily integrate full ERC-721 functionality without reimplementing complex state management.
 
 ---
 
@@ -297,22 +297,25 @@ error ERC721NonexistentToken(uint256 _tokenId);
 <ExpandableCode language="solidity" maxLines={20} title="Example Implementation">
 {`pragma solidity ^0.8.30;
 
-import {IERC721EnumerableMod} from "./interfaces/IERC721EnumerableMod.sol";
-import {ERC721EnumerableMod} from "./ERC721EnumerableMod.sol";
+import {IERC721EnumerableMod} from "../modules/ERC721EnumerableMod.sol";
 
 contract MyERC721Facet {
-    IERC721EnumerableMod private constant _ERC721_ENUMERABLE_MOD = IERC721EnumerableMod(address(this));
+    IERC721EnumerableMod public immutable erc721EnumerableMod;
+
+    constructor(address _erc721EnumerableModAddress) {
+        erc721EnumerableMod = IERC721EnumerableMod(_erc721EnumerableModAddress);
+    }
 
     function mintToken(address _to, uint256 _tokenId) external {
-        _ERC721_ENUMERABLE_MOD.mint(_to, _tokenId);
+        erc721EnumerableMod.mint(_to, _tokenId);
     }
 
     function burnToken(uint256 _tokenId) external {
-        _ERC721_ENUMERABLE_MOD.burn(_tokenId);
+        erc721EnumerableMod.burn(_tokenId);
     }
 
     function transferToken(address _from, address _to, uint256 _tokenId) external {
-        _ERC721_ENUMERABLE_MOD.transferFrom(_from, _to, _tokenId);
+        erc721EnumerableMod.transferFrom(_from, _to, _tokenId);
     }
 }`}
 </ExpandableCode>
@@ -320,19 +323,19 @@ contract MyERC721Facet {
 ## Best Practices
 
 <Callout type="tip" title="Best Practice">
-- Ensure proper access control within your facet before calling module functions like `mint` and `burn`.
-- Validate all input parameters (e.g., `_to` address for `mint`) to prevent unexpected reverts from the module.
-- Be aware that state changes made by this module are persistent and affect all facets interacting with ERC-721 enumerable data.
+- Ensure the ERC721EnumerableMod is deployed and its address is correctly passed to facets that use it.
+- Always check for the existence of a token before attempting to burn or transfer it, relying on the module's internal checks and reverting with `ERC721NonexistentToken` if necessary.
+- Handle potential reverts from the module functions like `ERC721IncorrectOwner`, `ERC721InsufficientApproval`, `ERC721InvalidReceiver`, `ERC721InvalidSender`, and `ERC721NonexistentToken` in your facet logic.
 </Callout>
 
 ## Integration Notes
 
 <Callout type="success" title="Shared Storage">
-The ERC721EnumerableMod interacts with a predefined storage slot within the diamond to manage its state. Facets using this module should import the relevant interface and cast the diamond's address to it. The `getStorage` function can be used by facets to access the raw storage struct directly if needed for complex operations or auditing, though direct manipulation is discouraged. State changes made by this module (e.g., token minting, burning, transfers) are visible to all facets that access the ERC-721 enumerable storage.
+This module interacts with a predefined storage slot for its internal `ERC721EnumerableStorage` struct. Facets using this module can access this storage directly via the `getStorage` function if needed for read operations, but all state modifications (mint, burn, transfer) must be performed through the module's provided functions to maintain data integrity and enumeration consistency. Ensure no other facets modify the storage slot used by `ERC721EnumerableMod` directly.
 </Callout>
 
 <div style={{marginTop: "3rem", paddingTop: "2rem", borderTop: "1px solid var(--ifm-color-emphasis-200)"}}>
   <WasThisHelpful pageId="ERC721EnumerableMod" />
 </div>
 
-<LastUpdated date="2025-12-23T00:27:29.283Z" />
+<LastUpdated date="2025-12-28T04:29:05.204Z" />

@@ -1,7 +1,7 @@
 ---
 sidebar_position: 99
 title: "RoyaltyFacet"
-description: "Manages token royalties according to ERC-2981."
+description: "Manages and retrieves royalty information for tokens."
 gitSource: "https://github.com/Perfect-Abstractions/Compose/tree/main/src/token/Royalty/RoyaltyFacet.sol"
 ---
 
@@ -21,19 +21,19 @@ import GradientText from '@site/src/components/ui/GradientText';
 import GradientButton from '@site/src/components/ui/GradientButton';
 
 <DocSubtitle>
-Manages token royalties according to ERC-2981.
+Manages and retrieves royalty information for tokens.
 </DocSubtitle>
 
 <Callout type="info" title="Key Features">
 - Implements ERC-2981 `royaltyInfo` function.
 - Supports token-specific royalty configurations.
-- Falls back to a default royalty setting when token-specific royalties are not defined.
-- Royalty calculation based on sale price in basis points.
+- Falls back to default royalty settings.
+- Calculates royalty fees based on sale price using basis points.
 </Callout>
 
 ## Overview
 
-The RoyaltyFacet implements the ERC-2981 standard, allowing tokens to specify royalty payments on secondary sales. It provides functions to retrieve royalty information for a given token ID and sale price, supporting both token-specific and default royalty configurations.
+The RoyaltyFacet implements the ERC-2981 standard, enabling royalty payments on secondary sales. It provides functions to retrieve royalty information for specific tokens, falling back to default settings when token-specific data is not found. This facet is crucial for creators and marketplaces to ensure fair compensation.
 
 ---
 
@@ -130,22 +130,23 @@ Returns royalty information for a given token and sale price. Returns token-spec
 <ExpandableCode language="solidity" maxLines={20} title="Example Implementation">
 {`pragma solidity ^0.8.30;
 
-import {IRoyaltyFacet} from "@compose-protocol/diamond-contracts/contracts/facets/RoyaltyFacet.sol";
-import {IDiamondProxy} from "@compose-protocol/diamond-contracts/contracts/interfaces/IDiamondProxy.sol";
+import {IRoyaltyFacet} from "@compose/contracts/facets/RoyaltyFacet.sol";
 
 contract RoyaltyConsumer {
-    address immutable diamondProxy;
-    bytes4 private constant ROYALTY_INFO_SELECTOR = IRoyaltyFacet.royaltyInfo.selector;
+    address immutable diamondAddress;
 
-    constructor(address _diamondProxy) {
-        diamondProxy = _diamondProxy;
+    constructor(address _diamondAddress) {
+        diamondAddress = _diamondAddress;
     }
 
-    function getTokenRoyalty(uint256 _tokenId, uint256 _salePrice) external view returns (address receiver, uint256 royaltyAmount) {
-        (bool success, bytes memory data) = diamondProxy.call(abi.encodeWithSelector(ROYALTY_INFO_SELECTOR, _tokenId, _salePrice));
-        require(success, "RoyaltyFacet: royaltyInfo call failed");
-        (receiver, royaltyAmount) = abi.decode(data, (address, uint256));
-        return (receiver, royaltyAmount);
+    function getRoyaltyDetails(uint256 _tokenId, uint256 _salePrice) public view returns (address receiver, uint256 feeBasisPoints) {
+        // Assume IRoyaltyFacet interface is correctly defined and the function is correctly dispatched
+        bytes4 selector = IRoyaltyFacet.royaltyInfo.selector;
+        (receiver, feeBasisPoints) = abi.decode(
+            DiamondProxy(diamondAddress).diamondCall(selector, abi.encodeCall(IRoyaltyFacet.royaltyInfo, (_tokenId, _salePrice))),
+            (address, uint256)
+        );
+        return (receiver, feeBasisPoints);
     }
 }`}
 </ExpandableCode>
@@ -153,19 +154,19 @@ contract RoyaltyConsumer {
 ## Best Practices
 
 <Callout type="tip" title="Best Practice">
-- Initialize the RoyaltyFacet with default royalty settings during diamond deployment.
-- Ensure appropriate access control is configured for setting default royalties if applicable.
-- When upgrading, ensure the storage layout of the RoyaltyFacet remains compatible.
+- Initialize the royalty storage with default royalty recipient and basis points during diamond deployment.
+- Use `getStorage` to access and potentially modify the royalty storage struct if needed for upgrades or specific configurations.
+- Ensure the `royaltyInfo` function is correctly implemented to handle token-specific overrides and default fallback logic.
 </Callout>
 
 ## Security Considerations
 
 <Callout type="warning" title="Security">
-The `royaltyInfo` function is read-only and does not pose reentrancy risks. Access control for setting default royalties should be strictly managed to prevent unauthorized modifications. Ensure the `STORAGE_POSITION` for royalty storage is unique and not conflicting with other facets.
+The `royaltyInfo` function relies on external calls to potentially set royalty recipients. Ensure that the storage for royalty information is protected by appropriate access controls if modifications are allowed. The calculation of royalty fees is a percentage, so ensure the `_salePrice` and `feeBasisPoints` are validated to prevent unexpected calculations or integer overflows, although the current implementation uses standard arithmetic operations that are safe within Solidity's `uint256` limits.
 </Callout>
 
 <div style={{marginTop: "3rem", paddingTop: "2rem", borderTop: "1px solid var(--ifm-color-emphasis-200)"}}>
   <WasThisHelpful pageId="RoyaltyFacet" />
 </div>
 
-<LastUpdated date="2025-12-23T00:27:52.929Z" />
+<LastUpdated date="2025-12-28T04:29:27.897Z" />

@@ -26,8 +26,8 @@ Manage roles and permissions within a diamond.
 
 <Callout type="info" title="Key Features">
 - Role-based access control for granular permission management.
-- Functions for granting, revoking, and checking role assignments.
-- Ability to set and manage administrative roles for other roles.
+- Standardized interface for granting, revoking, and checking roles.
+- Support for defining and assigning admin roles to manage other roles.
 </Callout>
 
 <Callout type="info" title="Module Usage">
@@ -36,7 +36,7 @@ This module provides internal functions for use in your custom facets. Import it
 
 ## Overview
 
-The AccessControl module provides a robust system for managing roles and permissions. It allows for granular control over which accounts can perform specific actions by assigning roles. This is crucial for building secure and upgradeable diamonds, ensuring that only authorized entities can modify critical state or execute sensitive functions.
+The AccessControl module provides a robust system for managing roles and permissions within a Compose diamond. It allows for granular control over who can perform specific actions by assigning roles to accounts. This enhances security and enables composability by defining clear access boundaries for different functionalities.
 
 ---
 
@@ -401,26 +401,25 @@ error AccessControlUnauthorizedAccount(address _account, bytes32 _role);
 <ExpandableCode language="solidity" maxLines={20} title="Example Implementation">
 {`pragma solidity ^0.8.30;
 
-import {IAccessControl} from "@compose/contracts/modules/access-control/IAccessControl.sol";
+import {IAccessControl} from "@compose/diamond-contracts/contracts/modules/access/IAccessControl.sol";
 
 contract MyFacet {
-    IAccessControl public immutable accessControl;
+    IAccessControl public accessControl;
 
-    constructor(address _diamondAddress) {
-        accessControl = IAccessControl(_diamondAddress);
-    }
-
-    function grantAdminRole(address _account) external {
-        // Assuming DEFAULT_ADMIN_ROLE is defined elsewhere or is a constant
-        // For demonstration, let's assume it's a known role identifier
-        bytes32 constant DEFAULT_ADMIN_ROLE = keccak256("DEFAULT_ADMIN_ROLE");
-        accessControl.grantRole(DEFAULT_ADMIN_ROLE, _account);
-    }
+    // Assume accessControl is initialized elsewhere
 
     function performAdminAction() external {
-        bytes32 constant ADMIN_ROLE = keccak256("ADMIN_ROLE");
-        accessControl.requireRole(ADMIN_ROLE, msg.sender);
+        address caller = _msgSender();
+        bytes32 adminRole = accessControl.getRoleAdmin(AccessControl.DEFAULT_ADMIN_ROLE());
+        accessControl.requireRole(caller, adminRole);
         // ... perform admin action ...
+    }
+
+    function grantNewRole(address _account, bytes32 _role) external {
+        address caller = _msgSender();
+        bytes32 adminRole = accessControl.getRoleAdmin(AccessControl.DEFAULT_ADMIN_ROLE());
+        accessControl.requireRole(caller, adminRole);
+        accessControl.grantRole(_role, _account);
     }
 }`}
 </ExpandableCode>
@@ -428,19 +427,19 @@ contract MyFacet {
 ## Best Practices
 
 <Callout type="tip" title="Best Practice">
-- Use `requireRole` to enforce access control checks at the beginning of external functions.
-- Define roles using `keccak256("ROLE_NAME")` and manage them consistently.
-- Store the `AccessControl` facet address in your diamond proxy for direct interaction.
+- Use `requireRole` to enforce access control checks directly within facet functions, reverting with `AccessControlUnauthorizedAccount` if the caller lacks the necessary role.
+- Understand that roles are managed by their designated admin role; ensure the admin role itself is properly secured.
+- When revoking roles, be mindful of the implications for ongoing operations that may rely on that role.
 </Callout>
 
 ## Integration Notes
 
 <Callout type="success" title="Shared Storage">
-The AccessControl module utilizes its own dedicated storage slot within the diamond's storage layout. Facets interact with this module through its `IAccessControl` interface. Changes made to role assignments via `grantRole` or `revokeRole` are immediately reflected and can be checked by any facet using `hasRole` or `requireRole`.
+The AccessControl module stores its state within the diamond's storage. Facets interacting with AccessControl should use the `IAccessControl` interface. Functions like `grantRole`, `revokeRole`, and `setRoleAdmin` modify the access control state, which is immediately visible to all facets upon upgrade. The module relies on the diamond's underlying address to function.
 </Callout>
 
 <div style={{marginTop: "3rem", paddingTop: "2rem", borderTop: "1px solid var(--ifm-color-emphasis-200)"}}>
   <WasThisHelpful pageId="AccessControlMod" />
 </div>
 
-<LastUpdated date="2025-12-23T00:26:35.544Z" />
+<LastUpdated date="2025-12-28T04:28:12.206Z" />

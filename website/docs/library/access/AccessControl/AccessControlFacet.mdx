@@ -1,7 +1,7 @@
 ---
 sidebar_position: 99
 title: "AccessControlFacet"
-description: "Manage roles and permissions within a Compose diamond."
+description: "Manages role-based access control within a diamond."
 gitSource: "https://github.com/Perfect-Abstractions/Compose/tree/main/src/access/AccessControl/AccessControlFacet.sol"
 ---
 
@@ -21,19 +21,19 @@ import GradientText from '@site/src/components/ui/GradientText';
 import GradientButton from '@site/src/components/ui/GradientButton';
 
 <DocSubtitle>
-Manage roles and permissions within a Compose diamond.
+Manages role-based access control within a diamond.
 </DocSubtitle>
 
 <Callout type="info" title="Key Features">
-- Role-based access control (RBAC).
-- Hierarchical role administration.
-- Permission management for individual accounts.
-- Batch operations for efficient role assignments and revocations.
+- Permission management via roles and accounts.
+- Role hierarchy support with administrative roles.
+- Batch operations for granting and revoking roles.
+- Reverts with specific errors for unauthorized actions.
 </Callout>
 
 ## Overview
 
-The AccessControlFacet provides a robust role-based access control (RBAC) system for Compose diamonds. It allows for granular permission management, enabling fine-grained control over who can perform specific actions. This facet is crucial for securing administrative functions and ensuring proper governance.
+The AccessControlFacet provides a robust role-based access control (RBAC) system for Compose diamonds. It allows granular permission management, enabling developers to define roles and assign them to accounts. This facet is crucial for orchestrating secure interactions by enforcing role requirements on sensitive functions.
 
 ---
 
@@ -478,30 +478,37 @@ error AccessControlUnauthorizedSender(address _sender, address _account);
 <ExpandableCode language="solidity" maxLines={20} title="Example Implementation">
 {`pragma solidity ^0.8.30;
 
-import {DiamondCutFacet, DiamondLoupeFacet, FacetCutAction} from "@compose-protocol/diamond-contracts/contracts/facets/DiamondCutFacet.sol";
-import {AccessControlFacet} from "@compose-protocol/diamond-contracts/contracts/facets/AccessControlFacet.sol";
+import {DiamondLoupeFacet} from "@compose/diamond-loupe/src/DiamondLoupeFacet.sol";
+import {AccessControlFacet} from "@compose/access-control/src/AccessControlFacet.sol";
 
-contract MyDiamond is DiamondCutFacet, DiamondLoupeFacet {
-    constructor(address _diamondAdmin) DiamondCutFacet(_diamondAdmin) {}
+interface IDiamond {
+    function diamondCut(...) external returns (bytes32);
+    function facetFunction(bytes4 _selector) external view returns (address _facetAddress);
+}
 
-    // Function to add facets to the diamond (e.g., AccessControlFacet)
-    function upgrade() external {
-        // Assume AccessControlFacet is deployed at address
-        // and its ABI is known.
-        address accessControlFacetAddress = address(0x123...);
-        bytes calldata selector = abi.encodeWithSelector(AccessControlFacet.grantRole.selector);
+contract Deployer {
+    // Assume diamond instance is deployed and initialized
+    IDiamond internal diamond;
 
-        FacetCut[] memory cut = new FacetCut[](1);
-        cut[0] = FacetCut(accessControlFacetAddress, FacetCutAction.Add, new bytes4[](1));
-        cut[0].functionSelectors[0] = selector;
-
-        diamondCut(cut, address(0), "");
+    constructor(address _diamondAddress) {
+        diamond = IDiamond(_diamondAddress);
     }
 
-    // Example of calling a function that requires a role
-    function grantAdminRoleTo(address _account) external {
-        // Assuming DEFAULT_ADMIN_ROLE is defined and accessible
-        AccessControlFacet(address(this)).grantRole(AccessControlFacet.DEFAULT_ADMIN_ROLE, _account);
+    function grantAdminRole(address _admin, address _member) public {
+        // Assuming 'grantRole' is the selector for AccessControlFacet.grantRole
+        bytes4 grantRoleSelector = AccessControlFacet.grantRole.selector;
+        (bool success, ) = address(diamond).call(abi.encodeWithSelector(grantRoleSelector, keccak256("ADMIN_ROLE"), _admin));
+        require(success, "Failed to grant ADMIN_ROLE");
+
+        (success, ) = address(diamond).call(abi.encodeWithSelector(grantRoleSelector, keccak256("MEMBER_ROLE"), _member));
+        require(success, "Failed to grant MEMBER_ROLE");
+    }
+
+    function checkMemberRole(address _account) public view returns (bool) {
+        bytes4 hasRoleSelector = AccessControlFacet.hasRole.selector;
+        (bool success, bytes memory result) = address(diamond).staticcall(abi.encodeWithSelector(hasRoleSelector, keccak256("MEMBER_ROLE"), _account));
+        require(success, "Failed to check MEMBER_ROLE");
+        return abi.decode(result, (bool));
     }
 }
 `}
@@ -510,19 +517,19 @@ contract MyDiamond is DiamondCutFacet, DiamondLoupeFacet {
 ## Best Practices
 
 <Callout type="tip" title="Best Practice">
-- Integrate the AccessControlFacet early in the diamond deployment to establish administrative roles.
-- Define custom roles specific to your diamond's logic and manage their administration carefully.
-- Use batch functions (`grantRoleBatch`, `revokeRoleBatch`) for efficiency when managing multiple accounts or roles.
+- Initialize roles and grant initial permissions during diamond deployment.
+- Use `grantRoleBatch` and `revokeRoleBatch` for efficient multi-account role management.
+- Design roles with clear administrative hierarchies using `setRoleAdmin`.
 </Callout>
 
 ## Security Considerations
 
 <Callout type="warning" title="Security">
-Ensure that the `DEFAULT_ADMIN_ROLE` is granted only to trusted addresses during deployment. Carefully manage role assignments to prevent unauthorized access to critical functions. The `renounceRole` function should be used with caution, as it permanently removes the caller's access to the role.
+Ensure that the administrative roles are protected to prevent unauthorized role modifications. Sensitive functions should use `requireRole` to enforce access control. Be mindful of gas costs when performing batch operations on very large sets of accounts.
 </Callout>
 
 <div style={{marginTop: "3rem", paddingTop: "2rem", borderTop: "1px solid var(--ifm-color-emphasis-200)"}}>
   <WasThisHelpful pageId="AccessControlFacet" />
 </div>
 
-<LastUpdated date="2025-12-23T00:26:40.362Z" />
+<LastUpdated date="2025-12-28T04:28:16.357Z" />
