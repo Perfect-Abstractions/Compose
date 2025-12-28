@@ -1,5 +1,5 @@
 ---
-sidebar_position: 99
+sidebar_position: 1
 title: "ERC6909Mod"
 description: "Implements ERC-6909 minimal multi-token logic."
 gitSource: "https://github.com/Perfect-Abstractions/Compose/tree/main/src/token/ERC6909/ERC6909/ERC6909Mod.sol"
@@ -25,9 +25,10 @@ Implements ERC-6909 minimal multi-token logic.
 </DocSubtitle>
 
 <Callout type="info" title="Key Features">
-- Supports core ERC-6909 token operations: mint, burn, transfer, and approve.
-- Includes operator authorization functionality via `setOperator`.
-- Provides a `getStorage` function for direct access to the module's storage, enabling custom logic in facets.
+- Provides core ERC-6909 token logic including mint, burn, and transfer.
+- Manages token balances, allowances, and operator approvals.
+- Supports unlimited allowances via `type(uint256).max`.
+- Allows transfers by operators without deducting from allowances.
 </Callout>
 
 <Callout type="info" title="Module Usage">
@@ -36,7 +37,7 @@ This module provides internal functions for use in your custom facets. Import it
 
 ## Overview
 
-The ERC6909Mod provides essential functions and storage for managing multi-token assets according to the ERC-6909 standard. It enables minting, burning, transferring, and approving tokens, with support for operator authorizations, ensuring efficient and composable token management within a diamond.
+The ERC6909Mod provides the core logic and storage for implementing the ERC-6909 standard within a Compose diamond. It enables functionalities such as minting, burning, transferring tokens, and managing operator approvals, adhering to the diamond's composable architecture.
 
 ---
 
@@ -477,24 +478,36 @@ error ERC6909InvalidSpender(address _spender);
 <ExpandableCode language="solidity" maxLines={20} title="Example Implementation">
 {`pragma solidity ^0.8.30;
 
-import {IERC6909Mod, IERC6909ModStorage} from "../modules/ERC6909Mod.sol";
-import {IDiamondCut, DiamondStorage} from "../diamond/Diamond.sol";
+import {IERC6909Mod} from "../modules/ERC6909Mod.sol";
+import {IDiamondLoupe} from "@compose/diamond-loupe/src/IDiamondLoupe.sol";
 
-contract MyTokenFacet {
-    function _getERC6909Storage() internal view returns (IERC6909ModStorage storage) {
-        uint256 position = 1; // Example storage slot, actual slot defined in ERC6909Mod
+contract MyERC6909Facet {
+    // Assume STORAGE_POSITION is defined and accessible
+    uint256 constant STORAGE_POSITION = 1; // Example slot
+
+    struct ERC6909Storage {
+        // ... other storage ...
+        mapping(address => mapping(address => uint256)) allowances;
+        mapping(address => mapping(uint256 => uint256)) balances;
+        mapping(address => mapping(address => bool)) operators;
+    }
+
+    function _getERC6909Storage() internal pure returns (ERC6909Storage storage) {
+        uint256 slot = STORAGE_POSITION;
         assembly {
-            storage := add(SSTORE_ADDRESS, mul(position, 0x20))
+            slot := add(slot, diamond.storage) // diamond.storage is the base storage pointer
         }
+        return ERC6909Storage(slot);
     }
 
-    function mintTokens(uint256 _id, address _to, uint256 _amount) external {
-        // Assume caller has authority to mint
-        IERC6909Mod(_getERC6909Storage()).mint(_id, _to, _amount);
+    function mint(address _to, uint256 _id, uint256 _amount) external {
+        ERC6909Storage storage erc6909 = _getERC6909Storage();
+        erc6909.mint(_to, _id, _amount);
     }
 
-    function approveToken(address _spender, uint256 _id, uint256 _amount) external {
-        IERC6909Mod(_getERC6909Storage()).approve(_spender, _id, _amount);
+    function transfer(address _from, address _to, uint256 _id, uint256 _amount) external {
+        ERC6909Storage storage erc6909 = _getERC6909Storage();
+        erc6909.transfer(_from, _to, _id, _amount);
     }
 }`}
 </ExpandableCode>
@@ -502,19 +515,56 @@ contract MyTokenFacet {
 ## Best Practices
 
 <Callout type="tip" title="Best Practice">
-- Ensure proper access control is implemented in facets calling module functions like `mint` and `setOperator`.
-- Handle custom errors (`ERC6909InsufficientBalance`, `ERC6909InsufficientAllowance`, etc.) returned by module functions to provide clear user feedback.
-- When upgrading facets that interact with this module, be mindful of storage layout compatibility to avoid data corruption.
+- Ensure the `ERC6909Storage` struct is correctly integrated into the diamond's main storage layout, maintaining the specified slot position.
+- Implement access control for functions like `mint` and `setOperator` based on the diamond's governance or role management system.
+- Handle `ERC6909InsufficientBalance`, `ERC6909InsufficientAllowance`, and other custom errors to provide clear feedback to users.
 </Callout>
 
 ## Integration Notes
 
 <Callout type="success" title="Shared Storage">
-The ERC6909Mod utilizes a dedicated storage slot (defined by `STORAGE_POSITION` within the module) for its `ERC6909ModStorage` struct. Facets must correctly calculate and access this slot using inline assembly via the `getStorage` function or by directly referencing the `STORAGE_POSITION` if the storage layout is known. The module's state is directly manipulated, and these changes are persistent within the diamond's storage.
+The ERC6909Mod requires a dedicated storage slot for its `ERC6909Storage` struct, which contains mappings for balances, allowances, and operators. Facets interacting with this module must correctly access this storage slot using inline assembly, as demonstrated in the `getStorage` function. Changes to balances, allowances, or operator status are directly reflected in this shared storage and are visible to all facets that access it.
 </Callout>
+
+<div style={{marginTop: "3rem", paddingTop: "2rem", borderTop: "1px solid var(--ifm-color-emphasis-200)"}}>
+  <RelatedDocs
+    items={[
+      {
+        title: "ERC6909Facet",
+        href: "/docs/library/token/ERC6909/ERC6909",
+        description: "Facet using ERC6909Mod",
+        icon: "💎"
+      },
+      {
+        title: "ERC20PermitMod",
+        href: "/docs/library/token/ERC20/ERC20Permit",
+        description: "Related module in token",
+        icon: "📦"
+      },
+      {
+        title: "ERC20Mod",
+        href: "/docs/library/token/ERC20/ERC20",
+        description: "Related module in token",
+        icon: "📦"
+      },
+      {
+        title: "ERC20BridgeableMod",
+        href: "/docs/library/token/ERC20/ERC20Bridgeable",
+        description: "Related module in token",
+        icon: "📦"
+      },
+      {
+        title: "ERC1155Mod",
+        href: "/docs/library/token/ERC1155",
+        description: "Related module in token",
+        icon: "📦"
+      }
+    ]}
+  />
+</div>
 
 <div style={{marginTop: "3rem", paddingTop: "2rem", borderTop: "1px solid var(--ifm-color-emphasis-200)"}}>
   <WasThisHelpful pageId="ERC6909Mod" />
 </div>
 
-<LastUpdated date="2025-12-28T04:29:00.841Z" />
+<LastUpdated date="2025-12-28T04:48:15.773Z" />

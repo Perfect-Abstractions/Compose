@@ -1,7 +1,7 @@
 ---
-sidebar_position: 99
+sidebar_position: 2
 title: "ERC721Facet"
-description: "Manages ERC-721 token ownership, transfers, and approvals."
+description: "Manages ERC-721 token ownership, approvals, and metadata."
 gitSource: "https://github.com/Perfect-Abstractions/Compose/tree/main/src/token/ERC721/ERC721/ERC721Facet.sol"
 ---
 
@@ -21,19 +21,19 @@ import GradientText from '@site/src/components/ui/GradientText';
 import GradientButton from '@site/src/components/ui/GradientButton';
 
 <DocSubtitle>
-Manages ERC-721 token ownership, transfers, and approvals.
+Manages ERC-721 token ownership, approvals, and metadata.
 </DocSubtitle>
 
 <Callout type="info" title="Key Features">
-- Implements the full ERC-721 standard including token transfers and ownership tracking.
-- Supports metadata retrieval via `tokenURI` for NFTs.
-- Provides internal and external functions for comprehensive token management.
-- Utilizes inline assembly for efficient storage access.
+- Full ERC-721 compliance for token management.
+- Support for token metadata retrieval via `tokenURI`.
+- Internal transfer mechanism (`internalTransferFrom`) for robust state management.
+- Explicit error handling for common ERC-721 issues.
 </Callout>
 
 ## Overview
 
-The ERC721Facet implements the core ERC-721 standard, enabling NFTs to be managed within a Compose diamond. It handles token ownership, metadata retrieval, and transfer logic, providing a robust foundation for decentralized applications requiring non-fungible assets.
+The ERC721Facet provides the core functionality for managing ERC-721 compliant non-fungible tokens within a Compose diamond. It handles token ownership, transfer logic, approvals, and metadata retrieval, enabling a robust NFT collection experience.
 
 ---
 
@@ -563,38 +563,43 @@ error ERC721InvalidOperator(address _operator);
 <ExpandableCode language="solidity" maxLines={20} title="Example Implementation">
 {`pragma solidity ^0.8.30;
 
-import {IERC721Facet} from "@compose-protocol/diamond/contracts/facets/ERC721/IERC721Facet.sol";
-import {IDiamondCut} from "@compose-protocol/diamond/contracts/IDiamondCut.sol";
+import {IERC721Facet} from "@compose/contracts/src/facets/ERC721Facet.sol";
 
-contract Deployer {
+contract ERC721Consumer {
     address diamondAddress;
 
-    // Assume diamondAddress is already set to your deployed diamond proxy
+    // ERC721Facet selectors
+    bytes4 private constant _NAME_SELECTOR = IERC721Facet.name.selector;
+    bytes4 private constant _SYMBOL_SELECTOR = IERC721Facet.symbol.selector;
+    bytes4 private constant _OWNEROF_SELECTOR = IERC721Facet.ownerOf.selector;
+    bytes4 private constant _TOKENURI_SELECTOR = IERC721Facet.tokenURI.selector;
 
-    function deployERC721() external {
-        IERC721Facet erc721Facet = new ERC721Facet();
-
-        IDiamondCut.FacetCut[] memory cut = new IDiamondCut.FacetCut[](1);
-        cut[0] = IDiamondCut.FacetCut({
-            facetAddress: address(erc721Facet),
-            action: IDiamondCut.FacetCutAction.ADD,
-            functionSelectors: IDiamondCut.getSelectors(erc721Facet)
-        });
-
-        // Replace with your diamond initializer and admin
-        address diamondAdmin = msg.sender;
-        address diamondInitializer = address(0); // Or your initializer contract
-
-        // Call the diamondCut function on your diamond proxy
-        // (This requires the diamond proxy to have a fallback function or similar mechanism to receive calls)
-        // Example: diamondAddress.diamondCut(cut, diamondInitializer, "");
+    constructor(address _diamondAddress) {
+        diamondAddress = _diamondAddress;
     }
 
-    function mintToken(uint256 _tokenId, address _to) external {
-        // Assuming ERC721Facet is already added and functions are routed
-        // You would typically call this through your diamond proxy
-        // Example:
-        // IERC721Facet(diamondAddress).mint(_tokenId, _to); // If mint function exists in a separate facet or is added here
+    function getTokenName() public view returns (string memory) {
+        (bool success, bytes memory data) = diamondAddress.call(abi.encodeWithSelector(_NAME_SELECTOR));
+        require(success, "ERC721Facet: failed to get name");
+        return abi.decode(data, (string));
+    }
+
+    function getTokenSymbol() public view returns (string memory) {
+        (bool success, bytes memory data) = diamondAddress.call(abi.encodeWithSelector(_SYMBOL_SELECTOR));
+        require(success, "ERC721Facet: failed to get symbol");
+        return abi.decode(data, (string));
+    }
+
+    function getOwnerOfToken(uint256 tokenId) public view returns (address) {
+        (bool success, bytes memory data) = diamondAddress.call(abi.encodeWithSelector(_OWNEROF_SELECTOR, tokenId));
+        require(success, "ERC721Facet: failed to get owner");
+        return abi.decode(data, (address));
+    }
+
+    function getTokenMetadataURI(uint256 tokenId) public view returns (string memory) {
+        (bool success, bytes memory data) = diamondAddress.call(abi.encodeWithSelector(_TOKENURI_SELECTOR, tokenId));
+        require(success, "ERC721Facet: failed to get token URI");
+        return abi.decode(data, (string));
     }
 }`}
 </ExpandableCode>
@@ -602,19 +607,62 @@ contract Deployer {
 ## Best Practices
 
 <Callout type="tip" title="Best Practice">
-- Initialize the ERC721Facet with necessary parameters (e.g., name, symbol) during diamond deployment or upgrade.
-- Ensure proper access control is implemented at the diamond proxy level for functions like `approve` and `transferFrom` if required.
-- Store the ERC721Facet's storage pointer correctly within the diamond's storage.
+- Initialize the facet with the correct storage slot using `getStorage` before any operations.
+- Ensure appropriate access control is implemented by the diamond proxy for sensitive functions like `approve` and `transferFrom` if not intended to be permissionless.
+- Carefully consider the implications of `setApprovalForAll` on operator permissions to prevent unintended access to a user's entire NFT collection.
 </Callout>
 
 ## Security Considerations
 
 <Callout type="warning" title="Security">
-The `internalTransferFrom` function includes critical checks for ownership and approvals. External callers must ensure that `safeTransferFrom` is used when transferring to contracts to prevent potential reentrancy or unhandled token issues. Input validation is crucial for all parameters, especially token IDs and addresses.
+This facet relies on the diamond proxy for access control and ensuring that only authorized addresses can perform state-changing operations. Input validation for token IDs and addresses is crucial. The `safeTransferFrom` functions include checks to prevent accidental transfers to non-compliant contracts, mitigating reentrancy risks associated with token receivers.
 </Callout>
+
+<div style={{marginTop: "3rem", paddingTop: "2rem", borderTop: "1px solid var(--ifm-color-emphasis-200)"}}>
+  <RelatedDocs
+    items={[
+      {
+        title: "ERC721Mod",
+        href: "/docs/library/token/ERC721/ERC721",
+        description: "Module used by ERC721Facet",
+        icon: "📦"
+      },
+      {
+        title: "ERC20PermitFacet",
+        href: "/docs/library/token/ERC20/ERC20Permit",
+        description: "Related facet in token",
+        icon: "💎"
+      },
+      {
+        title: "ERC20Facet",
+        href: "/docs/library/token/ERC20/ERC20",
+        description: "Related facet in token",
+        icon: "💎"
+      },
+      {
+        title: "ERC20BurnFacet",
+        href: "/docs/library/token/ERC20/ERC20",
+        description: "Related facet in token",
+        icon: "💎"
+      },
+      {
+        title: "ERC20BridgeableFacet",
+        href: "/docs/library/token/ERC20/ERC20Bridgeable",
+        description: "Related facet in token",
+        icon: "💎"
+      },
+      {
+        title: "ERC1155Facet",
+        href: "/docs/library/token/ERC1155",
+        description: "Related facet in token",
+        icon: "💎"
+      }
+    ]}
+  />
+</div>
 
 <div style={{marginTop: "3rem", paddingTop: "2rem", borderTop: "1px solid var(--ifm-color-emphasis-200)"}}>
   <WasThisHelpful pageId="ERC721Facet" />
 </div>
 
-<LastUpdated date="2025-12-28T04:29:25.528Z" />
+<LastUpdated date="2025-12-28T04:48:39.735Z" />

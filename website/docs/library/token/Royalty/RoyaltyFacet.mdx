@@ -1,7 +1,7 @@
 ---
-sidebar_position: 99
+sidebar_position: 2
 title: "RoyaltyFacet"
-description: "Manages and retrieves royalty information for tokens."
+description: "Manages and queries token royalties adhering to ERC-2981."
 gitSource: "https://github.com/Perfect-Abstractions/Compose/tree/main/src/token/Royalty/RoyaltyFacet.sol"
 ---
 
@@ -21,19 +21,19 @@ import GradientText from '@site/src/components/ui/GradientText';
 import GradientButton from '@site/src/components/ui/GradientButton';
 
 <DocSubtitle>
-Manages and retrieves royalty information for tokens.
+Manages and queries token royalties adhering to ERC-2981.
 </DocSubtitle>
 
 <Callout type="info" title="Key Features">
 - Implements ERC-2981 `royaltyInfo` function.
 - Supports token-specific royalty configurations.
-- Falls back to default royalty settings.
-- Calculates royalty fees based on sale price using basis points.
+- Provides fallback to a default royalty percentage.
+- Utilizes inline assembly for efficient storage access.
 </Callout>
 
 ## Overview
 
-The RoyaltyFacet implements the ERC-2981 standard, enabling royalty payments on secondary sales. It provides functions to retrieve royalty information for specific tokens, falling back to default settings when token-specific data is not found. This facet is crucial for creators and marketplaces to ensure fair compensation.
+The RoyaltyFacet implements the ERC-2981 standard for querying royalty information on a per-token basis. It allows a diamond to expose royalty details, facilitating compliance with the standard for secondary sales.
 
 ---
 
@@ -130,23 +130,21 @@ Returns royalty information for a given token and sale price. Returns token-spec
 <ExpandableCode language="solidity" maxLines={20} title="Example Implementation">
 {`pragma solidity ^0.8.30;
 
-import {IRoyaltyFacet} from "@compose/contracts/facets/RoyaltyFacet.sol";
+import {IDiamondWritable} from "@compose-protocol/diamond/contracts/IDiamondWritable.sol";
+import {RoyaltyFacet} from "./RoyaltyFacet.sol";
 
-contract RoyaltyConsumer {
-    address immutable diamondAddress;
+contract DeployRoyaltyFacet {
+    function deploy() external {
+        RoyaltyFacet royaltyFacet = new RoyaltyFacet();
 
-    constructor(address _diamondAddress) {
-        diamondAddress = _diamondAddress;
-    }
+        // Example: Add RoyaltyFacet to the diamond
+        // IDiamondWritable(diamondAddress).diamondCut(...);
 
-    function getRoyaltyDetails(uint256 _tokenId, uint256 _salePrice) public view returns (address receiver, uint256 feeBasisPoints) {
-        // Assume IRoyaltyFacet interface is correctly defined and the function is correctly dispatched
-        bytes4 selector = IRoyaltyFacet.royaltyInfo.selector;
-        (receiver, feeBasisPoints) = abi.decode(
-            DiamondProxy(diamondAddress).diamondCall(selector, abi.encodeCall(IRoyaltyFacet.royaltyInfo, (_tokenId, _salePrice))),
-            (address, uint256)
-        );
-        return (receiver, feeBasisPoints);
+        // Example: Call royaltyInfo
+        // address diamondAddress = ...;
+        // uint256 tokenId = 1;
+        // uint256 salePrice = 1000000000000000000; // 1 ETH
+        // (address receiver, uint256 royaltyAmount) = RoyaltyFacet(diamondAddress).royaltyInfo(tokenId, salePrice);
     }
 }`}
 </ExpandableCode>
@@ -154,19 +152,62 @@ contract RoyaltyConsumer {
 ## Best Practices
 
 <Callout type="tip" title="Best Practice">
-- Initialize the royalty storage with default royalty recipient and basis points during diamond deployment.
-- Use `getStorage` to access and potentially modify the royalty storage struct if needed for upgrades or specific configurations.
-- Ensure the `royaltyInfo` function is correctly implemented to handle token-specific overrides and default fallback logic.
+- Ensure the RoyaltyFacet is correctly initialized with default royalty settings during diamond deployment.
+- Access royalty information via the diamond proxy address to leverage the ERC-165 interface detection.
+- Store royalty configurations efficiently, using the provided storage structure.
 </Callout>
 
 ## Security Considerations
 
 <Callout type="warning" title="Security">
-The `royaltyInfo` function relies on external calls to potentially set royalty recipients. Ensure that the storage for royalty information is protected by appropriate access controls if modifications are allowed. The calculation of royalty fees is a percentage, so ensure the `_salePrice` and `feeBasisPoints` are validated to prevent unexpected calculations or integer overflows, although the current implementation uses standard arithmetic operations that are safe within Solidity's `uint256` limits.
+Access control for setting default and token-specific royalties should be managed by the diamond's access control mechanism. Ensure the `salePrice` is validated to prevent unexpected calculations. Reentrancy is not a concern as the function is read-only and does not perform external calls.
 </Callout>
+
+<div style={{marginTop: "3rem", paddingTop: "2rem", borderTop: "1px solid var(--ifm-color-emphasis-200)"}}>
+  <RelatedDocs
+    items={[
+      {
+        title: "ERC20PermitFacet",
+        href: "/docs/library/token/ERC20/ERC20Permit",
+        description: "Related facet in token",
+        icon: "💎"
+      },
+      {
+        title: "ERC20Facet",
+        href: "/docs/library/token/ERC20/ERC20",
+        description: "Related facet in token",
+        icon: "💎"
+      },
+      {
+        title: "ERC20BurnFacet",
+        href: "/docs/library/token/ERC20/ERC20",
+        description: "Related facet in token",
+        icon: "💎"
+      },
+      {
+        title: "ERC20BridgeableFacet",
+        href: "/docs/library/token/ERC20/ERC20Bridgeable",
+        description: "Related facet in token",
+        icon: "💎"
+      },
+      {
+        title: "ERC1155Facet",
+        href: "/docs/library/token/ERC1155",
+        description: "Related facet in token",
+        icon: "💎"
+      },
+      {
+        title: "ERC6909Facet",
+        href: "/docs/library/token/ERC6909/ERC6909",
+        description: "Related facet in token",
+        icon: "💎"
+      }
+    ]}
+  />
+</div>
 
 <div style={{marginTop: "3rem", paddingTop: "2rem", borderTop: "1px solid var(--ifm-color-emphasis-200)"}}>
   <WasThisHelpful pageId="RoyaltyFacet" />
 </div>
 
-<LastUpdated date="2025-12-28T04:29:27.897Z" />
+<LastUpdated date="2025-12-28T04:48:42.604Z" />

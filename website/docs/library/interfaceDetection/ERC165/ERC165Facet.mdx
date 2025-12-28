@@ -1,7 +1,7 @@
 ---
-sidebar_position: 99
+sidebar_position: 410
 title: "ERC165Facet"
-description: "Implements ERC-165 standard for interface detection."
+description: "Implements ERC-165 interface detection."
 gitSource: "https://github.com/Perfect-Abstractions/Compose/tree/main/src/interfaceDetection/ERC165/ERC165Facet.sol"
 ---
 
@@ -21,17 +21,18 @@ import GradientText from '@site/src/components/ui/GradientText';
 import GradientButton from '@site/src/components/ui/GradientButton';
 
 <DocSubtitle>
-Implements ERC-165 standard for interface detection.
+Implements ERC-165 interface detection.
 </DocSubtitle>
 
 <Callout type="info" title="Key Features">
-- Implements the `supportsInterface` function as defined by ERC-165.
-- Allows querying of supported interface IDs directly from the diamond proxy.
+- Implements the ERC-165 standard for interface detection.
+- Provides a standard way for external contracts to query diamond capabilities.
+- Leverages Compose's storage pattern for efficient interface ID management.
 </Callout>
 
 ## Overview
 
-This facet provides standard ERC-165 interface detection capabilities for a Compose diamond. It allows external contracts to query which interfaces the diamond proxy supports, enabling robust interoperability and discovery.
+The ERC165Facet enables a Compose diamond to declare support for specific interfaces, adhering to the ERC-165 standard. This allows external contracts to query the diamond's capabilities programmatically, enhancing interoperability and discoverability within the ecosystem.
 
 ---
 
@@ -102,42 +103,56 @@ Query if a contract implements an interface This function checks if the diamond 
 <ExpandableCode language="solidity" maxLines={20} title="Example Implementation">
 {`pragma solidity ^0.8.30;
 
-import {IERC165} from "@openzeppelin/contracts/utils/introspection/IERC165.sol";
-import {ERC165Facet} from "../facets/ERC165Facet.sol";
+import {IERC165} from "@openzeppelin/contracts/interfaces/IERC165.sol";
+import {IDiamondCut} from "../diamond/IDiamondCut.sol";
+
+import {ERC165Facet} from "./ERC165Facet.sol";
 
 contract MyDiamond is IERC165 {
-    // ... diamond setup ...
+    // ... other diamond logic ...
 
-    function supportsInterface(bytes4 interfaceId) public view virtual override returns (bool) {
-        // Use the ERC165Facet's implementation
-        return ERC165Facet.supportsInterface(interfaceId);
+    function supportsInterface(bytes4 _interfaceId) external view override returns (bool) {
+        // Check if the ERC165Facet supports the interface
+        if (ERC165Facet(address(this)).supportsInterface(_interfaceId)) {
+            return true;
+        }
+        // Add checks for other facets or the diamond itself
+        return false;
     }
 
     // ... other diamond functions ...
-
-    // Example of calling supportsInterface from another contract:
-    function checkInterface(address diamondAddress, bytes4 interfaceId) external view returns (bool) {
-        IERC165 diamond = IERC165(diamondAddress);
-        return diamond.supportsInterface(interfaceId);
-    }
 }`}
 </ExpandableCode>
 
 ## Best Practices
 
 <Callout type="tip" title="Best Practice">
-- Ensure the `ERC165Facet` is correctly deployed and added to the diamond proxy.
-- Implement `supportsInterface` in your diamond contract to delegate to the `ERC165Facet`'s function.
+- Ensure the ERC165Facet is correctly added during diamond deployment.
+- Implement the `supportsInterface` function in your diamond's main contract to delegate calls to this facet and any other interface-implementing facets.
+- Register interface IDs that your diamond supports, including the ERC-165 interface itself.
 </Callout>
 
 ## Security Considerations
 
 <Callout type="warning" title="Security">
-This facet is read-only and does not introduce reentrancy risks. Ensure that the diamond proxy correctly delegates calls to this facet for `supportsInterface` to function as expected.
+The `supportsInterface` function is a read-only operation and does not pose reentrancy risks. Ensure that the interface IDs registered are accurate and correspond to implemented functionality to avoid misleading callers.
 </Callout>
+
+<div style={{marginTop: "3rem", paddingTop: "2rem", borderTop: "1px solid var(--ifm-color-emphasis-200)"}}>
+  <RelatedDocs
+    items={[
+      {
+        title: "ERC165Mod",
+        href: "/docs/library/interfaceDetection/ERC165",
+        description: "Module used by ERC165Facet",
+        icon: "📦"
+      }
+    ]}
+  />
+</div>
 
 <div style={{marginTop: "3rem", paddingTop: "2rem", borderTop: "1px solid var(--ifm-color-emphasis-200)"}}>
   <WasThisHelpful pageId="ERC165Facet" />
 </div>
 
-<LastUpdated date="2025-12-28T04:29:40.487Z" />
+<LastUpdated date="2025-12-28T04:48:55.197Z" />

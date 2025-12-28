@@ -1,7 +1,7 @@
 ---
-sidebar_position: 99
+sidebar_position: 2
 title: "ERC20Facet"
-description: "ERC-20 token standard implementation"
+description: "Implements the ERC20 token standard for Compose diamonds."
 gitSource: "https://github.com/Perfect-Abstractions/Compose/tree/main/src/token/ERC20/ERC20/ERC20Facet.sol"
 ---
 
@@ -21,18 +21,18 @@ import GradientText from '@site/src/components/ui/GradientText';
 import GradientButton from '@site/src/components/ui/GradientButton';
 
 <DocSubtitle>
-ERC-20 token standard implementation
+Implements the ERC20 token standard for Compose diamonds.
 </DocSubtitle>
 
 <Callout type="info" title="Key Features">
-- Implements standard ERC-20 functions: name, symbol, decimals, totalSupply, balanceOf, allowance, approve, transfer, transferFrom.
-- Emits standard ERC-20 events: Approval and Transfer.
-- Manages token balances and spender allowances securely.
+- Implements the full ERC20 token standard.
+- Leverages the diamond storage pattern for state management.
+- Supports standard token operations like transfer, approve, and balance checks.
 </Callout>
 
 ## Overview
 
-The ERC20Facet provides a complete implementation of the ERC-20 token standard for Compose diamonds. It manages token metadata, balances, and allowances, enabling fungible token functionality within the diamond ecosystem.
+The ERC20Facet provides a standard interface for fungible tokens within a Compose diamond. It manages token metadata, balances, allowances, and transfers, enabling composability with other diamond facets.
 
 ---
 
@@ -500,27 +500,29 @@ error ERC20InvalidSpender(address _spender);
 <ExpandableCode language="solidity" maxLines={20} title="Example Implementation">
 {`pragma solidity ^0.8.30;
 
-import {IERC20Facet} from "@compose-protocol/diamond/contracts/facets/ERC20/IERC20Facet.sol";
-import {DiamondProxy} from "@compose-protocol/diamond/contracts/DiamondProxy.sol";
+import {IERC20Facet} from "@compose/diamond/facets/ERC20/IERC20Facet.sol";
 
 contract ERC20Consumer {
-    IERC20Facet public erc20;
+    IERC20Facet private immutable _erc20Facet;
 
-    constructor(address _diamondProxyAddress) {
-        // Assuming ERC20Facet is already added to the diamond proxy
-        erc20 = IERC20Facet(_diamondProxyAddress);
+    constructor(address diamondAddress) {
+        _erc20Facet = IERC20Facet(diamondAddress);
     }
 
     function getTokenName() external view returns (string memory) {
-        return erc20.name();
+        return _erc20Facet.name();
+    }
+
+    function getTokenSymbol() external view returns (string memory) {
+        return _erc20Facet.symbol();
+    }
+
+    function getAccountBalance(address _account) external view returns (uint256) {
+        return _erc20Facet.balanceOf(_account);
     }
 
     function transferTokens(address _to, uint256 _amount) external {
-        erc20.transfer(_to, _amount);
-    }
-
-    function getBalance(address _account) external view returns (uint256) {
-        return erc20.balanceOf(_account);
+        _erc20Facet.transfer(_to, _amount);
     }
 }`}
 </ExpandableCode>
@@ -528,19 +530,32 @@ contract ERC20Consumer {
 ## Best Practices
 
 <Callout type="tip" title="Best Practice">
-- Initialize the ERC20Facet with token metadata (name, symbol, decimals) during diamond deployment.
-- Ensure sufficient allowance is set via `approve` before calling `transferFrom`.
-- Manage access control for administrative functions like minting or burning if implemented in separate facets.
+- Initialize the ERC20Facet with the correct storage slot reference during diamond deployment.
+- Ensure adequate allowance is set before calling `transferFrom`.
+- Handle `Approval` and `Transfer` events for off-chain tracking and state updates.
 </Callout>
 
 ## Security Considerations
 
 <Callout type="warning" title="Security">
-Input validation is handled by custom errors to prevent invalid operations. Ensure sufficient balance before transfers and sufficient allowance before `transferFrom`. Reentrancy is mitigated by the diamond proxy's architecture and standard ERC-20 patterns. Access control for token minting/burning should be implemented in separate facets.
+Standard ERC20 security considerations apply, including checking for sufficient balances before transfers and managing allowances carefully to prevent unintended token movements. Input validation is handled internally by the facet's error conditions.
 </Callout>
+
+<div style={{marginTop: "3rem", paddingTop: "2rem", borderTop: "1px solid var(--ifm-color-emphasis-200)"}}>
+  <RelatedDocs
+    items={[
+      {
+        title: "ERC20PermitFacet",
+        href: "/docs/library/token/ERC20/ERC20Permit",
+        description: "Related facet in token",
+        icon: "💎"
+      }
+    ]}
+  />
+</div>
 
 <div style={{marginTop: "3rem", paddingTop: "2rem", borderTop: "1px solid var(--ifm-color-emphasis-200)"}}>
   <WasThisHelpful pageId="ERC20Facet" />
 </div>
 
-<LastUpdated date="2025-12-28T04:28:27.693Z" />
+<LastUpdated date="2025-12-28T04:47:42.493Z" />

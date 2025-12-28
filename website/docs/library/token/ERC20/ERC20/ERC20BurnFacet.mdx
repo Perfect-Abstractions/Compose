@@ -1,7 +1,7 @@
 ---
-sidebar_position: 99
+sidebar_position: 3
 title: "ERC20BurnFacet"
-description: "Burn ERC20 tokens directly within a Compose diamond."
+description: "Manage and burn ERC-20 tokens within a Compose diamond."
 gitSource: "https://github.com/Perfect-Abstractions/Compose/tree/main/src/token/ERC20/ERC20/ERC20BurnFacet.sol"
 ---
 
@@ -21,18 +21,18 @@ import GradientText from '@site/src/components/ui/GradientText';
 import GradientButton from '@site/src/components/ui/GradientButton';
 
 <DocSubtitle>
-Burn ERC20 tokens directly within a Compose diamond.
+Manage and burn ERC-20 tokens within a Compose diamond.
 </DocSubtitle>
 
 <Callout type="info" title="Key Features">
-- Direct token burning from caller balance.
-- Burn tokens from other accounts via allowance.
-- Emits standard ERC20 `Transfer` events to the zero address upon burning.
+- Allows burning of ERC-20 tokens directly from a diamond proxy.
+- Supports burning from the caller's balance and from other accounts via allowance.
+- Emits `Transfer` events to the zero address upon successful burning.
 </Callout>
 
 ## Overview
 
-The ERC20BurnFacet enables the burning of ERC20 tokens within a Compose diamond. It provides functions to burn tokens from the caller's balance or from another account using their allowance. This facet integrates with standard ERC20 mechanics, emitting `Transfer` events upon successful burning.
+The ERC20BurnFacet provides functionality to destroy ERC-20 tokens directly within a Compose diamond. It allows users to burn their own tokens or burn tokens from other accounts if they have sufficient allowance. This facet integrates with the standard ERC-20 token logic managed by the diamond's storage.
 
 ---
 
@@ -186,24 +186,27 @@ error ERC20InsufficientAllowance(address _spender, uint256 _allowance, uint256 _
 <ExpandableCode language="solidity" maxLines={20} title="Example Implementation">
 {`pragma solidity ^0.8.30;
 
-import {IERC20BurnFacet} from "@compose/diamond/facets/ERC20Burn/IERC20BurnFacet.sol";
+import {IDiamondCut} from "@compose-protocol/diamond-contracts/contracts/interfaces/IDiamondCut.sol";
 
-contract ERC20BurnConsumer {
-    address immutable diamondAddress;
+// Assuming you have a diamond proxy deployed and the ERC20BurnFacet is added
+contract Deployer {
+    address immutable diamondProxy;
 
-    constructor(address _diamondAddress) {
-        diamondAddress = _diamondAddress;
+    constructor(address _diamondProxy) {
+        diamondProxy = _diamondProxy;
     }
 
-    function burnMyTokens(uint256 _amount) external {
-        bytes4 selector = IERC20BurnFacet.burn.selector;
-        (bool success, ) = diamondAddress.call(abi.encodeWithSelector(selector, _amount));
+    // Example of burning tokens from caller's balance
+    function burnMyTokens(address _tokenAddress, uint256 _amount) external {
+        bytes4 selector = ERC20BurnFacet.burn.selector;
+        (bool success, ) = diamondProxy.call(abi.encodeWithSelector(selector, _tokenAddress, _amount));
         require(success, "Burn failed");
     }
 
-    function burnOtherTokens(address _from, uint256 _amount) external {
-        bytes4 selector = IERC20BurnFacet.burnFrom.selector;
-        (bool success, ) = diamondAddress.call(abi.encodeWithSelector(selector, _from, _amount));
+    // Example of burning tokens from another account using allowance
+    function burnFromAccount(address _tokenAddress, address _fromAccount, uint256 _amount) external {
+        bytes4 selector = ERC20BurnFacet.burnFrom.selector;
+        (bool success, ) = diamondProxy.call(abi.encodeWithSelector(selector, _tokenAddress, _fromAccount, _amount));
         require(success, "Burn from failed");
     }
 }`}
@@ -212,19 +215,44 @@ contract ERC20BurnConsumer {
 ## Best Practices
 
 <Callout type="tip" title="Best Practice">
-- Ensure the ERC20BurnFacet is properly initialized with correct storage slot configurations before use.
-- Calls to `burn` and `burnFrom` should be made via the diamond proxy address.
-- Implement necessary access control within your consuming contract or rely on Compose's diamond-level access control mechanisms.
+- Ensure the `ERC20BurnFacet` is added to the diamond proxy with appropriate selectors.
+- Token addresses are validated by the underlying ERC-20 implementation called by the facet.
+- Manage allowances correctly before calling `burnFrom`.
 </Callout>
 
 ## Security Considerations
 
 <Callout type="warning" title="Security">
-This facet relies on the underlying ERC20 token contract's balance and allowance checks. Ensure that the diamond proxy has the correct `ERC20BurnFacet` registered and that the `_amount` passed to `burn` or `burnFrom` does not exceed the caller's balance or allowance, respectively. The `burnFrom` function requires the caller to have sufficient allowance from the `_from` address. Reentrancy is not a concern as these functions do not make external calls to untrusted contracts.
+The facet relies on the underlying ERC-20 token contract's logic for balance and allowance checks. Ensure the correct token address is passed to avoid unintended burns. Insufficient balance or allowance will revert with `ERC20InsufficientBalance` or `ERC20InsufficientAllowance` respectively. Reentrancy is not a concern as the facet does not make external calls to untrusted contracts.
 </Callout>
+
+<div style={{marginTop: "3rem", paddingTop: "2rem", borderTop: "1px solid var(--ifm-color-emphasis-200)"}}>
+  <RelatedDocs
+    items={[
+      {
+        title: "ERC20PermitFacet",
+        href: "/docs/library/token/ERC20/ERC20Permit",
+        description: "Related facet in token",
+        icon: "💎"
+      },
+      {
+        title: "ERC20Facet",
+        href: "/docs/library/token/ERC20/ERC20",
+        description: "Related facet in token",
+        icon: "💎"
+      },
+      {
+        title: "ERC20Facet",
+        href: "/docs/library/token/ERC20/ERC20",
+        description: "Base facet for ERC20BurnFacet",
+        icon: "💎"
+      }
+    ]}
+  />
+</div>
 
 <div style={{marginTop: "3rem", paddingTop: "2rem", borderTop: "1px solid var(--ifm-color-emphasis-200)"}}>
   <WasThisHelpful pageId="ERC20BurnFacet" />
 </div>
 
-<LastUpdated date="2025-12-28T04:28:35.881Z" />
+<LastUpdated date="2025-12-28T04:47:51.902Z" />

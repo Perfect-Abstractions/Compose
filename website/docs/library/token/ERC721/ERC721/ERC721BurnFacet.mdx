@@ -1,7 +1,7 @@
 ---
-sidebar_position: 99
+sidebar_position: 3
 title: "ERC721BurnFacet"
-description: "Facilitates burning ERC-721 tokens within a diamond."
+description: "Burn ERC721 tokens and manage approvals."
 gitSource: "https://github.com/Perfect-Abstractions/Compose/tree/main/src/token/ERC721/ERC721/ERC721BurnFacet.sol"
 ---
 
@@ -21,18 +21,18 @@ import GradientText from '@site/src/components/ui/GradientText';
 import GradientButton from '@site/src/components/ui/GradientButton';
 
 <DocSubtitle>
-Facilitates burning ERC-721 tokens within a diamond.
+Burn ERC721 tokens and manage approvals.
 </DocSubtitle>
 
 <Callout type="info" title="Key Features">
-- Enables destruction of ERC-721 tokens.
-- Emits standard ERC-721 `Transfer` event upon burning.
-- Integrates with the diamond storage pattern for state management.
+- Allows burning of ERC721 tokens, removing them from circulation.
+- Supports the `Transfer` and `Approval` events as per ERC721 standard.
+- Includes checks for non-existent tokens and insufficient approvals.
 </Callout>
 
 ## Overview
 
-The ERC721BurnFacet provides the functionality to destroy ERC-721 tokens. It integrates with the diamond's storage pattern to manage token states and emit standard ERC-721 events upon successful burning.
+The ERC721BurnFacet provides functionality to destroy ERC721 tokens and manage necessary approvals for burning. It integrates with the diamond proxy to offer these operations as part of the broader ERC721 standard implementation.
 
 ---
 
@@ -148,15 +148,26 @@ error ERC721InsufficientApproval(address _operator, uint256 _tokenId);
 <ExpandableCode language="solidity" maxLines={20} title="Example Implementation">
 {`pragma solidity ^0.8.30;
 
-import {IERC721BurnFacet} from "@compose/contracts/facets/ERC721/IERC721BurnFacet.sol";
+import {IERC721BurnFacet} from "./interfaces/IERC721BurnFacet.sol";
 
-contract BurnCaller {
+contract Deployer {
     address diamondAddress;
 
-    function burnToken(uint256 tokenId) external {
-        IERC721BurnFacet burnFacet = IERC721BurnFacet(diamondAddress);
-        // Ensure caller has approval or is the owner before burning
-        burnFacet.burn(tokenId);
+    function deploy() public {
+        // ... deployment logic for diamond proxy and facets ...
+        diamondAddress = address(0xYourDiamondProxyAddress);
+    }
+
+    function burnToken(uint256 tokenId) public {
+        bytes4 selector = IERC721BurnFacet.burn.selector;
+        (bool success, ) = diamondAddress.call(abi.encodeWithSelector(selector, tokenId));
+        require(success, "Failed to burn token");
+    }
+
+    function approveBurn(address spender, uint256 tokenId) public {
+        bytes4 selector = IERC721BurnFacet.approve.selector;
+        (bool success, ) = diamondAddress.call(abi.encodeWithSelector(selector, spender, tokenId));
+        require(success, "Failed to approve for burning");
     }
 }`}
 </ExpandableCode>
@@ -164,19 +175,62 @@ contract BurnCaller {
 ## Best Practices
 
 <Callout type="tip" title="Best Practice">
-- Ensure the ERC721BurnFacet is correctly initialized with the diamond's storage slot.
-- Implement access control to restrict burning to authorized addresses (e.g., token owner or approved address).
-- Verify that the token exists and that the caller has sufficient approval before attempting to burn.
+- Ensure the `ERC721BurnFacet` is correctly initialized with the diamond proxy.
+- Verify that appropriate approvals are in place before attempting to burn a token if the caller is not the token owner.
+- Integrate with other ERC721 facets (e.g., `ERC721Facet`) for a complete ERC721 implementation.
 </Callout>
 
 ## Security Considerations
 
 <Callout type="warning" title="Security">
-The `burn` function requires careful access control to prevent unauthorized token destruction. The caller must be the owner of the token or have been approved to burn it. The facet should be protected against reentrancy if other facets interact with token state during the burn process.
+Access control for burning is implicitly handled by the ERC721 standard, requiring ownership or explicit approval. The facet relies on the diamond proxy for routing calls. Ensure the `STORAGE_POSITION` for ERC721 storage is correctly configured and unique to prevent state corruption.
 </Callout>
+
+<div style={{marginTop: "3rem", paddingTop: "2rem", borderTop: "1px solid var(--ifm-color-emphasis-200)"}}>
+  <RelatedDocs
+    items={[
+      {
+        title: "ERC20PermitFacet",
+        href: "/docs/library/token/ERC20/ERC20Permit",
+        description: "Related facet in token",
+        icon: "💎"
+      },
+      {
+        title: "ERC20Facet",
+        href: "/docs/library/token/ERC20/ERC20",
+        description: "Related facet in token",
+        icon: "💎"
+      },
+      {
+        title: "ERC20BurnFacet",
+        href: "/docs/library/token/ERC20/ERC20",
+        description: "Related facet in token",
+        icon: "💎"
+      },
+      {
+        title: "ERC20BridgeableFacet",
+        href: "/docs/library/token/ERC20/ERC20Bridgeable",
+        description: "Related facet in token",
+        icon: "💎"
+      },
+      {
+        title: "ERC1155Facet",
+        href: "/docs/library/token/ERC1155",
+        description: "Related facet in token",
+        icon: "💎"
+      },
+      {
+        title: "ERC6909Facet",
+        href: "/docs/library/token/ERC6909/ERC6909",
+        description: "Related facet in token",
+        icon: "💎"
+      }
+    ]}
+  />
+</div>
 
 <div style={{marginTop: "3rem", paddingTop: "2rem", borderTop: "1px solid var(--ifm-color-emphasis-200)"}}>
   <WasThisHelpful pageId="ERC721BurnFacet" />
 </div>
 
-<LastUpdated date="2025-12-28T04:29:15.847Z" />
+<LastUpdated date="2025-12-28T04:48:30.940Z" />

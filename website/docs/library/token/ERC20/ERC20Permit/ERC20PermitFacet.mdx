@@ -1,7 +1,7 @@
 ---
-sidebar_position: 99
+sidebar_position: 2
 title: "ERC20PermitFacet"
-description: "Manages ERC-20 token approvals via EIP-2612 signatures."
+description: "Enables EIP-2612 ERC-20 permit functionality."
 gitSource: "https://github.com/Perfect-Abstractions/Compose/tree/main/src/token/ERC20/ERC20Permit/ERC20PermitFacet.sol"
 ---
 
@@ -21,18 +21,18 @@ import GradientText from '@site/src/components/ui/GradientText';
 import GradientButton from '@site/src/components/ui/GradientButton';
 
 <DocSubtitle>
-Manages ERC-20 token approvals via EIP-2612 signatures.
+Enables EIP-2612 ERC-20 permit functionality.
 </DocSubtitle>
 
 <Callout type="info" title="Key Features">
-- Implements EIP-2612 permit functionality for gasless approvals.
-- Utilizes on-chain signatures to grant allowances without requiring the token owner to pay gas for the approval transaction.
-- Includes `nonces` and `DOMAIN_SEPARATOR` for robust signature validation and replay protection.
+- Implements EIP-2612 `permit` function for gasless approvals.
+- Utilizes nonces to prevent signature replay attacks.
+- Provides `DOMAIN_SEPARATOR` for correct signature encoding.
 </Callout>
 
 ## Overview
 
-The ERC20PermitFacet enables gasless approvals for ERC-20 tokens by allowing token holders to sign off-chain permit messages. These signed messages can then be submitted on-chain to grant allowances to specified spenders, streamlining user experience and reducing transaction costs.
+The ERC20PermitFacet provides EIP-2612 compliant permit functionality, allowing users to grant allowances to token spenders via signed messages. This enhances user experience by reducing the need for multiple on-chain transactions to approve token spending.
 
 ---
 
@@ -273,46 +273,70 @@ error ERC20InvalidSpender(address _spender);
 {`pragma solidity ^0.8.30;
 
 import {IERC20Permit} from "@openzeppelin/contracts/token/ERC20/extensions/draft-IERC20Permit.sol";
+import {ERC20PermitFacet} from "./ERC20PermitFacet.sol";
 
-contract DiamondDeployer {
-    // Assume diamond and facets are deployed and selectors are mapped
-    // address public diamondProxy;
+contract MyDiamond is IERC20Permit {
+    ERC20PermitFacet public erc20PermitFacet;
 
-    function grantPermit(address _token, address _spender, uint256 _value, uint256 _deadline, bytes calldata _signature) external {
-        // Selector for the permit function on the ERC20PermitFacet
-        bytes4 permitSelector = bytes4(keccak256("permit(address,address,uint256,uint256,uint8,bytes32,bytes32)"));
+    // ... diamond deployment and facet setup ...
 
-        // Call the permit function on the diamond proxy
-        (bool success, ) = address(diamondProxy).call(abi.encodeWithSelector(permitSelector,
-            _token, // The ERC20 token address
-            _spender, // The address to grant allowance to
-            _value, // The amount to allow
-            _deadline, // The permit deadline
-            _signature[0], // v
-            abi.decode(_signature[1:33], (bytes32)), // r
-            abi.decode(_signature[33:65], (bytes32)) // s
-        ));
-        require(success, "Permit call failed");
+    function setErc20PermitFacet(address _facetAddress) external onlyOwner {
+        erc20PermitFacet = ERC20PermitFacet(_facetAddress);
     }
+
+    function permit(address owner, address spender, uint256 value, uint256 deadline, uint8 v, bytes32 r, bytes32 s) external override {
+        // Delegate to the ERC20PermitFacet
+        // Ensure your diamond's router correctly dispatches this call to the facet
+        // The actual dispatch logic depends on your diamond implementation.
+        // For demonstration, assuming a direct call if router is not shown:
+        // require(msg.sender == address(this), \"Diamond: not router\"); // Example router guard
+        // erc20PermitFacet.permit(owner, spender, value, deadline, v, r, s);
+    }
+
+    // Implement other IERC20Permit functions that delegate to the underlying ERC20 token
+    // or are handled by other facets.
+
+    function nonces(address owner) public view override returns (uint256) {
+        return erc20PermitFacet.nonces(owner);
+    }
+
+    function DOMAIN_SEPARATOR() public view returns (bytes32) {
+        return erc20PermitFacet.DOMAIN_SEPARATOR();
+    }
+
+    // ... other diamond functions ...
 }`}
 </ExpandableCode>
 
 ## Best Practices
 
 <Callout type="tip" title="Best Practice">
-- Ensure the `permit` function is correctly implemented and adheres to EIP-2612 standards.
-- Verify the `DOMAIN_SEPARATOR` and `nonce` are used correctly to prevent replay attacks and ensure signature validity.
-- Integrate with an ERC-20 token contract that supports `transferFrom` and `approve` for the allowance to be utilized.
+- Ensure the `ERC20PermitFacet` is correctly initialized with the underlying ERC20 token contract address during deployment if applicable.
+- The `permit` function should be routed by the diamond proxy to this facet.
+- Users will call the diamond's `permit` function, which then delegates to this facet.
 </Callout>
 
 ## Security Considerations
 
 <Callout type="warning" title="Security">
-The primary security consideration is the validation of the signature provided to the `permit` function. Incorrect signature verification or manipulation of `nonce` or `DOMAIN_SEPARATOR` could lead to unauthorized allowances being granted. Ensure that the signing process on the client-side correctly encodes the permit message and that the on-chain verification logic is sound. The `permit` function itself does not directly handle token transfers, so its security is tied to the underlying ERC-20 token's `transferFrom` and `approve` implementations.
+The `permit` function relies on signature verification. Ensure the underlying ERC20 token contract correctly handles allowance changes. The `nonces` and `DOMAIN_SEPARATOR` are critical for signature validity and should not be manipulated externally. Access control for the `permit` function itself is typically handled by the diamond proxy's router and should enforce that users can only permit on their own behalf or on behalf of addresses they control.
 </Callout>
+
+<div style={{marginTop: "3rem", paddingTop: "2rem", borderTop: "1px solid var(--ifm-color-emphasis-200)"}}>
+  <RelatedDocs
+    items={[
+      {
+        title: "ERC20PermitMod",
+        href: "/docs/library/token/ERC20/ERC20Permit",
+        description: "Module used by ERC20PermitFacet",
+        icon: "📦"
+      }
+    ]}
+  />
+</div>
 
 <div style={{marginTop: "3rem", paddingTop: "2rem", borderTop: "1px solid var(--ifm-color-emphasis-200)"}}>
   <WasThisHelpful pageId="ERC20PermitFacet" />
 </div>
 
-<LastUpdated date="2025-12-28T04:28:24.913Z" />
+<LastUpdated date="2025-12-28T04:47:39.753Z" />
