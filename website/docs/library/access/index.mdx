@@ -1,0 +1,50 @@
+---
+title: "Access Control"
+description: "Access control patterns for permission management in Compose diamonds."
+---
+
+import DocCard, { DocCardGrid } from '@site/src/components/docs/DocCard';
+import DocSubtitle from '@site/src/components/docs/DocSubtitle';
+import Icon from '@site/src/components/ui/Icon';
+
+<DocSubtitle>
+  Access control patterns for permission management in Compose diamonds.
+</DocSubtitle>
+
+<DocCardGrid columns={2}>
+  <DocCard
+    title="Access Control"
+    description={"Role-based access control (RBAC) pattern."}
+    href="/docs/library/access/AccessControl"
+    icon={<Icon name="package" size={28} />}
+    size="medium"
+  />
+  <DocCard
+    title="Owner"
+    description={"Single-owner access control pattern."}
+    href="/docs/library/access/Owner"
+    icon={<Icon name="package" size={28} />}
+    size="medium"
+  />
+  <DocCard
+    title="Pausable Access Control"
+    description={"RBAC with pause functionality."}
+    href="/docs/library/access/AccessControlPausable"
+    icon={<Icon name="package" size={28} />}
+    size="medium"
+  />
+  <DocCard
+    title="Temporal Access Control"
+    description={"Time-limited role-based access control."}
+    href="/docs/library/access/AccessControlTemporal"
+    icon={<Icon name="package" size={28} />}
+    size="medium"
+  />
+  <DocCard
+    title="Two-Step Owner"
+    description={"Two-step ownership transfer pattern."}
+    href="/docs/library/access/OwnerTwoSteps"
+    icon={<Icon name="package" size={28} />}
+    size="medium"
+  />
+</DocCardGrid>

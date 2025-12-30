@@ -1,0 +1,566 @@
+---
+sidebar_position: 2
+title: "ERC20Facet"
+description: "Implements ERC-20 token functionality within a diamond"
+gitSource: "https://github.com/Perfect-Abstractions/Compose/tree/main/src/token/ERC20/ERC20/ERC20Facet.sol"
+---
+
+import DocSubtitle  from '@site/src/components/docs/DocSubtitle';
+import Badge from '@site/src/components/ui/Badge';
+import Callout from '@site/src/components/ui/Callout';
+import CalloutBox from '@site/src/components/ui/CalloutBox';
+import Accordion, { AccordionGroup } from '@site/src/components/ui/Accordion';
+import PropertyTable from '@site/src/components/api/PropertyTable';
+import ExpandableCode from '@site/src/components/code/ExpandableCode';
+import CodeShowcase from '@site/src/components/code/CodeShowcase';
+import RelatedDocs from '@site/src/components/docs/RelatedDocs';
+import WasThisHelpful from '@site/src/components/docs/WasThisHelpful';
+import LastUpdated from '@site/src/components/docs/LastUpdated';
+import ReadingTime from '@site/src/components/docs/ReadingTime';
+import GradientText from '@site/src/components/ui/GradientText';
+import GradientButton from '@site/src/components/ui/GradientButton';
+
+<DocSubtitle>
+Implements ERC-20 token functionality within a diamond
+</DocSubtitle>
+
+<Callout type="info" title="Key Features">
+- Implements core ERC-20 functions via external calls through the diamond proxy.
+- Manages token state (totalSupply, balances, allowances) within diamond storage.
+- Self-contained facet with no external dependencies or inheritance.
+- Utilizes custom errors for gas-efficient error handling.
+</Callout>
+
+## Overview
+
+This facet provides standard ERC-20 token operations, including transfers, approvals, and balance inquiries, routed through the diamond proxy. It accesses shared storage for token metadata and balances, enabling upgradeability and composability for token contracts within the diamond storage pattern.
+
+---
+
+## Storage
+
+### ERC20Storage
+
+<ExpandableCode language="solidity" maxLines={15} title="Definition">
+{`struct ERC20Storage {
+    mapping(address owner => uint256 balance) balanceOf;
+    uint256 totalSupply;
+    mapping(address owner => mapping(address spender => uint256 allowance)) allowance;
+    uint8 decimals;
+    string name;
+    string symbol;
+}`}
+</ExpandableCode>
+
+### State Variables
+
+<PropertyTable
+  properties={[
+    {
+      name: "STORAGE_POSITION",
+      type: "bytes32",
+      description: "Diamond storage slot position for this module (Value: `keccak256(\"compose.erc20\")`)"
+    }
+  ]}
+  showRequired={false}
+/>
+
+## Functions
+
+### name
+
+Returns the name of the token.
+
+<ExpandableCode language="solidity" maxLines={8}>
+{`function name() external view returns (string memory);`}
+</ExpandableCode>
+
+**Returns:**
+
+<PropertyTable
+  properties={[
+    {
+      name: "-",
+      type: "string",
+      description: "The token name."
+    }
+  ]}
+  showRequired={false}
+/>
+
+---
+### symbol
+
+Returns the symbol of the token.
+
+<ExpandableCode language="solidity" maxLines={8}>
+{`function symbol() external view returns (string memory);`}
+</ExpandableCode>
+
+**Returns:**
+
+<PropertyTable
+  properties={[
+    {
+      name: "-",
+      type: "string",
+      description: "The token symbol."
+    }
+  ]}
+  showRequired={false}
+/>
+
+---
+### decimals
+
+Returns the number of decimals used for token precision.
+
+<ExpandableCode language="solidity" maxLines={8}>
+{`function decimals() external view returns (uint8);`}
+</ExpandableCode>
+
+**Returns:**
+
+<PropertyTable
+  properties={[
+    {
+      name: "-",
+      type: "uint8",
+      description: "The number of decimals."
+    }
+  ]}
+  showRequired={false}
+/>
+
+---
+### totalSupply
+
+Returns the total supply of tokens.
+
+<ExpandableCode language="solidity" maxLines={8}>
+{`function totalSupply() external view returns (uint256);`}
+</ExpandableCode>
+
+**Returns:**
+
+<PropertyTable
+  properties={[
+    {
+      name: "-",
+      type: "uint256",
+      description: "The total token supply."
+    }
+  ]}
+  showRequired={false}
+/>
+
+---
+### balanceOf
+
+Returns the balance of a specific account.
+
+<ExpandableCode language="solidity" maxLines={8}>
+{`function balanceOf(address _account) external view returns (uint256);`}
+</ExpandableCode>
+
+**Parameters:**
+
+<PropertyTable
+  properties={[
+    {
+      name: "_account",
+      type: "address",
+      description: "The address of the account."
+    }
+  ]}
+  showRequired={false}
+/>
+
+**Returns:**
+
+<PropertyTable
+  properties={[
+    {
+      name: "-",
+      type: "uint256",
+      description: "The account balance."
+    }
+  ]}
+  showRequired={false}
+/>
+
+---
+### allowance
+
+Returns the remaining number of tokens that a spender is allowed to spend on behalf of an owner.
+
+<ExpandableCode language="solidity" maxLines={8}>
+{`function allowance(address _owner, address _spender) external view returns (uint256);`}
+</ExpandableCode>
+
+**Parameters:**
+
+<PropertyTable
+  properties={[
+    {
+      name: "_owner",
+      type: "address",
+      description: "The address of the token owner."
+    },
+    {
+      name: "_spender",
+      type: "address",
+      description: "The address of the spender."
+    }
+  ]}
+  showRequired={false}
+/>
+
+**Returns:**
+
+<PropertyTable
+  properties={[
+    {
+      name: "-",
+      type: "uint256",
+      description: "The remaining allowance."
+    }
+  ]}
+  showRequired={false}
+/>
+
+---
+### approve
+
+Approves a spender to transfer up to a certain amount of tokens on behalf of the caller. Emits an Approval event.
+
+<ExpandableCode language="solidity" maxLines={8}>
+{`function approve(address _spender, uint256 _value) external returns (bool);`}
+</ExpandableCode>
+
+**Parameters:**
+
+<PropertyTable
+  properties={[
+    {
+      name: "_spender",
+      type: "address",
+      description: "The address approved to spend tokens."
+    },
+    {
+      name: "_value",
+      type: "uint256",
+      description: "The number of tokens to approve."
+    }
+  ]}
+  showRequired={false}
+/>
+
+**Returns:**
+
+<PropertyTable
+  properties={[
+    {
+      name: "-",
+      type: "bool",
+      description: "True if the approval was successful."
+    }
+  ]}
+  showRequired={false}
+/>
+
+---
+### transfer
+
+Transfers tokens to another address. Emits a Transfer event.
+
+<ExpandableCode language="solidity" maxLines={8}>
+{`function transfer(address _to, uint256 _value) external returns (bool);`}
+</ExpandableCode>
+
+**Parameters:**
+
+<PropertyTable
+  properties={[
+    {
+      name: "_to",
+      type: "address",
+      description: "The address to receive the tokens."
+    },
+    {
+      name: "_value",
+      type: "uint256",
+      description: "The amount of tokens to transfer."
+    }
+  ]}
+  showRequired={false}
+/>
+
+**Returns:**
+
+<PropertyTable
+  properties={[
+    {
+      name: "-",
+      type: "bool",
+      description: "True if the transfer was successful."
+    }
+  ]}
+  showRequired={false}
+/>
+
+---
+### transferFrom
+
+Transfers tokens on behalf of another account, provided sufficient allowance exists. Emits a Transfer event and decreases the spender's allowance.
+
+<ExpandableCode language="solidity" maxLines={8}>
+{`function transferFrom(address _from, address _to, uint256 _value) external returns (bool);`}
+</ExpandableCode>
+
+**Parameters:**
+
+<PropertyTable
+  properties={[
+    {
+      name: "_from",
+      type: "address",
+      description: "The address to transfer tokens from."
+    },
+    {
+      name: "_to",
+      type: "address",
+      description: "The address to transfer tokens to."
+    },
+    {
+      name: "_value",
+      type: "uint256",
+      description: "The amount of tokens to transfer."
+    }
+  ]}
+  showRequired={false}
+/>
+
+**Returns:**
+
+<PropertyTable
+  properties={[
+    {
+      name: "-",
+      type: "bool",
+      description: "True if the transfer was successful."
+    }
+  ]}
+  showRequired={false}
+/>
+
+## Events
+
+<AccordionGroup>
+  <Accordion title="Approval" defaultOpen={false}>
+    <div style={{marginBottom: "1rem"}}>
+      Emitted when an approval is made for a spender by an owner.
+    </div>
+
+    <div style={{marginBottom: "1rem"}}>
+      <strong>Signature:</strong>
+      <ExpandableCode language="solidity" maxLines={5}>
+{`event Approval(address indexed _owner, address indexed _spender, uint256 _value);`}
+      </ExpandableCode>
+    </div>
+
+    <div style={{marginBottom: "1rem"}}>
+      <strong>Parameters:</strong>
+      <PropertyTable
+        properties={[
+          {
+            name: "_owner",
+            type: "address",
+            description: "The address granting the allowance."
+          },
+          {
+            name: "_spender",
+            type: "address",
+            description: "The address receiving the allowance."
+          },
+          {
+            name: "_value",
+            type: "uint256",
+            description: "The amount approved."
+          }
+        ]}
+        showRequired={false}
+      />
+    </div>
+  </Accordion>
+  <Accordion title="Transfer" defaultOpen={false}>
+    <div style={{marginBottom: "1rem"}}>
+      Emitted when tokens are transferred between two addresses.
+    </div>
+
+    <div style={{marginBottom: "1rem"}}>
+      <strong>Signature:</strong>
+      <ExpandableCode language="solidity" maxLines={5}>
+{`event Transfer(address indexed _from, address indexed _to, uint256 _value);`}
+      </ExpandableCode>
+    </div>
+
+    <div style={{marginBottom: "1rem"}}>
+      <strong>Parameters:</strong>
+      <PropertyTable
+        properties={[
+          {
+            name: "_from",
+            type: "address",
+            description: "Address sending the tokens."
+          },
+          {
+            name: "_to",
+            type: "address",
+            description: "Address receiving the tokens."
+          },
+          {
+            name: "_value",
+            type: "uint256",
+            description: "Amount of tokens transferred."
+          }
+        ]}
+        showRequired={false}
+      />
+    </div>
+  </Accordion>
+</AccordionGroup>
+
+## Errors
+
+<AccordionGroup>
+  <Accordion title="ERC20InsufficientBalance" defaultOpen={false}>
+    <div style={{marginBottom: "1rem"}}>
+      Thrown when an account has insufficient balance for a transfer or burn.
+    </div>
+
+    <div>
+      <strong>Signature:</strong>
+      <ExpandableCode language="solidity" maxLines={5}>
+error ERC20InsufficientBalance(address _sender, uint256 _balance, uint256 _needed);
+      </ExpandableCode>
+    </div>
+  </Accordion>
+  <Accordion title="ERC20InvalidSender" defaultOpen={false}>
+    <div style={{marginBottom: "1rem"}}>
+      Thrown when the sender address is invalid (e.g., zero address).
+    </div>
+
+    <div>
+      <strong>Signature:</strong>
+      <ExpandableCode language="solidity" maxLines={5}>
+error ERC20InvalidSender(address _sender);
+      </ExpandableCode>
+    </div>
+  </Accordion>
+  <Accordion title="ERC20InvalidReceiver" defaultOpen={false}>
+    <div style={{marginBottom: "1rem"}}>
+      Thrown when the receiver address is invalid (e.g., zero address).
+    </div>
+
+    <div>
+      <strong>Signature:</strong>
+      <ExpandableCode language="solidity" maxLines={5}>
+error ERC20InvalidReceiver(address _receiver);
+      </ExpandableCode>
+    </div>
+  </Accordion>
+  <Accordion title="ERC20InsufficientAllowance" defaultOpen={false}>
+    <div style={{marginBottom: "1rem"}}>
+      Thrown when a spender tries to use more than the approved allowance.
+    </div>
+
+    <div>
+      <strong>Signature:</strong>
+      <ExpandableCode language="solidity" maxLines={5}>
+error ERC20InsufficientAllowance(address _spender, uint256 _allowance, uint256 _needed);
+      </ExpandableCode>
+    </div>
+  </Accordion>
+  <Accordion title="ERC20InvalidSpender" defaultOpen={false}>
+    <div style={{marginBottom: "1rem"}}>
+      Thrown when the spender address is invalid (e.g., zero address).
+    </div>
+
+    <div>
+      <strong>Signature:</strong>
+      <ExpandableCode language="solidity" maxLines={5}>
+error ERC20InvalidSpender(address _spender);
+      </ExpandableCode>
+    </div>
+  </Accordion>
+</AccordionGroup>
+
+<!-- Usage Example section commented out for now -->
+<!--
+## Usage Example
+
+<ExpandableCode language="solidity" maxLines={20} title="Example Implementation">
+{`pragma solidity >=0.8.30;
+
+import { IDiamond } from "@compose/core/IDiamond";
+import { ERC20Facet } from "@compose/token/ERC20/ERC20/ERC20Facet";
+
+contract ExampleDiamondUser {
+    IDiamond diamond = IDiamond(address(this)); // Assuming this contract is the diamond
+
+    function transferToken(address _to, uint256 _value) public {
+        // Calls the transfer function implemented by the ERC20Facet
+        diamond.transfer(_to, _value);
+    }
+
+    function getBalance(address _account) public view returns (uint256) {
+        // Calls the balanceOf function implemented by the ERC20Facet
+        return diamond.balanceOf(_account);
+    }
+
+    function approveSpender(address _spender, uint256 _value) public {
+        // Calls the approve function implemented by the ERC20Facet
+        diamond.approve(_spender, _value);
+    }
+
+    function transferFromOwner(address _from, address _to, uint256 _value) public {
+        // Calls the transferFrom function implemented by the ERC20Facet
+        diamond.transferFrom(_from, _to, _value);
+    }
+}`}
+</ExpandableCode>
+-->
+
+## Best Practices
+
+<Callout type="tip" title="Best Practice">
+- Initialize token name, symbol, decimals, and total supply during diamond deployment.
+- Enforce access control where necessary for functions like `approve` if specific roles are required.
+- Ensure storage compatibility when upgrading the ERC20Facet to maintain state integrity.
+</Callout>
+
+## Security Considerations
+
+<Callout type="warning" title="Security">
+All state-changing functions (`approve`, `transfer`, `transferFrom`) emit events. Input validation is performed, reverting with custom errors such as `ERC20InsufficientBalance`, `ERC20InsufficientAllowance`, `ERC20InvalidSender`, `ERC20InvalidReceiver`, and `ERC20InvalidSpender` to prevent common ERC-20 vulnerabilities. Follow standard Solidity security practices for diamond interactions.
+</Callout>
+
+<div style={{marginTop: "3rem", paddingTop: "2rem", borderTop: "1px solid var(--ifm-color-emphasis-200)"}}>
+  <RelatedDocs
+    items={[
+      {
+        title: "ERC20PermitFacet",
+        href: "/docs/library/token/ERC20/ERC20Permit/ERC20PermitFacet",
+        description: "Related facet in token",
+        icon: "💎"
+      }
+    ]}
+  />
+</div>
+
+<div style={{marginTop: "3rem", paddingTop: "2rem", borderTop: "1px solid var(--ifm-color-emphasis-200)"}}>
+  <WasThisHelpful pageId="ERC20Facet" />
+</div>
+
+<LastUpdated date="2025-12-30T18:50:07.375Z" />

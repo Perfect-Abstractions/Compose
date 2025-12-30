@@ -1,0 +1,143 @@
+---
+sidebar_position: 1
+title: "NonReentrancyMod"
+description: "Prevent reentrant calls within facets"
+gitSource: "https://github.com/Perfect-Abstractions/Compose/tree/main/src/libraries/NonReentrancyMod.sol"
+---
+
+import DocSubtitle  from '@site/src/components/docs/DocSubtitle';
+import Badge from '@site/src/components/ui/Badge';
+import Callout from '@site/src/components/ui/Callout';
+import CalloutBox from '@site/src/components/ui/CalloutBox';
+import Accordion, { AccordionGroup } from '@site/src/components/ui/Accordion';
+import PropertyTable from '@site/src/components/api/PropertyTable';
+import ExpandableCode from '@site/src/components/code/ExpandableCode';
+import CodeShowcase from '@site/src/components/code/CodeShowcase';
+import RelatedDocs from '@site/src/components/docs/RelatedDocs';
+import WasThisHelpful from '@site/src/components/docs/WasThisHelpful';
+import LastUpdated from '@site/src/components/docs/LastUpdated';
+import ReadingTime from '@site/src/components/docs/ReadingTime';
+import GradientText from '@site/src/components/ui/GradientText';
+import GradientButton from '@site/src/components/ui/GradientButton';
+
+<DocSubtitle>
+Prevent reentrant calls within facets
+</DocSubtitle>
+
+<Callout type="info" title="Key Features">
+- Internal functions `enter` and `exit` for explicit non-reentrancy control.
+- Emits a `Reentrancy` error if reentrancy is detected.
+- No external dependencies, suitable for inclusion in any facet.
+</Callout>
+
+<Callout type="info" title="Module Usage">
+This module provides internal functions for use in your custom facets. Import it to access shared logic and storage.
+</Callout>
+
+## Overview
+
+This library provides functions to prevent reentrant calls within facets. By calling `enter` at the start of an external function and `exit` at the end, you ensure that the function cannot be re-entered before its execution completes. This is crucial for maintaining state integrity and preventing unexpected behavior in composable diamond architectures.
+
+---
+
+## Storage
+
+### State Variables
+
+<PropertyTable
+  properties={[
+    {
+      name: "NON_REENTRANT_SLOT",
+      type: "bytes32",
+      description: "Reentrancy guard storage slot (Value: `keccak256(\"compose.nonreentrant\")`)"
+    }
+  ]}
+  showRequired={false}
+/>
+
+## Functions
+
+### enter
+
+How to use as a library in user facets How to use as a modifier in user facets This unlocks the entry into a function
+
+<ExpandableCode language="solidity" maxLines={8}>
+{`function enter() ;`}
+</ExpandableCode>
+
+---
+### exit
+
+This locks the entry into a function
+
+<ExpandableCode language="solidity" maxLines={8}>
+{`function exit() ;`}
+</ExpandableCode>
+
+## Errors
+
+<AccordionGroup>
+  <Accordion title="Reentrancy" defaultOpen={false}>
+    <div style={{marginBottom: "1rem"}}>
+      Function selector - 0x43a0d067
+    </div>
+
+    <div>
+      <strong>Signature:</strong>
+      <ExpandableCode language="solidity" maxLines={5}>
+error Reentrancy();
+      </ExpandableCode>
+    </div>
+  </Accordion>
+</AccordionGroup>
+
+<!-- Usage Example section commented out for now -->
+<!--
+## Usage Example
+
+<ExpandableCode language="solidity" maxLines={20} title="Example Implementation">
+{`pragma solidity >=0.8.30;
+
+import {NonReentrancyMod} from "@compose/libraries/NonReentrancyMod";
+
+contract MyFacet {
+    using NonReentrancyMod for uint256; // Dummy usage for example
+
+    function sensitiveOperation() external {
+        NonReentrancyMod.enter();
+
+        // Simulate an operation that might be reentrant
+        // For example, calling another external function that could call back
+
+        NonReentrancyMod.exit();
+    }
+
+    // Example of direct use without 'using'
+    function anotherSensitiveOperation() external {
+        NonReentrancyMod.enter();
+        // ... operation logic ...
+        NonReentrancyMod.exit();
+    }
+}`}
+</ExpandableCode>
+-->
+
+## Best Practices
+
+<Callout type="tip" title="Best Practice">
+- Call `NonReentrancyMod.enter()` at the beginning of every external function that should be protected from reentrancy.
+- Call `NonReentrancyMod.exit()` at the end of the protected function, before returning any values.
+- Ensure the `Reentrancy` error is handled or understood in your calling context if reentrancy is detected.
+</Callout>
+
+## Integration Notes
+
+<Callout type="success" title="Shared Storage">
+This library does not interact with diamond storage. Its state is managed internally within the function call stack. The `enter` and `exit` functions manage a reentrancy guard mechanism that is local to the current function execution context.
+</Callout>
+
+<div style={{marginTop: "3rem", paddingTop: "2rem", borderTop: "1px solid var(--ifm-color-emphasis-200)"}}>
+  <WasThisHelpful pageId="NonReentrancyMod" />
+</div>
+
+<LastUpdated date="2025-12-30T18:51:48.015Z" />

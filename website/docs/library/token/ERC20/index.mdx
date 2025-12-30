@@ -1,0 +1,36 @@
+---
+title: "ERC-20"
+description: "ERC-20 fungible token implementations."
+---
+
+import DocCard, { DocCardGrid } from '@site/src/components/docs/DocCard';
+import DocSubtitle from '@site/src/components/docs/DocSubtitle';
+import Icon from '@site/src/components/ui/Icon';
+
+<DocSubtitle>
+  ERC-20 fungible token implementations.
+</DocSubtitle>
+
+<DocCardGrid columns={2}>
+  <DocCard
+    title="ERC-20"
+    description={"ERC-20 fungible token implementations."}
+    href="/docs/library/token/ERC20/ERC20"
+    icon={<Icon name="package" size={28} />}
+    size="medium"
+  />
+  <DocCard
+    title="ERC-20 Bridgeable"
+    description={"ERC-20 Bridgeable extension for ERC-20 tokens."}
+    href="/docs/library/token/ERC20/ERC20Bridgeable"
+    icon={<Icon name="package" size={28} />}
+    size="medium"
+  />
+  <DocCard
+    title="ERC-20 Permit"
+    description={"ERC-20 Permit extension for ERC-20 tokens."}
+    href="/docs/library/token/ERC20/ERC20Permit"
+    icon={<Icon name="package" size={28} />}
+    size="medium"
+  />
+</DocCardGrid>

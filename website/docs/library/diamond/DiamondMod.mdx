@@ -1,0 +1,252 @@
+---
+sidebar_position: 1
+title: "DiamondMod"
+description: "Internal functions and storage for diamond proxy functionality"
+gitSource: "https://github.com/Perfect-Abstractions/Compose/tree/main/src/diamond/DiamondMod.sol"
+---
+
+import DocSubtitle  from '@site/src/components/docs/DocSubtitle';
+import Badge from '@site/src/components/ui/Badge';
+import Callout from '@site/src/components/ui/Callout';
+import CalloutBox from '@site/src/components/ui/CalloutBox';
+import Accordion, { AccordionGroup } from '@site/src/components/ui/Accordion';
+import PropertyTable from '@site/src/components/api/PropertyTable';
+import ExpandableCode from '@site/src/components/code/ExpandableCode';
+import CodeShowcase from '@site/src/components/code/CodeShowcase';
+import RelatedDocs from '@site/src/components/docs/RelatedDocs';
+import WasThisHelpful from '@site/src/components/docs/WasThisHelpful';
+import LastUpdated from '@site/src/components/docs/LastUpdated';
+import ReadingTime from '@site/src/components/docs/ReadingTime';
+import GradientText from '@site/src/components/ui/GradientText';
+import GradientButton from '@site/src/components/ui/GradientButton';
+
+<DocSubtitle>
+Internal functions and storage for diamond proxy functionality
+</DocSubtitle>
+
+<Callout type="info" title="Key Features">
+- Provides `internal` functions for diamond proxy operations.
+- Manages facet mappings and function selectors using diamond storage.
+- Supports finding and executing functions via `diamondFallback`.
+- Includes `getStorage` for inspecting diamond storage state.
+</Callout>
+
+<Callout type="info" title="Module Usage">
+This module provides internal functions for use in your custom facets. Import it to access shared logic and storage.
+</Callout>
+
+## Overview
+
+This module provides internal functions and storage for managing diamond proxy functionality. It enables facets to interact with shared diamond storage for functions like adding facets and handling fallback calls. Changes to the diamond's facet mappings are managed internally, ensuring consistency across all facets.
+
+---
+
+## Storage
+
+### DiamondStorage
+
+storage-location: erc8042:erc8109.diamond
+
+<ExpandableCode language="solidity" maxLines={15} title="Definition">
+{`struct DiamondStorage {
+    mapping(bytes4 functionSelector => FacetAndPosition) facetAndPosition;
+    /**
+    * \`selectors\` contains all function selectors that can be called in the diamond.
+    */
+    bytes4[] selectors;
+}`}
+</ExpandableCode>
+
+---
+### FacetAndPosition
+
+<ExpandableCode language="solidity" maxLines={15} title="Definition">
+{`struct FacetAndPosition {
+    address facet;
+    uint32 position;
+}`}
+</ExpandableCode>
+
+---
+### FacetFunctions
+
+<ExpandableCode language="solidity" maxLines={15} title="Definition">
+{`struct FacetFunctions {
+    address facet;
+    bytes4[] selectors;
+}`}
+</ExpandableCode>
+
+### State Variables
+
+<PropertyTable
+  properties={[
+    {
+      name: "DIAMOND_STORAGE_POSITION",
+      type: "bytes32",
+      description: "Diamond storage slot position for this module (Value: `keccak256(\"erc8109.diamond\")`)"
+    }
+  ]}
+  showRequired={false}
+/>
+
+## Functions
+
+### addFacets
+
+Adds facets and their function selectors to the diamond. Only supports adding functions during diamond deployment.
+
+<ExpandableCode language="solidity" maxLines={8}>
+{`function addFacets(FacetFunctions[] memory _facets) ;`}
+</ExpandableCode>
+
+**Parameters:**
+
+<PropertyTable
+  properties={[
+    {
+      name: "_facets",
+      type: "FacetFunctions[]",
+      description: ""
+    }
+  ]}
+  showRequired={false}
+/>
+
+---
+### diamondFallback
+
+Find facet for function that is called and execute the function if a facet is found and return any value.
+
+<ExpandableCode language="solidity" maxLines={8}>
+{`function diamondFallback() ;`}
+</ExpandableCode>
+
+---
+### getStorage
+
+<ExpandableCode language="solidity" maxLines={8}>
+{`function getStorage() pure returns (DiamondStorage storage s);`}
+</ExpandableCode>
+
+## Events
+
+<AccordionGroup>
+  <Accordion title="DiamondFunctionAdded" defaultOpen={false}>
+    <div style={{marginBottom: "1rem"}}>
+      Emitted when a function is added to a diamond.
+    </div>
+
+    <div style={{marginBottom: "1rem"}}>
+      <strong>Signature:</strong>
+      <ExpandableCode language="solidity" maxLines={5}>
+{`event DiamondFunctionAdded(bytes4 indexed _selector, address indexed _facet);`}
+      </ExpandableCode>
+    </div>
+
+    <div style={{marginBottom: "1rem"}}>
+      <strong>Parameters:</strong>
+      <PropertyTable
+        properties={[
+          {
+            name: "_selector",
+            type: "bytes4",
+            description: "The function selector being added."
+          },
+          {
+            name: "_facet",
+            type: "address",
+            description: "The facet address that will handle calls to `_selector`."
+          }
+        ]}
+        showRequired={false}
+      />
+    </div>
+  </Accordion>
+</AccordionGroup>
+
+## Errors
+
+<AccordionGroup>
+  <Accordion title="CannotAddFunctionToDiamondThatAlreadyExists" defaultOpen={false}>
+
+    <div>
+      <strong>Signature:</strong>
+      <ExpandableCode language="solidity" maxLines={5}>
+error CannotAddFunctionToDiamondThatAlreadyExists(bytes4 _selector);
+      </ExpandableCode>
+    </div>
+  </Accordion>
+  <Accordion title="FunctionNotFound" defaultOpen={false}>
+
+    <div>
+      <strong>Signature:</strong>
+      <ExpandableCode language="solidity" maxLines={5}>
+error FunctionNotFound(bytes4 _selector);
+      </ExpandableCode>
+    </div>
+  </Accordion>
+  <Accordion title="NoBytecodeAtAddress" defaultOpen={false}>
+
+    <div>
+      <strong>Signature:</strong>
+      <ExpandableCode language="solidity" maxLines={5}>
+error NoBytecodeAtAddress(address _contractAddress);
+      </ExpandableCode>
+    </div>
+  </Accordion>
+</AccordionGroup>
+
+<!-- Usage Example section commented out for now -->
+<!--
+## Usage Example
+
+<ExpandableCode language="solidity" maxLines={20} title="Example Implementation">
+{`pragma solidity >=0.8.30;
+
+import { DiamondMod } from "@compose/diamond/DiamondMod";
+
+contract MyFacet {
+    DiamondMod internal diamondMod;
+
+    constructor(address diamondAddress) {
+        diamondMod = DiamondMod(diamondAddress);
+    }
+
+    /**
+     * @notice Example of calling diamondFallback.
+     */
+    function callDiamondFunction(bytes4 _selector, bytes memory _calldata) external returns (bytes memory) {
+        // Assuming diamondMod is initialized with the diamond's address
+        return diamondMod.diamondFallback(_selector, _calldata);
+    }
+
+    /**
+     * @notice Example of retrieving diamond storage.
+     */
+    function getDiamondStorage() external pure returns (bytes memory) {
+        return diamondMod.getStorage();
+    }
+}`}
+</ExpandableCode>
+-->
+
+## Best Practices
+
+<Callout type="tip" title="Best Practice">
+- Call `diamondFallback` only with valid function selectors and calldata.
+- Use `getStorage` to inspect diamond storage state when debugging or auditing.
+- Ensure `addFacets` is only invoked during initial diamond deployment to avoid conflicts.
+</Callout>
+
+## Integration Notes
+
+<Callout type="success" title="Shared Storage">
+This module utilizes the diamond storage pattern at the `DIAMOND_STORAGE_POSITION` slot, identified by `keccak256("erc8109.diamond")`. The `DiamondStorage` struct, although empty in the provided definition, represents the central storage for diamond-related information. Functions like `addFacets` and `diamondFallback` directly interact with this shared storage, making any modifications immediately visible to all facets that access the same storage slot.
+</Callout>
+
+<div style={{marginTop: "3rem", paddingTop: "2rem", borderTop: "1px solid var(--ifm-color-emphasis-200)"}}>
+  <WasThisHelpful pageId="DiamondMod" />
+</div>
+
+<LastUpdated date="2025-12-30T18:51:28.225Z" />

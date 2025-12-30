@@ -1,0 +1,238 @@
+---
+sidebar_position: 3
+title: "ERC721BurnFacet"
+description: "Burns ERC-721 tokens within a diamond"
+gitSource: "https://github.com/Perfect-Abstractions/Compose/tree/main/src/token/ERC721/ERC721/ERC721BurnFacet.sol"
+---
+
+import DocSubtitle  from '@site/src/components/docs/DocSubtitle';
+import Badge from '@site/src/components/ui/Badge';
+import Callout from '@site/src/components/ui/Callout';
+import CalloutBox from '@site/src/components/ui/CalloutBox';
+import Accordion, { AccordionGroup } from '@site/src/components/ui/Accordion';
+import PropertyTable from '@site/src/components/api/PropertyTable';
+import ExpandableCode from '@site/src/components/code/ExpandableCode';
+import CodeShowcase from '@site/src/components/code/CodeShowcase';
+import RelatedDocs from '@site/src/components/docs/RelatedDocs';
+import WasThisHelpful from '@site/src/components/docs/WasThisHelpful';
+import LastUpdated from '@site/src/components/docs/LastUpdated';
+import ReadingTime from '@site/src/components/docs/ReadingTime';
+import GradientText from '@site/src/components/ui/GradientText';
+import GradientButton from '@site/src/components/ui/GradientButton';
+
+<DocSubtitle>
+Burns ERC-721 tokens within a diamond
+</DocSubtitle>
+
+<Callout type="info" title="Key Features">
+- Exposes external function for burning ERC-721 tokens.
+- Accesses diamond storage using a defined storage position.
+- Self-contained with no external dependencies or inheritance.
+- Compatible with ERC-2535 diamond standard.
+</Callout>
+
+## Overview
+
+This facet implements the burning of ERC-721 tokens as an external function within a diamond. It accesses shared ERC-721 storage to remove tokens from enumeration tracking. Developers integrate this facet to provide token destruction capabilities while maintaining diamond upgradeability and modularity.
+
+---
+
+## Storage
+
+### ERC721Storage
+
+<ExpandableCode language="solidity" maxLines={15} title="Definition">
+{`struct ERC721Storage {
+    mapping(uint256 tokenId => address owner) ownerOf;
+    mapping(address owner => uint256 balance) balanceOf;
+    mapping(address owner => mapping(address operator => bool approved)) isApprovedForAll;
+    mapping(uint256 tokenId => address approved) approved;
+}`}
+</ExpandableCode>
+
+### State Variables
+
+<PropertyTable
+  properties={[
+    {
+      name: "STORAGE_POSITION",
+      type: "bytes32",
+      description: "Diamond storage slot position for this module (Value: `keccak256(\"compose.erc721\")`)"
+    }
+  ]}
+  showRequired={false}
+/>
+
+## Functions
+
+### burn
+
+Burns (destroys) a token, removing it from enumeration tracking.
+
+<ExpandableCode language="solidity" maxLines={8}>
+{`function burn(uint256 _tokenId) external;`}
+</ExpandableCode>
+
+**Parameters:**
+
+<PropertyTable
+  properties={[
+    {
+      name: "_tokenId",
+      type: "uint256",
+      description: "The ID of the token to burn."
+    }
+  ]}
+  showRequired={false}
+/>
+
+## Events
+
+<AccordionGroup>
+  <Accordion title="Transfer" defaultOpen={false}>
+
+    <div style={{marginBottom: "1rem"}}>
+      <strong>Signature:</strong>
+      <ExpandableCode language="solidity" maxLines={5}>
+{`event Transfer(address indexed _from, address indexed _to, uint256 indexed _tokenId);`}
+      </ExpandableCode>
+    </div>
+
+  </Accordion>
+  <Accordion title="Approval" defaultOpen={false}>
+
+    <div style={{marginBottom: "1rem"}}>
+      <strong>Signature:</strong>
+      <ExpandableCode language="solidity" maxLines={5}>
+{`event Approval(address indexed _owner, address indexed _to, uint256 indexed _tokenId);`}
+      </ExpandableCode>
+    </div>
+
+  </Accordion>
+  <Accordion title="ApprovalForAll" defaultOpen={false}>
+
+    <div style={{marginBottom: "1rem"}}>
+      <strong>Signature:</strong>
+      <ExpandableCode language="solidity" maxLines={5}>
+{`event ApprovalForAll(address indexed _owner, address indexed _operator, bool _approved);`}
+      </ExpandableCode>
+    </div>
+
+  </Accordion>
+</AccordionGroup>
+
+## Errors
+
+<AccordionGroup>
+  <Accordion title="ERC721NonexistentToken" defaultOpen={false}>
+
+    <div>
+      <strong>Signature:</strong>
+      <ExpandableCode language="solidity" maxLines={5}>
+error ERC721NonexistentToken(uint256 _tokenId);
+      </ExpandableCode>
+    </div>
+  </Accordion>
+  <Accordion title="ERC721InsufficientApproval" defaultOpen={false}>
+
+    <div>
+      <strong>Signature:</strong>
+      <ExpandableCode language="solidity" maxLines={5}>
+error ERC721InsufficientApproval(address _operator, uint256 _tokenId);
+      </ExpandableCode>
+    </div>
+  </Accordion>
+</AccordionGroup>
+
+<!-- Usage Example section commented out for now -->
+<!--
+## Usage Example
+
+<ExpandableCode language="solidity" maxLines={20} title="Example Implementation">
+{`pragma solidity >=0.8.30;
+import {ERC721BurnFacet} from "@compose/token/ERC721/ERC721/ERC721BurnFacet";
+import {IDiamond} from "@compose/diamond/IDiamond.sol";
+
+contract ExampleUsage {
+    address immutable diamondAddress;
+
+    constructor(address _diamondAddress) {
+        diamondAddress = _diamondAddress;
+    }
+
+    /**
+     * @notice Example of burning an ERC-721 token.
+     * @param _tokenId The ID of the token to burn.
+     */
+    function burnToken(uint256 _tokenId) external {
+        IDiamond diamond = IDiamond(diamondAddress);
+
+        // The diamond proxy routes this call to the ERC721BurnFacet
+        diamond.burn(_tokenId);
+    }
+}`}
+</ExpandableCode>
+-->
+
+## Best Practices
+
+<Callout type="tip" title="Best Practice">
+- Initialize ERC721Storage during diamond setup.
+- Ensure the caller has the necessary approvals or ownership before burning.
+- Verify storage compatibility when upgrading the diamond.
+</Callout>
+
+## Security Considerations
+
+<Callout type="warning" title="Security">
+The `burn` function should be protected by appropriate access controls, ensuring only authorized addresses (e.g., token owner with approval or operator) can call it. Input validation for `_tokenId` is critical to prevent unexpected behavior, although specific checks are not detailed in the provided function signature. Follow standard Solidity security practices for reentrancy and input validation.
+</Callout>
+
+<div style={{marginTop: "3rem", paddingTop: "2rem", borderTop: "1px solid var(--ifm-color-emphasis-200)"}}>
+  <RelatedDocs
+    items={[
+      {
+        title: "ERC20PermitFacet",
+        href: "/docs/library/token/ERC20/ERC20Permit/ERC20PermitFacet",
+        description: "Related facet in token",
+        icon: "💎"
+      },
+      {
+        title: "ERC20Facet",
+        href: "/docs/library/token/ERC20/ERC20/ERC20Facet",
+        description: "Related facet in token",
+        icon: "💎"
+      },
+      {
+        title: "ERC20BurnFacet",
+        href: "/docs/library/token/ERC20/ERC20/ERC20BurnFacet",
+        description: "Related facet in token",
+        icon: "💎"
+      },
+      {
+        title: "ERC20BridgeableFacet",
+        href: "/docs/library/token/ERC20/ERC20Bridgeable/ERC20BridgeableFacet",
+        description: "Related facet in token",
+        icon: "💎"
+      },
+      {
+        title: "ERC1155Facet",
+        href: "/docs/library/token/ERC1155/ERC1155Facet",
+        description: "Related facet in token",
+        icon: "💎"
+      },
+      {
+        title: "ERC6909Facet",
+        href: "/docs/library/token/ERC6909/ERC6909/ERC6909Facet",
+        description: "Related facet in token",
+        icon: "💎"
+      }
+    ]}
+  />
+</div>
+
+<div style={{marginTop: "3rem", paddingTop: "2rem", borderTop: "1px solid var(--ifm-color-emphasis-200)"}}>
+  <WasThisHelpful pageId="ERC721BurnFacet" />
+</div>
+
+<LastUpdated date="2025-12-30T18:50:56.024Z" />
