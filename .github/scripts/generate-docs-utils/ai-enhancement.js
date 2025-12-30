@@ -388,22 +388,20 @@ function extractJSON(content) {
  * @param {object} data - Parsed documentation data
  * @param {'module' | 'facet'} contractType - Type of contract
  * @param {string} token - Legacy token parameter (deprecated, uses env vars now)
- * @returns {Promise<object>} Enhanced data
+ * @returns {Promise<{data: object, usedFallback: boolean, error?: string}>} Enhanced data with fallback status
  */
 async function enhanceWithAI(data, contractType, token) {
   try {
-    console.log(`    AI Content Enhancement: ${data.title}`);
-    
     const systemPrompt = buildSystemPrompt();
     const userPrompt = buildPrompt(data, contractType);
 
     // Call AI provider
     const responseText = await ai.call(systemPrompt, userPrompt, {
-      onSuccess: (text, tokens) => {
-        console.log(`    ✅ AI enhancement complete (${tokens} tokens)`);
+      onSuccess: () => {
+        // Silent success - no logging
       },
-      onError: (error) => {
-        console.log(`    ⚠️ AI call failed: ${error.message}`);
+      onError: () => {
+        // Silent error - will be caught below
       }
     });
 
@@ -416,11 +414,14 @@ async function enhanceWithAI(data, contractType, token) {
       enhanced = JSON.parse(cleanedContent);
     }
 
-    return convertEnhancedFields(enhanced, data);
+    return { data: convertEnhancedFields(enhanced, data), usedFallback: false };
 
   } catch (error) {
-    console.log(`    ⚠️ Enhancement failed for ${data.title}: ${error.message}`);
-    return addFallbackContent(data, contractType);
+    return { 
+      data: addFallbackContent(data, contractType), 
+      usedFallback: true, 
+      error: error.message 
+    };
   }
 }
 
@@ -431,8 +432,6 @@ async function enhanceWithAI(data, contractType, token) {
  * @returns {object} Data with fallback content
  */
 function addFallbackContent(data, contractType) {
-  console.log('    Using fallback content');
-
   const enhanced = { ...data }
 
   if (contractType === 'module') {

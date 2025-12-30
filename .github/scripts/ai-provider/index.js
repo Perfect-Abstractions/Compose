@@ -38,10 +38,6 @@ class AIProvider {
       );
     }
 
-    console.log(`====================================================`);
-    console.log(` ✨ Using AI provider: ${this.provider.name}`);
-    console.log(`====================================================`);
-
     this.rateLimiter.setProvider(this.provider);
     this.initialized = true;
   }
@@ -104,8 +100,6 @@ class AIProvider {
       return extracted.content;
 
     } catch (error) {
-      console.error(`    ❌ AI call failed: ${error.message}`);
-
       if (onError) {
         onError(error);
       }

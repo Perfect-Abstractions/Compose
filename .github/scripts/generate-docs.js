@@ -53,6 +53,7 @@ const processedFiles = {
   modules: [],
   skipped: [],
   errors: [],
+  fallbackFiles: [],
 };
 
 // ============================================================================
@@ -68,7 +69,6 @@ const processedFiles = {
 async function processForgeDocFile(forgeDocFile, solFilePath) {
   const content = readFileSafe(forgeDocFile);
   if (!content) {
-    console.log(`Could not read: ${forgeDocFile}`);
     processedFiles.errors.push({ file: forgeDocFile, error: 'Could not read file' });
     return false;
   }
@@ -82,21 +82,18 @@ async function processForgeDocFile(forgeDocFile, solFilePath) {
   }
 
   if (!data.title) {
-    console.log(`Could not parse title from: ${forgeDocFile}`);
     processedFiles.skipped.push({ file: forgeDocFile, reason: 'No title found' });
     return false;
   }
 
   // Skip interfaces
   if (isInterface(data.title, content)) {
-    console.log(`Skipping interface: ${data.title}`);
     processedFiles.skipped.push({ file: forgeDocFile, reason: 'Interface (filtered)' });
     return false;
   }
 
   // Determine contract type
   const contractType = getContractType(forgeDocFile, content);
-  console.log(`Type: ${contractType} - ${data.title}`);
 
   // Extract storage info for modules
   if (contractType === 'module') {
@@ -148,11 +145,19 @@ async function processForgeDocFile(forgeDocFile, solFilePath) {
   let enhancedData = data;
   if (!skipAIEnhancement) {
     const token = process.env.GITHUB_TOKEN;
-    enhancedData = await enhanceWithAI(data, contractType, token);
+    const result = await enhanceWithAI(data, contractType, token);
+    enhancedData = result.data;
+    // Track fallback usage
+    if (result.usedFallback) {
+      processedFiles.fallbackFiles.push({
+        title: data.title,
+        file: pathInfo.outputFile,
+        error: result.error || 'Unknown error'
+      });
+    }
     // Ensure contractType is preserved after AI enhancement
     enhancedData.contractType = contractType;
   } else {
-    console.log(`Skipping AI enhancement for ${data.title}`);
     enhancedData = addFallbackContent(data, contractType);
     // Ensure contractType is preserved
     enhancedData.contractType = contractType;
@@ -168,8 +173,6 @@ async function processForgeDocFile(forgeDocFile, solFilePath) {
 
   // Write the file
   if (writeFileSafe(pathInfo.outputFile, mdxContent)) {
-    console.log('✅  Generated:', pathInfo.outputFile);
-
     if (contractType === 'module') {
       processedFiles.modules.push({ title: data.title, file: pathInfo.outputFile });
     } else {
@@ -205,15 +208,12 @@ function needsAggregation(forgeDocFiles) {
  * @returns {Promise<boolean>} True if processed successfully
  */
 async function processAggregatedFiles(forgeDocFiles, solFilePath) {
-  console.log(`Aggregating ${forgeDocFiles.length} files for: ${solFilePath}`);
-
   const parsedItems = [];
   let gitSource = '';
 
   for (const forgeDocFile of forgeDocFiles) {
     const content = readFileSafe(forgeDocFile);
     if (!content) {
-      console.log(`Could not read: ${forgeDocFile}`);
       continue;
     }
 
@@ -227,7 +227,6 @@ async function processAggregatedFiles(forgeDocFiles, solFilePath) {
   }
 
   if (parsedItems.length === 0) {
-    console.log(`No valid items found in files for: ${solFilePath}`);
     processedFiles.errors.push({ file: solFilePath, error: 'No valid items parsed' });
     return false;
   }
@@ -273,7 +272,6 @@ async function processAggregatedFiles(forgeDocFiles, solFilePath) {
   }
 
   const contractType = getContractType(solFilePath, '');
-  console.log(`Type: ${contractType} - ${data.title}`);
 
   if (contractType === 'module') {
     data.storageInfo = extractStorageInfo(data);
@@ -299,11 +297,19 @@ async function processAggregatedFiles(forgeDocFiles, solFilePath) {
   let enhancedData = data;
   if (!skipAIEnhancement) {
     const token = process.env.GITHUB_TOKEN;
-    enhancedData = await enhanceWithAI(data, contractType, token);
+    const result = await enhanceWithAI(data, contractType, token);
+    enhancedData = result.data;
+    // Track fallback usage
+    if (result.usedFallback) {
+      processedFiles.fallbackFiles.push({
+        title: data.title,
+        file: pathInfo.outputFile,
+        error: result.error || 'Unknown error'
+      });
+    }
     // Ensure contractType is preserved after AI enhancement
     enhancedData.contractType = contractType;
   } else {
-    console.log(`Skipping AI enhancement for ${data.title}`);
     enhancedData = addFallbackContent(data, contractType);
     // Ensure contractType is preserved
     enhancedData.contractType = contractType;
@@ -319,8 +325,6 @@ async function processAggregatedFiles(forgeDocFiles, solFilePath) {
 
   // Write the file
   if (writeFileSafe(pathInfo.outputFile, mdxContent)) {
-    console.log('✅  Generated:', pathInfo.outputFile);
-
     if (contractType === 'module') {
       processedFiles.modules.push({ title: data.title, file: pathInfo.outputFile });
     } else {
@@ -340,12 +344,9 @@ async function processAggregatedFiles(forgeDocFiles, solFilePath) {
  * @returns {Promise<void>}
  */
 async function processSolFile(solFilePath) {
-  console.log(`Processing: ${solFilePath}`);
-
   const forgeDocFiles = findForgeDocFiles(solFilePath);
 
   if (forgeDocFiles.length === 0) {
-    console.log(`No forge doc output found for: ${solFilePath}`);
     processedFiles.skipped.push({ file: solFilePath, reason: 'No forge doc output' });
     return;
   }
@@ -354,7 +355,6 @@ async function processSolFile(solFilePath) {
     await processAggregatedFiles(forgeDocFiles, solFilePath);
   } else {
     for (const forgeDocFile of forgeDocFiles) {
-      console.log(`Reading: ${path.basename(forgeDocFile)}`);
       await processForgeDocFile(forgeDocFile, solFilePath);
     }
   }
@@ -396,6 +396,13 @@ function printSummary() {
     }
   }
 
+  if (processedFiles.fallbackFiles.length > 0) {
+    console.log(`\n⚠️  Files using fallback due to AI errors: ${processedFiles.fallbackFiles.length}`);
+    for (const f of processedFiles.fallbackFiles) {
+      console.log(`   - ${f.title}: ${f.error}`);
+    }
+  }
+
   const total = processedFiles.facets.length + processedFiles.modules.length;
   console.log(`\nTotal generated: ${total} documentation files`);
   console.log('='.repeat(50) + '\n');
@@ -411,6 +418,7 @@ function writeSummaryFile() {
     modules: processedFiles.modules,
     skipped: processedFiles.skipped,
     errors: processedFiles.errors,
+    fallbackFiles: processedFiles.fallbackFiles,
     totalGenerated: processedFiles.facets.length + processedFiles.modules.length,
   };
 
@@ -473,7 +481,6 @@ async function main() {
   // Step 3: Process each file
   for (const solFile of solFiles) {
     await processSolFile(solFile);
-    console.log('');
   }
 
   // Step 4: Regenerate all index pages now that docs are created
@@ -481,9 +488,6 @@ async function main() {
   const indexResult = regenerateAllIndexFiles(true);
   if (indexResult.regenerated.length > 0) {
     console.log(`   Regenerated ${indexResult.regenerated.length} index pages`);
-    if (indexResult.regenerated.length <= 10) {
-      indexResult.regenerated.forEach((c) => console.log(`      ✅ ${c}`));
-    }
   }
   console.log('');
 

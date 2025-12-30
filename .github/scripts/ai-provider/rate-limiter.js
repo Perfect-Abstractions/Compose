@@ -46,7 +46,6 @@ class RateLimiter {
 
     if (this.lastCallTime > 0 && elapsed < minDelayMs) {
       const waitTime = minDelayMs - elapsed;
-      console.log(`    ⏳ Rate limit: waiting ${Math.ceil(waitTime / 1000)}s...`);
       await this._sleep(waitTime);
     }
 
@@ -59,9 +58,6 @@ class RateLimiter {
     if (estimatedTokens > availableTokens) {
       const waitTime = this._calculateTokenWaitTime(estimatedTokens, currentConsumption);
       if (waitTime > 0) {
-        console.log(
-          `Waiting ${Math.ceil(waitTime / 1000)}s...`
-        );
         await this._sleep(waitTime);
         this._cleanTokenHistory();
       }
