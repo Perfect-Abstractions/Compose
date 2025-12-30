@@ -73,6 +73,11 @@ contract ERC20BurnFacetTest is Test {
         vm.chainId(originalChainId + 1);
 
         /**
+         * Verify block.chainid actually changed (important for coverage mode with different compiler settings)
+         */
+        assertEq(block.chainid, originalChainId + 1, "Chain ID should have changed");
+
+        /**
          * Domain separator should recalculate with new chain ID
          */
         bytes32 separator2 = token.DOMAIN_SEPARATOR();
@@ -84,13 +89,14 @@ contract ERC20BurnFacetTest is Test {
 
         /**
          * New separator should match expected value for new chain ID
+         * Use block.chainid directly to ensure it works with all compiler settings
          */
         bytes32 expectedSeparator = keccak256(
             abi.encode(
                 keccak256("EIP712Domain(string name,string version,uint256 chainId,address verifyingContract)"),
                 keccak256(bytes(TOKEN_NAME)),
                 keccak256("1"),
-                originalChainId + 1,
+                block.chainid,
                 address(token)
             )
         );
