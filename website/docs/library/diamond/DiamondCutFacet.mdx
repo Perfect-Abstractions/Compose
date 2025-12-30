@@ -1,7 +1,7 @@
 ---
 sidebar_position: 3
 title: "DiamondCutFacet"
-description: "Manage diamond facets and upgrade diamond proxy"
+description: "Manages diamond upgrades and facet installations"
 gitSource: "https://github.com/Perfect-Abstractions/Compose/tree/main/src/diamond/DiamondCutFacet.sol"
 ---
 
@@ -21,18 +21,19 @@ import GradientText from '@site/src/components/ui/GradientText';
 import GradientButton from '@site/src/components/ui/GradientButton';
 
 <DocSubtitle>
-Manage diamond facets and upgrade diamond proxy
+Manages diamond upgrades and facet installations
 </DocSubtitle>
 
 <Callout type="info" title="Key Features">
-- Allows atomic addition, replacement, and removal of functions from the diamond proxy.
-- Supports executing an initialization function after performing facet changes.
-- Provides error handling for common upgrade-related issues like unauthorized access or invalid operations.
+- Enables adding, replacing, and removing facets and their function selectors.
+- Supports optional initialization calls via `delegatecall` during upgrades.
+- Includes error handling for common upgrade scenarios.
+- Operates as an external function on the diamond proxy.
 </Callout>
 
 ## Overview
 
-The DiamondCutFacet provides essential functions for managing the diamond proxy's facets. It allows authorized callers to add, replace, or remove functions, effectively upgrading or modifying the diamond's functionality. This facet is crucial for maintaining and evolving the diamond's surface area.
+This facet provides external functions to upgrade a diamond by adding, replacing, or removing facets. It orchestrates the diamond cut process, allowing for optional initialization calls. Developers integrate this facet to enable upgradeability and manage the diamond's functional surface area.
 
 ---
 
@@ -259,53 +260,57 @@ error InitializationFunctionReverted(address _initializationContractAddress, byt
   </Accordion>
 </AccordionGroup>
 
+<!-- Usage Example section commented out for now -->
+<!--
 ## Usage Example
 
 <ExpandableCode language="solidity" maxLines={20} title="Example Implementation">
-{`pragma solidity ^0.8.30;
+{`pragma solidity >=0.8.30;
 
-import {DiamondCutFacet} from "@compose/diamond/DiamondCutFacet.sol";
-import {DiamondInit} from "@compose/diamond/DiamondInit.sol";
-import {Selectors} from "@compose/diamond/Selectors.sol";
+import {DiamondCutFacet, FacetCut} from "@compose/diamond/DiamondCutFacet";
+import {IDiamond} from "@compose/diamond/IDiamond";
 
-contract MyDiamond is DiamondCutFacet, DiamondInit {
-    constructor(address[] memory _diamondFacets, bytes[] memory _facetCuts, address _init, bytes memory _calldata) DiamondInit(_diamondFacets, _facetCuts, _init, _calldata) {}
+// Example: Upgrading a diamond to add a new facet
+address diamondAddress = address(0x123);
+IDiamond diamond = IDiamond(diamondAddress);
 
-    // Functions from DiamondCutFacet can be called externally after deployment
-    // Example: Adding a new facet
-    function upgradeDiamond(address _newFacetAddress, bytes[] memory _newSelectors) external onlyOwner { // Assuming onlyOwner modifier is implemented elsewhere
-        FacetCut[] memory cut = new FacetCut[](1);
-        cut[0] = FacetCut(FacetCutAction.Add, _newFacetAddress, _newSelectors);
-        diamondCut(cut, address(0), "");
-    }
+// Assume newFacetAddress and newFunctionSelectors are defined
+// For example, newFacetAddress is the deployed address of the new facet
+// and newFunctionSelectors are the function selectors to be added
 
-    // Example: Replacing an existing facet's function
-    function replaceFunction(address _facetAddress, bytes4 _selector, address _newFacetAddress) external onlyOwner { // Assuming onlyOwner modifier is implemented elsewhere
-        FacetCut[] memory cut = new FacetCut[](1);
-        cut[0] = FacetCut(FacetCutAction.Replace, _facetAddress, new bytes[](1));
-        cut[0].selectors[0] = _selector; // This is a simplification, actual implementation requires selector mapping
-        // In a real scenario, you'd provide the new selector and its facet address
-        // For demonstration, this shows the intent of replacing a selector
-        // The diamondCut function expects an array of selectors for a given facet address
-        // A more accurate call would involve constructing the correct FacetCut struct
-        // with the new facet address and its selectors.
-    }
-}
-`}
+FacetCut[] memory cut = new FacetCut[](1);
+cut[0] = FacetCut({
+    facetAddress: newFacetAddress,
+    action: DiamondCutFacet.FacetAction.ADD,
+    functionSelectors: newFunctionSelectors
+});
+
+// Call diamondCut through the diamond proxy to perform the upgrade
+// No initialization call in this example
+(diamond as DiamondCutFacet).diamondCut(cut, address(0), "");
+
+// Example: Replacing a facet
+// cut[0].action = DiamondCutFacet.FacetAction.REPLACE;
+
+// Example: Removing a facet
+// cut[0].action = DiamondCutFacet.FacetAction.REMOVE;
+// cut[0].facetAddress = address(0); // Must be zero address for removal`}
 </ExpandableCode>
+-->
 
 ## Best Practices
 
 <Callout type="tip" title="Best Practice">
-- Ensure that the `diamondCut` function is only callable by an authorized entity (e.g., an owner or a governance contract) to prevent unauthorized upgrades.
-- When adding or replacing facets, carefully verify that the function selectors do not conflict with existing functions, especially immutable ones.
-- Always provide an initialization function (`_init` and `_calldata`) when performing complex upgrades to ensure the diamond's state is consistent after the cut.
+- Initialize the diamond owner using `OwnerStorage` before calling `diamondCut`.
+- Use `diamondCut` to add, replace, or remove facets and their function selectors.
+- Provide an initialization function call in `_init` and `_calldata` for setting up new facets or performing diamond-wide initialization.
+- Ensure the `diamondCut` function is called by the authorized owner.
 </Callout>
 
 ## Security Considerations
 
 <Callout type="warning" title="Security">
-Access to the `diamondCut` function must be strictly controlled to prevent malicious actors from altering the diamond's behavior. Ensure that any initialization function provided is thoroughly audited to prevent state corruption. Be mindful of potential reentrancy if the initialization function or facets being added/replaced interact with external contracts. Immutable functions cannot be replaced or removed.
+The `diamondCut` function must be protected by access control to prevent unauthorized upgrades. The owner of the diamond is responsible for authorizing all `diamondCut` operations. Ensure that facet addresses are valid and that function selectors are correctly mapped to prevent unexpected behavior. Initialization functions called via `_calldata` should be carefully audited for reentrancy and other vulnerabilities. Errors like `OwnerUnauthorizedAccount` and `InitializationFunctionReverted` indicate potential security issues.
 </Callout>
 
 <div style={{marginTop: "3rem", paddingTop: "2rem", borderTop: "1px solid var(--ifm-color-emphasis-200)"}}>
@@ -337,4 +342,4 @@ Access to the `diamondCut` function must be strictly controlled to prevent malic
   <WasThisHelpful pageId="DiamondCutFacet" />
 </div>
 
-<LastUpdated date="2025-12-30T15:56:18.625Z" />
+<LastUpdated date="2025-12-30T17:29:26.868Z" />

@@ -1,7 +1,7 @@
 ---
 sidebar_position: 2
 title: "OwnerTwoStepsFacet"
-description: "Manage diamond ownership with a two-step transfer process."
+description: "Manages diamond ownership with two-step transfer and renounce"
 gitSource: "https://github.com/Perfect-Abstractions/Compose/tree/main/src/access/OwnerTwoSteps/OwnerTwoStepsFacet.sol"
 ---
 
@@ -21,18 +21,19 @@ import GradientText from '@site/src/components/ui/GradientText';
 import GradientButton from '@site/src/components/ui/GradientButton';
 
 <DocSubtitle>
-Manage diamond ownership with a two-step transfer process.
+Manages diamond ownership with two-step transfer and renounce
 </DocSubtitle>
 
 <Callout type="info" title="Key Features">
-- Secure two-step ownership transfer process (`transferOwnership` and `acceptOwnership`).
-- Allows for ownership renouncement, making the contract ownerless.
-- Provides view functions (`owner`, `pendingOwner`) to check current and pending ownership.
+- Implements a secure two-step ownership transfer process.
+- Exposes owner and pending owner status via external view functions.
+- Functions are routed through the diamond proxy, adhering to EIP-2535.
+- Minimal dependencies, designed for composability within a diamond.
 </Callout>
 
 ## Overview
 
-The OwnerTwoSteps facet provides a secure, two-step mechanism for transferring ownership of a Compose diamond. This pattern prevents accidental or malicious ownership changes by requiring both the current owner to initiate the transfer and the new owner to accept it, enhancing the diamond's security and operational integrity.
+This facet implements a two-step ownership transfer mechanism for a diamond, providing enhanced security. It exposes external functions to manage the owner and pending owner addresses, accessible through the diamond proxy. Developers integrate this facet to control administrative functions within the diamond, requiring explicit acceptance of ownership transfers.
 
 ---
 
@@ -193,58 +194,80 @@ error OwnerUnauthorizedAccount();
   </Accordion>
 </AccordionGroup>
 
+<!-- Usage Example section commented out for now -->
+<!--
 ## Usage Example
 
 <ExpandableCode language="solidity" maxLines={20} title="Example Implementation">
-{`pragma solidity ^0.8.30;
+{`pragma solidity >=0.8.30;
+import {IDiamond} from "@compose/diamond/IDiamond";
+import {OwnerTwoStepsFacet} from "@compose/access/OwnerTwoSteps/OwnerTwoStepsFacet";
 
-import {IOwnerTwoStepsFacet} from "@compose/access/OwnerTwoSteps/IOwnerTwoStepsFacet.sol";
-import {OwnerTwoStepsFacet} from "@compose/access/OwnerTwoSteps/OwnerTwoStepsFacet.sol";
-
-// Assume diamond deployment and initialization context
-
-contract DiamondOwnerDeployer {
+contract DiamondUser {
     address public diamondAddress;
 
-    function deployDiamondWithOwner() external {
-        // ... diamond deployment logic ...
-        // diamondAddress = deployedDiamond;
-
-        // Add OwnerTwoStepsFacet to the diamond
-        // ... facet registration logic ...
-
-        // Initialize the facet
-        IOwnerTwoStepsFacet(diamondAddress).transferOwnership(msg.sender); // Or an admin address
+    constructor(address _diamondAddress) {
+        diamondAddress = _diamondAddress;
     }
 
-    function acceptDiamondOwnership() external {
-        // Call from the pending owner
-        IOwnerTwoStepsFacet(diamondAddress).acceptOwnership();
+    /**
+     * @notice Initiates an ownership transfer through the diamond.
+     * @param _newOwner The address to transfer ownership to.
+     */
+    function requestOwnershipTransfer(address _newOwner) external {
+        IDiamond(diamondAddress).transferOwnership(_newOwner);
     }
 
+    /**
+     * @notice Accepts a pending ownership transfer through the diamond.
+     */
+    function acceptNewOwnership() external {
+        IDiamond(diamondAddress).acceptOwnership();
+    }
+
+    /**
+     * @notice Renounces ownership of the diamond.
+     */
     function renounceDiamondOwnership() external {
-        // Call from the current owner to renounce ownership
-        IOwnerTwoStepsFacet(diamondAddress).renounceOwnership();
+        IDiamond(diamondAddress).renounceOwnership();
     }
-}`}
+
+    /**
+     * @notice Gets the current owner of the diamond.
+     * @return The address of the current owner.
+     */
+    function getCurrentOwner() external view returns (address) {
+        return IDiamond(diamondAddress).owner();
+    }
+
+    /**
+     * @notice Gets the pending owner of the diamond.
+     * @return The address of the pending owner.
+     */
+    function getPendingOwner() external view returns (address) {
+        return IDiamond(diamondAddress).pendingOwner();
+    }
+}
+`}
 </ExpandableCode>
+-->
 
 ## Best Practices
 
 <Callout type="tip" title="Best Practice">
-- Initialize ownership transfers using `transferOwnership` from an authorized address.
-- Ensure the intended new owner calls `acceptOwnership` to finalize the transfer.
-- Use `renounceOwnership` cautiously, as it makes the diamond contract unownable.
+- Initialize the owner address during the diamond's deployment process.
+- Call `transferOwnership` to initiate a transfer, followed by `acceptOwnership` from the new address.
+- Utilize `renounceOwnership` to remove the owner role when no longer needed.
 </Callout>
 
 ## Security Considerations
 
 <Callout type="warning" title="Security">
-Access to `transferOwnership` and `renounceOwnership` is restricted to the current owner. `acceptOwnership` can only be called by the address designated as the pending owner. Ensure that the address initiating `transferOwnership` is indeed the legitimate owner to prevent unauthorized ownership changes. Accidental renouncement will render the contract unmanageable by any address.
+The `transferOwnership` function requires the caller to be the current owner. The `acceptOwnership` function can only be called by the pending owner. `renounceOwnership` can only be called by the current owner. All sensitive operations are protected by these access controls. The `OwnerUnauthorizedAccount` error is emitted if unauthorized calls are attempted. Follow standard Solidity security practices for input validation.
 </Callout>
 
 <div style={{marginTop: "3rem", paddingTop: "2rem", borderTop: "1px solid var(--ifm-color-emphasis-200)"}}>
   <WasThisHelpful pageId="OwnerTwoStepsFacet" />
 </div>
 
-<LastUpdated date="2025-12-30T15:53:48.922Z" />
+<LastUpdated date="2025-12-30T17:27:01.049Z" />

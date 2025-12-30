@@ -1,7 +1,7 @@
 ---
 sidebar_position: 2
 title: "ERC721EnumerableFacet"
-description: "Manages ERC721 token metadata and enumerable features."
+description: "ERC-721 token standard implementation for diamonds"
 gitSource: "https://github.com/Perfect-Abstractions/Compose/tree/main/src/token/ERC721/ERC721Enumerable/ERC721EnumerableFacet.sol"
 ---
 
@@ -21,19 +21,19 @@ import GradientText from '@site/src/components/ui/GradientText';
 import GradientButton from '@site/src/components/ui/GradientButton';
 
 <DocSubtitle>
-Manages ERC721 token metadata and enumerable features.
+ERC-721 token standard implementation for diamonds
 </DocSubtitle>
 
 <Callout type="info" title="Key Features">
-- Implements ERC721 standard metadata and enumerable properties.
-- Provides efficient `tokenOfOwnerByIndex` for indexed token retrieval.
-- Supports `approve` and `setApprovalForAll` for granular token permissions.
-- Includes safe transfer variants for enhanced security with receiver contracts.
+- Implements core ERC-721 functionality including metadata, ownership, and approvals.
+- Provides enumerable capabilities with `tokenOfOwnerByIndex` and `totalSupply`.
+- Functions are exposed externally for direct interaction via the diamond proxy.
+- Adheres to EIP-2535 Diamond Standard for composability and upgradeability.
 </Callout>
 
 ## Overview
 
-The ERC721EnumerableFacet provides standard ERC721 functionality, including token metadata and ownership tracking. It enables efficient querying of token balances and ownership by index, crucial for applications requiring ordered token management within a Compose diamond.
+This facet implements the ERC-721 token standard, providing core functionality for managing non-fungible tokens within a diamond. It exposes external functions for token metadata, ownership, transfers, and approvals, accessible through the diamond proxy. Developers integrate this facet to enable NFT capabilities in a composable and upgradeable manner.
 
 ---
 
@@ -632,52 +632,58 @@ error ERC721OutOfBoundsIndex(address _owner, uint256 _index);
   </Accordion>
 </AccordionGroup>
 
+<!-- Usage Example section commented out for now -->
+<!--
 ## Usage Example
 
 <ExpandableCode language="solidity" maxLines={20} title="Example Implementation">
-{`pragma solidity ^0.8.30;
+{`pragma solidity >=0.8.30;
 
-import { DiamondInit } from "@compose/diamond-core/DiamondInit.sol";
-import { DiamondCut } from "@compose/diamond-core/DiamondCut.sol";
-import { ERC721EnumerableFacet } from "@compose/token/ERC721/ERC721Enumerable/ERC721EnumerableFacet.sol";
+import {IDiamond} from "@compose/diamond/IDiamond.sol";
+import {ERC721EnumerableFacet} from "@compose/token/ERC721/ERC721Enumerable/ERC721EnumerableFacet";
 
-contract Deployer {
-    function deploy() external {
-        // Assume diamond contract is already deployed and initialized
-        address diamond = address(0x123); // Replace with actual diamond address
+contract ExampleDiamondUser {
+    IDiamond diamond;
 
-        // Prepare facet cut data
-        bytes memory initData = abi.encodeWithSelector(ERC721EnumerableFacet.init.selector, "My Token", "MTK");
-        ERC721EnumerableFacet.FacetCut[] memory cuts = new ERC721EnumerableFacet.FacetCut[](1);
-        cuts[0] = ERC721EnumerableFacet.FacetCut({
-            facetAddress: address(new ERC721EnumerableFacet()), // Replace with actual deployed facet address
-            action: DiamondCut.Action.ADD,
-            selectors: ERC721EnumerableFacet.getSelectors()
-        });
+    constructor(address _diamondAddress) {
+        diamond = IDiamond(_diamondAddress);
+    }
 
-        // Execute cut
-        DiamondCut(diamond).diamondCut(cuts, address(0), initData);
+    function getTokenURI(uint256 tokenId) external view returns (string memory) {
+        // Calls the tokenURI function implemented by the ERC721EnumerableFacet via the diamond proxy
+        return diamond.tokenURI(tokenId);
+    }
 
-        // Example of calling functions after deployment
-        ERC721EnumerableFacet(diamond).name();
-        ERC721EnumerableFacet(diamond).symbol();
-        ERC721EnumerableFacet(diamond).totalSupply();
+    function transferToken(address to, uint256 tokenId) external {
+        // Calls the transferFrom function implemented by the ERC721EnumerableFacet via the diamond proxy
+        diamond.transferFrom(address(this), to, tokenId);
+    }
+
+    function approveToken(address to, uint256 tokenId) external {
+        // Calls the approve function implemented by the ERC721EnumerableFacet via the diamond proxy
+        diamond.approve(to, tokenId);
+    }
+
+    function getTotalSupply() external view returns (uint256) {
+        // Calls the totalSupply function implemented by the ERC721EnumerableFacet via the diamond proxy
+        return diamond.totalSupply();
     }
 }`}
 </ExpandableCode>
+-->
 
 ## Best Practices
 
 <Callout type="tip" title="Best Practice">
-- Initialize the facet with the desired token name and symbol using its `init` function during diamond deployment.
-- Utilize `tokenOfOwnerByIndex` for iterating through a user's tokens, ensuring proper handling of index bounds.
-- Leverage internal functions like `internalTransferFrom` within other facets for robust token management.
+- Initialize the facet's state variables, including `name`, `symbol`, and `baseURI`, during the diamond's deployment or upgrade process.
+- Enforce access control for functions like `approve` and `setApprovalForAll` by ensuring the caller has the necessary permissions or is the token owner.
+- Verify that the `internalTransferFrom` function is correctly called by authorized functions such as `transferFrom` and `safeTransferFrom` to maintain token ownership integrity.
 </Callout>
 
 ## Security Considerations
 
 <Callout type="warning" title="Security">
-Ensure proper access control is implemented at the diamond proxy level for functions that modify state (e.g., `approve`, `setApprovalForAll`). Validate `_to` and `_from` addresses in transfer functions to prevent unintended transfers. Be aware of potential reentrancy risks if external calls are made within transfer functions, though this facet's core transfer logic is internal.
+Follow standard Solidity security practices. Input validation is crucial for functions like `transferFrom`, `safeTransferFrom`, and `approve` to prevent issues such as transferring tokens to zero addresses or approving invalid operators. The `ownerOf` and `balanceOf` functions should be used to verify token ownership and existence before executing sensitive operations. Reentrancy is mitigated by the internal `internalTransferFrom` function, which follows the checks-effects-interactions pattern.
 </Callout>
 
 <div style={{marginTop: "3rem", paddingTop: "2rem", borderTop: "1px solid var(--ifm-color-emphasis-200)"}}>
@@ -727,4 +733,4 @@ Ensure proper access control is implemented at the diamond proxy level for funct
   <WasThisHelpful pageId="ERC721EnumerableFacet" />
 </div>
 
-<LastUpdated date="2025-12-30T15:55:30.055Z" />
+<LastUpdated date="2025-12-30T17:28:36.017Z" />

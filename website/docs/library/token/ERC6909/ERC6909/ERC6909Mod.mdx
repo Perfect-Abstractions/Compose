@@ -1,7 +1,7 @@
 ---
 sidebar_position: 1
 title: "ERC6909Mod"
-description: "Provides minimal multi-token logic for ERC-6909"
+description: "ERC-6909 minimal multi-token logic"
 gitSource: "https://github.com/Perfect-Abstractions/Compose/tree/main/src/token/ERC6909/ERC6909/ERC6909Mod.sol"
 ---
 
@@ -21,13 +21,14 @@ import GradientText from '@site/src/components/ui/GradientText';
 import GradientButton from '@site/src/components/ui/GradientButton';
 
 <DocSubtitle>
-Provides minimal multi-token logic for ERC-6909
+ERC-6909 minimal multi-token logic
 </DocSubtitle>
 
 <Callout type="info" title="Key Features">
-- Provides internal functions for minting, burning, transferring, and approving ERC-6909 tokens.
-- Supports operator approvals for token management.
-- Leverages the diamond storage pattern for state management.
+- Provides internal functions for ERC-6909 token operations.
+- Utilizes the diamond storage pattern for shared state management.
+- No external dependencies, promoting composability.
+- Functions are designed for integration within custom facets.
 </Callout>
 
 <Callout type="info" title="Module Usage">
@@ -36,7 +37,7 @@ This module provides internal functions for use in your custom facets. Import it
 
 ## Overview
 
-This module offers essential internal functions and storage for implementing the ERC-6909 standard. It enables composable, on-chain multi-token functionality within a diamond proxy, abstracting away the complexities of token management and allowing facets to integrate ERC-6909 capabilities seamlessly.
+This module provides internal functions for managing ERC-6909 minimal multi-token logic. Facets can import and use these functions to mint, burn, transfer, and manage approvals and operator status for tokens using shared diamond storage. Changes to token state are immediately reflected across all facets interacting with the same storage.
 
 ---
 
@@ -472,54 +473,55 @@ error ERC6909InvalidSpender(address _spender);
   </Accordion>
 </AccordionGroup>
 
+<!-- Usage Example section commented out for now -->
+<!--
 ## Usage Example
 
 <ExpandableCode language="solidity" maxLines={20} title="Example Implementation">
 {`pragma solidity ^0.8.30;
 
-import {IERC6909Mod} from "@compose/token/ERC6909/ERC6909/ERC6909Mod";
+import { ERC6909Mod } from "@compose/token/ERC6909/ERC6909/ERC6909Mod";
 
-contract MyTokenFacet {
-    IERC6909Mod internal constant ERC6909 = IERC6909Mod(address(this));
+contract ERC6909Facet {
+    using ERC6909Mod for ERC6909Mod.ERC6909Storage;
 
-    /**
-     * @notice Mints tokens and approves a spender.
-     * @param _to The recipient address.
-     * @param _id The token ID.
-     * @param _amount The amount to mint.
-     * @param _spender The address to approve.
-     */
-    function mintAndApprove(address _to, uint256 _id, uint256 _amount, address _spender) external {
-        ERC6909.mint(_to, _id, _amount);
-        ERC6909.approve(_to, _spender, _id, _amount);
+    ERC6909Mod.ERC6909Storage internal _erc6909Storage;
+
+    function mintToken(address _to, uint256 _id, uint256 _amount) external {
+        _erc6909Storage.mint(_to, _id, _amount);
     }
 
-    /**
-     * @notice Transfers tokens on behalf of another user.
-     * @param _from The sender address.
-     * @param _to The receiver address.
-     * @param _id The token ID.
-     * @param _amount The amount to transfer.
-     */
-    function transferFrom(address _from, address _to, uint256 _id, uint256 _amount) external {
-        // Assuming _msgSender() is authorized to transferFrom
-        ERC6909.transfer(_msgSender(), _from, _to, _id, _amount);
+    function transferToken(address _from, address _to, uint256 _id, uint256 _amount) external {
+        _erc6909Storage.transfer(msg.sender, _from, _to, _id, _amount);
+    }
+
+    function approveToken(address _owner, address _spender, uint256 _id, uint256 _amount) external {
+        _erc6909Storage.approve(_owner, _spender, _id, _amount);
+    }
+
+    function burnToken(address _from, uint256 _id, uint256 _amount) external {
+        _erc6909Storage.burn(_from, _id, _amount);
+    }
+
+    function setOperatorStatus(address _owner, address _spender, bool _approved) external {
+        _erc6909Storage.setOperator(_owner, _spender, _approved);
     }
 }`}
 </ExpandableCode>
+-->
 
 ## Best Practices
 
 <Callout type="tip" title="Best Practice">
-- Implement access control within your facet to ensure only authorized entities can call mint, burn, or transfer functions.
-- Handle ERC6909 custom errors (`ERC6909InsufficientAllowance`, `ERC6909InsufficientBalance`, etc.) appropriately in your facet's logic to provide clear revert reasons.
-- When upgrading facets, ensure the storage layout defined by `ERC6909Storage` is maintained to preserve token state.
+- Ensure token balances and allowances are validated before performing operations.
+- Call `approve` or `setOperator` with appropriate parameters to manage token access.
+- Handle errors returned by `mint`, `burn`, `transfer`, `approve`, and `setOperator` functions.
 </Callout>
 
 ## Integration Notes
 
 <Callout type="success" title="Shared Storage">
-This module relies on the diamond storage pattern to persist its state. The `ERC6909Storage` struct is located at a specific `STORAGE_POSITION` within the diamond's storage, identified by `keccak256("compose.erc6909")`. Facets using this module will interact with this storage slot via internal assembly calls within the module functions. Ensure that no other facets or modules attempt to write to this storage slot to maintain data integrity. The module functions are designed to be called internally by facets, ensuring that the underlying token logic is encapsulated and composable.
+This module interacts with diamond storage via a dedicated storage position identified by `STORAGE_POSITION`. The `getStorage` function provides access to the `ERC6909Storage` struct, enabling facets to read and write token-related data. All state modifications are immediately visible to other facets that access the same storage slot.
 </Callout>
 
 <div style={{marginTop: "3rem", paddingTop: "2rem", borderTop: "1px solid var(--ifm-color-emphasis-200)"}}>
@@ -563,4 +565,4 @@ This module relies on the diamond storage pattern to persist its state. The `ERC
   <WasThisHelpful pageId="ERC6909Mod" />
 </div>
 
-<LastUpdated date="2025-12-30T15:55:12.503Z" />
+<LastUpdated date="2025-12-30T17:28:25.270Z" />

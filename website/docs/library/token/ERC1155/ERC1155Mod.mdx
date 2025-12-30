@@ -1,7 +1,7 @@
 ---
 sidebar_position: 1
 title: "ERC1155Mod"
-description: "Manage and transfer ERC-1155 multi-token standards."
+description: "Manages ERC-1155 token transfers and metadata"
 gitSource: "https://github.com/Perfect-Abstractions/Compose/tree/main/src/token/ERC1155/ERC1155Mod.sol"
 ---
 
@@ -21,13 +21,14 @@ import GradientText from '@site/src/components/ui/GradientText';
 import GradientButton from '@site/src/components/ui/GradientButton';
 
 <DocSubtitle>
-Manage and transfer ERC-1155 multi-token standards.
+Manages ERC-1155 token transfers and metadata
 </DocSubtitle>
 
 <Callout type="info" title="Key Features">
-- Supports minting and burning of individual tokens and batches.
-- Implements EIP-1155 safe transfer logic, including receiver validation for contract addresses.
-- Allows setting a base URI and token-specific URIs for metadata.
+- Internal functions for minting, burning, and transfers.
+- Supports ERC-1155 safe transfer requirements.
+- Manages token URIs with base URI concatenation.
+- Uses diamond storage pattern for shared state.
 </Callout>
 
 <Callout type="info" title="Module Usage">
@@ -36,7 +37,7 @@ This module provides internal functions for use in your custom facets. Import it
 
 ## Overview
 
-This module provides core ERC-1155 functionality, enabling the minting, burning, and safe transfer of multiple token types within a diamond. It adheres to the EIP-1155 standard, ensuring interoperability and safe handling of token transfers by implementing receiver validation for contract recipients.
+This module provides internal functions for minting, burning, and transferring ERC-1155 tokens. Facets can import this module to manage token balances and metadata within a diamond storage pattern. Changes to token balances and URIs are immediately visible to all facets accessing the shared storage.
 
 ---
 
@@ -556,65 +557,50 @@ error ERC1155MissingApprovalForAll(address _operator, address _owner);
   </Accordion>
 </AccordionGroup>
 
+<!-- Usage Example section commented out for now -->
+<!--
 ## Usage Example
 
 <ExpandableCode language="solidity" maxLines={20} title="Example Implementation">
-{`pragma solidity ^0.8.30;
+{`pragma solidity >=0.8.30;
 
-import { IERC1155Receiver } from "@compose/token/ERC1155/IERC1155Receiver";
-import { ERC1155Mod } from "@compose/token/ERC1155/ERC1155Mod";
-import { IDiamondCut } from "@compose/diamond/IDiamondCut";
+import {ERC1155Mod} from "@compose/token/ERC1155/ERC1155Mod";
+import {ERC1155Storage} from "@compose/token/ERC1155/ERC1155Storage";
 
-contract MyFacet is IERC1155Receiver {
-    address immutable diamondProxy;
+contract MyERC1155Facet {
+    ERC1155Mod internal erc1155Module;
 
-    constructor(address _diamondProxy) {
-        diamondProxy = _diamondProxy;
+    function initialize(ERC1155Storage storage _storage) external {
+        erc1155Module = ERC1155Mod(_storage);
     }
 
-    function mintMyTokens() external {
-        ERC1155Mod(diamondProxy).mint(
-            msg.sender,
-            1,
-            100
-        );
+    function mintNewToken(address _to, uint256 _id, uint256 _value) external {
+        erc1155Module.mint(_to, _id, _value);
     }
 
-    function transferMyTokens(address _to, uint256 _id, uint256 _value) external {
-        ERC1155Mod(diamondProxy).safeTransferFrom(
-            msg.sender,
-            _to,
-            _id,
-            _value,
-            address(this) // Operator address
-        );
+    function transferToken(address _from, address _to, uint256 _id, uint256 _value, address _operator) external {
+        erc1155Module.safeTransferFrom(_from, _to, _id, _value, _operator);
     }
 
-    // Implement IERC1155Receiver functions as needed
-    function onERC1155Received(address operator, address from, uint256 id, uint256 value, bytes calldata data) external override returns (bytes4) {
-        // Handle received tokens
-        return bytes4(keccak256("onERC1155Received(address,address,uint256,uint256,bytes)"));
-    }
-
-    function onERC1155BatchReceived(address operator, address from, uint256[] calldata ids, uint256[] calldata values, bytes calldata data) external override returns (bytes4) {
-        // Handle received token batches
-        return bytes4(keccak256("onERC1155BatchReceived(address,address,uint256[],uint256[],bytes)"));
+    function setTokenMetadataURI(uint256 _tokenId, string memory _tokenURI) external {
+        erc1155Module.setTokenURI(_tokenId, _tokenURI);
     }
 }`}
 </ExpandableCode>
+-->
 
 ## Best Practices
 
 <Callout type="tip" title="Best Practice">
-- Always validate caller permissions before executing mint or burn operations.
-- Handle `ERC1155InsufficientBalance` and `ERC1155MissingApprovalForAll` errors to ensure robust transaction logic.
-- Ensure the `_operator` address passed to transfer functions has been approved via `setApprovalForAll`.
+- Ensure receiver contracts implement the ERC1155TokenReceiver interface for safe transfers.
+- Call `safeTransferFrom` or `safeBatchTransferFrom` for external transfers to ensure compatibility.
+- Verify ownership and approvals before executing transfers to prevent reverts.
 </Callout>
 
 ## Integration Notes
 
 <Callout type="success" title="Shared Storage">
-This module utilizes the diamond storage pattern, with its state stored at `keccak256("compose.erc1155")`. Facets interact with this storage via the `getStorage()` function, which returns an `ERC1155Storage` struct. Key fields include `uri` and `baseURI`. Ensure this module is added to the diamond with appropriate access controls and that its storage slot does not conflict with other modules.
+This module interacts with diamond storage at the position identified by `keccak256(\"compose.erc1155\")`. It utilizes the `ERC1155Storage` struct, which includes fields for `uri` and `baseURI`. All state modifications (minting, burning, URI setting) are performed directly on this shared storage, ensuring immediate visibility across all facets.
 </Callout>
 
 <div style={{marginTop: "3rem", paddingTop: "2rem", borderTop: "1px solid var(--ifm-color-emphasis-200)"}}>
@@ -646,4 +632,4 @@ This module utilizes the diamond storage pattern, with its state stored at `kecc
   <WasThisHelpful pageId="ERC1155Mod" />
 </div>
 
-<LastUpdated date="2025-12-30T15:54:58.913Z" />
+<LastUpdated date="2025-12-30T17:28:11.667Z" />

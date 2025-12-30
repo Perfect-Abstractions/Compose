@@ -1,7 +1,7 @@
 ---
 sidebar_position: 1
 title: "AccessControlPausableMod"
-description: "Control role execution based on pause state."
+description: "Control access and pause roles within a diamond"
 gitSource: "https://github.com/Perfect-Abstractions/Compose/tree/main/src/access/AccessControlPausable/AccessControlPausableMod.sol"
 ---
 
@@ -21,13 +21,14 @@ import GradientText from '@site/src/components/ui/GradientText';
 import GradientButton from '@site/src/components/ui/GradientButton';
 
 <DocSubtitle>
-Control role execution based on pause state.
+Control access and pause roles within a diamond
 </DocSubtitle>
 
 <Callout type="info" title="Key Features">
-- Allows roles to be individually paused and unpaused.
-- Provides `requireRoleNotPaused` to enforce state checks before executing sensitive operations.
-- Emits `RolePaused` and `RoleUnpaused` events for state change tracking.
+- Internal functions for role pausing and access control checks.
+- Utilizes diamond storage pattern (EIP-8042) at `ACCESS_CONTROL_STORAGE_POSITION`.
+- Compatible with ERC-2535 diamonds.
+- No external dependencies or `using` directives.
 </Callout>
 
 <Callout type="info" title="Module Usage">
@@ -36,7 +37,7 @@ This module provides internal functions for use in your custom facets. Import it
 
 ## Overview
 
-This module provides fine-grained control over role execution by allowing roles to be paused. It integrates with the Access Control facet, enabling developers to conditionally block or allow actions associated with specific roles. This is crucial for emergency stops or scheduled maintenance, ensuring system safety and predictability.
+This module provides internal functions to manage role pausing and access control checks. Facets can import this module to enforce role-specific pauses and verify account permissions using shared diamond storage. Changes to role pausing are immediately visible to all facets accessing the same storage.
 
 ---
 
@@ -325,52 +326,45 @@ error AccessControlUnauthorizedAccount(address _account, bytes32 _role);
   </Accordion>
 </AccordionGroup>
 
+<!-- Usage Example section commented out for now -->
+<!--
 ## Usage Example
 
 <ExpandableCode language="solidity" maxLines={20} title="Example Implementation">
-{`pragma solidity ^0.8.30;
+{`pragma solidity >=0.8.30;
+import @compose/access/AccessControlPausable/AccessControlPausableMod;
 
-import {IAccessControlPausable} from "@compose/access/AccessControlPausable/IAccessControlPausable.sol";
+contract MyAccessFacet {
+    AccessControlPausableMod internal accessControlPausableMod;
 
-contract MyFacet {
-    IAccessControlPausable internal accessControlPausable;
-
-    constructor(address _diamondAddress) {
-        accessControlPausable = IAccessControlPausable(_diamondAddress);
+    function initialize(AccessControlPausableMod _mod) external {
+        accessControlPausableMod = _mod;
     }
 
-    function _someRoleRestrictedAction() internal view {
-        bytes32 MY_ROLE = keccak256("MY_ROLE");
-        // Ensure the caller has MY_ROLE and that MY_ROLE is not paused.
-        accessControlPausable.requireRoleNotPaused(MY_ROLE, msg.sender);
-
-        // ... proceed with the action ...
+    function grantRoleAndUnpause(bytes32 _role, address _account) external {
+        // Assume granting role logic exists elsewhere or is handled by another facet
+        accessControlPausableMod.unpauseRole(_role);
     }
 
-    function pauseMyRole() external {
-        bytes32 MY_ROLE = keccak256("MY_ROLE");
-        accessControlPausable.pauseRole(MY_ROLE);
-    }
-
-    function unpauseMyRole() external {
-        bytes32 MY_ROLE = keccak256("MY_ROLE");
-        accessControlPausable.unpauseRole(MY_ROLE);
+    function checkRolePermission(bytes32 _role, address _account) view external {
+        accessControlPausableMod.requireRoleNotPaused(_role, _account);
     }
 }`}
 </ExpandableCode>
+-->
 
 ## Best Practices
 
 <Callout type="tip" title="Best Practice">
-- Use `requireRoleNotPaused` to enforce that actions can only be performed when the associated role is not paused.
-- Monitor `RolePaused` and `RoleUnpaused` events to track changes in role states.
-- Integrate pausing functionality thoughtfully, considering emergency scenarios and system maintenance.
+- Call `requireRoleNotPaused` to enforce role checks and ensure roles are not paused.
+- Use `pauseRole` and `unpauseRole` exclusively for managing role state.
+- Ensure storage layout compatibility when upgrading facets to maintain state integrity.
 </Callout>
 
 ## Integration Notes
 
 <Callout type="success" title="Shared Storage">
-This module utilizes the diamond storage pattern, storing its state under the `ACCESS_CONTROL_STORAGE_POSITION` slot, identified by `keccak256("compose.accesscontrol")`. The `AccessControlPausableStorage` struct manages the pause state for roles. Facets interact with this module via the `IAccessControlPausable` interface to check and modify role pause states. The `requireRoleNotPaused` function also implicitly checks for role membership via the underlying Access Control logic.
+This module interacts with diamond storage at the `ACCESS_CONTROL_STORAGE_POSITION`, identified by `keccak256(\"compose.accesscontrol\")`. It utilizes the `AccessControlPausableStorage` struct. All functions are internal, ensuring that state modifications and checks are performed within the diamond's context and are immediately visible to all composited facets accessing the same storage.
 </Callout>
 
 <div style={{marginTop: "3rem", paddingTop: "2rem", borderTop: "1px solid var(--ifm-color-emphasis-200)"}}>
@@ -390,4 +384,4 @@ This module utilizes the diamond storage pattern, storing its state under the `A
   <WasThisHelpful pageId="AccessControlPausableMod" />
 </div>
 
-<LastUpdated date="2025-12-30T15:53:57.838Z" />
+<LastUpdated date="2025-12-30T17:27:07.684Z" />

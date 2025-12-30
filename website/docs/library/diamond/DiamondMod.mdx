@@ -1,7 +1,7 @@
 ---
 sidebar_position: 1
 title: "DiamondMod"
-description: "Manages diamond facets, function routing, and storage."
+description: "Manages diamond facets and function dispatch"
 gitSource: "https://github.com/Perfect-Abstractions/Compose/tree/main/src/diamond/DiamondMod.sol"
 ---
 
@@ -21,13 +21,14 @@ import GradientText from '@site/src/components/ui/GradientText';
 import GradientButton from '@site/src/components/ui/GradientButton';
 
 <DocSubtitle>
-Manages diamond facets, function routing, and storage.
+Manages diamond facets and function dispatch
 </DocSubtitle>
 
 <Callout type="info" title="Key Features">
-- Manages facet additions and function selector registrations.
-- Provides a fallback mechanism for routing external calls to the correct facet.
-- Exposes diamond storage for inspection via `getStorage`.
+- Internal functions for facet management and call dispatch.
+- Utilizes EIP-8042 diamond storage pattern.
+- Supports adding facets during initial diamond deployment.
+- Provides a fallback mechanism for function routing.
 </Callout>
 
 <Callout type="info" title="Module Usage">
@@ -36,7 +37,7 @@ This module provides internal functions for use in your custom facets. Import it
 
 ## Overview
 
-DiamondMod provides core diamond proxy logic, enabling dynamic facet composition and function dispatch. It facilitates adding new functionalities via facets and ensures that calls are correctly routed to the appropriate facet implementation, crucial for upgradeability and modularity in Compose diamonds.
+This module provides core functionality for managing facets within a diamond proxy. It exposes internal functions for adding facets during deployment and a fallback mechanism for dispatching calls to the appropriate facet. This approach enables composability and upgradeability by allowing facets to be added and removed without altering the diamond's address.
 
 ---
 
@@ -190,45 +191,66 @@ error NoBytecodeAtAddress(address _contractAddress, string _message);
   </Accordion>
 </AccordionGroup>
 
+<!-- Usage Example section commented out for now -->
+<!--
 ## Usage Example
 
 <ExpandableCode language="solidity" maxLines={20} title="Example Implementation">
-{`pragma solidity ^0.8.30;
+{`pragma solidity >=0.8.30;
 
-import {DiamondMod} from "@compose/diamond/DiamondMod";
+import "@compose/diamond/DiamondMod";
 
-contract MyDiamond {
-    function upgradeDiamond() external {
-        // Assume DiamondMod is deployed and its address is known
-        address diamondModAddress = address(0x123...);
-        DiamondMod diamondMod = DiamondMod(diamondModAddress);
+contract MyFacet {
+    using DiamondMod for DiamondStorage;
 
-        // Example: Add a new facet (replace with actual facet details)
-        // diamondMod.addFacets(...);
+    // Assume DiamondStorage is accessible and initialized
+    DiamondStorage internal diamondStorage;
 
-        // Example: Get storage (if needed)
-        // DiamondStorage storage = diamondMod.getStorage();
+    /**
+     * @notice Example of calling addFacets during diamond initialization.
+     * @dev This function would typically be part of the diamond deployment script.
+     */
+    function initializeDiamond() external {
+        // Example: Add a facet with a specific selector range
+        // This is a simplified representation; actual deployment involves more steps.
+        // diamondStorage.addFacets(...);
     }
 
-    // Example: Fallback function to handle calls to facets not directly on the diamond
-    // fallback() external payable {
-    //     DiamondMod(diamondModAddress).diamondFallback();
-    // }
+    /**
+     * @notice Example of how diamondFallback might be implemented.
+     * @dev This is a conceptual example of how a diamond might dispatch calls.
+     */
+    function delegateCall(bytes calldata _calldata) external payable returns (bytes memory) {
+        // This function is conceptually how diamondFallback would work.
+        // Actual diamondFallback implementation is in DiamondMod.
+        // return diamondStorage.diamondFallback(_calldata);
+        revert FunctionNotFound(); // Placeholder
+    }
+
+    /**
+     * @notice Example of accessing diamond storage.
+     * @dev Use getStorage to retrieve the storage slot.
+     */
+    function getDiamondStorage() external pure returns (DiamondStorage storage) {
+        // return diamondStorage.getStorage(); // Conceptual call
+        return diamondStorage; // Placeholder
+    }
 }`}
 </ExpandableCode>
+-->
 
 ## Best Practices
 
 <Callout type="tip" title="Best Practice">
-- Use `addFacets` exclusively during initial diamond deployment to prevent unexpected state changes.
-- Implement robust error handling by checking for `FunctionNotFound` and other custom errors returned by module functions.
-- Ensure proper initialization of DiamondMod and other related modules like DiamondCutMod.
+- Ensure `addFacets` is only called during initial diamond deployment.
+- Handle `FunctionNotFound` errors when calling `diamondFallback`.
+- Use `getStorage` to access and manage diamond storage state consistently.
 </Callout>
 
 ## Integration Notes
 
 <Callout type="success" title="Shared Storage">
-DiamondMod interacts with the diamond's storage at the `DIAMOND_STORAGE_POSITION` (keccak256("compose.diamond")). Facets can access and modify this storage, and DiamondMod provides functions to manage facet registrations within this storage. Changes made via `addFacets` are immediately reflected in the diamond's routing logic. Facets should be aware of the `DiamondStorage` struct layout and ensure compatibility.
+This module interacts with diamond storage at the `DIAMOND_STORAGE_POSITION`, identified by `keccak256("compose.diamond")`. It utilizes the `DiamondStorage` struct to manage facet mappings and function selectors. Changes to facet configurations made through functions like `addFacets` are immediately reflected in the diamond's dispatch logic, affecting all facets that rely on this shared storage.
 </Callout>
 
 <div style={{marginTop: "3rem", paddingTop: "2rem", borderTop: "1px solid var(--ifm-color-emphasis-200)"}}>
@@ -248,4 +270,4 @@ DiamondMod interacts with the diamond's storage at the `DIAMOND_STORAGE_POSITION
   <WasThisHelpful pageId="DiamondMod" />
 </div>
 
-<LastUpdated date="2025-12-30T15:56:09.799Z" />
+<LastUpdated date="2025-12-30T17:29:18.871Z" />

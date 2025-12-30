@@ -1,7 +1,7 @@
 ---
 sidebar_position: 1
 title: "RoyaltyMod"
-description: "Manages ERC-2981 royalty information for tokens."
+description: "ERC-2981 royalty logic for NFTs"
 gitSource: "https://github.com/Perfect-Abstractions/Compose/tree/main/src/token/Royalty/RoyaltyMod.sol"
 ---
 
@@ -21,13 +21,14 @@ import GradientText from '@site/src/components/ui/GradientText';
 import GradientButton from '@site/src/components/ui/GradientButton';
 
 <DocSubtitle>
-Manages ERC-2981 royalty information for tokens.
+ERC-2981 royalty logic for NFTs
 </DocSubtitle>
 
 <Callout type="info" title="Key Features">
-- Implements ERC-2981 `royaltyInfo` function logic.
-- Supports both default royalties and token-specific royalty overrides.
-- Provides functions to set, delete, and query royalty information.
+- Implements ERC-2981 royalty standard logic.
+- Supports both default and token-specific royalty settings.
+- Uses diamond storage to manage royalty data.
+- Provides internal functions for facet integration.
 </Callout>
 
 <Callout type="info" title="Module Usage">
@@ -36,7 +37,7 @@ This module provides internal functions for use in your custom facets. Import it
 
 ## Overview
 
-This module provides the core logic and storage for ERC-2981 royalty standards. It enables setting and querying both default and token-specific royalties, ensuring compliance and composability for token contracts within a diamond.
+This module provides internal functions and storage for ERC-2981 royalty logic. Facets can import this module to set and query royalty information for tokens, falling back to a default if token-specific settings are not found. It leverages diamond storage for shared access across facets.
 
 ---
 
@@ -294,42 +295,66 @@ error ERC2981InvalidTokenRoyaltyReceiver(uint256 _tokenId, address _receiver);
   </Accordion>
 </AccordionGroup>
 
+<!-- Usage Example section commented out for now -->
+<!--
 ## Usage Example
 
 <ExpandableCode language="solidity" maxLines={20} title="Example Implementation">
-{`pragma solidity ^0.8.30;
+{`pragma solidity >=0.8.30;
 
-import {IRoyaltyMod} from "@compose/token/Royalty/RoyaltyMod";
+import {RoyaltyMod, RoyaltyStorage} from "@compose/token/Royalty/RoyaltyMod";
 
-contract MyRoyaltyFacet {
-    address immutable DIAMOND_STORAGE_ADDRESS;
+contract RoyaltyFacet {
+    RoyaltyMod internal royaltyMod;
 
-    constructor(address _diamondStorageAddress) {
-        DIAMOND_STORAGE_ADDRESS = _diamondStorageAddress;
+    constructor(address royaltyModAddress) {
+        royaltyMod = RoyaltyMod(royaltyModAddress);
     }
 
+    /**
+     * @notice Sets royalty for a specific token.
+     * @param _tokenId The ID of the token.
+     * @param _receiver The address to receive royalties.
+     * @param _feeNumerator The royalty fee numerator (basis points).
+     */
     function setTokenRoyalty(uint256 _tokenId, address _receiver, uint96 _feeNumerator) external {
-        IRoyaltyMod(DIAMOND_STORAGE_ADDRESS).setTokenRoyalty(_tokenId, _receiver, _feeNumerator);
+        royaltyMod.setTokenRoyalty(_tokenId, _receiver, _feeNumerator);
     }
 
-    function royaltyInfo(uint256 _tokenId, uint256 _salePrice) external view returns (address, uint256) {
-        return IRoyaltyMod(DIAMOND_STORAGE_ADDRESS).royaltyInfo(_tokenId, _salePrice);
+    /**
+     * @notice Resets token-specific royalty to use default.
+     * @param _tokenId The ID of the token.
+     */
+    function resetTokenRoyalty(uint256 _tokenId) external {
+        royaltyMod.resetTokenRoyalty(_tokenId);
+    }
+
+    /**
+     * @notice Gets royalty information for a token and sale price.
+     * @param _tokenId The ID of the token.
+     * @param _salePrice The price of the sale.
+     * @return receiver The address receiving royalties.
+     * @return feeNumerator The royalty fee numerator.
+     */
+    function royaltyInfo(uint256 _tokenId, uint256 _salePrice) external view returns (address receiver, uint256 feeNumerator) {
+        (receiver, feeNumerator) = royaltyMod.royaltyInfo(_tokenId, _salePrice);
     }
 }`}
 </ExpandableCode>
+-->
 
 ## Best Practices
 
 <Callout type="tip" title="Best Practice">
-- Use `setDefaultRoyalty` and `setTokenRoyalty` with validated receiver addresses and fee numerators to prevent errors.
-- Handle custom errors like `ERC2981InvalidDefaultRoyalty` and `ERC2981InvalidTokenRoyalty` in calling facets.
-- Leverage `resetTokenRoyalty` to revert token-specific royalties to the default setting.
+- Use `setTokenRoyalty` to configure token-specific royalties and `setDefaultRoyalty` for global defaults.
+- Call `resetTokenRoyalty` to revert a token to its default royalty settings.
+- Handle custom errors such as `ERC2981InvalidDefaultRoyaltyReceiver` and `ERC2981InvalidTokenRoyaltyReceiver`.
 </Callout>
 
 ## Integration Notes
 
 <Callout type="success" title="Shared Storage">
-The RoyaltyMod utilizes a dedicated storage slot identified by `keccak256("compose.erc2981")` to store its `RoyaltyStorage` struct. This struct contains default royalty information. Token-specific royalties are stored within the `tokenRoyalty` mapping within the `RoyaltyStorage` struct itself, managed by the module. Facets interacting with this module should use the `IRoyaltyMod` interface and call functions via the diamond proxy, which dispatches to the appropriate facet containing this module's logic.
+This module utilizes diamond storage at the slot identified by `keccak256(\"compose.erc2981\")`. It reads and writes to a `RoyaltyStorage` struct, which includes `defaultRoyaltyInfo`. All functions are internal, ensuring they are called via other facets within the diamond. Changes to default or token-specific royalties are immediately visible to any facet querying `royaltyInfo` through this module.
 </Callout>
 
 <div style={{marginTop: "3rem", paddingTop: "2rem", borderTop: "1px solid var(--ifm-color-emphasis-200)"}}>
@@ -379,4 +404,4 @@ The RoyaltyMod utilizes a dedicated storage slot identified by `keccak256("compo
   <WasThisHelpful pageId="RoyaltyMod" />
 </div>
 
-<LastUpdated date="2025-12-30T15:55:50.887Z" />
+<LastUpdated date="2025-12-30T17:28:58.312Z" />

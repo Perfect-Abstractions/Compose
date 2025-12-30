@@ -1,7 +1,7 @@
 ---
 sidebar_position: 1
 title: "AccessControlMod"
-description: "Manages roles and permissions within a diamond."
+description: "Manage roles and permissions across diamond facets"
 gitSource: "https://github.com/Perfect-Abstractions/Compose/tree/main/src/access/AccessControl/AccessControlMod.sol"
 ---
 
@@ -21,14 +21,14 @@ import GradientText from '@site/src/components/ui/GradientText';
 import GradientButton from '@site/src/components/ui/GradientButton';
 
 <DocSubtitle>
-Manages roles and permissions within a diamond.
+Manage roles and permissions across diamond facets
 </DocSubtitle>
 
 <Callout type="info" title="Key Features">
-- Permission management via roles assigned to accounts.
-- Ability to grant and revoke roles dynamically.
-- Built-in check for role existence with `hasRole`.
-- Revert mechanism for unauthorized access attempts via `requireRole`.
+- Internal functions for facet integration.
+- Uses diamond storage pattern for shared state management.
+- No external dependencies, promoting composability.
+- Emits events for role changes, aiding off-chain monitoring.
 </Callout>
 
 <Callout type="info" title="Module Usage">
@@ -37,7 +37,7 @@ This module provides internal functions for use in your custom facets. Import it
 
 ## Overview
 
-The AccessControl module provides a robust system for managing roles and permissions, ensuring that only authorized accounts can perform specific actions. This is crucial for maintaining security and control within a Compose diamond by enabling granular access delegation and revocation.
+This module provides internal functions for managing role-based access control within a diamond proxy. Facets can import and use these functions to grant, revoke, and check roles using shared diamond storage. This ensures consistent access control logic across all facets that depend on this module.
 
 ---
 
@@ -397,53 +397,53 @@ error AccessControlUnauthorizedAccount(address _account, bytes32 _role);
   </Accordion>
 </AccordionGroup>
 
+<!-- Usage Example section commented out for now -->
+<!--
 ## Usage Example
 
 <ExpandableCode language="solidity" maxLines={20} title="Example Implementation">
 {`pragma solidity ^0.8.30;
 
-import { AccessControlMod } from "@compose/access/AccessControl/AccessControlMod";
-import { AccessControlStorage } from "@compose/access/AccessControl/AccessControlStorage";
+import {AccessControlMod, AccessControlStorage} from "@compose/access/AccessControl/AccessControlMod";
 
-contract MyFacet {
+contract MyAccessFacet {
     AccessControlMod internal accessControl;
 
-    // Assuming AccessControlMod is initialized and its storage slot is known
-    constructor(address _diamondProxy) {
-        // Fetch storage location from the diamond proxy
-        address accessControlAddress = _diamondProxy; // Example: If AccessControlMod is a facet itself
-        accessControl = AccessControlMod(accessControlAddress);
+    // Assuming AccessControlMod is deployed and its storage is initialized
+    function initialize(address _accessControlModAddress) external {
+        accessControl = AccessControlMod(_accessControlModAddress);
     }
 
     function grantAdminRole(address _account) external {
-        bytes32 adminRole = keccak256("AccessControl.ADMIN_ROLE"); // Example role
+        bytes32 adminRole = keccak256("COMPOSE_ADMIN_ROLE");
         accessControl.grantRole(adminRole, _account);
     }
 
-    function checkAdminRole(address _account) view external returns (bool) {
-        bytes32 adminRole = keccak256("AccessControl.ADMIN_ROLE"); // Example role
+    function checkIfAdmin(address _account) external view returns (bool) {
+        bytes32 adminRole = keccak256("COMPOSE_ADMIN_ROLE");
         return accessControl.hasRole(adminRole, _account);
     }
 
-    function enforceAdminRole(address _account) view external {
-        bytes32 adminRole = keccak256("AccessControl.ADMIN_ROLE"); // Example role
+    function enforceAdminRole(address _account) external view {
+        bytes32 adminRole = keccak256("COMPOSE_ADMIN_ROLE");
         accessControl.requireRole(adminRole, _account);
     }
 }`}
 </ExpandableCode>
+-->
 
 ## Best Practices
 
 <Callout type="tip" title="Best Practice">
-- Define roles using `bytes32` and `keccak256` for clarity and gas efficiency.
-- Use `requireRole` for immediate enforcement of permissions within functions.
-- Carefully manage the administration of roles using `setRoleAdmin` to prevent unintended privilege escalation.
+- Call `requireRole` to enforce access control checks before executing sensitive operations.
+- Ensure the diamond's storage layout is compatible with the `AccessControlStorage` struct.
+- Handle `AccessControlUnauthorizedAccount` errors to provide clear feedback to users.
 </Callout>
 
 ## Integration Notes
 
 <Callout type="success" title="Shared Storage">
-The AccessControl module utilizes the diamond storage pattern, storing its state at a well-defined slot identified by `keccak256("compose.accesscontrol")`. Facets can access this state by calling the `getStorage()` function or directly interacting with the module's functions, which implicitly read from this storage slot. Ensure that the AccessControl module is correctly initialized and its storage slot is reserved to avoid conflicts with other modules.
+This module utilizes diamond storage at the slot identified by `keccak256("compose.accesscontrol")`. All functions operate on the `AccessControlStorage` struct, which is implicitly managed by the diamond storage pattern. Changes to roles made through this module are immediately visible to all facets that access the same storage slot.
 </Callout>
 
 <div style={{marginTop: "3rem", paddingTop: "2rem", borderTop: "1px solid var(--ifm-color-emphasis-200)"}}>
@@ -481,4 +481,4 @@ The AccessControl module utilizes the diamond storage pattern, storing its state
   <WasThisHelpful pageId="AccessControlMod" />
 </div>
 
-<LastUpdated date="2025-12-30T15:54:22.483Z" />
+<LastUpdated date="2025-12-30T17:27:32.246Z" />

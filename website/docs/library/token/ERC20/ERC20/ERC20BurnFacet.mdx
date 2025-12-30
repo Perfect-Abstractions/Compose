@@ -1,7 +1,7 @@
 ---
 sidebar_position: 3
 title: "ERC20BurnFacet"
-description: "ERC-20Burn facet for Compose diamonds"
+description: "Burn ERC-20 tokens from caller or other accounts"
 gitSource: "https://github.com/Perfect-Abstractions/Compose/tree/main/src/token/ERC20/ERC20/ERC20BurnFacet.sol"
 ---
 
@@ -21,19 +21,19 @@ import GradientText from '@site/src/components/ui/GradientText';
 import GradientButton from '@site/src/components/ui/GradientButton';
 
 <DocSubtitle>
-ERC-20Burn facet for Compose diamonds
+Burn ERC-20 tokens from caller or other accounts
 </DocSubtitle>
 
 <Callout type="info" title="Key Features">
-- Self-contained facet with no imports or inheritance
-- Only `external` and `internal` function visibility
-- Follows Compose readability-first conventions
-- Ready for diamond integration
+- Exposes external functions for burning tokens.
+- Utilizes diamond storage for token balances and supply.
+- Emits Transfer events upon successful burning.
+- Compatible with ERC-2535 diamond standard.
 </Callout>
 
 ## Overview
 
-ERC-20Burn facet for Compose diamonds
+This facet implements burning of ERC-20 tokens within a diamond. It exposes functions to destroy tokens from the caller's balance or from another specified account. Calls are routed through the diamond proxy, accessing shared token storage. Developers add this facet to enable token destruction functionality while maintaining diamond upgradeability.
 
 ---
 
@@ -182,6 +182,57 @@ error ERC20InsufficientAllowance(address _spender, uint256 _allowance, uint256 _
   </Accordion>
 </AccordionGroup>
 
+<!-- Usage Example section commented out for now -->
+<!--
+## Usage Example
+
+<ExpandableCode language="solidity" maxLines={20} title="Example Implementation">
+{`pragma solidity >=0.8.30;
+
+import { IDiamond } from "@compose/diamond/IDiamond";
+import { ERC20BurnFacet } from "@compose/token/ERC20/ERC20/ERC20BurnFacet";
+
+contract DiamondUser {
+    address immutable DIAMOND_ADDRESS;
+
+    constructor(address diamondAddress) {
+        DIAMOND_ADDRESS = diamondAddress;
+    }
+
+    /**
+     * @notice Burns tokens from the caller's balance.
+     * @param _value The amount of tokens to burn.
+     */
+    function burnTokens(uint256 _value) external {
+        IDiamond(DIAMOND_ADDRESS).burn(_value);
+    }
+
+    /**
+     * @notice Burns tokens from a specific account, using the caller's allowance.
+     * @param _account The account whose tokens are to be burned.
+     * @param _value The amount of tokens to burn.
+     */
+    function burnTokensFrom(address _account, uint256 _value) external {
+        IDiamond(DIAMOND_ADDRESS).burnFrom(_account, _value);
+    }
+}`}
+</ExpandableCode>
+-->
+
+## Best Practices
+
+<Callout type="tip" title="Best Practice">
+- Initialize token storage correctly before adding this facet.
+- Ensure the caller has sufficient balance or allowance for burn operations.
+- Verify storage compatibility before upgrading to a new version of this facet.
+</Callout>
+
+## Security Considerations
+
+<Callout type="warning" title="Security">
+The `burn` function requires the caller to have sufficient token balance. The `burnFrom` function requires the caller to have an adequate allowance for the specified account. Both functions emit a `Transfer` event to the zero address, signifying token destruction. Follow standard Solidity security practices for input validation and access control managed by other facets.
+</Callout>
+
 <div style={{marginTop: "3rem", paddingTop: "2rem", borderTop: "1px solid var(--ifm-color-emphasis-200)"}}>
   <RelatedDocs
     items={[
@@ -211,4 +262,4 @@ error ERC20InsufficientAllowance(address _spender, uint256 _allowance, uint256 _
   <WasThisHelpful pageId="ERC20BurnFacet" />
 </div>
 
-<LastUpdated date="2025-12-30T15:54:44.873Z" />
+<LastUpdated date="2025-12-30T17:27:59.378Z" />

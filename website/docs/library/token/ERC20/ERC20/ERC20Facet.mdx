@@ -1,7 +1,7 @@
 ---
 sidebar_position: 2
 title: "ERC20Facet"
-description: "ERC-20 facet for Compose diamonds"
+description: "Implements ERC-20 token functionality within a diamond"
 gitSource: "https://github.com/Perfect-Abstractions/Compose/tree/main/src/token/ERC20/ERC20/ERC20Facet.sol"
 ---
 
@@ -21,19 +21,19 @@ import GradientText from '@site/src/components/ui/GradientText';
 import GradientButton from '@site/src/components/ui/GradientButton';
 
 <DocSubtitle>
-ERC-20 facet for Compose diamonds
+Implements ERC-20 token functionality within a diamond
 </DocSubtitle>
 
 <Callout type="info" title="Key Features">
-- Self-contained facet with no imports or inheritance
-- Only `external` and `internal` function visibility
-- Follows Compose readability-first conventions
-- Ready for diamond integration
+- Exposes standard ERC-20 functions for external calls.
+- Integrates with the diamond storage pattern for state management.
+- Self-contained, adhering to Compose facet design principles.
+- Emits standard ERC-20 Approval and Transfer events.
 </Callout>
 
 ## Overview
 
-ERC-20 facet for Compose diamonds
+This facet implements ERC-20 token transfers as external functions in a diamond. It routes calls through the diamond proxy and accesses shared storage. Developers add this facet to expose token functionality while maintaining upgradeability.
 
 ---
 
@@ -496,6 +496,50 @@ error ERC20InvalidSpender(address _spender);
   </Accordion>
 </AccordionGroup>
 
+<!-- Usage Example section commented out for now -->
+<!--
+## Usage Example
+
+<ExpandableCode language="solidity" maxLines={20} title="Example Implementation">
+{`pragma solidity >=0.8.30;
+
+import {ERC20Facet} from "@compose/token/ERC20/ERC20/ERC20Facet";
+import {IDiamond} from "@compose/diamond-proxy/contracts/IDiamond";
+
+contract Deployer {
+    address immutable diamondAddress;
+
+    constructor(address _diamondAddress) {
+        diamondAddress = _diamondAddress;
+    }
+
+    function distributeTokens(address _recipient, uint256 _amount) external {
+        // Assuming the ERC20Facet is already added to the diamond
+        IDiamond(diamondAddress).transfer(_recipient, _amount);
+    }
+
+    function checkBalance(address _account) external view returns (uint256) {
+        IDiamond(diamondAddress).balanceOf(_account);
+        return IDiamond(diamondAddress).balanceOf(_account);
+    }
+}`}
+</ExpandableCode>
+-->
+
+## Best Practices
+
+<Callout type="tip" title="Best Practice">
+- Initialize token name, symbol, and decimals during diamond deployment.
+- Enforce access control on functions that modify token state if required by your token's design.
+- Ensure storage compatibility with existing facets before upgrading.
+</Callout>
+
+## Security Considerations
+
+<Callout type="warning" title="Security">
+Follow standard Solidity security practices. Input validation is performed for addresses and amounts. Reentrancy is mitigated by following the checks-effects-interactions pattern for transfer and transferFrom functions. Ensure sufficient allowance before calling transferFrom. Errors ERC20InsufficientBalance, ERC20InvalidSender, ERC20InvalidReceiver, ERC20InsufficientAllowance, and ERC20InvalidSpender are used for validation.
+</Callout>
+
 <div style={{marginTop: "3rem", paddingTop: "2rem", borderTop: "1px solid var(--ifm-color-emphasis-200)"}}>
   <RelatedDocs
     items={[
@@ -513,4 +557,4 @@ error ERC20InvalidSpender(address _spender);
   <WasThisHelpful pageId="ERC20Facet" />
 </div>
 
-<LastUpdated date="2025-12-30T15:54:39.818Z" />
+<LastUpdated date="2025-12-30T17:27:50.372Z" />
