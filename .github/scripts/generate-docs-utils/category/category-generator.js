@@ -393,8 +393,7 @@ function ensureBaseCategory(libraryDir) {
   const description = 'API reference for all Compose modules and facets.';
 
   // Create index.mdx for base library category
-  // Hide from sidebar (sidebar_position: -1) so it doesn't appear as a duplicate
-  // The category link in _category_.json will still work
+  // Hide from sidebar (sidebar_class_name: "hidden") so it doesn't appear as a page in the sidebar
   createIndexFile(libraryDir, '', label, description, generateLabel, generateDescription, false, true);
 
   const baseCategory = {
