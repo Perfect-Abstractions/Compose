@@ -6,6 +6,17 @@
 const fs = require('fs');
 const path = require('path');
 const ai = require('../ai-provider');
+const {
+  extractSourceContext,
+  computeImportPath,
+  formatFunctionSignatures,
+  formatStorageContext,
+  formatRelatedContracts,
+  formatStructDefinitions,
+  formatEventSignatures,
+  formatErrorSignatures,
+} = require('./context-extractor');
+const { getContractRegistry } = require('./contract-registry');
 
 const AI_PROMPT_PATH = path.join(__dirname, '../../docs-gen-prompts.md');
 const REPO_INSTRUCTIONS_PATH = path.join(__dirname, '../../copilot-instructions.md');
@@ -154,6 +165,33 @@ function buildPrompt(data, contractType) {
   const eventNames = (data.events || []).map(e => e.name).join(', ');
   const errorNames = (data.errors || []).map(e => e.name).join(', ');
 
+  // Extract additional context
+  const sourceContext = extractSourceContext(data.sourceFilePath);
+  const importPath = computeImportPath(data.sourceFilePath);
+  const functionSignatures = formatFunctionSignatures(data.functions);
+  const eventSignatures = formatEventSignatures(data.events);
+  const errorSignatures = formatErrorSignatures(data.errors);
+  const structDefinitions = formatStructDefinitions(data.structs);
+  
+  // Get storage context
+  const storageContext = formatStorageContext(
+    data.storageInfo,
+    data.structs,
+    data.stateVariables
+  );
+
+  // Get related contracts context
+  const registry = getContractRegistry();
+  // Try to get category from registry entry, or use empty string
+  const registryEntry = registry.byName.get(data.title);
+  const category = data.category || (registryEntry ? registryEntry.category : '');
+  const relatedContracts = formatRelatedContracts(
+    data.title,
+    contractType,
+    category,
+    registry
+  );
+
   const promptTemplate = contractType === 'module' 
     ? AI_PROMPTS.modulePrompt 
     : AI_PROMPTS.facetPrompt;
@@ -166,7 +204,15 @@ function buildPrompt(data, contractType) {
       .replace(/\{\{functionNames\}\}/g, functionNames || 'None')
       .replace(/\{\{functionDescriptions\}\}/g, functionDescriptions || '  None')
       .replace(/\{\{eventNames\}\}/g, eventNames || 'None')
-      .replace(/\{\{errorNames\}\}/g, errorNames || 'None');
+      .replace(/\{\{errorNames\}\}/g, errorNames || 'None')
+      .replace(/\{\{functionSignatures\}\}/g, functionSignatures || 'None')
+      .replace(/\{\{eventSignatures\}\}/g, eventSignatures || 'None')
+      .replace(/\{\{errorSignatures\}\}/g, errorSignatures || 'None')
+      .replace(/\{\{importPath\}\}/g, importPath || 'N/A')
+      .replace(/\{\{pragmaVersion\}\}/g, sourceContext.pragmaVersion || '^0.8.30')
+      .replace(/\{\{storageContext\}\}/g, storageContext || 'None')
+      .replace(/\{\{relatedContracts\}\}/g, relatedContracts || 'None')
+      .replace(/\{\{structDefinitions\}\}/g, structDefinitions || 'None');
   }
 
   // Fallback to hardcoded prompt if template not loaded
@@ -176,7 +222,7 @@ function buildPrompt(data, contractType) {
 
 2. **overview**: A clear, concise overview (2-3 sentences) explaining what this ${contractType} does and why it's useful in the context of diamond contracts.
 
-3. **usageExample**: A practical Solidity code example (10-20 lines) showing how to use this ${contractType}. For modules, show importing and calling functions. For facets, show how it would be used in a diamond.
+3. **usageExample**: A practical Solidity code example (10-20 lines) showing how to use this ${contractType}. For modules, show importing and calling functions. For facets, show how it would be used in a diamond. Use the EXACT import path and function signatures provided below.
 
 4. **bestPractices**: 2-3 bullet points of best practices for using this ${contractType}.
 
@@ -189,11 +235,24 @@ ${contractType === 'facet' ? '5. **securityConsiderations**: Important security 
 Contract Information:
 - Name: ${data.title}
 - Current Description: ${data.description || 'No description provided'}
+- Import Path: ${importPath || 'N/A'}
+- Pragma Version: ${sourceContext.pragmaVersion || '^0.8.30'}
 - Functions: ${functionNames || 'None'}
+- Function Signatures:
+${functionSignatures || '  None'}
 - Events: ${eventNames || 'None'}
+- Event Signatures:
+${eventSignatures || '  None'}
 - Errors: ${errorNames || 'None'}
+- Error Signatures:
+${errorSignatures || '  None'}
 - Function Details:
 ${functionDescriptions || '  None'}
+${storageContext && storageContext !== 'None' ? `\n- Storage Information:\n${storageContext}` : ''}
+${relatedContracts && relatedContracts !== 'None' ? `\n- Related Contracts:\n${relatedContracts}` : ''}
+${structDefinitions && structDefinitions !== 'None' ? `\n- Struct Definitions:\n${structDefinitions}` : ''}
+
+IMPORTANT: Use the EXACT function signatures, import paths, and storage information provided above. Do not invent or modify function names, parameter types, or import paths.
 
 Respond ONLY with valid JSON in this exact format (no markdown code blocks, no extra text):
 {
