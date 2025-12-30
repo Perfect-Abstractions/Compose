@@ -25,14 +25,14 @@ Manages diamond ownership and transfers.
 </DocSubtitle>
 
 <Callout type="info" title="Key Features">
-- Provides a standard interface for diamond ownership management.
-- Supports both explicit transfer and unconditional renouncement of ownership.
-- Includes a function to access raw storage for advanced inspection.
+- Provides owner query, transfer, and renunciation capabilities.
+- Emits `OwnershipTransferred` event upon successful ownership changes.
+- Includes `OwnerUnauthorizedAccount` custom error for access control violations.
 </Callout>
 
 ## Overview
 
-The OwnerFacet provides essential functions for managing the ownership of a Compose diamond. It allows for querying the current owner, transferring ownership to a new address, and renouncing ownership entirely. This facet is crucial for controlling administrative actions within the diamond.
+The OwnerFacet provides essential functions for managing the ownership of a Compose diamond. It allows querying the current owner, transferring ownership to a new address, and renouncing ownership entirely. This facet is crucial for controlling administrative actions within the diamond.
 
 ---
 
@@ -145,36 +145,24 @@ error OwnerUnauthorizedAccount();
 <ExpandableCode language="solidity" maxLines={20} title="Example Implementation">
 {`pragma solidity ^0.8.30;
 
-import {IOwnerFacet} from "../interfaces/IOwnerFacet.sol";
+import {IOwnerFacet} from "@compose/contracts/facets/Owner/IOwnerFacet.sol";
 
-contract OwnerFacetDeployer {
+contract OwnerFacetUser {
     IOwnerFacet ownerFacet;
 
-    function deployOwnerFacet(address _diamondProxy) public {
-        // Assume OwnerFacet is already deployed and its implementation address is known
-        // In a real scenario, you would deploy the OwnerFacet implementation contract first.
-        address ownerFacetImpl = address(0x1234567890123456789012345678901234567890); // Replace with actual implementation address
-
-        // Add the facet to the diamond proxy (using a hypothetical diamond ABI encoder)
-        // bytes4[] memory selectors = new bytes4[](4);
-        // selectors[0] = IOwnerFacet.owner.selector;
-        // selectors[1] = IOwnerFacet.transferOwnership.selector;
-        // selectors[2] = IOwnerFacet.renounceOwnership.selector;
-        // selectors[3] = IOwnerFacet.getStorage.selector;
-        // _diamondCut(selectors, ownerFacetImpl, 1); // Example call to a diamond cut function
-
-        ownerFacet = IOwnerFacet(_diamondProxy);
+    constructor(address _ownerFacetAddress) {
+        ownerFacet = IOwnerFacet(_ownerFacetAddress);
     }
 
-    function getDiamondOwner() public view returns (address) {
+    function getCurrentOwner() external view returns (address) {
         return ownerFacet.owner();
     }
 
-    function transferDiamondOwnership(address _newOwner) public {
+    function transferDiamondOwnership(address _newOwner) external {
         ownerFacet.transferOwnership(_newOwner);
     }
 
-    function renounceDiamondOwnership() public {
+    function renounceDiamondOwnership() external {
         ownerFacet.renounceOwnership();
     }
 }`}
@@ -183,15 +171,15 @@ contract OwnerFacetDeployer {
 ## Best Practices
 
 <Callout type="tip" title="Best Practice">
-- Initialize ownership to a trusted address during diamond deployment.
-- Use `transferOwnership` for planned transitions and `renounceOwnership` only when administrative control is no longer required.
-- Ensure that the address receiving ownership has appropriate security measures in place.
+- Initialize ownership during diamond deployment, typically to the deployer's address.
+- Only the current owner should call `transferOwnership` or `renounceOwnership`.
+- Carefully consider the implications before renouncing ownership, as administrative control will be lost.
 </Callout>
 
 ## Security Considerations
 
 <Callout type="warning" title="Security">
-Ownership transfers should be handled with extreme care. Ensure that the `_newOwner` address is valid and trusted before initiating a transfer. Renouncing ownership permanently removes administrative control, so this action should only be performed if the diamond is intended to be fully decentralized or abandoned. The `owner` function returns the current owner, which is critical for access control checks in other facets.
+Access to `transferOwnership` and `renounceOwnership` is restricted to the current owner. Setting the new owner to `address(0)` effectively renounces ownership. Ensure the `_newOwner` address is validated to prevent unintended state changes or loss of control.
 </Callout>
 
 <div style={{marginTop: "3rem", paddingTop: "2rem", borderTop: "1px solid var(--ifm-color-emphasis-200)"}}>
@@ -199,19 +187,19 @@ Ownership transfers should be handled with extreme care. Ensure that the `_newOw
     items={[
       {
         title: "OwnerTwoStepsFacet",
-        href: "/docs/library/access/OwnerTwoSteps",
+        href: "/docs/library/access/OwnerTwoSteps/OwnerTwoStepsFacet",
         description: "Related facet in access",
         icon: "💎"
       },
       {
         title: "AccessControlPausableFacet",
-        href: "/docs/library/access/AccessControlPausable",
+        href: "/docs/library/access/AccessControlPausable/AccessControlPausableFacet",
         description: "Related facet in access",
         icon: "💎"
       },
       {
         title: "AccessControlTemporalFacet",
-        href: "/docs/library/access/AccessControlTemporal",
+        href: "/docs/library/access/AccessControlTemporal/AccessControlTemporalFacet",
         description: "Related facet in access",
         icon: "💎"
       }
@@ -223,4 +211,4 @@ Ownership transfers should be handled with extreme care. Ensure that the `_newOw
   <WasThisHelpful pageId="OwnerFacet" />
 </div>
 
-<LastUpdated date="2025-12-28T04:47:19.611Z" />
+<LastUpdated date="2025-12-30T14:40:44.701Z" />

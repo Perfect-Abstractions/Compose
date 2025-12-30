@@ -1,7 +1,7 @@
 ---
 sidebar_position: 510
 title: "DiamondInspectFacet"
-description: "Inspect diamond storage and facet mappings"
+description: "Inspect diamond storage and facet mappings."
 gitSource: "https://github.com/Perfect-Abstractions/Compose/tree/main/src/diamond/DiamondInspectFacet.sol"
 ---
 
@@ -21,18 +21,18 @@ import GradientText from '@site/src/components/ui/GradientText';
 import GradientButton from '@site/src/components/ui/GradientButton';
 
 <DocSubtitle>
-Inspect diamond storage and facet mappings
+Inspect diamond storage and facet mappings.
 </DocSubtitle>
 
 <Callout type="info" title="Key Features">
-- Direct access to diamond storage slots via `getStorage`.
-- Comprehensive mapping of function selectors to their implementing facet addresses via `functionFacetPairs`.
-- Read-only operations, ensuring no state modification risks.
+- Directly accesses diamond storage via inline assembly.
+- Provides a comprehensive mapping of all deployed function selectors to their facets.
+- Read-only operations, ensuring no state modification.
 </Callout>
 
 ## Overview
 
-The DiamondInspectFacet provides read-only access to a diamond's internal state and function-to-facet mappings. It allows developers to programmatically query storage values and understand how function selectors are routed to specific facets within the diamond proxy.
+The DiamondInspectFacet provides essential read-only functions to understand the internal state and function distribution of a Compose diamond. It allows developers to query raw storage data and map function selectors to their respective implementation facets, aiding in debugging and on-chain analysis.
 
 ---
 
@@ -111,21 +111,23 @@ Returns an array of all function selectors and their corresponding facet address
 <ExpandableCode language="solidity" maxLines={20} title="Example Implementation">
 {`pragma solidity ^0.8.30;
 
-import {IDiamondInspectFacet} from "@compose/contracts/facets/DiamondInspect/IDiamondInspectFacet.sol";
+import {IDiamondInspectFacet} from "@compose/diamond/facets/DiamondInspect/IDiamondInspectFacet.sol";
 
-contract Consumer {
-    IDiamondInspectFacet private constant DIAMOND_INSPECT_FACET = IDiamondInspectFacet(address(this)); // Replace with actual diamond proxy address
+contract DiamondInspector {
+    address immutable diamondAddress;
 
-    function inspectDiamond() public view returns (bytes memory) {
-        // Example: Retrieve a specific storage variable (assuming 'owner' is at slot 0)
-        // Note: This requires knowledge of the storage layout and slot number.
-        bytes memory ownerStorage = DIAMOND_INSPECT_FACET.getStorage(0);
+    constructor(address _diamondAddress) {
+        diamondAddress = _diamondAddress;
+    }
 
-        // Example: Get all function-facet pairs
-        (bytes4[] memory selectors, address[] memory facets) = DIAMOND_INSPECT_FACET.functionFacetPairs();
+    function inspectStorage() public view returns (bytes memory) {
+        IDiamondInspectFacet inspectFacet = IDiamondInspectFacet(diamondAddress);
+        return inspectFacet.getStorage();
+    }
 
-        // Process retrieved data as needed...
-        return abi.encodePacked(ownerStorage, selectors, facets);
+    function inspectFunctionFacets() public view returns (struct IDiamondInspectFacet.FunctionFacetPair[] memory) {
+        IDiamondInspectFacet inspectFacet = IDiamondInspectFacet(diamondAddress);
+        return inspectFacet.functionFacetPairs();
     }
 }`}
 </ExpandableCode>
@@ -133,19 +135,18 @@ contract Consumer {
 ## Best Practices
 
 <Callout type="tip" title="Best Practice">
-- Integrate this facet by adding its ABI to the diamond proxy during deployment.
-- Use `getStorage` with caution; ensure you know the exact storage slot and data type to correctly interpret the returned bytes.
-- Leverage `functionFacetPairs` for debugging and understanding diamond function routing.
+- Call `getStorage()` to retrieve the raw storage bytes for deep inspection or off-chain analysis.
+- Use `functionFacetPairs()` to verify function routing and identify which facet implements a specific selector.
 </Callout>
 
 ## Security Considerations
 
 <Callout type="warning" title="Security">
-The `getStorage` function directly accesses storage slots. Incorrectly identifying a storage slot or misinterpreting the returned byte data can lead to logical errors or unintended behavior. Ensure thorough testing and understanding of the diamond's storage layout before relying on `getStorage`.
+The `getStorage()` function returns raw storage bytes. Consumers must carefully interpret this data to avoid misinterpreting storage layout, especially during diamond upgrades. `functionFacetPairs()` relies on the diamond's internal mapping of selectors to facets, which is managed by the diamond cut facet.
 </Callout>
 
 <div style={{marginTop: "3rem", paddingTop: "2rem", borderTop: "1px solid var(--ifm-color-emphasis-200)"}}>
   <WasThisHelpful pageId="DiamondInspectFacet" />
 </div>
 
-<LastUpdated date="2025-12-28T04:48:59.032Z" />
+<LastUpdated date="2025-12-30T14:42:31.272Z" />

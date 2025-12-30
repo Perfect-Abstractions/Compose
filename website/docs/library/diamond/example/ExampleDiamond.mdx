@@ -1,7 +1,7 @@
 ---
 sidebar_position: 510
 title: "ExampleDiamond"
-description: "Initializes and manages diamond facets and ownership."
+description: "Example Diamond for Compose: Initializes and manages facets."
 gitSource: "https://github.com/Perfect-Abstractions/Compose/tree/main/src/diamond/example/ExampleDiamond.sol"
 ---
 
@@ -21,18 +21,18 @@ import GradientText from '@site/src/components/ui/GradientText';
 import GradientButton from '@site/src/components/ui/GradientButton';
 
 <DocSubtitle>
-Initializes and manages diamond facets and ownership.
+Example Diamond for Compose: Initializes and manages facets.
 </DocSubtitle>
 
 <Callout type="info" title="Key Features">
-- Registers facets and their function selectors to enable diamond routing.
-- Sets the initial owner of the diamond contract.
-- Supports adding, replacing, or removing facets during initialization.
+- Initializes the diamond proxy with an owner and an initial set of facets.
+- Registers function selectors to enable `delegatecall` routing to the correct facets.
+- Demonstrates the fundamental structure for deploying a Compose diamond.
 </Callout>
 
 ## Overview
 
-The ExampleDiamond facet serves as the core initialization contract for a Compose diamond. It registers facets and their associated function selectors, enabling the diamond proxy to route calls to the correct implementation contracts. It also establishes the initial owner of the diamond.
+The ExampleDiamond contract serves as a foundational example for Compose diamonds. It demonstrates the core initialization process, including setting the owner and registering facet function selectors. This contract is crucial for understanding how facets are added and made accessible through the diamond proxy pattern.
 
 ---
 
@@ -85,55 +85,40 @@ Struct to hold facet address and its function selectors. struct FacetCut &#123; 
 <ExpandableCode language="solidity" maxLines={20} title="Example Implementation">
 {`pragma solidity ^0.8.30;
 
-import {IDiamondCut} from "@compose-protocol/diamond-contracts/contracts/interfaces/IDiamondCut.sol";
-import {ExampleDiamond} from "@compose-protocol/diamond-contracts/contracts/facets/ExampleDiamond.sol";
+import {ExampleDiamond} from "@compose/contracts/diamond/ExampleDiamond.sol";
+import {DiamondCutFacet} from "@compose/contracts/diamond/facets/DiamondCutFacet.sol";
+import {DiamondLoupeFacet} from "@compose/contracts/diamond/facets/DiamondLoupeFacet.sol";
 
-contract Deployer {
-    address owner = msg.sender;
-
-    function deploy() public {
-        // Example facet details
-        address erc20FacetAddress = address(0x123); // Replace with actual ERC20 facet address
-        bytes4[] memory erc20Selectors = new bytes4[](2);
-        erc20Selectors[0] = ExampleDiamond.transfer.selector;
-        erc20Selectors[1] = ExampleDiamond.balanceOf.selector;
-
-        address governanceFacetAddress = address(0x456); // Replace with actual Governance facet address
-        bytes4[] memory governanceSelectors = new bytes4[](1);
-        governanceSelectors[0] = ExampleDiamond.setOwner.selector;
-
-        // Setup FacetCuts
-        IDiamondCut.FacetCut[] memory cuts = new IDiamondCut.FacetCut[](2);
-        cuts[0] = IDiamondCut.FacetCut({
-            facetAddress: erc20FacetAddress,
-            action: IDiamondCut.FacetCutAction.Add,
-            functionSelectors: erc20Selectors
-        });
-        cuts[1] = IDiamondCut.FacetCut({
-            facetAddress: governanceFacetAddress,
-            action: IDiamondCut.FacetCutAction.Add,
-            functionSelectors: governanceSelectors
-        });
-
-        // Deploy and initialize the diamond
-        ExampleDiamond exampleDiamond = new ExampleDiamond();
-        exampleDiamond.init(cuts, owner);
+contract MyDiamond is ExampleDiamond {
+    constructor(address _owner, FacetCut[] memory _diamondCut) ExampleDiamond(_owner, _diamondCut) {
+        // Additional diamond initialization logic can go here
     }
-}`}
+
+    // Fallback and receive functions are inherited and managed by ExampleDiamond
+}
+
+// Deployment example (conceptual)
+// FacetCut[] memory facetsToCut = new FacetCut[](2);
+// facetsToCut[0] = FacetCut(address(new DiamondCutFacet()), FacetCutAction.Add, DiamondCutFacet.getFunctionSelectors());
+// facetsToCut[1] = FacetCut(address(new DiamondLoupeFacet()), FacetCutAction.Add, DiamondLoupeFacet.getFunctionSelectors());
+//
+// address owner = msg.sender;
+// ExampleDiamond diamond = new ExampleDiamond(owner, facetsToCut);
+`}
 </ExpandableCode>
 
 ## Best Practices
 
 <Callout type="tip" title="Best Practice">
-- Ensure all facet addresses and their function selectors are correctly specified during initialization.
-- The `owner` address set during initialization should be carefully chosen and secured.
-- Use `IDiamondCut.FacetCutAction.Add` to register new facets and `Replace` or `Remove` for upgrades.
+- Initialize the diamond with essential facets like DiamondCutFacet and DiamondLoupeFacet during deployment.
+- Ensure the owner is set correctly to manage future facet upgrades.
+- Understand that `constructor` is used for initial setup; upgrades are handled via `DiamondCutFacet`.
 </Callout>
 
 ## Security Considerations
 
 <Callout type="warning" title="Security">
-Initializes the diamond with provided facet addresses and owner. Ensure that the facet addresses are verified and intended for use. Incorrectly set facet addresses or an insecure owner address can compromise the diamond's functionality and control.
+The `constructor` is called only once during deployment. Access control for subsequent facet management is delegated to the `DiamondCutFacet`, which should be secured appropriately (e.g., restricted to the owner). The `fallback` and `receive` functions are inherited and their behavior is determined by the underlying diamond proxy implementation.
 </Callout>
 
 <div style={{marginTop: "3rem", paddingTop: "2rem", borderTop: "1px solid var(--ifm-color-emphasis-200)"}}>
@@ -141,13 +126,13 @@ Initializes the diamond with provided facet addresses and owner. Ensure that the
     items={[
       {
         title: "ExampleDiamond",
-        href: "/docs/library/diamond/example",
+        href: "/docs/library/diamond/example/ExampleDiamond",
         description: "Module used by ExampleDiamond",
         icon: "📦"
       },
       {
         title: "DiamondInspectFacet",
-        href: "/docs/library/diamond",
+        href: "/docs/library/diamond/DiamondInspectFacet",
         description: "Related facet in diamond",
         icon: "💎"
       }
@@ -159,4 +144,4 @@ Initializes the diamond with provided facet addresses and owner. Ensure that the
   <WasThisHelpful pageId="ExampleDiamond" />
 </div>
 
-<LastUpdated date="2025-12-28T04:49:11.658Z" />
+<LastUpdated date="2025-12-30T14:42:44.058Z" />

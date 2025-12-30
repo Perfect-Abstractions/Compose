@@ -1,7 +1,7 @@
 ---
 sidebar_position: 1
 title: "DiamondMod"
-description: "Manage diamond facets and storage during deployment and runtime."
+description: "Diamond Library - Internal functions and storage for diamond proxy functionality."
 gitSource: "https://github.com/Perfect-Abstractions/Compose/tree/main/src/diamond/DiamondMod.sol"
 ---
 
@@ -21,13 +21,14 @@ import GradientText from '@site/src/components/ui/GradientText';
 import GradientButton from '@site/src/components/ui/GradientButton';
 
 <DocSubtitle>
-Manage diamond facets and storage during deployment and runtime.
+Diamond Library - Internal functions and storage for diamond proxy functionality.
 </DocSubtitle>
 
 <Callout type="info" title="Key Features">
-- Restricts facet additions to the initial deployment phase, enforcing a stable diamond structure post-deployment.
-- Provides a fallback mechanism (`diamondFallback`) to dynamically route function calls to the correct facet based on selector.
-- Exposes internal storage access (`getStorage`) for advanced diagnostic or upgrade scenarios.
+- All functions are `internal` for use in custom facets
+- Follows diamond storage pattern (EIP-8042)
+- Compatible with ERC-2535 diamonds
+- No external dependencies or `using` directives
 </Callout>
 
 <Callout type="info" title="Module Usage">
@@ -36,7 +37,7 @@ This module provides internal functions for use in your custom facets. Import it
 
 ## Overview
 
-The DiamondMod module provides core logic for managing facets within a diamond proxy. It handles adding facets during initial deployment and provides a fallback mechanism to route external calls to the appropriate facet. This ensures composability and efficient execution of diamond functions.
+Diamond Library - Internal functions and storage for diamond proxy functionality.
 
 ---
 
@@ -190,46 +191,10 @@ error NoBytecodeAtAddress(address _contractAddress, string _message);
   </Accordion>
 </AccordionGroup>
 
-## Usage Example
-
-<ExpandableCode language="solidity" maxLines={20} title="Example Implementation">
-{`pragma solidity ^0.8.30;
-
-import {IDiamondMod} from "@compose/contracts/diamond/interfaces/IDiamondMod.sol";
-import {DiamondCut} from "@compose/contracts/diamond/events/DiamondCut.sol";
-
-contract MyFacet {
-    // Assume DiamondMod is deployed and its address is known
-    IDiamondMod internal diamondMod;
-
-    constructor(address _diamondModAddress) {
-        diamondMod = IDiamondMod(_diamondModAddress);
-    }
-
-    function addMyFacet() external {
-        // Example of adding facets during deployment (not typical for runtime)
-        // diamondMod.addFacets(...); // This function is restricted to deployment
-    }
-
-    // Example of how diamondFallback might be used internally if a facet needed to access it
-    function callUnknownFunction(bytes memory _calldata) external returns (bytes memory) {
-        return diamondMod.diamondFallback(_calldata);
-    }
-}`}
-</ExpandableCode>
-
-## Best Practices
-
-<Callout type="tip" title="Best Practice">
-- Use `addFacets` strictly during the initial diamond deployment phase. It is not intended for runtime facet additions.
-- Implement robust error handling by checking for Compose-specific errors like `CannotAddFunctionToDiamondThatAlreadyExists` and `FunctionNotFound`.
-- Understand that `diamondFallback` is the primary mechanism for routing calls; ensure your diamond's logic correctly dispatches to facets.
-</Callout>
-
 ## Integration Notes
 
 <Callout type="success" title="Shared Storage">
-DiamondMod stores facet information and function selector mappings. The `addFacets` function is designed to be called only during the initial diamond deployment to populate these mappings. The `diamondFallback` function reads from this storage to determine which facet should handle an incoming call. Any changes to facet mappings or storage layout made by `addFacets` are persistent and visible to all facets interacting with the diamond.
+This module accesses shared diamond storage, so changes made through this module are immediately visible to facets using the same storage pattern. All functions are internal as per Compose conventions.
 </Callout>
 
 <div style={{marginTop: "3rem", paddingTop: "2rem", borderTop: "1px solid var(--ifm-color-emphasis-200)"}}>
@@ -237,7 +202,7 @@ DiamondMod stores facet information and function selector mappings. The `addFace
     items={[
       {
         title: "DiamondCutMod",
-        href: "/docs/library/diamond",
+        href: "/docs/library/diamond/DiamondCutMod",
         description: "Related module in diamond",
         icon: "📦"
       }
@@ -249,4 +214,4 @@ DiamondMod stores facet information and function selector mappings. The `addFace
   <WasThisHelpful pageId="DiamondMod" />
 </div>
 
-<LastUpdated date="2025-12-28T04:49:07.717Z" />
+<LastUpdated date="2025-12-30T14:42:39.181Z" />

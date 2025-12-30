@@ -1,7 +1,7 @@
 ---
 sidebar_position: 1
 title: "ERC1155Mod"
-description: "Manages ERC-1155 token operations including minting, burning, and transfers."
+description: "ERC-1155 token management and safe transfers."
 gitSource: "https://github.com/Perfect-Abstractions/Compose/tree/main/src/token/ERC1155/ERC1155Mod.sol"
 ---
 
@@ -21,13 +21,13 @@ import GradientText from '@site/src/components/ui/GradientText';
 import GradientButton from '@site/src/components/ui/GradientButton';
 
 <DocSubtitle>
-Manages ERC-1155 token operations including minting, burning, and transfers.
+ERC-1155 token management and safe transfers.
 </DocSubtitle>
 
 <Callout type="info" title="Key Features">
-- Supports both single and batch transfers, minting, and burning operations for efficiency.
-- Implements EIP-1155 safe transfer mechanisms, including receiver validation for contract recipients.
-- Provides functionality to set and retrieve token URIs, essential for metadata and UI representation.
+- Supports both single and batch operations for minting, burning, and transfers.
+- Implements safe transfer logic, including ERC1155Receiver validation for contract recipients.
+- Provides functions to set base and token-specific URIs for metadata.
 </Callout>
 
 <Callout type="info" title="Module Usage">
@@ -36,7 +36,7 @@ This module provides internal functions for use in your custom facets. Import it
 
 ## Overview
 
-This module implements the core ERC-1155 token functionality, enabling the minting, burning, and safe transfer of multiple token types within a Compose diamond. It adheres to EIP-1155 standards, ensuring interoperability and secure token handling. By integrating this module, diamonds can manage fungible and non-fungible tokens efficiently.
+This module provides core ERC-1155 functionality, including minting, burning, and safe transfers of single and batch token types. It ensures composability and adherence to EIP-1155 standards by handling balance updates, receiver validation, and event emissions.
 
 ---
 
@@ -561,47 +561,34 @@ error ERC1155MissingApprovalForAll(address _operator, address _owner);
 <ExpandableCode language="solidity" maxLines={20} title="Example Implementation">
 {`pragma solidity ^0.8.30;
 
-import {IERC1155} from "@compose/contracts/src/interfaces/IERC1155.sol";
-import {IERC1155Receiver} from "@compose/contracts/src/interfaces/IERC1155Receiver.sol";
+import {IERC1155Mod } from "../interfaces/IERC1155Mod.sol";
 
-contract MyERC1155Facet {
-    IERC1155 internal constant erc1155 = IERC1155(address(this));
+contract MyDiamondFacet {
+    IERC1155Mod internal constant ERC1155 = IERC1155Mod(address(this));
 
-    /**
-     * @notice Mints a specific ERC-1155 token to an address.
-     * @dev This function assumes the caller has the necessary permissions.
-     */
-    function mintErc1155Token(address _to, uint256 _id, uint256 _amount, bytes calldata _data) external {
-        // Assumes this facet is part of a diamond and can call the ERC1155Mod functions.
-        // In a real scenario, you would interact with the diamond proxy.
-        // For demonstration, we call it directly as if it were on the same contract.
-        erc1155.mint(_to, _id, _amount, _data);
+    function mintAndTransferTokens(address _to, uint256 _id, uint256 _amount) external {
+        // Mint tokens to the caller (or another address)
+        ERC1155.mint(_to, _id, _amount);
+
+        // Safely transfer the minted tokens to another address
+        address fromAddress = msg.sender; // Or any other valid sender
+        ERC1155.safeTransferFrom(fromAddress, _to, _id, _amount, "");
     }
-
-    /**
-     * @notice Safely transfers a specific ERC-1155 token.
-     * @dev This function assumes the caller has the necessary permissions and approvals.
-     */
-    function safeTransferErc1155(address _from, address _to, uint256 _id, uint256 _amount, bytes calldata _data) external {
-        // Assumes this facet is part of a diamond and can call the ERC1155Mod functions.
-        erc1155.safeTransferFrom(_from, _to, _id, _amount, _data);
-    }
-}
-`}
+}`}
 </ExpandableCode>
 
 ## Best Practices
 
 <Callout type="tip" title="Best Practice">
-- Ensure proper access control is implemented for minting and burning functions, restricting them to authorized roles.
-- Always validate `_to` addresses in minting and transfer functions to prevent accidental token loss or unintended contract interactions.
-- Handle `ERC1155InvalidArrayLength` errors explicitly when using batch operations to ensure data integrity.
+- Ensure proper access control for minting and burning functions, as they modify token balances.
+- Always validate the `_to` address in `mint` and `mintBatch` functions if it's a contract to ensure it implements the ERC1155Receiver interface for safe transfers.
+- Use custom errors for revert conditions for gas efficiency and clarity.
 </Callout>
 
 ## Integration Notes
 
 <Callout type="success" title="Shared Storage">
-The `ERC1155Mod` functions interact with a dedicated storage slot within the diamond's storage layout, typically managed by a `ERC1155Storage` struct. Facets interacting with ERC-1155 tokens should ensure they have the correct storage pointer and call the module functions through the diamond proxy. The `getStorage` function provides direct access to this struct, allowing facets to read balances and other state. Any changes to token balances or URIs are immediately reflected across all facets interacting with the diamond's ERC-1155 state.
+The ERC1155Mod stores its state within a predefined slot in the diamond's storage. Facets interacting with this module should use the `getStorage` function to access its internal storage struct. Ensure this module is added to the diamond with appropriate selectors. The module maintains invariants related to token balances and ownership.
 </Callout>
 
 <div style={{marginTop: "3rem", paddingTop: "2rem", borderTop: "1px solid var(--ifm-color-emphasis-200)"}}>
@@ -609,19 +596,19 @@ The `ERC1155Mod` functions interact with a dedicated storage slot within the dia
     items={[
       {
         title: "ERC20PermitMod",
-        href: "/docs/library/token/ERC20/ERC20Permit",
+        href: "/docs/library/token/ERC20/ERC20Permit/ERC20PermitMod",
         description: "Related module in token",
         icon: "📦"
       },
       {
         title: "ERC20Mod",
-        href: "/docs/library/token/ERC20/ERC20",
+        href: "/docs/library/token/ERC20/ERC20/ERC20Mod",
         description: "Related module in token",
         icon: "📦"
       },
       {
         title: "ERC20BridgeableMod",
-        href: "/docs/library/token/ERC20/ERC20Bridgeable",
+        href: "/docs/library/token/ERC20/ERC20Bridgeable/ERC20BridgeableMod",
         description: "Related module in token",
         icon: "📦"
       }
@@ -633,4 +620,4 @@ The `ERC1155Mod` functions interact with a dedicated storage slot within the dia
   <WasThisHelpful pageId="ERC1155Mod" />
 </div>
 
-<LastUpdated date="2025-12-28T04:48:04.373Z" />
+<LastUpdated date="2025-12-30T14:41:34.741Z" />

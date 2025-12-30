@@ -1,7 +1,7 @@
 ---
 sidebar_position: 1
 title: "ERC20PermitMod"
-description: "ERC-2612 Permit and domain separator logic"
+description: "Implements ERC-2612 permit functionality and domain separator."
 gitSource: "https://github.com/Perfect-Abstractions/Compose/tree/main/src/token/ERC20/ERC20Permit/ERC20PermitMod.sol"
 ---
 
@@ -21,13 +21,13 @@ import GradientText from '@site/src/components/ui/GradientText';
 import GradientButton from '@site/src/components/ui/GradientButton';
 
 <DocSubtitle>
-ERC-2612 Permit and domain separator logic
+Implements ERC-2612 permit functionality and domain separator.
 </DocSubtitle>
 
 <Callout type="info" title="Key Features">
-- Implements ERC-2612 Permit logic for gasless approvals.
-- Provides a standardized `DOMAIN_SEPARATOR` for signature validation.
-- Includes a `permit` function to validate signatures and set allowances.
+- Implements EIP-2612 `permit` function for gasless approvals.
+- Manages domain separator generation for secure signature validation.
+- Emits `Approval` event upon successful permit execution.
 </Callout>
 
 <Callout type="info" title="Module Usage">
@@ -36,7 +36,7 @@ This module provides internal functions for use in your custom facets. Import it
 
 ## Overview
 
-This module provides the core logic for implementing ERC-2612 Permit functionality, enabling gasless token approvals. It includes utilities for managing the domain separator and validating permit signatures, crucial for secure and efficient token transfers.
+The ERC20PermitMod provides essential logic for implementing ERC-2612's permit functionality. It enables users to grant allowances via signed messages, enhancing user experience by reducing the need for gas-intensive approval transactions. This module ensures secure and standardized permit handling within a Compose diamond.
 
 ---
 
@@ -236,50 +236,57 @@ address _owner, address _spender, uint256 _value, uint256 _deadline, uint8 _v, b
 <ExpandableCode language="solidity" maxLines={20} title="Example Implementation">
 {`pragma solidity ^0.8.30;
 
-import {ERC20PermitMod} from "@compose/modules/ERC20PermitMod.sol";
-import {IERC20Permit} from "@openzeppelin/contracts/interfaces/draft-IERC677.sol";
+import {IERC20PermitMod} from "@compose/modules/ERC20PermitMod.sol";
+import {IDiamondCut} from "@compose/core/IDiamondCut.sol";
 
 contract MyERC20Facet {
-    using ERC20PermitMod for ERC20PermitMod.PermitStorage;
+    IERC20PermitMod private immutable _erc20PermitMod;
 
-    ERC20PermitMod.PermitStorage internal _permitStorage;
-
-    function permit(address owner, address spender, uint256 value, uint256 deadline, uint8 v, bytes32 r, bytes32 s)
-        external
-        returns (bool)
-    {
-        // Ensure the calling contract's domain separator is correctly set
-        bytes32 domainSeparator = ERC20PermitMod.DOMAIN_SEPARATOR();
-
-        // Use the library function to validate and set allowance
-        _permitStorage.permit(owner, spender, value, deadline, v, r, s, domainSeparator);
-
-        // Emit the Approval event as required by ERC-20 and ERC-2612
-        emit IERC20Permit.Approval(owner, spender, value);
-
-        return true;
+    constructor(address diamondAddress) {
+        _erc20PermitMod = IERC20PermitMod(diamondAddress);
     }
 
-    // Other ERC-20 functions would go here...
+    /**
+     * @notice Approves a spender using an ERC-2612 permit.
+     * @param owner The owner of the tokens.
+     * @param spender The address to approve.
+     * @param value The amount to approve.
+     * @param deadline The permit deadline.
+     * @param v The v component of the signature.
+     * @param r The r component of the signature.
+     * @param s The s component of the signature.
+     */
+    function permit(address owner, address spender, uint256 value, uint256 deadline, uint8 v, bytes32 r, bytes32 s) external {
+        // The permit function in the module emits the Approval event.
+        _erc20PermitMod.permit(owner, spender, value, deadline, v, r, s);
+    }
+
+    /**
+     * @notice Get the domain separator for permit signatures.
+     * @return The domain separator.
+     */
+    function DOMAIN_SEPARATOR() external view returns (bytes32) {
+        return _erc20PermitMod.DOMAIN_SEPARATOR();
+    }
 }`}
 </ExpandableCode>
 
 ## Best Practices
 
 <Callout type="tip" title="Best Practice">
-- Ensure the domain separator is correctly retrieved and used for signature validation.
-- Always emit the `Approval` event after a successful `permit` call, as required by the ERC-2612 standard.
-- Handle `ERC2612InvalidSignature` and `ERC20InvalidSpender` errors appropriately in your facet.
+- Ensure the `Approval` event is emitted by the calling facet or contract when `permit` is called, as per the module's contract.
+- Validate the `deadline` parameter carefully to prevent expired permits from being used.
+- Handle potential `ERC2612InvalidSignature` and `ERC20InvalidSpender` errors gracefully.
 </Callout>
 
 ## Integration Notes
 
 <Callout type="success" title="Shared Storage">
-The `ERC20PermitMod` relies on specific storage slots within the diamond proxy for its `PermitStorage` and `ERC20Storage`. Facets integrating this module should ensure these storage layouts are correctly initialized and accessible. The `permit` function internally uses the `Approval` event, which must also be emitted by the calling facet to comply with ERC-20 standards.
+This module requires access to the ERC20 and permit storage slots. The `permit` function internally handles signature validation and allowance updates. The `Approval` event must be emitted by the facet calling the `permit` function. The `DOMAIN_SEPARATOR` function should be called to obtain the correct domain separator for generating permit signatures.
 </Callout>
 
 <div style={{marginTop: "3rem", paddingTop: "2rem", borderTop: "1px solid var(--ifm-color-emphasis-200)"}}>
   <WasThisHelpful pageId="ERC20PermitMod" />
 </div>
 
-<LastUpdated date="2025-12-28T04:47:35.330Z" />
+<LastUpdated date="2025-12-30T14:41:07.042Z" />
