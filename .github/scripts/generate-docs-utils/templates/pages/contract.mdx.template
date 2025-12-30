@@ -211,16 +211,16 @@ This module provides internal functions for use in your custom facets. Import it
 </AccordionGroup>
 {{/if}}
 
-{{!-- Usage Example section commented out for now --}}
-{{!--
 {{#if usageExample}}
+<!-- Usage Example section commented out for now -->
+<!--
 ## Usage Example
 
 <ExpandableCode language="solidity" maxLines={20} title="Example Implementation">
 {{{codeContent usageExample}}}
 </ExpandableCode>
+-->
 {{/if}}
---}}
 
 {{#if bestPractices}}
 ## Best Practices
