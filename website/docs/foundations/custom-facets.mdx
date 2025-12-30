@@ -4,6 +4,8 @@ title: "Custom Functionality: Compose Your Own Facets"
 description: "Build your own facets that work seamlessly with existing Compose Functionality."
 ---
 
+import Callout from '@site/src/components/ui/Callout';
+
 Many projects need custom functionality beyond the standard facets.  
 Compose is designed for this — you can build and integrate your own facets that work seamlessly alongside existing Compose facets.
 
@@ -41,12 +43,12 @@ contract GameNFTFacet {
     }
 }
 ```
-:::tip[Key Insight]
+<Callout type="tip" title="Key Insight">
 Your custom `GameNFTFacet` and the standard `ERC721Facet` both operate on the **same storage** within your diamond. This shared-storage architecture is what makes composition possible.
-:::
+</Callout>
 
 
-:::warning[Early State Development]
+<Callout type="warning" title="Early State Development">
 Compose is still in early development and currently available only to contributors.
 It is not **production-ready** — use it in test or development environments only.
-:::
+</Callout>

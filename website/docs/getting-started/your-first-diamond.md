@@ -3,6 +3,9 @@ sidebar_position: 3
 draft: true
 ---
 
+import Callout from '@site/src/components/ui/Callout';
+import ExpandableCode from '@site/src/components/code/ExpandableCode';
+
 # Your First Diamond
 
 In this guide, you'll learn how to create a diamond from scratch and understand every piece of the architecture.
@@ -251,8 +254,8 @@ The diamond uses these selectors to route calls to the correct facet.
 
 Here's a complete deployment script:
 
-```solidity
-// SPDX-License-Identifier: MIT
+<ExpandableCode language="solidity" maxLines={15} title="Complete Deployment Script">
+{`// SPDX-License-Identifier: MIT
 pragma solidity ^0.8.24;
 
 import "forge-std/Script.sol";
@@ -321,8 +324,8 @@ contract DeployDiamond is Script {
         selectors[8] = ERC20Facet.transferFrom.selector;
         return selectors;
     }
-}
-```
+}`}
+</ExpandableCode>
 
 ## Testing Your Diamond
 
@@ -365,7 +368,7 @@ You now understand how to build a diamond from scratch! Continue learning:
 - **[Creating Custom Facets](/)** - Build your own facets
 - **[Upgrading Diamonds](/)** - Learn about diamond cuts
 
-:::tip Pro Tip
+<Callout type="tip" title="Pro Tip">
 In production, consider using a multi-sig wallet or DAO for the diamond owner to ensure secure upgrades.
-:::
+</Callout>
 

@@ -3,6 +3,8 @@ sidebar_position: 2
 draft: true
 ---
 
+import ExpandableCode from '@site/src/components/code/ExpandableCode';
+
 # Quick Start
 
 Let's build your first diamond using Compose facets in under 5 minutes! 🚀
@@ -52,8 +54,8 @@ contract MyTokenDiamond is Diamond {
 
 Create `script/DeployMyDiamond.s.sol`:
 
-```solidity
-// SPDX-License-Identifier: MIT
+<ExpandableCode language="solidity" maxLines={15} title="DeployMyDiamond.s.sol - Deployment Script">
+{`// SPDX-License-Identifier: MIT
 pragma solidity ^0.8.24;
 
 import {Script} from "forge-std/Script.sol";
@@ -108,8 +110,8 @@ contract DeployMyDiamond is Script {
         console.log("Diamond deployed at:", address(diamond));
         console.log("ERC20Facet deployed at:", address(erc20Facet));
     }
-}
-```
+}`}
+</ExpandableCode>
 
 ## Step 4: Create Initialization Facet
 
@@ -150,8 +152,8 @@ contract TokenInitFacet {
 
 Create `test/MyTokenDiamond.t.sol`:
 
-```solidity
-// SPDX-License-Identifier: MIT
+<ExpandableCode language="solidity" maxLines={15} title="MyTokenDiamond.t.sol - Test Suite">
+{`// SPDX-License-Identifier: MIT
 pragma solidity ^0.8.24;
 
 import {Test} from "forge-std/Test.sol";
@@ -201,8 +203,8 @@ contract MyTokenDiamondTest is Test {
         // Assert
         assertEq(token.balanceOf(user2), 50 ether);
     }
-}
-```
+}`}
+</ExpandableCode>
 
 ## Step 6: Run and Deploy
 

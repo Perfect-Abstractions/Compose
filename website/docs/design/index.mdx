@@ -7,6 +7,7 @@ sidebar_class_name: hidden
 
 import DocCard, { DocCardGrid } from '@site/src/components/docs/DocCard';
 import DocSubtitle from '@site/src/components/docs/DocSubtitle';
+import Callout from '@site/src/components/ui/Callout';
 
 <DocSubtitle>
 This section contains the guidelines and rules for developing new facets and Solidity libraries in **Compose**. We focus on building small, independent, and easy-to-understand facets. Each facet is designed to be deployed once, then reused and composed seamlessly with others to form complete smart contract systems.
@@ -51,7 +52,7 @@ This section contains the guidelines and rules for developing new facets and Sol
   />
 </DocCardGrid>
 
-:::warning[Early Development]
+<Callout type="warning" title="Early Development">
 Compose is still in early development and currently available only to contributors.
 It is not **production-ready** — use it in test or development environments only.
-:::
+</Callout>
