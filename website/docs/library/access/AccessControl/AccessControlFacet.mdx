@@ -25,15 +25,14 @@ Manages role-based access control within a diamond.
 </DocSubtitle>
 
 <Callout type="info" title="Key Features">
-- Role-based access control (RBAC) implementation.
-- Supports granting and revoking roles for individual accounts and batches.
-- Allows for defining role administrators to manage role assignments.
-- Emits events for role changes for off-chain monitoring.
+- Role-based access control for granular permission management.
+- Support for batch granting and revoking roles.
+- Extensible with other access control facets like `AccessControlPausableFacet`.
 </Callout>
 
 ## Overview
 
-The AccessControlFacet provides a robust framework for implementing role-based access control (RBAC) within a Compose diamond. It allows for granular permission management by defining roles, assigning them to accounts, and enforcing role requirements for function execution. This facet is crucial for securing sensitive operations and ensuring that only authorized entities can perform specific actions.
+The AccessControlFacet provides a robust role-based access control (RBAC) system for Compose diamonds. It allows for granular permission management by defining roles and assigning them to accounts. This facet is crucial for securing sensitive functions and orchestrating complex interactions by enforcing role requirements.
 
 ---
 
@@ -478,42 +477,33 @@ error AccessControlUnauthorizedSender(address _sender, address _account);
 <ExpandableCode language="solidity" maxLines={20} title="Example Implementation">
 {`pragma solidity ^0.8.30;
 
-import { DiamondAccessControl } from "@compose/access/DiamondAccessControl";
-import { AccessControlFacet } from "@compose/access/AccessControl/AccessControlFacet";
-import { AccessControlStorage } from "@compose/access/AccessControl/AccessControlStorage";
+import {DiamondInit} from "@compose/diamond/DiamondInit.sol";
+import {DiamondCut} from "@compose/diamond/DiamondCut.sol";
+import {AccessControlFacet} from "@compose/access/AccessControl/AccessControlFacet.sol";
+import {Diamond} from "@compose/diamond/Diamond.sol";
 
-contract MyDiamond is DiamondAccessControl {
-    bytes32 constant ACCESS_CONTROL_STORAGE_POSITION = keccak256("compose.accesscontrol");
+contract DeployDiamondWithAccessControl is DiamondInit {
+    // Define roles
+    bytes32 constant ADMIN_ROLE = keccak256("ADMIN_ROLE");
+    bytes32 constant OPERATOR_ROLE = keccak256("OPERATOR_ROLE");
 
-    // Example Role Definitions
-    bytes32 public constant ADMIN_ROLE = keccak256("ADMIN_ROLE");
-    bytes32 public constant MINTER_ROLE = keccak256("MINTER_ROLE");
+    function deploy() external {
+        // ... diamond deployment logic ...
 
-    constructor(address _diamondAdmin, address _owner) DiamondAccessControl(_diamondAdmin, _owner) {
         // Initialize AccessControlFacet
-        AccessControlFacet acFacet = AccessControlFacet(address(this));
-        acFacet.grantRole(ADMIN_ROLE, _diamondAdmin);
-        acFacet.grantRole(ADMIN_ROLE, _owner);
-        acFacet.grantRole(MINTER_ROLE, _owner);
+        AccessControlFacet accessControlFacet = AccessControlFacet(diamondAddress);
+        accessControlFacet.grantRole(ADMIN_ROLE, msg.sender); // Grant admin role to deployer
+        accessControlFacet.grantRole(OPERATOR_ROLE, address(this)); // Grant operator role to diamond itself
+
+        // ... other facet initializations ...
     }
 
-    // Function to grant MINTER_ROLE to an address
-    function grantMinterRole(address _account) external {
-        AccessControlFacet acFacet = AccessControlFacet(address(this));
-        acFacet.grantRole(MINTER_ROLE, _account);
-    }
+    // Example of calling a protected function using requireRole
+    function executeProtectedAction() external {
+        AccessControlFacet accessControlFacet = AccessControlFacet(diamondAddress);
+        accessControlFacet.requireRole(OPERATOR_ROLE, msg.sender);
 
-    // Function that requires MINTER_ROLE
-    function mintTokens(address _to, uint256 _amount) external {
-        AccessControlFacet acFacet = AccessControlFacet(address(this));
-        acFacet.requireRole(MINTER_ROLE, msg.sender);
-        // ... token minting logic ...
-    }
-
-    // Function to get role admin
-    function getAdminForRole(bytes32 _role) external view returns (bytes32) {
-        AccessControlFacet acFacet = AccessControlFacet(address(this));
-        return acFacet.getRoleAdmin(_role);
+        // ... protected action logic ...
     }
 }`}
 </ExpandableCode>
@@ -521,15 +511,15 @@ contract MyDiamond is DiamondAccessControl {
 ## Best Practices
 
 <Callout type="tip" title="Best Practice">
-- Initialize roles and grant initial permissions during diamond deployment or upgrade initialization.
-- Define role hierarchies using `setRoleAdmin` to ensure proper administrative control.
-- Utilize `requireRole` within functions to enforce access control checks, reverting with specific errors if unauthorized.
+- Initialize roles and grant them to appropriate accounts during diamond deployment.
+- Use `grantRoleBatch` and `revokeRoleBatch` for efficient mass role management.
+- Define clear hierarchies for roles using `setRoleAdmin` to manage administrative privileges.
 </Callout>
 
 ## Security Considerations
 
 <Callout type="warning" title="Security">
-Ensure that sensitive roles, such as `ADMIN_ROLE`, are only granted to trusted addresses. The `setRoleAdmin` function's access control is enforced by the current role administrator, preventing unauthorized changes to role hierarchies. Batch operations (`grantRoleBatch`, `revokeRoleBatch`) should be used cautiously to avoid unintended mass role modifications. Reentrancy is not a direct concern as functions operate on state and do not make external calls without proper checks.
+Ensure that role administration is properly secured. The `setRoleAdmin`, `grantRole`, and `revokeRole` functions require the caller to be the admin of the role. Reentrancy is mitigated as role modifications are atomic. Input validation is handled internally by the facet to prevent invalid role or account assignments.
 </Callout>
 
 <div style={{marginTop: "3rem", paddingTop: "2rem", borderTop: "1px solid var(--ifm-color-emphasis-200)"}}>
@@ -573,4 +563,4 @@ Ensure that sensitive roles, such as `ADMIN_ROLE`, are only granted to trusted a
   <WasThisHelpful pageId="AccessControlFacet" />
 </div>
 
-<LastUpdated date="2025-12-30T15:37:57.431Z" />
+<LastUpdated date="2025-12-30T15:54:26.223Z" />

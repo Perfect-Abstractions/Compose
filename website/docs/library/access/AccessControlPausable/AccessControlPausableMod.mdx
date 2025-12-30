@@ -1,7 +1,7 @@
 ---
 sidebar_position: 1
 title: "AccessControlPausableMod"
-description: "Manage role pausing and access control for diamond functions."
+description: "Control role execution based on pause state."
 gitSource: "https://github.com/Perfect-Abstractions/Compose/tree/main/src/access/AccessControlPausable/AccessControlPausableMod.sol"
 ---
 
@@ -21,13 +21,13 @@ import GradientText from '@site/src/components/ui/GradientText';
 import GradientButton from '@site/src/components/ui/GradientButton';
 
 <DocSubtitle>
-Manage role pausing and access control for diamond functions.
+Control role execution based on pause state.
 </DocSubtitle>
 
 <Callout type="info" title="Key Features">
-- Allows pausing and unpausing of specific roles, temporarily revoking access.
-- Integrates with existing Access Control mechanisms by leveraging its storage.
-- Provides explicit checks for role pause status via `isRolePaused`.
+- Allows roles to be individually paused and unpaused.
+- Provides `requireRoleNotPaused` to enforce state checks before executing sensitive operations.
+- Emits `RolePaused` and `RoleUnpaused` events for state change tracking.
 </Callout>
 
 <Callout type="info" title="Module Usage">
@@ -36,7 +36,7 @@ This module provides internal functions for use in your custom facets. Import it
 
 ## Overview
 
-This module provides fine-grained control over role permissions by allowing specific roles to be paused. It integrates seamlessly with the diamond storage pattern, ensuring consistent state management. By enabling role-specific pausing, it enhances the safety and flexibility of diamond upgrades and operations.
+This module provides fine-grained control over role execution by allowing roles to be paused. It integrates with the Access Control facet, enabling developers to conditionally block or allow actions associated with specific roles. This is crucial for emergency stops or scheduled maintenance, ensuring system safety and predictability.
 
 ---
 
@@ -331,38 +331,30 @@ error AccessControlUnauthorizedAccount(address _account, bytes32 _role);
 {`pragma solidity ^0.8.30;
 
 import {IAccessControlPausable} from "@compose/access/AccessControlPausable/IAccessControlPausable.sol";
-import {AccessControlPausableMod} from "@compose/access/AccessControlPausable/AccessControlPausableMod.sol";
 
 contract MyFacet {
-    IAccessControlPausable internal _accessControlPausable;
+    IAccessControlPausable internal accessControlPausable;
 
-    constructor(address _diamondProxy) {
-        _accessControlPausable = IAccessControlPausable(_diamondProxy);
+    constructor(address _diamondAddress) {
+        accessControlPausable = IAccessControlPausable(_diamondAddress);
     }
 
-    // Example of pausing a role
+    function _someRoleRestrictedAction() internal view {
+        bytes32 MY_ROLE = keccak256("MY_ROLE");
+        // Ensure the caller has MY_ROLE and that MY_ROLE is not paused.
+        accessControlPausable.requireRoleNotPaused(MY_ROLE, msg.sender);
+
+        // ... proceed with the action ...
+    }
+
     function pauseMyRole() external {
-        bytes32 role = keccak256("MY_ROLE");
-        _accessControlPausable.pauseRole(role);
+        bytes32 MY_ROLE = keccak256("MY_ROLE");
+        accessControlPausable.pauseRole(MY_ROLE);
     }
 
-    // Example of unpausing a role
     function unpauseMyRole() external {
-        bytes32 role = keccak256("MY_ROLE");
-        _accessControlPausable.unpauseRole(role);
-    }
-
-    // Example of checking if a role is paused
-    function checkRolePaused(bytes32 _role) external view returns (bool) {
-        return _accessControlPausable.isRolePaused(_role);
-    }
-
-    // Example of requiring a role and that it's not paused
-    function performActionWithRole() external {
-        bytes32 role = keccak256("MY_ROLE");
-        address caller = msg.sender;
-        _accessControlPausable.requireRoleNotPaused(role, caller);
-        // ... perform action ...
+        bytes32 MY_ROLE = keccak256("MY_ROLE");
+        accessControlPausable.unpauseRole(MY_ROLE);
     }
 }`}
 </ExpandableCode>
@@ -370,15 +362,15 @@ contract MyFacet {
 ## Best Practices
 
 <Callout type="tip" title="Best Practice">
-- Ensure the `AccessControlPausableMod` facet is deployed and initialized correctly within the diamond.
-- Use custom errors (`AccessControlRolePaused`, `AccessControlUnauthorizedAccount`) for clear revert reasons.
-- Implement role checks using `requireRoleNotPaused` to prevent execution when a role is paused.
+- Use `requireRoleNotPaused` to enforce that actions can only be performed when the associated role is not paused.
+- Monitor `RolePaused` and `RoleUnpaused` events to track changes in role states.
+- Integrate pausing functionality thoughtfully, considering emergency scenarios and system maintenance.
 </Callout>
 
 ## Integration Notes
 
 <Callout type="success" title="Shared Storage">
-The `AccessControlPausableMod` utilizes the diamond storage pattern, storing its state at the `ACCESS_CONTROL_STORAGE_POSITION` slot, which is identified by `keccak256("compose.accesscontrol")`. It also depends on the `AccessControlStorage` struct. Facets interacting with this module should use the `IAccessControlPausable` interface to call its functions. The `requireRoleNotPaused` function enforces both role existence and the non-paused status of that role.
+This module utilizes the diamond storage pattern, storing its state under the `ACCESS_CONTROL_STORAGE_POSITION` slot, identified by `keccak256("compose.accesscontrol")`. The `AccessControlPausableStorage` struct manages the pause state for roles. Facets interact with this module via the `IAccessControlPausable` interface to check and modify role pause states. The `requireRoleNotPaused` function also implicitly checks for role membership via the underlying Access Control logic.
 </Callout>
 
 <div style={{marginTop: "3rem", paddingTop: "2rem", borderTop: "1px solid var(--ifm-color-emphasis-200)"}}>
@@ -398,4 +390,4 @@ The `AccessControlPausableMod` utilizes the diamond storage pattern, storing its
   <WasThisHelpful pageId="AccessControlPausableMod" />
 </div>
 
-<LastUpdated date="2025-12-30T15:37:28.589Z" />
+<LastUpdated date="2025-12-30T15:53:57.838Z" />

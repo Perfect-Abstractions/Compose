@@ -1,7 +1,7 @@
 ---
 sidebar_position: 1
 title: "NonReentrancyMod"
-description: "Prevents reentrant calls within functions."
+description: "Prevent reentrant function calls within facets."
 gitSource: "https://github.com/Perfect-Abstractions/Compose/tree/main/src/libraries/NonReentrancyMod.sol"
 ---
 
@@ -21,12 +21,13 @@ import GradientText from '@site/src/components/ui/GradientText';
 import GradientButton from '@site/src/components/ui/GradientButton';
 
 <DocSubtitle>
-Prevents reentrant calls within functions.
+Prevent reentrant function calls within facets.
 </DocSubtitle>
 
 <Callout type="info" title="Key Features">
-- Prevents reentrant function calls, mitigating a class of common smart contract exploits.
-- Simple `enter` and `exit` functions provide a clear, explicit mechanism for managing reentrancy guards.
+- Prevents reentrant calls to functions, enhancing security.
+- Uses a simple, composable library interface for easy integration.
+- Emits a `Reentrancy` error if a reentrant call is detected.
 </Callout>
 
 <Callout type="info" title="Module Usage">
@@ -35,7 +36,7 @@ This module provides internal functions for use in your custom facets. Import it
 
 ## Overview
 
-This library provides essential non-reentrancy guards for your facets. By preventing reentrant calls, it enhances the security and predictability of your diamond's state transitions. Integrate it to safeguard against common reentrancy vulnerabilities.
+This library provides a robust mechanism to prevent reentrant function calls, a common vulnerability. By incorporating its `enter` and `exit` functions, facets can ensure that sensitive operations are executed atomically, safeguarding against unexpected state changes and exploits.
 
 ---
 
@@ -95,23 +96,28 @@ error Reentrancy();
 <ExpandableCode language="solidity" maxLines={20} title="Example Implementation">
 {`pragma solidity ^0.8.30;
 
-import {NonReentrancyMod} from \"@compose/libraries/NonReentrancyMod\";
+import {NonReentrancyMod} from "@compose/libraries/NonReentrancyMod";
 
 contract MyFacet {
-    using NonReentrancyMod for uint256; // Dummy type, library functions are standalone
+    using NonReentrancyMod for uint256; // Example: using with a dummy type
 
-    function doSomethingSensitive() external {
+    function sensitiveOperation() external {
+        // Enter the non-reentrant guard
         NonReentrancyMod.enter();
+
         try {
-            // ... perform sensitive operations ...
+            // Perform sensitive operations here
+            // ...
         } finally {
+            // Exit the non-reentrant guard
             NonReentrancyMod.exit();
         }
     }
 
-    function anotherSensitiveAction() external {
+    // Example of direct usage without try/finally
+    function anotherSensitiveOperation() external {
         NonReentrancyMod.enter();
-        // ... other sensitive operations ...
+        // ... operations ...
         NonReentrancyMod.exit();
     }
 }`}
@@ -120,18 +126,18 @@ contract MyFacet {
 ## Best Practices
 
 <Callout type="tip" title="Best Practice">
-- Always pair `NonReentrancyMod.enter()` with `NonReentrancyMod.exit()` in a `try...finally` block to ensure the lock is released, even if errors occur.
-- Use this library for any function that modifies critical state and could potentially be called recursively from within itself or another function.
+- Always pair `NonReentrancyMod.enter()` with `NonReentrancyMod.exit()` within a `try...finally` block to guarantee exit, even if errors occur during execution.
+- Ensure `NonReentrancyMod.exit()` is called before any external calls or state-changing operations that might re-enter the current function or other protected functions.
 </Callout>
 
 ## Integration Notes
 
 <Callout type="success" title="Shared Storage">
-The `NonReentrancyMod` library does not interact with diamond storage. Its state is managed internally within the EVM execution context. Facets using this library will manage their own reentrancy protection state independently of the diamond's core storage layout.
+The `NonReentrancyMod` is a library and does not directly interact with diamond storage. Its state is managed internally within the scope of the calling facet's execution context. Facets can integrate this library by importing it and calling its `enter` and `exit` functions directly. No specific storage slots are required from the diamond's perspective for this library's operation.
 </Callout>
 
 <div style={{marginTop: "3rem", paddingTop: "2rem", borderTop: "1px solid var(--ifm-color-emphasis-200)"}}>
   <WasThisHelpful pageId="NonReentrancyMod" />
 </div>
 
-<LastUpdated date="2025-12-30T15:39:51.365Z" />
+<LastUpdated date="2025-12-30T15:56:27.297Z" />

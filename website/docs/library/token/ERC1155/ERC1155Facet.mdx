@@ -1,7 +1,7 @@
 ---
 sidebar_position: 2
 title: "ERC1155Facet"
-description: "Manages ERC-1155 multi-token standards."
+description: "Manages ERC-1155 fungible and non-fungible tokens."
 gitSource: "https://github.com/Perfect-Abstractions/Compose/tree/main/src/token/ERC1155/ERC1155Facet.sol"
 ---
 
@@ -21,18 +21,19 @@ import GradientText from '@site/src/components/ui/GradientText';
 import GradientButton from '@site/src/components/ui/GradientButton';
 
 <DocSubtitle>
-Manages ERC-1155 multi-token standards.
+Manages ERC-1155 fungible and non-fungible tokens.
 </DocSubtitle>
 
 <Callout type="info" title="Key Features">
-- Supports single and batch transfers of ERC-1155 tokens.
-- Handles operator approvals for token management.
-- Provides URI resolution for token metadata.
+- Supports both fungible and non-fungible token types.
+- Provides individual and batched balance queries.
+- Implements token approval mechanism for operators.
+- Includes safe transfer functions to prevent unintended token loss.
 </Callout>
 
 ## Overview
 
-The ERC1155Facet provides the core functionality for managing ERC-1155 multi-token standards within a Compose diamond. It enables tracking token balances, handling approvals, and performing single or batched token transfers, acting as a dedicated surface area for ERC-1155 operations.
+The ERC1155Facet provides a robust implementation of the ERC-1155 standard for multi-token management within a Compose diamond. It enables efficient handling of various token types, including fungible and non-fungible assets, facilitating complex tokenomics and interoperability.
 
 ---
 
@@ -601,32 +602,33 @@ error ERC1155InvalidArrayLength(uint256 _idsLength, uint256 _valuesLength);
 <ExpandableCode language="solidity" maxLines={20} title="Example Implementation">
 {`pragma solidity ^0.8.30;
 
-import {DiamondCutFacet} from "@compose/diamond/DiamondCutFacet.sol";
-import {DiamondLoupeFacet} from "@compose/diamond/DiamondLoupeFacet.sol";
-import {ERC1155Facet} from "@compose/token/ERC1155/ERC1155Facet.sol";
-import {ERC1155Storage} from "@compose/token/ERC1155/ERC1155Storage.sol";
-import {ERC1155Selectors} from "@compose/token/ERC1155/ERC1155Selectors.sol";
+import {ERC1155Facet} from "@compose/token/ERC1155/ERC1155Facet";
+import {DiamondCutFacet} from "@compose/diamond/DiamondCutFacet";
+import {DiamondLoupeFacet} from "@compose/diamond/DiamondLoupeFacet";
 
 contract MyDiamond is DiamondCutFacet, DiamondLoupeFacet {
-    address constant ERC1155_FACET_ADDRESS = address(0x...); // Address of deployed ERC1155Facet
+    constructor(address _diamondOwner) DiamondCutFacet(_diamondOwner) {}
 
-    function upgrade() external {
-        bytes memory data = abi.encodeWithSelector(
-            ERC1155Selectors.setApprovalForAll,
-            address(this), // Example: Approving the diamond itself
-            true
-        );
+    function upgrade() public payable {
+        address[] memory facets = new address[](1);
+        bytes[] memory selectors = new bytes[](1);
 
-        // Assuming you have a diamond upgrade function that accepts facet addresses and selectors
-        // This is a simplified example for demonstration purposes.
-        // A real upgrade would involve adding/replacing facets.
+        facets[0] = address(new ERC1155Facet());
+        // Assuming default selectors for all functions
+        selectors[0] = ""; // Placeholder, actual selectors would be computed or passed
 
-        // Example of calling a function after deployment:
-        ERC1155Facet erc1155Facet = ERC1155Facet(address(this)); // If facet is part of the diamond proxy
-        bool isApproved = erc1155Facet.isApprovedForAll(msg.sender, address(this));
+        // Cut operation to add the ERC1155Facet
+        cut(facets, selectors, address(0), "");
+    }
 
-        // Example of setting URI
-        // erc1155Facet.setURI("ipfs://my-token-uri/");
+    // Example of calling a function on the ERC1155Facet after deployment
+    function getTokenURI(uint256 _id) public view returns (string memory) {
+        // Assuming ERC1155Facet is already added and its functions are accessible via the diamond proxy
+        return ERC1155Facet(address(this)).uri(_id);
+    }
+
+    function getBalance(address _account, uint256 _id) public view returns (uint256) {
+        return ERC1155Facet(address(this)).balanceOf(_account, _id);
     }
 }`}
 </ExpandableCode>
@@ -634,15 +636,15 @@ contract MyDiamond is DiamondCutFacet, DiamondLoupeFacet {
 ## Best Practices
 
 <Callout type="tip" title="Best Practice">
-- Initialize the `baseURI` if token URIs are intended to be concatenated.
-- Ensure proper access control is implemented at the diamond level for functions that modify state.
-- Store the `ERC1155Facet` address and its selectors correctly within the diamond's facet registry.
+- Initialize the `baseURI` in the ERC1155Storage if a common base URI is desired for all tokens.
+- Ensure `setApprovalForAll` is used correctly to grant necessary permissions before transfers.
+- Leverage `balanceOfBatch` and `safeBatchTransferFrom` for gas-efficient operations involving multiple token IDs.
 </Callout>
 
 ## Security Considerations
 
 <Callout type="warning" title="Security">
-Input validation for addresses, token IDs, and values is crucial. Ensure that `msg.sender` has the necessary approvals before executing transfers. Reentrancy guards may be required on functions that interact with external contracts during transfers. Be mindful of potential array length mismatches in batch operations, which are handled by the `ERC1155InvalidArrayLength` error.
+This facet relies on Compose's diamond proxy for access control and function routing. Ensure that the `operator` in `setApprovalForAll` is a trusted address. The `safeTransferFrom` and `safeBatchTransferFrom` functions include checks for sufficient balance and proper approvals, mitigating risks of insufficient funds or unauthorized transfers. Input validation for array lengths in batch operations is handled by custom errors.
 </Callout>
 
 <div style={{marginTop: "3rem", paddingTop: "2rem", borderTop: "1px solid var(--ifm-color-emphasis-200)"}}>
@@ -686,4 +688,4 @@ Input validation for addresses, token IDs, and values is crucial. Ensure that `m
   <WasThisHelpful pageId="ERC1155Facet" />
 </div>
 
-<LastUpdated date="2025-12-30T15:38:33.255Z" />
+<LastUpdated date="2025-12-30T15:55:02.803Z" />

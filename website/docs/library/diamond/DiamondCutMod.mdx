@@ -1,7 +1,7 @@
 ---
 sidebar_position: 2
 title: "DiamondCutMod"
-description: "Manages diamond facet additions, replacements, and removals."
+description: "Manage diamond facets and function selectors."
 gitSource: "https://github.com/Perfect-Abstractions/Compose/tree/main/src/diamond/DiamondCutMod.sol"
 ---
 
@@ -21,13 +21,13 @@ import GradientText from '@site/src/components/ui/GradientText';
 import GradientButton from '@site/src/components/ui/GradientButton';
 
 <DocSubtitle>
-Manages diamond facet additions, replacements, and removals.
+Manage diamond facets and function selectors.
 </DocSubtitle>
 
 <Callout type="info" title="Key Features">
-- Supports atomic addition, replacement, and removal of functions.
-- Allows optional execution of an initialization function via `delegatecall` after a cut.
-- Enforces checks to prevent invalid operations like removing non-existent functions or replacing immutable ones.
+- Supports atomic addition, replacement, and removal of facets.
+- Allows for an optional initialization function to be executed post-cut.
+- Enforces checks to prevent adding duplicate functions or removing non-existent ones.
 </Callout>
 
 <Callout type="info" title="Module Usage">
@@ -36,7 +36,7 @@ This module provides internal functions for use in your custom facets. Import it
 
 ## Overview
 
-The DiamondCutMod facet provides the core functionality for managing the diamond's facets. It allows for the atomic addition, replacement, and removal of functions, ensuring the diamond's logic can be upgraded safely and composably. This is crucial for maintaining the diamond's integrity during upgrades.
+The DiamondCutMod provides essential functions for upgrading and managing the composition of your diamond. It allows for atomic addition, replacement, or removal of facets and their associated functions, ensuring a controlled and predictable upgrade path. This module is critical for maintaining the integrity and evolvability of your diamond architecture.
 
 ---
 
@@ -334,22 +334,32 @@ error RemoveFacetAddressMustBeZeroAddress(address _facet);
 <ExpandableCode language="solidity" maxLines={20} title="Example Implementation">
 {`pragma solidity ^0.8.30;
 
-import { IDiamondCut } from "@compose/diamond/DiamondCutMod/IDiamondCut";
-import { FacetCutAction } from "@compose/diamond/DiamondCutMod/DiamondCutMod";
-import { FacetCut } from "@compose/diamond/DiamondCutMod/DiamondCutMod";
+import {DiamondCutMod} from "@compose/diamond/DiamondCutMod";
+import {IDiamondCut} from "@compose/diamond/IDiamondCut";
+import {FacetCut, FacetCutAction} from "@compose/diamond/DiamondCutMod";
 
-contract MyDiamondAdminFacet {
-    IDiamondCut internal diamondCutFacet;
+contract MyDiamond is IDiamondCut {
+    function diamondCut(FacetCut[] memory _diamondCut, address _init, bytes memory _calldata) external override {
+        // Implementation that calls DiamondCutMod.diamondCut
+    }
 
-    // Assuming diamondCutFacet is initialized elsewhere
+    // Other diamond functions...
+}
 
-    function upgradeDiamond(bytes[] memory _facetCuts, address _init, bytes memory _calldata) external {
-        FacetCut[] memory facetCuts = new FacetCut[](_facetCuts.length);
-        // Populate facetCuts array with appropriate data for each cut
-        // For example:
-        // facetCuts[0] = FacetCut({facetAddress: newFacetAddress, selectors: newSelectors, action: FacetCutAction.ADD});
+contract FacetInstaller {
+    function installNewFacet(address _diamondAddress, address _newFacetAddress, bytes[] memory _functionSelectors) public {
+        // Assume DiamondCutMod is deployed and accessible
+        DiamondCutMod diamondCutMod = DiamondCutMod(_diamondAddress); // Or use a specific DiamondCutMod address if separate
 
-        diamondCutFacet.diamondCut(facetCuts, _init, _calldata);
+        FacetCut[] memory cuts = new FacetCut[](1);
+        cuts[0].facetAddress = _newFacetAddress;
+        cuts[0].action = FacetCutAction.ADD;
+        cuts[0].functionSelectors = _functionSelectors;
+
+        // Note: In a real scenario, you would likely use the diamond's own diamondCut function
+        // which internally calls DiamondCutMod logic.
+        // This example directly calls a hypothetical DiamondCutMod contract for illustration.
+        // diamondCutMod.diamondCut(cuts, address(0), ""); // This is a simplified illustration
     }
 }`}
 </ExpandableCode>
@@ -357,19 +367,19 @@ contract MyDiamondAdminFacet {
 ## Best Practices
 
 <Callout type="tip" title="Best Practice">
-- Ensure all function selectors and facet addresses are correctly specified during diamond cuts.
-- Handle potential errors from `diamondCut` such as `InitializationFunctionReverted` or selector conflicts.
-- Be aware of immutable functions and avoid attempting to remove or replace them.
+- Always use custom errors for revert conditions to improve clarity and gas efficiency.
+- Ensure that any initialization function passed to `diamondCut` is thoroughly tested and reverts with a descriptive error if it fails.
+- Understand the `FacetCutAction` enum and use it correctly to avoid unintended state changes.
 </Callout>
 
 ## Integration Notes
 
 <Callout type="success" title="Shared Storage">
-The DiamondCutMod facet interacts with the diamond's storage located at `DIAMOND_STORAGE_POSITION`. It modifies the mapping of selectors to facet addresses within the `DiamondStorage` struct. Facets should be aware that the `diamondCut` function is the sole mechanism for changing the diamond's executable logic. Immutable functions, if defined, cannot be modified or removed through this facet.
+The DiamondCutMod interacts with the diamond's storage at the `DIAMOND_STORAGE_POSITION` key. It modifies the `DiamondStorage` struct, which is crucial for mapping function selectors to facet addresses. Facets should be aware that the set of available function selectors and their corresponding facet addresses can change dynamically through calls to `diamondCut`. The order of operations within a single `diamondCut` transaction is important for maintaining consistency.
 </Callout>
 
 <div style={{marginTop: "3rem", paddingTop: "2rem", borderTop: "1px solid var(--ifm-color-emphasis-200)"}}>
   <WasThisHelpful pageId="DiamondCutMod" />
 </div>
 
-<LastUpdated date="2025-12-30T15:39:29.791Z" />
+<LastUpdated date="2025-12-30T15:56:06.364Z" />

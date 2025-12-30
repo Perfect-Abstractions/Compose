@@ -1,7 +1,7 @@
 ---
 sidebar_position: 410
 title: "ERC165Facet"
-description: "Implements ERC-165 standard for interface detection."
+description: "Supports ERC-165 interface detection for Compose diamonds."
 gitSource: "https://github.com/Perfect-Abstractions/Compose/tree/main/src/interfaceDetection/ERC165/ERC165Facet.sol"
 ---
 
@@ -21,17 +21,18 @@ import GradientText from '@site/src/components/ui/GradientText';
 import GradientButton from '@site/src/components/ui/GradientButton';
 
 <DocSubtitle>
-Implements ERC-165 standard for interface detection.
+Supports ERC-165 interface detection for Compose diamonds.
 </DocSubtitle>
 
 <Callout type="info" title="Key Features">
-- Implements the `supportsInterface` function as per ERC-165.
-- Provides a standardized mechanism for interface detection within a diamond proxy.
+- Implements EIP-165 standard for interface detection.
+- Allows querying diamond capabilities via `supportsInterface` function.
+- Facilitates interoperability with other EIP-165 compliant contracts.
 </Callout>
 
 ## Overview
 
-The ERC165Facet enables Compose diamonds to declare and query supported interfaces using the ERC-165 standard. This facet ensures interoperability by providing a standardized method for other contracts to discover the diamond's capabilities.
+The ERC165Facet enables diamonds to declare support for specific interfaces as per EIP-165. It provides a standardized way for external contracts to query the diamond's capabilities, enhancing interoperability within the Compose ecosystem.
 
 ---
 
@@ -102,33 +103,35 @@ Query if a contract implements an interface This function checks if the diamond 
 <ExpandableCode language="solidity" maxLines={20} title="Example Implementation">
 {`pragma solidity ^0.8.30;
 
-import { IDiamondCut } from "@compose/diamond/IDiamondCut.sol";
-import { ERC165Facet } from "@compose/interfaceDetection/ERC165/ERC165Facet.sol";
+import {IDiamondCut} from "@compose/diamond/IDiamondCut.sol";
+import {ERC165Facet} from "@compose/interfaceDetection/ERC165/ERC165Facet.sol";
 
-contract MyDiamond is IDiamondCut {
-    // ... other facet and diamond setup ...
+diamond interface IDiamond {}
 
-    function supportsInterface(bytes4 _interfaceId) external view override returns (bool) {
-        // Delegate to the ERC165Facet
-        return ERC165Facet.supportsInterface(_interfaceId);
+contract MyDiamond is IDiamond {
+    constructor(address _diamondAdmin, address[] memory _facetAddresses, IDiamondCut.FacetCut[] memory _facetCuts) {
+        // ... deployment logic ...
     }
 
-    // ... other diamond functions ...
+    // Example of calling supportsInterface from another facet or contract
+    function checkERC165Support(address _diamondAddress, bytes4 _interfaceId) external view returns (bool) {
+        ERC165Facet erc165Facet = ERC165Facet(_diamondAddress);
+        return erc165Facet.supportsInterface(_interfaceId);
+    }
 }`}
 </ExpandableCode>
 
 ## Best Practices
 
 <Callout type="tip" title="Best Practice">
-- Ensure the ERC165Facet is included in the diamond's initial deployment or upgrade.
-- When implementing custom interfaces, ensure their IDs are correctly registered within the ERC165Facet's logic (typically via the ERC165Mod).
-- Call `supportsInterface` from external contracts to determine if a diamond or its facets implement specific functionality.
+- Ensure the ERC165Facet is correctly initialized during diamond deployment.
+- Implement the `supportsInterface` function within your custom facets if they introduce new interfaces.
 </Callout>
 
 ## Security Considerations
 
 <Callout type="warning" title="Security">
-This facet primarily handles interface detection and does not manage critical state or complex logic, thus posing minimal reentrancy or direct state manipulation risks. Ensure that the interface IDs registered within the facet accurately reflect the diamond's capabilities.
+The `supportsInterface` function is `view` and does not modify state, making it safe from reentrancy. Access control is handled by the diamond proxy itself; this facet assumes it is called through a valid proxy.
 </Callout>
 
 <div style={{marginTop: "3rem", paddingTop: "2rem", borderTop: "1px solid var(--ifm-color-emphasis-200)"}}>
@@ -148,4 +151,4 @@ This facet primarily handles interface detection and does not manage critical st
   <WasThisHelpful pageId="ERC165Facet" />
 </div>
 
-<LastUpdated date="2025-12-30T15:39:22.709Z" />
+<LastUpdated date="2025-12-30T15:55:59.396Z" />

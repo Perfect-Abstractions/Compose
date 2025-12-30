@@ -1,7 +1,7 @@
 ---
 sidebar_position: 2
 title: "AccessControlTemporalFacet"
-description: "Access Control Temporal facet for Compose diamonds"
+description: "Manages role assignments with time-based expiry."
 gitSource: "https://github.com/Perfect-Abstractions/Compose/tree/main/src/access/AccessControlTemporal/AccessControlTemporalFacet.sol"
 ---
 
@@ -21,19 +21,18 @@ import GradientText from '@site/src/components/ui/GradientText';
 import GradientButton from '@site/src/components/ui/GradientButton';
 
 <DocSubtitle>
-Access Control Temporal facet for Compose diamonds
+Manages role assignments with time-based expiry.
 </DocSubtitle>
 
 <Callout type="info" title="Key Features">
-- Self-contained facet with no imports or inheritance
-- Only `external` and `internal` function visibility
-- Follows Compose readability-first conventions
-- Ready for diamond integration
+- Grants roles with specific expiration timestamps.
+- Automatically revokes roles upon expiry.
+- Provides functions to check role expiry status.
 </Callout>
 
 ## Overview
 
-Access Control Temporal facet for Compose diamonds
+The AccessControlTemporalFacet extends the base access control mechanism by introducing time-bound role assignments. This allows for temporary privileges to be granted and automatically revoked upon expiration, enhancing granular control and security within a Compose diamond.
 
 ---
 
@@ -355,6 +354,55 @@ error AccessControlRoleExpired(bytes32 _role, address _account);
   </Accordion>
 </AccordionGroup>
 
+## Usage Example
+
+<ExpandableCode language="solidity" maxLines={20} title="Example Implementation">
+{`pragma solidity ^0.8.30;
+
+import { DiamondLoupeFacet } from "@compose/diamond-loupe/DiamondLoupeFacet";
+import { Diamond } from "@compose/diamond-proxy/Diamond";
+import { AccessControlTemporalFacet } from "@compose/access/AccessControlTemporal/AccessControlTemporalFacet";
+
+contract Deployer {
+    address public diamondProxy;
+
+    function deployDiamond() public {
+        // Facet deployment logic here...
+        address accessControlTemporalFacet = address(new AccessControlTemporalFacet());
+
+        // Diamond initialization logic here...
+        // Assuming diamondProxy is already deployed and initialized with base facets
+        // Add the AccessControlTemporalFacet
+        // diamondProxy.diamondCut(...);
+
+        // Grant a role with expiry
+        bytes32 role = keccak256("TEMPORARY_ADMIN_ROLE");
+        address user = 0x1234567890123456789012345678901234567890;
+        uint256 expiry = block.timestamp + 3600; // Expires in 1 hour
+
+        AccessControlTemporalFacet(diamondProxy).grantRoleWithExpiry(role, user, expiry);
+
+        // Check role status
+        bool expired = AccessControlTemporalFacet(diamondProxy).isRoleExpired(role, user);
+        uint256 expiryTime = AccessControlTemporalFacet(diamondProxy).getRoleExpiry(role, user);
+    }
+}`}
+</ExpandableCode>
+
+## Best Practices
+
+<Callout type="tip" title="Best Practice">
+- Initialize this facet with appropriate roles and administrative permissions during diamond deployment.
+- Carefully consider the expiry durations for role grants to align with the principle of least privilege.
+- Integrate checks for role expiry using `isRoleExpired` or `requireValidRole` in functions that require temporally-limited access.
+</Callout>
+
+## Security Considerations
+
+<Callout type="warning" title="Security">
+Access to `grantRoleWithExpiry` and `revokeTemporalRole` is restricted to the role's admin, preventing unauthorized temporal role management. Ensure that the underlying access control mechanism correctly enforces these admin roles. The `requireValidRole` function reverts with `AccessControlRoleExpired` if the role has expired, preventing the use of outdated privileges.
+</Callout>
+
 <div style={{marginTop: "3rem", paddingTop: "2rem", borderTop: "1px solid var(--ifm-color-emphasis-200)"}}>
   <RelatedDocs
     items={[
@@ -378,4 +426,4 @@ error AccessControlRoleExpired(bytes32 _role, address _account);
   <WasThisHelpful pageId="AccessControlTemporalFacet" />
 </div>
 
-<LastUpdated date="2025-12-30T15:37:36.862Z" />
+<LastUpdated date="2025-12-30T15:54:06.460Z" />

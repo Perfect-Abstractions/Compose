@@ -25,14 +25,14 @@ Manage diamond ownership with a two-step transfer process.
 </DocSubtitle>
 
 <Callout type="info" title="Key Features">
-- Secure two-step ownership transfer process (initiate and accept).
-- Prevents accidental loss of ownership.
-- Standardized access control pattern for diamond management.
+- Secure two-step ownership transfer process (`transferOwnership` and `acceptOwnership`).
+- Allows for ownership renouncement, making the contract ownerless.
+- Provides view functions (`owner`, `pendingOwner`) to check current and pending ownership.
 </Callout>
 
 ## Overview
 
-The OwnerTwoSteps facet provides a secure, two-step mechanism for transferring ownership of the diamond. This pattern prevents accidental ownership loss by requiring both the current owner to initiate a transfer and the new owner to explicitly accept it, enhancing the security of critical diamond operations.
+The OwnerTwoSteps facet provides a secure, two-step mechanism for transferring ownership of a Compose diamond. This pattern prevents accidental or malicious ownership changes by requiring both the current owner to initiate the transfer and the new owner to accept it, enhancing the diamond's security and operational integrity.
 
 ---
 
@@ -198,31 +198,33 @@ error OwnerUnauthorizedAccount();
 <ExpandableCode language="solidity" maxLines={20} title="Example Implementation">
 {`pragma solidity ^0.8.30;
 
-import {DiamondCutFacet} from "@compose/diamond/DiamondCutFacet.sol";
-import {DiamondLoupeFacet} from "@compose/diamond/DiamondLoupeFacet.sol";
-import {Diamond} from "@compose/diamond/Diamond.sol";
+import {IOwnerTwoStepsFacet} from "@compose/access/OwnerTwoSteps/IOwnerTwoStepsFacet.sol";
 import {OwnerTwoStepsFacet} from "@compose/access/OwnerTwoSteps/OwnerTwoStepsFacet.sol";
 
-contract MyDiamond is Diamond {
-    constructor(address[] memory _initFacets, bytes[] memory _calldatas) Diamond(_initFacets, _calldatas) {}
+// Assume diamond deployment and initialization context
 
-    // Example of calling transferOwnership through the diamond proxy
-    function initiateOwnershipTransfer(address _newOwner) external {
-        address ownerTwoStepsFacetAddress = getFacetAddress("OwnerTwoStepsFacet");
-        OwnerTwoStepsFacet(ownerTwoStepsFacetAddress).transferOwnership(_newOwner);
+contract DiamondOwnerDeployer {
+    address public diamondAddress;
+
+    function deployDiamondWithOwner() external {
+        // ... diamond deployment logic ...
+        // diamondAddress = deployedDiamond;
+
+        // Add OwnerTwoStepsFacet to the diamond
+        // ... facet registration logic ...
+
+        // Initialize the facet
+        IOwnerTwoStepsFacet(diamondAddress).transferOwnership(msg.sender); // Or an admin address
     }
 
-    // Example of calling acceptOwnership through the diamond proxy
-    function finalizeOwnershipTransfer() external {
-        address ownerTwoStepsFacetAddress = getFacetAddress("OwnerTwoStepsFacet");
-        OwnerTwoStepsFacet(ownerTwoStepsFacetAddress).acceptOwnership();
+    function acceptDiamondOwnership() external {
+        // Call from the pending owner
+        IOwnerTwoStepsFacet(diamondAddress).acceptOwnership();
     }
 
-    // Helper to get facet address (implementation omitted for brevity)
-    function getFacetAddress(string memory _facetName) internal view returns (address) {
-        // In a real diamond, you would query the DiamondLoupeFacet or similar
-        // For this example, assume we know the address or can retrieve it
-        return address(1); // Placeholder address
+    function renounceDiamondOwnership() external {
+        // Call from the current owner to renounce ownership
+        IOwnerTwoStepsFacet(diamondAddress).renounceOwnership();
     }
 }`}
 </ExpandableCode>
@@ -230,19 +232,19 @@ contract MyDiamond is Diamond {
 ## Best Practices
 
 <Callout type="tip" title="Best Practice">
-- Initialize the `OwnerTwoStepsFacet` during diamond deployment to set the initial owner.
-- Always use the `transferOwnership` function to initiate a change, followed by `acceptOwnership` from the new owner.
-- Ensure the diamond proxy is correctly configured to route calls to the `OwnerTwoStepsFacet` for ownership management functions.
+- Initialize ownership transfers using `transferOwnership` from an authorized address.
+- Ensure the intended new owner calls `acceptOwnership` to finalize the transfer.
+- Use `renounceOwnership` cautiously, as it makes the diamond contract unownable.
 </Callout>
 
 ## Security Considerations
 
 <Callout type="warning" title="Security">
-Access to `transferOwnership` and `acceptOwnership` is restricted to the current owner and the pending owner, respectively. The `owner` and `pendingOwner` views are public. Ensure that only authorized entities can call these functions through the diamond proxy. No reentrancy concerns as state changes are atomic and external calls are limited.
+Access to `transferOwnership` and `renounceOwnership` is restricted to the current owner. `acceptOwnership` can only be called by the address designated as the pending owner. Ensure that the address initiating `transferOwnership` is indeed the legitimate owner to prevent unauthorized ownership changes. Accidental renouncement will render the contract unmanageable by any address.
 </Callout>
 
 <div style={{marginTop: "3rem", paddingTop: "2rem", borderTop: "1px solid var(--ifm-color-emphasis-200)"}}>
   <WasThisHelpful pageId="OwnerTwoStepsFacet" />
 </div>
 
-<LastUpdated date="2025-12-30T15:37:20.192Z" />
+<LastUpdated date="2025-12-30T15:53:48.922Z" />
