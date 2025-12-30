@@ -27,7 +27,7 @@ jobs:
 
       - name: Run coverage
         run: |
-          forge coverage --report summary --report lcov
+          forge coverage --via-ir --report summary --report lcov
           ls -la lcov.info || echo "lcov.info not found"
 
       - name: Generate coverage report
