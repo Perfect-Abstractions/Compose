@@ -505,9 +505,10 @@ function regenerateAllIndexFiles(overwrite = true) {
   const skipped = [];
 
   // Regenerate base library index
+  // Always hide from sidebar (sidebar_class_name: "hidden")
   const label = 'Library';
   const description = 'API reference for all Compose modules and facets.';
-  if (createCategoryIndexFile(libraryDir, '', label, description, overwrite)) {
+  if (createCategoryIndexFile(libraryDir, '', label, description, overwrite, true)) {
     regenerated.push('library');
   } else {
     skipped.push('library');
