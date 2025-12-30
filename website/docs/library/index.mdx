@@ -1,0 +1,51 @@
+---
+title: "Library"
+description: "API reference for all Compose modules and facets."
+sidebar_class_name: "hidden"
+---
+
+import DocCard, { DocCardGrid } from '@site/src/components/docs/DocCard';
+import DocSubtitle from '@site/src/components/docs/DocSubtitle';
+import Icon from '@site/src/components/ui/Icon';
+
+<DocSubtitle>
+  API reference for all Compose modules and facets.
+</DocSubtitle>
+
+<DocCardGrid columns={2}>
+  <DocCard
+    title="Access Control"
+    description={"Access control patterns for permission management in Compose diamonds."}
+    href="/docs/library/access"
+    icon={<Icon name="package" size={28} />}
+    size="medium"
+  />
+  <DocCard
+    title="Diamond Core"
+    description={"Core diamond proxy functionality for ERC-2535 diamonds."}
+    href="/docs/library/diamond"
+    icon={<Icon name="package" size={28} />}
+    size="medium"
+  />
+  <DocCard
+    title="Interface Detection"
+    description={"ERC-165 interface detection support."}
+    href="/docs/library/interfaceDetection"
+    icon={<Icon name="package" size={28} />}
+    size="medium"
+  />
+  <DocCard
+    title="Token Standards"
+    description={"Token standard implementations for Compose diamonds."}
+    href="/docs/library/token"
+    icon={<Icon name="package" size={28} />}
+    size="medium"
+  />
+  <DocCard
+    title="Utilities"
+    description={"Utility libraries and helpers for diamond development."}
+    href="/docs/library/utils"
+    icon={<Icon name="package" size={28} />}
+    size="medium"
+  />
+</DocCardGrid>

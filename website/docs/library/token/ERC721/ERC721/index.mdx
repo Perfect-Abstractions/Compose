@@ -1,0 +1,36 @@
+---
+title: "ERC-721"
+description: "ERC-721 non-fungible token implementations."
+---
+
+import DocCard, { DocCardGrid } from '@site/src/components/docs/DocCard';
+import DocSubtitle from '@site/src/components/docs/DocSubtitle';
+import Icon from '@site/src/components/ui/Icon';
+
+<DocSubtitle>
+  ERC-721 non-fungible token implementations.
+</DocSubtitle>
+
+<DocCardGrid columns={2}>
+  <DocCard
+    title="ERC721BurnFacet"
+    description={"Burns ERC-721 tokens within a diamond"}
+    href="/docs/library/token/ERC721/ERC721/ERC721BurnFacet"
+    icon={<Icon name="book" size={28} />}
+    size="medium"
+  />
+  <DocCard
+    title="ERC721Facet"
+    description={"ERC-721 token management within a diamond"}
+    href="/docs/library/token/ERC721/ERC721/ERC721Facet"
+    icon={<Icon name="book" size={28} />}
+    size="medium"
+  />
+  <DocCard
+    title="ERC721Mod"
+    description={"Internal logic for ERC-721 token management"}
+    href="/docs/library/token/ERC721/ERC721/ERC721Mod"
+    icon={<Icon name="book" size={28} />}
+    size="medium"
+  />
+</DocCardGrid>

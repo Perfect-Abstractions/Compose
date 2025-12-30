@@ -1,0 +1,50 @@
+---
+title: "Token Standards"
+description: "Token standard implementations for Compose diamonds."
+---
+
+import DocCard, { DocCardGrid } from '@site/src/components/docs/DocCard';
+import DocSubtitle from '@site/src/components/docs/DocSubtitle';
+import Icon from '@site/src/components/ui/Icon';
+
+<DocSubtitle>
+  Token standard implementations for Compose diamonds.
+</DocSubtitle>
+
+<DocCardGrid columns={2}>
+  <DocCard
+    title="ERC-1155"
+    description={"ERC-1155 multi-token implementations."}
+    href="/docs/library/token/ERC1155"
+    icon={<Icon name="package" size={28} />}
+    size="medium"
+  />
+  <DocCard
+    title="ERC-20"
+    description={"ERC-20 fungible token implementations."}
+    href="/docs/library/token/ERC20"
+    icon={<Icon name="package" size={28} />}
+    size="medium"
+  />
+  <DocCard
+    title="ERC-6909"
+    description={"ERC-6909 minimal multi-token implementations."}
+    href="/docs/library/token/ERC6909"
+    icon={<Icon name="package" size={28} />}
+    size="medium"
+  />
+  <DocCard
+    title="ERC-721"
+    description={"ERC-721 non-fungible token implementations."}
+    href="/docs/library/token/ERC721"
+    icon={<Icon name="package" size={28} />}
+    size="medium"
+  />
+  <DocCard
+    title="Royalty"
+    description={"ERC-2981 royalty standard implementations."}
+    href="/docs/library/token/Royalty"
+    icon={<Icon name="package" size={28} />}
+    size="medium"
+  />
+</DocCardGrid>
