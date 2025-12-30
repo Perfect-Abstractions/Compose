@@ -25,15 +25,14 @@ Manages time-bound role assignments and checks for access control.
 </DocSubtitle>
 
 <Callout type="info" title="Key Features">
-- Grants roles with a specified expiry timestamp.
-- Checks if a role assignment has expired.
-- Allows administrators to revoke temporal roles.
-- Reverts with specific errors for unauthorized access and expired roles.
+- Time-bound role assignments with explicit expiry timestamps.
+- Automatic role expiry checking via `isRoleExpired` and `requireValidRole`.
+- Administrator-controlled granting and revocation of temporal roles.
 </Callout>
 
 ## Overview
 
-This facet extends Compose's access control system by introducing time-bound role assignments. It allows administrators to grant roles with specific expiry dates and provides mechanisms to check if a role is still valid or has expired. This enables more granular and dynamic permission management within a diamond.
+This facet extends Compose's access control by introducing time-bound role assignments. It allows for granting roles with specific expiry timestamps and provides mechanisms to check if a role assignment is still valid. This enables dynamic access control policies that automatically expire, reducing the need for manual revocation.
 
 ---
 
@@ -360,30 +359,50 @@ error AccessControlRoleExpired(bytes32 _role, address _account);
 <ExpandableCode language="solidity" maxLines={20} title="Example Implementation">
 {`pragma solidity ^0.8.30;
 
-import {IAccessControlTemporalFacet} from "@compose/contracts/facets/AccessControlTemporal/IAccessControlTemporalFacet.sol";
+import {IDiamondCut} from "@compose/diamond/contracts/interfaces/IDiamondCut.sol";
+import {AccessControlTemporalFacet} from "@compose/access-control/contracts/facets/AccessControlTemporalFacet.sol";
 
-diamond abi AccessControlTemporalFacetSelectors {
-    function grantRoleWithExpiry(bytes32 role, address account, uint64 expiry) external;
-    function revokeTemporalRole(bytes32 role, address account) external;
-    function isRoleExpired(bytes32 role, address account) external view returns (bool);
-    function getRoleExpiry(bytes32 role, address account) external view returns (uint64);
-}
+contract DeployDiamond {
+    function deploy() public {
+        // ... diamond deployment logic ...
 
-contract Deployer {
-    function grantTempRole(address diamondProxy, bytes32 role, address user, uint64 expiry) external {
-        IAccessControlTemporalFacet(diamondProxy).grantRoleWithExpiry(role, user, expiry);
+        address diamondAddress = address(0x123); // Placeholder for deployed diamond
+
+        // Add AccessControlTemporalFacet
+        IDiamondCut.FacetCut[] memory cut = new IDiamondCut.FacetCut[](1);
+        cut[0] = IDiamondCut.FacetCut({
+            facetAddress: address(new AccessControlTemporalFacet()),
+            action: IDiamondCut.Action.ADD,
+            selectors:
+                AccessControlTemporalFacet.selectors() // Assuming selectors() is defined
+        });
+
+        // ... diamond cut call ...
     }
 
-    function revokeTempRole(address diamondProxy, bytes32 role, address user) external {
-        IAccessControlTemporalFacet(diamondProxy).revokeTemporalRole(role, user);
+    function grantRole() public {
+        AccessControlTemporalFacet temporalFacet = AccessControlTemporalFacet(address(0x123));
+        uint64 expiryTimestamp = uint64(block.timestamp) + 3600; // Role expires in 1 hour
+        bytes32 role = keccak256("ADMIN_ROLE");
+        address account = address(0x456); // Account to grant role to
+
+        // Assuming the caller is the admin of the role
+        temporalFacet.grantRoleWithExpiry(role, account, expiryTimestamp);
     }
 
-    function checkRoleValidity(address diamondProxy, bytes32 role, address user) external view returns (bool) {
-        if (IAccessControlTemporalFacet(diamondProxy).isRoleExpired(role, user)) {
-            return false; // Role has expired
+    function checkRole() public view {
+        AccessControlTemporalFacet temporalFacet = AccessControlTemporalFacet(address(0x123));
+        bytes32 role = keccak256("ADMIN_ROLE");
+        address account = address(0x456);
+
+        if (temporalFacet.isRoleExpired(role, account)) {
+            // Role has expired
+        } else {
+            // Role is still valid
         }
-        // Additional checks might be needed if the role itself is not granted in the base AccessControl facet
-        return true; // Role is valid and not expired
+
+        // This will revert if the role is expired or not granted
+        temporalFacet.requireValidRole(role, account);
     }
 }`}
 </ExpandableCode>
@@ -391,15 +410,15 @@ contract Deployer {
 ## Best Practices
 
 <Callout type="tip" title="Best Practice">
-- Grant roles with expiry only to trusted administrators to prevent unauthorized time-bound access.
-- Regularly review and revoke expired or unnecessary temporal roles.
-- Ensure the underlying AccessControl facet is properly configured before deploying this facet.
+- Grant roles with expiry using the `grantRoleWithExpiry` function, ensuring the caller is the authorized administrator for that role.
+- Regularly check role validity using `isRoleExpired` or `requireValidRole` before performing sensitive operations.
+- Utilize `revokeTemporalRole` for immediate revocation of time-bound roles when necessary, adhering to administrator privileges.
 </Callout>
 
 ## Security Considerations
 
 <Callout type="warning" title="Security">
-Access to `grantRoleWithExpiry` and `revokeTemporalRole` is restricted to the admin of the role, preventing unauthorized users from managing temporal roles. The `requireValidRole` internal function ensures that expired roles do not grant access. Callers must ensure that the role exists in the base AccessControl facet before granting a temporal aspect to it.
+Access to `grantRoleWithExpiry` and `revokeTemporalRole` is restricted to the role's administrator, preventing unauthorized role management. The `requireValidRole` function enforces both role existence and non-expiry, mitigating risks associated with stale or expired permissions. Ensure that the expiry timestamps are set appropriately to prevent unintended long-term access.
 </Callout>
 
 <div style={{marginTop: "3rem", paddingTop: "2rem", borderTop: "1px solid var(--ifm-color-emphasis-200)"}}>
@@ -425,4 +444,4 @@ Access to `grantRoleWithExpiry` and `revokeTemporalRole` is restricted to the ad
   <WasThisHelpful pageId="AccessControlTemporalFacet" />
 </div>
 
-<LastUpdated date="2025-12-30T14:40:39.164Z" />
+<LastUpdated date="2025-12-30T15:01:21.854Z" />

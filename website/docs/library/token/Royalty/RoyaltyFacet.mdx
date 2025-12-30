@@ -1,7 +1,7 @@
 ---
 sidebar_position: 2
 title: "RoyaltyFacet"
-description: "Manages and retrieves royalty information for tokens."
+description: "Manages and retrieves royalty information per token."
 gitSource: "https://github.com/Perfect-Abstractions/Compose/tree/main/src/token/Royalty/RoyaltyFacet.sol"
 ---
 
@@ -21,19 +21,18 @@ import GradientText from '@site/src/components/ui/GradientText';
 import GradientButton from '@site/src/components/ui/GradientButton';
 
 <DocSubtitle>
-Manages and retrieves royalty information for tokens.
+Manages and retrieves royalty information per token.
 </DocSubtitle>
 
 <Callout type="info" title="Key Features">
-- Implements ERC-2981 `royaltyInfo` function.
-- Supports token-specific royalty configurations.
-- Provides a default royalty configuration.
-- Royalty amounts are calculated in basis points.
+- Implements ERC-2981 `royaltyInfo` standard.
+- Supports token-specific and default royalty configurations.
+- Calculates royalties based on sale price in basis points.
 </Callout>
 
 ## Overview
 
-The RoyaltyFacet implements the ERC-2981 standard for on-chain royalties. It allows setting and querying royalty information per token, falling back to a default if not specified. This facet enables creators to earn royalties on secondary sales directly within the diamond.
+The RoyaltyFacet implements the ERC-2981 standard, providing a standardized way to query royalty information for NFTs. It allows setting token-specific royalties and falls back to a default royalty, ensuring consistent royalty distribution across your diamond.
 
 ---
 
@@ -131,18 +130,20 @@ Returns royalty information for a given token and sale price. Returns token-spec
 {`pragma solidity ^0.8.30;
 
 import {IRoyaltyFacet} from "@compose/contracts/facets/Royalty/IRoyaltyFacet.sol";
-import {IDiamondProxy} from "@compose/contracts/diamond/IDiamondProxy.sol";
 
 contract RoyaltyConsumer {
-    IDiamondProxy immutable diamondProxy;
+    address immutable DIAMOND_PROXY;
 
-    constructor(address _diamondProxyAddress) {
-        diamondProxy = IDiamondProxy(_diamondProxyAddress);
+    constructor(address _diamondProxy) {
+        DIAMOND_PROXY = _diamondProxy;
     }
 
-    function getRoyaltyInfo(uint256 _tokenId, uint256 _salePrice) public view returns (address receiver, uint256 royaltyAmount) {
+    function getRoyaltyDetails(uint256 _tokenId, uint256 _salePrice) public view returns (address receiver, uint256 royaltyAmount) {
         bytes4 selector = IRoyaltyFacet.royaltyInfo.selector;
-        (receiver, royaltyAmount) = IRoyaltyFacet(diamondProxy).royaltyInfo(_tokenId, _salePrice);
+        (receiver, royaltyAmount) = abi.decode(
+            DiamondProxy(DIAMOND_PROXY).call(abi.encodeWithSelector(selector, _tokenId, _salePrice)),
+            (address, uint256)
+        );
         return (receiver, royaltyAmount);
     }
 }`}
@@ -151,15 +152,14 @@ contract RoyaltyConsumer {
 ## Best Practices
 
 <Callout type="tip" title="Best Practice">
-- Initialize the `defaultRoyaltyInfo` using the `setRoyaltyInfo` function within the `DiamondInit` contract during deployment.
-- When querying, always use the facet's selector via the diamond proxy interface to ensure correct routing.
-- Ensure the `salePrice` is passed in the same denomination as the token's currency.
+- Initialize royalty settings using the appropriate initializer function during diamond deployment.
+- Access royalty information via the diamond proxy to ensure correct routing to this facet.
 </Callout>
 
 ## Security Considerations
 
 <Callout type="warning" title="Security">
-Access control for setting default royalties should be managed by the diamond's owner or a designated administrator. The `royaltyInfo` function itself is view-only and does not pose reentrancy risks. Input validation for `_salePrice` is handled internally. Ensure the `receiver` address returned is trustworthy if automation is involved.
+Ensure the `STORAGE_POSITION` for royalty storage is unique and correctly managed. Access control for setting royalties should be handled by the facet that manages ownership or administration of the diamond.
 </Callout>
 
 <div style={{marginTop: "3rem", paddingTop: "2rem", borderTop: "1px solid var(--ifm-color-emphasis-200)"}}>
@@ -209,4 +209,4 @@ Access control for setting default royalties should be managed by the diamond's 
   <WasThisHelpful pageId="RoyaltyFacet" />
 </div>
 
-<LastUpdated date="2025-12-30T14:42:13.983Z" />
+<LastUpdated date="2025-12-30T15:02:58.111Z" />

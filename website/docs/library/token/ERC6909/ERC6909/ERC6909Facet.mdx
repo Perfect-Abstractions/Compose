@@ -1,7 +1,7 @@
 ---
 sidebar_position: 2
 title: "ERC6909Facet"
-description: "Manages fungible and non-fungible token balances and approvals."
+description: "Manages ERC-6909 token balances, allowances, and operator roles."
 gitSource: "https://github.com/Perfect-Abstractions/Compose/tree/main/src/token/ERC6909/ERC6909/ERC6909Facet.sol"
 ---
 
@@ -21,19 +21,18 @@ import GradientText from '@site/src/components/ui/GradientText';
 import GradientButton from '@site/src/components/ui/GradientButton';
 
 <DocSubtitle>
-Manages fungible and non-fungible token balances and approvals.
+Manages ERC-6909 token balances, allowances, and operator roles.
 </DocSubtitle>
 
 <Callout type="info" title="Key Features">
-- Supports both fungible and non-fungible token types via a common ID system.
-- Enables operator delegation, allowing one address to manage tokens on behalf of another.
-- Emits events (`Transfer`, `Approval`, `OperatorSet`) for off-chain tracking and state synchronization.
-- Implements strict validation to prevent invalid operations such as transferring to zero addresses.
+- Implements the ERC-6909 standard for flexible token management.
+- Supports both fungible and non-fungible token operations.
+- Includes explicit functions for managing operator roles, enhancing composability.
 </Callout>
 
 ## Overview
 
-The ERC6909Facet implements the ERC-6909 standard for managing token balances and operator relationships within a Compose diamond. It provides core functionalities for transferring tokens, checking balances and allowances, and managing operator permissions, enabling flexible token management and delegation.
+This facet implements the ERC-6909 standard, enabling fungible and non-fungible token management within a Compose diamond. It provides core functionalities for checking balances, allowances, and operator status, alongside mechanisms for token transfers and approval setting.
 
 ---
 
@@ -460,21 +459,22 @@ error ERC6909InvalidSpender(address _spender);
 <ExpandableCode language="solidity" maxLines={20} title="Example Implementation">
 {`pragma solidity ^0.8.30;
 
-import {IERC6909Facet} from "@compose/contracts/src/facets/ERC6909/IERC6909Facet.sol";
+import {IERC6909Facet} from "@compose/contracts/facets/ERC6909/IERC6909Facet.sol";
 
 contract ERC6909Consumer {
-    IERC6909Facet immutable erc6909Facet;
+    IERC6909Facet public immutable erc6909Facet;
 
-    constructor(address _diamondAddress) {
-        erc6909Facet = IERC6909Facet(_diamondAddress);
+    constructor(address _erc6909FacetAddress) {
+        erc6909Facet = IERC6909Facet(_erc6909FacetAddress);
     }
 
-    function consumeTransfer(address _to, uint256 _id, uint256 _amount) external {
-        erc6909Facet.transfer(_to, _id, _amount);
+    function consumeERC6909(uint256 _tokenId, address _receiver, uint256 _amount) external {
+        // Example: Transfer tokens
+        erc6909Facet.transfer(_tokenId, msg.sender, _receiver, _amount);
     }
 
-    function consumeApprove(address _spender, uint256 _id, uint256 _amount) external {
-        erc6909Facet.approve(_spender, _id, _amount);
+    function checkBalance(uint256 _tokenId) external view returns (uint256) {
+        return erc6909Facet.balanceOf(_tokenId, msg.sender);
     }
 }`}
 </ExpandableCode>
@@ -482,15 +482,15 @@ contract ERC6909Consumer {
 ## Best Practices
 
 <Callout type="tip" title="Best Practice">
-- Initialize all token balances and operator settings through explicit calls to the `approve` and `setOperator` functions.
-- Always check balances and allowances before initiating transfers to prevent `ERC6909InsufficientBalance` or `ERC6909InsufficientAllowance` errors.
-- Utilize `getStorage` to inspect the internal storage layout if deeper analysis or custom logic is required.
+- Integrate the `ERC6909Facet` into your diamond using the standard facet deployment process. Ensure the facet's storage is correctly initialized.
+- When calling `transferFrom`, ensure the caller has sufficient allowance set via the `approve` function or is an operator for the sender.
+- Use `setOperator` judiciously to manage who can transfer tokens on behalf of an owner, and consider revoking operator status when no longer needed.
 </Callout>
 
 ## Security Considerations
 
 <Callout type="warning" title="Security">
-Ensure proper access control is implemented at the diamond level for functions that modify state (e.g., `transfer`, `transferFrom`, `approve`, `setOperator`). Input validation for addresses and amounts is crucial to prevent unexpected behavior and potential exploits. Reentrancy is not an explicit concern for this facet as it does not make external calls during state-changing operations.
+Ensure that `transfer` and `transferFrom` functions validate sender and receiver addresses to prevent unintended transfers or blackholes. Access control for `approve` and `setOperator` should be managed by the diamond's access control mechanism. Be mindful of potential reentrancy if custom logic interacts with token transfers externally.
 </Callout>
 
 <div style={{marginTop: "3rem", paddingTop: "2rem", borderTop: "1px solid var(--ifm-color-emphasis-200)"}}>
@@ -534,4 +534,4 @@ Ensure proper access control is implemented at the diamond level for functions t
   <WasThisHelpful pageId="ERC6909Facet" />
 </div>
 
-<LastUpdated date="2025-12-30T14:41:43.250Z" />
+<LastUpdated date="2025-12-30T15:02:24.645Z" />

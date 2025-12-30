@@ -1,7 +1,7 @@
 ---
 sidebar_position: 2
 title: "OwnerTwoStepsFacet"
-description: "Manage diamond ownership with a two-step transfer process."
+description: "Manages ownership transfer with a two-step verification process."
 gitSource: "https://github.com/Perfect-Abstractions/Compose/tree/main/src/access/OwnerTwoSteps/OwnerTwoStepsFacet.sol"
 ---
 
@@ -21,18 +21,18 @@ import GradientText from '@site/src/components/ui/GradientText';
 import GradientButton from '@site/src/components/ui/GradientButton';
 
 <DocSubtitle>
-Manage diamond ownership with a two-step transfer process.
+Manages ownership transfer with a two-step verification process.
 </DocSubtitle>
 
 <Callout type="info" title="Key Features">
-- Implements a secure two-step ownership transfer mechanism.
-- Provides functions to view current and pending owners.
-- Supports ownership renouncement via `renounceOwnership()`.
+- Two-step ownership transfer process (initiate and accept).
+- Provides `owner()`, `pendingOwner()`, `transferOwnership()`, `acceptOwnership()`, and `renounceOwnership()` functions.
+- Uses specific storage slots for owner and pending owner states, accessible via `getOwnerStorage` and `getPendingOwnerStorage`.
 </Callout>
 
 ## Overview
 
-This facet implements a secure, two-step ownership transfer mechanism for Compose diamonds. It ensures that ownership changes are deliberate by requiring both the current owner to initiate a transfer and the new owner to accept it, preventing accidental or unauthorized takeovers.
+This facet provides a robust ownership management system for Compose diamonds. It enforces a two-step ownership transfer process, requiring both the current owner to initiate the transfer and the new owner to accept it, enhancing security against accidental or unauthorized ownership changes.
 
 ---
 
@@ -198,31 +198,35 @@ error OwnerUnauthorizedAccount();
 <ExpandableCode language="solidity" maxLines={20} title="Example Implementation">
 {`pragma solidity ^0.8.30;
 
-import {IOwnerTwoStepsFacet} from "@compose/contracts/src/facets/owner/OwnerTwoStepsFacet.sol";
+import {IOwnerTwoStepsFacet} from "@compose/facets/owner/OwnerTwoStepsFacet.sol";
+import {DiamondProxy} from "@compose/diamond/DiamondProxy.sol";
 
-contract OwnerManager {
-    IOwnerTwoStepsFacet ownerFacet;
+contract MyDiamond is DiamondProxy {
+    // ... deployment logic ...
 
-    constructor(address _ownerFacetAddress) {
-        ownerFacet = IOwnerTwoStepsFacet(_ownerFacetAddress);
+    function _setup() internal override {
+        // ... other facet setups ...
+        // Add OwnerTwoStepsFacet
+        address ownerTwoStepsFacetAddress = address(new OwnerTwoStepsFacet()); // Replace with actual deployment
+        _diamondCut(new IOperation[][](0), ownerTwoStepsFacetAddress, "OwnerTwoStepsFacet");
+
+        // Initialize ownership
+        IOwnerTwoStepsFacet(ownerTwoStepsFacetAddress).transferOwnership(newOwnerAddress);
     }
 
-    function requestOwnershipTransfer(address _newOwner) external {
-        // Assuming the caller is the current owner
-        ownerFacet.transferOwnership(_newOwner);
+    function transferOwnershipToNewOwner(address newOwnerAddress) external {
+        address ownerTwoStepsFacetAddress = address(this).getFacetAddress("OwnerTwoStepsFacet");
+        IOwnerTwoStepsFacet(ownerTwoStepsFacetAddress).transferOwnership(newOwnerAddress);
     }
 
     function acceptNewOwnership() external {
-        // Assuming the caller is the pending owner
-        ownerFacet.acceptOwnership();
+        address ownerTwoStepsFacetAddress = address(this).getFacetAddress("OwnerTwoStepsFacet");
+        IOwnerTwoStepsFacet(ownerTwoStepsFacetAddress).acceptOwnership();
     }
 
-    function getCurrentOwner() external view returns (address) {
-        return ownerFacet.owner();
-    }
-
-    function getPendingOwnerAddress() external view returns (address) {
-        return ownerFacet.pendingOwner();
+    function renounceDiamondOwnership() external {
+        address ownerTwoStepsFacetAddress = address(this).getFacetAddress("OwnerTwoStepsFacet");
+        IOwnerTwoStepsFacet(ownerTwoStepsFacetAddress).renounceOwnership();
     }
 }`}
 </ExpandableCode>
@@ -230,19 +234,19 @@ contract OwnerManager {
 ## Best Practices
 
 <Callout type="tip" title="Best Practice">
-- Initialize ownership transfers using `transferOwnership` and require the intended new owner to call `acceptOwnership` to finalize.
-- Regularly check `pendingOwner()` to monitor any pending ownership changes.
-- Use `owner()` to retrieve the current owner address for any administrative operations.
+- Initialize ownership by calling `transferOwnership` during diamond deployment or upgrade.
+- The new owner must call `acceptOwnership` to finalize the transfer.
+- Use `owner()` and `pendingOwner()` to track the current and pending ownership states.
 </Callout>
 
 ## Security Considerations
 
 <Callout type="warning" title="Security">
-Access control: Only the current owner can initiate a transfer (`transferOwnership`), and only the pending owner can accept it (`acceptOwnership`). The `renounceOwnership` function can be called by the current owner to remove ownership entirely. Ensure that only trusted accounts can call these functions as appropriate for your diamond's governance model.
+The `transferOwnership` function can only be called by the current owner. The `acceptOwnership` function can only be called by the pending owner. Direct calls to `getOwnerStorage` or `getPendingOwnerStorage` should be avoided in favor of the public getter functions to maintain encapsulation and prevent accidental state manipulation.
 </Callout>
 
 <div style={{marginTop: "3rem", paddingTop: "2rem", borderTop: "1px solid var(--ifm-color-emphasis-200)"}}>
   <WasThisHelpful pageId="OwnerTwoStepsFacet" />
 </div>
 
-<LastUpdated date="2025-12-30T14:40:22.031Z" />
+<LastUpdated date="2025-12-30T15:01:01.792Z" />

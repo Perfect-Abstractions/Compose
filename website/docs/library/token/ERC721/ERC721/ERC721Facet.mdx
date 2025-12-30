@@ -1,7 +1,7 @@
 ---
 sidebar_position: 2
 title: "ERC721Facet"
-description: "Manages ERC721 tokens, including ownership, approvals, and metadata."
+description: "Manages ERC-721 token collection properties and transfers."
 gitSource: "https://github.com/Perfect-Abstractions/Compose/tree/main/src/token/ERC721/ERC721/ERC721Facet.sol"
 ---
 
@@ -21,18 +21,19 @@ import GradientText from '@site/src/components/ui/GradientText';
 import GradientButton from '@site/src/components/ui/GradientButton';
 
 <DocSubtitle>
-Manages ERC721 tokens, including ownership, approvals, and metadata.
+Manages ERC-721 token collection properties and transfers.
 </DocSubtitle>
 
 <Callout type="info" title="Key Features">
-- Implements core ERC721 standard functions: `name`, `symbol`, `tokenURI`, `balanceOf`, `ownerOf`, `approve`, `getApproved`, `setApprovalForAll`, `isApprovedForAll`.
-- Supports both standard and safe token transfers.
-- Provides internal transfer logic (`internalTransferFrom`) for robust state management.
+- Full ERC-721 compliance for token management.
+- Supports metadata retrieval via `tokenURI`.
+- Provides internal and external transfer functions, including safe transfer variants.
+- Exposes ownership and approval querying functions.
 </Callout>
 
 ## Overview
 
-The ERC721Facet provides the core functionality for managing Non-Fungible Tokens (NFTs) within a Compose diamond. It implements the ERC721 standard, enabling token transfers, ownership tracking, and approval mechanisms. This facet allows for the creation, management, and querying of unique digital assets.
+The ERC721Facet provides the core functionality for an ERC-721 compliant token collection within a Compose diamond. It handles token ownership, approvals, metadata retrieval, and all standard transfer operations, ensuring interoperability with the ERC-721 standard.
 
 ---
 
@@ -565,30 +566,25 @@ error ERC721InvalidOperator(address _operator);
 import {IERC721Facet} from "@compose-protocol/diamond/contracts/facets/ERC721/IERC721Facet.sol";
 
 contract ERC721Consumer {
-    address immutable diamondAddress;
+    address immutable _diamondAddress;
 
-    constructor(address _diamondAddress) {
-        diamondAddress = _diamondAddress;
+    constructor(address diamondAddress) {
+        _diamondAddress = diamondAddress;
     }
 
-    function getTokenName() external view returns (string memory) {
-        bytes32 nameSelector = IERC721Facet.name.selector;
-        (bool success, bytes memory data) = diamondAddress.staticcall(abi.encodeWithSelector(nameSelector));
-        require(success, "ERC721Facet: failed to get name");
-        return abi.decode(data, (string));
-    }
+    function consumeERC721() external {
+        IERC721Facet erc721Facet = IERC721Facet(_diamondAddress);
 
-    function getTokenSymbol() external view returns (string memory) {
-        bytes32 symbolSelector = IERC721Facet.symbol.selector;
-        (bool success, bytes memory data) = diamondAddress.staticcall(abi.encodeWithSelector(symbolSelector));
-        require(success, "ERC721Facet: failed to get symbol");
-        return abi.decode(data, (string));
-    }
+        // Get token name and symbol
+        string memory name = erc721Facet.name();
+        string memory symbol = erc721Facet.symbol();
 
-    function approveToken(address _to, uint256 _tokenId) external {
-        bytes32 approveSelector = IERC721Facet.approve.selector;
-        (bool success, ) = diamondAddress.call(abi.encodeWithSelector(approveSelector, _to, _tokenId));
-        require(success, "ERC721Facet: failed to approve token");
+        // Check balance of caller
+        uint256 balance = erc721Facet.balanceOf(msg.sender);
+
+        // Attempt to transfer a token (assuming caller owns token ID 1 and is approved)
+        // Note: This is illustrative; actual calls require proper setup and permissions.
+        // erc721Facet.transferFrom(msg.sender, address(this), 1);
     }
 }`}
 </ExpandableCode>
@@ -596,15 +592,15 @@ contract ERC721Consumer {
 ## Best Practices
 
 <Callout type="tip" title="Best Practice">
-- Ensure the diamond is initialized with the ERC721Facet to enable NFT functionality.
-- Use `safeTransferFrom` when transferring tokens to unknown or untrusted receivers.
-- Access token metadata via `tokenURI` and ensure it points to valid, immutable metadata sources.
+- Ensure the ERC721Facet is correctly initialized with its storage slot. Access storage via `getStorage()` for direct manipulation if necessary, but prefer using facet functions.
+- Implement robust access control mechanisms externally or within other facets to gate sensitive functions like `approve` and `transferFrom` if required by your application logic.
+- For safe transfers, prefer `safeTransferFrom` over `transferFrom` to ensure receiver contract compatibility.
 </Callout>
 
 ## Security Considerations
 
 <Callout type="warning" title="Security">
-Input validation is critical for all transfer and approval functions to prevent unauthorized access or state corruption. Ensure that `ownerOf`, `balanceOf`, and approval checks are correctly implemented to prevent reentrancy issues. The `safeTransferFrom` functions include checks for receiver contract compatibility to mitigate risks associated with untrusted recipient addresses.
+Access control for `approve` and `transferFrom` functions should be managed externally, as this facet implements the core ERC-721 logic without inherent owner checks on these operations. Input validation for token IDs and addresses is handled by custom errors. Reentrancy is mitigated by the diamond proxy pattern and standard ERC-721 checks. Ensure the receiver address in `safeTransferFrom` can handle ERC-721 tokens to prevent unintended state or reverts.
 </Callout>
 
 <div style={{marginTop: "3rem", paddingTop: "2rem", borderTop: "1px solid var(--ifm-color-emphasis-200)"}}>
@@ -654,4 +650,4 @@ Input validation is critical for all transfer and approval functions to prevent 
   <WasThisHelpful pageId="ERC721Facet" />
 </div>
 
-<LastUpdated date="2025-12-30T14:42:12.455Z" />
+<LastUpdated date="2025-12-30T15:02:55.051Z" />

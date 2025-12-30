@@ -1,7 +1,7 @@
 ---
 sidebar_position: 1
 title: "AccessControlMod"
-description: "Manage roles and permissions within a diamond."
+description: "Manages roles and permissions within a diamond."
 gitSource: "https://github.com/Perfect-Abstractions/Compose/tree/main/src/access/AccessControl/AccessControlMod.sol"
 ---
 
@@ -21,13 +21,13 @@ import GradientText from '@site/src/components/ui/GradientText';
 import GradientButton from '@site/src/components/ui/GradientButton';
 
 <DocSubtitle>
-Manage roles and permissions within a diamond.
+Manages roles and permissions within a diamond.
 </DocSubtitle>
 
 <Callout type="info" title="Key Features">
 - Role-based access control for granular permission management.
-- Functions to grant, revoke, and check role assignments for accounts.
-- Ability to define and manage administrative roles for other roles.
+- Functions to grant, revoke, and check for role ownership.
+- Ability to set and change the administrative role for any given role.
 </Callout>
 
 <Callout type="info" title="Module Usage">
@@ -36,7 +36,7 @@ This module provides internal functions for use in your custom facets. Import it
 
 ## Overview
 
-The AccessControl module provides a robust system for managing roles and permissions within your Compose diamond. It allows you to define granular access levels for different accounts, ensuring that only authorized entities can perform sensitive operations. This module is crucial for building secure and auditable decentralized applications.
+The AccessControl module provides a robust system for managing roles and permissions within a Compose diamond. It allows for granular control over who can perform specific actions by assigning roles to accounts. This ensures secure and predictable execution of diamond functions by enforcing authorization checks.
 
 ---
 
@@ -401,24 +401,23 @@ error AccessControlUnauthorizedAccount(address _account, bytes32 _role);
 <ExpandableCode language="solidity" maxLines={20} title="Example Implementation">
 {`pragma solidity ^0.8.30;
 
-import {IAccessControl} from "@compose-protocol/diamond-contracts/contracts/modules/accesscontrol/IAccessControl.sol";
+import {IAccessControl} from "@compose/contracts/modules/access/IAccessControl.sol";
 
-contract MyFacet {
-    IAccessControl immutable accessControl;
+contract AccessControlFacet {
+    IAccessControl internal accessControl;
 
-    constructor(address _diamondProxy) {
-        accessControl = IAccessControl(_diamondProxy);
+    constructor(address _accessControlAddress) {
+        accessControl = IAccessControl(_accessControlAddress);
     }
 
     function grantAdminRole(address _account) external {
-        bytes32 adminRole = accessControl.getStorage().DEFAULT_ADMIN_ROLE;
+        address adminRole = accessControl.getStorage().DEFAULT_ADMIN_ROLE;
         accessControl.grantRole(adminRole, _account);
     }
 
-    function executeSensitiveAction() external {
-        bytes32 sensitiveRole = keccak256("SENSITIVE_ROLE");
-        accessControl.requireRole(sensitiveRole, msg.sender);
-        // ... perform sensitive action ...
+    function checkHasDefaultAdmin(address _account) external view returns (bool) {
+        address adminRole = accessControl.getStorage().DEFAULT_ADMIN_ROLE;
+        return accessControl.hasRole(adminRole, _account);
     }
 }`}
 </ExpandableCode>
@@ -426,15 +425,15 @@ contract MyFacet {
 ## Best Practices
 
 <Callout type="tip" title="Best Practice">
-- Use `requireRole` for access control checks to ensure correct authorization before executing critical functions.
-- Define custom roles using `keccak256` for specific functionalities and manage their assignments and admin roles effectively.
-- Be mindful of role administration: ensure the `DEFAULT_ADMIN_ROLE` is secured and `setRoleAdmin` is used judiciously.
+- Use `requireRole` internally within facets to enforce access control checks before executing sensitive operations.
+- Ensure the `DEFAULT_ADMIN_ROLE` is appropriately managed, typically by the diamond's owner or a designated multi-sig.
+- When revoking roles, be mindful of potential cascading effects on dependent permissions.
 </Callout>
 
 ## Integration Notes
 
 <Callout type="success" title="Shared Storage">
-The AccessControl module stores its state within the diamond's storage. Facets interact with it by calling its external functions via the diamond proxy address. Ensure the AccessControl facet is correctly initialized within the diamond's deployment process. Any changes to role assignments or admin roles made through this module are immediately reflected across all facets interacting with the diamond.
+The AccessControl module utilizes a dedicated storage slot within the diamond's state. Facets interacting with AccessControl should use the `IAccessControl` interface. Functions like `grantRole`, `revokeRole`, `hasRole`, `requireRole`, and `setRoleAdmin` operate on this shared storage. Changes made via this module are immediately visible to all facets.
 </Callout>
 
 <div style={{marginTop: "3rem", paddingTop: "2rem", borderTop: "1px solid var(--ifm-color-emphasis-200)"}}>
@@ -472,4 +471,4 @@ The AccessControl module stores its state within the diamond's storage. Facets i
   <WasThisHelpful pageId="AccessControlMod" />
 </div>
 
-<LastUpdated date="2025-12-30T14:40:54.750Z" />
+<LastUpdated date="2025-12-30T15:01:38.426Z" />
