@@ -6,7 +6,7 @@
 const { loadAndRenderTemplate } = require('./template-engine-handlebars');
 const { sanitizeForMdx } = require('./helpers');
 const { readFileSafe } = require('../../workflow-utils');
-const { enrichWithRelationships } = require('../doc-generation-utils');
+const { enrichWithRelationships } = require('../core/relationship-detector');
 
 /**
  * Extract function parameters directly from Solidity source file

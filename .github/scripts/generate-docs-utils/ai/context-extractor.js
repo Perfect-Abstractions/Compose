@@ -7,9 +7,9 @@
 
 const fs = require('fs');
 const path = require('path');
-const { readFileSafe } = require('../workflow-utils');
-const { findRelatedContracts } = require('./contract-registry');
-const { getContractRegistry } = require('./contract-registry');
+const { readFileSafe } = require('../../workflow-utils');
+const { findRelatedContracts } = require('../core/relationship-detector');
+const { getContractRegistry } = require('../core/contract-registry');
 
 /**
  * Extract context from source file (pragma, imports, etc.)

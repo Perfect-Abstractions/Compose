@@ -1,93 +1,15 @@
 /**
- * Contract Registry System
+ * Relationship Detector
  *
- * Tracks all contracts (modules and facets) for relationship detection
- * and cross-reference generation in documentation.
+ * Detects relationships between contracts (modules and facets) for
+ * cross-reference generation in documentation.
  *
  * Features:
- * - Register contracts with metadata (name, type, category, path)
  * - Find related contracts (module/facet pairs, same category, extensions)
  * - Enrich documentation data with relationship information
  */
 
-// ============================================================================
-// Registry State
-// ============================================================================
-
-/**
- * Global registry to track all contracts for relationship detection
- * This allows us to find related contracts and generate cross-references
- */
-const contractRegistry = {
-  byName: new Map(),
-  byCategory: new Map(),
-  byType: { modules: [], facets: [] }
-};
-
-// ============================================================================
-// Registry Management
-// ============================================================================
-
-/**
- * Register a contract in the global registry
- * @param {object} contractData - Contract documentation data
- * @param {object} outputPath - Output path information from getOutputPath
- * @returns {object} Registered contract entry
- */
-function registerContract(contractData, outputPath) {
-  // Construct full path including filename (without .mdx extension)
-  // This ensures RelatedDocs links point to the actual page, not the category index
-  const fullPath = outputPath.relativePath 
-    ? `${outputPath.relativePath}/${outputPath.fileName}`
-    : outputPath.fileName;
-  
-  const entry = {
-    name: contractData.title,
-    type: contractData.contractType, // 'module' or 'facet'
-    category: outputPath.category,
-    path: fullPath,
-    sourcePath: contractData.sourceFilePath,
-    functions: contractData.functions || [],
-    storagePosition: contractData.storageInfo?.storagePosition
-  };
-  
-  contractRegistry.byName.set(contractData.title, entry);
-  
-  if (!contractRegistry.byCategory.has(outputPath.category)) {
-    contractRegistry.byCategory.set(outputPath.category, []);
-  }
-  contractRegistry.byCategory.get(outputPath.category).push(entry);
-  
-  if (contractData.contractType === 'module') {
-    contractRegistry.byType.modules.push(entry);
-  } else {
-    contractRegistry.byType.facets.push(entry);
-  }
-  
-  return entry;
-}
-
-/**
- * Get the contract registry
- * @returns {object} The contract registry
- */
-function getContractRegistry() {
-  return contractRegistry;
-}
-
-/**
- * Clear the contract registry (useful for testing or reset)
- */
-function clearContractRegistry() {
-  contractRegistry.byName.clear();
-  contractRegistry.byCategory.clear();
-  contractRegistry.byType.modules = [];
-  contractRegistry.byType.facets = [];
-}
-
-// ============================================================================
-// Relationship Detection
-// ============================================================================
+const { getContractRegistry } = require('./contract-registry');
 
 /**
  * Find related contracts for a given contract
@@ -98,7 +20,7 @@ function clearContractRegistry() {
  * @returns {Array} Array of related contract objects with title, href, description, icon
  */
 function findRelatedContracts(contractName, contractType, category, registry = null) {
-  const reg = registry || contractRegistry;
+  const reg = registry || getContractRegistry();
   const related = [];
   const contract = reg.byName.get(contractName);
   if (!contract) return related;
@@ -170,7 +92,7 @@ function findRelatedContracts(contractName, contractType, category, registry = n
     }
   }
   
-  return related.slice(0, 6); // Limit to 6 related items
+  return related.slice(0, 4); // Limit to 4 related items
 }
 
 /**
@@ -194,17 +116,7 @@ function enrichWithRelationships(data, pathInfo, registry = null) {
   };
 }
 
-// ============================================================================
-// Exports
-// ============================================================================
-
 module.exports = {
-  // Registry management
-  registerContract,
-  getContractRegistry,
-  clearContractRegistry,
-  
-  // Relationship detection
   findRelatedContracts,
   enrichWithRelationships,
 };
