@@ -2,7 +2,7 @@
 pragma solidity >=0.8.30;
 
 contract DiamondInspectFacet {
-    bytes32 constant DIAMOND_STORAGE_POSITION = keccak256("compose.diamond");
+    bytes32 constant DIAMOND_STORAGE_POSITION = keccak256("erc8109.diamond");
 
     /**
      * @notice Data stored for each function selector.
@@ -35,6 +35,17 @@ contract DiamondInspectFacet {
         assembly {
             s.slot := position
         }
+    }
+
+    /**
+     * @notice Gets the facet address that handles the given selector.
+     * @dev If facet is not found return address(0).
+     * @param _functionSelector The function selector.
+     * @return facet The facet address.
+     */
+    function facetAddress(bytes4 _functionSelector) external view returns (address facet) {
+        DiamondStorage storage s = getStorage();
+        facet = s.facetAndPosition[_functionSelector].facet;
     }
 
     struct FunctionFacetPair {

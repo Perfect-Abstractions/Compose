@@ -6,6 +6,7 @@ Among Nick’s duties are defining the overall direction of the project, approvi
 # Active Maintainers
 
 - @maxnorm
+- @lumoswiz
 - @panditdhamdhere
 - @Haroldwonder
 

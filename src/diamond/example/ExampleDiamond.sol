@@ -11,10 +11,9 @@ import {IERC721Metadata} from "../../interfaces/IERC721Metadata.sol";
 contract ExampleDiamond {
     /**
      * @notice Struct to hold facet address and its function selectors.
-     * struct FacetCut {
-     *    address facetAddress;
-     *    FacetCutAction action; // Add=0, Replace=1, Remove=2
-     *    bytes4[] functionSelectors;
+     * struct FacetFunctions {
+     *     address facet;
+     *     bytes4[] selectors;
      * }
      */
     /**
@@ -24,7 +23,7 @@ contract ExampleDiamond {
      * @param _facets Array of facet addresses and their corresponding function selectors to add to the diamond.
      * @param _diamondOwner Address that will be set as the owner of the diamond contract.
      */
-    constructor(DiamondMod.FacetCut[] memory _facets, address _diamondOwner) {
+    constructor(DiamondMod.FacetFunctions[] memory _facets, address _diamondOwner) {
         DiamondMod.addFacets(_facets);
 
         /*************************************
