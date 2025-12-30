@@ -1,7 +1,7 @@
 ---
 sidebar_position: 510
 title: "ExampleDiamond"
-description: "Example Diamond for Compose: Initializes and manages facets."
+description: "Manages facet registration and ownership for a diamond."
 gitSource: "https://github.com/Perfect-Abstractions/Compose/tree/main/src/diamond/example/ExampleDiamond.sol"
 ---
 
@@ -21,18 +21,18 @@ import GradientText from '@site/src/components/ui/GradientText';
 import GradientButton from '@site/src/components/ui/GradientButton';
 
 <DocSubtitle>
-Example Diamond for Compose: Initializes and manages facets.
+Manages facet registration and ownership for a diamond.
 </DocSubtitle>
 
 <Callout type="info" title="Key Features">
-- Initializes the diamond proxy with an owner and an initial set of facets.
-- Registers function selectors to enable `delegatecall` routing to the correct facets.
-- Demonstrates the fundamental structure for deploying a Compose diamond.
+- Initializes the diamond with a set of facets and their function selectors.
+- Establishes the contract owner during deployment.
+- Supports adding, replacing, or removing facets via the `FacetCut` struct.
 </Callout>
 
 ## Overview
 
-The ExampleDiamond contract serves as a foundational example for Compose diamonds. It demonstrates the core initialization process, including setting the owner and registering facet function selectors. This contract is crucial for understanding how facets are added and made accessible through the diamond proxy pattern.
+The ExampleDiamond facet acts as the core contract for a Compose diamond. It handles the initialization of the diamond by registering facets and their associated function selectors, enabling delegatecall routing. It also establishes the initial owner of the diamond, crucial for subsequent administrative operations.
 
 ---
 
@@ -85,40 +85,54 @@ Struct to hold facet address and its function selectors. struct FacetCut &#123; 
 <ExpandableCode language="solidity" maxLines={20} title="Example Implementation">
 {`pragma solidity ^0.8.30;
 
-import {ExampleDiamond} from "@compose/contracts/diamond/ExampleDiamond.sol";
-import {DiamondCutFacet} from "@compose/contracts/diamond/facets/DiamondCutFacet.sol";
-import {DiamondLoupeFacet} from "@compose/contracts/diamond/facets/DiamondLoupeFacet.sol";
+import {IDiamondCut} from "@compose/diamond/contracts/IDiamondCut.sol";
+import {ExampleDiamond} from "@compose/diamond/contracts/ExampleDiamond.sol";
 
-contract MyDiamond is ExampleDiamond {
-    constructor(address _owner, FacetCut[] memory _diamondCut) ExampleDiamond(_owner, _diamondCut) {
-        // Additional diamond initialization logic can go here
+contract DeployExampleDiamond {
+    address public diamondAddress;
+
+    function deploy() public {
+        // Define facets to be added during initialization
+        ExampleDiamond.FacetCut[] memory facetsToInit = new ExampleDiamond.FacetCut[](2);
+
+        // Example facet 1 (replace with actual facet address and selectors)
+        bytes4[] memory selectors1 = new bytes4[](1);
+        selectors1[0] = ExampleDiamond.deploy.selector; // Example selector
+        facetsToInit[0] = ExampleDiamond.FacetCut({
+            facetAddress: address(this), // Placeholder address
+            action: ExampleDiamond.FacetCutAction.Add,
+            functionSelectors: selectors1
+        });
+
+        // Example facet 2 (replace with actual facet address and selectors)
+        bytes4[] memory selectors2 = new bytes4[](1);
+        selectors2[0] = ExampleDiamond.fallback.selector; // Example selector
+        facetsToInit[1] = ExampleDiamond.FacetCut({
+            facetAddress: address(this), // Placeholder address
+            action: ExampleDiamond.FacetCutAction.Add,
+            functionSelectors: selectors2
+        });
+
+        // Deploy the diamond, initializing it with facets and owner
+        ExampleDiamond exampleDiamond = new ExampleDiamond();
+        exampleDiamond.constructor(facetsToInit, msg.sender); // msg.sender becomes owner
+        diamondAddress = address(exampleDiamond);
     }
-
-    // Fallback and receive functions are inherited and managed by ExampleDiamond
-}
-
-// Deployment example (conceptual)
-// FacetCut[] memory facetsToCut = new FacetCut[](2);
-// facetsToCut[0] = FacetCut(address(new DiamondCutFacet()), FacetCutAction.Add, DiamondCutFacet.getFunctionSelectors());
-// facetsToCut[1] = FacetCut(address(new DiamondLoupeFacet()), FacetCutAction.Add, DiamondLoupeFacet.getFunctionSelectors());
-//
-// address owner = msg.sender;
-// ExampleDiamond diamond = new ExampleDiamond(owner, facetsToCut);
-`}
+}`}
 </ExpandableCode>
 
 ## Best Practices
 
 <Callout type="tip" title="Best Practice">
-- Initialize the diamond with essential facets like DiamondCutFacet and DiamondLoupeFacet during deployment.
-- Ensure the owner is set correctly to manage future facet upgrades.
-- Understand that `constructor` is used for initial setup; upgrades are handled via `DiamondCutFacet`.
+- Ensure all facets intended for initialization are correctly defined with their respective function selectors.
+- The `msg.sender` at the time of diamond deployment becomes the initial owner, responsible for future upgrades and management.
+- Carefully consider the initial set of facets to be registered; subsequent additions or modifications require diamond upgrade mechanisms.
 </Callout>
 
 ## Security Considerations
 
 <Callout type="warning" title="Security">
-The `constructor` is called only once during deployment. Access control for subsequent facet management is delegated to the `DiamondCutFacet`, which should be secured appropriately (e.g., restricted to the owner). The `fallback` and `receive` functions are inherited and their behavior is determined by the underlying diamond proxy implementation.
+This facet is responsible for the initial setup and ownership of the diamond. Any vulnerabilities in the constructor logic or improper owner assignment could lead to the permanent loss of control over the diamond. Ensure the facet addresses and selectors provided during initialization are correct and trusted.
 </Callout>
 
 <div style={{marginTop: "3rem", paddingTop: "2rem", borderTop: "1px solid var(--ifm-color-emphasis-200)"}}>
@@ -144,4 +158,4 @@ The `constructor` is called only once during deployment. Access control for subs
   <WasThisHelpful pageId="ExampleDiamond" />
 </div>
 
-<LastUpdated date="2025-12-30T14:42:44.058Z" />
+<LastUpdated date="2025-12-30T15:03:29.078Z" />

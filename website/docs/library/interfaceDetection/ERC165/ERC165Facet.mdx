@@ -25,14 +25,13 @@ Implements ERC-165 standard for interface detection.
 </DocSubtitle>
 
 <Callout type="info" title="Key Features">
-- Implements the standard ERC-165 `supportsInterface` function.
-- Allows external contracts to query supported interfaces via the diamond proxy.
-- Does not introduce new storage slots; relies on the diamond's shared storage.
+- Implements `supportsInterface` as per ERC-165.
+- Provides a standardized method for interface detection on the diamond.
 </Callout>
 
 ## Overview
 
-The ERC165Facet enables a Compose diamond to declare support for specific interfaces according to the ERC-165 standard. This allows external contracts to programmatically query which functionalities the diamond supports without needing to know the diamond's specific facet addresses.
+The ERC165Facet enables Compose diamonds to comply with the ERC-165 standard, allowing external contracts to query which interfaces the diamond supports. It exposes the `supportsInterface` function, crucial for interoperability and discovering diamond capabilities.
 
 ---
 
@@ -103,39 +102,39 @@ Query if a contract implements an interface This function checks if the diamond 
 <ExpandableCode language="solidity" maxLines={20} title="Example Implementation">
 {`pragma solidity ^0.8.30;
 
-import {IERC165} from "@openzeppelin/contracts/utils/introspection/IERC165.sol";
+import {ERC165Facet} from "@compose/contracts/facets/ERC165Facet.sol";
 
-interface IMyDiamond {
-    // ... other interface functions ...
-    function supportsInterface(bytes4 interfaceId) external view returns (bool);
-}
+contract MyDiamond is ERC165Facet {
+    // ... other facet deployments
 
-contract ConsumerContract {
-    address immutable diamondProxy;
-
-    constructor(address _diamondProxy) {
-        diamondProxy = _diamondProxy;
+    function supportsInterface(bytes4 interfaceId) external view override returns (bool) {
+        // Check if the interface is supported by this facet
+        if (interfaceId == type(IERC165).interfaceId) {
+            return true;
+        }
+        // Delegate to other facets or known interfaces
+        // For example, if this diamond also supports IERC20:
+        // if (interfaceId == type(IERC20).interfaceId) {
+        //     return true;
+        // }
+        return super.supportsInterface(interfaceId);
     }
 
-    function checkERC721Support() public view returns (bool) {
-        // ERC721 interface ID
-        bytes4 erc721InterfaceId = 0x80ac585d;
-        return IMyDiamond(diamondProxy).supportsInterface(erc721InterfaceId);
-    }
+    // ... other diamond logic
 }`}
 </ExpandableCode>
 
 ## Best Practices
 
 <Callout type="tip" title="Best Practice">
-- Ensure the `supportsInterface` function is correctly implemented and returns `true` for the ERC-165 interface ID itself if the facet is intended to be discoverable.
-- Declare all supported interface IDs within the `supportsInterface` function, mapping them to their respective standard or custom interface IDs.
+- Ensure the `supportsInterface` function is correctly implemented to return true for `IERC165.interfaceId` and any other supported interface IDs.
+- Integrate this facet early in the diamond deployment process to establish its interface support capabilities.
 </Callout>
 
 ## Security Considerations
 
 <Callout type="warning" title="Security">
-This facet is read-only and does not modify state, posing minimal direct security risks. Ensure that the interface IDs returned by `supportsInterface` accurately reflect the diamond's capabilities to prevent misleading external queries.
+The `supportsInterface` function is read-only and does not directly handle state changes. Ensure that the logic within `supportsInterface` accurately reflects all supported interfaces to prevent incorrect discovery by consumers.
 </Callout>
 
 <div style={{marginTop: "3rem", paddingTop: "2rem", borderTop: "1px solid var(--ifm-color-emphasis-200)"}}>
@@ -155,4 +154,4 @@ This facet is read-only and does not modify state, posing minimal direct securit
   <WasThisHelpful pageId="ERC165Facet" />
 </div>
 
-<LastUpdated date="2025-12-30T14:42:29.025Z" />
+<LastUpdated date="2025-12-30T15:03:11.091Z" />

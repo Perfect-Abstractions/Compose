@@ -1,7 +1,7 @@
 ---
 sidebar_position: 1
 title: "DiamondMod"
-description: "Diamond Library - Internal functions and storage for diamond proxy functionality."
+description: "Internal functions and storage for diamond proxy"
 gitSource: "https://github.com/Perfect-Abstractions/Compose/tree/main/src/diamond/DiamondMod.sol"
 ---
 
@@ -21,14 +21,13 @@ import GradientText from '@site/src/components/ui/GradientText';
 import GradientButton from '@site/src/components/ui/GradientButton';
 
 <DocSubtitle>
-Diamond Library - Internal functions and storage for diamond proxy functionality.
+Internal functions and storage for diamond proxy
 </DocSubtitle>
 
 <Callout type="info" title="Key Features">
-- All functions are `internal` for use in custom facets
-- Follows diamond storage pattern (EIP-8042)
-- Compatible with ERC-2535 diamonds
-- No external dependencies or `using` directives
+- Manages facet registration and function selector mapping during deployment (`addFacets`).
+- Provides a secure and standardized way to access diamond's storage (`getStorage`).
+- Enables fallback logic for unhandled function calls via `diamondFallback`.
 </Callout>
 
 <Callout type="info" title="Module Usage">
@@ -37,7 +36,7 @@ This module provides internal functions for use in your custom facets. Import it
 
 ## Overview
 
-Diamond Library - Internal functions and storage for diamond proxy functionality.
+The DiamondMod module manages diamond proxy core functionalities including facet management and storage access. It ensures proper function dispatch and provides internal access to diamond state, crucial for composability and upgradeability.
 
 ---
 
@@ -191,10 +190,56 @@ error NoBytecodeAtAddress(address _contractAddress, string _message);
   </Accordion>
 </AccordionGroup>
 
+## Usage Example
+
+<ExpandableCode language="solidity" maxLines={20} title="Example Implementation">
+{`pragma solidity ^0.8.30;
+
+import {IDiamondMod} from "../interfaces/IDiamondMod.sol";
+
+contract MyFacet {
+    IDiamondMod internal diamondMod;
+
+    constructor(address _diamondMod) {
+        diamondMod = IDiamondMod(_diamondMod);
+    }
+
+    /**
+     * @notice Example of calling getStorage.
+     */
+    function exampleGetStorage() external view returns (bytes memory) {
+        // Assuming storage slot 0 is relevant for demonstration
+        return diamondMod.getStorage(0);
+    }
+
+    /**
+     * @notice Example of calling diamondFallback (implicitly via proxy).
+     * This function would typically be called by the diamond proxy itself.
+     */
+    function exampleDiamondFallback() external {
+        // This function would be part of the diamond's logic,
+        // invoked when a selector is not found in other facets.
+        // For demonstration, we show a placeholder call.
+
+        // Example: A selector not mapped to any facet.
+        // bytes4 selector = bytes4(keccak256("nonExistentFunction()"));
+        // diamondMod.diamondFallback(selector, "");
+    }
+}`}
+</ExpandableCode>
+
+## Best Practices
+
+<Callout type="tip" title="Best Practice">
+- Use `diamondMod.getStorage(slot)` to safely read diamond storage slots. Ensure correct slot indexing to avoid data corruption.
+- Understand that `addFacets` is only callable during initial diamond deployment. Post-deployment facet additions require a separate `DiamondCut` mechanism.
+- Leverage `diamondFallback` for implementing custom logic when a function selector is not explicitly handled by any facet.
+</Callout>
+
 ## Integration Notes
 
 <Callout type="success" title="Shared Storage">
-This module accesses shared diamond storage, so changes made through this module are immediately visible to facets using the same storage pattern. All functions are internal as per Compose conventions.
+DiamondMod utilizes specific storage slots to maintain its internal state, including facet address mappings and function selector registrations. Facets interact with DiamondMod through its external interface. The `getStorage` function allows facets to read data from any storage slot within the diamond's address space, adhering to the EIP-2535 Diamond Standard. The `addFacets` function is restricted to the initial deployment phase to maintain diamond integrity.
 </Callout>
 
 <div style={{marginTop: "3rem", paddingTop: "2rem", borderTop: "1px solid var(--ifm-color-emphasis-200)"}}>
@@ -214,4 +259,4 @@ This module accesses shared diamond storage, so changes made through this module
   <WasThisHelpful pageId="DiamondMod" />
 </div>
 
-<LastUpdated date="2025-12-30T14:42:39.181Z" />
+<LastUpdated date="2025-12-30T15:03:26.984Z" />

@@ -25,9 +25,9 @@ Implement ERC-165 interface detection.
 </DocSubtitle>
 
 <Callout type="info" title="Key Features">
-- Implements ERC-165 standard for interface detection.
-- Allows facets to register and query supported interfaces.
-- Utilizes internal library functions for efficient interface management.
+- Implements the core logic for ERC-165 interface detection.
+- Provides an `initialize` function for registering supported interfaces.
+- Exposes a `supportsInterface` view function for querying capabilities.
 </Callout>
 
 <Callout type="info" title="Module Usage">
@@ -36,7 +36,7 @@ This module provides internal functions for use in your custom facets. Import it
 
 ## Overview
 
-The ERC165Mod provides the necessary storage and logic to implement the ERC-165 standard for interface detection within a Compose diamond. By registering supported interfaces during initialization, facets can signal their capabilities, enabling external contracts to query them efficiently.
+The ERC165Mod provides the necessary storage and internal functions to comply with the ERC-165 standard for interface detection. By registering supported interfaces, your diamond can clearly communicate its capabilities to other smart contracts, enhancing interoperability.
 
 ---
 
@@ -116,22 +116,20 @@ Register that a contract supports an interface Call this function during initial
 <ExpandableCode language="solidity" maxLines={20} title="Example Implementation">
 {`pragma solidity ^0.8.30;
 
-import {ERC165Mod, IERC165Mod} from "@compose/modules/ERC165/ERC165Mod.sol";
+import {LibERC165, IERC165Mod} from "@compose/modules/erc165/LibERC165.sol";
 
 contract MyFacet {
-    struct MyFacetStorage {
-        ERC165Mod.ERC165Storage erc165Data;
-        // ... other storage variables
-    }
+    // Assume storage is managed by the diamond proxy
+    // and LibERC165.getStorage() returns a pointer to it.
 
-    function initialize(MyFacetStorage storage self) external {
-        // Register the interfaces this facet supports
-        ERC165Mod.registerInterface(self.erc165Data, type(IERC721).interfaceId);
-        ERC165Mod.registerInterface(self.erc165Data, type(IERC1155).interfaceId);
+    function initialize() external {
+        // Register supported interfaces during facet initialization
+        LibERC165.registerInterface(type(IERC721).interfaceId);
+        LibERC165.registerInterface(type(IERC20).interfaceId);
     }
 
     function supportsInterface(bytes4 _interfaceId) external view returns (bool) {
-        return ERC165Mod.supportsInterface(_interface(self).erc165Data, _interfaceId);
+        return LibERC165.supportsInterface(_interfaceId);
     }
 }`}
 </ExpandableCode>
@@ -140,18 +138,18 @@ contract MyFacet {
 
 <Callout type="tip" title="Best Practice">
 - Call `registerInterface` during facet initialization to declare supported interfaces.
-- Use `supportsInterface` to check if a given interface ID is supported.
-- Ensure the `ERC165Storage` struct is correctly laid out and initialized.
+- Use `supportsInterface` to check for interface support, adhering to the ERC-165 standard.
+- Ensure the ERC165Mod is initialized before any other facet that might rely on its interface detection capabilities.
 </Callout>
 
 ## Integration Notes
 
 <Callout type="success" title="Shared Storage">
-The ERC165Mod requires a dedicated storage slot for its `ERC165Storage` struct. This struct must be initialized by the facet that incorporates the ERC165Mod. Facets can then call `ERC165Mod.registerInterface` during their initialization to populate this storage with supported interface IDs. The `supportsInterface` function can then be called by any facet to check for interface support based on the registered data.
+The ERC165Mod utilizes a fixed storage slot for its `ERC165Storage` struct, as defined by the ERC-165 standard. Facets can access this storage via `LibERC165.getStorage()`. It is crucial to call `LibERC165.registerInterface` during the initialization of any facet that implements specific interfaces to ensure accurate reporting via the `supportsInterface` function.
 </Callout>
 
 <div style={{marginTop: "3rem", paddingTop: "2rem", borderTop: "1px solid var(--ifm-color-emphasis-200)"}}>
   <WasThisHelpful pageId="ERC165Mod" />
 </div>
 
-<LastUpdated date="2025-12-30T14:42:23.339Z" />
+<LastUpdated date="2025-12-30T15:03:05.815Z" />

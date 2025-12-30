@@ -25,14 +25,15 @@ Enumerable ERC-721 token management and querying.
 </DocSubtitle>
 
 <Callout type="info" title="Key Features">
-- Provides `totalSupply`, `balanceOf`, `ownerOf`, and `tokenOfOwnerByIndex` for comprehensive token querying.
-- Supports standard ERC-721 functions including `name`, `symbol`, `tokenURI`, `approve`, and `transfer` variants.
-- Includes internal helper `internalTransferFrom` for optimized token transfers.
+- Full ERC-721 compliance including `transferFrom` and `safeTransferFrom` variants.
+- On-chain token enumeration via `tokenOfOwnerByIndex`.
+- Owner enumeration via `balanceOf` and `tokenOfOwnerByIndex`.
+- Supports `approve` and `setApprovalForAll` for managing token permissions.
 </Callout>
 
 ## Overview
 
-This facet extends the ERC-721 standard by providing enumerable functionality, allowing for efficient querying of token supply, ownership, and token URIs. It integrates seamlessly into a Compose diamond, offering a robust interface for managing non-fungible tokens.
+The ERC721EnumerableFacet provides full ERC-721 functionality with added capabilities for enumerating tokens and owners. It allows querying total supply, balance, owner of specific tokens, and token IDs owned by an address by index. This facet integrates seamlessly into Compose diamonds, expanding the surface area for NFT interactions.
 
 ---
 
@@ -636,29 +637,28 @@ error ERC721OutOfBoundsIndex(address _owner, uint256 _index);
 <ExpandableCode language="solidity" maxLines={20} title="Example Implementation">
 {`pragma solidity ^0.8.30;
 
-import {IERC721EnumerableFacet} from "@compose/contracts/src/facets/ERC721/IERC721EnumerableFacet.sol";
+import {IERC721EnumerableFacet} from "@compose-chain/contracts/facets/ERC721/ERC721EnumerableFacet.sol";
 
-contract Deployer {
-    address diamondAddress;
+contract MyDiamondOwner {
+    address immutable diamondAddress;
 
-    function deploy() public {
-        // ... diamond deployment logic ...
-        diamondAddress = address(0xYourDiamondAddress);
+    constructor(address _diamondAddress) {
+        diamondAddress = _diamondAddress;
     }
 
-    function getTokenSupply() public view returns (uint256) {
-        IERC721EnumerableFacet facet = IERC721EnumerableFacet(diamondAddress);
-        return facet.totalSupply();
+    function getTotalSupply() public view returns (uint256) {
+        IERC721EnumerableFacet erc721 = IERC721EnumerableFacet(diamondAddress);
+        return erc721.totalSupply();
     }
 
     function getTokenOwner(uint256 tokenId) public view returns (address) {
-        IERC721EnumerableFacet facet = IERC721EnumerableFacet(diamondAddress);
-        return facet.ownerOf(tokenId);
+        IERC721EnumerableFacet erc721 = IERC721EnumerableFacet(diamondAddress);
+        return erc721.ownerOf(tokenId);
     }
 
-    function getTokenURI(uint256 tokenId) public view returns (string memory) {
-        IERC721EnumerableFacet facet = IERC721EnumerableFacet(diamondAddress);
-        return facet.tokenURI(tokenId);
+    function getTokenByIndex(address owner, uint256 index) public view returns (uint256) {
+        IERC721EnumerableFacet erc721 = IERC721EnumerableFacet(diamondAddress);
+        return erc721.tokenOfOwnerByIndex(owner, index);
     }
 }`}
 </ExpandableCode>
@@ -666,15 +666,15 @@ contract Deployer {
 ## Best Practices
 
 <Callout type="tip" title="Best Practice">
-- Initialize the facet with a unique storage slot to avoid state collisions.
-- Use `internalTransferFrom` for internal token movements to leverage its optimized logic.
-- Ensure access control mechanisms are correctly implemented in the diamond proxy for functions like `approve` and `transferFrom`.
+- Ensure the `ERC721EnumerableFacet` is correctly initialized with an `ERC721Storage` struct during diamond deployment.
+- Use `ownerOf` and `tokenOfOwnerByIndex` for robust token ownership verification.
+- Leverage `balanceOf` and `totalSupply` for accurate token count tracking.
 </Callout>
 
 ## Security Considerations
 
 <Callout type="warning" title="Security">
-Input validation is crucial for token IDs and addresses to prevent `ERC721NonexistentToken`, `ERC721InvalidOwner`, and other related errors. Ensure proper checks for approvals and ownership are in place before executing transfers. The `safeTransferFrom` functions include checks for receiver contract compatibility, mitigating reentrancy risks from malicious ERC721Receivers.
+This facet implements standard ERC-721 transfer logic. Ensure proper access control is configured at the diamond level for functions like `approve` and `transferFrom`. Input validation for token IDs, addresses, and indices is handled internally by the facet to prevent common errors like non-existent tokens or incorrect ownership. Be mindful of gas costs associated with iterating over large token supplies or balances.
 </Callout>
 
 <div style={{marginTop: "3rem", paddingTop: "2rem", borderTop: "1px solid var(--ifm-color-emphasis-200)"}}>
@@ -724,4 +724,4 @@ Input validation is crucial for token IDs and addresses to prevent `ERC721Nonexi
   <WasThisHelpful pageId="ERC721EnumerableFacet" />
 </div>
 
-<LastUpdated date="2025-12-30T14:41:59.445Z" />
+<LastUpdated date="2025-12-30T15:02:42.597Z" />

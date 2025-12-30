@@ -1,7 +1,7 @@
 ---
 sidebar_position: 2
 title: "DiamondCutMod"
-description: "Manage diamond facets and function selectors."
+description: "Manage diamond facets and function registrations"
 gitSource: "https://github.com/Perfect-Abstractions/Compose/tree/main/src/diamond/DiamondCutMod.sol"
 ---
 
@@ -21,13 +21,13 @@ import GradientText from '@site/src/components/ui/GradientText';
 import GradientButton from '@site/src/components/ui/GradientButton';
 
 <DocSubtitle>
-Manage diamond facets and function selectors.
+Manage diamond facets and function registrations
 </DocSubtitle>
 
 <Callout type="info" title="Key Features">
-- Atomically add, replace, or remove multiple functions and facets.
-- Supports executing an initialization function via delegatecall after a cut.
-- Includes robust error handling for invalid operations like removing non-existent or immutable functions.
+- Dynamically add, replace, and remove facets and their associated functions from the diamond proxy.
+- Supports batch operations for efficient upgrades and modifications.
+- Includes error handling for common cut operation failures, such as attempting to modify non-existent or immutable functions.
 </Callout>
 
 <Callout type="info" title="Module Usage">
@@ -36,7 +36,7 @@ This module provides internal functions for use in your custom facets. Import it
 
 ## Overview
 
-The DiamondCut module provides essential functionality for managing the diamond proxy's facets. It allows for adding, replacing, and removing functions, as well as executing arbitrary calls for initialization or upgrades. This module is crucial for maintaining the diamond's upgradeability and composability.
+The DiamondCutMod provides essential functionality for managing the functions and facets within a Compose diamond. It enables dynamic addition, replacement, and removal of facets, allowing for upgradeability and modularity. This module is crucial for maintaining the diamond's structure and ensuring correct function dispatch.
 
 ---
 
@@ -334,29 +334,31 @@ error RemoveFacetAddressMustBeZeroAddress(address _facet);
 <ExpandableCode language="solidity" maxLines={20} title="Example Implementation">
 {`pragma solidity ^0.8.30;
 
-import {IDiamondCut} from "@compose/modules/diamond-cut/IDiamondCut.sol";
-import {IDiamondLoupe} from "@compose/modules/diamond-loupe/IDiamondLoupe.sol";
-import {FacetCut, FunctionSelector} from "@compose/modules/diamond-cut/types.sol";
+import {IDiamondCutMod} from "@compose/diamond-proxy/modules/diamond-cut/IDiamondCutMod.sol";
+import {Selectors} from "@compose/diamond-proxy/lib/Selectors.sol";
 
 contract MyFacet {
-    // Assume this facet has functions to be added or replaced
-    function myNewFunction() external pure {}
+    using Selectors for uint160;
 
-    function myExistingFunction() external pure {}
+    // Assume IDiamondCutMod is correctly initialized and accessible
+    IDiamondCutMod internal diamondCutMod;
 
-    function upgradeDiamond(address _diamondCutFacetAddress) external {
-        IDiamondCut diamondCut = IDiamondCut(_diamondCutFacetAddress);
+    function addMyNewFunctions(address _facetAddress, bytes[] memory _functionSelectors) external {
+        // Example: Adding new functions to the diamond
+        uint160[] memory selectors = new uint160[](_functionSelectors.length);
+        for (uint i = 0; i < _functionSelectors.length; i++) {
+            selectors[i] = uint160(_functionSelectors[i]);
+        }
+        diamondCutMod.addFunctions(_facetAddress, selectors);
+    }
 
-        // Example: Add a new function
-        FacetCut[] memory cuts = new FacetCut[](1);
-        cuts[0] = FacetCut(
-            address(this), // Facet address
-            FunctionSelector.addSelectors(this.myNewFunction.selector),
-            IDiamondCut.Action.ADD
-        );
-
-        // Execute the diamond cut
-        diamondCut.diamondCut(cuts, address(0), "");
+    function replaceMyExistingFunctions(address _newFacetAddress, address _oldFacetAddress, bytes[] memory _functionSelectors) external {
+        // Example: Replacing existing functions
+        uint160[] memory selectors = new uint160[](_functionSelectors.length);
+        for (uint i = 0; i < _functionSelectors.length; i++) {
+            selectors[i] = uint160(_functionSelectors[i]);
+        }
+        diamondCutMod.replaceFunctions(_newFacetAddress, _oldFacetAddress, selectors);
     }
 }
 `}
@@ -365,19 +367,19 @@ contract MyFacet {
 ## Best Practices
 
 <Callout type="tip" title="Best Practice">
-- Ensure all facet cuts are atomic and revert if any part of the cut fails. Use `diamondCut` with an initialization function call if performing complex upgrades.
-- Carefully validate function selectors and facet addresses before performing a cut to prevent unintended behavior or loss of functionality.
-- Understand the implications of removing functions, especially immutable ones, as this action is irreversible.
+- Use custom errors provided by the module for clear error handling during cut operations.
+- Ensure facet addresses are valid and that selectors provided for add/replace operations correspond to actual function signatures within those facets.
+- Be aware of immutable functions; attempting to remove or replace them will result in a revert.
 </Callout>
 
 ## Integration Notes
 
 <Callout type="success" title="Shared Storage">
-The DiamondCut module directly interacts with the diamond proxy's storage to update the mapping of function selectors to facet addresses. Any changes made through `diamondCut` are immediately reflected in the diamond's ABI. Facets can query the current facet and function mappings using the DiamondLoupe module. It is critical that the `DiamondCut` facet is always present and functional to manage the diamond's upgradeability.
+The DiamondCutMod operates by directly modifying the diamond's internal mapping of selectors to facet addresses. Functions added or replaced via this module become immediately available for dispatch through the diamond proxy. Immutable functions, once registered, cannot be altered by this module. Changes made by `diamondCut` are visible to all facets interacting with the diamond.
 </Callout>
 
 <div style={{marginTop: "3rem", paddingTop: "2rem", borderTop: "1px solid var(--ifm-color-emphasis-200)"}}>
   <WasThisHelpful pageId="DiamondCutMod" />
 </div>
 
-<LastUpdated date="2025-12-30T14:42:38.141Z" />
+<LastUpdated date="2025-12-30T15:03:22.672Z" />

@@ -1,7 +1,7 @@
 ---
 sidebar_position: 1
 title: "NonReentrancyMod"
-description: "Prevent reentrant calls within functions."
+description: "Prevents reentrant calls within functions."
 gitSource: "https://github.com/Perfect-Abstractions/Compose/tree/main/src/libraries/NonReentrancyMod.sol"
 ---
 
@@ -21,13 +21,13 @@ import GradientText from '@site/src/components/ui/GradientText';
 import GradientButton from '@site/src/components/ui/GradientButton';
 
 <DocSubtitle>
-Prevent reentrant calls within functions.
+Prevents reentrant calls within functions.
 </DocSubtitle>
 
 <Callout type="info" title="Key Features">
-- Prevents reentrant calls to functions, enhancing security.
-- Utilizes a simple state variable to track execution status.
-- Provides clear error reporting via the `Reentrancy` custom error.
+- Prevents recursive calls to the same function or other functions protected by the same flag.
+- Utilizes a simple storage variable to track the reentrancy state.
+- Provides `enter` and `exit` functions that are meant to be used with `using for`.
 </Callout>
 
 <Callout type="info" title="Module Usage">
@@ -36,7 +36,7 @@ This module provides internal functions for use in your custom facets. Import it
 
 ## Overview
 
-The NonReentrancy module provides a robust mechanism to prevent reentrant function calls, a common vulnerability in smart contracts. By managing an internal state, it ensures that a function cannot be re-entered before its initial execution completes, safeguarding against unintended state changes and exploits.
+The NonReentrancy module provides essential guards against reentrant function calls. By using `enter` and `exit` within your facets, you ensure that a function cannot be re-entered before its initial execution completes, preventing common reentrancy vulnerabilities.
 
 ---
 
@@ -96,31 +96,21 @@ error Reentrancy();
 <ExpandableCode language="solidity" maxLines={20} title="Example Implementation">
 {`pragma solidity ^0.8.30;
 
-import {LibNonReentrancy} from "@compose/contracts/src/modules/non-reentrancy/LibNonReentrancy.sol";
+import {LibNonReentrancy} from "@compose/contracts/src/libraries/LibNonReentrancy.sol";
 
 contract MyFacet {
     using LibNonReentrancy for uint256;
 
-    uint256 internal _nonReentrancyState;
+    uint256 internal _nonReentrancyFlag; // Storage slot for the flag
 
-    /**
-     * @notice Performs an action that must not be reentrant.
-     */
-    function sensitiveAction() external {
-        _nonReentrancyState.enter(); // Lock reentrancy
+    function doSomethingSensitive() external {
+        _nonReentrancyFlag.enter(); // Lock reentrancy
 
-        // Perform sensitive operations here...
-        // Example: emit Event("Operation started");
+        // ... sensitive operations ...
+        // Example: calling an external contract that might call back
+        // address(externalContract).call{value: msg.value}("");
 
-        _nonReentrancyState.exit(); // Unlock reentrancy
-    }
-
-    /**
-     * @notice A function that might call sensitiveAction, but should be prevented from reentrancy.
-     */
-    function attackerAction() external {
-        // This call will revert if sensitiveAction is already executing
-        sensitiveAction();
+        _nonReentrancyFlag.exit(); // Unlock reentrancy
     }
 }`}
 </ExpandableCode>
@@ -128,19 +118,19 @@ contract MyFacet {
 ## Best Practices
 
 <Callout type="tip" title="Best Practice">
-- Always use `_state.enter()` at the beginning and `_state.exit()` at the end of functions that require reentrancy protection.
-- Ensure the state variable used for non-reentrancy is initialized correctly and is unique to the function or context being protected.
-- Handle the `Reentrancy` error explicitly in calling contracts or front-ends to provide clear feedback to users.
+- Always call `enter` at the beginning of a function and `exit` at the end, ideally within a `try/finally` block to guarantee unlocking.
+- Ensure the storage slot for the reentrancy flag is properly initialized and managed. It should typically be initialized to 0.
+- Use the `Reentrancy` custom error for explicit error handling if needed, although the library handles reverts internally.
 </Callout>
 
 ## Integration Notes
 
 <Callout type="success" title="Shared Storage">
-This module relies on a `uint256` storage slot to track the reentrancy state. Facets integrating this module must declare a `uint256` variable (e.g., `_nonReentrancyState`) and pass it by reference to the `enter` and `exit` functions. The state variable should be unique per protected context to avoid interference between different reentrancy guards. No specific slot ordering is mandated, but consistency within a facet is recommended.
+This library operates on a `uint256` storage variable which acts as a flag. The `enter` function increments this flag, and `exit` decrements it. A reentrancy guard is active if the flag is greater than zero. Facets using this library must declare a `uint256` storage variable to hold the reentrancy flag and use `using LibNonReentrancy for uint256;` to access the `enter` and `exit` functions. The storage slot for this flag must be unique and managed according to Compose's storage slot allocation strategy.
 </Callout>
 
 <div style={{marginTop: "3rem", paddingTop: "2rem", borderTop: "1px solid var(--ifm-color-emphasis-200)"}}>
   <WasThisHelpful pageId="NonReentrancyMod" />
 </div>
 
-<LastUpdated date="2025-12-30T14:42:58.746Z" />
+<LastUpdated date="2025-12-30T15:03:42.930Z" />

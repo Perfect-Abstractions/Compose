@@ -25,14 +25,14 @@ Burn ERC721 tokens within a Compose diamond.
 </DocSubtitle>
 
 <Callout type="info" title="Key Features">
-- Implements the `burn` function for ERC721 tokens.
-- Emits standard `Transfer` and `ApprovalForAll` events upon successful burning.
-- Utilizes the diamond storage pattern for efficient state management.
+- Burns ERC721 tokens, removing them from the contract's tracking.
+- Emits standard `Transfer` and `ApprovalForAll` events as per ERC721 specification.
+- Utilizes inline assembly for direct storage manipulation, enhancing efficiency.
 </Callout>
 
 ## Overview
 
-The ERC721BurnFacet provides the functionality to burn (destroy) ERC721 tokens managed by a Compose diamond. It integrates with the diamond's storage to remove tokens from existence, emitting standard ERC721 events.
+The ERC721BurnFacet provides the functionality to destroy ERC721 tokens. It interacts directly with the diamond's storage to remove tokens from existence, emitting standard ERC721 events. This facet ensures tokens are properly accounted for and removed when burned.
 
 ---
 
@@ -148,18 +148,19 @@ error ERC721InsufficientApproval(address _operator, uint256 _tokenId);
 <ExpandableCode language="solidity" maxLines={20} title="Example Implementation">
 {`pragma solidity ^0.8.30;
 
-import {IERC721BurnFacet} from "@compose/contracts/facets/erc721/IERC721BurnFacet.sol";
+import {IERC721BurnFacet} from "@compose-protocol/diamond-contracts/contracts/facets/ERC721/IERC721BurnFacet.sol";
 
-contract ERC721BurnConsumer {
-    address immutable DIAMOND_FACET;
+contract Burner {
+    address immutable diamondAddress;
 
-    constructor(address _diamondFacet) {
-        DIAMOND_FACET = _diamondFacet;
+    constructor(address _diamondAddress) {
+        diamondAddress = _diamondAddress;
     }
 
     function burnToken(uint256 _tokenId) external {
-        // Call the burn function on the ERC721BurnFacet via the diamond proxy
-        IERC721BurnFacet(DIAMOND_FACET).burn(_tokenId);
+        bytes4 selector = IERC721BurnFacet.burn.selector;
+        (bool success, ) = diamondAddress.call(abi.encodeWithSelector(selector, _tokenId));
+        require(success, "Burn failed");
     }
 }`}
 </ExpandableCode>
@@ -167,14 +168,14 @@ contract ERC721BurnConsumer {
 ## Best Practices
 
 <Callout type="tip" title="Best Practice">
-- Ensure the `ERC721BurnFacet` is correctly cut and added to the diamond proxy during deployment or upgrade.
-- Token burning logic should be carefully reviewed for adherence to ERC721 standards and diamond access control.
+- Ensure the ERC721BurnFacet is correctly initialized with the diamond's storage layout.
+- Verify that the caller has the necessary approval or ownership to burn the specified token before invoking the `burn` function.
 </Callout>
 
 ## Security Considerations
 
 <Callout type="warning" title="Security">
-Access control for the `burn` function should be managed by the diamond's access control mechanism to prevent unauthorized token destruction. Ensure that the `_tokenId` provided to `burn` exists to prevent the `ERC721NonexistentToken` error. The facet relies on the diamond's approval mechanisms for burning tokens owned by other addresses.
+The `burn` function requires that the caller is either the owner of the token or has been approved to burn it. Implement robust access control within your diamond's logic or rely on the underlying ERC721 ownership and approval mechanisms to prevent unauthorized burning.
 </Callout>
 
 <div style={{marginTop: "3rem", paddingTop: "2rem", borderTop: "1px solid var(--ifm-color-emphasis-200)"}}>
@@ -224,4 +225,4 @@ Access control for the `burn` function should be managed by the diamond's access
   <WasThisHelpful pageId="ERC721BurnFacet" />
 </div>
 
-<LastUpdated date="2025-12-30T14:42:01.198Z" />
+<LastUpdated date="2025-12-30T15:02:45.520Z" />

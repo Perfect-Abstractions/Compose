@@ -1,7 +1,7 @@
 ---
 sidebar_position: 2
 title: "AccessControlFacet"
-description: "Manages roles and permissions within the diamond."
+description: "Manage roles and permissions within a diamond."
 gitSource: "https://github.com/Perfect-Abstractions/Compose/tree/main/src/access/AccessControl/AccessControlFacet.sol"
 ---
 
@@ -21,19 +21,19 @@ import GradientText from '@site/src/components/ui/GradientText';
 import GradientButton from '@site/src/components/ui/GradientButton';
 
 <DocSubtitle>
-Manages roles and permissions within the diamond.
+Manage roles and permissions within a diamond.
 </DocSubtitle>
 
 <Callout type="info" title="Key Features">
-- Hierarchical role management with role admins.
-- Support for granting and revoking roles to individual accounts or in batches.
-- Built-in check functions (`hasRole`, `requireRole`) for easy permission verification.
-- Renounce role functionality for accounts to give up their own permissions.
+- Role-based access control (RBAC) for granular permissions.
+- Support for granting and revoking roles to/from accounts.
+- Batch operations for efficient role management of multiple accounts.
+- Default admin role for bootstrapping access control.
 </Callout>
 
 ## Overview
 
-The AccessControlFacet provides a robust role-based access control (RBAC) system for Compose diamonds. It allows for granular permission management, enabling administrators to grant, revoke, and renounce roles for specific accounts. This facet is crucial for securing administrative functions and controlling access to sensitive operations within the diamond.
+The AccessControlFacet provides a robust role-based access control (RBAC) system. It allows defining roles, assigning them to accounts, and enforcing permissions based on these roles. This facet is crucial for orchestrating access to sensitive functions within a diamond, ensuring only authorized entities can perform specific actions.
 
 ---
 
@@ -478,25 +478,26 @@ error AccessControlUnauthorizedSender(address _sender, address _account);
 <ExpandableCode language="solidity" maxLines={20} title="Example Implementation">
 {`pragma solidity ^0.8.30;
 
-import {DiamondProxy, DiamondCut} from "@compose/diamond-proxy/contracts/DiamondProxy.sol";
-import {AccessControlFacet} from "@compose/diamond-proxy/contracts/facets/AccessControlFacet.sol";
+import {DiamondLoupeFacet} from "@compose/diamond-loupe/contracts/DiamondLoupeFacet.sol";
+import {AccessControlFacet} from "@compose/access-control/contracts/AccessControlFacet.sol";
 
-contract MyDiamond is DiamondProxy {
-    function upgrade() external {
-        // Assume diamondCut is already set up with the AccessControlFacet selector
-        // and implementation address.
-        // diamondCut.diamondCut(...);
+// Assume diamond is already deployed and functions are added
+contract Caller {
+    address immutable DIAMOND_ADDRESS;
+
+    constructor(address _diamondAddress) {
+        DIAMOND_ADDRESS = _diamondAddress;
     }
 
-    function grantAdminRole(address _account) external {
-        AccessControlFacet accessControl = AccessControlFacet(address(this));
-        bytes32 adminRole = accessControl.getRoleAdmin(AccessControlFacet.DEFAULT_ADMIN_ROLE());
-        accessControl.grantRole(adminRole, _account);
+    function grantAdminRole() external {
+        AccessControlFacet accessControl = AccessControlFacet(DIAMOND_ADDRESS);
+        bytes32 adminRole = accessControl.getRoleAdmin(AccessControlFacet.DEFAULT_ADMIN_ROLE);
+        accessControl.grantRole(adminRole, address(this));
     }
 
-    function hasRootAccess(address _account) external view returns (bool) {
-        AccessControlFacet accessControl = AccessControlFacet(address(this));
-        return accessControl.hasRole(AccessControlFacet.DEFAULT_ADMIN_ROLE(), _account);
+    function checkMyRole() external view {
+        AccessControlFacet accessControl = AccessControlFacet(DIAMOND_ADDRESS);
+        require(accessControl.hasRole(AccessControlFacet.DEFAULT_ADMIN_ROLE, msg.sender), "Caller: Not admin");
     }
 }`}
 </ExpandableCode>
@@ -504,15 +505,15 @@ contract MyDiamond is DiamondProxy {
 ## Best Practices
 
 <Callout type="tip" title="Best Practice">
-- Ensure the `DEFAULT_ADMIN_ROLE` is granted to the initial deployer or multisig for diamond ownership.
-- Use role hierarchies by setting role admins appropriately to delegate permission management.
-- Batch role grants and revokes (`grantRoleBatch`, `revokeRoleBatch`) for gas efficiency when managing multiple accounts.
+- Initialize roles and grant initial permissions during diamond deployment or upgrade. Use `grantRole` for single assignments and `grantRoleBatch` for multiple accounts to the same role.
+- Define role hierarchies carefully using `setRoleAdmin` to ensure proper administrative control over role assignments.
+- Integrate `requireRole` checks directly within functions that require specific permissions, ensuring granular access control.
 </Callout>
 
 ## Security Considerations
 
 <Callout type="warning" title="Security">
-Access control checks are enforced at the function level. Ensure that callers attempting to manage roles (grant, revoke, set admin) possess the necessary administrative privileges for the target role. Reentrancy is not a direct concern for role management functions, but ensure that any functions that *grant* roles do not have reentrancy vulnerabilities if they call external contracts. All role operations are protected against unauthorized callers via `AccessControlUnauthorizedAccount` and `AccessControlUnauthorizedSender` errors.
+Ensure that the caller is authorized before granting or revoking roles by checking their current role membership. Use `requireRole` to protect sensitive functions. Be mindful of gas costs for batch operations, especially with a large number of accounts. The `DEFAULT_ADMIN_ROLE` is critical for initial setup and should be managed securely.
 </Callout>
 
 <div style={{marginTop: "3rem", paddingTop: "2rem", borderTop: "1px solid var(--ifm-color-emphasis-200)"}}>
@@ -556,4 +557,4 @@ Access control checks are enforced at the function level. Ensure that callers at
   <WasThisHelpful pageId="AccessControlFacet" />
 </div>
 
-<LastUpdated date="2025-12-30T14:41:02.648Z" />
+<LastUpdated date="2025-12-30T15:01:42.964Z" />
