@@ -1,0 +1,10 @@
+{
+  "label": "ERC-1155",
+  "position": 3,
+  "collapsible": true,
+  "collapsed": true,
+  "link": {
+    "type": "doc",
+    "id": "library/token/ERC1155/index"
+  }
+}

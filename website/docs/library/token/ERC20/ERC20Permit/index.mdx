@@ -1,0 +1,29 @@
+---
+title: "ERC-20 Permit"
+description: "ERC-20 Permit extension for ERC-20 tokens."
+---
+
+import DocCard, { DocCardGrid } from '@site/src/components/docs/DocCard';
+import DocSubtitle from '@site/src/components/docs/DocSubtitle';
+import Icon from '@site/src/components/ui/Icon';
+
+<DocSubtitle>
+  ERC-20 Permit extension for ERC-20 tokens.
+</DocSubtitle>
+
+<DocCardGrid columns={2}>
+  <DocCard
+    title="ERC20PermitFacet"
+    description={"EIP-2612 permit functionality for ERC-20 tokens"}
+    href="/docs/library/token/ERC20/ERC20Permit/ERC20PermitFacet"
+    icon={<Icon name="book" size={28} />}
+    size="medium"
+  />
+  <DocCard
+    title="ERC20PermitMod"
+    description={"ERC-2612 permit and domain separator logic"}
+    href="/docs/library/token/ERC20/ERC20Permit/ERC20PermitMod"
+    icon={<Icon name="book" size={28} />}
+    size="medium"
+  />
+</DocCardGrid>
