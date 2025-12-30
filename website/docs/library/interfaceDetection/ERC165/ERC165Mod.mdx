@@ -25,9 +25,9 @@ Implement ERC-165 interface detection.
 </DocSubtitle>
 
 <Callout type="info" title="Key Features">
-- Implements the ERC-165 standard for interface detection.
-- Allows facets to declare support for specific interfaces.
-- Facilitates dynamic discovery of facet capabilities within a diamond.
+- Implements ERC-165 standard for interface detection.
+- Allows facets to register and query supported interfaces.
+- Utilizes internal library functions for efficient interface management.
 </Callout>
 
 <Callout type="info" title="Module Usage">
@@ -36,7 +36,7 @@ This module provides internal functions for use in your custom facets. Import it
 
 ## Overview
 
-The ERC165Mod provides the necessary storage and internal functions to comply with the ERC-165 standard for interface detection. By registering supported interfaces during initialization, facets can leverage this module to declare their capabilities, enhancing composability and discoverability within the diamond.
+The ERC165Mod provides the necessary storage and logic to implement the ERC-165 standard for interface detection within a Compose diamond. By registering supported interfaces during initialization, facets can signal their capabilities, enabling external contracts to query them efficiently.
 
 ---
 
@@ -116,16 +116,22 @@ Register that a contract supports an interface Call this function during initial
 <ExpandableCode language="solidity" maxLines={20} title="Example Implementation">
 {`pragma solidity ^0.8.30;
 
-import {LibERC165, IERC165} from "@compose/modules/erc165/LibERC165.sol";
+import {ERC165Mod, IERC165Mod} from "@compose/modules/ERC165/ERC165Mod.sol";
 
 contract MyFacet {
-    function initialize() external {
-        // Register ERC721 interface support during facet initialization
-        LibERC165.registerInterface(type(IERC721).interfaceId);
+    struct MyFacetStorage {
+        ERC165Mod.ERC165Storage erc165Data;
+        // ... other storage variables
     }
 
-    function supportsInterface(bytes4 interfaceId) external view override(IERC165) returns (bool) {
-        return LibERC165.supportsInterface(interfaceId);
+    function initialize(MyFacetStorage storage self) external {
+        // Register the interfaces this facet supports
+        ERC165Mod.registerInterface(self.erc165Data, type(IERC721).interfaceId);
+        ERC165Mod.registerInterface(self.erc165Data, type(IERC1155).interfaceId);
+    }
+
+    function supportsInterface(bytes4 _interfaceId) external view returns (bool) {
+        return ERC165Mod.supportsInterface(_interface(self).erc165Data, _interfaceId);
     }
 }`}
 </ExpandableCode>
@@ -133,19 +139,19 @@ contract MyFacet {
 ## Best Practices
 
 <Callout type="tip" title="Best Practice">
-- Register all supported interfaces during facet initialization to ensure accurate reporting.
-- Call `supportsInterface` to check for interface support, leveraging the module's internal logic.
-- Ensure the `ERC165Mod` storage is correctly positioned and initialized within the diamond's deployment process.
+- Call `registerInterface` during facet initialization to declare supported interfaces.
+- Use `supportsInterface` to check if a given interface ID is supported.
+- Ensure the `ERC165Storage` struct is correctly laid out and initialized.
 </Callout>
 
 ## Integration Notes
 
 <Callout type="success" title="Shared Storage">
-The ERC165Mod utilizes a dedicated storage slot for its `ERC165Storage` struct. Facets can access this storage via the `getStorage` internal function. Interface IDs are registered using `LibERC165.registerInterface` during facet initialization. The `supportsInterface` function checks against the registered interfaces, including the diamond's own capabilities if it inherits from `IDiamondCut`.
+The ERC165Mod requires a dedicated storage slot for its `ERC165Storage` struct. This struct must be initialized by the facet that incorporates the ERC165Mod. Facets can then call `ERC165Mod.registerInterface` during their initialization to populate this storage with supported interface IDs. The `supportsInterface` function can then be called by any facet to check for interface support based on the registered data.
 </Callout>
 
 <div style={{marginTop: "3rem", paddingTop: "2rem", borderTop: "1px solid var(--ifm-color-emphasis-200)"}}>
   <WasThisHelpful pageId="ERC165Mod" />
 </div>
 
-<LastUpdated date="2025-12-28T04:48:51.185Z" />
+<LastUpdated date="2025-12-30T14:42:23.339Z" />

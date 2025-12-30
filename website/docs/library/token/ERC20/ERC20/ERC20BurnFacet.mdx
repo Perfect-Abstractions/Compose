@@ -1,7 +1,7 @@
 ---
 sidebar_position: 3
 title: "ERC20BurnFacet"
-description: "Manage and burn ERC-20 tokens within a Compose diamond."
+description: "Burn ERC20 tokens from caller or allowance."
 gitSource: "https://github.com/Perfect-Abstractions/Compose/tree/main/src/token/ERC20/ERC20/ERC20BurnFacet.sol"
 ---
 
@@ -21,18 +21,18 @@ import GradientText from '@site/src/components/ui/GradientText';
 import GradientButton from '@site/src/components/ui/GradientButton';
 
 <DocSubtitle>
-Manage and burn ERC-20 tokens within a Compose diamond.
+Burn ERC20 tokens from caller or allowance.
 </DocSubtitle>
 
 <Callout type="info" title="Key Features">
-- Allows burning of ERC-20 tokens directly from a diamond proxy.
-- Supports burning from the caller's balance and from other accounts via allowance.
-- Emits `Transfer` events to the zero address upon successful burning.
+- Supports burning tokens directly from the caller's balance.
+- Enables burning tokens from another account using pre-approved allowances.
+- Emits `Transfer` events to the zero address upon successful burning, conforming to ERC20 standards.
 </Callout>
 
 ## Overview
 
-The ERC20BurnFacet provides functionality to destroy ERC-20 tokens directly within a Compose diamond. It allows users to burn their own tokens or burn tokens from other accounts if they have sufficient allowance. This facet integrates with the standard ERC-20 token logic managed by the diamond's storage.
+The ERC20BurnFacet enables the burning of ERC20 tokens within a Compose diamond. It provides functions to reduce token supply by destroying tokens directly from the caller's balance or by utilizing approved allowances.
 
 ---
 
@@ -186,28 +186,21 @@ error ERC20InsufficientAllowance(address _spender, uint256 _allowance, uint256 _
 <ExpandableCode language="solidity" maxLines={20} title="Example Implementation">
 {`pragma solidity ^0.8.30;
 
-import {IDiamondCut} from "@compose-protocol/diamond-contracts/contracts/interfaces/IDiamondCut.sol";
+import {IERC20BurnFacet} from "@compose-protocol/diamond-contracts/contracts/facets/erc20/ERC20BurnFacet.sol";
 
-// Assuming you have a diamond proxy deployed and the ERC20BurnFacet is added
-contract Deployer {
+contract ERC20BurnConsumer {
     address immutable diamondProxy;
 
     constructor(address _diamondProxy) {
         diamondProxy = _diamondProxy;
     }
 
-    // Example of burning tokens from caller's balance
-    function burnMyTokens(address _tokenAddress, uint256 _amount) external {
-        bytes4 selector = ERC20BurnFacet.burn.selector;
-        (bool success, ) = diamondProxy.call(abi.encodeWithSelector(selector, _tokenAddress, _amount));
-        require(success, "Burn failed");
+    function consumeBurn(address _token, uint256 _amount) external {
+        IERC20BurnFacet(diamondProxy).burn(_token, _amount);
     }
 
-    // Example of burning tokens from another account using allowance
-    function burnFromAccount(address _tokenAddress, address _fromAccount, uint256 _amount) external {
-        bytes4 selector = ERC20BurnFacet.burnFrom.selector;
-        (bool success, ) = diamondProxy.call(abi.encodeWithSelector(selector, _tokenAddress, _fromAccount, _amount));
-        require(success, "Burn from failed");
+    function consumeBurnFrom(address _token, address _from, uint256 _amount) external {
+        IERC20BurnFacet(diamondProxy).burnFrom(_token, _from, _amount);
     }
 }`}
 </ExpandableCode>
@@ -215,15 +208,15 @@ contract Deployer {
 ## Best Practices
 
 <Callout type="tip" title="Best Practice">
-- Ensure the `ERC20BurnFacet` is added to the diamond proxy with appropriate selectors.
-- Token addresses are validated by the underlying ERC-20 implementation called by the facet.
-- Manage allowances correctly before calling `burnFrom`.
+- Ensure the ERC20BurnFacet is correctly initialized within the diamond deployment process.
+- Utilize `burnFrom` only after ensuring sufficient allowance has been granted via `ERC20ApproveFacet`.
+- Handle `ERC20InsufficientBalance` and `ERC20InsufficientAllowance` errors appropriately in consumer contracts.
 </Callout>
 
 ## Security Considerations
 
 <Callout type="warning" title="Security">
-The facet relies on the underlying ERC-20 token contract's logic for balance and allowance checks. Ensure the correct token address is passed to avoid unintended burns. Insufficient balance or allowance will revert with `ERC20InsufficientBalance` or `ERC20InsufficientAllowance` respectively. Reentrancy is not a concern as the facet does not make external calls to untrusted contracts.
+This facet relies on the underlying ERC20 token contract's balance and allowance logic. Input validation for amounts should be handled by the caller. Ensure the diamond's access control mechanisms prevent unauthorized calls to burn or burnFrom functions if specific restrictions are desired beyond standard ERC20 behavior.
 </Callout>
 
 <div style={{marginTop: "3rem", paddingTop: "2rem", borderTop: "1px solid var(--ifm-color-emphasis-200)"}}>
@@ -231,19 +224,19 @@ The facet relies on the underlying ERC-20 token contract's logic for balance and
     items={[
       {
         title: "ERC20PermitFacet",
-        href: "/docs/library/token/ERC20/ERC20Permit",
+        href: "/docs/library/token/ERC20/ERC20Permit/ERC20PermitFacet",
         description: "Related facet in token",
         icon: "💎"
       },
       {
         title: "ERC20Facet",
-        href: "/docs/library/token/ERC20/ERC20",
+        href: "/docs/library/token/ERC20/ERC20/ERC20Facet",
         description: "Related facet in token",
         icon: "💎"
       },
       {
         title: "ERC20Facet",
-        href: "/docs/library/token/ERC20/ERC20",
+        href: "/docs/library/token/ERC20/ERC20/ERC20Facet",
         description: "Base facet for ERC20BurnFacet",
         icon: "💎"
       }
@@ -255,4 +248,4 @@ The facet relies on the underlying ERC-20 token contract's logic for balance and
   <WasThisHelpful pageId="ERC20BurnFacet" />
 </div>
 
-<LastUpdated date="2025-12-28T04:47:51.902Z" />
+<LastUpdated date="2025-12-30T14:41:22.351Z" />

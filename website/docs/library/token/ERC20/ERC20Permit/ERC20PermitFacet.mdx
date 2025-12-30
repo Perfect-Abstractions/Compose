@@ -1,7 +1,7 @@
 ---
 sidebar_position: 2
 title: "ERC20PermitFacet"
-description: "Enables EIP-2612 ERC-20 permit functionality."
+description: "Enables EIP-2612 permit functionality for ERC-20 tokens."
 gitSource: "https://github.com/Perfect-Abstractions/Compose/tree/main/src/token/ERC20/ERC20Permit/ERC20PermitFacet.sol"
 ---
 
@@ -21,18 +21,18 @@ import GradientText from '@site/src/components/ui/GradientText';
 import GradientButton from '@site/src/components/ui/GradientButton';
 
 <DocSubtitle>
-Enables EIP-2612 ERC-20 permit functionality.
+Enables EIP-2612 permit functionality for ERC-20 tokens.
 </DocSubtitle>
 
 <Callout type="info" title="Key Features">
-- Implements EIP-2612 `permit` function for gasless approvals.
-- Utilizes nonces to prevent signature replay attacks.
-- Provides `DOMAIN_SEPARATOR` for correct signature encoding.
+- Implements EIP-2612 permit functionality for ERC-20 token approvals.
+- Provides `nonces` and `DOMAIN_SEPARATOR` for secure signature verification.
+- Allows token holders to grant allowances off-chain via signed messages.
 </Callout>
 
 ## Overview
 
-The ERC20PermitFacet provides EIP-2612 compliant permit functionality, allowing users to grant allowances to token spenders via signed messages. This enhances user experience by reducing the need for multiple on-chain transactions to approve token spending.
+This facet integrates EIP-2612 permit functionality, allowing token holders to grant allowances via signed messages. It provides the necessary functions to manage nonces, retrieve the domain separator, and process permit transactions, enhancing composability and user experience for token approvals.
 
 ---
 
@@ -272,54 +272,47 @@ error ERC20InvalidSpender(address _spender);
 <ExpandableCode language="solidity" maxLines={20} title="Example Implementation">
 {`pragma solidity ^0.8.30;
 
-import {IERC20Permit} from "@openzeppelin/contracts/token/ERC20/extensions/draft-IERC20Permit.sol";
-import {ERC20PermitFacet} from "./ERC20PermitFacet.sol";
+import { IERC20Permit } from "@openzeppelin/contracts/token/ERC20/extensions/IERC20Permit.sol";
+import { DiamondLoupeFacet } from "../DiamondLoupeFacet.sol"; // Assuming DiamondLoupeFacet is available
 
-contract MyDiamond is IERC20Permit {
-    ERC20PermitFacet public erc20PermitFacet;
+contract ERC20PermitConsumer {
+    address immutable DIAMOND_ADDRESS;
 
-    // ... diamond deployment and facet setup ...
-
-    function setErc20PermitFacet(address _facetAddress) external onlyOwner {
-        erc20PermitFacet = ERC20PermitFacet(_facetAddress);
+    constructor(address diamondAddress) {
+        DIAMOND_ADDRESS = diamondAddress;
     }
 
-    function permit(address owner, address spender, uint256 value, uint256 deadline, uint8 v, bytes32 r, bytes32 s) external override {
-        // Delegate to the ERC20PermitFacet
-        // Ensure your diamond's router correctly dispatches this call to the facet
-        // The actual dispatch logic depends on your diamond implementation.
-        // For demonstration, assuming a direct call if router is not shown:
-        // require(msg.sender == address(this), \"Diamond: not router\"); // Example router guard
-        // erc20PermitFacet.permit(owner, spender, value, deadline, v, r, s);
+    // Example: Checking a user's nonce
+    function getUserNonce(address user) public view returns (uint256) {
+        bytes4 selector = bytes4(keccak256("nonces(address)"));
+        (bool success, bytes memory data) = DIAMOND_ADDRESS.staticcall(abi.encodeWithSelector(selector, user));
+        require(success, "Failed to get nonce");
+        return abi.decode(data, (uint256));
     }
 
-    // Implement other IERC20Permit functions that delegate to the underlying ERC20 token
-    // or are handled by other facets.
-
-    function nonces(address owner) public view override returns (uint256) {
-        return erc20PermitFacet.nonces(owner);
+    // Example: Approving via permit (requires user's signature)
+    function approveWithPermit(address token, address spender, uint256 amount, uint256 deadline, bytes memory signature) external {
+        bytes4 selector = bytes4(keccak256("permit(address,address,uint256,uint256,uint8,bytes32,bytes32)"));
+        // Note: The actual permit function signature might vary slightly based on implementation
+        // This is a simplified representation for demonstration.
+        (bool success, ) = DIAMOND_ADDRESS.call(abi.encodeWithSelector(selector, token, msg.sender, spender, amount, deadline, signature));
+        require(success, "Permit approval failed");
     }
-
-    function DOMAIN_SEPARATOR() public view returns (bytes32) {
-        return erc20PermitFacet.DOMAIN_SEPARATOR();
-    }
-
-    // ... other diamond functions ...
 }`}
 </ExpandableCode>
 
 ## Best Practices
 
 <Callout type="tip" title="Best Practice">
-- Ensure the `ERC20PermitFacet` is correctly initialized with the underlying ERC20 token contract address during deployment if applicable.
-- The `permit` function should be routed by the diamond proxy to this facet.
-- Users will call the diamond's `permit` function, which then delegates to this facet.
+- Ensure the `DOMAIN_SEPARATOR` is correctly configured and unique per chain and contract instance to prevent replay attacks.
+- Use the `nonces` function to retrieve the current nonce for an owner before signing a permit.
+- Validate the `deadline` parameter to prevent stale permit approvals.
 </Callout>
 
 ## Security Considerations
 
 <Callout type="warning" title="Security">
-The `permit` function relies on signature verification. Ensure the underlying ERC20 token contract correctly handles allowance changes. The `nonces` and `DOMAIN_SEPARATOR` are critical for signature validity and should not be manipulated externally. Access control for the `permit` function itself is typically handled by the diamond proxy's router and should enforce that users can only permit on their own behalf or on behalf of addresses they control.
+The `permit` function is critical and handles token allowances. Ensure that signature verification logic within the facet is robust and correctly implemented. The `ERC2612InvalidSignature` error indicates a problem with the provided signature, which could stem from incorrect signing or nonce management. Input validation on `spender`, `amount`, and `deadline` is essential to prevent unexpected state changes.
 </Callout>
 
 <div style={{marginTop: "3rem", paddingTop: "2rem", borderTop: "1px solid var(--ifm-color-emphasis-200)"}}>
@@ -327,7 +320,7 @@ The `permit` function relies on signature verification. Ensure the underlying ER
     items={[
       {
         title: "ERC20PermitMod",
-        href: "/docs/library/token/ERC20/ERC20Permit",
+        href: "/docs/library/token/ERC20/ERC20Permit/ERC20PermitMod",
         description: "Module used by ERC20PermitFacet",
         icon: "📦"
       }
@@ -339,4 +332,4 @@ The `permit` function relies on signature verification. Ensure the underlying ER
   <WasThisHelpful pageId="ERC20PermitFacet" />
 </div>
 
-<LastUpdated date="2025-12-28T04:47:39.753Z" />
+<LastUpdated date="2025-12-30T14:41:09.159Z" />

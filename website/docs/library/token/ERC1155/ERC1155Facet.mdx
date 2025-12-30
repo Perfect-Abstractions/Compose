@@ -1,7 +1,7 @@
 ---
 sidebar_position: 2
 title: "ERC1155Facet"
-description: "Manages ERC-1155 multi-token standards."
+description: "Manages fungible and non-fungible tokens with ERC-1155 standard."
 gitSource: "https://github.com/Perfect-Abstractions/Compose/tree/main/src/token/ERC1155/ERC1155Facet.sol"
 ---
 
@@ -21,19 +21,18 @@ import GradientText from '@site/src/components/ui/GradientText';
 import GradientButton from '@site/src/components/ui/GradientButton';
 
 <DocSubtitle>
-Manages ERC-1155 multi-token standards.
+Manages fungible and non-fungible tokens with ERC-1155 standard.
 </DocSubtitle>
 
 <Callout type="info" title="Key Features">
-- Supports multiple token types within a single facet.
-- Implements batched transfer and balance checking functions for efficiency.
-- Provides URI management for token metadata.
-- Emits standard ERC-1155 events for off-chain tracking.
+- Supports both fungible and non-fungible tokens under a single standard.
+- Provides efficient batch operations for transfers and balance checks.
+- Allows for dynamic token URI resolution based on token ID and base URI.
 </Callout>
 
 ## Overview
 
-The ERC1155Facet provides full ERC-1155 multi-token standard functionality for a Compose diamond. It enables the management of multiple token types within a single contract, including balance tracking, approvals, and transfers, facilitating complex token economies and gaming applications.
+The ERC1155Facet provides a comprehensive implementation of the ERC-1155 multi-token standard within a Compose diamond. It enables the management of various token types, including fungible and non-fungible assets, supporting batch transfers and approval mechanisms. This facet allows for flexible tokenURI management and integrates seamlessly with the diamond's storage pattern.
 
 ---
 
@@ -606,26 +605,32 @@ import {IERC1155Facet} from "@compose/contracts/facets/ERC1155/IERC1155Facet.sol
 import {IDiamondCut} from "@compose/contracts/diamond/IDiamondCut.sol";
 
 contract ERC1155Deployer {
-    address immutable diamondAddress;
+    IDiamondCut public diamondCut;
 
-    constructor(address _diamondAddress) {
-        diamondAddress = _diamondAddress;
+    constructor(address _diamondCut) {
+        diamondCut = IDiamondCut(_diamondCut);
     }
 
-    function deployERC1155Facet(address _erc1155FacetAddress) external {
-        IDiamondCut.FacetCut[] memory cuts = new IDiamondCut.FacetCut[](1);
-        cuts[0] = IDiamondCut.FacetCut({
-            facetAddress: _erc1155FacetAddress,
-            action: IDiamondCut.Action.ADD,
-            functionSelectors: Diamond.facetFunctionSelectors(IERC1155Facet)
+    function addERC1155Facet() public {
+        address erc1155Facet = address(new ERC1155Facet()); // Replace with actual deployment of your facet
+        bytes32[] memory selectors = new bytes32[](8);
+        selectors[0] = ERC1155Facet.getStorage.selector;
+        selectors[1] = ERC1155Facet.uri.selector;
+        selectors[2] = ERC1155Facet.balanceOf.selector;
+        selectors[3] = ERC1155Facet.balanceOfBatch.selector;
+        selectors[4] = ERC1155Facet.setApprovalForAll.selector;
+        selectors[5] = ERC1155Facet.isApprovedForAll.selector;
+        selectors[6] = ERC1155Facet.safeTransferFrom.selector;
+        selectors[7] = ERC1155Facet.safeBatchTransferFrom.selector;
+
+        IDiamondCut.FacetCut[] memory cut = new IDiamondCut.FacetCut[](1);
+        cut[0] = IDiamondCut.FacetCut({
+            facetAddress: erc1155Facet,
+            action: IDiamondCut.FacetCutAction.ADD,
+            selectors: selectors
         });
-        // Assume diamondCut is callable on the diamond proxy
-        // IDiamondCut(diamondAddress).diamondCut(cuts, address(0), "");
-    }
 
-    function getTokenURI(uint256 _id) external view returns (string memory) {
-        // Assume IERC1155Facet is the interface for the ERC1155 facet
-        return IERC1155Facet(diamondAddress).uri(_id);
+        diamondCut.diamondCut(cut, address(0), "");
     }
 }`}
 </ExpandableCode>
@@ -633,15 +638,15 @@ contract ERC1155Deployer {
 ## Best Practices
 
 <Callout type="tip" title="Best Practice">
-- Initialize or set the base URI and any token-specific URIs using the `uri` function's logic if desired, before deploying the facet or immediately after.
-- Manage approvals carefully using `setApprovalForAll` to control operator permissions for token transfers.
-- Ensure `safeTransferFrom` and `safeBatchTransferFrom` are used for transfers to prevent accidental loss of tokens due to incorrect handling.
+- Initialize ERC-1155 specific storage (like baseURI or tokenURIs) after facet deployment using appropriate initializer functions or separate facets.
+- Carefully manage approvals using `setApprovalForAll` to grant necessary permissions to operators.
+- Ensure all token transfers are validated for sufficient balance before execution, especially in batch operations.
 </Callout>
 
 ## Security Considerations
 
 <Callout type="warning" title="Security">
-Access control for setting URIs or approvals is managed by the caller's permissions within the diamond's access control system. Standard ERC-1155 checks for sufficient balance and approvals are enforced by the facet functions themselves. Users should be cautious when granting `setApprovalForAll` permissions to prevent unauthorized token management.
+Ensure that the `operator` in `setApprovalForAll` is a trusted address. Implement proper access control mechanisms for functions that modify token URIs or set global base URIs. Validate all input parameters, especially token IDs, amounts, sender, and receiver addresses, to prevent unexpected behavior or exploits. Reentrancy is not an issue as the facet adheres to the Checks-Effects-Interactions pattern and does not make external calls before state changes.
 </Callout>
 
 <div style={{marginTop: "3rem", paddingTop: "2rem", borderTop: "1px solid var(--ifm-color-emphasis-200)"}}>
@@ -649,31 +654,31 @@ Access control for setting URIs or approvals is managed by the caller's permissi
     items={[
       {
         title: "ERC1155Mod",
-        href: "/docs/library/token/ERC1155",
+        href: "/docs/library/token/ERC1155/ERC1155Mod",
         description: "Module used by ERC1155Facet",
         icon: "📦"
       },
       {
         title: "ERC20PermitFacet",
-        href: "/docs/library/token/ERC20/ERC20Permit",
+        href: "/docs/library/token/ERC20/ERC20Permit/ERC20PermitFacet",
         description: "Related facet in token",
         icon: "💎"
       },
       {
         title: "ERC20Facet",
-        href: "/docs/library/token/ERC20/ERC20",
+        href: "/docs/library/token/ERC20/ERC20/ERC20Facet",
         description: "Related facet in token",
         icon: "💎"
       },
       {
         title: "ERC20BurnFacet",
-        href: "/docs/library/token/ERC20/ERC20",
+        href: "/docs/library/token/ERC20/ERC20/ERC20BurnFacet",
         description: "Related facet in token",
         icon: "💎"
       },
       {
         title: "ERC20BridgeableFacet",
-        href: "/docs/library/token/ERC20/ERC20Bridgeable",
+        href: "/docs/library/token/ERC20/ERC20Bridgeable/ERC20BridgeableFacet",
         description: "Related facet in token",
         icon: "💎"
       }
@@ -685,4 +690,4 @@ Access control for setting URIs or approvals is managed by the caller's permissi
   <WasThisHelpful pageId="ERC1155Facet" />
 </div>
 
-<LastUpdated date="2025-12-28T04:48:07.902Z" />
+<LastUpdated date="2025-12-30T14:41:37.366Z" />
