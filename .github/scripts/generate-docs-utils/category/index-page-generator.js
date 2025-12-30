@@ -108,14 +108,17 @@ function getCategoryItems(outputDir, relativePath, generateLabel, generateDescri
  * @param {Array} items - Array of items to display
  * @returns {string} Generated MDX content
  */
-function generateIndexMdxContent(label, description, items) {
+function generateIndexMdxContent(label, description, items, hideFromSidebar = false) {
   // Escape quotes in label and description for frontmatter
   const escapedLabel = label.replace(/"/g, '\\"');
   const escapedDescription = description.replace(/"/g, '\\"');
   
+  // Add sidebar_class_name: "hidden" to hide from sidebar if requested
+  const sidebarClass = hideFromSidebar ? '\nsidebar_class_name: "hidden"' : '';
+  
   let mdxContent = `---
 title: "${escapedLabel}"
-description: "${escapedDescription}"
+description: "${escapedDescription}"${sidebarClass}
 ---
 
 import DocCard, { DocCardGrid } from '@site/src/components/docs/DocCard';
@@ -174,7 +177,8 @@ function createCategoryIndexFile(
   description,
   generateLabel,
   generateDescription,
-  overwrite = false
+  overwrite = false,
+  hideFromSidebar = false
 ) {
   const indexFile = path.join(outputDir, 'index.mdx');
 
@@ -187,7 +191,7 @@ function createCategoryIndexFile(
   const items = getCategoryItems(outputDir, relativePath, generateLabel, generateDescription);
 
   // Generate MDX content
-  const mdxContent = generateIndexMdxContent(label, description, items);
+  const mdxContent = generateIndexMdxContent(label, description, items, hideFromSidebar);
 
   // Ensure directory exists
   fs.mkdirSync(outputDir, { recursive: true });

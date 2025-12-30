@@ -312,9 +312,10 @@ function computeSlug(outputDir, libraryDir) {
  * @param {string} label - Category label
  * @param {string} description - Category description
  * @param {boolean} overwrite - Whether to overwrite existing files (default: false)
+ * @param {boolean} hideFromSidebar - Whether to hide the index page from sidebar (default: false)
  * @returns {boolean} True if file was created/updated, false if skipped
  */
-function createCategoryIndexFile(outputDir, relativePath, label, description, overwrite = false) {
+function createCategoryIndexFile(outputDir, relativePath, label, description, overwrite = false, hideFromSidebar = false) {
   return createIndexFile(
     outputDir,
     relativePath,
@@ -322,7 +323,8 @@ function createCategoryIndexFile(outputDir, relativePath, label, description, ov
     description,
     generateLabel,
     generateDescription,
-    overwrite
+    overwrite,
+    hideFromSidebar
   );
 }
 
@@ -391,7 +393,9 @@ function ensureBaseCategory(libraryDir) {
   const description = 'API reference for all Compose modules and facets.';
 
   // Create index.mdx for base library category
-  createCategoryIndexFile(libraryDir, '', label, description, false);
+  // Hide from sidebar (sidebar_position: -1) so it doesn't appear as a duplicate
+  // The category link in _category_.json will still work
+  createIndexFile(libraryDir, '', label, description, generateLabel, generateDescription, false, true);
 
   const baseCategory = {
     label,
