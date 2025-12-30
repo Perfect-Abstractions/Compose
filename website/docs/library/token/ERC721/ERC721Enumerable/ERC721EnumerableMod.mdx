@@ -1,7 +1,7 @@
 ---
 sidebar_position: 1
 title: "ERC721EnumerableMod"
-description: "Adds enumerable ERC-721 token functionality to diamonds."
+description: "Internal logic for enumerable ERC721 tokens."
 gitSource: "https://github.com/Perfect-Abstractions/Compose/tree/main/src/token/ERC721/ERC721Enumerable/ERC721EnumerableMod.sol"
 ---
 
@@ -21,13 +21,13 @@ import GradientText from '@site/src/components/ui/GradientText';
 import GradientButton from '@site/src/components/ui/GradientButton';
 
 <DocSubtitle>
-Adds enumerable ERC-721 token functionality to diamonds.
+Internal logic for enumerable ERC721 tokens.
 </DocSubtitle>
 
 <Callout type="info" title="Key Features">
-- Manages the minting and burning of ERC-721 tokens, updating internal enumeration lists.
-- Provides `transferFrom` functionality that respects ERC-721 ownership and approval rules, while also updating enumerable state.
-- Offers a `getStorage` function for direct access to the ERC-721 enumerable storage state, facilitating custom logic.
+- Manages ordered lists of token IDs for enumerable functionality.
+- Supports core ERC721 operations: minting, burning, and transfers.
+- Reverts with specific errors for common ERC721 violations (ownership, existence, approvals).
 </Callout>
 
 <Callout type="info" title="Module Usage">
@@ -36,7 +36,7 @@ This module provides internal functions for use in your custom facets. Import it
 
 ## Overview
 
-This module provides the core logic for managing enumerable ERC-721 tokens within a Compose diamond. It enables tracking token ownership and maintaining ordered lists of all tokens, which is crucial for compliance and user experience. Facets can leverage this module to integrate standard ERC-721 features with added enumeration capabilities.
+This module provides the core internal logic for managing enumerable ERC721 tokens within a Compose diamond. It handles minting, burning, and transferring tokens while maintaining ordered enumeration lists. By abstracting this logic, facets can integrate ERC721 functionality without reimplementing complex state management.
 
 ---
 
@@ -297,26 +297,24 @@ error ERC721NonexistentToken(uint256 _tokenId);
 <ExpandableCode language="solidity" maxLines={20} title="Example Implementation">
 {`pragma solidity ^0.8.30;
 
-import {IERC721EnumerableMod} from "./IERC721EnumerableMod.sol";
-import {ERC721EnumerableMod} from "./ERC721EnumerableMod.sol";
+import {ERC721EnumerableMod} from "@compose/token/ERC721/ERC721Enumerable/ERC721EnumerableMod";
+import {IERC721Enumerable} from "@compose/token/ERC721/ERC721Enumerable/IERC721Enumerable";
 
 contract MyERC721Facet {
-    IERC721EnumerableMod private immutable _erc721EnumerableMod;
+    using ERC721EnumerableMod for ERC721EnumerableMod.ERC721EnumerableStorage;
 
-    constructor(address _diamondProxy) {
-        _erc721EnumerableMod = IERC721EnumerableMod(_diamondProxy);
-    }
+    ERC721EnumerableMod.ERC721EnumerableStorage private _storage = ERC721EnumerableMod.ERC721EnumerableStorage(ERC721EnumerableMod.getStorage());
 
     function mintToken(address _to, uint256 _tokenId) external {
-        _erc721EnumerableMod.mint(_to, _tokenId);
+        _storage.mint(_to, _tokenId);
     }
 
-    function burnToken(uint256 _tokenId) external {
-        _erc721EnumerableMod.burn(_tokenId);
+    function burnToken(uint256 _tokenId, address _sender) external {
+        _storage.burn(_tokenId, _sender);
     }
 
-    function transferToken(address _from, address _to, uint256 _tokenId) external {
-        _erc721EnumerableMod.transferFrom(_from, _to, _tokenId);
+    function transferToken(address _from, address _to, uint256 _tokenId, address _sender) external {
+        _storage.transferFrom(_from, _to, _tokenId, _sender);
     }
 }`}
 </ExpandableCode>
@@ -324,15 +322,15 @@ contract MyERC721Facet {
 ## Best Practices
 
 <Callout type="tip" title="Best Practice">
-- Ensure the `ERC721EnumerableMod` facet is initialized correctly during diamond deployment.
-- Handle `ERC721IncorrectOwner`, `ERC721InsufficientApproval`, `ERC721InvalidReceiver`, `ERC721InvalidSender`, and `ERC721NonexistentToken` errors gracefully in facet implementations.
-- When upgrading facets, ensure that the storage slot for ERC721 enumerable data remains consistent.
+- Ensure the `ERC721EnumerableMod.ERC721EnumerableStorage` struct is correctly initialized and accessed via `ERC721EnumerableMod.getStorage()` to maintain diamond storage integrity.
+- Implement robust access control within your facet to authorize `mint`, `burn`, and `transferFrom` calls, preventing unauthorized state modifications.
+- Handle specific `ERC721EnumerableMod` errors (e.g., `ERC721NonexistentToken`, `ERC721IncorrectOwner`) appropriately in your facet's logic.
 </Callout>
 
 ## Integration Notes
 
 <Callout type="success" title="Shared Storage">
-The `ERC721EnumerableMod` interacts with the diamond's storage using a predefined slot for its internal `ERC721EnumerableStorage` struct. Facets calling functions like `mint`, `burn`, or `transferFrom` will directly modify this storage. The module ensures that enumeration lists (e.g., token IDs owned by an address, or total supply) are kept consistent with token transfers and lifecycle events. Custom facets should be aware of this storage layout when implementing their own ERC-721 logic to avoid conflicts.
+This module interacts with diamond storage at the slot identified by `keccak256("compose.erc721.enumerable")`. Facets using this module should retrieve the storage struct using the `ERC721EnumerableMod.getStorage()` function. The `ERC721EnumerableStorage` struct, though defined as empty in the provided information, will hold the internal state for enumerable tokens. Any facet that calls functions from this module will implicitly modify this shared diamond storage.
 </Callout>
 
 <div style={{marginTop: "3rem", paddingTop: "2rem", borderTop: "1px solid var(--ifm-color-emphasis-200)"}}>
@@ -376,4 +374,4 @@ The `ERC721EnumerableMod` interacts with the diamond's storage using a predefine
   <WasThisHelpful pageId="ERC721EnumerableMod" />
 </div>
 
-<LastUpdated date="2025-12-30T15:02:33.621Z" />
+<LastUpdated date="2025-12-30T15:38:46.429Z" />

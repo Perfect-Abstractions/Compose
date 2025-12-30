@@ -1,7 +1,7 @@
 ---
 sidebar_position: 1
 title: "RoyaltyMod"
-description: "Manages ERC-2981 royalty standards for tokens and defaults."
+description: "Manages ERC-2981 royalty information for tokens."
 gitSource: "https://github.com/Perfect-Abstractions/Compose/tree/main/src/token/Royalty/RoyaltyMod.sol"
 ---
 
@@ -21,13 +21,14 @@ import GradientText from '@site/src/components/ui/GradientText';
 import GradientButton from '@site/src/components/ui/GradientButton';
 
 <DocSubtitle>
-Manages ERC-2981 royalty standards for tokens and defaults.
+Manages ERC-2981 royalty information for tokens.
 </DocSubtitle>
 
 <Callout type="info" title="Key Features">
-- Supports both global default royalties and token-specific royalty overrides.
-- Implements the ERC-2981 `royaltyInfo` function for standardized royalty queries.
-- Provides functions to set, delete, and reset royalty configurations.
+- Implements ERC-2981 `royaltyInfo` function logic.
+- Supports both default royalties for all tokens and token-specific overrides.
+- Provides functions to set, reset, and delete royalty information.
+- Utilizes diamond storage for persistent royalty data.
 </Callout>
 
 <Callout type="info" title="Module Usage">
@@ -36,7 +37,7 @@ This module provides internal functions for use in your custom facets. Import it
 
 ## Overview
 
-The RoyaltyMod provides a robust implementation for the ERC-2981 royalty standard. It allows setting both default royalties applicable to all tokens and specific royalties for individual tokens, ensuring accurate royalty distribution on sales. This module is crucial for marketplaces and NFT platforms that need to comply with royalty agreements.
+The RoyaltyMod library provides the core logic and storage for implementing the ERC-2981 royalty standard. It allows setting and querying default and token-specific royalties, ensuring consistent royalty distribution across your diamond. This module is crucial for marketplaces and secondary sales, enabling creators to earn royalties on secondary transactions.
 
 ---
 
@@ -299,38 +300,40 @@ error ERC2981InvalidTokenRoyaltyReceiver(uint256 _tokenId, address _receiver);
 <ExpandableCode language="solidity" maxLines={20} title="Example Implementation">
 {`pragma solidity ^0.8.30;
 
-import {IRoyaltyMod} from "../modules/RoyaltyMod.sol";
+import {IRoyaltyMod} from "@compose/token/Royalty/RoyaltyMod.sol";
 
-contract MyNftFacet {
-    address immutable _diamondProxy;
+contract MyRoyaltyFacet {
+    // Assume diamond storage is accessible and module is initialized.
+    address immutable DIAMOND_STORAGE_ADDRESS; // Replace with actual diamond address
 
-    constructor(address diamondProxy) {
-        _diamondProxy = diamondProxy;
+    constructor(address _diamondAddress) {
+        DIAMOND_STORAGE_ADDRESS = _diamondAddress;
     }
 
-    function _royaltyMod() internal view returns (IRoyaltyMod) {
-        return IRoyaltyMod(_diamondProxy);
-    }
-
-    /**
-     * @notice Gets royalty information for a token.
-     * @param _tokenId The ID of the token.
-     * @param _salePrice The sale price of the token.
-     * @return receiver The address receiving the royalty payment.
-     * @return fee The royalty fee in basis points.
-     */
-    function getRoyaltyInfo(uint256 _tokenId, uint256 _salePrice) external view returns (address receiver, uint256 fee) {
-        return _royaltyMod().royaltyInfo(_tokenId, _salePrice);
+    function _getRoyaltyMod() internal view returns (IRoyaltyMod) {
+        return IRoyaltyMod(DIAMOND_STORAGE_ADDRESS);
     }
 
     /**
      * @notice Sets royalty information for a specific token.
-     * @param _tokenId The ID of the token.
-     * @param _receiver The address receiving the royalty payment.
-     * @param _fee The royalty fee in basis points.
+     * @param _tokenId The ID of the token to set royalty for.
+     * @param _receiver The address to receive the royalty.
+     * @param _feeNumerator The royalty fee numerator (e.g., 1000 for 1%).
      */
-    function setTokenRoyalty(uint256 _tokenId, address _receiver, uint256 _fee) external {
-        _royaltyMod().setTokenRoyalty(_tokenId, _receiver, _fee);
+    function setTokenRoyalty(uint256 _tokenId, address _receiver, uint96 _feeNumerator) external {
+        _getRoyaltyMod().setTokenRoyalty(_tokenId, _receiver, _feeNumerator);
+    }
+
+    /**
+     * @notice Queries royalty information for a token and sale price.
+     * @param _tokenId The ID of the token.
+     * @param _salePrice The price of the sale.
+     * @return receiver The address receiving the royalty.
+     * @return feeNumerator The royalty fee numerator.
+     */
+    function royaltyInfo(uint256 _tokenId, uint256 _salePrice) external view returns (address receiver, uint256 feeNumerator) {
+        (receiver, feeNumerator) = _getRoyaltyMod().royaltyInfo(_tokenId, _salePrice);
+        return (receiver, feeNumerator);
     }
 }`}
 </ExpandableCode>
@@ -338,15 +341,15 @@ contract MyNftFacet {
 ## Best Practices
 
 <Callout type="tip" title="Best Practice">
-- Use `setDefaultRoyalty` to establish a baseline royalty for all tokens, ensuring broad compliance.
-- Employ `setTokenRoyalty` for specific NFTs that require unique royalty arrangements, overriding the default.
-- Implement checks for `ERC2981InvalidDefaultRoyaltyReceiver`, `ERC2981InvalidTokenRoyaltyReceiver`, `ERC2981InvalidDefaultRoyalty`, and `ERC2981InvalidTokenRoyalty` errors to handle invalid inputs gracefully.
+- Ensure royalty receiver addresses are validated and not zero addresses before setting.
+- Use `deleteDefaultRoyalty` and `resetTokenRoyalty` judiciously to manage royalty fallback behavior.
+- Handle custom errors like `ERC2981InvalidDefaultRoyalty` and `ERC2981InvalidTokenRoyaltyReceiver` in facet implementations for robust error handling.
 </Callout>
 
 ## Integration Notes
 
 <Callout type="success" title="Shared Storage">
-The RoyaltyMod interacts with diamond storage at a predefined slot to manage its state. Facets that integrate with this module can call its functions directly through the diamond proxy. `royaltyInfo` queries will transparently fall back from token-specific settings to default settings if no token-specific royalty is found. Changes to default royalties will affect all tokens not explicitly configured with their own royalties.
+This module stores royalty data within the diamond's persistent storage, keyed by `keccak256("compose.erc2981")`. The `RoyaltyStorage` struct, containing `defaultRoyaltyInfo`, is accessed via inline assembly at a predefined `STORAGE_POSITION`. Facets interacting with this module should call its functions through the diamond proxy. Changes to default or token-specific royalties are immediately reflected in subsequent `royaltyInfo` calls.
 </Callout>
 
 <div style={{marginTop: "3rem", paddingTop: "2rem", borderTop: "1px solid var(--ifm-color-emphasis-200)"}}>
@@ -396,4 +399,4 @@ The RoyaltyMod interacts with diamond storage at a predefined slot to manage its
   <WasThisHelpful pageId="RoyaltyMod" />
 </div>
 
-<LastUpdated date="2025-12-30T15:03:04.079Z" />
+<LastUpdated date="2025-12-30T15:39:15.765Z" />

@@ -1,7 +1,7 @@
 ---
 sidebar_position: 1
 title: "ERC6909Mod"
-description: "Implements ERC-6909 minimal multi-token logic."
+description: "ERC-6909 minimal multi-token logic"
 gitSource: "https://github.com/Perfect-Abstractions/Compose/tree/main/src/token/ERC6909/ERC6909/ERC6909Mod.sol"
 ---
 
@@ -21,13 +21,13 @@ import GradientText from '@site/src/components/ui/GradientText';
 import GradientButton from '@site/src/components/ui/GradientButton';
 
 <DocSubtitle>
-Implements ERC-6909 minimal multi-token logic.
+ERC-6909 minimal multi-token logic
 </DocSubtitle>
 
 <Callout type="info" title="Key Features">
-- Supports minting, burning, transferring, and approving multiple token IDs within a single diamond.
-- Implements operator functionality for delegated transfers.
-- Provides internal utility functions for common ERC-6909 operations.
+- Supports minting, burning, and transferring multiple token IDs.
+- Manages operator approvals for token transfers.
+- Provides internal functions for core ERC-6909 logic, enabling facet extension.
 </Callout>
 
 <Callout type="info" title="Module Usage">
@@ -36,7 +36,7 @@ This module provides internal functions for use in your custom facets. Import it
 
 ## Overview
 
-This module provides the core logic and storage for the ERC-6909 standard, enabling a diamond to manage multiple token types with minimal overhead. It facilitates essential operations like minting, transferring, burning, and approving token amounts, adhering to the ERC-6909 specification for composability.
+The ERC6909Mod library provides essential internal functions and storage layout for implementing ERC-6909 compliant multi-token logic within a diamond proxy. It enables minting, burning, transferring, and managing approvals for various token IDs, promoting composability and efficient on-chain state management.
 
 ---
 
@@ -477,23 +477,32 @@ error ERC6909InvalidSpender(address _spender);
 <ExpandableCode language="solidity" maxLines={20} title="Example Implementation">
 {`pragma solidity ^0.8.30;
 
-import {IERC6909Mod} from "../modules/ERC6909Mod.sol";
+import {ERC6909Mod} from "@compose/token/ERC6909/ERC6909/ERC6909Mod";
+import {IERC6909} from "@compose/token/ERC6909/IERC6909";
 
-contract ERC6909Facet {
-    address immutable DIAMOND_ADDRESS;
-    IERC6909Mod private immutable _erc6909Mod;
+contract MyERC6909Facet {
+    ERC6909Mod internal immutable _erc6909Mod;
 
-    constructor(address diamondAddress) {
-        DIAMOND_ADDRESS = diamondAddress;
-        _erc6909Mod = IERC6909Mod(diamondAddress);
+    constructor(address _diamondProxy) {
+        // Assuming ERC6909Mod is deployed and its address is known
+        // In a real scenario, this would be handled by the diamond deployment process
+        _erc6909Mod = ERC6909Mod(_diamondProxy); // Placeholder: actual address would be retrieved
     }
 
-    function mintToken(uint256 _id, address _to, uint256 _amount) external {
-        _erc6909Mod.mint(_id, _to, _amount);
+    function mintTokens(address _to, uint256 _id, uint256 _amount) external {
+        _erc6909Mod.mint(_to, _id, _amount);
     }
 
-    function transferToken(uint256 _id, address _from, address _to, uint256 _amount) external {
-        _erc6909Mod.transfer(_id, _from, _to, _amount);
+    function transferTokens(address _from, address _to, uint256 _id, uint256 _amount) external {
+        _erc6909Mod.transfer(msg.sender, _from, _to, _id, _amount);
+    }
+
+    function approveTokens(address _spender, uint256 _id, uint256 _amount) external {
+        _erc6909Mod.approve(msg.sender, _spender, _id, _amount);
+    }
+
+    function burnTokens(address _from, uint256 _id, uint256 _amount) external {
+        _erc6909Mod.burn(_from, _id, _amount);
     }
 }`}
 </ExpandableCode>
@@ -501,15 +510,15 @@ contract ERC6909Facet {
 ## Best Practices
 
 <Callout type="tip" title="Best Practice">
-- Ensure proper access control is implemented in facets calling module functions, especially for minting and burning.
-- Handle ERC-6909 specific errors to provide clear feedback to users on failed operations.
-- Be aware of allowance management for transfers; use `type(uint256).max` for unlimited allowances where appropriate.
+- Ensure the `ERC6909Mod` library is correctly initialized with the diamond proxy address.
+- Always handle `ERC6909InsufficientBalance`, `ERC6909InsufficientAllowance`, and other custom errors for robust error management.
+- Be mindful of operator permissions when calling `transfer` to ensure authorized state changes.
 </Callout>
 
 ## Integration Notes
 
 <Callout type="success" title="Shared Storage">
-The ERC6909Mod uses a dedicated storage slot for its internal `ERC6909Storage` struct. Facets interacting with this module should access its functions via the diamond proxy. The `getStorage` function can be used by facets to retrieve a pointer to the module's storage, enabling direct reads of token balances, allowances, and operator statuses. Ensure that the ERC6909Mod is initialized correctly within the diamond's deployment process.
+The ERC6909Mod library interacts with the diamond's storage pattern using a specific `STORAGE_POSITION` identified by `keccak256("compose.erc6909")`. Facets using this module will access and modify the `ERC6909Storage` struct located at this slot. Ensure that no other facets or modules attempt to use this storage slot to prevent conflicts.
 </Callout>
 
 <div style={{marginTop: "3rem", paddingTop: "2rem", borderTop: "1px solid var(--ifm-color-emphasis-200)"}}>
@@ -553,4 +562,4 @@ The ERC6909Mod uses a dedicated storage slot for its internal `ERC6909Storage` s
   <WasThisHelpful pageId="ERC6909Mod" />
 </div>
 
-<LastUpdated date="2025-12-30T15:02:29.043Z" />
+<LastUpdated date="2025-12-30T15:38:40.966Z" />

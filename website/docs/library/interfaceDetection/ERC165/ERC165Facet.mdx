@@ -25,13 +25,13 @@ Implements ERC-165 standard for interface detection.
 </DocSubtitle>
 
 <Callout type="info" title="Key Features">
-- Implements `supportsInterface` as per ERC-165.
-- Provides a standardized method for interface detection on the diamond.
+- Implements the `supportsInterface` function as per ERC-165.
+- Provides a standardized mechanism for interface detection within a diamond proxy.
 </Callout>
 
 ## Overview
 
-The ERC165Facet enables Compose diamonds to comply with the ERC-165 standard, allowing external contracts to query which interfaces the diamond supports. It exposes the `supportsInterface` function, crucial for interoperability and discovering diamond capabilities.
+The ERC165Facet enables Compose diamonds to declare and query supported interfaces using the ERC-165 standard. This facet ensures interoperability by providing a standardized method for other contracts to discover the diamond's capabilities.
 
 ---
 
@@ -102,39 +102,33 @@ Query if a contract implements an interface This function checks if the diamond 
 <ExpandableCode language="solidity" maxLines={20} title="Example Implementation">
 {`pragma solidity ^0.8.30;
 
-import {ERC165Facet} from "@compose/contracts/facets/ERC165Facet.sol";
+import { IDiamondCut } from "@compose/diamond/IDiamondCut.sol";
+import { ERC165Facet } from "@compose/interfaceDetection/ERC165/ERC165Facet.sol";
 
-contract MyDiamond is ERC165Facet {
-    // ... other facet deployments
+contract MyDiamond is IDiamondCut {
+    // ... other facet and diamond setup ...
 
-    function supportsInterface(bytes4 interfaceId) external view override returns (bool) {
-        // Check if the interface is supported by this facet
-        if (interfaceId == type(IERC165).interfaceId) {
-            return true;
-        }
-        // Delegate to other facets or known interfaces
-        // For example, if this diamond also supports IERC20:
-        // if (interfaceId == type(IERC20).interfaceId) {
-        //     return true;
-        // }
-        return super.supportsInterface(interfaceId);
+    function supportsInterface(bytes4 _interfaceId) external view override returns (bool) {
+        // Delegate to the ERC165Facet
+        return ERC165Facet.supportsInterface(_interfaceId);
     }
 
-    // ... other diamond logic
+    // ... other diamond functions ...
 }`}
 </ExpandableCode>
 
 ## Best Practices
 
 <Callout type="tip" title="Best Practice">
-- Ensure the `supportsInterface` function is correctly implemented to return true for `IERC165.interfaceId` and any other supported interface IDs.
-- Integrate this facet early in the diamond deployment process to establish its interface support capabilities.
+- Ensure the ERC165Facet is included in the diamond's initial deployment or upgrade.
+- When implementing custom interfaces, ensure their IDs are correctly registered within the ERC165Facet's logic (typically via the ERC165Mod).
+- Call `supportsInterface` from external contracts to determine if a diamond or its facets implement specific functionality.
 </Callout>
 
 ## Security Considerations
 
 <Callout type="warning" title="Security">
-The `supportsInterface` function is read-only and does not directly handle state changes. Ensure that the logic within `supportsInterface` accurately reflects all supported interfaces to prevent incorrect discovery by consumers.
+This facet primarily handles interface detection and does not manage critical state or complex logic, thus posing minimal reentrancy or direct state manipulation risks. Ensure that the interface IDs registered within the facet accurately reflect the diamond's capabilities.
 </Callout>
 
 <div style={{marginTop: "3rem", paddingTop: "2rem", borderTop: "1px solid var(--ifm-color-emphasis-200)"}}>
@@ -154,4 +148,4 @@ The `supportsInterface` function is read-only and does not directly handle state
   <WasThisHelpful pageId="ERC165Facet" />
 </div>
 
-<LastUpdated date="2025-12-30T15:03:11.091Z" />
+<LastUpdated date="2025-12-30T15:39:22.709Z" />

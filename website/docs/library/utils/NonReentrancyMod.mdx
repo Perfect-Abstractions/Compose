@@ -25,9 +25,8 @@ Prevents reentrant calls within functions.
 </DocSubtitle>
 
 <Callout type="info" title="Key Features">
-- Prevents recursive calls to the same function or other functions protected by the same flag.
-- Utilizes a simple storage variable to track the reentrancy state.
-- Provides `enter` and `exit` functions that are meant to be used with `using for`.
+- Prevents reentrant function calls, mitigating a class of common smart contract exploits.
+- Simple `enter` and `exit` functions provide a clear, explicit mechanism for managing reentrancy guards.
 </Callout>
 
 <Callout type="info" title="Module Usage">
@@ -36,7 +35,7 @@ This module provides internal functions for use in your custom facets. Import it
 
 ## Overview
 
-The NonReentrancy module provides essential guards against reentrant function calls. By using `enter` and `exit` within your facets, you ensure that a function cannot be re-entered before its initial execution completes, preventing common reentrancy vulnerabilities.
+This library provides essential non-reentrancy guards for your facets. By preventing reentrant calls, it enhances the security and predictability of your diamond's state transitions. Integrate it to safeguard against common reentrancy vulnerabilities.
 
 ---
 
@@ -96,21 +95,24 @@ error Reentrancy();
 <ExpandableCode language="solidity" maxLines={20} title="Example Implementation">
 {`pragma solidity ^0.8.30;
 
-import {LibNonReentrancy} from "@compose/contracts/src/libraries/LibNonReentrancy.sol";
+import {NonReentrancyMod} from \"@compose/libraries/NonReentrancyMod\";
 
 contract MyFacet {
-    using LibNonReentrancy for uint256;
-
-    uint256 internal _nonReentrancyFlag; // Storage slot for the flag
+    using NonReentrancyMod for uint256; // Dummy type, library functions are standalone
 
     function doSomethingSensitive() external {
-        _nonReentrancyFlag.enter(); // Lock reentrancy
+        NonReentrancyMod.enter();
+        try {
+            // ... perform sensitive operations ...
+        } finally {
+            NonReentrancyMod.exit();
+        }
+    }
 
-        // ... sensitive operations ...
-        // Example: calling an external contract that might call back
-        // address(externalContract).call{value: msg.value}("");
-
-        _nonReentrancyFlag.exit(); // Unlock reentrancy
+    function anotherSensitiveAction() external {
+        NonReentrancyMod.enter();
+        // ... other sensitive operations ...
+        NonReentrancyMod.exit();
     }
 }`}
 </ExpandableCode>
@@ -118,19 +120,18 @@ contract MyFacet {
 ## Best Practices
 
 <Callout type="tip" title="Best Practice">
-- Always call `enter` at the beginning of a function and `exit` at the end, ideally within a `try/finally` block to guarantee unlocking.
-- Ensure the storage slot for the reentrancy flag is properly initialized and managed. It should typically be initialized to 0.
-- Use the `Reentrancy` custom error for explicit error handling if needed, although the library handles reverts internally.
+- Always pair `NonReentrancyMod.enter()` with `NonReentrancyMod.exit()` in a `try...finally` block to ensure the lock is released, even if errors occur.
+- Use this library for any function that modifies critical state and could potentially be called recursively from within itself or another function.
 </Callout>
 
 ## Integration Notes
 
 <Callout type="success" title="Shared Storage">
-This library operates on a `uint256` storage variable which acts as a flag. The `enter` function increments this flag, and `exit` decrements it. A reentrancy guard is active if the flag is greater than zero. Facets using this library must declare a `uint256` storage variable to hold the reentrancy flag and use `using LibNonReentrancy for uint256;` to access the `enter` and `exit` functions. The storage slot for this flag must be unique and managed according to Compose's storage slot allocation strategy.
+The `NonReentrancyMod` library does not interact with diamond storage. Its state is managed internally within the EVM execution context. Facets using this library will manage their own reentrancy protection state independently of the diamond's core storage layout.
 </Callout>
 
 <div style={{marginTop: "3rem", paddingTop: "2rem", borderTop: "1px solid var(--ifm-color-emphasis-200)"}}>
   <WasThisHelpful pageId="NonReentrancyMod" />
 </div>
 
-<LastUpdated date="2025-12-30T15:03:42.930Z" />
+<LastUpdated date="2025-12-30T15:39:51.365Z" />

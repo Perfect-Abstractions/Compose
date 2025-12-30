@@ -1,7 +1,7 @@
 ---
 sidebar_position: 510
 title: "ExampleDiamond"
-description: "Manages facet registration and ownership for a diamond."
+description: "Example Diamond with constructor, fallback, and receive functions"
 gitSource: "https://github.com/Perfect-Abstractions/Compose/tree/main/src/diamond/example/ExampleDiamond.sol"
 ---
 
@@ -21,18 +21,18 @@ import GradientText from '@site/src/components/ui/GradientText';
 import GradientButton from '@site/src/components/ui/GradientButton';
 
 <DocSubtitle>
-Manages facet registration and ownership for a diamond.
+Example Diamond with constructor, fallback, and receive functions
 </DocSubtitle>
 
 <Callout type="info" title="Key Features">
-- Initializes the diamond with a set of facets and their function selectors.
-- Establishes the contract owner during deployment.
-- Supports adding, replacing, or removing facets via the `FacetCut` struct.
+- Initializes the diamond contract with facets and owner.
+- Supports adding, replacing, or removing facets during initialization.
+- Includes `fallback` and `receive` functions for general contract interaction and ether reception.
 </Callout>
 
 ## Overview
 
-The ExampleDiamond facet acts as the core contract for a Compose diamond. It handles the initialization of the diamond by registering facets and their associated function selectors, enabling delegatecall routing. It also establishes the initial owner of the diamond, crucial for subsequent administrative operations.
+The ExampleDiamond contract serves as a foundational template for Compose diamonds. It demonstrates the diamond proxy pattern's initialization via a constructor, enabling the addition of facets and setting the diamond's owner. It also includes fallback and receive functions to handle arbitrary calls and ether transfers, respectively.
 
 ---
 
@@ -85,54 +85,51 @@ Struct to hold facet address and its function selectors. struct FacetCut &#123; 
 <ExpandableCode language="solidity" maxLines={20} title="Example Implementation">
 {`pragma solidity ^0.8.30;
 
-import {IDiamondCut} from "@compose/diamond/contracts/IDiamondCut.sol";
-import {ExampleDiamond} from "@compose/diamond/contracts/ExampleDiamond.sol";
+import {ExampleDiamond} from "@compose/diamond/example/ExampleDiamond";
+import {DiamondMod} from "@compose/diamond/DiamondMod";
 
 contract DeployExampleDiamond {
     address public diamondAddress;
 
     function deploy() public {
-        // Define facets to be added during initialization
-        ExampleDiamond.FacetCut[] memory facetsToInit = new ExampleDiamond.FacetCut[](2);
+        // Define facets to be added during deployment
+        DiamondMod.FacetCut[] memory facets = new DiamondMod.FacetCut[](1);
+        // Assuming MyFacet is a deployed facet contract
+        // address myFacetAddress = address(new MyFacet());
+        // facets[0] = DiamondMod.FacetCut(myFacetAddress, DiamondMod.FacetCutAction.Add, MyFacet.selectors());
 
-        // Example facet 1 (replace with actual facet address and selectors)
-        bytes4[] memory selectors1 = new bytes4[](1);
-        selectors1[0] = ExampleDiamond.deploy.selector; // Example selector
-        facetsToInit[0] = ExampleDiamond.FacetCut({
-            facetAddress: address(this), // Placeholder address
-            action: ExampleDiamond.FacetCutAction.Add,
-            functionSelectors: selectors1
-        });
-
-        // Example facet 2 (replace with actual facet address and selectors)
-        bytes4[] memory selectors2 = new bytes4[](1);
-        selectors2[0] = ExampleDiamond.fallback.selector; // Example selector
-        facetsToInit[1] = ExampleDiamond.FacetCut({
-            facetAddress: address(this), // Placeholder address
-            action: ExampleDiamond.FacetCutAction.Add,
-            functionSelectors: selectors2
-        });
-
-        // Deploy the diamond, initializing it with facets and owner
+        // For this example, we'll simulate a constructor call without actual facets
+        // In a real scenario, you would pass actual facet data.
+        address owner = msg.sender;
         ExampleDiamond exampleDiamond = new ExampleDiamond();
-        exampleDiamond.constructor(facetsToInit, msg.sender); // msg.sender becomes owner
+        // The actual constructor call would look like this:
+        // ExampleDiamond exampleDiamond = new ExampleDiamond(facets, owner);
+
         diamondAddress = address(exampleDiamond);
     }
+
+    // To interact with the deployed diamond, you would typically use an instance of
+    // the diamond contract and call functions on it.
+    // function interactWithDiamond() public {
+    //     ExampleDiamond deployedDiamond = ExampleDiamond(diamondAddress);
+    //     // Call functions on facets added to the diamond
+    //     // deployedDiamond.myFacetFunction();
+    // }
 }`}
 </ExpandableCode>
 
 ## Best Practices
 
 <Callout type="tip" title="Best Practice">
-- Ensure all facets intended for initialization are correctly defined with their respective function selectors.
-- The `msg.sender` at the time of diamond deployment becomes the initial owner, responsible for future upgrades and management.
-- Carefully consider the initial set of facets to be registered; subsequent additions or modifications require diamond upgrade mechanisms.
+- Initialize the diamond with all necessary facets and the owner address using the constructor during deployment.
+- Ensure that the `functionSelectors` array within `FacetCut` accurately reflects the functions exposed by each facet address.
+- The `ExampleDiamond` contract itself is a deployment template; production diamonds will typically inherit from or utilize `DiamondMod` for facet management.
 </Callout>
 
 ## Security Considerations
 
 <Callout type="warning" title="Security">
-This facet is responsible for the initial setup and ownership of the diamond. Any vulnerabilities in the constructor logic or improper owner assignment could lead to the permanent loss of control over the diamond. Ensure the facet addresses and selectors provided during initialization are correct and trusted.
+The constructor function is critical for initial setup. Ensure that the provided facet addresses are trustworthy and that the function selectors accurately map to the intended functions. The `fallback` and `receive` functions are payable and can be called externally, so any logic within them must be robust against reentrancy if state changes are involved (though none are defined in this example).
 </Callout>
 
 <div style={{marginTop: "3rem", paddingTop: "2rem", borderTop: "1px solid var(--ifm-color-emphasis-200)"}}>
@@ -158,4 +155,4 @@ This facet is responsible for the initial setup and ownership of the diamond. An
   <WasThisHelpful pageId="ExampleDiamond" />
 </div>
 
-<LastUpdated date="2025-12-30T15:03:29.078Z" />
+<LastUpdated date="2025-12-30T15:39:38.099Z" />

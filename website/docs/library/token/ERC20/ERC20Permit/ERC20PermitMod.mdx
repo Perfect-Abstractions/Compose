@@ -25,9 +25,9 @@ Manages ERC-2612 permit logic and domain separator.
 </DocSubtitle>
 
 <Callout type="info" title="Key Features">
-- Implements ERC-2612 Permit functionality for off-chain approvals.
-- Manages the domain separator for secure signature validation.
-- Designed for composition into any ERC-20 compliant facet.
+- Implements ERC-2612 permit functionality for gasless approvals.
+- Generates a chain- and contract-specific domain separator for signature replay protection.
+- Provides a clear interface for signing and verifying token permits.
 </Callout>
 
 <Callout type="info" title="Module Usage">
@@ -36,7 +36,7 @@ This module provides internal functions for use in your custom facets. Import it
 
 ## Overview
 
-This module provides the necessary logic and storage for implementing the ERC-2612 Permit functionality. It allows users to grant allowances to token holders via signed messages, enhancing gas efficiency and user experience by enabling off-chain approvals. Its self-contained nature ensures that permit logic can be composed into any ERC-20 facet.
+This module encapsulates ERC-2612 permit functionality, enabling off-chain signature verification for token approvals. It ensures replay protection via a chain-specific domain separator and provides a standardized interface for managing permits, enhancing composability and user experience within the diamond.
 
 ---
 
@@ -236,50 +236,39 @@ address _owner, address _spender, uint256 _value, uint256 _deadline, uint8 _v, b
 <ExpandableCode language="solidity" maxLines={20} title="Example Implementation">
 {`pragma solidity ^0.8.30;
 
-import {IERC20PermitMod} from "../modules/ERC20PermitMod.sol";
+import {ERC20PermitMod} from "@compose/token/ERC20/ERC20Permit/ERC20PermitMod";
 
 contract MyERC20Facet {
-    // Assume ERC20PermitMod is deployed and its address is known
-    IERC20PermitMod private immutable _erc20PermitMod;
+    using ERC20PermitMod for ERC20PermitMod;
 
-    constructor(address erc20PermitModAddress) {
-        _erc20PermitMod = IERC20PermitMod(erc20PermitModAddress);
+    // Assume ERC20PermitStorage is correctly initialized in diamond storage
+    // Assume _owner, _spender, _value, _deadline are obtained from a permit signature verification
+
+    function executePermit(address _owner, address _spender, uint256 _value, uint256 _deadline, uint8 _v, bytes32 _r, bytes32 _s) external {
+        // The permit function from the module handles signature validation and storage updates.
+        // The Approval event must be emitted by the caller facet.
+        ERC20PermitMod.permit(_owner, _spender, _value, _deadline, _v, _r, _s);
+        emit ERC20PermitMod.Approval(_owner, _spender, _value);
     }
-
-    /**
-     * @notice Approves a spender using an ERC-2612 permit.
-     * @param owner The owner of the tokens.
-     * @param spender The address to approve.
-     * @param value The amount of tokens to approve.
-     * @param deadline The deadline for the permit.
-     * @param v The v component of the signature.
-     * @param r The r component of the signature.
-     * @param s The s component of the signature.
-     */
-    function permit(address owner, address spender, uint256 value, uint256 deadline, uint8 v, bytes32 r, bytes32 s) external {
-        // The permit function in the module emits the Approval event.
-        _erc20PermitMod.permit(owner, spender, value, deadline, v, r, s);
-    }
-
-    // Other ERC20 functions...
 }`}
 </ExpandableCode>
 
 ## Best Practices
 
 <Callout type="tip" title="Best Practice">
-- Ensure the `permit` function within your facet correctly forwards the call to the `ERC20PermitMod` instance.
-- The `ERC20PermitMod` library emits the `Approval` event. Ensure your facet's ABI and event tracking accommodate this.
+- Ensure the `ERC20PermitStorage` is correctly initialized and accessible via the diamond's storage pattern.
+- Always emit the `Approval` event after a successful call to `permit` to maintain ERC-20 compliance.
+- Handle `ERC2612InvalidSignature` and `ERC20InvalidSpender` errors appropriately in facet logic.
 </Callout>
 
 ## Integration Notes
 
 <Callout type="success" title="Shared Storage">
-The `ERC20PermitMod` relies on specific storage slots for its internal state, including the domain separator and permit-related data. Facets interacting with this module should be aware that the `permit` function modifies the token's allowance state. The `DOMAIN_SEPARATOR` function is callable externally to retrieve the domain separator for signature generation. The `getERC20Storage` and `getPermitStorage` functions are internal helpers for accessing storage and should not be called directly by external facets.
+This module interacts with diamond storage at `ERC20_STORAGE_POSITION`, which is mapped to `keccak256("compose.erc20")`. The `ERC20PermitStorage` struct and `ERC20Storage` struct are defined within this module but are intended to be part of the larger diamond storage layout managed by the diamond proxy. Facets using this module will access and modify state related to permits through the module's functions, which implicitly operate on the diamond's shared storage.
 </Callout>
 
 <div style={{marginTop: "3rem", paddingTop: "2rem", borderTop: "1px solid var(--ifm-color-emphasis-200)"}}>
   <WasThisHelpful pageId="ERC20PermitMod" />
 </div>
 
-<LastUpdated date="2025-12-30T15:01:47.427Z" />
+<LastUpdated date="2025-12-30T15:38:00.903Z" />

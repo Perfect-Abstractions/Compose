@@ -1,7 +1,7 @@
 ---
 sidebar_position: 3
 title: "ERC721BurnFacet"
-description: "Burn ERC721 tokens within a Compose diamond."
+description: "Burn NFTs from a Compose diamond"
 gitSource: "https://github.com/Perfect-Abstractions/Compose/tree/main/src/token/ERC721/ERC721/ERC721BurnFacet.sol"
 ---
 
@@ -21,18 +21,18 @@ import GradientText from '@site/src/components/ui/GradientText';
 import GradientButton from '@site/src/components/ui/GradientButton';
 
 <DocSubtitle>
-Burn ERC721 tokens within a Compose diamond.
+Burn NFTs from a Compose diamond
 </DocSubtitle>
 
 <Callout type="info" title="Key Features">
-- Burns ERC721 tokens, removing them from the contract's tracking.
-- Emits standard `Transfer` and `ApprovalForAll` events as per ERC721 specification.
-- Utilizes inline assembly for direct storage manipulation, enhancing efficiency.
+- Implements the `burn` function for ERC721 tokens.
+- Removes tokens from tracking and circulation.
+- Adheres to ERC721 standard requirements for token destruction.
 </Callout>
 
 ## Overview
 
-The ERC721BurnFacet provides the functionality to destroy ERC721 tokens. It interacts directly with the diamond's storage to remove tokens from existence, emitting standard ERC721 events. This facet ensures tokens are properly accounted for and removed when burned.
+The ERC721BurnFacet enables the destruction of ERC721 tokens within a Compose diamond. It provides the `burn` function to remove tokens from circulation, adhering to the ERC721 standard. This facet works in conjunction with other ERC721 facets to offer a complete NFT management solution.
 
 ---
 
@@ -148,19 +148,18 @@ error ERC721InsufficientApproval(address _operator, uint256 _tokenId);
 <ExpandableCode language="solidity" maxLines={20} title="Example Implementation">
 {`pragma solidity ^0.8.30;
 
-import {IERC721BurnFacet} from "@compose-protocol/diamond-contracts/contracts/facets/ERC721/IERC721BurnFacet.sol";
+import { IERC721Burn } from "@compose/token/ERC721/ERC721/interfaces/IERC721Burn.sol";
+import { ERC721BurnFacet } from "@compose/token/ERC721/ERC721/ERC721BurnFacet.sol";
 
-contract Burner {
-    address immutable diamondAddress;
+contract ERC721BurnConsumer {
+    address diamondAddress;
 
     constructor(address _diamondAddress) {
         diamondAddress = _diamondAddress;
     }
 
     function burnToken(uint256 _tokenId) external {
-        bytes4 selector = IERC721BurnFacet.burn.selector;
-        (bool success, ) = diamondAddress.call(abi.encodeWithSelector(selector, _tokenId));
-        require(success, "Burn failed");
+        IERC721Burn(diamondAddress).burn(_tokenId);
     }
 }`}
 </ExpandableCode>
@@ -168,14 +167,15 @@ contract Burner {
 ## Best Practices
 
 <Callout type="tip" title="Best Practice">
-- Ensure the ERC721BurnFacet is correctly initialized with the diamond's storage layout.
-- Verify that the caller has the necessary approval or ownership to burn the specified token before invoking the `burn` function.
+- Ensure the `ERC721BurnFacet` is correctly implemented and added to the diamond proxy during deployment.
+- Access control for the `burn` function should be managed at the diamond level, typically through an access control facet.
+- Verify that the token ID being burned exists and is owned by the caller or an approved address before invoking the `burn` function.
 </Callout>
 
 ## Security Considerations
 
 <Callout type="warning" title="Security">
-The `burn` function requires that the caller is either the owner of the token or has been approved to burn it. Implement robust access control within your diamond's logic or rely on the underlying ERC721 ownership and approval mechanisms to prevent unauthorized burning.
+The `burn` function should be protected by robust access control mechanisms at the diamond level to prevent unauthorized token destruction. Ensure that the token ID provided to `burn` is valid and exists to avoid unexpected behavior or reverting with `ERC721NonexistentToken`. The facet itself does not perform reentrancy checks; this is the responsibility of the caller or the diamond proxy.
 </Callout>
 
 <div style={{marginTop: "3rem", paddingTop: "2rem", borderTop: "1px solid var(--ifm-color-emphasis-200)"}}>
@@ -225,4 +225,4 @@ The `burn` function requires that the caller is either the owner of the token or
   <WasThisHelpful pageId="ERC721BurnFacet" />
 </div>
 
-<LastUpdated date="2025-12-30T15:02:45.520Z" />
+<LastUpdated date="2025-12-30T15:38:57.803Z" />

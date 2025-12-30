@@ -1,7 +1,7 @@
 ---
 sidebar_position: 1
 title: "ERC20Mod"
-description: "ERC-20 token logic and state management."
+description: "ERC-20 token functionality and state management."
 gitSource: "https://github.com/Perfect-Abstractions/Compose/tree/main/src/token/ERC20/ERC20/ERC20Mod.sol"
 ---
 
@@ -21,13 +21,13 @@ import GradientText from '@site/src/components/ui/GradientText';
 import GradientButton from '@site/src/components/ui/GradientButton';
 
 <DocSubtitle>
-ERC-20 token logic and state management.
+ERC-20 token functionality and state management.
 </DocSubtitle>
 
 <Callout type="info" title="Key Features">
-- Supports standard ERC-20 `transfer`, `approve`, `transferFrom` operations.
-- Enables `mint` and `burn` functionalities for token supply management.
-- Provides a deterministic way to access ERC-20 storage via `getStorage`.
+- Provides standard ERC-20 `transfer`, `approve`, `transferFrom`, `mint`, and `burn` functions.
+- Manages ERC-20 token state including total supply and individual balances.
+- Utilizes the diamond storage pattern for predictable state location.
 </Callout>
 
 <Callout type="info" title="Module Usage">
@@ -36,7 +36,7 @@ This module provides internal functions for use in your custom facets. Import it
 
 ## Overview
 
-The ERC20Mod module provides essential functions for ERC-20 token operations, including minting, burning, transfers, and approvals. It utilizes a dedicated storage layout to manage token balances, allowances, and total supply, enabling composable integration within a diamond proxy.
+The ERC20Mod module provides the core logic and storage layout for ERC-20 token standards. It enables standard token operations such as minting, burning, transferring, and approving allowances. By externalizing this logic, facets can compose ERC-20 capabilities into a diamond, ensuring state is managed consistently and safely.
 
 ---
 
@@ -378,34 +378,34 @@ error ERC20InvalidSpender(address _spender);
 <ExpandableCode language="solidity" maxLines={20} title="Example Implementation">
 {`pragma solidity ^0.8.30;
 
-import {IERC20Mod } from "@compose/modules/ERC20Mod.sol";
-import {IDiamond } from "@compose/core/IDiamond.sol";
+import {IERC20Facet} from "@compose/token/ERC20/ERC20Facet.sol";
+import {ERC20Mod} from "@compose/token/ERC20/ERC20/ERC20Mod.sol";
 
-contract ERC20Facet {
-    // Assume storage is properly initialized and ERC20Mod is implemented
-    // Storage slot for ERC20Mod is known
-    uint256 constant ERC20_STORAGE_SLOT = 1; // Example slot
+contract MyTokenFacet is IERC20Facet {
+    address constant ERC20_STORAGE_POSITION = ERC20Mod.STORAGE_POSITION;
 
-    function transferTokens(address _to, uint256 _amount) external {
-        IERC20Mod erc20 = IERC20Mod(address(this));
-        erc20.transfer(_to, _amount);
+    function transfer(address _to, uint256 _value) external override returns (bool) {
+        // Call the internal transfer function from the ERC20Mod library
+        // Note: In a real facet, you would access storage via getStorage() or similar.
+        // This example assumes direct access for demonstration.
+        ERC20Mod.transfer(_to, _value);
+        return true;
     }
 
-    function approveSpender(address _spender, uint256 _amount) external {
-        IERC20Mod erc20 = IERC20Mod(address(this));
-        erc20.approve(_spender, _amount);
+    function approve(address _spender, uint256 _value) external override returns (bool) {
+        // Call the internal approve function from the ERC20Mod library
+        ERC20Mod.approve(_spender, _value);
+        return true;
     }
 
-    function burnTokens(uint256 _amount) external {
-        IERC20Mod erc20 = IERC20Mod(address(this));
-        // Burning tokens typically requires a specific sender, here assuming caller
-        erc20.burn(_amount);
-    }
+    // ... other ERC20Facet functions like transferFrom, mint, burn ...
 
-    function mintNewTokens(address _to, uint256 _amount) external {
-        IERC20Mod erc20 = IERC20Mod(address(this));
-        // Minting requires appropriate permissions, assumed here for example
-        erc20.mint(_to, _amount);
+    // Example of accessing storage (in a real facet)
+    function _getERC20Storage() internal view returns (ERC20Mod.ERC20Storage storage) {
+        bytes32 position = ERC20_STORAGE_POSITION;
+        assembly {
+            storage := sload(position)
+        }
     }
 }`}
 </ExpandableCode>
@@ -413,15 +413,15 @@ contract ERC20Facet {
 ## Best Practices
 
 <Callout type="tip" title="Best Practice">
-- Ensure correct access control is implemented in facets calling mint or burn functions.
-- Handle `ERC20InsufficientBalance`, `ERC20InsufficientAllowance`, `ERC20InvalidReceiver`, `ERC20InvalidSender`, and `ERC20InvalidSpender` errors appropriately.
-- Be aware of the storage slot used by ERC20Mod to avoid collisions with other facets.
+- Ensure proper access control is implemented in the facet calling these functions, as the module itself does not enforce granular permissions beyond basic checks.
+- Handle all custom errors defined by the module (`ERC20InsufficientAllowance`, `ERC20InsufficientBalance`, etc.) to provide clear feedback to users.
+- Be mindful of storage slot collisions when integrating other modules; adhere to Compose's storage pattern.
 </Callout>
 
 ## Integration Notes
 
 <Callout type="success" title="Shared Storage">
-The ERC20Mod module relies on a fixed storage slot for its internal `ERC20Storage` struct. Facets interacting with this module must correctly bind to this storage slot using the `getStorage` function, which utilizes inline assembly. Any facet implementing ERC-20 logic should ensure its storage layout does not conflict with the slot occupied by ERC20Mod. Changes to token balances and allowances are directly reflected in the diamond's storage.
+The ERC20Mod relies on a dedicated storage slot, `STORAGE_POSITION` (defined as `keccak256("compose.erc20")`), within the diamond's storage. Facets interacting with this module must use the `getStorage()` function or inline assembly to access the `ERC20Storage` struct. The `ERC20Storage` struct holds critical token state such as `totalSupply`, `decimals`, `name`, and `symbol`. Any facet that modifies token balances or allowances must correctly interact with this storage structure.
 </Callout>
 
 <div style={{marginTop: "3rem", paddingTop: "2rem", borderTop: "1px solid var(--ifm-color-emphasis-200)"}}>
@@ -447,4 +447,4 @@ The ERC20Mod module relies on a fixed storage slot for its internal `ERC20Storag
   <WasThisHelpful pageId="ERC20Mod" />
 </div>
 
-<LastUpdated date="2025-12-30T15:01:59.652Z" />
+<LastUpdated date="2025-12-30T15:38:13.129Z" />

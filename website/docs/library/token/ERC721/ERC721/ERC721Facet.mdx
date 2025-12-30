@@ -1,7 +1,7 @@
 ---
 sidebar_position: 2
 title: "ERC721Facet"
-description: "Manages ERC-721 token collection properties and transfers."
+description: "Manages ERC-721 token properties and transfers."
 gitSource: "https://github.com/Perfect-Abstractions/Compose/tree/main/src/token/ERC721/ERC721/ERC721Facet.sol"
 ---
 
@@ -21,19 +21,19 @@ import GradientText from '@site/src/components/ui/GradientText';
 import GradientButton from '@site/src/components/ui/GradientButton';
 
 <DocSubtitle>
-Manages ERC-721 token collection properties and transfers.
+Manages ERC-721 token properties and transfers.
 </DocSubtitle>
 
 <Callout type="info" title="Key Features">
-- Full ERC-721 compliance for token management.
-- Supports metadata retrieval via `tokenURI`.
-- Provides internal and external transfer functions, including safe transfer variants.
-- Exposes ownership and approval querying functions.
+- Implements core ERC-721 standard functions.
+- Supports token metadata retrieval (name, symbol, tokenURI).
+- Handles token ownership and transfer logic.
+- Manages approvals for individual tokens and for all tokens by an operator.
 </Callout>
 
 ## Overview
 
-The ERC721Facet provides the core functionality for an ERC-721 compliant token collection within a Compose diamond. It handles token ownership, approvals, metadata retrieval, and all standard transfer operations, ensuring interoperability with the ERC-721 standard.
+The ERC721Facet provides standard ERC-721 functionality for a Compose diamond. It exposes core token metadata, ownership, and transfer capabilities, enabling the diamond to act as an ERC-721 compliant collection.
 
 ---
 
@@ -563,28 +563,37 @@ error ERC721InvalidOperator(address _operator);
 <ExpandableCode language="solidity" maxLines={20} title="Example Implementation">
 {`pragma solidity ^0.8.30;
 
-import {IERC721Facet} from "@compose-protocol/diamond/contracts/facets/ERC721/IERC721Facet.sol";
+import { ERC721Facet } from "@compose/token/ERC721/ERC721/ERC721Facet";
+import { Diamond } from "@compose/diamond/Diamond";
 
-contract ERC721Consumer {
-    address immutable _diamondAddress;
+contract MyERC721Diamond is Diamond {
+    constructor() Diamond(
+        address(this),
+        address(0), // owner
+        bytes('')  // initializationCalldata
+    ) {}
 
-    constructor(address diamondAddress) {
-        _diamondAddress = diamondAddress;
+    // Assume ERC721Facet is already deployed and its address is known
+    address public constant ERC721_FACET_ADDRESS = address(0xYourERC721FacetAddress);
+
+    function name() public view returns (string memory) {
+        return ERC721Facet(ERC721_FACET_ADDRESS).name();
     }
 
-    function consumeERC721() external {
-        IERC721Facet erc721Facet = IERC721Facet(_diamondAddress);
+    function symbol() public view returns (string memory) {
+        return ERC721Facet(ERC721_FACET_ADDRESS).symbol();
+    }
 
-        // Get token name and symbol
-        string memory name = erc721Facet.name();
-        string memory symbol = erc721Facet.symbol();
+    function tokenURI(uint256 _tokenId) public view returns (string memory) {
+        return ERC721Facet(ERC721_FACET_ADDRESS).tokenURI(_tokenId);
+    }
 
-        // Check balance of caller
-        uint256 balance = erc721Facet.balanceOf(msg.sender);
+    function ownerOf(uint256 _tokenId) public view returns (address) {
+        return ERC721Facet(ERC721_FACET_ADDRESS).ownerOf(_tokenId);
+    }
 
-        // Attempt to transfer a token (assuming caller owns token ID 1 and is approved)
-        // Note: This is illustrative; actual calls require proper setup and permissions.
-        // erc721Facet.transferFrom(msg.sender, address(this), 1);
+    function transferFrom(address _from, address _to, uint256 _tokenId) external {
+        ERC721Facet(ERC721_FACET_ADDRESS).transferFrom(_from, _to, _tokenId);
     }
 }`}
 </ExpandableCode>
@@ -592,15 +601,15 @@ contract ERC721Consumer {
 ## Best Practices
 
 <Callout type="tip" title="Best Practice">
-- Ensure the ERC721Facet is correctly initialized with its storage slot. Access storage via `getStorage()` for direct manipulation if necessary, but prefer using facet functions.
-- Implement robust access control mechanisms externally or within other facets to gate sensitive functions like `approve` and `transferFrom` if required by your application logic.
-- For safe transfers, prefer `safeTransferFrom` over `transferFrom` to ensure receiver contract compatibility.
+- Initialize the ERC721Facet with necessary metadata (name, symbol, baseURI) during diamond deployment.
+- Ensure proper access control is configured for functions that modify token ownership or approvals.
+- Integrate with other facets for advanced features like minting or burning, adhering to storage slot conventions.
 </Callout>
 
 ## Security Considerations
 
 <Callout type="warning" title="Security">
-Access control for `approve` and `transferFrom` functions should be managed externally, as this facet implements the core ERC-721 logic without inherent owner checks on these operations. Input validation for token IDs and addresses is handled by custom errors. Reentrancy is mitigated by the diamond proxy pattern and standard ERC-721 checks. Ensure the receiver address in `safeTransferFrom` can handle ERC-721 tokens to prevent unintended state or reverts.
+The `internalTransferFrom` function includes critical checks for ownership and approvals. Ensure that the caller invoking `transferFrom`, `safeTransferFrom`, `approve`, and `setApprovalForAll` has the appropriate permissions. Be mindful of reentrancy if external calls are made within these functions, although the current implementation is designed to mitigate this risk through careful state updates.
 </Callout>
 
 <div style={{marginTop: "3rem", paddingTop: "2rem", borderTop: "1px solid var(--ifm-color-emphasis-200)"}}>
@@ -650,4 +659,4 @@ Access control for `approve` and `transferFrom` functions should be managed exte
   <WasThisHelpful pageId="ERC721Facet" />
 </div>
 
-<LastUpdated date="2025-12-30T15:02:55.051Z" />
+<LastUpdated date="2025-12-30T15:39:06.459Z" />
