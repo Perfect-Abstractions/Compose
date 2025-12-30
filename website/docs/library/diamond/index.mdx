@@ -1,0 +1,57 @@
+---
+title: "Diamond Core"
+description: "Core diamond proxy functionality for ERC-2535 diamonds."
+---
+
+import DocCard, { DocCardGrid } from '@site/src/components/docs/DocCard';
+import DocSubtitle from '@site/src/components/docs/DocSubtitle';
+import Icon from '@site/src/components/ui/Icon';
+
+<DocSubtitle>
+  Core diamond proxy functionality for ERC-2535 diamonds.
+</DocSubtitle>
+
+<DocCardGrid columns={2}>
+  <DocCard
+    title="example"
+    description={"example components for Compose diamonds."}
+    href="/docs/library/diamond/example"
+    icon={<Icon name="package" size={28} />}
+    size="medium"
+  />
+  <DocCard
+    title="DiamondInspectFacet"
+    description={"Inspects diamond facets and storage mappings"}
+    href="/docs/library/diamond/DiamondInspectFacet"
+    icon={<Icon name="book" size={28} />}
+    size="medium"
+  />
+  <DocCard
+    title="DiamondLoupeFacet"
+    description={"Inspect diamond facets and their function selectors"}
+    href="/docs/library/diamond/DiamondLoupeFacet"
+    icon={<Icon name="book" size={28} />}
+    size="medium"
+  />
+  <DocCard
+    title="DiamondMod"
+    description={"Manages facet additions and function dispatch for diamonds"}
+    href="/docs/library/diamond/DiamondMod"
+    icon={<Icon name="book" size={28} />}
+    size="medium"
+  />
+  <DocCard
+    title="DiamondUpgradeFacet"
+    description={"Manage diamond upgrades and facet additions"}
+    href="/docs/library/diamond/DiamondUpgradeFacet"
+    icon={<Icon name="book" size={28} />}
+    size="medium"
+  />
+  <DocCard
+    title="DiamondUpgradeMod"
+    description={"Upgrade diamond with add, replace, and remove functions"}
+    href="/docs/library/diamond/DiamondUpgradeMod"
+    icon={<Icon name="book" size={28} />}
+    size="medium"
+  />
+</DocCardGrid>
