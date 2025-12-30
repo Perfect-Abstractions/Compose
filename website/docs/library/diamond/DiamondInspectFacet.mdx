@@ -25,13 +25,14 @@ Inspect diamond storage and function mappings.
 </DocSubtitle>
 
 <Callout type="info" title="Key Features">
-- Retrieves diamond storage layout.
-- Exposes function selector to facet address mappings.
+- Provides read-only access to diamond's function-to-facet mappings.
+- Enables programmatic inspection of the diamond's storage layout.
+- Utilizes inline assembly for direct storage access, ensuring efficiency for critical inspection tasks.
 </Callout>
 
 ## Overview
 
-The DiamondInspectFacet provides read-only access to the diamond's internal state and function routing information. It allows external callers to query how functions are mapped to specific facets within the diamond proxy, enhancing transparency and auditability.
+The DiamondInspectFacet provides read-only access to the diamond's internal state and function routing. It allows external querying of how function selectors map to specific facet addresses, facilitating dynamic interaction and debugging without altering diamond state.
 
 ---
 
@@ -113,16 +114,24 @@ Returns an array of all function selectors and their corresponding facet address
 import {DiamondInspectFacet} from "@compose/diamond/DiamondInspectFacet";
 import {IDiamondCut} from "@compose/diamond/IDiamondCut";
 
-contract Consumer {
-    address immutable diamondAddress;
+contract Deployer {
+    address immutable diamond;
 
-    constructor(address _diamondAddress) {
-        diamondAddress = _diamondAddress;
+    constructor(address _diamond) {
+        diamond = _diamond;
     }
 
-    function inspectFunctions() external view returns (DiamondInspectFacet.FunctionFacetPair[] memory) {
-        DiamondInspectFacet inspectFacet = DiamondInspectFacet(diamondAddress);
-        return inspectFacet.functionFacetPairs();
+    function inspectDiamond() external view {
+        DiamondInspectFacet inspectFacet = DiamondInspectFacet(diamond);
+
+        // Get all function selector to facet address mappings
+        DiamondInspectFacet.FunctionFacetPair[] memory pairs = inspectFacet.functionFacetPairs();
+
+        // Example: Iterate and log mappings (requires a logging mechanism or event)
+        for (uint i = 0; i < pairs.length; i++) {
+            // Log pairs[i].functionSelector and pairs[i].facetAddress
+            // (Actual logging would involve events or external calls)
+        }
     }
 }`}
 </ExpandableCode>
@@ -130,18 +139,19 @@ contract Consumer {
 ## Best Practices
 
 <Callout type="tip" title="Best Practice">
-- Use this facet for read-only inspection of diamond configuration and function mappings.
-- Avoid modifying diamond state through this facet; use dedicated facets for state changes.
+- Integrate this facet to enable external inspection of diamond's function routing.
+- Use the `functionFacetPairs` function to dynamically resolve function calls when the target facet is not known statically.
+- Access storage directly via `getStorage` only when absolutely necessary for deep inspection, as it bypasses standard function call interfaces.
 </Callout>
 
 ## Security Considerations
 
 <Callout type="warning" title="Security">
-This facet is designed for read-only operations. Ensure that access control for calling its functions is appropriately managed by the diamond's access control mechanism if necessary, though typically inspection functions are permissionless.
+This facet is read-only and does not introduce reentrancy risks. Direct storage access via `getStorage` should be used with caution to avoid misinterpreting raw storage data. Ensure that the diamond's storage slot `DIAMOND_STORAGE_POSITION` is correctly set to `keccak256("compose.diamond")` to prevent accidental data corruption.
 </Callout>
 
 <div style={{marginTop: "3rem", paddingTop: "2rem", borderTop: "1px solid var(--ifm-color-emphasis-200)"}}>
   <WasThisHelpful pageId="DiamondInspectFacet" />
 </div>
 
-<LastUpdated date="2025-12-30T15:39:25.086Z" />
+<LastUpdated date="2025-12-30T15:56:01.960Z" />

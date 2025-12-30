@@ -1,7 +1,7 @@
 ---
 sidebar_position: 1
 title: "AccessControlTemporalMod"
-description: "Manages role assignments with expiry dates."
+description: "Manages role assignments with expiry for diamond access control."
 gitSource: "https://github.com/Perfect-Abstractions/Compose/tree/main/src/access/AccessControlTemporal/AccessControlTemporalMod.sol"
 ---
 
@@ -21,13 +21,13 @@ import GradientText from '@site/src/components/ui/GradientText';
 import GradientButton from '@site/src/components/ui/GradientButton';
 
 <DocSubtitle>
-Manages role assignments with expiry dates.
+Manages role assignments with expiry for diamond access control.
 </DocSubtitle>
 
 <Callout type="info" title="Key Features">
-- Roles can be granted with a specific expiry timestamp.
-- Functions to check if a role has expired or is currently valid.
-- Allows for programmatic revocation of temporal roles before expiry.
+- Grants roles with a specific expiration timestamp.
+- Automatically enforces role validity, reverting if expired.
+- Explicitly revokes temporal roles before their expiry.
 </Callout>
 
 <Callout type="info" title="Module Usage">
@@ -36,7 +36,7 @@ This module provides internal functions for use in your custom facets. Import it
 
 ## Overview
 
-This module provides time-bound access control, allowing roles to be granted for a specific duration. It enhances security by ensuring that elevated privileges automatically expire, reducing the risk of stale permissions. Integrate this module to implement temporary role assignments within your diamond.
+This module introduces time-bound role assignments, enabling temporary permissions for accounts. By integrating with the diamond's access control, it enhances security by automatically revoking expired roles, reducing the need for manual cleanup and preventing stale permissions from being exploited.
 
 ---
 
@@ -433,28 +433,22 @@ error AccessControlUnauthorizedAccount(address _account, bytes32 _role);
 <ExpandableCode language="solidity" maxLines={20} title="Example Implementation">
 {`pragma solidity ^0.8.30;
 
-import { IAccessControlTemporal } from "@compose/access/AccessControlTemporal/IAccessControlTemporal";
-import { AccessControlTemporalMod } from "@compose/access/AccessControlTemporal/AccessControlTemporalMod";
+import {IAccessControlTemporal} from "@compose/access/AccessControlTemporal/IAccessControlTemporal.sol";
+import {AccessControlTemporalMod} from "@compose/access/AccessControlTemporal/AccessControlTemporalMod.sol";
 
 contract MyFacet {
-    // Assume AccessControlTemporalMod is deployed and accessible via a diamond storage slot
-    AccessControlTemporalMod internal accessControlTemporalMod = AccessControlTemporalMod(
-        address(this) // In a real diamond, this would be the diamond proxy address
-    );
+    IAccessControlTemporal internal constant accessControlTemporal = IAccessControlTemporal(AccessControlTemporalMod.ACCESS_CONTROL_STORAGE_POSITION);
 
-    function grantTempRole(bytes32 _role, address _account, uint256 _expiresAt) external {
-        // Grant a role that expires at a specific timestamp
-        accessControlTemporalMod.grantRoleWithExpiry(_role, _account, _expiresAt);
+    function grantTemporaryRole(bytes32 _role, address _account, uint256 _expiresAt) external {
+        accessControlTemporal.grantRoleWithExpiry(_role, _account, _expiresAt);
     }
 
-    function checkRoleValidity(bytes32 _role, address _account) external view {
-        // Ensure the role is still valid and not expired
-        accessControlTemporalMod.requireValidRole(_role, _account);
+    function checkRole(bytes32 _role, address _account) external view {
+        accessControlTemporal.requireValidRole(_role, _account);
     }
 
-    function revokeTempRole(bytes32 _role, address _account) external {
-        // Manually revoke a temporal role before its expiry
-        accessControlTemporalMod.revokeTemporalRole(_role, _account);
+    function revokeRole(bytes32 _role, address _account) external {
+        accessControlTemporal.revokeTemporalRole(_role, _account);
     }
 }`}
 </ExpandableCode>
@@ -462,15 +456,15 @@ contract MyFacet {
 ## Best Practices
 
 <Callout type="tip" title="Best Practice">
-- Ensure `_expiresAt` timestamps are set reasonably to avoid immediate expiry or excessively long-lived roles.
-- Regularly audit temporal role assignments to manage the diamond's access control posture.
-- Handle `AccessControlRoleExpired` and `AccessControlUnauthorizedAccount` errors gracefully in calling facets.
+- Use `requireValidRole` to enforce temporal access control checks before sensitive operations, ensuring roles have not expired.
+- Grant roles with specific, short expiry durations to minimize the attack surface and adhere to the principle of least privilege.
+- Monitor `RoleGrantedWithExpiry` and `TemporalRoleRevoked` events for auditing and off-chain access control management.
 </Callout>
 
 ## Integration Notes
 
 <Callout type="success" title="Shared Storage">
-This module utilizes the diamond storage pattern. Its primary storage is located at `ACCESS_CONTROL_STORAGE_POSITION`, identified by `keccak256("compose.accesscontrol")`, and is managed by the `AccessControlStorage` struct. Facets interacting with temporal roles should call the functions provided by this module, which in turn read from and write to the diamond's storage. Ensure that no other modules or facets conflict with the `ACCESS_CONTROL_STORAGE_POSITION`.
+AccessControlTemporalMod utilizes diamond storage at the `ACCESS_CONTROL_STORAGE_POSITION` (keccak256("compose.accesscontrol")) to manage temporal role assignments. Facets interacting with this module should use the `IAccessControlTemporal` interface. The module's state is managed independently of the base `AccessControlStorage` but is accessible through the diamond storage pattern. Ensure that the `AccessControlTemporalFacet` is correctly implemented and added to the diamond to expose these functions.
 </Callout>
 
 <div style={{marginTop: "3rem", paddingTop: "2rem", borderTop: "1px solid var(--ifm-color-emphasis-200)"}}>
@@ -502,4 +496,4 @@ This module utilizes the diamond storage pattern. Its primary storage is located
   <WasThisHelpful pageId="AccessControlTemporalMod" />
 </div>
 
-<LastUpdated date="2025-12-30T15:37:38.697Z" />
+<LastUpdated date="2025-12-30T15:54:10.163Z" />

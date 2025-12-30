@@ -25,13 +25,14 @@ Burn ERC721 tokens and update enumeration
 </DocSubtitle>
 
 <Callout type="info" title="Key Features">
-- Destroys ERC721 tokens, rendering them permanently unusable.
-- Updates internal enumeration state to reflect token removal.
+- Burns ERC721 tokens, effectively destroying them.
+- Updates internal enumeration tracking to reflect token removal.
+- Utilizes the diamond proxy pattern for composability.
 </Callout>
 
 ## Overview
 
-The ERC721EnumerableBurnFacet provides functionality to burn ERC721 tokens. It ensures that upon token destruction, the token is correctly removed from any enumeration tracking mechanisms managed by other facets within the diamond. This maintains the integrity of token lists and counts.
+This facet provides functionality to burn (destroy) ERC721 tokens within a Compose diamond. It ensures that token destruction is correctly reflected in the diamond's state, including any enumeration tracking mechanisms.
 
 ---
 
@@ -162,39 +163,46 @@ error ERC721InsufficientApproval(address _operator, uint256 _tokenId);
 <ExpandableCode language="solidity" maxLines={20} title="Example Implementation">
 {`pragma solidity ^0.8.30;
 
-import { IERC721Enumerable } from "@compose/token/ERC721/IERC721Enumerable.sol";
+import { IDiamondWritable } from "@compose/diamond/IDiamondWritable.sol";
 import { ERC721EnumerableBurnFacet } from "@compose/token/ERC721/ERC721Enumerable/ERC721EnumerableBurnFacet.sol";
 
-contract MyDiamond is IERC721Enumerable {
-    ERC721EnumerableBurnFacet private burnFacet;
+contract Deployer {
+    address diamondAddress;
 
-    // Assume diamond deployment and facet setup is handled elsewhere
-    // Example: Setting the burnFacet after deployment
-    function setBurnFacet(address _burnFacetAddress) external {
-        burnFacet = ERC721EnumerableBurnFacet(_burnFacetAddress);
+    function deploy() public {
+        // Assume diamond is deployed and facets are added
+        diamondAddress = address(0x123...); // Replace with actual diamond address
     }
 
-    function burn(uint256 _tokenId) external {
-        // Delegate burn to the facet
-        burnFacet.burn(_tokenId);
+    function burnToken(uint256 _tokenId) public {
+        address facetAddress = getAddressForFunction(diamondAddress, "burn(uint256)"); // Helper to get facet address
+        ERC721EnumerableBurnFacet(facetAddress).burn(_tokenId);
     }
 
-    // Other IERC721Enumerable functions would be implemented or delegated here
-}
-`}
+    // This is a placeholder and would need actual implementation
+    function getAddressForFunction(address _diamond, string memory _functionSelector) internal pure returns (address) {
+        // In a real scenario, this would query the diamond's facet address mapping.
+        // For this example, we assume a known facet address for demonstration.
+        if (keccak256(abi.encodePacked(_functionSelector)) == keccak256(abi.encodePacked("burn(uint256)"))) {
+            return 0x456...; // Replace with actual ERC721EnumerableBurnFacet address
+        }
+        revert("Function not found");
+    }
+}`}
 </ExpandableCode>
 
 ## Best Practices
 
 <Callout type="tip" title="Best Practice">
-- Ensure the `ERC721EnumerableBurnFacet` is correctly initialized and added to the diamond proxy.
-- Verify that the `burn` function is called with appropriate access control checks, typically by the token owner or an approved operator.
+- Ensure the `ERC721EnumerableBurnFacet` is added to the diamond with the correct selector for the `burn` function.
+- Call `burn` via the diamond proxy to ensure proper function routing and access control.
+- Be aware that burning a token is irreversible and will remove it from any enumeration tracking.
 </Callout>
 
 ## Security Considerations
 
 <Callout type="warning" title="Security">
-The `burn` function should only be callable by the owner of the token or an address with explicit approval. Ensure that the `ERC721NonexistentToken` and `ERC721InsufficientApproval` errors are handled by the caller to prevent unexpected reverts. Reentrancy is mitigated by the diamond proxy's architecture and the fact that this function modifies state before returning.
+The `burn` function should be protected by appropriate access control mechanisms (e.g., ownership or operator approval) to prevent unauthorized token destruction. Ensure that the `ERC721NonexistentToken` and `ERC721InsufficientApproval` errors are handled by the caller to prevent unexpected reverts.
 </Callout>
 
 <div style={{marginTop: "3rem", paddingTop: "2rem", borderTop: "1px solid var(--ifm-color-emphasis-200)"}}>
@@ -244,4 +252,4 @@ The `burn` function should only be callable by the owner of the token or an addr
   <WasThisHelpful pageId="ERC721EnumerableBurnFacet" />
 </div>
 
-<LastUpdated date="2025-12-30T15:38:50.370Z" />
+<LastUpdated date="2025-12-30T15:55:23.926Z" />

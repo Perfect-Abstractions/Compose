@@ -1,7 +1,7 @@
 ---
 sidebar_position: 2
 title: "ERC721Facet"
-description: "Manages ERC-721 token properties and transfers."
+description: "Manages ERC-721 compliant tokens within a Compose diamond."
 gitSource: "https://github.com/Perfect-Abstractions/Compose/tree/main/src/token/ERC721/ERC721/ERC721Facet.sol"
 ---
 
@@ -21,19 +21,18 @@ import GradientText from '@site/src/components/ui/GradientText';
 import GradientButton from '@site/src/components/ui/GradientButton';
 
 <DocSubtitle>
-Manages ERC-721 token properties and transfers.
+Manages ERC-721 compliant tokens within a Compose diamond.
 </DocSubtitle>
 
 <Callout type="info" title="Key Features">
-- Implements core ERC-721 standard functions.
-- Supports token metadata retrieval (name, symbol, tokenURI).
-- Handles token ownership and transfer logic.
-- Manages approvals for individual tokens and for all tokens by an operator.
+- Implements core ERC-721 functions: name, symbol, tokenURI, balanceOf, ownerOf, approvals, and transfers.
+- Supports both standard and safe transfer operations.
+- Leverages the diamond storage pattern for state management.
 </Callout>
 
 ## Overview
 
-The ERC721Facet provides standard ERC-721 functionality for a Compose diamond. It exposes core token metadata, ownership, and transfer capabilities, enabling the diamond to act as an ERC-721 compliant collection.
+The ERC721Facet provides standard ERC-721 functionality for managing non-fungible tokens. It allows querying token details, ownership, approvals, and performing transfers, all orchestrated through the diamond proxy.
 
 ---
 
@@ -563,37 +562,31 @@ error ERC721InvalidOperator(address _operator);
 <ExpandableCode language="solidity" maxLines={20} title="Example Implementation">
 {`pragma solidity ^0.8.30;
 
-import { ERC721Facet } from "@compose/token/ERC721/ERC721/ERC721Facet";
-import { Diamond } from "@compose/diamond/Diamond";
+import { IERC721Facet } from "@compose/token/ERC721/ERC721/IERC721Facet";
+import { DiamondProxy } from "@compose/diamond/DiamondProxy";
 
-contract MyERC721Diamond is Diamond {
-    constructor() Diamond(
-        address(this),
-        address(0), // owner
-        bytes('')  // initializationCalldata
-    ) {}
+contract ERC721Consumer {
+    IERC721Facet private immutable _erc721Facet;
 
-    // Assume ERC721Facet is already deployed and its address is known
-    address public constant ERC721_FACET_ADDRESS = address(0xYourERC721FacetAddress);
-
-    function name() public view returns (string memory) {
-        return ERC721Facet(ERC721_FACET_ADDRESS).name();
+    constructor(address diamondProxyAddress) {
+        _erc721Facet = IERC721Facet(diamondProxyAddress);
     }
 
-    function symbol() public view returns (string memory) {
-        return ERC721Facet(ERC721_FACET_ADDRESS).symbol();
+    function getTokenName() external view returns (string memory) {
+        return _erc721Facet.name();
     }
 
-    function tokenURI(uint256 _tokenId) public view returns (string memory) {
-        return ERC721Facet(ERC721_FACET_ADDRESS).tokenURI(_tokenId);
+    function getTokenSymbol() external view returns (string memory) {
+        return _erc721Facet.symbol();
     }
 
-    function ownerOf(uint256 _tokenId) public view returns (address) {
-        return ERC721Facet(ERC721_FACET_ADDRESS).ownerOf(_tokenId);
+    function getTokenOwner(uint256 tokenId) external view returns (address) {
+        return _erc721Facet.ownerOf(tokenId);
     }
 
-    function transferFrom(address _from, address _to, uint256 _tokenId) external {
-        ERC721Facet(ERC721_FACET_ADDRESS).transferFrom(_from, _to, _tokenId);
+    function transferToken(address to, uint256 tokenId) external {
+        address from = _erc721Facet.ownerOf(tokenId); // Assuming caller is the owner
+        _erc721Facet.transferFrom(from, to, tokenId);
     }
 }`}
 </ExpandableCode>
@@ -601,15 +594,15 @@ contract MyERC721Diamond is Diamond {
 ## Best Practices
 
 <Callout type="tip" title="Best Practice">
-- Initialize the ERC721Facet with necessary metadata (name, symbol, baseURI) during diamond deployment.
-- Ensure proper access control is configured for functions that modify token ownership or approvals.
-- Integrate with other facets for advanced features like minting or burning, adhering to storage slot conventions.
+- Initialize the ERC721Facet with the correct storage slot and base URI during diamond deployment.
+- Ensure proper access control is configured at the diamond level for functions like `approve` and `transferFrom` if necessary, though many ERC-721 operations are permissionless for the token owner.
+- When upgrading, preserve the `STORAGE_POSITION` to maintain state continuity.
 </Callout>
 
 ## Security Considerations
 
 <Callout type="warning" title="Security">
-The `internalTransferFrom` function includes critical checks for ownership and approvals. Ensure that the caller invoking `transferFrom`, `safeTransferFrom`, `approve`, and `setApprovalForAll` has the appropriate permissions. Be mindful of reentrancy if external calls are made within these functions, although the current implementation is designed to mitigate this risk through careful state updates.
+Input validation for token IDs and addresses is handled internally by the facet. Ensure that the diamond proxy correctly routes calls to this facet. Be mindful of potential reentrancy if custom logic interacts with token transfers outside of this facet's direct control. The `safeTransferFrom` functions include checks for receiver contract compatibility.
 </Callout>
 
 <div style={{marginTop: "3rem", paddingTop: "2rem", borderTop: "1px solid var(--ifm-color-emphasis-200)"}}>
@@ -659,4 +652,4 @@ The `internalTransferFrom` function includes critical checks for ownership and a
   <WasThisHelpful pageId="ERC721Facet" />
 </div>
 
-<LastUpdated date="2025-12-30T15:39:06.459Z" />
+<LastUpdated date="2025-12-30T15:55:42.896Z" />

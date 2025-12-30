@@ -1,7 +1,7 @@
 ---
 sidebar_position: 1
 title: "OwnerTwoStepsMod"
-description: "Manages contract ownership with a two-step transfer process."
+description: "Two-step contract ownership transfer logic."
 gitSource: "https://github.com/Perfect-Abstractions/Compose/tree/main/src/access/OwnerTwoSteps/OwnerTwoStepsMod.sol"
 ---
 
@@ -21,13 +21,14 @@ import GradientText from '@site/src/components/ui/GradientText';
 import GradientButton from '@site/src/components/ui/GradientButton';
 
 <DocSubtitle>
-Manages contract ownership with a two-step transfer process.
+Two-step contract ownership transfer logic.
 </DocSubtitle>
 
 <Callout type="info" title="Key Features">
 - Secure two-step ownership transfer process.
-- Explicit owner and pending owner tracking.
-- Permissionless `renounceOwnership` function to relinquish all owner privileges.
+- Explicit `acceptOwnership` confirmation required from the new owner.
+- Provides `owner()`, `pendingOwner()`, and `renounceOwnership()` for state inspection and management.
+- Integrates with diamond storage using defined storage positions.
 </Callout>
 
 <Callout type="info" title="Module Usage">
@@ -36,7 +37,7 @@ This module provides internal functions for use in your custom facets. Import it
 
 ## Overview
 
-This module provides a secure, two-step ownership transfer mechanism, crucial for preventing accidental or malicious ownership changes in upgradeable diamond proxies. By requiring explicit acceptance from the new owner, it enhances contract safety and predictability during ownership transitions.
+This module provides a robust, two-step ownership transfer mechanism, enhancing security by requiring explicit confirmation from the new owner. It integrates seamlessly with the Compose diamond storage pattern, ensuring ownership state is managed predictably and upgrade-safely.
 
 ---
 
@@ -252,34 +253,29 @@ error OwnerUnauthorizedAccount();
 <ExpandableCode language="solidity" maxLines={20} title="Example Implementation">
 {`pragma solidity ^0.8.30;
 
-import {IOwnerTwoStepsFacet} from "@compose/access/OwnerTwoSteps/OwnerTwoStepsFacet.sol";
-import {OwnerTwoStepsMod} from "@compose/access/OwnerTwoSteps/OwnerTwoStepsMod.sol";
+import {OwnerTwoStepsMod} from "@compose/access/OwnerTwoSteps/OwnerTwoStepsMod";
+import {IOwnerTwoStepsFacet} from "@compose/access/OwnerTwoSteps/IOwnerTwoStepsFacet";
 
-contract MyFacet is IOwnerTwoStepsFacet {
-    address immutable diamondAddress;
+contract MyFacet {
+    // Assume OwnerTwoStepsMod is initialized and its storage slot is known
+    address public constant OWNER_STORAGE_POSITION = OwnerTwoStepsMod.OWNER_STORAGE_POSITION;
+    address public constant PENDING_OWNER_STORAGE_POSITION = OwnerTwoStepsMod.PENDING_OWNER_STORAGE_POSITION;
 
-    constructor(address _diamondAddress) {
-        diamondAddress = _diamondAddress;
+    // Example of calling transferOwnership from a facet
+    function initiateOwnershipTransfer(address _newOwner) external {
+        // Assuming IOwnerTwoStepsFacet is implemented by the diamond proxy
+        IOwnerTwoStepsFacet(msg.sender).transferOwnership(_newOwner);
     }
 
-    function transferContractOwnership(address _newOwner) external {
-        OwnerTwoStepsMod.transferOwnership(diamondAddress, _newOwner);
+    // Example of calling acceptOwnership
+    function finalizeOwnershipTransfer() external {
+        IOwnerTwoStepsFacet(msg.sender).acceptOwnership();
     }
 
-    function acceptContractOwnership() external {
-        OwnerTwoStepsMod.acceptOwnership(diamondAddress);
-    }
-
-    function getCurrentOwner() external view returns (address) {
-        return OwnerTwoStepsMod.owner(diamondAddress);
-    }
-
-    function getPendingOwner() external view returns (address) {
-        return OwnerTwoStepsMod.pendingOwner(diamondAddress);
-    }
-
-    function renounceContractOwnership() external {
-        OwnerTwoStepsMod.renounceOwnership(diamondAddress);
+    // Example of checking ownership
+    function checkOwnership() external view {
+        require(OwnerTwoStepsMod.owner() == msg.sender, "Not the owner");
+        // ... owner-specific logic
     }
 }`}
 </ExpandableCode>
@@ -287,15 +283,15 @@ contract MyFacet is IOwnerTwoStepsFacet {
 ## Best Practices
 
 <Callout type="tip" title="Best Practice">
-- Always use the `transferOwnership` and `acceptOwnership` functions in tandem to ensure secure ownership changes.
-- Implement `requireOwner` checks within facets that should only be callable by the contract owner.
-- Be aware that calling `renounceOwnership` permanently removes owner privileges and should be used with extreme caution.
+- Always use the `transferOwnership` function to initiate a transfer and `acceptOwnership` to finalize it. Never call `acceptOwnership` directly without a prior `transferOwnership` call.
+- Implement `requireOwner()` checks judiciously, ensuring critical administrative functions are protected.
+- Be aware that `renounceOwnership()` permanently relinquishes ownership, setting the owner to `address(0)`.
 </Callout>
 
 ## Integration Notes
 
 <Callout type="success" title="Shared Storage">
-This module interacts with diamond storage using specific storage positions defined by `OWNER_STORAGE_POSITION` and `PENDING_OWNER_STORAGE_POSITION`. Facets integrating this module must correctly reference these positions and the associated `OwnerStorage` and `PendingOwnerStorage` structs. The `owner` and `pendingOwner` state variables are managed within the diamond's storage.
+This module utilizes the diamond storage pattern, storing ownership and pending ownership states at `OWNER_STORAGE_POSITION` and `PENDING_OWNER_STORAGE_POSITION` respectively. Facets interacting with ownership logic should reference these positions and the `OwnerStorage` and `PendingOwnerStorage` structs. The `owner()` and `pendingOwner()` functions provide view access to these states. Functions like `requireOwner()` will revert if the caller is not the current owner, enforcing access control based on the module's state.
 </Callout>
 
 <div style={{marginTop: "3rem", paddingTop: "2rem", borderTop: "1px solid var(--ifm-color-emphasis-200)"}}>
@@ -315,4 +311,4 @@ This module interacts with diamond storage using specific storage positions defi
   <WasThisHelpful pageId="OwnerTwoStepsMod" />
 </div>
 
-<LastUpdated date="2025-12-30T15:37:24.140Z" />
+<LastUpdated date="2025-12-30T15:53:53.330Z" />

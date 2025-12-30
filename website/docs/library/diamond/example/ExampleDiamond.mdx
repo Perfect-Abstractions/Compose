@@ -1,7 +1,7 @@
 ---
 sidebar_position: 510
 title: "ExampleDiamond"
-description: "Example Diamond with constructor, fallback, and receive functions"
+description: "Example Diamond for Compose framework"
 gitSource: "https://github.com/Perfect-Abstractions/Compose/tree/main/src/diamond/example/ExampleDiamond.sol"
 ---
 
@@ -21,18 +21,18 @@ import GradientText from '@site/src/components/ui/GradientText';
 import GradientButton from '@site/src/components/ui/GradientButton';
 
 <DocSubtitle>
-Example Diamond with constructor, fallback, and receive functions
+Example Diamond for Compose framework
 </DocSubtitle>
 
 <Callout type="info" title="Key Features">
-- Initializes the diamond contract with facets and owner.
-- Supports adding, replacing, or removing facets during initialization.
-- Includes `fallback` and `receive` functions for general contract interaction and ether reception.
+- Enables initialization of a diamond proxy with multiple facets.
+- Sets the initial owner of the diamond contract.
+- Supports direct Ether reception via `receive` and `fallback` functions.
 </Callout>
 
 ## Overview
 
-The ExampleDiamond contract serves as a foundational template for Compose diamonds. It demonstrates the diamond proxy pattern's initialization via a constructor, enabling the addition of facets and setting the diamond's owner. It also includes fallback and receive functions to handle arbitrary calls and ether transfers, respectively.
+The ExampleDiamond contract serves as a foundational template for Compose diamonds. It demonstrates the core diamond proxy pattern by enabling the registration of facets and setting an initial owner. This contract is intended for integration within Compose projects to illustrate facet management and proxy functionality.
 
 ---
 
@@ -85,8 +85,8 @@ Struct to hold facet address and its function selectors. struct FacetCut &#123; 
 <ExpandableCode language="solidity" maxLines={20} title="Example Implementation">
 {`pragma solidity ^0.8.30;
 
-import {ExampleDiamond} from "@compose/diamond/example/ExampleDiamond";
-import {DiamondMod} from "@compose/diamond/DiamondMod";
+import { ExampleDiamond } from "@compose/diamond/example/ExampleDiamond";
+import { DiamondMod } from "@compose/diamond/DiamondMod";
 
 contract DeployExampleDiamond {
     address public diamondAddress;
@@ -94,42 +94,36 @@ contract DeployExampleDiamond {
     function deploy() public {
         // Define facets to be added during deployment
         DiamondMod.FacetCut[] memory facets = new DiamondMod.FacetCut[](1);
-        // Assuming MyFacet is a deployed facet contract
-        // address myFacetAddress = address(new MyFacet());
-        // facets[0] = DiamondMod.FacetCut(myFacetAddress, DiamondMod.FacetCutAction.Add, MyFacet.selectors());
+        // Assuming MyFacet is deployed and its address is known
+        address myFacetAddress = address(0x123...); // Replace with actual facet address
+        bytes4[] memory selectors = new bytes4[](1);
+        selectors[0] = ExampleDiamond.someFunction.selector; // Replace with actual function selector
 
-        // For this example, we'll simulate a constructor call without actual facets
-        // In a real scenario, you would pass actual facet data.
-        address owner = msg.sender;
-        ExampleDiamond exampleDiamond = new ExampleDiamond();
-        // The actual constructor call would look like this:
-        // ExampleDiamond exampleDiamond = new ExampleDiamond(facets, owner);
+        facets[0] = DiamondMod.FacetCut({
+            facetAddress: myFacetAddress,
+            action: DiamondMod.FacetCutAction.Add,
+            functionSelectors: selectors
+        });
 
+        // Deploy the ExampleDiamond with initial facets and owner
+        ExampleDiamond exampleDiamond = new ExampleDiamond(facets, msg.sender);
         diamondAddress = address(exampleDiamond);
     }
-
-    // To interact with the deployed diamond, you would typically use an instance of
-    // the diamond contract and call functions on it.
-    // function interactWithDiamond() public {
-    //     ExampleDiamond deployedDiamond = ExampleDiamond(diamondAddress);
-    //     // Call functions on facets added to the diamond
-    //     // deployedDiamond.myFacetFunction();
-    // }
 }`}
 </ExpandableCode>
 
 ## Best Practices
 
 <Callout type="tip" title="Best Practice">
-- Initialize the diamond with all necessary facets and the owner address using the constructor during deployment.
-- Ensure that the `functionSelectors` array within `FacetCut` accurately reflects the functions exposed by each facet address.
-- The `ExampleDiamond` contract itself is a deployment template; production diamonds will typically inherit from or utilize `DiamondMod` for facet management.
+- Initialize the diamond with necessary facets during deployment using the `constructor`.
+- The `constructor` sets the initial owner, which should be managed securely.
+- Leverage `fallback` and `receive` for handling Ether transfers to the diamond proxy.
 </Callout>
 
 ## Security Considerations
 
 <Callout type="warning" title="Security">
-The constructor function is critical for initial setup. Ensure that the provided facet addresses are trustworthy and that the function selectors accurately map to the intended functions. The `fallback` and `receive` functions are payable and can be called externally, so any logic within them must be robust against reentrancy if state changes are involved (though none are defined in this example).
+The `constructor` function should only be called once during deployment. Ensure that facet addresses provided during initialization are verified and trusted. The `fallback` and `receive` functions, while allowing Ether transfer, do not include specific logic for handling this Ether, which must be implemented by other facets.
 </Callout>
 
 <div style={{marginTop: "3rem", paddingTop: "2rem", borderTop: "1px solid var(--ifm-color-emphasis-200)"}}>
@@ -155,4 +149,4 @@ The constructor function is critical for initial setup. Ensure that the provided
   <WasThisHelpful pageId="ExampleDiamond" />
 </div>
 
-<LastUpdated date="2025-12-30T15:39:38.099Z" />
+<LastUpdated date="2025-12-30T15:56:13.967Z" />

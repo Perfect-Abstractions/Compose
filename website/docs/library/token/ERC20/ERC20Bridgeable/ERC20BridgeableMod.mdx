@@ -1,7 +1,7 @@
 ---
 sidebar_position: 1
 title: "ERC20BridgeableMod"
-description: "Manages cross-chain ERC20 token operations and access control."
+description: "Manages cross-chain ERC20 token operations."
 gitSource: "https://github.com/Perfect-Abstractions/Compose/tree/main/src/token/ERC20/ERC20Bridgeable/ERC20BridgeableMod.sol"
 ---
 
@@ -21,13 +21,13 @@ import GradientText from '@site/src/components/ui/GradientText';
 import GradientButton from '@site/src/components/ui/GradientButton';
 
 <DocSubtitle>
-Manages cross-chain ERC20 token operations and access control.
+Manages cross-chain ERC20 token operations.
 </DocSubtitle>
 
 <Callout type="info" title="Key Features">
-- Enables permissioned cross-chain token minting and burning operations.
-- Integrates with Compose's Access Control system to manage trusted bridge addresses.
-- Provides view functions to access ERC20 and Access Control storage layouts.
+- Enables permissioned cross-chain minting and burning operations.
+- Integrates with the diamond's access control system for role-based authorization of bridge addresses.
+- Emits `CrosschainMint` and `CrosschainBurn` events for off-chain monitoring.
 </Callout>
 
 <Callout type="info" title="Module Usage">
@@ -36,7 +36,7 @@ This module provides internal functions for use in your custom facets. Import it
 
 ## Overview
 
-This module facilitates secure cross-chain token transfers by enabling authorized bridge contracts to mint and burn ERC20 tokens. It leverages Compose's storage pattern for managing ERC20 and Access Control state, ensuring composability and upgradeability within a diamond proxy.
+This module enables secure cross-chain minting and burning of ERC20 tokens. It enforces access control, ensuring only trusted bridge addresses can initiate these operations, maintaining the integrity of token balances across different chains within the diamond.
 
 ---
 
@@ -383,43 +383,47 @@ error ERC20InvalidSender(address _sender);
 import {IERC20BridgeableMod} from "@compose/token/ERC20/ERC20Bridgeable/ERC20BridgeableMod";
 
 contract MyFacet {
-    // Assume this facet has access to the diamond proxy
-    IERC20BridgeableMod private constant ERC20_BRIDGEABLE_FACET = IERC20BridgeableMod(address(this));
+    IERC20BridgeableMod internal immutable erc20BridgeableMod;
 
-    /**
-     * @notice Initiates a cross-chain burn of tokens.
-     * @param _from The address to burn tokens from.
-     * @param _value The amount of tokens to burn.
-     */
-    function burnTokensCrossChain(address _from, uint256 _value) external {
-        // Internal check to ensure caller has trusted-bridge role is performed by the module.
-        ERC20_BRIDGEABLE_FACET.crosschainBurn(_from, _value);
+    constructor(address _diamondProxy) {
+        erc20BridgeableMod = IERC20BridgeableMod(_diamondProxy);
     }
 
     /**
-     * @notice Initiates a cross-chain mint of tokens.
+     * @notice Mints tokens to an account via a trusted bridge.
      * @param _account The address to mint tokens to.
      * @param _value The amount of tokens to mint.
      */
-    function mintTokensCrossChain(address _account, uint256 _value) external {
-        // Internal check to ensure caller has trusted-bridge role is performed by the module.
-        ERC20_BRIDGEABLE_FACET.crosschainMint(_account, _value);
+    function mintCrosschain(address _account, uint256 _value) external {
+        // Ensure caller has the 'trusted-bridge' role before calling.
+        erc20BridgeableMod.crosschainMint(_account, _value);
     }
-}`}
+
+    /**
+     * @notice Burns tokens from an account via a trusted bridge.
+     * @param _from The address to burn tokens from.
+     * @param _value The amount of tokens to burn.
+     */
+    function burnCrosschain(address _from, uint256 _value) external {
+        // Ensure caller has the 'trusted-bridge' role before calling.
+        erc20BridgeableMod.crosschainBurn(_from, _value);
+    }
+}
+`}
 </ExpandableCode>
 
 ## Best Practices
 
 <Callout type="tip" title="Best Practice">
-- Ensure only addresses with the `trusted-bridge` role can call `crosschainBurn` and `crosschainMint` through proper Access Control setup.
-- Handle the custom errors `ERC20InvalidBridgeAccount`, `ERC20InvalidCallerAddress`, `ERC20InvalidReciever`, `ERC20InvalidSender`, and `AccessControlUnauthorizedAccount` gracefully in your facet logic.
-- Understand that `crosschainBurn` and `crosschainMint` directly modify ERC20 token balances, which are managed by the `ERC20Mod` facet.
+- Ensure the `trusted-bridge` role is granted only to authorized cross-chain communication contracts or relayer services.
+- Handle `AccessControlUnauthorizedAccount`, `ERC20InvalidBridgeAccount`, `ERC20InvalidCallerAddress`, `ERC20InvalidReciever`, and `ERC20InvalidSender` errors appropriately in calling facets.
+- Verify that `checkTokenBridge` is called or implicitly handled by the diamond proxy's access control mechanism before executing `crosschainMint` or `crosschainBurn`.
 </Callout>
 
 ## Integration Notes
 
 <Callout type="success" title="Shared Storage">
-This module interacts with the diamond's storage through a predefined slot, `ERC20_STORAGE_POSITION`, which is associated with the keccak256 hash `compose.erc20`. Facets using this module can access the underlying `ERC20Storage` and `AccessControlStorage` structs. The `crosschainBurn` and `crosschainMint` functions directly affect the token balances managed by the `ERC20Mod` facet.
+This module reads and writes to the diamond's storage. The `ERC20Storage` struct is accessed via the `ERC20_STORAGE_POSITION` slot, identified by `keccak256("compose.erc20")`. The `AccessControlStorage` is implicitly managed and accessed through the diamond's Access Control facet. Facets interacting with this module should be aware of the potential for these storage locations to be updated during diamond upgrades.
 </Callout>
 
 <div style={{marginTop: "3rem", paddingTop: "2rem", borderTop: "1px solid var(--ifm-color-emphasis-200)"}}>
@@ -445,4 +449,4 @@ This module interacts with the diamond's storage through a predefined slot, `ERC
   <WasThisHelpful pageId="ERC20BridgeableMod" />
 </div>
 
-<LastUpdated date="2025-12-30T15:38:22.755Z" />
+<LastUpdated date="2025-12-30T15:54:52.501Z" />

@@ -1,7 +1,7 @@
 ---
 sidebar_position: 4
 title: "DiamondLoupeFacet"
-description: "Inspect diamond facets and their associated selectors."
+description: "Inspect diamond facets and function selectors."
 gitSource: "https://github.com/Perfect-Abstractions/Compose/tree/main/src/diamond/DiamondLoupeFacet.sol"
 ---
 
@@ -21,19 +21,18 @@ import GradientText from '@site/src/components/ui/GradientText';
 import GradientButton from '@site/src/components/ui/GradientButton';
 
 <DocSubtitle>
-Inspect diamond facets and their associated selectors.
+Inspect diamond facets and function selectors.
 </DocSubtitle>
 
 <Callout type="info" title="Key Features">
-- Provides a read-only interface for diamond introspection.
-- Supports querying individual facet addresses by function selector.
-- Enables retrieval of all function selectors associated with a given facet address.
-- Returns a complete list of all facets and their respective function selectors.
+- Provides access to the diamond's facet registry and function selector mappings.
+- Optimized for efficient querying of facet information, even in large diamonds.
+- Enables dynamic discovery of diamond functionality.
 </Callout>
 
 ## Overview
 
-The DiamondLoupeFacet provides essential introspection capabilities for a Compose diamond. It allows developers to query which facets are deployed, which function selectors each facet supports, and the addresses of these facets. This is crucial for understanding the diamond's architecture, debugging, and building compatible extensions.
+The DiamondLoupeFacet provides essential introspection capabilities for a Compose diamond. It allows developers to query facet addresses, associated function selectors, and lists of all facets and their selectors within the diamond. This facet is crucial for understanding the diamond's on-chain structure and for dynamic interactions.
 
 ---
 
@@ -204,26 +203,31 @@ Gets all facets and their selectors. Returns each unique facet address currently
 <ExpandableCode language="solidity" maxLines={20} title="Example Implementation">
 {`pragma solidity ^0.8.30;
 
-import { DiamondLoupeFacet } from "@compose/diamond/DiamondLoupeFacet";
-import { Facet } from "@compose/diamond/DiamondLoupeFacet";
+import { IDiamondCut } from "@compose/diamond/DiamondCutFacet.sol";
+import { IDiamondLoupe } from "@compose/diamond/DiamondLoupeFacet.sol";
+import { ExampleDiamond } from "@compose/diamond/ExampleDiamond.sol";
 
-contract DiamondConsumer {
-    DiamondLoupeFacet public diamondLoupe;
+contract DeployDiamondExample {
+    address immutable diamondAddress;
 
-    constructor(address _diamondAddress) {
-        diamondLoupe = DiamondLoupeFacet(_diamondAddress);
+    constructor() {
+        // Assume ExampleDiamond is deployed and returns the diamond address
+        diamondAddress = address(new ExampleDiamond());
     }
 
-    function inspectDiamond() public view returns (Facet[] memory) {
-        return diamondLoupe.facets();
+    function getFacetAddresses() public view returns (address[] memory) {
+        IDiamondLoupe loupe = IDiamondLoupe(diamondAddress);
+        return loupe.facetAddresses();
     }
 
-    function getFacetAddress(bytes4 _selector) public view returns (address) {
-        return diamondLoupe.facetAddress(_selector);
+    function getFacets() public view returns (IDiamondLoupe.Facet[] memory) {
+        IDiamondLoupe loupe = IDiamondLoupe(diamondAddress);
+        return loupe.facets();
     }
 
-    function getFacetSelectors(address _facetAddress) public view returns (bytes4[] memory) {
-        return diamondLoupe.facetFunctionSelectors(_facetAddress);
+    function getFacetForSelector(bytes4 _selector) public view returns (address) {
+        IDiamondLoupe loupe = IDiamondLoupe(diamondAddress);
+        return loupe.facetAddress(_selector);
     }
 }`}
 </ExpandableCode>
@@ -231,15 +235,15 @@ contract DiamondConsumer {
 ## Best Practices
 
 <Callout type="tip" title="Best Practice">
-- Integrate DiamondLoupeFacet into your diamond to provide essential visibility into its deployed facets and functions.
-- Use the `facets()` function to retrieve a comprehensive list of all deployed facets and their associated selectors for architectural analysis.
-- Leverage `facetAddress()` and `facetFunctionSelectors()` for dynamic routing logic or to verify the implementation of specific functions within the diamond.
+- Integrate DiamondLoupeFacet into your diamond to enable introspection.
+- Use `facetAddresses()` and `facets()` to understand the diamond's current facet composition.
+- Query `facetAddress(selector)` to determine which facet handles a specific function call.
 </Callout>
 
 ## Security Considerations
 
 <Callout type="warning" title="Security">
-This facet is read-only and does not modify diamond state, posing minimal security risks. Ensure that the diamond address passed to the facet constructor is the correct and trusted diamond proxy address to prevent querying unintended contracts.
+This facet is primarily for inspection and does not modify diamond state. Ensure that the diamond's access control mechanisms are correctly implemented in other facets to prevent unauthorized modifications.
 </Callout>
 
 <div style={{marginTop: "3rem", paddingTop: "2rem", borderTop: "1px solid var(--ifm-color-emphasis-200)"}}>
@@ -277,4 +281,4 @@ This facet is read-only and does not modify diamond state, posing minimal securi
   <WasThisHelpful pageId="DiamondLoupeFacet" />
 </div>
 
-<LastUpdated date="2025-12-30T15:39:47.035Z" />
+<LastUpdated date="2025-12-30T15:56:23.553Z" />

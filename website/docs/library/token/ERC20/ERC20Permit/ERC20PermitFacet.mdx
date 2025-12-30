@@ -1,7 +1,7 @@
 ---
 sidebar_position: 2
 title: "ERC20PermitFacet"
-description: "Enables EIP-2612 permit functionality for ERC-20 tokens."
+description: "Enables EIP-2612 ERC-20 token permits via signatures."
 gitSource: "https://github.com/Perfect-Abstractions/Compose/tree/main/src/token/ERC20/ERC20Permit/ERC20PermitFacet.sol"
 ---
 
@@ -21,18 +21,18 @@ import GradientText from '@site/src/components/ui/GradientText';
 import GradientButton from '@site/src/components/ui/GradientButton';
 
 <DocSubtitle>
-Enables EIP-2612 permit functionality for ERC-20 tokens.
+Enables EIP-2612 ERC-20 token permits via signatures.
 </DocSubtitle>
 
 <Callout type="info" title="Key Features">
-- Implements EIP-2612 `permit` function for ERC-20 tokens.
-- Uses domain separator to prevent replay attacks across different chains or contracts.
-- Manages nonces per owner to ensure signature validity and prevent reuse.
+- Implements EIP-2612 permit functionality for ERC-20 tokens.
+- Enables off-chain authorization for token spending, reducing on-chain transactions.
+- Provides access to nonces and domain separator for signature generation.
 </Callout>
 
 ## Overview
 
-The ERC20PermitFacet provides EIP-2612 compliant permit functionality, allowing token owners to grant allowances via signed messages. This enhances composability by enabling off-chain approvals that can be later processed on-chain, reducing gas costs for users.
+The ERC20PermitFacet allows users to grant allowances to token spenders using signed messages, adhering to EIP-2612. This enhances composability by enabling off-chain authorization for on-chain token transfers, reducing gas costs for users and improving user experience within the diamond.
 
 ---
 
@@ -272,42 +272,25 @@ error ERC20InvalidSpender(address _spender);
 <ExpandableCode language="solidity" maxLines={20} title="Example Implementation">
 {`pragma solidity ^0.8.30;
 
-import { IERC20Permit } from "@compose/token/ERC20/ERC20Permit/IERC20Permit.sol";
-import { ERC20PermitFacet } from "@compose/token/ERC20/ERC20Permit/ERC20PermitFacet.sol";
-import { DiamondInit } from "@compose/diamond/DiamondInit.sol";
-import { DiamondCut } from "@compose/diamond/DiamondCut.sol";
-import { Diamond } from "@compose/diamond/Diamond.sol";
+import { ERC20PermitFacet } from "@compose/token/ERC20/ERC20Permit/ERC20PermitFacet";
+import { IERC20Permit } from "@compose/token/ERC20/ERC20Permit/IERC20Permit";
 
-contract Deployer {
-    function deploy() public {
-        // Assume diamond, diamondInit, and diamondCut are deployed and initialized.
-        Diamond diamond = /* ... */;
-        DiamondInit diamondInit = /* ... */;
-        DiamondCut diamondCut = /* ... */;
+contract MyDiamond {
+    // ... other facets ...
 
-        // Facet deployment and cut are handled during diamond initialization.
-        // Example of how a user might interact with the permit function:
+    function permitTokenOwner(address _owner, address _spender, uint256 _value, uint256 _deadline, uint8 _v, bytes32 _r, bytes32 _s) external {
+        ERC20PermitFacet permitFacet = ERC20PermitFacet(address(this));
+        permitFacet.permit(_owner, _spender, _value, _deadline, _v, _r, _s);
+    }
 
-        address user = msg.sender;
-        address spender = address(0x123);
-        uint256 value = 1000 * (10**18); // 1000 tokens
-        uint256 deadline = block.timestamp + 1 days;
+    function getTokenNonces(address _owner) external view returns (uint256) {
+        ERC20PermitFacet permitFacet = ERC20PermitFacet(address(this));
+        return permitFacet.nonces(_owner);
+    }
 
-        // Sign the permit data off-chain using user's private key
-        // bytes memory signature = signPermit(user, spender, value, deadline);
-        // uint8 v = ...;
-        // bytes32 r = ...;
-        // bytes32 s = ...;
-
-        // To execute the permit on-chain, call the facet directly or via the diamond proxy:
-        ERC20PermitFacet permitFacet = ERC20PermitFacet(diamond.getFacetAddress(diamond.getSelector(ERC20PermitFacet.permit)));
-
-        // permitFacet.permit(user, spender, value, deadline, v, r, s);
-
-        // Or using the diamond proxy (if selector is known or via a helper):
-        // bytes4 permitSelector = diamond.getSelector(ERC20PermitFacet.permit);
-        // (bool success, bytes memory data) = diamond.call(abi.encodeWithSelector(permitSelector, user, spender, value, deadline, v, r, s));
-        // require(success, "Permit call failed");
+    function getTokenDomainSeparator() external view returns (bytes32) {
+        ERC20PermitFacet permitFacet = ERC20PermitFacet(address(this));
+        return permitFacet.DOMAIN_SEPARATOR();
     }
 }`}
 </ExpandableCode>
@@ -315,15 +298,15 @@ contract Deployer {
 ## Best Practices
 
 <Callout type="tip" title="Best Practice">
-- Initialize the `ERC20PermitMod` module during diamond deployment to manage the `ERC20PermitStorage`.
-- Ensure the `ERC20PermitFacet` is correctly cut into the diamond proxy to expose the `permit` function.
-- Users must sign permit data off-chain and provide the signature components (`v`, `r`, `s`) to the `permit` function.
+- Initialize the ERC20PermitMod module to ensure correct storage setup before using this facet.
+- Verify the signature's validity off-chain before broadcasting the `permit` transaction to save gas.
+- Ensure the `_deadline` parameter is set appropriately to prevent stale permits.
 </Callout>
 
 ## Security Considerations
 
 <Callout type="warning" title="Security">
-Input validation is crucial for the `permit` function. The `ERC2612InvalidSignature` error is emitted if the signature verification fails, protecting against unauthorized allowance changes. The domain separator prevents cross-chain or cross-contract replay attacks. Ensure the deadline is set appropriately to limit the validity window of the permit.
+This facet relies on cryptographic signatures for authorization. Ensure that signature generation is performed securely off-chain. The `permit` function itself does not perform signature verification; this is handled by the underlying EIP-2612 logic which is assumed to be correctly implemented. Be mindful of replay attacks; the `DOMAIN_SEPARATOR` and nonces are critical for preventing these. Input validation for `_value` and `_deadline` should be handled by the caller or consuming contract.
 </Callout>
 
 <div style={{marginTop: "3rem", paddingTop: "2rem", borderTop: "1px solid var(--ifm-color-emphasis-200)"}}>
@@ -343,4 +326,4 @@ Input validation is crucial for the `permit` function. The `ERC2612InvalidSignat
   <WasThisHelpful pageId="ERC20PermitFacet" />
 </div>
 
-<LastUpdated date="2025-12-30T15:38:06.927Z" />
+<LastUpdated date="2025-12-30T15:54:35.174Z" />
