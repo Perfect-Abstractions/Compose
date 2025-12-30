@@ -7,8 +7,8 @@
 const fs = require('fs');
 const path = require('path');
 
-const AI_PROMPT_PATH = path.join(__dirname, '../../docs-gen-prompts.md');
-const REPO_INSTRUCTIONS_PATH = path.join(__dirname, '../../copilot-instructions.md');
+const AI_PROMPT_PATH = path.join(__dirname, '../../../docs-gen-prompts.md');
+const REPO_INSTRUCTIONS_PATH = path.join(__dirname, '../../../copilot-instructions.md');
 
 // Cache loaded prompts
 let cachedPrompts = null;
