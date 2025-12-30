@@ -1,7 +1,7 @@
 ---
 sidebar_position: 2
 title: "ERC1155Facet"
-description: "Manages ERC-1155 fungible and non-fungible tokens."
+description: "ERC-1155 token transfers and management within a diamond"
 gitSource: "https://github.com/Perfect-Abstractions/Compose/tree/main/src/token/ERC1155/ERC1155Facet.sol"
 ---
 
@@ -21,19 +21,19 @@ import GradientText from '@site/src/components/ui/GradientText';
 import GradientButton from '@site/src/components/ui/GradientButton';
 
 <DocSubtitle>
-Manages ERC-1155 fungible and non-fungible tokens.
+ERC-1155 token transfers and management within a diamond
 </DocSubtitle>
 
 <Callout type="info" title="Key Features">
-- Supports both fungible and non-fungible token types.
-- Provides individual and batched balance queries.
-- Implements token approval mechanism for operators.
-- Includes safe transfer functions to prevent unintended token loss.
+- Implements core ERC-1155 external functions for diamond routing.
+- Accesses token state via the diamond storage pattern.
+- Supports both single and batch token transfers.
+- Emits standard ERC-1155 events for on-chain activity tracking.
 </Callout>
 
 ## Overview
 
-The ERC1155Facet provides a robust implementation of the ERC-1155 standard for multi-token management within a Compose diamond. It enables efficient handling of various token types, including fungible and non-fungible assets, facilitating complex tokenomics and interoperability.
+This facet implements ERC-1155 fungible token standard functions within a Compose diamond. It provides external interfaces for token transfers, balance checks, and approvals, routing calls through the diamond proxy to access shared storage. Developers add this facet to expose ERC-1155 functionality while preserving upgradeability and composability.
 
 ---
 
@@ -597,54 +597,55 @@ error ERC1155InvalidArrayLength(uint256 _idsLength, uint256 _valuesLength);
   </Accordion>
 </AccordionGroup>
 
+<!-- Usage Example section commented out for now -->
+<!--
 ## Usage Example
 
 <ExpandableCode language="solidity" maxLines={20} title="Example Implementation">
-{`pragma solidity ^0.8.30;
+{`pragma solidity >=0.8.30;
+import { IDiamond } from "@compose/diamond/IDiamond.sol";
+import { ERC1155Facet } from "@compose/token/ERC1155/ERC1155Facet.sol";
 
-import {ERC1155Facet} from "@compose/token/ERC1155/ERC1155Facet";
-import {DiamondCutFacet} from "@compose/diamond/DiamondCutFacet";
-import {DiamondLoupeFacet} from "@compose/diamond/DiamondLoupeFacet";
+contract MyDiamondUser {
+    IDiamond diamond;
 
-contract MyDiamond is DiamondCutFacet, DiamondLoupeFacet {
-    constructor(address _diamondOwner) DiamondCutFacet(_diamondOwner) {}
-
-    function upgrade() public payable {
-        address[] memory facets = new address[](1);
-        bytes[] memory selectors = new bytes[](1);
-
-        facets[0] = address(new ERC1155Facet());
-        // Assuming default selectors for all functions
-        selectors[0] = ""; // Placeholder, actual selectors would be computed or passed
-
-        // Cut operation to add the ERC1155Facet
-        cut(facets, selectors, address(0), "");
+    constructor(address _diamondAddress) {
+        diamond = IDiamond(_diamondAddress);
     }
 
-    // Example of calling a function on the ERC1155Facet after deployment
-    function getTokenURI(uint256 _id) public view returns (string memory) {
-        // Assuming ERC1155Facet is already added and its functions are accessible via the diamond proxy
-        return ERC1155Facet(address(this)).uri(_id);
+    function transferSingleToken(address _to, uint256 _id, uint256 _value, bytes _data) external {
+        ERC1155Facet(diamond.getFacetAddress(ERC1155Facet.facetName())).safeTransferFrom(
+            address(this),
+            _to,
+            _id,
+            _value,
+            _data
+        );
     }
 
-    function getBalance(address _account, uint256 _id) public view returns (uint256) {
-        return ERC1155Facet(address(this)).balanceOf(_account, _id);
+    function checkBalance(address _account, uint256 _id) external view returns (uint256) {
+        return ERC1155Facet(diamond.getFacetAddress(ERC1155Facet.facetName())).balanceOf(_account, _id);
+    }
+
+    function approveOperator(address _operator, bool _approved) external {
+        ERC1155Facet(diamond.getFacetAddress(ERC1155Facet.facetName())).setApprovalForAll(_operator, _approved);
     }
 }`}
 </ExpandableCode>
+-->
 
 ## Best Practices
 
 <Callout type="tip" title="Best Practice">
-- Initialize the `baseURI` in the ERC1155Storage if a common base URI is desired for all tokens.
-- Ensure `setApprovalForAll` is used correctly to grant necessary permissions before transfers.
-- Leverage `balanceOfBatch` and `safeBatchTransferFrom` for gas-efficient operations involving multiple token IDs.
+- Initialize ERC1155 storage and base URI during diamond deployment or upgrade.
+- Enforce access control for functions that modify approvals or URIs if needed, beyond the standard ERC-1155 requirements.
+- Verify storage compatibility and slot alignment before upgrading to maintain state integrity.
 </Callout>
 
 ## Security Considerations
 
 <Callout type="warning" title="Security">
-This facet relies on Compose's diamond proxy for access control and function routing. Ensure that the `operator` in `setApprovalForAll` is a trusted address. The `safeTransferFrom` and `safeBatchTransferFrom` functions include checks for sufficient balance and proper approvals, mitigating risks of insufficient funds or unauthorized transfers. Input validation for array lengths in batch operations is handled by custom errors.
+Functions like `safeTransferFrom` and `safeBatchTransferFrom` use the checks-effects-interactions pattern to prevent reentrancy. Input validation is performed to ensure correct array lengths and to prevent transfers to the zero address. `setApprovalForAll` requires the caller to have permission to approve for the `_account`. The `uri` function handles potential concatenation of base and token-specific URIs. Follow standard Solidity security practices for external calls and input validation.
 </Callout>
 
 <div style={{marginTop: "3rem", paddingTop: "2rem", borderTop: "1px solid var(--ifm-color-emphasis-200)"}}>
@@ -688,4 +689,4 @@ This facet relies on Compose's diamond proxy for access control and function rou
   <WasThisHelpful pageId="ERC1155Facet" />
 </div>
 
-<LastUpdated date="2025-12-30T15:55:02.803Z" />
+<LastUpdated date="2025-12-30T17:28:16.124Z" />

@@ -25,10 +25,10 @@ Internal logic for ERC-721 token management
 </DocSubtitle>
 
 <Callout type="info" title="Key Features">
-- Provides essential ERC-721 functions: mint, burn, and transfer.
-- Manages ERC-721 state in a dedicated diamond storage slot for composability.
-- Emits standard `Transfer` events for on-chain tracking.
-- Includes specific custom errors for precise error reporting during operations.
+- Provides `internal` functions for core ERC-721 logic, promoting facet reusability.
+- Utilizes the diamond storage pattern (EIP-8042) for shared state management.
+- No external dependencies, ensuring minimal on-chain footprint.
+- Exposes `burn`, `mint`, and `transferFrom` operations.
 </Callout>
 
 <Callout type="info" title="Module Usage">
@@ -37,7 +37,7 @@ This module provides internal functions for use in your custom facets. Import it
 
 ## Overview
 
-This module provides core ERC-721 functionality, including minting, burning, and transferring tokens. It leverages the diamond storage pattern to manage token state, making it composable with other facets. By encapsulating this logic, custom facets can easily integrate robust ERC-721 capabilities without reimplementing complex state management.
+This module provides internal functions for ERC-721 token operations, designed for integration within Compose diamonds. Facets can import and utilize these functions to manage token minting, transfers, and burning, leveraging the shared diamond storage pattern for consistent state visibility across all facets.
 
 ---
 
@@ -310,25 +310,27 @@ error ERC721NonexistentToken(uint256 _tokenId);
   </Accordion>
 </AccordionGroup>
 
+<!-- Usage Example section commented out for now -->
+<!--
 ## Usage Example
 
 <ExpandableCode language="solidity" maxLines={20} title="Example Implementation">
-{`pragma solidity ^0.8.30;
+{`pragma solidity >=0.8.30;
 
-import {IERC721Mod} from "@compose/token/ERC721/ERC721/ERC721Mod";
-import {IERC721Storage} from "@compose/token/ERC721/ERC721/ERC721Mod";
+import { ERC721Mod } from "@compose/token/ERC721/ERC721/ERC721Mod";
 
 contract MyERC721Facet {
-    IERC721Mod public immutable erc721Mod;
+    ERC721Mod internal erc721Mod;
 
-    constructor(address _diamondAddress) {
-        // Assuming _diamondAddress is the address of the diamond proxy
-        // and the ERC721Mod facet is correctly registered and accessible.
-        erc721Mod = IERC721Mod(_diamondAddress);
+    function initialize(address _diamondAddress) external {
+        // In a real scenario, _diamondAddress would be the address of the diamond proxy
+        // This is a simplified example assuming direct access to the module's storage
+        // In a diamond, modules are typically accessed via the DiamondLoupeFacet or similar registry.
+        // For demonstration, we simulate calling module functions.
     }
 
     /**
-     * @notice Mints a new ERC-721 token.
+     * @notice Mints a new token to a recipient address.
      * @param _to The address to mint the token to.
      * @param _tokenId The ID of the token to mint.
      */
@@ -337,9 +339,9 @@ contract MyERC721Facet {
     }
 
     /**
-     * @notice Transfers an ERC-721 token.
-     * @param _from The current owner of the token.
-     * @param _to The new owner of the token.
+     * @notice Transfers a token from one address to another.
+     * @param _from The current owner's address.
+     * @param _to The recipient's address.
      * @param _tokenId The ID of the token to transfer.
      */
     function transferToken(address _from, address _to, uint256 _tokenId) external {
@@ -347,27 +349,36 @@ contract MyERC721Facet {
     }
 
     /**
-     * @notice Burns an ERC-721 token.
+     * @notice Burns a token by its ID.
      * @param _tokenId The ID of the token to burn.
      */
     function burnToken(uint256 _tokenId) external {
         erc721Mod.burn(_tokenId);
     }
+
+    /**
+     * @notice Retrieves the ERC721 storage struct.
+     * @return ERC721Storage The storage struct.
+     */
+    function getERC721Storage() external pure returns (ERC721Mod.ERC721Storage memory) {
+        return erc721Mod.getStorage();
+    }
 }`}
 </ExpandableCode>
+-->
 
 ## Best Practices
 
 <Callout type="tip" title="Best Practice">
-- Ensure the ERC721Mod facet is correctly registered with the diamond proxy before use.
-- Handle all custom errors emitted by the module (e.g., `ERC721IncorrectOwner`, `ERC721NonexistentToken`) in your facet's logic for robust error handling.
-- For state changes, always interact with the module via the diamond proxy address to ensure operations are routed correctly.
+- Ensure access control is implemented in the calling facet before executing mint, transfer, or burn operations.
+- Verify that the ERC721Storage struct's layout remains compatible when upgrading facets or adding new ones.
+- Handle specific errors like `ERC721NonexistentToken`, `ERC721IncorrectOwner`, and `ERC721InvalidReceiver` returned by module functions.
 </Callout>
 
 ## Integration Notes
 
 <Callout type="success" title="Shared Storage">
-This module utilizes the diamond storage pattern, storing its state at the `keccak256("compose.erc721")` slot. The `ERC721Storage` struct, containing `name`, `symbol`, and `baseURI`, is managed within this slot. Facets interacting with this module should be aware that all ERC-721 state modifications (minting, burning, transfers) are performed directly on this shared storage. The `getStorage()` function provides read-only access to this state via inline assembly.
+This module stores its state in a dedicated slot within the diamond's storage, identified by `keccak256(\"compose.erc721\")`. All functions operate on this shared `ERC721Storage` struct. Changes made by any facet calling functions in this module are immediately visible to all other facets interacting with the same storage slot, ensuring data consistency across the diamond.
 </Callout>
 
 <div style={{marginTop: "3rem", paddingTop: "2rem", borderTop: "1px solid var(--ifm-color-emphasis-200)"}}>
@@ -417,4 +428,4 @@ This module utilizes the diamond storage pattern, storing its state at the `kecc
   <WasThisHelpful pageId="ERC721Mod" />
 </div>
 
-<LastUpdated date="2025-12-30T15:55:36.924Z" />
+<LastUpdated date="2025-12-30T17:28:46.853Z" />

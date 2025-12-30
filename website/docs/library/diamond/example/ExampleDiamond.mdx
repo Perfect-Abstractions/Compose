@@ -1,7 +1,7 @@
 ---
 sidebar_position: 510
 title: "ExampleDiamond"
-description: "Example Diamond for Compose framework"
+description: "Example Diamond initialization and fallback handlers"
 gitSource: "https://github.com/Perfect-Abstractions/Compose/tree/main/src/diamond/example/ExampleDiamond.sol"
 ---
 
@@ -21,18 +21,19 @@ import GradientText from '@site/src/components/ui/GradientText';
 import GradientButton from '@site/src/components/ui/GradientButton';
 
 <DocSubtitle>
-Example Diamond for Compose framework
+Example Diamond initialization and fallback handlers
 </DocSubtitle>
 
 <Callout type="info" title="Key Features">
-- Enables initialization of a diamond proxy with multiple facets.
-- Sets the initial owner of the diamond contract.
-- Supports direct Ether reception via `receive` and `fallback` functions.
+- Provides a constructor for diamond initialization.
+- Includes fallback and receive functions for general contract interaction.
+- Demonstrates facet cut structure for diamond assembly.
+- Acts as a foundational example for Compose diamond deployments.
 </Callout>
 
 ## Overview
 
-The ExampleDiamond contract serves as a foundational template for Compose diamonds. It demonstrates the core diamond proxy pattern by enabling the registration of facets and setting an initial owner. This contract is intended for integration within Compose projects to illustrate facet management and proxy functionality.
+This contract serves as an example for initializing a diamond with facets and owner. It also includes fallback and receive functions for handling arbitrary calls and ether transfers. Developers can reference this contract for structuring diamond deployments and understanding basic diamond proxy behavior.
 
 ---
 
@@ -80,50 +81,53 @@ Struct to hold facet address and its function selectors. struct FacetCut &#123; 
 {`receive() external payable;`}
 </ExpandableCode>
 
+<!-- Usage Example section commented out for now -->
+<!--
 ## Usage Example
 
 <ExpandableCode language="solidity" maxLines={20} title="Example Implementation">
-{`pragma solidity ^0.8.30;
+{`pragma solidity >=0.8.30;
 
-import { ExampleDiamond } from "@compose/diamond/example/ExampleDiamond";
-import { DiamondMod } from "@compose/diamond/DiamondMod";
+import { IDiamond, DiamondMod } from '@compose/diamond/example/ExampleDiamond';
 
+// Example: Deploying and initializing an ExampleDiamond
 contract DeployExampleDiamond {
     address public diamondAddress;
 
-    function deploy() public {
-        // Define facets to be added during deployment
-        DiamondMod.FacetCut[] memory facets = new DiamondMod.FacetCut[](1);
-        // Assuming MyFacet is deployed and its address is known
-        address myFacetAddress = address(0x123...); // Replace with actual facet address
-        bytes4[] memory selectors = new bytes4[](1);
-        selectors[0] = ExampleDiamond.someFunction.selector; // Replace with actual function selector
+    constructor(
+        DiamondMod.FacetCut[] memory _facets,
+        address _diamondOwner
+    ) {
+        // Deploy and initialize the diamond
+        diamondAddress = address(new ExampleDiamond(_facets, _diamondOwner));
+    }
 
-        facets[0] = DiamondMod.FacetCut({
-            facetAddress: myFacetAddress,
-            action: DiamondMod.FacetCutAction.Add,
-            functionSelectors: selectors
-        });
+    // Example of calling a function through the diamond proxy (assuming it's implemented by an added facet)
+    function callFacetFunction(address _diamondAddress, bytes memory _calldata) public {
+        IDiamond(_diamondAddress).diamondCut(_calldata);
+    }
 
-        // Deploy the ExampleDiamond with initial facets and owner
-        ExampleDiamond exampleDiamond = new ExampleDiamond(facets, msg.sender);
-        diamondAddress = address(exampleDiamond);
+    // Example of sending ether to the diamond
+    function sendEtherToDiamond(address _diamondAddress) public payable {
+        (bool success, ) = _diamondAddress.call{value: msg.value}("");
+        require(success, "Failed to send ether to diamond");
     }
 }`}
 </ExpandableCode>
+-->
 
 ## Best Practices
 
 <Callout type="tip" title="Best Practice">
-- Initialize the diamond with necessary facets during deployment using the `constructor`.
-- The `constructor` sets the initial owner, which should be managed securely.
-- Leverage `fallback` and `receive` for handling Ether transfers to the diamond proxy.
+- Initialize the diamond with all necessary facets and the owner during deployment.
+- Ensure facet cut data is correctly formatted with actions, facet addresses, and function selectors.
+- Use the fallback and receive functions for handling arbitrary calls and ether transfers to the diamond proxy as intended.
 </Callout>
 
 ## Security Considerations
 
 <Callout type="warning" title="Security">
-The `constructor` function should only be called once during deployment. Ensure that facet addresses provided during initialization are verified and trusted. The `fallback` and `receive` functions, while allowing Ether transfer, do not include specific logic for handling this Ether, which must be implemented by other facets.
+The constructor should only be called once during deployment. The fallback and receive functions should be reviewed for intended behavior, especially if they are intended to forward calls or handle value. Ensure that added facets implement robust access control for sensitive operations.
 </Callout>
 
 <div style={{marginTop: "3rem", paddingTop: "2rem", borderTop: "1px solid var(--ifm-color-emphasis-200)"}}>
@@ -149,4 +153,4 @@ The `constructor` function should only be called once during deployment. Ensure 
   <WasThisHelpful pageId="ExampleDiamond" />
 </div>
 
-<LastUpdated date="2025-12-30T15:56:13.967Z" />
+<LastUpdated date="2025-12-30T17:29:22.328Z" />

@@ -1,7 +1,7 @@
 ---
 sidebar_position: 410
 title: "ERC165Facet"
-description: "Supports ERC-165 interface detection for Compose diamonds."
+description: "Implements ERC-165 interface detection for diamonds"
 gitSource: "https://github.com/Perfect-Abstractions/Compose/tree/main/src/interfaceDetection/ERC165/ERC165Facet.sol"
 ---
 
@@ -21,18 +21,19 @@ import GradientText from '@site/src/components/ui/GradientText';
 import GradientButton from '@site/src/components/ui/GradientButton';
 
 <DocSubtitle>
-Supports ERC-165 interface detection for Compose diamonds.
+Implements ERC-165 interface detection for diamonds
 </DocSubtitle>
 
 <Callout type="info" title="Key Features">
-- Implements EIP-165 standard for interface detection.
-- Allows querying diamond capabilities via `supportsInterface` function.
-- Facilitates interoperability with other EIP-165 compliant contracts.
+- Implements the ERC-165 standard for interface detection.
+- Exposes `supportsInterface` externally via the diamond proxy.
+- Self-contained with no external dependencies beyond diamond interfaces.
+- Uses fixed storage slots for interface support data.
 </Callout>
 
 ## Overview
 
-The ERC165Facet enables diamonds to declare support for specific interfaces as per EIP-165. It provides a standardized way for external contracts to query the diamond's capabilities, enhancing interoperability within the Compose ecosystem.
+This facet implements the ERC-165 standard for diamonds, allowing external contracts to query supported interfaces. It exposes the `supportsInterface` function through the diamond proxy, enabling dynamic interface checks. Developers add this facet to ensure their diamond adheres to interface standards and integrates seamlessly with other smart contracts.
 
 ---
 
@@ -98,40 +99,49 @@ Query if a contract implements an interface This function checks if the diamond 
   showRequired={false}
 />
 
+<!-- Usage Example section commented out for now -->
+<!--
 ## Usage Example
 
 <ExpandableCode language="solidity" maxLines={20} title="Example Implementation">
-{`pragma solidity ^0.8.30;
+{`pragma solidity >=0.8.30;
 
-import {IDiamondCut} from "@compose/diamond/IDiamondCut.sol";
-import {ERC165Facet} from "@compose/interfaceDetection/ERC165/ERC165Facet.sol";
+import { IDiamond } from "@compose/diamond/IDiamond.sol";
+import { ERC165Facet } from "@compose/interfaceDetection/ERC165/ERC165Facet";
 
-diamond interface IDiamond {}
+contract DiamondUser {
+    address immutable diamondAddress;
 
-contract MyDiamond is IDiamond {
-    constructor(address _diamondAdmin, address[] memory _facetAddresses, IDiamondCut.FacetCut[] memory _facetCuts) {
-        // ... deployment logic ...
+    constructor(address _diamondAddress) {
+        diamondAddress = _diamondAddress;
     }
 
-    // Example of calling supportsInterface from another facet or contract
-    function checkERC165Support(address _diamondAddress, bytes4 _interfaceId) external view returns (bool) {
-        ERC165Facet erc165Facet = ERC165Facet(_diamondAddress);
-        return erc165Facet.supportsInterface(_interfaceId);
+    function checkERC721Support() public view returns (bool) {
+        bytes4 interfaceId = 0x80ac58cd; // ERC721 Interface ID
+        IDiamond diamond = IDiamond(diamondAddress);
+        return diamond.supportsInterface(interfaceId);
+    }
+
+    function checkCustomInterfaceSupport(bytes4 _customInterfaceId) public view returns (bool) {
+        IDiamond diamond = IDiamond(diamondAddress);
+        return diamond.supportsInterface(_customInterfaceId);
     }
 }`}
 </ExpandableCode>
+-->
 
 ## Best Practices
 
 <Callout type="tip" title="Best Practice">
-- Ensure the ERC165Facet is correctly initialized during diamond deployment.
-- Implement the `supportsInterface` function within your custom facets if they introduce new interfaces.
+- Ensure the `ERC165Facet` is added to the diamond during initialization.
+- Call `supportsInterface` through the diamond proxy to check for supported interfaces.
+- Register custom interface IDs with this facet if applicable to your diamond's functionality.
 </Callout>
 
 ## Security Considerations
 
 <Callout type="warning" title="Security">
-The `supportsInterface` function is `view` and does not modify state, making it safe from reentrancy. Access control is handled by the diamond proxy itself; this facet assumes it is called through a valid proxy.
+The `supportsInterface` function is view-only and does not modify state, posing minimal security risk. Input validation is handled by the Solidity ABI encoder. Follow standard Solidity security practices for diamond proxy interactions.
 </Callout>
 
 <div style={{marginTop: "3rem", paddingTop: "2rem", borderTop: "1px solid var(--ifm-color-emphasis-200)"}}>
@@ -151,4 +161,4 @@ The `supportsInterface` function is `view` and does not modify state, making it 
   <WasThisHelpful pageId="ERC165Facet" />
 </div>
 
-<LastUpdated date="2025-12-30T15:55:59.396Z" />
+<LastUpdated date="2025-12-30T17:29:04.383Z" />

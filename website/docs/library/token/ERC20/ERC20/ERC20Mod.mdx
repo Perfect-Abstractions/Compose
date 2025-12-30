@@ -1,7 +1,7 @@
 ---
 sidebar_position: 1
 title: "ERC20Mod"
-description: "ERC-20 token logic and state management."
+description: "LibERC20 — ERC-20 Library - Provides internal functions and storage layout for ERC-20 token logic."
 gitSource: "https://github.com/Perfect-Abstractions/Compose/tree/main/src/token/ERC20/ERC20/ERC20Mod.sol"
 ---
 
@@ -21,13 +21,14 @@ import GradientText from '@site/src/components/ui/GradientText';
 import GradientButton from '@site/src/components/ui/GradientButton';
 
 <DocSubtitle>
-ERC-20 token logic and state management.
+LibERC20 — ERC-20 Library - Provides internal functions and storage layout for ERC-20 token logic.
 </DocSubtitle>
 
 <Callout type="info" title="Key Features">
-- Provides essential ERC-20 functions: `transfer`, `transferFrom`, `approve`, `mint`, `burn`.
-- Manages ERC-20 state including `totalSupply`, `decimals`, `name`, and `symbol`.
-- Leverages the diamond storage pattern via `getStorage` for external access to its state.
+- All functions are `internal` for use in custom facets
+- Follows diamond storage pattern (EIP-8042)
+- Compatible with ERC-2535 diamonds
+- No external dependencies or `using` directives
 </Callout>
 
 <Callout type="info" title="Module Usage">
@@ -36,7 +37,7 @@ This module provides internal functions for use in your custom facets. Import it
 
 ## Overview
 
-This module provides the core internal functions and storage layout for ERC-20 token functionality within a Compose diamond. It ensures standardized token operations, including transfers, minting, and burning, while adhering to the diamond storage pattern for composability and upgradeability.
+LibERC20 — ERC-20 Library - Provides internal functions and storage layout for ERC-20 token logic.
 
 ---
 
@@ -373,47 +374,10 @@ error ERC20InvalidSpender(address _spender);
   </Accordion>
 </AccordionGroup>
 
-## Usage Example
-
-<ExpandableCode language="solidity" maxLines={20} title="Example Implementation">
-{`pragma solidity ^0.8.30;
-
-import {IERC20Facet} from "@compose/token/ERC20/ERC20Facet";
-import {ERC20Mod} from "@compose/token/ERC20/ERC20/ERC20Mod";
-
-contract MyERC20Facet is IERC20Facet {
-    address immutable DIAMOND_STORAGE_POSITION;
-
-    constructor(address _diamondStoragePosition) {
-        DIAMOND_STORAGE_POSITION = _diamondStoragePosition;
-    }
-
-    function transfer(address _to, uint256 _value) external override {
-        ERC20Mod.ERC20Storage storage erc20Storage = ERC20Mod.ERC20Storage(DIAMOND_STORAGE_POSITION);
-        ERC20Mod.transfer(erc20Storage, _to, _value);
-    }
-
-    function mint(address _account, uint256 _value) external override {
-        ERC20Mod.ERC20Storage storage erc20Storage = ERC20Mod.ERC20Storage(DIAMOND_STORAGE_POSITION);
-        ERC20Mod.mint(erc20Storage, _account, _value);
-    }
-
-    // ... other ERC20Facet functions
-}`}
-</ExpandableCode>
-
-## Best Practices
-
-<Callout type="tip" title="Best Practice">
-- Ensure the `DIAMOND_STORAGE_POSITION` is correctly set and points to the ERC-20 storage slot.
-- Handle ERC-20 specific errors such as `ERC20InsufficientBalance` and `ERC20InvalidReceiver` appropriately.
-- Be mindful of the immutable `totalSupply` which is managed internally by mint and burn operations.
-</Callout>
-
 ## Integration Notes
 
 <Callout type="success" title="Shared Storage">
-This module's state is managed within the diamond's storage at a dedicated slot (`STORAGE_POSITION`, `keccak256("compose.erc20")`). Facets interacting with this module should retrieve a pointer to the `ERC20Storage` struct using `ERC20Mod.getStorage()` and pass it to the module's internal functions. The `ERC20Storage` struct contains fields like `totalSupply`, `decimals`, `name`, and `symbol`.
+This module accesses shared diamond storage, so changes made through this module are immediately visible to facets using the same storage pattern. All functions are internal as per Compose conventions.
 </Callout>
 
 <div style={{marginTop: "3rem", paddingTop: "2rem", borderTop: "1px solid var(--ifm-color-emphasis-200)"}}>
@@ -439,4 +403,4 @@ This module's state is managed within the diamond's storage at a dedicated slot 
   <WasThisHelpful pageId="ERC20Mod" />
 </div>
 
-<LastUpdated date="2025-12-30T15:54:42.966Z" />
+<LastUpdated date="2025-12-30T17:27:57.788Z" />

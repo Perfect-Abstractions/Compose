@@ -1,7 +1,7 @@
 ---
 sidebar_position: 2
 title: "AccessControlTemporalFacet"
-description: "Manages role assignments with time-based expiry."
+description: "Grants and revokes roles with expiry timestamps"
 gitSource: "https://github.com/Perfect-Abstractions/Compose/tree/main/src/access/AccessControlTemporal/AccessControlTemporalFacet.sol"
 ---
 
@@ -21,18 +21,19 @@ import GradientText from '@site/src/components/ui/GradientText';
 import GradientButton from '@site/src/components/ui/GradientButton';
 
 <DocSubtitle>
-Manages role assignments with time-based expiry.
+Grants and revokes roles with expiry timestamps
 </DocSubtitle>
 
 <Callout type="info" title="Key Features">
-- Grants roles with specific expiration timestamps.
-- Automatically revokes roles upon expiry.
-- Provides functions to check role expiry status.
+- Manages role assignments with time-based expiration.
+- Provides external functions for granting, revoking, and checking temporal roles.
+- Emits `RoleGrantedWithExpiry` and `TemporalRoleRevoked` events for tracking.
+- Integrates with the diamond storage pattern for composability.
 </Callout>
 
 ## Overview
 
-The AccessControlTemporalFacet extends the base access control mechanism by introducing time-bound role assignments. This allows for temporary privileges to be granted and automatically revoked upon expiration, enhancing granular control and security within a Compose diamond.
+This facet implements temporal role-based access control within a diamond. It allows granting roles with specific expiry dates and revoking them. Calls are routed through the diamond proxy, accessing shared storage for role management. Developers integrate this facet to manage time-bound permissions in a composable and upgradeable manner.
 
 ---
 
@@ -354,53 +355,50 @@ error AccessControlRoleExpired(bytes32 _role, address _account);
   </Accordion>
 </AccordionGroup>
 
+<!-- Usage Example section commented out for now -->
+<!--
 ## Usage Example
 
 <ExpandableCode language="solidity" maxLines={20} title="Example Implementation">
-{`pragma solidity ^0.8.30;
+{`pragma solidity >=0.8.30;
 
-import { DiamondLoupeFacet } from "@compose/diamond-loupe/DiamondLoupeFacet";
-import { Diamond } from "@compose/diamond-proxy/Diamond";
+import { IDiamond } from "@compose/diamond/IDiamond";
 import { AccessControlTemporalFacet } from "@compose/access/AccessControlTemporal/AccessControlTemporalFacet";
 
-contract Deployer {
-    address public diamondProxy;
+contract DiamondDeployment {
+    address constant ACCESS_CONTROL_TEMPORAL_FACET_ADDRESS = address(0xabc);
+    address constant DIAMOND_ADDRESS = address(0xdef);
 
-    function deployDiamond() public {
-        // Facet deployment logic here...
-        address accessControlTemporalFacet = address(new AccessControlTemporalFacet());
+    function deploy() public {
+        // Assume diamond is already deployed and facets are added
+        IDiamond diamond = IDiamond(DIAMOND_ADDRESS);
 
-        // Diamond initialization logic here...
-        // Assuming diamondProxy is already deployed and initialized with base facets
-        // Add the AccessControlTemporalFacet
-        // diamondProxy.diamondCut(...);
+        // Grant a role with an expiry timestamp (e.g., 1 hour from now)
+        uint256 expiry = block.timestamp + 1 hours;
+        diamond.grantRoleWithExpiry(bytes32(keccak256("OPERATOR_ROLE")), address(0x123), expiry);
 
-        // Grant a role with expiry
-        bytes32 role = keccak256("TEMPORARY_ADMIN_ROLE");
-        address user = 0x1234567890123456789012345678901234567890;
-        uint256 expiry = block.timestamp + 3600; // Expires in 1 hour
+        // Check if a role is expired
+        bool isExpired = diamond.isRoleExpired(bytes32(keccak256("OPERATOR_ROLE")), address(0x123));
 
-        AccessControlTemporalFacet(diamondProxy).grantRoleWithExpiry(role, user, expiry);
-
-        // Check role status
-        bool expired = AccessControlTemporalFacet(diamondProxy).isRoleExpired(role, user);
-        uint256 expiryTime = AccessControlTemporalFacet(diamondProxy).getRoleExpiry(role, user);
+        // Revoke a temporal role
+        diamond.revokeTemporalRole(bytes32(keccak256("OPERATOR_ROLE")), address(0x123));
     }
 }`}
 </ExpandableCode>
+-->
 
 ## Best Practices
 
 <Callout type="tip" title="Best Practice">
-- Initialize this facet with appropriate roles and administrative permissions during diamond deployment.
-- Carefully consider the expiry durations for role grants to align with the principle of least privilege.
-- Integrate checks for role expiry using `isRoleExpired` or `requireValidRole` in functions that require temporally-limited access.
+- Initialize temporal roles and their expiry logic during diamond setup.
+- Ensure that callers invoking `grantRoleWithExpiry` and `revokeTemporalRole` possess the necessary administrative privileges.
+- Regularly audit expired roles to maintain security posture.
 </Callout>
 
 ## Security Considerations
 
 <Callout type="warning" title="Security">
-Access to `grantRoleWithExpiry` and `revokeTemporalRole` is restricted to the role's admin, preventing unauthorized temporal role management. Ensure that the underlying access control mechanism correctly enforces these admin roles. The `requireValidRole` function reverts with `AccessControlRoleExpired` if the role has expired, preventing the use of outdated privileges.
+All state-changing functions (`grantRoleWithExpiry`, `revokeTemporalRole`) are protected by access control, reverting with `AccessControlUnauthorizedAccount` if the caller lacks the required role. The `requireValidRole` function validates role existence and expiry, reverting with `AccessControlRoleExpired` if the role has expired. Input parameters for expiry timestamps should be validated to prevent unexpected behavior.
 </Callout>
 
 <div style={{marginTop: "3rem", paddingTop: "2rem", borderTop: "1px solid var(--ifm-color-emphasis-200)"}}>
@@ -426,4 +424,4 @@ Access to `grantRoleWithExpiry` and `revokeTemporalRole` is restricted to the ro
   <WasThisHelpful pageId="AccessControlTemporalFacet" />
 </div>
 
-<LastUpdated date="2025-12-30T15:54:06.460Z" />
+<LastUpdated date="2025-12-30T17:27:16.806Z" />

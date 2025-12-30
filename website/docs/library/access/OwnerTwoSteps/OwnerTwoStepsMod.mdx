@@ -1,7 +1,7 @@
 ---
 sidebar_position: 1
 title: "OwnerTwoStepsMod"
-description: "Two-step contract ownership transfer logic."
+description: "Two-step ownership transfer logic"
 gitSource: "https://github.com/Perfect-Abstractions/Compose/tree/main/src/access/OwnerTwoSteps/OwnerTwoStepsMod.sol"
 ---
 
@@ -21,14 +21,14 @@ import GradientText from '@site/src/components/ui/GradientText';
 import GradientButton from '@site/src/components/ui/GradientButton';
 
 <DocSubtitle>
-Two-step contract ownership transfer logic.
+Two-step ownership transfer logic
 </DocSubtitle>
 
 <Callout type="info" title="Key Features">
-- Secure two-step ownership transfer process.
-- Explicit `acceptOwnership` confirmation required from the new owner.
-- Provides `owner()`, `pendingOwner()`, and `renounceOwnership()` for state inspection and management.
-- Integrates with diamond storage using defined storage positions.
+- Implements ERC-173 two-step ownership transfer.
+- All functions are `internal` for use within facets.
+- Utilizes diamond storage for owner and pending owner state.
+- Includes `requireOwner` for access control checks.
 </Callout>
 
 <Callout type="info" title="Module Usage">
@@ -37,7 +37,7 @@ This module provides internal functions for use in your custom facets. Import it
 
 ## Overview
 
-This module provides a robust, two-step ownership transfer mechanism, enhancing security by requiring explicit confirmation from the new owner. It integrates seamlessly with the Compose diamond storage pattern, ensuring ownership state is managed predictably and upgrade-safely.
+This module provides ERC-173 compliant two-step ownership transfer logic. Facets import this module to manage contract ownership securely, preventing accidental self-renouncement or unauthorized transfers. Changes are managed via shared diamond storage.
 
 ---
 
@@ -248,50 +248,61 @@ error OwnerUnauthorizedAccount();
   </Accordion>
 </AccordionGroup>
 
+<!-- Usage Example section commented out for now -->
+<!--
 ## Usage Example
 
 <ExpandableCode language="solidity" maxLines={20} title="Example Implementation">
-{`pragma solidity ^0.8.30;
+{`pragma solidity >=0.8.30;
 
 import {OwnerTwoStepsMod} from "@compose/access/OwnerTwoSteps/OwnerTwoStepsMod";
-import {IOwnerTwoStepsFacet} from "@compose/access/OwnerTwoSteps/IOwnerTwoStepsFacet";
 
-contract MyFacet {
-    // Assume OwnerTwoStepsMod is initialized and its storage slot is known
-    address public constant OWNER_STORAGE_POSITION = OwnerTwoStepsMod.OWNER_STORAGE_POSITION;
-    address public constant PENDING_OWNER_STORAGE_POSITION = OwnerTwoStepsMod.PENDING_OWNER_STORAGE_POSITION;
+contract OwnerFacet {
+    OwnerTwoStepsMod internal ownerMod;
 
-    // Example of calling transferOwnership from a facet
-    function initiateOwnershipTransfer(address _newOwner) external {
-        // Assuming IOwnerTwoStepsFacet is implemented by the diamond proxy
-        IOwnerTwoStepsFacet(msg.sender).transferOwnership(_newOwner);
+    // Assume ownerMod is initialized with the correct storage slot
+    // via a diamond initializer or facet deployment.
+
+    function transferContractOwnership(address _newOwner) external {
+        ownerMod.transferOwnership(_newOwner);
     }
 
-    // Example of calling acceptOwnership
-    function finalizeOwnershipTransfer() external {
-        IOwnerTwoStepsFacet(msg.sender).acceptOwnership();
+    function acceptContractOwnership() external {
+        ownerMod.acceptOwnership();
     }
 
-    // Example of checking ownership
-    function checkOwnership() external view {
-        require(OwnerTwoStepsMod.owner() == msg.sender, "Not the owner");
-        // ... owner-specific logic
+    function renounceContractOwnership() external {
+        ownerMod.renounceOwnership();
+    }
+
+    function getCurrentOwner() external view returns (address) {
+        return ownerMod.owner();
+    }
+
+    function getPendingOwner() external view returns (address) {
+        return ownerMod.pendingOwner();
+    }
+
+    function checkOwnerPermissions() external view {
+        ownerMod.requireOwner();
+        // ... owner-only logic ...
     }
 }`}
 </ExpandableCode>
+-->
 
 ## Best Practices
 
 <Callout type="tip" title="Best Practice">
-- Always use the `transferOwnership` function to initiate a transfer and `acceptOwnership` to finalize it. Never call `acceptOwnership` directly without a prior `transferOwnership` call.
-- Implement `requireOwner()` checks judiciously, ensuring critical administrative functions are protected.
-- Be aware that `renounceOwnership()` permanently relinquishes ownership, setting the owner to `address(0)`.
+- Call `transferOwnership` to initiate a transfer and `acceptOwnership` to finalize it.
+- Ensure the caller is the current owner before calling `transferOwnership` or `renounceOwnership`.
+- Handle `OwnerUnauthorizedAccount` and `OwnerAlreadyRenounced` errors for robust operation.
 </Callout>
 
 ## Integration Notes
 
 <Callout type="success" title="Shared Storage">
-This module utilizes the diamond storage pattern, storing ownership and pending ownership states at `OWNER_STORAGE_POSITION` and `PENDING_OWNER_STORAGE_POSITION` respectively. Facets interacting with ownership logic should reference these positions and the `OwnerStorage` and `PendingOwnerStorage` structs. The `owner()` and `pendingOwner()` functions provide view access to these states. Functions like `requireOwner()` will revert if the caller is not the current owner, enforcing access control based on the module's state.
+This module reads and writes to diamond storage locations defined by `OWNER_STORAGE_POSITION` and `PENDING_OWNER_STORAGE_POSITION`. The `OwnerStorage` and `PendingOwnerStorage` structs are accessed via inline assembly. Changes to ownership state are immediately reflected across all facets that interact with these storage slots.
 </Callout>
 
 <div style={{marginTop: "3rem", paddingTop: "2rem", borderTop: "1px solid var(--ifm-color-emphasis-200)"}}>
@@ -311,4 +322,4 @@ This module utilizes the diamond storage pattern, storing ownership and pending 
   <WasThisHelpful pageId="OwnerTwoStepsMod" />
 </div>
 
-<LastUpdated date="2025-12-30T15:53:53.330Z" />
+<LastUpdated date="2025-12-30T17:27:02.725Z" />
