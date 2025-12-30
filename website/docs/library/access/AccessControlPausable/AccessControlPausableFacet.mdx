@@ -1,7 +1,7 @@
 ---
 sidebar_position: 2
 title: "AccessControlPausableFacet"
-description: "Manage role pausing and access control within a diamond."
+description: "Manages role-based pausing and unpausing of operations."
 gitSource: "https://github.com/Perfect-Abstractions/Compose/tree/main/src/access/AccessControlPausable/AccessControlPausableFacet.sol"
 ---
 
@@ -21,18 +21,19 @@ import GradientText from '@site/src/components/ui/GradientText';
 import GradientButton from '@site/src/components/ui/GradientButton';
 
 <DocSubtitle>
-Manage role pausing and access control within a diamond.
+Manages role-based pausing and unpausing of operations.
 </DocSubtitle>
 
 <Callout type="info" title="Key Features">
-- Role-specific pausing and unpausing capabilities.
-- Integrates seamlessly with existing Access Control mechanisms.
-- Emits events for state changes, facilitating off-chain monitoring.
+- Role-specific pausing and unpausing of operations.
+- Integration with diamond's access control for administrative actions.
+- Emits `RolePaused` and `RoleUnpaused` events for state changes.
+- Reverts with specific errors for unauthorized access and paused roles.
 </Callout>
 
 ## Overview
 
-This facet provides granular control over role execution by allowing specific roles to be temporarily paused. It integrates with the Access Control system, enabling administrators to halt operations for a role and resume them later. This is crucial for maintenance or emergency situations.
+This facet provides granular control over role execution by allowing specific roles to be temporarily paused. It integrates with the diamond's access control system to ensure only authorized entities can manage pause states. This enables flexible operational control and emergency stops for critical functions.
 
 ---
 
@@ -282,32 +283,27 @@ error AccessControlRolePaused(bytes32 _role);
 <ExpandableCode language="solidity" maxLines={20} title="Example Implementation">
 {`pragma solidity ^0.8.30;
 
-import {IAccessControl} from "@compose/contracts/src/interfaces/IAccessControl.sol";
-import {IAccessControlPausable} from "@compose/contracts/src/interfaces/IAccessControlPausable.sol";
-import {DiamondProxy} from "@compose/contracts/src/DiamondProxy.sol";
+import { Diamond } from "@compose/core/Diamond.sol";
+import { AccessControlPausableFacet } from "@compose/access/AccessControlPausable/AccessControlPausableFacet.sol";
+import { AccessControlFacet } from "@compose/access/AccessControl/AccessControlFacet.sol";
 
-contract Example {
-    DiamondProxy public diamondProxy;
-    IAccessControlPausable private accessControlPausableFacet;
+contract MyDiamond is Diamond {
+    constructor(address _diamondAdmin, address[] memory _initFacets, bytes[] memory _initCalldata) Diamond(_diamondAdmin, _initFacets, _initCalldata) {}
 
-    constructor(address _diamondProxyAddress) {
-        diamondProxy = DiamondProxy(_diamondProxyAddress);
-        accessControlPausableFacet = IAccessControlPausable(address(diamondProxy));
+    function pauseMyRole() external {
+        AccessControlPausableFacet(address(this)).pauseRole("MY_ROLE");
     }
 
-    function pauseMyRole() public {
-        // Assuming 'MY_ROLE' is a defined role and the caller is its admin
-        bytes32 MY_ROLE = keccak256("MY_ROLE");
-        accessControlPausableFacet.pauseRole(MY_ROLE);
+    function unpauseMyRole() external {
+        AccessControlPausableFacet(address(this)).unpauseRole("MY_ROLE");
     }
 
-    function unpauseMyRole() public {
-        bytes32 MY_ROLE = keccak256("MY_ROLE");
-        accessControlPausableFacet.unpauseRole(MY_ROLE);
+    function checkMyRolePauseStatus(bytes32 _role) external view returns (bool) {
+        return AccessControlPausableFacet(address(this)).isRolePaused(_role);
     }
 
-    function checkRolePaused(bytes32 role) public view returns (bool) {
-        return accessControlPausableFacet.isRolePaused(role);
+    function requireMyRoleNotPaused(bytes32 _role, address _account) external view {
+        AccessControlPausableFacet(address(this)).requireRoleNotPaused(_role, _account);
     }
 }`}
 </ExpandableCode>
@@ -315,14 +311,15 @@ contract Example {
 ## Best Practices
 
 <Callout type="tip" title="Best Practice">
-- Ensure the caller has the necessary administrative role before attempting to pause or unpause another role.
-- Utilize `requireRoleNotPaused` within other facets to enforce the paused state of roles before executing sensitive operations.
+- Initialize the facet with appropriate role administrators during diamond deployment.
+- Use `pauseRole` and `unpauseRole` judiciously to manage operational states, ensuring the caller has the necessary administrative privileges.
+- Leverage `requireRoleNotPaused` within other facets to conditionally gate functionality based on the operational status of a role.
 </Callout>
 
 ## Security Considerations
 
 <Callout type="warning" title="Security">
-Access to `pauseRole` and `unpauseRole` is restricted to the administrator of the specific role, preventing unauthorized pausing. The `requireRoleNotPaused` function ensures that operations tied to a role are blocked if that role is paused, preventing unintended executions during maintenance or emergencies. Reentrancy is not a direct concern for the pause/unpause functions themselves, but dependent operations in other facets must be carefully audited.
+Ensure that the administrative role capable of pausing and unpausing is properly secured. The `requireRoleNotPaused` function should be integrated into any facet function that relies on a role's operational status to prevent execution when paused. Reentrancy is not a concern as the functions are read-only or perform state changes without external calls.
 </Callout>
 
 <div style={{marginTop: "3rem", paddingTop: "2rem", borderTop: "1px solid var(--ifm-color-emphasis-200)"}}>
@@ -348,4 +345,4 @@ Access to `pauseRole` and `unpauseRole` is restricted to the administrator of th
   <WasThisHelpful pageId="AccessControlPausableFacet" />
 </div>
 
-<LastUpdated date="2025-12-30T15:01:13.999Z" />
+<LastUpdated date="2025-12-30T15:37:32.160Z" />

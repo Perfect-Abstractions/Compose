@@ -1,7 +1,7 @@
 ---
 sidebar_position: 2
 title: "ERC721EnumerableFacet"
-description: "Enumerable ERC-721 token management and querying."
+description: "Manages ERC-721 tokens with enumeration capabilities."
 gitSource: "https://github.com/Perfect-Abstractions/Compose/tree/main/src/token/ERC721/ERC721Enumerable/ERC721EnumerableFacet.sol"
 ---
 
@@ -21,19 +21,18 @@ import GradientText from '@site/src/components/ui/GradientText';
 import GradientButton from '@site/src/components/ui/GradientButton';
 
 <DocSubtitle>
-Enumerable ERC-721 token management and querying.
+Manages ERC-721 tokens with enumeration capabilities.
 </DocSubtitle>
 
 <Callout type="info" title="Key Features">
-- Full ERC-721 compliance including `transferFrom` and `safeTransferFrom` variants.
-- On-chain token enumeration via `tokenOfOwnerByIndex`.
-- Owner enumeration via `balanceOf` and `tokenOfOwnerByIndex`.
-- Supports `approve` and `setApprovalForAll` for managing token permissions.
+- Provides `totalSupply`, `balanceOf`, and `tokenOfOwnerByIndex` for token enumeration.
+- Supports standard ERC-721 functions like `name`, `symbol`, `ownerOf`, and `tokenURI`.
+- Implements `approve`, `getApproved`, and `isApprovedForAll` for token approvals.
 </Callout>
 
 ## Overview
 
-The ERC721EnumerableFacet provides full ERC-721 functionality with added capabilities for enumerating tokens and owners. It allows querying total supply, balance, owner of specific tokens, and token IDs owned by an address by index. This facet integrates seamlessly into Compose diamonds, expanding the surface area for NFT interactions.
+The ERC721EnumerableFacet extends standard ERC-721 functionality by providing methods to enumerate tokens. This allows for querying token supply, individual token ownership, and token indices, crucial for applications requiring token listing or ordered access.
 
 ---
 
@@ -637,28 +636,43 @@ error ERC721OutOfBoundsIndex(address _owner, uint256 _index);
 <ExpandableCode language="solidity" maxLines={20} title="Example Implementation">
 {`pragma solidity ^0.8.30;
 
-import {IERC721EnumerableFacet} from "@compose-chain/contracts/facets/ERC721/ERC721EnumerableFacet.sol";
+import { DiamondLoupeFacet } from "@compose/core/DiamondLoupe/DiamondLoupeFacet";
+import { ERC721EnumerableFacet } from "@compose/token/ERC721/ERC721Enumerable/ERC721EnumerableFacet";
 
-contract MyDiamondOwner {
-    address immutable diamondAddress;
+contract MyDiamond is DiamondLoupeFacet {
+    // ... other facet
 
-    constructor(address _diamondAddress) {
-        diamondAddress = _diamondAddress;
+    function setFacets() external override {
+        // ... other facet setups
+        addFacet(ERC721EnumerableFacet.getStorage());
     }
 
-    function getTotalSupply() public view returns (uint256) {
-        IERC721EnumerableFacet erc721 = IERC721EnumerableFacet(diamondAddress);
-        return erc721.totalSupply();
+    function name() external view returns (string memory) {
+        return ERC721EnumerableFacet.name();
     }
 
-    function getTokenOwner(uint256 tokenId) public view returns (address) {
-        IERC721EnumerableFacet erc721 = IERC721EnumerableFacet(diamondAddress);
-        return erc721.ownerOf(tokenId);
+    function symbol() external view returns (string memory) {
+        return ERC721EnumerableFacet.symbol();
     }
 
-    function getTokenByIndex(address owner, uint256 index) public view returns (uint256) {
-        IERC721EnumerableFacet erc721 = IERC721EnumerableFacet(diamondAddress);
-        return erc721.tokenOfOwnerByIndex(owner, index);
+    function tokenURI(uint256 tokenId) external view returns (string memory) {
+        return ERC721EnumerableFacet.tokenURI(tokenId);
+    }
+
+    function totalSupply() external view returns (uint256) {
+        return ERC721EnumerableFacet.totalSupply();
+    }
+
+    function balanceOf(address owner) external view returns (uint256) {
+        return ERC721EnumerableFacet.balanceOf(owner);
+    }
+
+    function ownerOf(uint256 tokenId) public view returns (address) {
+        return ERC721EnumerableFacet.ownerOf(tokenId);
+    }
+
+    function tokenOfOwnerByIndex(address owner, uint256 index) external view returns (uint256) {
+        return ERC721EnumerableFacet.tokenOfOwnerByIndex(owner, index);
     }
 }`}
 </ExpandableCode>
@@ -666,15 +680,15 @@ contract MyDiamondOwner {
 ## Best Practices
 
 <Callout type="tip" title="Best Practice">
-- Ensure the `ERC721EnumerableFacet` is correctly initialized with an `ERC721Storage` struct during diamond deployment.
-- Use `ownerOf` and `tokenOfOwnerByIndex` for robust token ownership verification.
-- Leverage `balanceOf` and `totalSupply` for accurate token count tracking.
+- Initialize the `ERC721EnumerableFacet` with the correct storage slot `keccak256("compose.erc721.enumerable")`.
+- Call `ERC721EnumerableFacet.getStorage()` during diamond facet setup to ensure correct storage binding.
+- Use `transferFrom` and `safeTransferFrom` for token transfers, adhering to ERC-721 standards.
 </Callout>
 
 ## Security Considerations
 
 <Callout type="warning" title="Security">
-This facet implements standard ERC-721 transfer logic. Ensure proper access control is configured at the diamond level for functions like `approve` and `transferFrom`. Input validation for token IDs, addresses, and indices is handled internally by the facet to prevent common errors like non-existent tokens or incorrect ownership. Be mindful of gas costs associated with iterating over large token supplies or balances.
+Ensure that token transfers (`transferFrom`, `safeTransferFrom`) are properly authorized. The `ownerOf` and `tokenOfOwnerByIndex` functions can reveal token ownership details, which should be considered in the context of privacy if applicable. Input validation for token IDs and owner addresses is handled internally by the facet, but callers should be aware of potential errors like `ERC721NonexistentToken` or `ERC721OutOfBoundsIndex`.
 </Callout>
 
 <div style={{marginTop: "3rem", paddingTop: "2rem", borderTop: "1px solid var(--ifm-color-emphasis-200)"}}>
@@ -724,4 +738,4 @@ This facet implements standard ERC-721 transfer logic. Ensure proper access cont
   <WasThisHelpful pageId="ERC721EnumerableFacet" />
 </div>
 
-<LastUpdated date="2025-12-30T15:02:42.597Z" />
+<LastUpdated date="2025-12-30T15:38:54.810Z" />

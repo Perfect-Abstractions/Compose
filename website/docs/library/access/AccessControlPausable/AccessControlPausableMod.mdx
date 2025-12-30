@@ -1,7 +1,7 @@
 ---
 sidebar_position: 1
 title: "AccessControlPausableMod"
-description: "Manage role-based access control with pause/unpause functionality."
+description: "Manage role pausing and access control for diamond functions."
 gitSource: "https://github.com/Perfect-Abstractions/Compose/tree/main/src/access/AccessControlPausable/AccessControlPausableMod.sol"
 ---
 
@@ -21,13 +21,13 @@ import GradientText from '@site/src/components/ui/GradientText';
 import GradientButton from '@site/src/components/ui/GradientButton';
 
 <DocSubtitle>
-Manage role-based access control with pause/unpause functionality.
+Manage role pausing and access control for diamond functions.
 </DocSubtitle>
 
 <Callout type="info" title="Key Features">
-- Role-based pausing: Temporarily disable operations for specific roles without affecting others.
-- Composable access control: Integrates as a standard Compose module, adhering to the diamond storage pattern.
-- Explicit error handling: Employs custom errors for clear revert conditions.
+- Allows pausing and unpausing of specific roles, temporarily revoking access.
+- Integrates with existing Access Control mechanisms by leveraging its storage.
+- Provides explicit checks for role pause status via `isRolePaused`.
 </Callout>
 
 <Callout type="info" title="Module Usage">
@@ -36,7 +36,7 @@ This module provides internal functions for use in your custom facets. Import it
 
 ## Overview
 
-This module provides granular control over role permissions, allowing specific roles to be paused. This is crucial for temporarily halting operations tied to certain roles during emergencies or maintenance, ensuring diamond safety and controlled upgrades. It integrates seamlessly with Compose's storage pattern.
+This module provides fine-grained control over role permissions by allowing specific roles to be paused. It integrates seamlessly with the diamond storage pattern, ensuring consistent state management. By enabling role-specific pausing, it enhances the safety and flexibility of diamond upgrades and operations.
 
 ---
 
@@ -330,22 +330,39 @@ error AccessControlUnauthorizedAccount(address _account, bytes32 _role);
 <ExpandableCode language="solidity" maxLines={20} title="Example Implementation">
 {`pragma solidity ^0.8.30;
 
-import {IAccessControlPausableMod} from "@compose/diamond-core/contracts/modules/access/IAccessControlPausableMod.sol";
+import {IAccessControlPausable} from "@compose/access/AccessControlPausable/IAccessControlPausable.sol";
+import {AccessControlPausableMod} from "@compose/access/AccessControlPausable/AccessControlPausableMod.sol";
 
 contract MyFacet {
-    IAccessControlPausableMod public constant ACCESS_CONTROL_PAUSABLE_MOD = IAccessControlPausableMod(0x...); // Diamond address
+    IAccessControlPausable internal _accessControlPausable;
 
-    function doSomethingRestricted() external {
-        ACCESS_CONTROL_PAUSABLE_MOD.requireRoleNotPaused(msg.sender, 1); // Example role ID
-        // ... restricted logic ...
+    constructor(address _diamondProxy) {
+        _accessControlPausable = IAccessControlPausable(_diamondProxy);
     }
 
+    // Example of pausing a role
     function pauseMyRole() external {
-        ACCESS_CONTROL_PAUSABLE_MOD.pauseRole(1); // Example role ID
+        bytes32 role = keccak256("MY_ROLE");
+        _accessControlPausable.pauseRole(role);
     }
 
+    // Example of unpausing a role
     function unpauseMyRole() external {
-        ACCESS_CONTROL_PAUSABLE_MOD.unpauseRole(1); // Example role ID
+        bytes32 role = keccak256("MY_ROLE");
+        _accessControlPausable.unpauseRole(role);
+    }
+
+    // Example of checking if a role is paused
+    function checkRolePaused(bytes32 _role) external view returns (bool) {
+        return _accessControlPausable.isRolePaused(_role);
+    }
+
+    // Example of requiring a role and that it's not paused
+    function performActionWithRole() external {
+        bytes32 role = keccak256("MY_ROLE");
+        address caller = msg.sender;
+        _accessControlPausable.requireRoleNotPaused(role, caller);
+        // ... perform action ...
     }
 }`}
 </ExpandableCode>
@@ -353,15 +370,15 @@ contract MyFacet {
 ## Best Practices
 
 <Callout type="tip" title="Best Practice">
-- Use `requireRoleNotPaused` to enforce both role membership and operational status before executing sensitive functions.
-- Implement pause/unpause logic for roles judiciously, ensuring clear communication and audit trails for such actions.
-- Utilize the provided `AccessControlRolePaused` and `AccessControlUnauthorizedAccount` custom errors for gas-efficient and explicit revert reasons.
+- Ensure the `AccessControlPausableMod` facet is deployed and initialized correctly within the diamond.
+- Use custom errors (`AccessControlRolePaused`, `AccessControlUnauthorizedAccount`) for clear revert reasons.
+- Implement role checks using `requireRoleNotPaused` to prevent execution when a role is paused.
 </Callout>
 
 ## Integration Notes
 
 <Callout type="success" title="Shared Storage">
-This module interacts with the diamond's storage. Facets can access its state and functionality via the `IAccessControlPausableMod` interface. The module manages its own storage, respecting Compose's storage slot allocation. Ensure the module is correctly initialized and its address is accessible to facets that require its services. The order of checks in `requireRoleNotPaused` is important: role existence is checked before pause status.
+The `AccessControlPausableMod` utilizes the diamond storage pattern, storing its state at the `ACCESS_CONTROL_STORAGE_POSITION` slot, which is identified by `keccak256("compose.accesscontrol")`. It also depends on the `AccessControlStorage` struct. Facets interacting with this module should use the `IAccessControlPausable` interface to call its functions. The `requireRoleNotPaused` function enforces both role existence and the non-paused status of that role.
 </Callout>
 
 <div style={{marginTop: "3rem", paddingTop: "2rem", borderTop: "1px solid var(--ifm-color-emphasis-200)"}}>
@@ -381,4 +398,4 @@ This module interacts with the diamond's storage. Facets can access its state an
   <WasThisHelpful pageId="AccessControlPausableMod" />
 </div>
 
-<LastUpdated date="2025-12-30T15:01:11.756Z" />
+<LastUpdated date="2025-12-30T15:37:28.589Z" />

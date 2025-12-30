@@ -25,10 +25,9 @@ Manages contract ownership with a two-step transfer process.
 </DocSubtitle>
 
 <Callout type="info" title="Key Features">
-- Implements a secure two-step ownership transfer process.
-- Provides functions to view current and pending owners.
-- Includes a `requireOwner` guard for access control.
-- Supports renouncing ownership to address(0).
+- Secure two-step ownership transfer process.
+- Explicit owner and pending owner tracking.
+- Permissionless `renounceOwnership` function to relinquish all owner privileges.
 </Callout>
 
 <Callout type="info" title="Module Usage">
@@ -37,7 +36,7 @@ This module provides internal functions for use in your custom facets. Import it
 
 ## Overview
 
-This module implements a secure two-step ownership transfer mechanism, preventing accidental ownership loss. It ensures that ownership changes are deliberate and confirmed by both the current and pending owners, enhancing the safety and auditability of diamond upgrades and administrative actions.
+This module provides a secure, two-step ownership transfer mechanism, crucial for preventing accidental or malicious ownership changes in upgradeable diamond proxies. By requiring explicit acceptance from the new owner, it enhances contract safety and predictability during ownership transitions.
 
 ---
 
@@ -253,37 +252,34 @@ error OwnerUnauthorizedAccount();
 <ExpandableCode language="solidity" maxLines={20} title="Example Implementation">
 {`pragma solidity ^0.8.30;
 
-import {OwnerTwoStepsMod} from "./OwnerTwoStepsMod.sol";
+import {IOwnerTwoStepsFacet} from "@compose/access/OwnerTwoSteps/OwnerTwoStepsFacet.sol";
+import {OwnerTwoStepsMod} from "@compose/access/OwnerTwoSteps/OwnerTwoStepsMod.sol";
 
-contract MyFacet is OwnerTwoStepsMod {
-    address public constant OWNER_STORAGE_POSITION = OwnerTwoStepsMod.OWNER_STORAGE_POSITION;
-    address public constant PENDING_OWNER_STORAGE_POSITION = OwnerTwoStepsMod.PENDING_OWNER_STORAGE_POSITION;
+contract MyFacet is IOwnerTwoStepsFacet {
+    address immutable diamondAddress;
 
-    function initializeOwner(address _initialOwner) external {
-        // Initialize owner using the module's logic
-        // This would typically be called once during diamond deployment
-        // For demonstration, we simulate setting it directly
-        // In a real scenario, use OwnerTwoStepsMod.transferOwnership to set initial owner
+    constructor(address _diamondAddress) {
+        diamondAddress = _diamondAddress;
     }
 
     function transferContractOwnership(address _newOwner) external {
-        transferOwnership(_newOwner);
+        OwnerTwoStepsMod.transferOwnership(diamondAddress, _newOwner);
     }
 
     function acceptContractOwnership() external {
-        acceptOwnership();
-    }
-
-    function renounceContractOwnership() external {
-        renounceOwnership();
+        OwnerTwoStepsMod.acceptOwnership(diamondAddress);
     }
 
     function getCurrentOwner() external view returns (address) {
-        return owner();
+        return OwnerTwoStepsMod.owner(diamondAddress);
     }
 
-    function getPendingContractOwner() external view returns (address) {
-        return pendingOwner();
+    function getPendingOwner() external view returns (address) {
+        return OwnerTwoStepsMod.pendingOwner(diamondAddress);
+    }
+
+    function renounceContractOwnership() external {
+        OwnerTwoStepsMod.renounceOwnership(diamondAddress);
     }
 }`}
 </ExpandableCode>
@@ -291,15 +287,15 @@ contract MyFacet is OwnerTwoStepsMod {
 ## Best Practices
 
 <Callout type="tip" title="Best Practice">
-- Always use `transferOwnership` to initiate a transfer, followed by `acceptOwnership` by the new owner.
-- Utilize `requireOwner` to protect sensitive administrative functions.
-- Be aware that `renounceOwnership` permanently disables owner-only functions.
+- Always use the `transferOwnership` and `acceptOwnership` functions in tandem to ensure secure ownership changes.
+- Implement `requireOwner` checks within facets that should only be callable by the contract owner.
+- Be aware that calling `renounceOwnership` permanently removes owner privileges and should be used with extreme caution.
 </Callout>
 
 ## Integration Notes
 
 <Callout type="success" title="Shared Storage">
-This module utilizes distinct storage slots for `owner` and `pendingOwner` state variables, defined by `OWNER_STORAGE_POSITION` and `PENDING_OWNER_STORAGE_POSITION`. Facets interacting with ownership should be aware of these positions if they need to directly access or verify the owner state. The functions provided (`owner`, `pendingOwner`, `transferOwnership`, `acceptOwnership`, `renounceOwnership`, `requireOwner`) abstract away direct storage manipulation, promoting a cleaner interface.
+This module interacts with diamond storage using specific storage positions defined by `OWNER_STORAGE_POSITION` and `PENDING_OWNER_STORAGE_POSITION`. Facets integrating this module must correctly reference these positions and the associated `OwnerStorage` and `PendingOwnerStorage` structs. The `owner` and `pendingOwner` state variables are managed within the diamond's storage.
 </Callout>
 
 <div style={{marginTop: "3rem", paddingTop: "2rem", borderTop: "1px solid var(--ifm-color-emphasis-200)"}}>
@@ -319,4 +315,4 @@ This module utilizes distinct storage slots for `owner` and `pendingOwner` state
   <WasThisHelpful pageId="OwnerTwoStepsMod" />
 </div>
 
-<LastUpdated date="2025-12-30T15:01:06.504Z" />
+<LastUpdated date="2025-12-30T15:37:24.140Z" />

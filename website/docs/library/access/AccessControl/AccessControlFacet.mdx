@@ -1,7 +1,7 @@
 ---
 sidebar_position: 2
 title: "AccessControlFacet"
-description: "Manage roles and permissions within a diamond."
+description: "Manages role-based access control within a diamond."
 gitSource: "https://github.com/Perfect-Abstractions/Compose/tree/main/src/access/AccessControl/AccessControlFacet.sol"
 ---
 
@@ -21,19 +21,19 @@ import GradientText from '@site/src/components/ui/GradientText';
 import GradientButton from '@site/src/components/ui/GradientButton';
 
 <DocSubtitle>
-Manage roles and permissions within a diamond.
+Manages role-based access control within a diamond.
 </DocSubtitle>
 
 <Callout type="info" title="Key Features">
-- Role-based access control (RBAC) for granular permissions.
-- Support for granting and revoking roles to/from accounts.
-- Batch operations for efficient role management of multiple accounts.
-- Default admin role for bootstrapping access control.
+- Role-based access control (RBAC) implementation.
+- Supports granting and revoking roles for individual accounts and batches.
+- Allows for defining role administrators to manage role assignments.
+- Emits events for role changes for off-chain monitoring.
 </Callout>
 
 ## Overview
 
-The AccessControlFacet provides a robust role-based access control (RBAC) system. It allows defining roles, assigning them to accounts, and enforcing permissions based on these roles. This facet is crucial for orchestrating access to sensitive functions within a diamond, ensuring only authorized entities can perform specific actions.
+The AccessControlFacet provides a robust framework for implementing role-based access control (RBAC) within a Compose diamond. It allows for granular permission management by defining roles, assigning them to accounts, and enforcing role requirements for function execution. This facet is crucial for securing sensitive operations and ensuring that only authorized entities can perform specific actions.
 
 ---
 
@@ -478,26 +478,42 @@ error AccessControlUnauthorizedSender(address _sender, address _account);
 <ExpandableCode language="solidity" maxLines={20} title="Example Implementation">
 {`pragma solidity ^0.8.30;
 
-import {DiamondLoupeFacet} from "@compose/diamond-loupe/contracts/DiamondLoupeFacet.sol";
-import {AccessControlFacet} from "@compose/access-control/contracts/AccessControlFacet.sol";
+import { DiamondAccessControl } from "@compose/access/DiamondAccessControl";
+import { AccessControlFacet } from "@compose/access/AccessControl/AccessControlFacet";
+import { AccessControlStorage } from "@compose/access/AccessControl/AccessControlStorage";
 
-// Assume diamond is already deployed and functions are added
-contract Caller {
-    address immutable DIAMOND_ADDRESS;
+contract MyDiamond is DiamondAccessControl {
+    bytes32 constant ACCESS_CONTROL_STORAGE_POSITION = keccak256("compose.accesscontrol");
 
-    constructor(address _diamondAddress) {
-        DIAMOND_ADDRESS = _diamondAddress;
+    // Example Role Definitions
+    bytes32 public constant ADMIN_ROLE = keccak256("ADMIN_ROLE");
+    bytes32 public constant MINTER_ROLE = keccak256("MINTER_ROLE");
+
+    constructor(address _diamondAdmin, address _owner) DiamondAccessControl(_diamondAdmin, _owner) {
+        // Initialize AccessControlFacet
+        AccessControlFacet acFacet = AccessControlFacet(address(this));
+        acFacet.grantRole(ADMIN_ROLE, _diamondAdmin);
+        acFacet.grantRole(ADMIN_ROLE, _owner);
+        acFacet.grantRole(MINTER_ROLE, _owner);
     }
 
-    function grantAdminRole() external {
-        AccessControlFacet accessControl = AccessControlFacet(DIAMOND_ADDRESS);
-        bytes32 adminRole = accessControl.getRoleAdmin(AccessControlFacet.DEFAULT_ADMIN_ROLE);
-        accessControl.grantRole(adminRole, address(this));
+    // Function to grant MINTER_ROLE to an address
+    function grantMinterRole(address _account) external {
+        AccessControlFacet acFacet = AccessControlFacet(address(this));
+        acFacet.grantRole(MINTER_ROLE, _account);
     }
 
-    function checkMyRole() external view {
-        AccessControlFacet accessControl = AccessControlFacet(DIAMOND_ADDRESS);
-        require(accessControl.hasRole(AccessControlFacet.DEFAULT_ADMIN_ROLE, msg.sender), "Caller: Not admin");
+    // Function that requires MINTER_ROLE
+    function mintTokens(address _to, uint256 _amount) external {
+        AccessControlFacet acFacet = AccessControlFacet(address(this));
+        acFacet.requireRole(MINTER_ROLE, msg.sender);
+        // ... token minting logic ...
+    }
+
+    // Function to get role admin
+    function getAdminForRole(bytes32 _role) external view returns (bytes32) {
+        AccessControlFacet acFacet = AccessControlFacet(address(this));
+        return acFacet.getRoleAdmin(_role);
     }
 }`}
 </ExpandableCode>
@@ -505,15 +521,15 @@ contract Caller {
 ## Best Practices
 
 <Callout type="tip" title="Best Practice">
-- Initialize roles and grant initial permissions during diamond deployment or upgrade. Use `grantRole` for single assignments and `grantRoleBatch` for multiple accounts to the same role.
-- Define role hierarchies carefully using `setRoleAdmin` to ensure proper administrative control over role assignments.
-- Integrate `requireRole` checks directly within functions that require specific permissions, ensuring granular access control.
+- Initialize roles and grant initial permissions during diamond deployment or upgrade initialization.
+- Define role hierarchies using `setRoleAdmin` to ensure proper administrative control.
+- Utilize `requireRole` within functions to enforce access control checks, reverting with specific errors if unauthorized.
 </Callout>
 
 ## Security Considerations
 
 <Callout type="warning" title="Security">
-Ensure that the caller is authorized before granting or revoking roles by checking their current role membership. Use `requireRole` to protect sensitive functions. Be mindful of gas costs for batch operations, especially with a large number of accounts. The `DEFAULT_ADMIN_ROLE` is critical for initial setup and should be managed securely.
+Ensure that sensitive roles, such as `ADMIN_ROLE`, are only granted to trusted addresses. The `setRoleAdmin` function's access control is enforced by the current role administrator, preventing unauthorized changes to role hierarchies. Batch operations (`grantRoleBatch`, `revokeRoleBatch`) should be used cautiously to avoid unintended mass role modifications. Reentrancy is not a direct concern as functions operate on state and do not make external calls without proper checks.
 </Callout>
 
 <div style={{marginTop: "3rem", paddingTop: "2rem", borderTop: "1px solid var(--ifm-color-emphasis-200)"}}>
@@ -557,4 +573,4 @@ Ensure that the caller is authorized before granting or revoking roles by checki
   <WasThisHelpful pageId="AccessControlFacet" />
 </div>
 
-<LastUpdated date="2025-12-30T15:01:42.964Z" />
+<LastUpdated date="2025-12-30T15:37:57.431Z" />

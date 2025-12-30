@@ -1,7 +1,7 @@
 ---
 sidebar_position: 2
 title: "ERC1155Facet"
-description: "Manage ERC-1155 fungible and non-fungible tokens."
+description: "Manages ERC-1155 multi-token standards."
 gitSource: "https://github.com/Perfect-Abstractions/Compose/tree/main/src/token/ERC1155/ERC1155Facet.sol"
 ---
 
@@ -21,18 +21,18 @@ import GradientText from '@site/src/components/ui/GradientText';
 import GradientButton from '@site/src/components/ui/GradientButton';
 
 <DocSubtitle>
-Manage ERC-1155 fungible and non-fungible tokens.
+Manages ERC-1155 multi-token standards.
 </DocSubtitle>
 
 <Callout type="info" title="Key Features">
-- Supports both fungible and non-fungible tokens within a single standard.
-- Enables batched operations for transfers and approvals to optimize gas usage.
-- Provides a flexible URI mechanism for token metadata, allowing for both default and token-specific URIs.
+- Supports single and batch transfers of ERC-1155 tokens.
+- Handles operator approvals for token management.
+- Provides URI resolution for token metadata.
 </Callout>
 
 ## Overview
 
-The ERC1155Facet provides a comprehensive implementation of the ERC-1155 multi-token standard. It enables managing fungible and non-fungible tokens within a Compose diamond, supporting batch transfers, approvals, and URI resolution for token metadata.
+The ERC1155Facet provides the core functionality for managing ERC-1155 multi-token standards within a Compose diamond. It enables tracking token balances, handling approvals, and performing single or batched token transfers, acting as a dedicated surface area for ERC-1155 operations.
 
 ---
 
@@ -601,61 +601,48 @@ error ERC1155InvalidArrayLength(uint256 _idsLength, uint256 _valuesLength);
 <ExpandableCode language="solidity" maxLines={20} title="Example Implementation">
 {`pragma solidity ^0.8.30;
 
-import {IERC1155Facet} from "@compose/diamond/facets/ERC1155/IERC1155Facet.sol";
-import {IDiamondCut} from "@compose/diamond/facets/DiamondCut/IDiamondCut.sol";
+import {DiamondCutFacet} from "@compose/diamond/DiamondCutFacet.sol";
+import {DiamondLoupeFacet} from "@compose/diamond/DiamondLoupeFacet.sol";
+import {ERC1155Facet} from "@compose/token/ERC1155/ERC1155Facet.sol";
+import {ERC1155Storage} from "@compose/token/ERC1155/ERC1155Storage.sol";
+import {ERC1155Selectors} from "@compose/token/ERC1155/ERC1155Selectors.sol";
 
-contract Deployer {
-    address immutable diamondAddress;
+contract MyDiamond is DiamondCutFacet, DiamondLoupeFacet {
+    address constant ERC1155_FACET_ADDRESS = address(0x...); // Address of deployed ERC1155Facet
 
-    constructor(address _diamondAddress) {
-        diamondAddress = _diamondAddress;
-    }
-
-    function addERC1155Facet() public {
-        bytes memory facetImplementation = type(ERC1155Facet).creation.runtimeBytecode;
-        bytes4[] memory selectors = new bytes4[](8);
-        selectors[0] = IERC1155Facet.getStorage.selector;
-        selectors[1] = IERC1155Facet.uri.selector;
-        selectors[2] = IERC1155Facet.balanceOf.selector;
-        selectors[3] = IERC1155Facet.balanceOfBatch.selector;
-        selectors[4] = IERC1155Facet.setApprovalForAll.selector;
-        selectors[5] = IERC1155Facet.isApprovedForAll.selector;
-        selectors[6] = IERC1155Facet.safeTransferFrom.selector;
-        selectors[7] = IERC1155Facet.safeBatchTransferFrom.selector;
-
-        IDiamondCut(diamondAddress).diamondCut(
-            IDiamondCut.FacetCut[]
-                (  new IDiamondCut.FacetCut[](1)  )
-                .push(IDiamondCut.FacetCut({
-                    facetAddress: address(new ERC1155Facet{storage: ERC1155Facet.storage(0x0)}),
-                    action: IDiamondCut.FacetCutAction.ADD,
-                    isUnion: selectors
-                }))
-            ,
-            address(0), // clear all diamonds
-            '' // init data
+    function upgrade() external {
+        bytes memory data = abi.encodeWithSelector(
+            ERC1155Selectors.setApprovalForAll,
+            address(this), // Example: Approving the diamond itself
+            true
         );
-    }
 
-    function transferERC1155(uint256 _id, uint256 _value, address _to) external {
-        IERC1155Facet(diamondAddress).safeTransferFrom(msg.sender, _to, _id, _value, \"\");
+        // Assuming you have a diamond upgrade function that accepts facet addresses and selectors
+        // This is a simplified example for demonstration purposes.
+        // A real upgrade would involve adding/replacing facets.
+
+        // Example of calling a function after deployment:
+        ERC1155Facet erc1155Facet = ERC1155Facet(address(this)); // If facet is part of the diamond proxy
+        bool isApproved = erc1155Facet.isApprovedForAll(msg.sender, address(this));
+
+        // Example of setting URI
+        // erc1155Facet.setURI("ipfs://my-token-uri/");
     }
-}
-`}
+}`}
 </ExpandableCode>
 
 ## Best Practices
 
 <Callout type="tip" title="Best Practice">
-- Initialize the ERC1155 storage struct with a unique slot address during deployment.
-- Use the `setApprovalForAll` function to grant operator permissions before transferring tokens on behalf of another account.
-- Ensure correct URI formatting with `&#123;id&#125;` placeholder for token-specific URIs if a base URI is set.
+- Initialize the `baseURI` if token URIs are intended to be concatenated.
+- Ensure proper access control is implemented at the diamond level for functions that modify state.
+- Store the `ERC1155Facet` address and its selectors correctly within the diamond's facet registry.
 </Callout>
 
 ## Security Considerations
 
 <Callout type="warning" title="Security">
-Access control is managed by the diamond proxy's authorization system. Ensure that only authorized addresses can call administrative functions. Reentrancy is mitigated by the standard ERC-1155 transfer patterns. Input validation is handled by custom errors like `ERC1155InsufficientBalance` and `ERC1155InvalidReceiver`.
+Input validation for addresses, token IDs, and values is crucial. Ensure that `msg.sender` has the necessary approvals before executing transfers. Reentrancy guards may be required on functions that interact with external contracts during transfers. Be mindful of potential array length mismatches in batch operations, which are handled by the `ERC1155InvalidArrayLength` error.
 </Callout>
 
 <div style={{marginTop: "3rem", paddingTop: "2rem", borderTop: "1px solid var(--ifm-color-emphasis-200)"}}>
@@ -699,4 +686,4 @@ Access control is managed by the diamond proxy's authorization system. Ensure th
   <WasThisHelpful pageId="ERC1155Facet" />
 </div>
 
-<LastUpdated date="2025-12-30T15:02:19.736Z" />
+<LastUpdated date="2025-12-30T15:38:33.255Z" />

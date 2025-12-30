@@ -1,7 +1,7 @@
 ---
 sidebar_position: 2
 title: "OwnerFacet"
-description: "Manages ownership and control of the diamond."
+description: "Manage contract ownership and transfer."
 gitSource: "https://github.com/Perfect-Abstractions/Compose/tree/main/src/access/Owner/OwnerFacet.sol"
 ---
 
@@ -21,18 +21,18 @@ import GradientText from '@site/src/components/ui/GradientText';
 import GradientButton from '@site/src/components/ui/GradientButton';
 
 <DocSubtitle>
-Manages ownership and control of the diamond.
+Manage contract ownership and transfer.
 </DocSubtitle>
 
 <Callout type="info" title="Key Features">
-- Enables secure transfer of diamond ownership.
-- Allows for complete relinquishment of diamond control via `renounceOwnership`.
-- Provides a clear interface for querying the current owner.
+- Manages the single owner of the diamond.
+- Supports secure transfer of ownership to a new address.
+- Allows the owner to completely renounce ownership.
 </Callout>
 
 ## Overview
 
-The OwnerFacet provides essential functions for managing the ownership of the Compose diamond. It allows for querying the current owner, transferring ownership to a new address, and renouncing ownership entirely. This facet is crucial for controlling administrative actions and ensuring secure operation.
+The OwnerFacet provides essential ownership management functionalities for a Compose diamond. It allows the current owner to view the owner's address, transfer ownership to a new address, or renounce ownership entirely. This facet is fundamental for controlling administrative actions within the diamond.
 
 ---
 
@@ -145,41 +145,63 @@ error OwnerUnauthorizedAccount();
 <ExpandableCode language="solidity" maxLines={20} title="Example Implementation">
 {`pragma solidity ^0.8.30;
 
-import {IOwnerFacet} from "@compose/contracts/src/facets/Owner/IOwnerFacet.sol";
+import { IOwnerFacet } from "@compose/access/Owner/IOwnerFacet";
+import { OwnerFacet } from "@compose/access/Owner/OwnerFacet";
+import { DiamondCutFacet } from "@compose/diamond/DiamondCutFacet";
+import { Diamond } from "@compose/diamond/Diamond";
 
-contract OwnerManager {
-    IOwnerFacet ownerFacet;
+contract DeployOwnerFacet {
+    address internal constant OWNER_FACET_STORAGE_POSITION = keccak256("compose.owner");
 
-    constructor(address _ownerFacetAddress) {
-        ownerFacet = IOwnerFacet(_ownerFacetAddress);
+    function deploy() public {
+        // Assume diamond is already deployed and initialized
+        Diamond diamond = Diamond(msg.sender); // Replace with actual diamond address
+
+        // Deploy the OwnerFacet
+        OwnerFacet ownerFacet = new OwnerFacet();
+
+        // Prepare diamond cut to add the OwnerFacet
+        // This assumes you have a way to get the facet cut data
+        // For demonstration, we'll just show how to add it
+        address[] memory facetAddresses = new address[](1);
+        facetAddresses[0] = address(ownerFacet);
+
+        bytes[] memory functionSelectors = new bytes[](4);
+        functionSelectors[0] = OwnerFacet.owner.selector;
+        functionSelectors[1] = OwnerFacet.transferOwnership.selector;
+        functionSelectors[2] = OwnerFacet.renounceOwnership.selector;
+        functionSelectors[3] = OwnerFacet.getStorage.selector; // Internal function for storage pointer
+
+        // In a real deployment, you'd use DiamondCutFacet to add facets
+        // DiamondCutFacet(diamond.getFacetAddress(diamond.DIAMOND_CUT_FACET_ID)).diamondCut(
+        //     new Diamond.FacetCut[](
+        //         1
+        //     ),
+        //     address(0), // clear all old facets
+        //     encodedSelectorsToClear
+        // );
+
+        // Example of calling owner function after deployment
+        // IOwnerFacet ownerFacetInterface = IOwnerFacet(diamond.getFacetAddress(diamond.OWNER_FACET_ID)); // Assuming owner facet has a known ID
+        // address currentOwner = ownerFacetInterface.owner();
+        // ownerFacetInterface.transferOwnership(address(1));
     }
-
-    function getCurrentOwner() external view returns (address) {
-        return ownerFacet.owner();
-    }
-
-    function transferDiamondOwnership(address _newOwner) external {
-        ownerFacet.transferOwnership(_newOwner);
-    }
-
-    function renounceDiamondOwnership() external {
-        ownerFacet.renounceOwnership();
-    }
-}`}
+}
+`}
 </ExpandableCode>
 
 ## Best Practices
 
 <Callout type="tip" title="Best Practice">
-- Initialize ownership during diamond deployment to a trusted address.
-- Only transfer ownership to addresses that can be secured and managed.
-- Use `renounceOwnership` with extreme caution, as it permanently relinquishes control.
+- Initialize the OwnerFacet during diamond deployment or upgrade to set the initial owner.
+- Ensure that only the current owner can call `transferOwnership` and `renounceOwnership`.
+- Store the OwnerFacet's storage in its designated slot (`keccak256("compose.owner")`) to prevent conflicts with other facets.
 </Callout>
 
 ## Security Considerations
 
 <Callout type="warning" title="Security">
-The `transferOwnership` function is critical. Ensure that any address receiving ownership has robust security measures in place. Unauthorized transfer of ownership can lead to the loss of control over the diamond. `renounceOwnership` is irreversible and should only be called if full relinquishment of control is intended and understood.
+Access control is critical. Only the current owner should be able to execute `transferOwnership` and `renounceOwnership`. The `owner` function is view-only and safe to call externally. Ensure that `transferOwnership` correctly handles the case where `_newOwner` is set to `address(0)` for renouncement.
 </Callout>
 
 <div style={{marginTop: "3rem", paddingTop: "2rem", borderTop: "1px solid var(--ifm-color-emphasis-200)"}}>
@@ -211,4 +233,4 @@ The `transferOwnership` function is critical. Ensure that any address receiving 
   <WasThisHelpful pageId="OwnerFacet" />
 </div>
 
-<LastUpdated date="2025-12-30T15:01:27.607Z" />
+<LastUpdated date="2025-12-30T15:37:43.443Z" />

@@ -1,7 +1,7 @@
 ---
 sidebar_position: 1
 title: "AccessControlTemporalMod"
-description: "Grants and revokes roles with time-based expiry."
+description: "Manages role assignments with expiry dates."
 gitSource: "https://github.com/Perfect-Abstractions/Compose/tree/main/src/access/AccessControlTemporal/AccessControlTemporalMod.sol"
 ---
 
@@ -21,13 +21,13 @@ import GradientText from '@site/src/components/ui/GradientText';
 import GradientButton from '@site/src/components/ui/GradientButton';
 
 <DocSubtitle>
-Grants and revokes roles with time-based expiry.
+Manages role assignments with expiry dates.
 </DocSubtitle>
 
 <Callout type="info" title="Key Features">
-- Grants roles with specific expiry timestamps, ensuring automatic revocation.
-- Provides a `requireValidRole` function to enforce non-expired role checks directly within facets.
-- Allows for granular, time-based access control policies within a diamond architecture.
+- Roles can be granted with a specific expiry timestamp.
+- Functions to check if a role has expired or is currently valid.
+- Allows for programmatic revocation of temporal roles before expiry.
 </Callout>
 
 <Callout type="info" title="Module Usage">
@@ -36,7 +36,7 @@ This module provides internal functions for use in your custom facets. Import it
 
 ## Overview
 
-This module extends role-based access control by allowing roles to be granted with a specific expiry timestamp. It ensures that permissions are automatically invalidated after a set period, enhancing security and operational flexibility for Compose diamonds. Facets can leverage this module to implement time-sensitive access policies.
+This module provides time-bound access control, allowing roles to be granted for a specific duration. It enhances security by ensuring that elevated privileges automatically expire, reducing the risk of stale permissions. Integrate this module to implement temporary role assignments within your diamond.
 
 ---
 
@@ -433,49 +433,44 @@ error AccessControlUnauthorizedAccount(address _account, bytes32 _role);
 <ExpandableCode language="solidity" maxLines={20} title="Example Implementation">
 {`pragma solidity ^0.8.30;
 
-import {IAccessControlTemporalMod} from "./interfaces/IAccessControlTemporalMod.sol";
+import { IAccessControlTemporal } from "@compose/access/AccessControlTemporal/IAccessControlTemporal";
+import { AccessControlTemporalMod } from "@compose/access/AccessControlTemporal/AccessControlTemporalMod";
 
 contract MyFacet {
-    IAccessControlTemporalMod public immutable accessControlTemporalMod;
+    // Assume AccessControlTemporalMod is deployed and accessible via a diamond storage slot
+    AccessControlTemporalMod internal accessControlTemporalMod = AccessControlTemporalMod(
+        address(this) // In a real diamond, this would be the diamond proxy address
+    );
 
-    constructor(address _accessControlTemporalModAddress) {
-        accessControlTemporalMod = IAccessControlTemporalMod(_accessControlTemporalModAddress);
+    function grantTempRole(bytes32 _role, address _account, uint256 _expiresAt) external {
+        // Grant a role that expires at a specific timestamp
+        accessControlTemporalMod.grantRoleWithExpiry(_role, _account, _expiresAt);
     }
 
-    /**
-     * @notice Grants a role to an account with a specific expiry timestamp.
-     * @param _account The account to grant the role to.
-     * @param _role The role to grant.
-     * @param _expiryTimestamp The Unix timestamp when the role expires.
-     */
-    function grantRoleWithExpiry(address _account, bytes32 _role, uint64 _expiryTimestamp) external {
-        accessControlTemporalMod.grantRoleWithExpiry(_account, _role, _expiryTimestamp);
+    function checkRoleValidity(bytes32 _role, address _account) external view {
+        // Ensure the role is still valid and not expired
+        accessControlTemporalMod.requireValidRole(_role, _account);
     }
 
-    /**
-     * @notice Checks if an account has a valid, non-expired role.
-     * @param _account The account to check.
-     * @param _role The role to check.
-     */
-    function requireValidRole(address _account, bytes32 _role) external view {
-        accessControlTemporalMod.requireValidRole(_account, _role);
+    function revokeTempRole(bytes32 _role, address _account) external {
+        // Manually revoke a temporal role before its expiry
+        accessControlTemporalMod.revokeTemporalRole(_role, _account);
     }
-}
-`}
+}`}
 </ExpandableCode>
 
 ## Best Practices
 
 <Callout type="tip" title="Best Practice">
-- Use `requireValidRole` in facet functions to enforce time-sensitive access control before executing sensitive operations.
-- Store the `AccessControlTemporalMod` facet address in your diamond proxy for deterministic access.
-- Carefully manage expiry timestamps to prevent unintended loss of critical permissions or prolonged access.
+- Ensure `_expiresAt` timestamps are set reasonably to avoid immediate expiry or excessively long-lived roles.
+- Regularly audit temporal role assignments to manage the diamond's access control posture.
+- Handle `AccessControlRoleExpired` and `AccessControlUnauthorizedAccount` errors gracefully in calling facets.
 </Callout>
 
 ## Integration Notes
 
 <Callout type="success" title="Shared Storage">
-The `AccessControlTemporalMod` manages its state within its own storage slots. Facets interact with this module via its interface to grant, revoke, and check temporal roles. The `requireValidRole` function within this module will revert if the role has expired or if the account does not possess the role, ensuring that the state of temporal access control is consistently enforced across all interacting facets.
+This module utilizes the diamond storage pattern. Its primary storage is located at `ACCESS_CONTROL_STORAGE_POSITION`, identified by `keccak256("compose.accesscontrol")`, and is managed by the `AccessControlStorage` struct. Facets interacting with temporal roles should call the functions provided by this module, which in turn read from and write to the diamond's storage. Ensure that no other modules or facets conflict with the `ACCESS_CONTROL_STORAGE_POSITION`.
 </Callout>
 
 <div style={{marginTop: "3rem", paddingTop: "2rem", borderTop: "1px solid var(--ifm-color-emphasis-200)"}}>
@@ -507,4 +502,4 @@ The `AccessControlTemporalMod` manages its state within its own storage slots. F
   <WasThisHelpful pageId="AccessControlTemporalMod" />
 </div>
 
-<LastUpdated date="2025-12-30T15:01:25.956Z" />
+<LastUpdated date="2025-12-30T15:37:38.697Z" />
