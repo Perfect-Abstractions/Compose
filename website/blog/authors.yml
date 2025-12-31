@@ -28,3 +28,13 @@ mn:
   name: MN
   title: Maintainer @ Compose
   image_url: https://github.com/maxnorm.png
+
+mudgen:
+  name: Nick Mudge
+  title: Maintainer @ Compose
+  image_url: https://github.com/mudgen.png
+  socials:
+    x: mudgen
+    linkedin: mudge
+    github: mudgen    
+  
