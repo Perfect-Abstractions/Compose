@@ -6,3 +6,7 @@ architecture:
   label: Architecture
   permalink: /architecture
   description: Architecture in Compose
+standards:
+  label: Standards
+  permalink: /standards
+  description: Standards in Compose
