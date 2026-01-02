@@ -1,6 +1,10 @@
 // SPDX-License-Identifier: MIT
 pragma solidity >=0.8.30;
 
+/* Compose
+ * https://compose.diamonds
+ */
+
 import {AccessControlTemporalFacet} from "../../../../src/access/AccessControlTemporal/AccessControlTemporalFacet.sol";
 
 /**

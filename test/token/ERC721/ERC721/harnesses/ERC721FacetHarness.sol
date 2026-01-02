@@ -1,6 +1,10 @@
 // SPDX-License-Identifier: MIT
 pragma solidity >=0.8.30;
 
+/* Compose
+ * https://compose.diamonds
+ */
+
 import {ERC721Facet} from "../../../../../src/token/ERC721/ERC721/ERC721Facet.sol";
 
 contract ERC721FacetHarness is ERC721Facet {

@@ -1,6 +1,10 @@
 // SPDX-License-Identifier: MIT
 pragma solidity >=0.8.30;
 
+/* Compose
+ * https://compose.diamonds
+ */
+
 /*
  * @title   LibERC20Permit — Library for ERC-2612 Permit Logic
  * @notice  Library for self-contained ERC-2612 permit and domain separator logic and storage

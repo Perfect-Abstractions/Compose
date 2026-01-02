@@ -1,6 +1,10 @@
 // SPDX-License-Identifier: MIT
 pragma solidity >=0.8.30;
 
+/* Compose
+ * https://compose.diamonds
+ */
+
 /*
  * @title ERC-173 Two-Step Contract Ownership Library
  * @notice Provides two-step ownership transfer logic for facets or modular contracts.

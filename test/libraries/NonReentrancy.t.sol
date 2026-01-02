@@ -1,6 +1,10 @@
 // SPDX-License-Identifier: MIT
 pragma solidity >=0.8.30;
 
+/* Compose
+ * https://compose.diamonds
+ */
+
 import {Test} from "forge-std/Test.sol";
 import "src/libraries/NonReentrancyMod.sol" as NonReentrancyMod;
 import {NonReentrantHarness} from "test/libraries/harnesses/NonReentrancyHarness.sol";

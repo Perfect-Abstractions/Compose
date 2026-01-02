@@ -1,6 +1,10 @@
 // SPDX-License-Identifier: MIT
 pragma solidity >=0.8.30;
 
+/* Compose
+ * https://compose.diamonds
+ */
+
 /*
  * @title LibNonReentrancy - Non-Reentrancy Library
  * @notice Provides common non-reentrant functions for Solidity contracts.

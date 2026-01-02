@@ -1,6 +1,10 @@
 // SPDX-License-Identifier: MIT
 pragma solidity >=0.8.30;
 
+/* Compose
+ * https://compose.diamonds
+ */
+
 contract DiamondInspectFacet {
     bytes32 constant DIAMOND_STORAGE_POSITION = keccak256("erc8109.diamond");
 

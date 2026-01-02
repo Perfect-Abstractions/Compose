@@ -1,6 +1,10 @@
 // SPDX-License-Identifier: MIT
 pragma solidity >=0.8.30;
 
+/* Compose
+ * https://compose.diamonds
+ */
+
 import {Test, console2} from "forge-std/Test.sol";
 import "../../../src/access/AccessControlPausable/AccessControlPausableMod.sol" as AccessControlPausableMod;
 import "../../../src/access/AccessControl/AccessControlMod.sol" as AccessControlMod;

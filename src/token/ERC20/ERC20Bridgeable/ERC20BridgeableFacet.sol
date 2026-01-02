@@ -1,5 +1,9 @@
 // SPDX-License-Identifier: MIT
 pragma solidity >=0.8.30;
+
+/* Compose
+ * https://compose.diamonds
+ */
 /**
  * @title ERC20Bridgeable — ERC-7802 Implementation Facet
  * @notice Provides functions and storage layout for ERC20-Bridgeable token logic.

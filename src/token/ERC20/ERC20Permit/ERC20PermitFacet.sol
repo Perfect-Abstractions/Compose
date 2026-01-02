@@ -1,6 +1,10 @@
 // SPDX-License-Identifier: MIT
 pragma solidity >=0.8.30;
 
+/* Compose
+ * https://compose.diamonds
+ */
+
 contract ERC20PermitFacet {
     /**
      * @notice Thrown when a permit signature is invalid or expired.

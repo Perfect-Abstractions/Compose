@@ -1,6 +1,10 @@
 // SPDX-License-Identifier: MIT
 pragma solidity >=0.8.30;
 
+/* Compose
+ * https://compose.diamonds
+ */
+
 /*
  * @title ERC-721 Library for Compose
  * @notice Provides internal logic for ERC-721 token management using diamond storage.

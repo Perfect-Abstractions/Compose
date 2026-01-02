@@ -1,6 +1,10 @@
 // SPDX-License-Identifier: MIT
 pragma solidity >=0.8.30;
 
+/* Compose
+ * https://compose.diamonds
+ */
+
 /*
  * @title LibERC20 — ERC-20 Library
  * @notice Provides internal functions and storage layout for ERC-20 token logic.

@@ -1,6 +1,10 @@
 // SPDX-License-Identifier: MIT
 pragma solidity >=0.8.30;
 
+/* Compose
+ * https://compose.diamonds
+ */
+
 import {Test} from "forge-std/Test.sol";
 import {ERC721Harness} from "./harnesses/ERC721Harness.sol";
 import "../../../../src/token/ERC721/ERC721/ERC721Mod.sol" as ERC721Mod;

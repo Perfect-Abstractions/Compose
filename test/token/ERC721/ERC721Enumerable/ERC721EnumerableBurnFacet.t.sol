@@ -1,6 +1,10 @@
 // SPDX-License-Identifier: MIT
 pragma solidity >=0.8.30;
 
+/* Compose
+ * https://compose.diamonds
+ */
+
 import {Test} from "forge-std/Test.sol";
 import {ERC721EnumerableBurnFacet} from "../../../../src/token/ERC721/ERC721Enumerable/ERC721EnumerableBurnFacet.sol";
 import {ERC721EnumerableBurnFacetHarness} from "./harnesses/ERC721EnumerableBurnFacetHarness.sol";

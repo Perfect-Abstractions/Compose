@@ -1,6 +1,10 @@
 // SPDX-License-Identifier: MIT
 pragma solidity >=0.8.30;
 
+/* Compose
+ * https://compose.diamonds
+ */
+
 contract ERC20MetadataFacet {
     /**
      * @dev Storage position determined by the keccak256 hash of the diamond storage identifier.

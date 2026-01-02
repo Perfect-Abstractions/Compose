@@ -1,6 +1,10 @@
 // SPDX-License-Identifier: MIT
 pragma solidity >=0.8.30;
 
+/* Compose
+ * https://compose.diamonds
+ */
+
 /**
  * @title ERC721 Receiver Interface
  * @notice Interface for contracts that want to support safe ERC721 token transfers.

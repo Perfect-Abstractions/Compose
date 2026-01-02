@@ -1,6 +1,10 @@
 // SPDX-License-Identifier: MIT
 pragma solidity >=0.8.30;
 
+/* Compose
+ * https://compose.diamonds
+ */
+
 /*
  * @title ERC-1155 Token Receiver Interface
  * @notice Interface for contracts that want to handle safe transfers of ERC-1155 tokens.

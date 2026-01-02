@@ -1,6 +1,10 @@
 // SPDX-License-Identifier: MIT
 pragma solidity >=0.8.30;
 
+/* Compose
+ * https://compose.diamonds
+ */
+
 /**
  * @notice Event emitted when a role is granted with an expiry timestamp.
  * @param _role The role that was granted.

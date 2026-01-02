@@ -1,6 +1,10 @@
 // SPDX-License-Identifier: MIT
 pragma solidity >=0.8.30;
 
+/* Compose
+ * https://compose.diamonds
+ */
+
 import "../DiamondMod.sol" as DiamondMod;
 import "../../access/Owner/OwnerMod.sol" as OwnerMod;
 import "../../token/ERC721/ERC721/ERC721Mod.sol" as ERC721Mod;

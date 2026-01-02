@@ -1,6 +1,10 @@
 // SPDX-License-Identifier: MIT
 pragma solidity >=0.8.30;
 
+/* Compose
+ * https://compose.diamonds
+ */
+
 import "../../../../src/interfaceDetection/ERC165/ERC165Mod.sol" as ERC165Mod;
 
 /**

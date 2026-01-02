@@ -1,6 +1,10 @@
 // SPDX-License-Identifier: MIT
 pragma solidity >=0.8.30;
 
+/* Compose
+ * https://compose.diamonds
+ */
+
 /*
  * @title LibRoyalty - ERC-2981 Royalty Standard Library
  * @notice Provides internal functions and storage layout for ERC-2981 royalty logic.

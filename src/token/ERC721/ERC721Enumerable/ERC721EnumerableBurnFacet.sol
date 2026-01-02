@@ -1,6 +1,10 @@
 // SPDX-License-Identifier: MIT
 pragma solidity >=0.8.30;
 
+/* Compose
+ * https://compose.diamonds
+ */
+
 /**
  * @title ERC-721 Enumerable Burn Facet
  * @notice Provides an external burn entry point that composes with other ERC-721 enumerable facets.

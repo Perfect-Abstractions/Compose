@@ -1,6 +1,10 @@
 // SPDX-License-Identifier: MIT
 pragma solidity >=0.8.30;
 
+/* Compose
+ * https://compose.diamonds
+ */
+
 /*
  * @title LibERC6909 — ERC-6909 Library
  * @notice Provides internal functions and storage layout for ERC-6909 minimal multi-token logic.
