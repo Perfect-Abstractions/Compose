@@ -64,7 +64,7 @@ contract ERC20TransferFacet {
     struct ERC20TransferStorage {
         mapping(address owner => uint256 balance) balanceOf;
         uint256 totalSupply;
-        mapping(address owner => mapping(address spender => uint256 allowance)) allowance;        
+        mapping(address owner => mapping(address spender => uint256 allowance)) allowance;
     }
 
     /**
@@ -77,7 +77,7 @@ contract ERC20TransferFacet {
         assembly {
             s.slot := position
         }
-    }    
+    }
 
     /**
      * @notice Returns the total supply of tokens.

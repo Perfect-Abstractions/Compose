@@ -2,7 +2,6 @@
 pragma solidity >=0.8.30;
 
 contract ERC20MetadataFacet {
-
     /**
      * @dev Storage position determined by the keccak256 hash of the diamond storage identifier.
      */
@@ -12,7 +11,7 @@ contract ERC20MetadataFacet {
      * @dev ERC-8042 compliant storage struct for ERC20 token data.
      * @custom:storage-location erc8042:compose.erc20.metadata
      */
-    struct ERC20MetadataStorage {        
+    struct ERC20MetadataStorage {
         string name;
         string symbol;
         uint8 decimals;

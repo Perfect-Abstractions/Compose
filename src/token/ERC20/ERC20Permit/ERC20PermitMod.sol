@@ -37,9 +37,9 @@ event Approval(address indexed _owner, address indexed _spender, uint256 _value)
 
 bytes32 constant ERC20_METADATA_STORAGE_POSITION = keccak256("compose.erc20.metadata");
 
-/**     
-    * @custom:storage-location erc8042:compose.erc20.metadata
-    */
+/**
+ * @custom:storage-location erc8042:compose.erc20.metadata
+ */
 struct ERC20MetadataStorage {
     string name;
 }
@@ -54,12 +54,12 @@ function getERC20MetadataStorage() pure returns (ERC20MetadataStorage storage s)
 bytes32 constant ERC20_TRANSFER_STORAGE_POSITION = keccak256("compose.erc20.transfer");
 
 /**
-    * @custom:storage-location erc8042:compose.erc20.transfer
-    */
+ * @custom:storage-location erc8042:compose.erc20.transfer
+ */
 struct ERC20TransferStorage {
     mapping(address owner => uint256 balance) balanceOf;
     uint256 totalSupply;
-    mapping(address owner => mapping(address spender => uint256 allowance)) allowance;        
+    mapping(address owner => mapping(address spender => uint256 allowance)) allowance;
 }
 
 function getERC20TransferStorage() pure returns (ERC20TransferStorage storage s) {

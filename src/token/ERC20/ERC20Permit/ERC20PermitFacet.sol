@@ -32,7 +32,7 @@ contract ERC20PermitFacet {
 
     bytes32 constant ERC20_METADATA_STORAGE_POSITION = keccak256("compose.erc20.metadata");
 
-    /**     
+    /**
      * @custom:storage-location erc8042:compose.erc20.metadata
      */
     struct ERC20MetadataStorage {
@@ -54,7 +54,7 @@ contract ERC20PermitFacet {
     struct ERC20TransferStorage {
         mapping(address owner => uint256 balance) balanceOf;
         uint256 totalSupply;
-        mapping(address owner => mapping(address spender => uint256 allowance)) allowance;        
+        mapping(address owner => mapping(address spender => uint256 allowance)) allowance;
     }
 
     function getERC20TransferStorage() internal pure returns (ERC20TransferStorage storage s) {
