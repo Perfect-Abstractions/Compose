@@ -1,0 +1,159 @@
+---
+sidebar_position: 410
+title: "ERC165Facet"
+description: "Supports ERC-165 interface detection for diamonds"
+gitSource: "https://github.com/Perfect-Abstractions/Compose/tree/main/src/interfaceDetection/ERC165/ERC165Facet.sol"
+---
+
+import DocSubtitle  from '@site/src/components/docs/DocSubtitle';
+import Badge from '@site/src/components/ui/Badge';
+import Callout from '@site/src/components/ui/Callout';
+import CalloutBox from '@site/src/components/ui/CalloutBox';
+import Accordion, { AccordionGroup } from '@site/src/components/ui/Accordion';
+import PropertyTable from '@site/src/components/api/PropertyTable';
+import ExpandableCode from '@site/src/components/code/ExpandableCode';
+import CodeShowcase from '@site/src/components/code/CodeShowcase';
+import RelatedDocs from '@site/src/components/docs/RelatedDocs';
+import WasThisHelpful from '@site/src/components/docs/WasThisHelpful';
+import LastUpdated from '@site/src/components/docs/LastUpdated';
+import ReadingTime from '@site/src/components/docs/ReadingTime';
+import GradientText from '@site/src/components/ui/GradientText';
+import GradientButton from '@site/src/components/ui/GradientButton';
+
+<DocSubtitle>
+Supports ERC-165 interface detection for diamonds
+</DocSubtitle>
+
+<Callout type="info" title="Key Features">
+- Exposes `supportsInterface` for ERC-165 compliance.
+- Utilizes a fixed storage slot for ERC-165 state.
+- No external dependencies beyond standard Solidity.
+</Callout>
+
+## Overview
+
+This facet implements ERC-165 interface detection for diamonds. It exposes the `supportsInterface` function, allowing external contracts to query if the diamond supports specific interface IDs. This facet utilizes a fixed storage slot for its state, adhering to the diamond storage pattern.
+
+---
+
+## Storage
+
+### ERC165Storage
+
+<ExpandableCode language="solidity" maxLines={15} title="Definition">
+{`struct ERC165Storage {
+    /**
+    * @notice Mapping of interface IDs to whether they are supported
+    */
+    mapping(bytes4 => bool) supportedInterfaces;
+}`}
+</ExpandableCode>
+
+### State Variables
+
+<PropertyTable
+  properties={[
+    {
+      name: "STORAGE_POSITION",
+      type: "bytes32",
+      description: "Diamond storage slot position for this module (Value: `keccak256(\"compose.erc165\")`)"
+    }
+  ]}
+  showRequired={false}
+/>
+
+## Functions
+
+### supportsInterface
+
+Query if a contract implements an interface This function checks if the diamond supports the given interface ID
+
+<ExpandableCode language="solidity" maxLines={8}>
+{`function supportsInterface(bytes4 _interfaceId) external view returns (bool);`}
+</ExpandableCode>
+
+**Parameters:**
+
+<PropertyTable
+  properties={[
+    {
+      name: "_interfaceId",
+      type: "bytes4",
+      description: "The interface identifier, as specified in ERC-165"
+    }
+  ]}
+  showRequired={false}
+/>
+
+**Returns:**
+
+<PropertyTable
+  properties={[
+    {
+      name: "-",
+      type: "bool",
+      description: "`true` if the contract implements `_interfaceId` and `_interfaceId` is not 0xffffffff, `false` otherwise"
+    }
+  ]}
+  showRequired={false}
+/>
+
+<!-- Usage Example section commented out for now -->
+<!--
+## Usage Example
+
+<ExpandableCode language="solidity" maxLines={20} title="Example Implementation">
+{`pragma solidity >=0.8.30;
+import @compose/interfaceDetection/ERC165/ERC165Facet;
+
+// Assume diamondAddress is the address of your Compose diamond
+address diamondAddress = 0xYourDiamondAddress;
+
+// To check if the diamond supports ERC-721 interface (0x80ac585d)
+// The call is routed through the diamond proxy to the ERC165Facet
+bool supportsERC721 = ERC165Facet.supportsInterface(diamondAddress, bytes4(keccak256("supportsInterface(bytes4)")));
+
+// Note: In a real-world scenario, you would typically interact with the diamond proxy directly
+// and the diamond itself would dispatch the call to the correct facet.
+// The following is a conceptual representation of how the function is exposed:
+
+interface IDiamond {
+    function supportsInterface(bytes4 _interfaceId) external view returns (bool);
+}
+
+IDiamond(diamondAddress).supportsInterface(bytes4(keccak256("SOME_INTERFACE_ID")));`}
+</ExpandableCode>
+-->
+
+## Best Practices
+
+<Callout type="tip" title="Best Practice">
+- Ensure the `ERC165Facet` is added to your diamond during initialization.
+- Call `supportsInterface` through the diamond proxy to query interface support.
+- Verify storage compatibility if upgrading facets that interact with ERC-165 state.
+</Callout>
+
+## Security Considerations
+
+<Callout type="warning" title="Security">
+The `supportsInterface` function is view-only and does not modify state. Input validation for `_interfaceId` is handled by standard Solidity bytes4 comparisons. Follow standard Solidity security practices.
+</Callout>
+
+<div style={{marginTop: "3rem", paddingTop: "2rem", borderTop: "1px solid var(--ifm-color-emphasis-200)"}}>
+  <RelatedDocs
+    items={[
+      {
+        title: "ERC165Mod",
+        href: "/docs/library/interfaceDetection/ERC165/ERC165Mod",
+        description: "Module used by ERC165Facet",
+        icon: "📦"
+      }
+    ]}
+  />
+</div>
+
+<div style={{marginTop: "3rem", paddingTop: "2rem", borderTop: "1px solid var(--ifm-color-emphasis-200)"}}>
+  <WasThisHelpful pageId="ERC165Facet" />
+</div>
+
+<LastUpdated date="2025-12-30T20:14:37.872Z" />

@@ -4,6 +4,8 @@ title: Solidity Modules
 description: Description of what Solidity modules are and how they are used in Compose.
 ---
 
+import ExpandableCode from '@site/src/components/code/ExpandableCode';
+
 
 Solidity **modules** are Solidity files whose top-level code lives *outside* of contracts and Solidity libraries. They contain reusable logic that gets pulled into other contracts at compile time.
 
@@ -33,8 +35,8 @@ Compose uses clear naming patterns to distinguish Solidity file types:
 
 Here is an example of a Solidity module that implements contract ownership functionality:
 
-```solidity
-// SPDX-License-Identifier: MIT
+<ExpandableCode language="solidity" maxLines={15} title="OwnerMod.sol - Contract Ownership Module">
+{`// SPDX-License-Identifier: MIT
 pragma solidity >=0.8.30;
 
 /*
@@ -87,13 +89,13 @@ function requireOwner() view {
     if (getStorage().owner != msg.sender) {
         revert OwnerUnauthorizedAccount();
     }
-}
-```
+}`}
+</ExpandableCode>
 
 Here is an example of a diamond contract that uses Solidity modules to implement ERC-2535 Diamonds: 
 
-```solidity
-// SPDX-License-Identifier: MIT
+<ExpandableCode language="solidity" maxLines={15} title="ExampleDiamond.sol - Diamond Contract Using Modules">
+{`// SPDX-License-Identifier: MIT
 pragma solidity >=0.8.30;
 
 import "../DiamondMod.sol" as DiamondMod;
@@ -146,7 +148,7 @@ contract ExampleDiamond {
     }
 
     receive() external payable {}
-}
-```
+}`}
+</ExpandableCode>
 
 

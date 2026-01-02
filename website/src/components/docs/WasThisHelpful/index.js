@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import clsx from 'clsx';
 import styles from './styles.module.css';
+import { useDocumentationFeedback } from '../../../hooks/useDocumentationFeedback';
 
 /**
  * WasThisHelpful Component - Feedback widget for documentation pages
@@ -12,6 +13,7 @@ export default function WasThisHelpful({
   pageId,
   onSubmit
 }) {
+  const { submitFeedback } = useDocumentationFeedback();
   const [feedback, setFeedback] = useState(null);
   const [comment, setComment] = useState('');
   const [submitted, setSubmitted] = useState(false);
@@ -21,12 +23,11 @@ export default function WasThisHelpful({
   };
 
   const handleSubmit = () => {
+    submitFeedback(pageId, feedback, comment.trim() || null);
     if (onSubmit) {
       onSubmit({ pageId, feedback, comment });
-    } else {
-      // Default behavior - could log to analytics
-      console.log('Feedback submitted:', { pageId, feedback, comment });
     }
+    
     setSubmitted(true);
   };
 
@@ -60,15 +61,14 @@ export default function WasThisHelpful({
             onClick={() => handleFeedback('yes')}
             aria-label="Yes, this was helpful"
           >
-            <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
-              <path
-                d="M5.833 8.333H4.167A1.667 1.667 0 002.5 10v5a1.667 1.667 0 001.667 1.667h1.666M5.833 8.333V6.667a1.667 1.667 0 011.667-1.667h1.666M5.833 8.333h8.334M10.833 5v3.333M10.833 5h1.667a1.667 1.667 0 011.667 1.667v1.666M10.833 8.333h2.5"
-                stroke="currentColor"
-                strokeWidth="1.5"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              />
-            </svg>
+            <img 
+              src={feedback === 'yes' ? "/icons/thumbs-up-white.svg" : "/icons/thumbs-up.svg"}
+              alt="" 
+              width="20" 
+              height="20"
+              className={styles.feedbackIcon}
+              aria-hidden="true"
+            />
             Yes
           </button>
           <button
@@ -79,15 +79,14 @@ export default function WasThisHelpful({
             onClick={() => handleFeedback('no')}
             aria-label="No, this was not helpful"
           >
-            <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
-              <path
-                d="M5.833 11.667H4.167A1.667 1.667 0 002.5 10V5a1.667 1.667 0 001.667-1.667h1.666M5.833 11.667V13.333a1.667 1.667 0 001.667 1.667h1.666M5.833 11.667h8.334M10.833 15v-3.333M10.833 15h1.667a1.667 1.667 0 001.667-1.667v-1.666M10.833 11.667h2.5"
-                stroke="currentColor"
-                strokeWidth="1.5"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              />
-            </svg>
+            <img 
+              src={feedback === 'no' ? "/icons/thumbs-down-white.svg" : "/icons/thumbs-down.svg"}
+              alt="" 
+              width="20" 
+              height="20"
+              className={styles.feedbackIcon}
+              aria-hidden="true"
+            />
             No
           </button>
         </div>

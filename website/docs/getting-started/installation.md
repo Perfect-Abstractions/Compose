@@ -2,6 +2,8 @@
 sidebar_position: 1
 ---
 
+import Callout from '@site/src/components/ui/Callout';
+
 # Installation
 
 Get up and running with Compose in just a few minutes.
@@ -123,7 +125,7 @@ Having trouble with installation?
 - Ask in **[Discord](https://discord.gg/compose)**
 - Open an **[issue on GitHub](https://github.com/Perfect-Abstractions/Compose/issues)**
 
-:::tip Development Environment
+<Callout type="tip" title="Development Environment">
 We recommend using VSCode with the **Solidity** extension by Juan Blanco for the best development experience.
-:::
+</Callout>
 

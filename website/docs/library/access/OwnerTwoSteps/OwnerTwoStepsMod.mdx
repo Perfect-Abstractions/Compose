@@ -1,0 +1,337 @@
+---
+sidebar_position: 1
+title: "OwnerTwoStepsMod"
+description: "Two-step ownership transfer for diamonds"
+gitSource: "https://github.com/Perfect-Abstractions/Compose/tree/main/src/access/OwnerTwoSteps/OwnerTwoStepsMod.sol"
+---
+
+import DocSubtitle  from '@site/src/components/docs/DocSubtitle';
+import Badge from '@site/src/components/ui/Badge';
+import Callout from '@site/src/components/ui/Callout';
+import CalloutBox from '@site/src/components/ui/CalloutBox';
+import Accordion, { AccordionGroup } from '@site/src/components/ui/Accordion';
+import PropertyTable from '@site/src/components/api/PropertyTable';
+import ExpandableCode from '@site/src/components/code/ExpandableCode';
+import CodeShowcase from '@site/src/components/code/CodeShowcase';
+import RelatedDocs from '@site/src/components/docs/RelatedDocs';
+import WasThisHelpful from '@site/src/components/docs/WasThisHelpful';
+import LastUpdated from '@site/src/components/docs/LastUpdated';
+import ReadingTime from '@site/src/components/docs/ReadingTime';
+import GradientText from '@site/src/components/ui/GradientText';
+import GradientButton from '@site/src/components/ui/GradientButton';
+
+<DocSubtitle>
+Two-step ownership transfer for diamonds
+</DocSubtitle>
+
+<Callout type="info" title="Key Features">
+- Implements ERC-173 two-step ownership transfer logic.
+- Uses internal functions for seamless integration with facets.
+- Leverages diamond storage for shared ownership state.
+- Provides `owner()`, `pendingOwner()`, `transferOwnership()`, `acceptOwnership()`, and `renounceOwnership()` functions.
+</Callout>
+
+<Callout type="info" title="Module Usage">
+This module provides internal functions for use in your custom facets. Import it to access shared logic and storage.
+</Callout>
+
+## Overview
+
+This module facilitates a secure, two-step ownership transfer process for diamonds. By separating the initiation and finalization of ownership changes, it prevents accidental or malicious takeovers. Facets can import this module to manage ownership responsibilities within the diamond storage pattern.
+
+---
+
+## Storage
+
+### OwnerStorage
+
+storage-location: erc8042:compose.owner
+
+<ExpandableCode language="solidity" maxLines={15} title="Definition">
+{`struct OwnerStorage {
+    address owner;
+}`}
+</ExpandableCode>
+
+---
+### PendingOwnerStorage
+
+storage-location: erc8042:compose.owner.pending
+
+<ExpandableCode language="solidity" maxLines={15} title="Definition">
+{`struct PendingOwnerStorage {
+    address pendingOwner;
+}`}
+</ExpandableCode>
+
+### State Variables
+
+<PropertyTable
+  properties={[
+    {
+      name: "OWNER_STORAGE_POSITION",
+      type: "bytes32",
+      description: "Diamond storage slot position for this module (Value: `keccak256(\"compose.owner\")`)"
+    },
+    {
+      name: "PENDING_OWNER_STORAGE_POSITION",
+      type: "bytes32",
+      description: "Diamond storage slot position for this module (Value: `keccak256(\"compose.owner.pending\")`)"
+    }
+  ]}
+  showRequired={false}
+/>
+
+## Functions
+
+### acceptOwnership
+
+Finalizes ownership transfer; must be called by the pending owner.
+
+<ExpandableCode language="solidity" maxLines={8}>
+{`function acceptOwnership() ;`}
+</ExpandableCode>
+
+---
+### getOwnerStorage
+
+Returns a pointer to the Owner storage struct. Uses inline assembly to access the storage slot defined by OWNER_STORAGE_POSITION.
+
+<ExpandableCode language="solidity" maxLines={8}>
+{`function getOwnerStorage() pure returns (OwnerStorage storage s);`}
+</ExpandableCode>
+
+**Returns:**
+
+<PropertyTable
+  properties={[
+    {
+      name: "s",
+      type: "OwnerStorage",
+      description: "The OwnerStorage struct in storage."
+    }
+  ]}
+  showRequired={false}
+/>
+
+---
+### getPendingOwnerStorage
+
+Returns a pointer to the PendingOwner storage struct. Uses inline assembly to access the storage slot defined by PENDING_OWNER_STORAGE_POSITION.
+
+<ExpandableCode language="solidity" maxLines={8}>
+{`function getPendingOwnerStorage() pure returns (PendingOwnerStorage storage s);`}
+</ExpandableCode>
+
+**Returns:**
+
+<PropertyTable
+  properties={[
+    {
+      name: "s",
+      type: "PendingOwnerStorage",
+      description: "The PendingOwnerStorage struct in storage."
+    }
+  ]}
+  showRequired={false}
+/>
+
+---
+### owner
+
+Returns the current owner.
+
+<ExpandableCode language="solidity" maxLines={8}>
+{`function owner() view returns (address);`}
+</ExpandableCode>
+
+---
+### pendingOwner
+
+Returns the pending owner (if any).
+
+<ExpandableCode language="solidity" maxLines={8}>
+{`function pendingOwner() view returns (address);`}
+</ExpandableCode>
+
+---
+### renounceOwnership
+
+Renounce ownership of the contract Sets the owner to address(0), disabling all functions restricted to the owner.
+
+<ExpandableCode language="solidity" maxLines={8}>
+{`function renounceOwnership() ;`}
+</ExpandableCode>
+
+---
+### requireOwner
+
+Reverts if the caller is not the owner.
+
+<ExpandableCode language="solidity" maxLines={8}>
+{`function requireOwner() view;`}
+</ExpandableCode>
+
+---
+### transferOwnership
+
+Initiates a two-step ownership transfer.
+
+<ExpandableCode language="solidity" maxLines={8}>
+{`function transferOwnership(address _newOwner) ;`}
+</ExpandableCode>
+
+**Parameters:**
+
+<PropertyTable
+  properties={[
+    {
+      name: "_newOwner",
+      type: "address",
+      description: "The address of the new owner of the contract"
+    }
+  ]}
+  showRequired={false}
+/>
+
+## Events
+
+<AccordionGroup>
+  <Accordion title="OwnershipTransferStarted" defaultOpen={false}>
+    <div style={{marginBottom: "1rem"}}>
+      Emitted when ownership transfer is initiated (pending owner set).
+    </div>
+
+    <div style={{marginBottom: "1rem"}}>
+      <strong>Signature:</strong>
+      <ExpandableCode language="solidity" maxLines={5}>
+{`event OwnershipTransferStarted(address indexed _previousOwner, address indexed _newOwner);`}
+      </ExpandableCode>
+    </div>
+
+  </Accordion>
+  <Accordion title="OwnershipTransferred" defaultOpen={false}>
+    <div style={{marginBottom: "1rem"}}>
+      Emitted when ownership transfer is finalized.
+    </div>
+
+    <div style={{marginBottom: "1rem"}}>
+      <strong>Signature:</strong>
+      <ExpandableCode language="solidity" maxLines={5}>
+{`event OwnershipTransferred(address indexed _previousOwner, address indexed _newOwner);`}
+      </ExpandableCode>
+    </div>
+
+  </Accordion>
+</AccordionGroup>
+
+## Errors
+
+<AccordionGroup>
+  <Accordion title="OwnerAlreadyRenounced" defaultOpen={false}>
+
+    <div>
+      <strong>Signature:</strong>
+      <ExpandableCode language="solidity" maxLines={5}>
+error OwnerAlreadyRenounced();
+      </ExpandableCode>
+    </div>
+  </Accordion>
+  <Accordion title="OwnerUnauthorizedAccount" defaultOpen={false}>
+
+    <div>
+      <strong>Signature:</strong>
+      <ExpandableCode language="solidity" maxLines={5}>
+error OwnerUnauthorizedAccount();
+      </ExpandableCode>
+    </div>
+  </Accordion>
+</AccordionGroup>
+
+<!-- Usage Example section commented out for now -->
+<!--
+## Usage Example
+
+<ExpandableCode language="solidity" maxLines={20} title="Example Implementation">
+{`pragma solidity >=0.8.30;
+
+import {OwnerTwoStepsMod} from "@compose/access/OwnerTwoSteps/OwnerTwoStepsMod";
+
+contract MyOwnerFacet {
+    OwnerTwoStepsMod internal ownerModule;
+
+    constructor(address ownerModuleAddress) {
+        ownerModule = OwnerTwoStepsMod(ownerModuleAddress);
+    }
+
+    /**
+     * @notice Initiates an ownership transfer.
+     * @param _newOwner The address to transfer ownership to.
+     */
+    function initiateOwnershipTransfer(address _newOwner) external {
+        ownerModule.transferOwnership(_newOwner);
+    }
+
+    /**
+     * @notice Accepts a pending ownership transfer.
+     */
+    function acceptPendingOwnership() external {
+        ownerModule.acceptOwnership();
+    }
+
+    /**
+     * @notice Renounces ownership, setting owner to address(0).
+     */
+    function fullyRenounceOwnership() external {
+        ownerModule.renounceOwnership();
+    }
+
+    /**
+     * @notice Returns the current owner.
+     */
+    function getCurrentOwner() external view returns (address) {
+        return ownerModule.owner();
+    }
+
+    /**
+     * @notice Returns the pending owner.
+     */
+    function getPendingOwner() external view returns (address) {
+        return ownerModule.pendingOwner();
+    }
+}`}
+</ExpandableCode>
+-->
+
+## Best Practices
+
+<Callout type="tip" title="Best Practice">
+- Call `transferOwnership` only from the current owner.
+- Call `acceptOwnership` only from the pending owner.
+- Use `requireOwner()` within facets to enforce owner-only access to critical functions.
+</Callout>
+
+## Integration Notes
+
+<Callout type="success" title="Shared Storage">
+This module manages ownership state within diamond storage. It utilizes specific storage slots (`OWNER_STORAGE_POSITION` and `PENDING_OWNER_STORAGE_POSITION`) to store the `owner` and `pendingOwner` values, respectively. All functions interact with these storage locations directly via inline assembly, ensuring that changes are immediately visible to any facet interacting with the same diamond storage pattern.
+</Callout>
+
+<div style={{marginTop: "3rem", paddingTop: "2rem", borderTop: "1px solid var(--ifm-color-emphasis-200)"}}>
+  <RelatedDocs
+    items={[
+      {
+        title: "OwnerTwoStepsFacet",
+        href: "/docs/library/access/OwnerTwoSteps/OwnerTwoStepsFacet",
+        description: "Facet using OwnerTwoStepsMod",
+        icon: "💎"
+      }
+    ]}
+  />
+</div>
+
+<div style={{marginTop: "3rem", paddingTop: "2rem", borderTop: "1px solid var(--ifm-color-emphasis-200)"}}>
+  <WasThisHelpful pageId="OwnerTwoStepsMod" />
+</div>
+
+<LastUpdated date="2025-12-30T20:12:41.135Z" />

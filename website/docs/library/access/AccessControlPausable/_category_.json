@@ -1,0 +1,10 @@
+{
+  "label": "Pausable Access Control",
+  "position": 4,
+  "collapsible": true,
+  "collapsed": true,
+  "link": {
+    "type": "doc",
+    "id": "library/access/AccessControlPausable/index"
+  }
+}

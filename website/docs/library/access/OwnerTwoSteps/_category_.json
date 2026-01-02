@@ -1,0 +1,10 @@
+{
+  "label": "Two-Step Owner",
+  "position": 2,
+  "collapsible": true,
+  "collapsed": true,
+  "link": {
+    "type": "doc",
+    "id": "library/access/OwnerTwoSteps/index"
+  }
+}
