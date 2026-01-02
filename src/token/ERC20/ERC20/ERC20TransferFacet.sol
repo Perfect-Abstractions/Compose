@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity >=0.8.30;
 
-contract ERC20Facet {
+contract ERC20TransferFacet {
     /**
      * @notice Thrown when an account has insufficient balance for a transfer or burn.
      * @param _sender Address attempting the transfer.
@@ -55,19 +55,16 @@ contract ERC20Facet {
     /**
      * @dev Storage position determined by the keccak256 hash of the diamond storage identifier.
      */
-    bytes32 constant STORAGE_POSITION = keccak256("compose.erc20");
+    bytes32 constant STORAGE_POSITION = keccak256("compose.erc20.transfer");
 
     /**
      * @dev ERC-8042 compliant storage struct for ERC20 token data.
-     * @custom:storage-location erc8042:compose.erc20
+     * @custom:storage-location erc8042:compose.erc20.transfer
      */
-    struct ERC20Storage {
+    struct ERC20TransferStorage {
         mapping(address owner => uint256 balance) balanceOf;
         uint256 totalSupply;
-        mapping(address owner => mapping(address spender => uint256 allowance)) allowance;
-        uint8 decimals;
-        string name;
-        string symbol;
+        mapping(address owner => mapping(address spender => uint256 allowance)) allowance;        
     }
 
     /**
@@ -75,36 +72,12 @@ contract ERC20Facet {
      * @dev Uses inline assembly to set the storage slot reference.
      * @return s The ERC20 storage struct reference.
      */
-    function getStorage() internal pure returns (ERC20Storage storage s) {
+    function getStorage() internal pure returns (ERC20TransferStorage storage s) {
         bytes32 position = STORAGE_POSITION;
         assembly {
             s.slot := position
         }
-    }
-
-    /**
-     * @notice Returns the name of the token.
-     * @return The token name.
-     */
-    function name() external view returns (string memory) {
-        return getStorage().name;
-    }
-
-    /**
-     * @notice Returns the symbol of the token.
-     * @return The token symbol.
-     */
-    function symbol() external view returns (string memory) {
-        return getStorage().symbol;
-    }
-
-    /**
-     * @notice Returns the number of decimals used for token precision.
-     * @return The number of decimals.
-     */
-    function decimals() external view returns (uint8) {
-        return getStorage().decimals;
-    }
+    }    
 
     /**
      * @notice Returns the total supply of tokens.
@@ -141,7 +114,7 @@ contract ERC20Facet {
      * @return True if the approval was successful.
      */
     function approve(address _spender, uint256 _value) external returns (bool) {
-        ERC20Storage storage s = getStorage();
+        ERC20TransferStorage storage s = getStorage();
         if (_spender == address(0)) {
             revert ERC20InvalidSpender(address(0));
         }
@@ -158,7 +131,7 @@ contract ERC20Facet {
      * @return True if the transfer was successful.
      */
     function transfer(address _to, uint256 _value) external returns (bool) {
-        ERC20Storage storage s = getStorage();
+        ERC20TransferStorage storage s = getStorage();
         if (_to == address(0)) {
             revert ERC20InvalidReceiver(address(0));
         }
@@ -183,7 +156,7 @@ contract ERC20Facet {
      * @return True if the transfer was successful.
      */
     function transferFrom(address _from, address _to, uint256 _value) external returns (bool) {
-        ERC20Storage storage s = getStorage();
+        ERC20TransferStorage storage s = getStorage();
         if (_from == address(0)) {
             revert ERC20InvalidSender(address(0));
         }

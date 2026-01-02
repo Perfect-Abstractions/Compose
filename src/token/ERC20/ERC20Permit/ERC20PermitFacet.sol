@@ -30,28 +30,35 @@ contract ERC20PermitFacet {
      */
     event Approval(address indexed _owner, address indexed _spender, uint256 _value);
 
-    bytes32 constant ERC20_STORAGE_POSITION = keccak256("compose.erc20");
+    bytes32 constant ERC20_METADATA_STORAGE_POSITION = keccak256("compose.erc20.metadata");
 
-    /**
-     * The `ERC20PermitFacet` only uses the `allowance` and `name` variables inside
-     * the `ERC20Storage` struct from `ERC20Facet`.
-     * We cannot remove the `balanceOf`, `totalSupply`, and `decimals` variables from
-     * the struct even though they aren't used. This is because we must maintain the
-     * order of variables defined in structs. Only variables at the end of structs can be
-     * removed. In this case there is only one variable at the end that isn't used and that
-     * is the `symbol` variable so that is removed from the struct below.
-     * @custom:storage-location erc8042:compose.erc20
+    /**     
+     * @custom:storage-location erc8042:compose.erc20.metadata
      */
-    struct ERC20Storage {
-        mapping(address owner => uint256 balance) balanceOf;
-        uint256 totalSupply;
-        mapping(address owner => mapping(address spender => uint256 allowance)) allowance;
-        uint8 decimals;
+    struct ERC20MetadataStorage {
         string name;
     }
 
-    function getERC20Storage() internal pure returns (ERC20Storage storage s) {
-        bytes32 position = ERC20_STORAGE_POSITION;
+    function getERC20MetadataStorage() internal pure returns (ERC20MetadataStorage storage s) {
+        bytes32 position = ERC20_METADATA_STORAGE_POSITION;
+        assembly {
+            s.slot := position
+        }
+    }
+
+    bytes32 constant ERC20_TRANSFER_STORAGE_POSITION = keccak256("compose.erc20.transfer");
+
+    /**
+     * @custom:storage-location erc8042:compose.erc20.transfer
+     */
+    struct ERC20TransferStorage {
+        mapping(address owner => uint256 balance) balanceOf;
+        uint256 totalSupply;
+        mapping(address owner => mapping(address spender => uint256 allowance)) allowance;        
+    }
+
+    function getERC20TransferStorage() internal pure returns (ERC20TransferStorage storage s) {
+        bytes32 position = ERC20_TRANSFER_STORAGE_POSITION;
         assembly {
             s.slot := position
         }
@@ -92,7 +99,7 @@ contract ERC20PermitFacet {
         return keccak256(
             abi.encode(
                 keccak256("EIP712Domain(string name,string version,uint256 chainId,address verifyingContract)"),
-                keccak256(bytes(getERC20Storage().name)),
+                keccak256(bytes(getERC20MetadataStorage().name)),
                 keccak256("1"),
                 block.chainid,
                 address(this)
@@ -128,7 +135,7 @@ contract ERC20PermitFacet {
         }
 
         ERC20PermitStorage storage s = getStorage();
-        ERC20Storage storage sERC20 = getERC20Storage();
+        ERC20TransferStorage storage erc20Transfer = getERC20TransferStorage();
         uint256 currentNonce = s.nonces[_owner];
         bytes32 structHash = keccak256(
             abi.encode(
@@ -147,7 +154,7 @@ contract ERC20PermitFacet {
                 keccak256(
                     abi.encode(
                         keccak256("EIP712Domain(string name,string version,uint256 chainId,address verifyingContract)"),
-                        keccak256(bytes(sERC20.name)),
+                        keccak256(bytes(getERC20MetadataStorage().name)),
                         keccak256("1"),
                         block.chainid,
                         address(this)
@@ -162,7 +169,7 @@ contract ERC20PermitFacet {
             revert ERC2612InvalidSignature(_owner, _spender, _value, _deadline, _v, _r, _s);
         }
 
-        sERC20.allowance[_owner][_spender] = _value;
+        erc20Transfer.allowance[_owner][_spender] = _value;
         s.nonces[_owner] = currentNonce + 1;
         emit Approval(_owner, _spender, _value);
     }
