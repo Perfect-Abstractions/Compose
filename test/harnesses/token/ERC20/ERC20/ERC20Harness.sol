@@ -14,17 +14,6 @@ import "src/token/ERC20/ERC20/ERC20Mod.sol" as ERC20Mod;
  */
 contract ERC20Harness {
     /**
-     * @notice Initialize the ERC20 token storage
-     * @dev Only used for testing
-     */
-    function initialize(string memory _name, string memory _symbol, uint8 _decimals) external {
-        ERC20Mod.ERC20Storage storage s = ERC20Mod.getStorage();
-        s.name = _name;
-        s.symbol = _symbol;
-        s.decimals = _decimals;
-    }
-
-    /**
      * @notice Exposes ERC20Mod.mint as an external function
      */
     function mint(address _account, uint256 _value) external {
@@ -57,21 +46,6 @@ contract ERC20Harness {
      */
     function approve(address _spender, uint256 _value) external {
         ERC20Mod.approve(_spender, _value);
-    }
-
-    /**
-     * @notice Get storage values for testing
-     */
-    function name() external view returns (string memory) {
-        return ERC20Mod.getStorage().name;
-    }
-
-    function symbol() external view returns (string memory) {
-        return ERC20Mod.getStorage().symbol;
-    }
-
-    function decimals() external view returns (uint8) {
-        return ERC20Mod.getStorage().decimals;
     }
 
     function totalSupply() external view returns (uint256) {
