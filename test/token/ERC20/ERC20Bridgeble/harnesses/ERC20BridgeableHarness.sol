@@ -23,7 +23,7 @@ contract ERC20BridgeableHarness {
      * @return The current balance of the account.
      */
     function balanceOf(address _account) external view returns (uint256) {
-        ERC20BridgeableMod.ERC20Storage storage s = ERC20BridgeableMod.getERC20Storage();
+        ERC20BridgeableMod.ERC20TransferStorage storage s = ERC20BridgeableMod.getERC20TransferStorage();
         return s.balanceOf[_account];
     }
 

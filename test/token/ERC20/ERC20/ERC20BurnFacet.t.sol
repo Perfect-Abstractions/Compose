@@ -6,8 +6,8 @@ pragma solidity >=0.8.30;
  */
 
 import {Test} from "forge-std/Test.sol";
-import {ERC20BurnFacet} from "../../../../src/token/ERC20/ERC20/ERC20BurnFacet.sol";
-import {ERC20BurnFacetHarness} from "./harnesses/ERC20BurnFacetHarness.sol";
+import {ERC20BurnFacet} from "src/token/ERC20/ERC20/ERC20BurnFacet.sol";
+import {ERC20BurnFacetHarness} from "test/harnesses/token/ERC20/ERC20/ERC20BurnFacetHarness.sol";
 
 contract ERC20BurnFacetTest is Test {
     ERC20BurnFacetHarness public token;
