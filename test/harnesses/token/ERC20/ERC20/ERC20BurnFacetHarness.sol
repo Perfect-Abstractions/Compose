@@ -34,7 +34,7 @@ contract ERC20BurnFacetHarness is ERC20BurnFacet {
      */
     function approve(address _spender, uint256 _value) external returns (bool) {
         require(_spender != address(0), "ERC20: approve to zero address");
-        ERC20Storage storage s = getStorage();
+        ERC20TransferStorage storage s = getStorage();
         s.allowance[msg.sender][_spender] = _value;
         emit Approval(msg.sender, _spender, _value);
         return true;
@@ -45,7 +45,7 @@ contract ERC20BurnFacetHarness is ERC20BurnFacet {
      * @dev Only used for testing - exposes internal mint functionality
      */
     function mint(address _to, uint256 _value) external {
-        ERC20Storage storage s = getStorage();
+        ERC20TransferStorage storage s = getStorage();
         require(_to != address(0), "ERC20: mint to zero address");
         unchecked {
             s.totalSupply += _value;
