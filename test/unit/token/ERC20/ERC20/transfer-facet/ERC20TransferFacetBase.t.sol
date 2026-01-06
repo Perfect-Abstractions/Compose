@@ -8,7 +8,6 @@ pragma solidity >=0.8.30 <0.9.0;
 import {Base_Test} from "test/Base.t.sol";
 import {ERC20TransferFacet} from "src/token/ERC20/ERC20/ERC20TransferFacet.sol";
 
-/// @dev BTT spec: test/trees/ERC20.tree
 contract ERC20TransferFacet_Base_Test is Base_Test {
     ERC20TransferFacet internal facet;
 

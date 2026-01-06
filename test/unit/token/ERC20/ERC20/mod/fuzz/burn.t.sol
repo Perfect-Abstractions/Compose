@@ -11,7 +11,9 @@ import {ERC20Harness} from "test/harnesses/token/ERC20/ERC20/ERC20Harness.sol";
 
 import "src/token/ERC20/ERC20/ERC20Mod.sol";
 
-/// @dev BTT spec: test/trees/ERC20.tree
+/**
+ *  @dev BTT spec: test/trees/ERC20.tree
+ */
 contract Burn_ERC20Mod_Fuzz_Unit_Test is Base_Test {
     ERC20Harness internal harness;
 

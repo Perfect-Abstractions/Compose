@@ -10,7 +10,9 @@ import {ERC20StorageUtils} from "test/utils/storage/ERC20StorageUtils.sol";
 
 import {ERC20TransferFacet} from "src/token/ERC20/ERC20/ERC20TransferFacet.sol";
 
-/// @dev BTT spec: test/trees/ERC20.tree
+/**
+ *  @dev BTT spec: test/trees/ERC20.tree
+ */
 contract TransferFrom_ERC20TransferFacet_Fuzz_Unit_Test is ERC20TransferFacet_Base_Test {
     using ERC20StorageUtils for address;
 

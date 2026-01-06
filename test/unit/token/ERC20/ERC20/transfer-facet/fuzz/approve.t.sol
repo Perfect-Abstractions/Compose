@@ -10,7 +10,9 @@ import {ERC20TransferFacet_Base_Test} from "../ERC20TransferFacetBase.t.sol";
 
 import {ERC20TransferFacet} from "src/token/ERC20/ERC20/ERC20TransferFacet.sol";
 
-/// @dev BTT spec: test/trees/ERC20.tree
+/**
+ *  @dev BTT spec: test/trees/ERC20.tree
+ */
 contract Approve_ERC20TransferFacet_Fuzz_Unit_Test is ERC20TransferFacet_Base_Test {
     function testFuzz_ShouldRevert_SpenderIsZeroAddress(uint256 value) external {
         vm.expectRevert(abi.encodeWithSelector(ERC20TransferFacet.ERC20InvalidSpender.selector, ADDRESS_ZERO));
