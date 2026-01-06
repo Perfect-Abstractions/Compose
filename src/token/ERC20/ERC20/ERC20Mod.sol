@@ -132,8 +132,9 @@ function burn(address _account, uint256 _value) {
  * @param _from The address to send tokens from.
  * @param _to The address to send tokens to.
  * @param _value The number of tokens to transfer.
+ * @return True if the transfer was successful.
  */
-function transferFrom(address _from, address _to, uint256 _value) {
+function transferFrom(address _from, address _to, uint256 _value) returns (bool) {
     ERC20TransferStorage storage s = getStorage();
     if (_from == address(0)) {
         revert ERC20InvalidSender(address(0));
@@ -157,6 +158,7 @@ function transferFrom(address _from, address _to, uint256 _value) {
     }
     s.balanceOf[_to] += _value;
     emit Transfer(_from, _to, _value);
+    return true;
 }
 
 /**
@@ -164,8 +166,9 @@ function transferFrom(address _from, address _to, uint256 _value) {
  * @dev Updates balances directly without allowance mechanism.
  * @param _to The address to send tokens to.
  * @param _value The number of tokens to transfer.
+ * @return True if the transfer was successful.
  */
-function transfer(address _to, uint256 _value) {
+function transfer(address _to, uint256 _value) returns (bool) {
     ERC20TransferStorage storage s = getStorage();
     if (_to == address(0)) {
         revert ERC20InvalidReceiver(address(0));
@@ -179,6 +182,7 @@ function transfer(address _to, uint256 _value) {
     }
     s.balanceOf[_to] += _value;
     emit Transfer(msg.sender, _to, _value);
+    return true;
 }
 
 /**
@@ -186,12 +190,14 @@ function transfer(address _to, uint256 _value) {
  * @dev Sets the allowance for the spender.
  * @param _spender The address to approve for spending.
  * @param _value The amount of tokens to approve.
+ * @return True if the approval was successful.
  */
-function approve(address _spender, uint256 _value) {
+function approve(address _spender, uint256 _value) returns (bool) {
     if (_spender == address(0)) {
         revert ERC20InvalidSpender(address(0));
     }
     ERC20TransferStorage storage s = getStorage();
     s.allowance[msg.sender][_spender] = _value;
     emit Approval(msg.sender, _spender, _value);
+    return true;
 }

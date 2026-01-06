@@ -1,6 +1,0 @@
-Approve_ERC20Mod_Fuzz_Unit_Test
-├── when the spender is the zero address
-│   └── it should revert
-└── when the spender is not the zero address
-    ├── it should set the spender's allowance from the caller
-    └── it should emit an {Approval} event

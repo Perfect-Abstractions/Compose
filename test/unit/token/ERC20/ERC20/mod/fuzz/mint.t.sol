@@ -9,21 +9,21 @@ import {stdError} from "forge-std/StdError.sol";
 import {Base_Test} from "test/Base.t.sol";
 import {ERC20Harness} from "test/harnesses/token/ERC20/ERC20/ERC20Harness.sol";
 
-import "src/token/ERC20/ERC20/ERC20Mod.sol" as ERC20Mod;
+import "src/token/ERC20/ERC20/ERC20Mod.sol";
 
+/**
+ *  @dev BTT spec: test/trees/ERC20.tree
+ */
 contract Mint_ERC20Mod_Fuzz_Unit_Test is Base_Test {
     ERC20Harness internal harness;
 
-    event Transfer(address indexed _from, address indexed _to, uint256 _value);
-
     function setUp() public override {
         Base_Test.setUp();
-
         harness = new ERC20Harness();
     }
 
     function testFuzz_ShouldRevert_Account_ZeroAddress(uint256 value) external {
-        vm.expectRevert(abi.encodeWithSelector(ERC20Mod.ERC20InvalidReceiver.selector, address(0)));
+        vm.expectRevert(abi.encodeWithSelector(ERC20InvalidReceiver.selector, address(0)));
         harness.mint(ADDRESS_ZERO, value);
     }
 
@@ -58,4 +58,3 @@ contract Mint_ERC20Mod_Fuzz_Unit_Test is Base_Test {
         assertEq(harness.balanceOf(account), beforeBalanceOfAccount + value, "balanceOf(account)");
     }
 }
-
