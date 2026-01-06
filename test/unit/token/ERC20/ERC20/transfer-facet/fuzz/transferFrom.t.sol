@@ -77,6 +77,47 @@ contract TransferFrom_ERC20TransferFacet_Fuzz_Unit_Test is ERC20TransferFacet_Ba
         facet.transferFrom(from, to, value);
     }
 
+    function testFuzz_ShouldReturnTrue_AmountIsZero(
+        address from,
+        address to,
+        uint256 allowance,
+        uint256 fromBalance,
+        uint256 toBalance
+    )
+        external
+        whenSenderNotZeroAddress
+        whenReceiverNotZeroAddress
+        givenWhenSpenderAllowanceGETransferAmount
+        givenWhenSenderBalanceGETransferAmount
+    {
+        vm.assume(from != ADDRESS_ZERO);
+        vm.assume(to != ADDRESS_ZERO);
+        vm.assume(to != from);
+        vm.assume(users.sender != from);
+
+        allowance = bound(allowance, 0, MAX_UINT256);
+        fromBalance = bound(fromBalance, 0, MAX_UINT256 / 2);
+        toBalance = bound(toBalance, 0, MAX_UINT256 / 2);
+
+        address(facet).mint(from, fromBalance);
+        address(facet).mint(to, toBalance);
+
+        setMsgSender(from);
+        facet.approve(users.sender, allowance);
+        setMsgSender(users.sender);
+
+        uint256 beforeAllowance = facet.allowance(from, users.sender);
+
+        vm.expectEmit(address(facet));
+        emit ERC20TransferFacet.Transfer(from, to, 0);
+        bool result = facet.transferFrom(from, to, 0);
+
+        assertEq(result, true, "transferFrom failed");
+        assertEq(facet.balanceOf(from), fromBalance, "balanceOf(from)");
+        assertEq(facet.balanceOf(to), toBalance, "balanceOf(to)");
+        assertEq(facet.allowance(from, users.sender), beforeAllowance, "allowance should be unchanged");
+    }
+
     function testFuzz_TransferFrom_InfiniteApproval(address from, address to, uint256 value, uint256 balance)
         external
         whenSenderNotZeroAddress

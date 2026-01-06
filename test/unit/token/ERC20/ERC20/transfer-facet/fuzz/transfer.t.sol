@@ -5,10 +5,10 @@ pragma solidity >=0.8.30;
  * https://compose.diamonds
  */
 
-import {ERC20TransferFacet} from "src/token/ERC20/ERC20/ERC20TransferFacet.sol";
-
 import {ERC20TransferFacet_Base_Test} from "../ERC20TransferFacetBase.t.sol";
 import {ERC20StorageUtils} from "test/utils/storage/ERC20StorageUtils.sol";
+
+import {ERC20TransferFacet} from "src/token/ERC20/ERC20/ERC20TransferFacet.sol";
 
 /// @dev BTT spec: test/trees/ERC20.tree
 contract Transfer_ERC20TransferFacet_Fuzz_Unit_Test is ERC20TransferFacet_Base_Test {
@@ -33,6 +33,29 @@ contract Transfer_ERC20TransferFacet_Fuzz_Unit_Test is ERC20TransferFacet_Base_T
             abi.encodeWithSelector(ERC20TransferFacet.ERC20InsufficientBalance.selector, users.alice, balance, value)
         );
         facet.transfer(to, value);
+    }
+
+    function testFuzz_ShouldReturnTrue_AmountIsZero(address to, uint256 senderBalance, uint256 receiverBalance)
+        external
+        whenReceiverNotZeroAddress
+        givenWhenSenderBalanceGETransferAmount
+    {
+        vm.assume(to != ADDRESS_ZERO);
+        vm.assume(to != users.alice);
+
+        senderBalance = bound(senderBalance, 0, MAX_UINT256 / 2);
+        receiverBalance = bound(receiverBalance, 0, MAX_UINT256 / 2);
+
+        address(facet).mint(users.alice, senderBalance);
+        address(facet).mint(to, receiverBalance);
+
+        vm.expectEmit(address(facet));
+        emit ERC20TransferFacet.Transfer(users.alice, to, 0);
+        bool result = facet.transfer(to, 0);
+
+        assertEq(result, true, "transfer failed");
+        assertEq(facet.balanceOf(users.alice), senderBalance, "balanceOf(users.alice)");
+        assertEq(facet.balanceOf(to), receiverBalance, "balanceOf(to)");
     }
 
     function testFuzz_Transfer(address to, uint256 balance, uint256 value)
