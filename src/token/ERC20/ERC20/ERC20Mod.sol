@@ -132,6 +132,7 @@ function burn(address _account, uint256 _value) {
  * @param _from The address to send tokens from.
  * @param _to The address to send tokens to.
  * @param _value The number of tokens to transfer.
+ * @return True if the transfer was successful.
  */
 function transferFrom(address _from, address _to, uint256 _value) returns (bool) {
     ERC20TransferStorage storage s = getStorage();
@@ -165,6 +166,7 @@ function transferFrom(address _from, address _to, uint256 _value) returns (bool)
  * @dev Updates balances directly without allowance mechanism.
  * @param _to The address to send tokens to.
  * @param _value The number of tokens to transfer.
+ * @return True if the transfer was successful.
  */
 function transfer(address _to, uint256 _value) returns (bool) {
     ERC20TransferStorage storage s = getStorage();
@@ -188,6 +190,7 @@ function transfer(address _to, uint256 _value) returns (bool) {
  * @dev Sets the allowance for the spender.
  * @param _spender The address to approve for spending.
  * @param _value The amount of tokens to approve.
+ * @return True if the approval was successful.
  */
 function approve(address _spender, uint256 _value) returns (bool) {
     if (_spender == address(0)) {
