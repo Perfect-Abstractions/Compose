@@ -9,21 +9,19 @@ import {stdError} from "forge-std/StdError.sol";
 import {Base_Test} from "test/Base.t.sol";
 import {ERC20Harness} from "test/harnesses/token/ERC20/ERC20/ERC20Harness.sol";
 
-import "src/token/ERC20/ERC20/ERC20Mod.sol" as ERC20Mod;
+import "src/token/ERC20/ERC20/ERC20Mod.sol";
 
+/// @dev BTT spec: test/trees/ERC20.tree
 contract Approve_ERC20Mod_Fuzz_Unit_Test is Base_Test {
     ERC20Harness internal harness;
 
-    event Approval(address indexed _owner, address indexed _spender, uint256 _value);
-
     function setUp() public override {
         Base_Test.setUp();
-
         harness = new ERC20Harness();
     }
 
     function testFuzz_ShouldRevert_SpenderIsZeroAddress(uint256 value) external {
-        vm.expectRevert(abi.encodeWithSelector(ERC20Mod.ERC20InvalidSpender.selector, ADDRESS_ZERO));
+        vm.expectRevert(abi.encodeWithSelector(ERC20InvalidSpender.selector, ADDRESS_ZERO));
         harness.approve(ADDRESS_ZERO, value);
     }
 
@@ -37,4 +35,3 @@ contract Approve_ERC20Mod_Fuzz_Unit_Test is Base_Test {
         assertEq(harness.allowance(users.alice, spender), value);
     }
 }
-

@@ -9,21 +9,19 @@ import {stdError} from "forge-std/StdError.sol";
 import {Base_Test} from "test/Base.t.sol";
 import {ERC20Harness} from "test/harnesses/token/ERC20/ERC20/ERC20Harness.sol";
 
-import "src/token/ERC20/ERC20/ERC20Mod.sol" as ERC20Mod;
+import "src/token/ERC20/ERC20/ERC20Mod.sol";
 
+/// @dev BTT spec: test/trees/ERC20.tree
 contract Transfer_ERC20Mod_Fuzz_Unit_Test is Base_Test {
     ERC20Harness internal harness;
 
-    event Transfer(address indexed _from, address indexed _to, uint256 _value);
-
     function setUp() public override {
         Base_Test.setUp();
-
         harness = new ERC20Harness();
     }
 
     function testFuzz_ShouldRevert_ReceiverIsZeroAddress(uint256 value) external {
-        vm.expectRevert(abi.encodeWithSelector(ERC20Mod.ERC20InvalidReceiver.selector, ADDRESS_ZERO));
+        vm.expectRevert(abi.encodeWithSelector(ERC20InvalidReceiver.selector, ADDRESS_ZERO));
         harness.transfer(ADDRESS_ZERO, value);
     }
 
@@ -37,7 +35,7 @@ contract Transfer_ERC20Mod_Fuzz_Unit_Test is Base_Test {
 
         harness.mint(users.alice, balance);
 
-        vm.expectRevert(abi.encodeWithSelector(ERC20Mod.ERC20InsufficientBalance.selector, users.alice, balance, value));
+        vm.expectRevert(abi.encodeWithSelector(ERC20InsufficientBalance.selector, users.alice, balance, value));
         harness.transfer(to, value);
     }
 
@@ -64,4 +62,3 @@ contract Transfer_ERC20Mod_Fuzz_Unit_Test is Base_Test {
         assertEq(harness.balanceOf(to), beforeBalanceOfTo + value, "balanceOf(to)");
     }
 }
-
