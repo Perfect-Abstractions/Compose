@@ -56,8 +56,9 @@ contract Transfer_ERC20Mod_Fuzz_Unit_Test is Base_Test {
 
         vm.expectEmit(address(harness));
         emit Transfer(users.alice, to, value);
-        harness.transfer(to, value);
+        bool result = harness.transfer(to, value);
 
+        assertEq(result, true, "transfer failed");
         assertEq(harness.balanceOf(users.alice), beforeBalanceOfAlice - value, "balanceOf(users.alice)");
         assertEq(harness.balanceOf(to), beforeBalanceOfTo + value, "balanceOf(to)");
     }

@@ -103,8 +103,9 @@ contract TransferFrom_ERC20Mod_Fuzz_Unit_Test is Base_Test {
 
         vm.expectEmit(address(harness));
         emit Transfer(from, to, value);
-        harness.transferFrom(from, to, value);
+        bool result = harness.transferFrom(from, to, value);
 
+        assertEq(result, true, "transfer failed");
         assertEq(harness.balanceOf(from), beforeBalanceOfFrom - value, "balanceOf(from)");
         assertEq(harness.balanceOf(to), beforeBalanceOfTo + value, "balanceOf(to)");
     }
@@ -136,8 +137,9 @@ contract TransferFrom_ERC20Mod_Fuzz_Unit_Test is Base_Test {
 
         vm.expectEmit(address(harness));
         emit Transfer(from, to, value);
-        harness.transferFrom(from, to, value);
+        bool result = harness.transferFrom(from, to, value);
 
+        assertEq(result, true, "transfer failed");
         assertEq(harness.balanceOf(from), beforeBalanceOfFrom - value, "balanceOf(from)");
         assertEq(harness.balanceOf(to), beforeBalanceOfTo + value, "balanceOf(to)");
         assertEq(harness.allowance(from, users.sender), allowance - value, "allowance(from, users.sender)");

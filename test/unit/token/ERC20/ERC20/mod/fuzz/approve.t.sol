@@ -30,8 +30,9 @@ contract Approve_ERC20Mod_Fuzz_Unit_Test is Base_Test {
 
         vm.expectEmit(address(harness));
         emit Approval(users.alice, spender, value);
-        harness.approve(spender, value);
+        bool result = harness.approve(spender, value);
 
+        assertEq(result, true, "approve failed");
         assertEq(harness.allowance(users.alice, spender), value);
     }
 }

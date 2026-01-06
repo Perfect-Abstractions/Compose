@@ -133,7 +133,7 @@ function burn(address _account, uint256 _value) {
  * @param _to The address to send tokens to.
  * @param _value The number of tokens to transfer.
  */
-function transferFrom(address _from, address _to, uint256 _value) {
+function transferFrom(address _from, address _to, uint256 _value) returns (bool) {
     ERC20TransferStorage storage s = getStorage();
     if (_from == address(0)) {
         revert ERC20InvalidSender(address(0));
@@ -157,6 +157,7 @@ function transferFrom(address _from, address _to, uint256 _value) {
     }
     s.balanceOf[_to] += _value;
     emit Transfer(_from, _to, _value);
+    return true;
 }
 
 /**
@@ -165,7 +166,7 @@ function transferFrom(address _from, address _to, uint256 _value) {
  * @param _to The address to send tokens to.
  * @param _value The number of tokens to transfer.
  */
-function transfer(address _to, uint256 _value) {
+function transfer(address _to, uint256 _value) returns (bool) {
     ERC20TransferStorage storage s = getStorage();
     if (_to == address(0)) {
         revert ERC20InvalidReceiver(address(0));
@@ -179,6 +180,7 @@ function transfer(address _to, uint256 _value) {
     }
     s.balanceOf[_to] += _value;
     emit Transfer(msg.sender, _to, _value);
+    return true;
 }
 
 /**
@@ -187,11 +189,12 @@ function transfer(address _to, uint256 _value) {
  * @param _spender The address to approve for spending.
  * @param _value The amount of tokens to approve.
  */
-function approve(address _spender, uint256 _value) {
+function approve(address _spender, uint256 _value) returns (bool) {
     if (_spender == address(0)) {
         revert ERC20InvalidSpender(address(0));
     }
     ERC20TransferStorage storage s = getStorage();
     s.allowance[msg.sender][_spender] = _value;
     emit Approval(msg.sender, _spender, _value);
+    return true;
 }

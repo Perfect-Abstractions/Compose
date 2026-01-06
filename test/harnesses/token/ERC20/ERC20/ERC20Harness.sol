@@ -30,22 +30,22 @@ contract ERC20Harness {
     /**
      * @notice Exposes ERC20Mod.transferFrom as an external function
      */
-    function transferFrom(address _from, address _to, uint256 _value) external {
-        ERC20Mod.transferFrom(_from, _to, _value);
+    function transferFrom(address _from, address _to, uint256 _value) external returns (bool) {
+        return ERC20Mod.transferFrom(_from, _to, _value);
     }
 
     /**
      * @notice Exposes ERC20Mod.transfer as an external function
      */
-    function transfer(address _to, uint256 _value) external {
-        ERC20Mod.transfer(_to, _value);
+    function transfer(address _to, uint256 _value) external returns (bool) {
+        return ERC20Mod.transfer(_to, _value);
     }
 
     /**
      * @notice Exposes ERC20Mod.approve as an external function
      */
-    function approve(address _spender, uint256 _value) external {
-        ERC20Mod.approve(_spender, _value);
+    function approve(address _spender, uint256 _value) external returns (bool) {
+        return ERC20Mod.approve(_spender, _value);
     }
 
     function totalSupply() external view returns (uint256) {
