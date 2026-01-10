@@ -50,19 +50,19 @@ contract ERC20PermitFacet {
         }
     }
 
-    bytes32 constant ERC20_TRANSFER_STORAGE_POSITION = keccak256("erc20.transfer");
+    bytes32 constant ERC20_STORAGE_POSITION = keccak256("erc20");
 
     /**
-     * @custom:storage-location erc8042:erc20.transfer
+     * @custom:storage-location erc8042:erc20
      */
-    struct ERC20TransferStorage {
+    struct ERC20Storage {
         mapping(address owner => uint256 balance) balanceOf;
         uint256 totalSupply;
         mapping(address owner => mapping(address spender => uint256 allowance)) allowance;
     }
 
-    function getERC20TransferStorage() internal pure returns (ERC20TransferStorage storage s) {
-        bytes32 position = ERC20_TRANSFER_STORAGE_POSITION;
+    function getERC20Storage() internal pure returns (ERC20Storage storage s) {
+        bytes32 position = ERC20_STORAGE_POSITION;
         assembly {
             s.slot := position
         }
@@ -139,7 +139,7 @@ contract ERC20PermitFacet {
         }
 
         NoncesStorage storage s = getStorage();
-        ERC20TransferStorage storage erc20Transfer = getERC20TransferStorage();
+        ERC20Storage storage erc20Storage = getERC20Storage();
         uint256 currentNonce = s.nonces[_owner];
         bytes32 structHash = keccak256(
             abi.encode(
@@ -173,7 +173,7 @@ contract ERC20PermitFacet {
             revert ERC2612InvalidSignature(_owner, _spender, _value, _deadline, _v, _r, _s);
         }
 
-        erc20Transfer.allowance[_owner][_spender] = _value;
+        erc20Storage.allowance[_owner][_spender] = _value;
         s.nonces[_owner] = currentNonce + 1;
         emit Approval(_owner, _spender, _value);
     }

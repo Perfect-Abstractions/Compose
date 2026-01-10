@@ -80,13 +80,13 @@ contract ERC20BridgeableFacet {
      * @notice Storage slot for ERC-20 token using ERC8042 for storage location standardization
      * @dev Storage position determined by the keccak256 hash of the diamond storage identifier.
      */
-    bytes32 constant ERC20_TRANSFER_STORAGE_POSITION = keccak256("erc20.transfer");
+    bytes32 constant ERC20_STORAGE_POSITION = keccak256("erc20");
 
     /**
      * @dev ERC-8042 compliant storage struct for ERC20 token data.
-     * @custom:storage-location erc8042:erc20.transfer
+     * @custom:storage-location erc8042:erc20
      */
-    struct ERC20TransferStorage {
+    struct ERC20Storage {
         mapping(address owner => uint256 balance) balanceOf;
         uint256 totalSupply;
     }
@@ -96,8 +96,8 @@ contract ERC20BridgeableFacet {
      * @return s The ERC20 storage struct reference.
      */
 
-    function getERC20TransferStorage() internal pure returns (ERC20TransferStorage storage s) {
-        bytes32 position = ERC20_TRANSFER_STORAGE_POSITION;
+    function getERC20Storage() internal pure returns (ERC20Storage storage s) {
+        bytes32 position = ERC20_STORAGE_POSITION;
         assembly {
             s.slot := position
         }
@@ -137,7 +137,7 @@ contract ERC20BridgeableFacet {
      * @param _value The amount to mint.
      */
     function crosschainMint(address _account, uint256 _value) external {
-        ERC20TransferStorage storage erc20Transfer = getERC20TransferStorage();
+        ERC20Storage storage erc20Storage = getERC20Storage();
 
         AccessControlStorage storage acs = getAccessControlStorage();
 
@@ -153,8 +153,8 @@ contract ERC20BridgeableFacet {
         }
 
         unchecked {
-            erc20Transfer.totalSupply += _value;
-            erc20Transfer.balanceOf[_account] += _value;
+            erc20Storage.totalSupply += _value;
+            erc20Storage.balanceOf[_account] += _value;
         }
         emit Transfer(address(0), _account, _value);
         emit CrosschainMint(_account, _value, msg.sender);
@@ -166,7 +166,7 @@ contract ERC20BridgeableFacet {
      * @param _value The amount to burn.
      */
     function crosschainBurn(address _from, uint256 _value) external {
-        ERC20TransferStorage storage erc20Transfer = getERC20TransferStorage();
+        ERC20Storage storage erc20Storage = getERC20Storage();
 
         AccessControlStorage storage acs = getAccessControlStorage();
 
@@ -180,15 +180,15 @@ contract ERC20BridgeableFacet {
             revert ERC20InvalidReceiver(address(0));
         }
 
-        uint256 accountBalance = erc20Transfer.balanceOf[_from];
+        uint256 accountBalance = erc20Storage.balanceOf[_from];
 
         if (accountBalance < _value) {
             revert ERC20InsufficientBalance(_from, accountBalance, _value);
         }
 
         unchecked {
-            erc20Transfer.totalSupply -= _value;
-            erc20Transfer.balanceOf[_from] -= _value;
+            erc20Storage.totalSupply -= _value;
+            erc20Storage.balanceOf[_from] -= _value;
         }
 
         emit Transfer(_from, address(0), _value);

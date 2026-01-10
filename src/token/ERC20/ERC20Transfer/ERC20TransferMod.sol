@@ -64,13 +64,13 @@ event Approval(address indexed _owner, address indexed _spender, uint256 _value)
 /*
  * @notice Storage slot identifier, defined using keccak256 hash of the library diamond storage identifier.
  */
-bytes32 constant STORAGE_POSITION = keccak256("erc20.transfer");
+bytes32 constant STORAGE_POSITION = keccak256("erc20");
 
 /*
  * @notice ERC-20 storage layout using the ERC-8042 standard.
- * @custom:storage-location erc8042:erc20.transfer
+ * @custom:storage-location erc8042:erc20
  */
-struct ERC20TransferStorage {
+struct ERC20Storage {
     mapping(address owner => uint256 balance) balanceOf;
     uint256 totalSupply;
     mapping(address owner => mapping(address spender => uint256 allowance)) allowance;
@@ -81,7 +81,7 @@ struct ERC20TransferStorage {
  * @dev Uses inline assembly to bind the storage struct to the fixed storage position.
  * @return s The ERC-20 storage struct.
  */
-function getStorage() pure returns (ERC20TransferStorage storage s) {
+function getStorage() pure returns (ERC20Storage storage s) {
     bytes32 position = STORAGE_POSITION;
     assembly {
         s.slot := position
@@ -96,7 +96,7 @@ function getStorage() pure returns (ERC20TransferStorage storage s) {
  * @param _value The number of tokens to transfer.
  */
 function transferFrom(address _from, address _to, uint256 _value) {
-    ERC20TransferStorage storage s = getStorage();
+    ERC20Storage storage s = getStorage();
     if (_from == address(0)) {
         revert ERC20InvalidSender(address(0));
     }
@@ -128,7 +128,7 @@ function transferFrom(address _from, address _to, uint256 _value) {
  * @param _value The number of tokens to transfer.
  */
 function transfer(address _to, uint256 _value) {
-    ERC20TransferStorage storage s = getStorage();
+    ERC20Storage storage s = getStorage();
     if (_to == address(0)) {
         revert ERC20InvalidReceiver(address(0));
     }
@@ -143,17 +143,3 @@ function transfer(address _to, uint256 _value) {
     emit Transfer(msg.sender, _to, _value);
 }
 
-/**
- * @notice Approves a spender to transfer tokens on behalf of the caller.
- * @dev Sets the allowance for the spender.
- * @param _spender The address to approve for spending.
- * @param _value The amount of tokens to approve.
- */
-function approve(address _spender, uint256 _value) {
-    if (_spender == address(0)) {
-        revert ERC20InvalidSpender(address(0));
-    }
-    ERC20TransferStorage storage s = getStorage();
-    s.allowance[msg.sender][_spender] = _value;
-    emit Approval(msg.sender, _spender, _value);
-}
