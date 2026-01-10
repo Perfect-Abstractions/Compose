@@ -6,20 +6,16 @@ pragma solidity >=0.8.30;
  */
 
 /*
- *  /// @title LibERC20Bridgeable — ERC-7802 Library
- */
-/*
- *  /// @notice Provides internal functions and storage layout for ERC-7802 token logic.
- */
-/**
- *  /// @dev Uses ERC-8042 for storage location standardization and ERC-6093 for error conventions
+ * @title LibERC20Bridgeable — ERC-7802 Library
+ * @notice Provides internal functions and storage layout for ERC-7802 token logic.
+ * @dev Uses ERC-8042 for storage location standardization and ERC-6093 for error conventions
  */
 
 /**
  * @notice Revert when a provided receiver is invalid(e.g,zero address) .
- * @param _receiver The invalid reciever address.
+ * @param _receiver The invalid receiver address.
  */
-error ERC20InvalidReciever(address _receiver);
+error ERC20InvalidReceiver(address _receiver);
 
 /**
  * @notice Thrown when the sender address is invalid (e.g., zero address).
@@ -84,11 +80,11 @@ event Transfer(address indexed _from, address indexed _to, uint256 _value);
  * @notice Storage slot for ERC-20 token using ERC8042 for storage location standardization
  * @dev Storage position determined by the keccak256 hash of the diamond storage identifier.
  */
-bytes32 constant ERC20_TRANSFER_STORAGE_POSITION = keccak256("compose.erc20.transfer");
+bytes32 constant ERC20_TRANSFER_STORAGE_POSITION = keccak256("erc20.transfer");
 
 /**
  * @dev ERC-8042 compliant storage struct for ERC20 token data.
- * @custom:storage-location erc8042:compose.erc20.transfer
+ * @custom:storage-location erc8042:erc20.transfer
  */
 struct ERC20TransferStorage {
     mapping(address owner => uint256 balance) balanceOf;
@@ -153,7 +149,7 @@ function crosschainMint(address _account, uint256 _value) {
     }
 
     if (_account == address(0)) {
-        revert ERC20InvalidReciever(address(0));
+        revert ERC20InvalidReceiver(address(0));
     }
 
     unchecked {
@@ -183,7 +179,7 @@ function crosschainBurn(address _from, uint256 _value) {
     }
 
     if (_from == address(0)) {
-        revert ERC20InvalidReciever(address(0));
+        revert ERC20InvalidReceiver(address(0));
     }
 
     uint256 accountBalance = erc20Transfer.balanceOf[_from];

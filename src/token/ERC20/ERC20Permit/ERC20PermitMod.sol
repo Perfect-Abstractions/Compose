@@ -39,10 +39,10 @@ error ERC20InvalidSpender(address _spender);
  */
 event Approval(address indexed _owner, address indexed _spender, uint256 _value);
 
-bytes32 constant ERC20_METADATA_STORAGE_POSITION = keccak256("compose.erc20.metadata");
+bytes32 constant ERC20_METADATA_STORAGE_POSITION = keccak256("erc20.metadata");
 
 /**
- * @custom:storage-location erc8042:compose.erc20.metadata
+ * @custom:storage-location erc8042:erc20.metadata
  */
 struct ERC20MetadataStorage {
     string name;
@@ -55,10 +55,10 @@ function getERC20MetadataStorage() pure returns (ERC20MetadataStorage storage s)
     }
 }
 
-bytes32 constant ERC20_TRANSFER_STORAGE_POSITION = keccak256("compose.erc20.transfer");
+bytes32 constant ERC20_TRANSFER_STORAGE_POSITION = keccak256("erc20.transfer");
 
 /**
- * @custom:storage-location erc8042:compose.erc20.transfer
+ * @custom:storage-location erc8042:erc20.transfer
  */
 struct ERC20TransferStorage {
     mapping(address owner => uint256 balance) balanceOf;
@@ -73,16 +73,16 @@ function getERC20TransferStorage() pure returns (ERC20TransferStorage storage s)
     }
 }
 
-bytes32 constant STORAGE_POSITION = keccak256("compose.erc20.permit");
+bytes32 constant STORAGE_POSITION = keccak256("nonces");
 
 /**
- * @custom:storage-location erc8042:compose.erc20.permit
+ * @custom:storage-location erc8042:nonces
  */
-struct ERC20PermitStorage {
+struct NoncesStorage {
     mapping(address owner => uint256) nonces;
 }
 
-function getPermitStorage() pure returns (ERC20PermitStorage storage s) {
+function getPermitStorage() pure returns (NoncesStorage storage s) {
     bytes32 position = STORAGE_POSITION;
     assembly {
         s.slot := position
@@ -127,7 +127,7 @@ function permit(address _owner, address _spender, uint256 _value, uint256 _deadl
         revert ERC2612InvalidSignature(_owner, _spender, _value, _deadline, _v, _r, _s);
     }
 
-    ERC20PermitStorage storage s = getPermitStorage();
+    NoncesStorage storage s = getPermitStorage();
     ERC20TransferStorage storage erc20Transfer = getERC20TransferStorage();
     uint256 currentNonce = s.nonces[_owner];
     bytes32 structHash = keccak256(

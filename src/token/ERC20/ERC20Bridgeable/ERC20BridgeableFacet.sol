@@ -13,9 +13,9 @@ pragma solidity >=0.8.30;
 contract ERC20BridgeableFacet {
     /**
      * @notice Revert when a provided receiver is invalid(e.g,zero address) .
-     * @param _receiver The invalid reciever address.
+     * @param _receiver The invalid receiver address.
      */
-    error ERC20InvalidReciever(address _receiver);
+    error ERC20InvalidReceiver(address _receiver);
 
     /**
      * @notice Thrown when the sender address is invalid (e.g., zero address).
@@ -80,11 +80,11 @@ contract ERC20BridgeableFacet {
      * @notice Storage slot for ERC-20 token using ERC8042 for storage location standardization
      * @dev Storage position determined by the keccak256 hash of the diamond storage identifier.
      */
-    bytes32 constant ERC20_TRANSFER_STORAGE_POSITION = keccak256("compose.erc20.transfer");
+    bytes32 constant ERC20_TRANSFER_STORAGE_POSITION = keccak256("erc20.transfer");
 
     /**
      * @dev ERC-8042 compliant storage struct for ERC20 token data.
-     * @custom:storage-location erc8042:compose.erc20.transfer
+     * @custom:storage-location erc8042:erc20.transfer
      */
     struct ERC20TransferStorage {
         mapping(address owner => uint256 balance) balanceOf;
@@ -149,7 +149,7 @@ contract ERC20BridgeableFacet {
         }
 
         if (_account == address(0)) {
-            revert ERC20InvalidReciever(address(0));
+            revert ERC20InvalidReceiver(address(0));
         }
 
         unchecked {
@@ -177,7 +177,7 @@ contract ERC20BridgeableFacet {
             revert AccessControlUnauthorizedAccount(msg.sender, "trusted-bridge");
         }
         if (_from == address(0)) {
-            revert ERC20InvalidReciever(address(0));
+            revert ERC20InvalidReceiver(address(0));
         }
 
         uint256 accountBalance = erc20Transfer.balanceOf[_from];

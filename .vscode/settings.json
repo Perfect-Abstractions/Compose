@@ -27,6 +27,8 @@
     "editor.suggestOnTriggerCharacters": true,
     "editor.suggestSelection": "first",
     "cSpell.words": [
-        "accesscontrol"
+        "accesscontrol",
+        "chainid",
+        "crosschain"
     ]
 }
