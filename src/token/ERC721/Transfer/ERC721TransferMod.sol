@@ -84,7 +84,7 @@ function transferFrom(address _from, address _to, uint256 _tokenId) {
     }
     if (owner != _from) {
         revert ERC721IncorrectOwner(_from, _tokenId, owner);
-    }    
+    }
     delete s.approved[_tokenId];
     unchecked {
         s.balanceOf[_from]--;

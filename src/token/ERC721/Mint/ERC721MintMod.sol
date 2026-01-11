@@ -54,7 +54,6 @@ function getStorage() pure returns (ERC721Storage storage s) {
     }
 }
 
-
 /**
  * @notice Mints a new ERC-721 token to the specified address.
  * @dev Reverts if the receiver address is zero or if the token already exists.

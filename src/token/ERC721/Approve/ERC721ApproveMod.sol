@@ -5,7 +5,6 @@ pragma solidity >=0.8.30;
  * https://compose.diamonds
  */
 
-
 /**
  * @title ERC-721 Approve Module
  */
@@ -13,8 +12,8 @@ pragma solidity >=0.8.30;
 /**
  * @notice Error indicating that the queried token does not exist.
  */
-error ERC721NonexistentToken(uint256 _tokenId);       
-    
+error ERC721NonexistentToken(uint256 _tokenId);
+
 /**
  * @notice Error indicating the approver address is invalid.
  */
@@ -69,7 +68,7 @@ function approve(address _to, uint256 _tokenId) {
     address owner = s.ownerOf[_tokenId];
     if (owner == address(0)) {
         revert ERC721NonexistentToken(_tokenId);
-    }    
+    }
     s.approved[_tokenId] = _to;
     emit Approval(owner, _to, _tokenId);
 }

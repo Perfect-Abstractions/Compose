@@ -1,7 +1,6 @@
 // SPDX-License-Identifier: MIT
 pragma solidity >=0.8.30;
 
-
 /**
  * @notice Error indicating that the queried token does not exist.
  */

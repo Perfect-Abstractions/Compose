@@ -6,7 +6,6 @@ pragma solidity >=0.8.30;
  */
 
 contract ERC721EnumerableFacet {
-
     /**
      * @notice Thrown when an index is out of bounds during enumeration.
      */
@@ -17,10 +16,10 @@ contract ERC721EnumerableFacet {
     /**
      * @custom:storage-location erc8042:erc721.enumerable
      */
-    struct ERC721EnumerableStorage {                
+    struct ERC721EnumerableStorage {
         mapping(address owner => mapping(uint256 index => uint256 tokenId)) ownerTokens;
         mapping(uint256 tokenId => uint256 ownerTokensIndex) ownerTokensIndex;
-        uint256[] allTokens;  
+        uint256[] allTokens;
     }
 
     /**
@@ -32,7 +31,7 @@ contract ERC721EnumerableFacet {
         assembly {
             s.slot := position
         }
-    }    
+    }
 
     bytes32 constant ERC721_STORAGE_POSITION = keccak256("erc721");
 
@@ -41,7 +40,7 @@ contract ERC721EnumerableFacet {
      */
     struct ERC721Storage {
         mapping(uint256 tokenId => address owner) ownerOf;
-        mapping(address owner => uint256 balance) balanceOf;        
+        mapping(address owner => uint256 balance) balanceOf;
     }
 
     /**
@@ -84,7 +83,7 @@ contract ERC721EnumerableFacet {
      * @dev Throws if `_index` >= `totalSupply()`.
      * @param _index A counter less than `totalSupply()`
      * @return The token identifier for the `_index`th NFT,
-    */
+     */
     function tokenByIndex(uint256 _index) external view returns (uint256) {
         ERC721EnumerableStorage storage s = getStorage();
         if (_index >= s.allTokens.length) {
@@ -92,5 +91,4 @@ contract ERC721EnumerableFacet {
         }
         return s.allTokens[_index];
     }
-
 }

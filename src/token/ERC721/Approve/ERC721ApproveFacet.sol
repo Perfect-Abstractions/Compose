@@ -5,17 +5,15 @@ pragma solidity >=0.8.30;
  * https://compose.diamonds
  */
 
-
 /**
- * @title ERC-721 Approve 
+ * @title ERC-721 Approve
  */
 contract ERC721ApproveFacet {
-    
     /**
      * @notice Error indicating that the queried token does not exist.
      */
-    error ERC721NonexistentToken(uint256 _tokenId);       
-        
+    error ERC721NonexistentToken(uint256 _tokenId);
+
     /**
      * @notice Error indicating the approver address is invalid.
      */
@@ -25,7 +23,7 @@ contract ERC721ApproveFacet {
      * @notice Error indicating the operator address is invalid.
      */
     error ERC721InvalidOperator(address _operator);
-    
+
     /**
      * @notice Emitted when the approved address for an NFT is changed or reaffirmed.
      */

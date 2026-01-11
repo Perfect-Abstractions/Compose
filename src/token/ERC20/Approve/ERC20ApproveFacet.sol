@@ -18,7 +18,7 @@ contract ERC20ApproveFacet {
      * @param _spender The address receiving the allowance.
      * @param _value The amount approved.
      */
-    event Approval(address indexed _owner, address indexed _spender, uint256 _value);  
+    event Approval(address indexed _owner, address indexed _spender, uint256 _value);
 
     /**
      * @dev Storage position determined by the keccak256 hash of the diamond storage identifier.
@@ -46,7 +46,7 @@ contract ERC20ApproveFacet {
             s.slot := position
         }
     }
-    
+
     /**
      * @notice Approves a spender to transfer up to a certain amount of tokens on behalf of the caller.
      * @dev Emits an {Approval} event.

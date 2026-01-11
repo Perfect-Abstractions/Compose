@@ -19,18 +19,18 @@ contract ERC721EnumerableBurnFacet {
      * @notice Thrown when the operator lacks sufficient approval for a transfer.
      */
     error ERC721InsufficientApproval(address _operator, uint256 _tokenId);
-    
+
     /**
      * @notice Emitted when a token is transferred between addresses.
      */
-    event Transfer(address indexed _from, address indexed _to, uint256 indexed _tokenId);    
-    
+    event Transfer(address indexed _from, address indexed _to, uint256 indexed _tokenId);
+
     bytes32 constant STORAGE_POSITION = keccak256("erc721.enumerable");
 
     /**
      * @custom:storage-location erc8042:erc721.enumerable
      */
-    struct ERC721EnumerableStorage {                
+    struct ERC721EnumerableStorage {
         mapping(address owner => mapping(uint256 index => uint256 tokenId)) ownerTokens;
         mapping(uint256 tokenId => uint256 ownerTokensIndex) ownerTokensIndex;
         uint256[] allTokens;
@@ -46,7 +46,7 @@ contract ERC721EnumerableBurnFacet {
         assembly {
             s.slot := position
         }
-    }    
+    }
 
     bytes32 constant ERC721_STORAGE_POSITION = keccak256("erc721");
 
@@ -72,7 +72,7 @@ contract ERC721EnumerableBurnFacet {
         }
     }
 
-     /**
+    /**
      * @notice Burns (destroys) a token, removing it from enumeration tracking.
      * @param _tokenId The ID of the token to burn.
      */
@@ -103,7 +103,7 @@ contract ERC721EnumerableBurnFacet {
             s.ownerTokens[owner][tokenIndex] = lastTokenId;
             s.ownerTokensIndex[lastTokenId] = tokenIndex;
         }
-        erc721Storage.balanceOf[owner]--;        
+        erc721Storage.balanceOf[owner]--;
 
         /**
          * Remove from all tokens list
@@ -118,5 +118,5 @@ contract ERC721EnumerableBurnFacet {
         s.allTokens.pop();
 
         emit Transfer(owner, address(0), _tokenId);
-    }   
+    }
 }

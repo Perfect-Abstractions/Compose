@@ -5,7 +5,7 @@ pragma solidity >=0.8.30;
  * https://compose.diamonds
  */
 
-contract ERC20DataFacet {  
+contract ERC20DataFacet {
     /**
      * @dev Storage position determined by the keccak256 hash of the diamond storage identifier.
      */

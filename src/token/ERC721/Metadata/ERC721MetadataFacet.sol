@@ -7,7 +7,6 @@ pragma solidity >=0.8.30;
  * @dev This facet provides metadata, ownership, approvals, safe transfers, minting, burning, and helpers.
  */
 contract ERC721MetadataFacet {
-
     /**
      * @notice Error indicating that the queried token does not exist.
      */
@@ -17,7 +16,7 @@ contract ERC721MetadataFacet {
      * @notice Error indicating the queried owner address is invalid (zero address).
      */
     error ERC721InvalidOwner(address _owner);
-   
+
     bytes32 constant STORAGE_POSITION = keccak256("erc721.metadata");
 
     /**
@@ -50,7 +49,7 @@ contract ERC721MetadataFacet {
         mapping(uint256 tokenId => address owner) ownerOf;
         mapping(address owner => uint256 balance) balanceOf;
         mapping(address owner => mapping(address operator => bool approved)) isApprovedForAll;
-        mapping(uint256 tokenId => address approved) approved;        
+        mapping(uint256 tokenId => address approved) approved;
     }
 
     /**

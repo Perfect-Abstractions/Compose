@@ -26,7 +26,6 @@ interface IERC721Receiver {
  * @dev This facet provides metadata, ownership, approvals, safe transfers, minting, burning, and helpers.
  */
 contract ERC721TransferFacet {
-    
     /**
      * @notice Error indicating that the queried token does not exist.
      */
@@ -36,7 +35,7 @@ contract ERC721TransferFacet {
      * @notice Error indicating the sender does not match the token owner.
      */
     error ERC721IncorrectOwner(address _sender, uint256 _tokenId, address _owner);
-    
+
     /**
      * @notice Error indicating the receiver address is invalid.
      */
@@ -45,12 +44,12 @@ contract ERC721TransferFacet {
     /**
      * @notice Error indicating the operator lacks approval to transfer the given token.
      */
-    error ERC721InsufficientApproval(address _operator, uint256 _tokenId);  
-   
+    error ERC721InsufficientApproval(address _operator, uint256 _tokenId);
+
     /**
      * @notice Emitted when ownership of an NFT changes by any mechanism.
      */
-    event Transfer(address indexed _from, address indexed _to, uint256 indexed _tokenId);    
+    event Transfer(address indexed _from, address indexed _to, uint256 indexed _tokenId);
 
     bytes32 constant STORAGE_POSITION = keccak256("erc721");
 
@@ -61,7 +60,7 @@ contract ERC721TransferFacet {
         mapping(uint256 tokenId => address owner) ownerOf;
         mapping(address owner => uint256 balance) balanceOf;
         mapping(address owner => mapping(address operator => bool approved)) isApprovedForAll;
-        mapping(uint256 tokenId => address approved) approved;        
+        mapping(uint256 tokenId => address approved) approved;
     }
 
     /**
@@ -74,7 +73,7 @@ contract ERC721TransferFacet {
         assembly {
             s.slot := position
         }
-    }    
+    }
 
     /**
      * @dev Internal function to transfer a token, checking for ownership and approval.

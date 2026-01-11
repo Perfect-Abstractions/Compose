@@ -24,7 +24,7 @@ contract ERC721BurnFacet {
     /**
      * @notice Emitted when ownership of an NFT changes by any mechanism.
      */
-    event Transfer(address indexed _from, address indexed _to, uint256 indexed _tokenId);    
+    event Transfer(address indexed _from, address indexed _to, uint256 indexed _tokenId);
 
     bytes32 constant STORAGE_POSITION = keccak256("erc721");
 

@@ -46,18 +46,18 @@ contract ERC721EnumerableFacet {
      * @notice Thrown when the operator lacks sufficient approval for a transfer.
      */
     error ERC721InsufficientApproval(address _operator, uint256 _tokenId);
-    
+
     /**
      * @notice Emitted when a token is transferred between addresses.
      */
-    event Transfer(address indexed _from, address indexed _to, uint256 indexed _tokenId);    
-    
+    event Transfer(address indexed _from, address indexed _to, uint256 indexed _tokenId);
+
     bytes32 constant STORAGE_POSITION = keccak256("erc721.enumerable");
 
     /**
      * @custom:storage-location erc8042:erc721.enumerable
      */
-    struct ERC721EnumerableStorage {                
+    struct ERC721EnumerableStorage {
         mapping(address owner => mapping(uint256 index => uint256 tokenId)) ownerTokens;
         mapping(uint256 tokenId => uint256 ownerTokensIndex) ownerTokensIndex;
         uint256[] allTokens;
@@ -73,7 +73,7 @@ contract ERC721EnumerableFacet {
         assembly {
             s.slot := position
         }
-    }    
+    }
 
     bytes32 constant ERC721_STORAGE_POSITION = keccak256("erc721");
 
@@ -97,7 +97,7 @@ contract ERC721EnumerableFacet {
         assembly {
             s.slot := position
         }
-    } 
+    }
 
     /**
      * @notice Internal function to transfer ownership of a token ID.
@@ -123,8 +123,8 @@ contract ERC721EnumerableFacet {
                 revert ERC721InsufficientApproval(msg.sender, _tokenId);
             }
         }
-        delete erc721Storage.approved[_tokenId];       
-        unchecked {                        
+        delete erc721Storage.approved[_tokenId];
+        unchecked {
             uint256 tokenIndex = s.ownerTokensIndex[_tokenId];
             uint256 lastTokenIndex = erc721Storage.balanceOf[_from] - 1;
             if (tokenIndex != lastTokenIndex) {

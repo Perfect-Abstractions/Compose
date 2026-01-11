@@ -5,12 +5,10 @@ pragma solidity >=0.8.30;
  * https://compose.diamonds
  */
 
-
 /**
  * @title ERC-721 Data Facet
  */
 contract ERC721DataFacet {
-
     /**
      * @notice Error indicating the queried owner address is invalid (zero address).
      */
@@ -20,7 +18,7 @@ contract ERC721DataFacet {
      * @notice Error indicating that the queried token does not exist.
      */
     error ERC721NonexistentToken(uint256 _tokenId);
-        
+
     bytes32 constant STORAGE_POSITION = keccak256("erc721");
 
     /**

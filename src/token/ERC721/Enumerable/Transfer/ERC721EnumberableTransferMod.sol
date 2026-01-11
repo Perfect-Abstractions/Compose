@@ -44,14 +44,14 @@ error ERC721InsufficientApproval(address _operator, uint256 _tokenId);
 /**
  * @notice Emitted when a token is transferred between addresses.
  */
-event Transfer(address indexed _from, address indexed _to, uint256 indexed _tokenId);    
+event Transfer(address indexed _from, address indexed _to, uint256 indexed _tokenId);
 
 bytes32 constant STORAGE_POSITION = keccak256("erc721.enumerable");
 
 /**
  * @custom:storage-location erc8042:erc721.enumerable
  */
-struct ERC721EnumerableStorage {                
+struct ERC721EnumerableStorage {
     mapping(address owner => mapping(uint256 index => uint256 tokenId)) ownerTokens;
     mapping(uint256 tokenId => uint256 ownerTokensIndex) ownerTokensIndex;
     uint256[] allTokens;
@@ -67,7 +67,7 @@ function getStorage() pure returns (ERC721EnumerableStorage storage s) {
     assembly {
         s.slot := position
     }
-}    
+}
 
 bytes32 constant ERC721_STORAGE_POSITION = keccak256("erc721");
 
@@ -91,7 +91,7 @@ function getERC721Storage() pure returns (ERC721Storage storage s) {
     assembly {
         s.slot := position
     }
-} 
+}
 
 /**
  * @notice Internal function to transfer ownership of a token ID.
@@ -111,10 +111,10 @@ function transferFrom(address _from, address _to, uint256 _tokenId) {
     }
     if (owner != _from) {
         revert ERC721IncorrectOwner(_from, _tokenId, owner);
-    }    
-    delete erc721Storage.approved[_tokenId];       
+    }
+    delete erc721Storage.approved[_tokenId];
 
-    unchecked {                        
+    unchecked {
         uint256 tokenIndex = s.ownerTokensIndex[_tokenId];
         uint256 lastTokenIndex = erc721Storage.balanceOf[_from] - 1;
         if (tokenIndex != lastTokenIndex) {
@@ -134,13 +134,12 @@ function transferFrom(address _from, address _to, uint256 _tokenId) {
     emit Transfer(_from, _to, _tokenId);
 }
 
-
 /**
-    * @notice Safely transfers a token, checking for receiver contract compatibility.
-    * @param _from The current owner of the token.
-    * @param _to The recipient address.
-    * @param _tokenId The token ID to transfer.
-    */
+ * @notice Safely transfers a token, checking for receiver contract compatibility.
+ * @param _from The current owner of the token.
+ * @param _to The recipient address.
+ * @param _tokenId The token ID to transfer.
+ */
 function safeTransferFrom(address _from, address _to, uint256 _tokenId) {
     transferFrom(_from, _to, _tokenId);
     if (_to.code.length > 0) {
@@ -160,12 +159,12 @@ function safeTransferFrom(address _from, address _to, uint256 _tokenId) {
 }
 
 /**
-    * @notice Safely transfers a token with additional data.
-    * @param _from The current owner of the token.
-    * @param _to The recipient address.
-    * @param _tokenId The token ID to transfer.
-    * @param _data Additional data to send to the receiver contract.
-    */
+ * @notice Safely transfers a token with additional data.
+ * @param _from The current owner of the token.
+ * @param _to The recipient address.
+ * @param _tokenId The token ID to transfer.
+ * @param _data Additional data to send to the receiver contract.
+ */
 function safeTransferFrom(address _from, address _to, uint256 _tokenId, bytes memory _data) {
     transferFrom(_from, _to, _tokenId);
     if (_to.code.length > 0) {

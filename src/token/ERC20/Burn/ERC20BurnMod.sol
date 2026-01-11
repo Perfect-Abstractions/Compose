@@ -44,7 +44,7 @@ bytes32 constant STORAGE_POSITION = keccak256("erc20");
  */
 struct ERC20Storage {
     mapping(address owner => uint256 balance) balanceOf;
-    uint256 totalSupply;    
+    uint256 totalSupply;
 }
 
 /**

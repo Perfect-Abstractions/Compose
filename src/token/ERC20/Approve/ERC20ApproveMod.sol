@@ -6,28 +6,28 @@ pragma solidity >=0.8.30;
  */
 
 /**
-* @notice Thrown when the spender address is invalid (e.g., zero address).
-* @param _spender Invalid spender address.
-*/
+ * @notice Thrown when the spender address is invalid (e.g., zero address).
+ * @param _spender Invalid spender address.
+ */
 error ERC20InvalidSpender(address _spender);
 
 /**
-* @notice Emitted when an approval is made for a spender by an owner.
-* @param _owner The address granting the allowance.
-* @param _spender The address receiving the allowance.
-* @param _value The amount approved.
-*/
-event Approval(address indexed _owner, address indexed _spender, uint256 _value);  
+ * @notice Emitted when an approval is made for a spender by an owner.
+ * @param _owner The address granting the allowance.
+ * @param _spender The address receiving the allowance.
+ * @param _value The amount approved.
+ */
+event Approval(address indexed _owner, address indexed _spender, uint256 _value);
 
 /**
-* @dev Storage position determined by the keccak256 hash of the diamond storage identifier.
-*/
+ * @dev Storage position determined by the keccak256 hash of the diamond storage identifier.
+ */
 bytes32 constant STORAGE_POSITION = keccak256("erc20");
 
 /**
-* @dev ERC-8042 compliant storage struct for ERC20 token data.
-* @custom:storage-location erc8042:erc20
-*/
+ * @dev ERC-8042 compliant storage struct for ERC20 token data.
+ * @custom:storage-location erc8042:erc20
+ */
 struct ERC20Storage {
     mapping(address owner => uint256 balance) balanceOf;
     uint256 totalSupply;
@@ -35,10 +35,10 @@ struct ERC20Storage {
 }
 
 /**
-* @notice Returns the ERC20 storage struct from the predefined diamond storage slot.
-* @dev Uses inline assembly to set the storage slot reference.
-* @return s The ERC20 storage struct reference.
-*/
+ * @notice Returns the ERC20 storage struct from the predefined diamond storage slot.
+ * @dev Uses inline assembly to set the storage slot reference.
+ * @return s The ERC20 storage struct reference.
+ */
 function getStorage() pure returns (ERC20Storage storage s) {
     bytes32 position = STORAGE_POSITION;
     assembly {

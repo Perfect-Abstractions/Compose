@@ -5,7 +5,6 @@ pragma solidity >=0.8.30;
  * https://compose.diamonds
  */
 
-
 /**
  * @notice Thrown when attempting to interact with a non-existent token.
  * @param _tokenId The ID of the token that does not exist.

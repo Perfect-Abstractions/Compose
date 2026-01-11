@@ -39,7 +39,7 @@ contract ERC20TransferFacet {
      * @param _spender Invalid spender address.
      */
     error ERC20InvalidSpender(address _spender);
-    
+
     /**
      * @notice Emitted when tokens are transferred between two addresses.
      * @param _from Address sending the tokens.
@@ -73,7 +73,7 @@ contract ERC20TransferFacet {
         assembly {
             s.slot := position
         }
-    }   
+    }
 
     /**
      * @notice Transfers tokens to another address.
