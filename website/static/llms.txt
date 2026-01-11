@@ -1,6 +1,5 @@
 # LLMs crawling policy
 # Purpose: Signal intent to common AI/LLM crawlers.
-# Note: This file is advisory; enforcement depends on each crawler.
 
 User-agent: GPTBot
 Allow: /
@@ -21,6 +20,66 @@ Allow: /
 User-agent: *
 Allow: /
 
-# Reference sitemap (update domain when finalized)
-Sitemap: https://docusaurus-test-seven-sage.vercel.app/sitemap.xml
+Sitemap: https://compose.diamonds/sitemap.xml
 
+# Site Information
+Site-Name: Compose
+Site-URL: https://compose.diamonds/
+Description: Smart Contract Oriented Programming for ERC-2535 Diamonds. A smart contract library that helps developers build smart contract systems using the ERC-2535 Diamond standard, designed for code clarity, reusability, and on-chain composability.
+Tagline: Smart Contract Oriented Programming for ERC-2535 Diamonds
+
+# Main Content Sections
+Content-Sections:
+  - Homepage: https://compose.diamonds/
+  - Documentation: https://compose.diamonds/docs
+  - Blog: https://compose.diamonds/blog
+
+# Documentation Structure
+Documentation-Topics:
+  - Introduction: https://compose.diamonds/docs
+  - Foundations: https://compose.diamonds/docs/foundations
+  - Getting Started: https://compose.diamonds/docs/getting-started
+  - Design: https://compose.diamonds/docs/design
+  - Contribution: https://compose.diamonds/docs/contribution
+
+# Key Concepts
+Core-Concepts:
+  - ERC-2535 Diamonds: Diamond standard for modular smart contracts
+  - Facets: Modular smart contract components
+  - Smart Contract Oriented Programming (SCOP): Programming paradigm designed specifically for smart contracts
+  - Composition Over Inheritance: Combine deployed facets instead of inheriting contracts
+  - On-Chain Standard Library: Verified, audited facets deployed on multiple blockchains
+
+# Philosophy
+Philosophy:
+  - Read First: Code written to be understood first, not just executed
+  - Diamond-Native: Built specifically for ERC-2535 diamond contracts
+  - Composition Over Inheritance: Combine facets instead of inheriting contracts
+  - Intentional Simplicity: Banned features lead to clearer, safer code
+
+# Important Links
+Links:
+  - GitHub: https://github.com/Perfect-Abstractions/Compose
+  - Discord: https://discord.gg/DCBD2UKbxc
+  - GitHub Discussions: https://github.com/Perfect-Abstractions/Compose/discussions
+  - License: https://github.com/Perfect-Abstractions/Compose/blob/main/LICENSE.md
+
+# Project Status
+Status: Early Stage - Not Production Ready
+License: MIT
+Language: Solidity
+Framework: Foundry
+
+# Technical Details
+Tech-Stack:
+  - Smart Contracts: Solidity
+  - Build Tool: Foundry
+  - Documentation: Docusaurus
+  - Standard: ERC-2535 Diamonds
+
+# Content Types
+Content-Types:
+  - Documentation: Technical guides, API references, tutorials
+  - Blog: Articles, updates, and community content
+  - Code Examples: Solidity smart contract examples
+  - Design Patterns: SCOP patterns and best practices

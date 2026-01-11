@@ -1,0 +1,36 @@
+/**
+ * Giscus Comments Section Styling
+ */
+
+.commentsSection {
+  margin-top: 3rem;
+  margin-bottom: 2rem;
+}
+
+.commentsHeading {
+  font-size: 2rem;
+  font-weight: 700;
+  letter-spacing: -0.015em;
+  margin-top: 0;
+  margin-bottom: 1.5rem;
+  padding-bottom: 0.75rem;
+  border-bottom: 2px solid var(--ifm-color-emphasis-200);
+  color: var(--ifm-heading-color);
+}
+
+[data-theme='dark'] .commentsHeading {
+  border-bottom-color: #334155;
+  color: #ffffff;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .commentsHeading {
+    font-size: 1.75rem;
+    margin-bottom: 1.25rem;
+  }
+  
+  .commentsSection {
+    margin-top: 2.5rem;
+  }
+}
