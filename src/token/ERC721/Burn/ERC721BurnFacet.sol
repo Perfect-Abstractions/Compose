@@ -6,25 +6,6 @@ pragma solidity >=0.8.30;
  */
 
 /**
- * @title ERC-721 Token Receiver Interface
- * @notice Interface for contracts that want to handle safe transfers of ERC-721 tokens.
- * @dev Contracts implementing this must return the selector to confirm token receipt.
- */
-interface IERC721Receiver {
-    /**
-     * @notice Handles the receipt of an NFT.
-     * @param _operator The address which called `safeTransferFrom`.
-     * @param _from The previous owner of the token.
-     * @param _tokenId The NFT identifier being transferred.
-     * @param _data Additional data with no specified format.
-     * @return The selector to confirm the token transfer.
-     */
-    function onERC721Received(address _operator, address _from, uint256 _tokenId, bytes calldata _data)
-        external
-        returns (bytes4);
-}
-
-/**
  * @title ERC-721 Token
  * @notice A complete, dependency-free ERC-721 implementation using the diamond storage pattern.
  * @dev This facet provides metadata, ownership, approvals, safe transfers, minting, burning, and helpers.
@@ -43,19 +24,9 @@ contract ERC721BurnFacet {
     /**
      * @notice Emitted when ownership of an NFT changes by any mechanism.
      */
-    event Transfer(address indexed _from, address indexed _to, uint256 indexed _tokenId);
+    event Transfer(address indexed _from, address indexed _to, uint256 indexed _tokenId);    
 
-    /**
-     * @notice Emitted when the approved address for an NFT is changed or reaffirmed.
-     */
-    event Approval(address indexed _owner, address indexed _to, uint256 indexed _tokenId);
-
-    /**
-     * @notice Emitted when an operator is enabled or disabled for an owner.
-     */
-    event ApprovalForAll(address indexed _owner, address indexed _operator, bool _approved);
-
-    bytes32 constant STORAGE_POSITION = keccak256("compose.erc721");
+    bytes32 constant STORAGE_POSITION = keccak256("erc721");
 
     /**
      * @custom:storage-location erc8042:compose.erc721
