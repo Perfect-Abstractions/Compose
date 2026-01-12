@@ -34,7 +34,7 @@ function getStorage() pure returns (ERC721MetadataStorage storage s) {
     }
 }
 
-function setMetaData(string memory _name, string memory _symbol, string memory _baseURI) {
+function setMetadata(string memory _name, string memory _symbol, string memory _baseURI) {
     ERC721MetadataStorage storage s = getStorage();
     s.name = _name;
     s.symbol = _symbol;
