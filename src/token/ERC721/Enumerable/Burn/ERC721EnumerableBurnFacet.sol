@@ -93,29 +93,32 @@ contract ERC721EnumerableBurnFacet {
         delete erc721Storage.ownerOf[_tokenId];
         delete erc721Storage.approved[_tokenId];
 
-        /**
-         * Remove from owner's list
-         */
-        uint256 tokenIndex = s.ownerTokensIndex[_tokenId];
-        uint256 lastTokenIndex = erc721Storage.balanceOf[owner] - 1;
-        if (tokenIndex != lastTokenIndex) {
-            uint256 lastTokenId = s.ownerTokens[owner][lastTokenIndex];
-            s.ownerTokens[owner][tokenIndex] = lastTokenId;
-            s.ownerTokensIndex[lastTokenId] = tokenIndex;
-        }
-        erc721Storage.balanceOf[owner]--;
+        unchecked {
+            /**
+             * Remove from owner's list
+             */
+            uint256 tokenIndex = s.ownerTokensIndex[_tokenId];
+            uint256 lastTokenIndex = erc721Storage.balanceOf[owner] - 1;
+            if (tokenIndex != lastTokenIndex) {
+                uint256 lastTokenId = s.ownerTokens[owner][lastTokenIndex];
+                s.ownerTokens[owner][tokenIndex] = lastTokenId;
+                s.ownerTokensIndex[lastTokenId] = tokenIndex;
+            }
+            erc721Storage.balanceOf[owner]--;
 
-        /**
-         * Remove from all tokens list
-         */
-        tokenIndex = s.allTokensIndex[_tokenId];
-        lastTokenIndex = s.allTokens.length - 1;
-        if (tokenIndex != lastTokenIndex) {
-            uint256 lastTokenId = s.allTokens[lastTokenIndex];
-            s.allTokens[tokenIndex] = lastTokenId;
-            s.allTokensIndex[lastTokenId] = tokenIndex;
+            /**
+             * Remove from all tokens list
+             */
+            tokenIndex = s.allTokensIndex[_tokenId];
+            lastTokenIndex = s.allTokens.length - 1;
+
+            if (tokenIndex != lastTokenIndex) {
+                uint256 lastTokenId = s.allTokens[lastTokenIndex];
+                s.allTokens[tokenIndex] = lastTokenId;
+                s.allTokensIndex[lastTokenId] = tokenIndex;
+            }
+            s.allTokens.pop();
         }
-        s.allTokens.pop();
 
         emit Transfer(owner, address(0), _tokenId);
     }

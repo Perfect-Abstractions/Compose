@@ -57,7 +57,7 @@ function getStorage() pure returns (ERC20Storage storage s) {
  * @param _account The address receiving the newly minted tokens.
  * @param _value The number of tokens to mint.
  */
-function mint(address _account, uint256 _value) {
+function mintERC20(address _account, uint256 _value) {
     ERC20Storage storage s = getStorage();
     if (_account == address(0)) {
         revert ERC20InvalidReceiver(address(0));

@@ -134,13 +134,12 @@ contract ERC721EnumerableFacet {
             }
             erc721Storage.balanceOf[_from]--;
 
-            uint256 toTokensCount = erc721Storage.balanceOf[_to];
-            s.ownerTokensIndex[_tokenId] = toTokensCount;
-            s.ownerTokens[_to][toTokensCount] = _tokenId;
-            erc721Storage.balanceOf[_to] = toTokensCount + 1;
+            tokenIndex = erc721Storage.balanceOf[_to];
+            s.ownerTokensIndex[_tokenId] = tokenIndex;
+            s.ownerTokens[_to][tokenIndex] = _tokenId;
+            erc721Storage.balanceOf[_to] = tokenIndex + 1;
             erc721Storage.ownerOf[_tokenId] = _to;
         }
-
         emit Transfer(_from, _to, _tokenId);
     }
 

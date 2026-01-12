@@ -9,11 +9,11 @@ contract ERC20MetadataFacet {
     /**
      * @dev Storage position determined by the keccak256 hash of the diamond storage identifier.
      */
-    bytes32 constant STORAGE_POSITION = keccak256("compose.erc20.metadata");
+    bytes32 constant STORAGE_POSITION = keccak256("erc20.metadata");
 
     /**
      * @dev ERC-8042 compliant storage struct for ERC20 token data.
-     * @custom:storage-location erc8042:compose.erc20.metadata
+     * @custom:storage-location erc8042:erc20.metadata
      */
     struct ERC20MetadataStorage {
         string name;

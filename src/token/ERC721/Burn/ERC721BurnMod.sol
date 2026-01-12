@@ -53,7 +53,7 @@ function getStorage() pure returns (ERC721Storage storage s) {
  * @dev Reverts if the token does not exist. Clears ownership and approval.
  * @param _tokenId The ID of the token to burn.
  */
-function burn(uint256 _tokenId) {
+function burnERC721(uint256 _tokenId) {
     ERC721Storage storage s = getStorage();
     address owner = s.ownerOf[_tokenId];
     if (owner == address(0)) {

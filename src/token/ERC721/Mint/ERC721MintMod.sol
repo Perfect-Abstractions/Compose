@@ -60,7 +60,7 @@ function getStorage() pure returns (ERC721Storage storage s) {
  * @param _to The address that will own the newly minted token.
  * @param _tokenId The ID of the token to mint.
  */
-function mint(address _to, uint256 _tokenId) {
+function mintERC721(address _to, uint256 _tokenId) {
     ERC721Storage storage s = getStorage();
     if (_to == address(0)) {
         revert ERC721InvalidReceiver(address(0));

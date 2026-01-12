@@ -13,12 +13,6 @@ pragma solidity >=0.8.30;
  * @notice Error indicating that the queried token does not exist.
  */
 error ERC721NonexistentToken(uint256 _tokenId);
-
-/**
- * @notice Error indicating the approver address is invalid.
- */
-error ERC721InvalidApprover(address _approver);
-
 /**
  * @notice Error indicating the operator address is invalid.
  */

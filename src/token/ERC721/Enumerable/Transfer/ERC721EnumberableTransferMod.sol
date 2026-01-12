@@ -36,10 +36,6 @@ error ERC721IncorrectOwner(address _sender, uint256 _tokenId, address _owner);
  * @notice Thrown when the receiver address is invalid.
  */
 error ERC721InvalidReceiver(address _receiver);
-/**
- * @notice Thrown when the operator lacks sufficient approval for a transfer.
- */
-error ERC721InsufficientApproval(address _operator, uint256 _tokenId);
 
 /**
  * @notice Emitted when a token is transferred between addresses.
@@ -124,13 +120,12 @@ function transferFrom(address _from, address _to, uint256 _tokenId) {
         }
         erc721Storage.balanceOf[_from]--;
 
-        uint256 toTokensCount = erc721Storage.balanceOf[_to];
-        s.ownerTokensIndex[_tokenId] = toTokensCount;
-        s.ownerTokens[_to][toTokensCount] = _tokenId;
-        erc721Storage.balanceOf[_to] = toTokensCount + 1;
+        tokenIndex = erc721Storage.balanceOf[_to];
+        s.ownerTokensIndex[_tokenId] = tokenIndex;
+        s.ownerTokens[_to][tokenIndex] = _tokenId;
+        erc721Storage.balanceOf[_to] = tokenIndex + 1;
         erc721Storage.ownerOf[_tokenId] = _to;
     }
-
     emit Transfer(_from, _to, _tokenId);
 }
 
