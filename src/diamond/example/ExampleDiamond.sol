@@ -41,7 +41,7 @@ contract ExampleDiamond {
         /**
          * Setting ERC721 token details
          */
-        ERC721MetadataMod.setMetaData({_name: "ExampleDiamondNFT", _symbol: "EDN", _baseURI: "https://example.com/metadata/"});
+        ERC721MetadataMod.setMetadata({_name: "ExampleDiamondNFT", _symbol: "EDN", _baseURI: "https://example.com/metadata/"});
         /**
          * Registering ERC165 interfaces
          */
