@@ -7,7 +7,7 @@ pragma solidity >=0.8.30;
 
 import "../DiamondMod.sol" as DiamondMod;
 import "../../access/Owner/OwnerMod.sol" as OwnerMod;
-import "../../token/ERC721/ERC721/ERC721Mod.sol" as ERC721Mod;
+import "../../token/ERC721/Metadata/ERC721MetadataMod.sol" as ERC721MetadataMod;
 import "../../interfaceDetection/ERC165/ERC165Mod.sol" as ERC165Mod;
 import {IERC721} from "../../interfaces/IERC721.sol";
 import {IERC721Metadata} from "../../interfaces/IERC721Metadata.sol";
@@ -41,7 +41,7 @@ contract ExampleDiamond {
         /**
          * Setting ERC721 token details
          */
-        ERC721Mod.setMetadata({_name: "ExampleDiamondNFT", _symbol: "EDN", _baseURI: "https://example.com/metadata/"});
+        ERC721MetadataMod.setMetadata({_name: "ExampleDiamondNFT", _symbol: "EDN", _baseURI: "https://example.com/metadata/"});
         /**
          * Registering ERC165 interfaces
          */
