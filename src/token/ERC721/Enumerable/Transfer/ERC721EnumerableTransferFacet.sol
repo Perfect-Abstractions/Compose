@@ -29,7 +29,7 @@ interface IERC721Receiver {
  * @notice A complete, dependency-free ERC-721 implementation with enumeration support using a custom storage layout.
  * @dev Provides metadata, ownership, approvals, enumeration, safe transfers, minting, and burning features.
  */
-contract ERC721EnumerableFacet {
+contract ERC721EnumerableTransferFacet {
     /**
      * @notice Thrown when operating on a non-existent token.
      */

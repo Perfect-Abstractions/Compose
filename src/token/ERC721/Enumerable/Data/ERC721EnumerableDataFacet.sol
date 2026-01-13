@@ -5,7 +5,7 @@ pragma solidity >=0.8.30;
  * https://compose.diamonds
  */
 
-contract ERC721EnumerableFacet {
+contract ERC721EnumerableDataFacet {
     /**
      * @notice Thrown when an index is out of bounds during enumeration.
      */
