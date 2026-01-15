@@ -1,0 +1,521 @@
+/**
+ * Premium Newsletter Signup Component Styling
+ * World-class design with glass morphism, gradients, and smooth animations
+ * Matches Compose's blue-focused theme in both light and dark modes
+ */
+
+/* ============================================
+   CONTAINER - Glass Morphism Effect
+   ============================================ */
+
+.newsletterContainer {
+  margin: 4rem auto;
+  padding: 3rem;
+  border-radius: 1.25rem;
+  position: relative;
+  overflow: hidden;
+  
+  /* Glass morphism effect */
+  background: rgba(255, 255, 255, 0.7);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(59, 130, 246, 0.2);
+  
+  /* Premium shadow */
+  box-shadow: 
+    0 8px 32px rgba(0, 0, 0, 0.08),
+    0 2px 8px rgba(59, 130, 246, 0.1),
+    inset 0 1px 0 rgba(255, 255, 255, 0.9);
+  
+  /* Subtle gradient overlay */
+  background-image: 
+    linear-gradient(135deg, rgba(59, 130, 246, 0.03) 0%, rgba(37, 99, 235, 0.05) 100%),
+    linear-gradient(to bottom, rgba(255, 255, 255, 0.7), rgba(255, 255, 255, 0.9));
+  
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.newsletterContainer:hover {
+  transform: translateY(-2px);
+  box-shadow: 
+    0 12px 48px rgba(0, 0, 0, 0.12),
+    0 4px 16px rgba(59, 130, 246, 0.15),
+    inset 0 1px 0 rgba(255, 255, 255, 0.95);
+  border-color: rgba(59, 130, 246, 0.3);
+}
+
+/* Dark mode glass morphism */
+[data-theme='dark'] .newsletterContainer {
+  background: rgba(30, 41, 59, 0.6);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(96, 165, 250, 0.2);
+  box-shadow: 
+    0 8px 32px rgba(0, 0, 0, 0.3),
+    0 2px 8px rgba(96, 165, 250, 0.1),
+    inset 0 1px 0 rgba(255, 255, 255, 0.05);
+  background-image: 
+    linear-gradient(135deg, rgba(96, 165, 250, 0.05) 0%, rgba(59, 130, 246, 0.08) 100%),
+    linear-gradient(to bottom, rgba(30, 41, 59, 0.6), rgba(15, 23, 42, 0.8));
+}
+
+[data-theme='dark'] .newsletterContainer:hover {
+  box-shadow: 
+    0 12px 48px rgba(0, 0, 0, 0.4),
+    0 4px 16px rgba(96, 165, 250, 0.2),
+    inset 0 1px 0 rgba(255, 255, 255, 0.08);
+  border-color: rgba(96, 165, 250, 0.3);
+}
+
+/* ============================================
+   CONTENT LAYOUT
+   ============================================ */
+
+.newsletterContent {
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+  position: relative;
+  z-index: 1;
+}
+
+/* ============================================
+   HEADER SECTION
+   ============================================ */
+
+.newsletterHeader {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.newsletterTitleRow {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.newsletterIconWrapper {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 48px;
+  height: 48px;
+  border-radius: 0.75rem;
+  background: linear-gradient(135deg, rgba(59, 130, 246, 0.1) 0%, rgba(37, 99, 235, 0.15) 100%);
+  flex-shrink: 0;
+  transition: transform 0.3s ease;
+}
+
+.newsletterContainer:hover .newsletterIconWrapper {
+  transform: scale(1.05) rotate(5deg);
+}
+
+[data-theme='dark'] .newsletterIconWrapper {
+  background: linear-gradient(135deg, rgba(96, 165, 250, 0.15) 0%, rgba(59, 130, 246, 0.2) 100%);
+}
+
+.newsletterIcon {
+  width: 24px;
+  height: 24px;
+  color: var(--ifm-color-primary);
+  stroke-width: 2;
+}
+
+.newsletterTitle {
+  margin: 0;
+  font-size: 2rem;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  line-height: 1.2;
+  
+  /* Gradient text effect */
+  background: linear-gradient(135deg, #3b82f6 0%, #1e40af 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+[data-theme='dark'] .newsletterTitle {
+  background: linear-gradient(135deg, #93c5fd 0%, #60a5fa 50%, #3b82f6 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.newsletterDescription {
+  margin: 0;
+  color: var(--ifm-color-content-secondary);
+  font-size: 1.0625rem;
+  line-height: 1.7;
+  font-weight: 400;
+}
+
+[data-theme='dark'] .newsletterDescription {
+  color: rgba(255, 255, 255, 0.75);
+}
+
+/* ============================================
+   FORM SECTION
+   ============================================ */
+
+.newsletterForm {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+.newsletterRow {
+  display: flex;
+  gap: 0.875rem;
+  align-items: stretch;
+}
+
+/* Desktop: side-by-side layout */
+@media (min-width: 769px) {
+  .newsletterRow {
+    flex-direction: row;
+  }
+}
+
+/* Mobile: stacked layout */
+@media (max-width: 768px) {
+  .newsletterRow {
+    flex-direction: column;
+  }
+}
+
+/* ============================================
+   INPUT FIELD - Premium Styling
+   ============================================ */
+
+.newsletterInputWrapper {
+  position: relative;
+  flex: 1;
+  min-width: 0;
+}
+
+.newsletterInput {
+  width: 100%;
+  padding: 1rem 1.25rem;
+  border: 2px solid var(--ifm-color-emphasis-300);
+  border-radius: 0.75rem;
+  font-size: 1rem;
+  font-family: var(--ifm-font-family-base);
+  font-weight: 500;
+  background: rgba(255, 255, 255, 0.9);
+  color: var(--ifm-font-color-base);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.04);
+}
+
+[data-theme='dark'] .newsletterInput {
+  background: rgba(15, 23, 42, 0.6);
+  border-color: rgba(96, 165, 250, 0.2);
+  color: #ffffff;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+.newsletterInput:focus {
+  outline: none;
+  border-color: var(--ifm-color-primary);
+  background: rgba(255, 255, 255, 1);
+  box-shadow: 
+    0 0 0 4px rgba(59, 130, 246, 0.15),
+    0 4px 12px rgba(59, 130, 246, 0.2);
+  transform: translateY(-1px);
+}
+
+[data-theme='dark'] .newsletterInput:focus {
+  background: rgba(15, 23, 42, 0.8);
+  border-color: #60a5fa;
+  box-shadow: 
+    0 0 0 4px rgba(96, 165, 250, 0.2),
+    0 4px 12px rgba(96, 165, 250, 0.15);
+}
+
+.newsletterInput:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.newsletterInput::placeholder {
+  color: var(--ifm-color-content-secondary);
+  opacity: 0.6;
+  font-weight: 400;
+}
+
+[data-theme='dark'] .newsletterInput::placeholder {
+  color: rgba(255, 255, 255, 0.5);
+}
+
+/* ============================================
+   BUTTON - Gradient with Premium Effects
+   ============================================ */
+
+.newsletterButton {
+  position: relative;
+  padding: 1rem 2rem;
+  white-space: nowrap;
+  min-width: 140px;
+  font-weight: 700;
+  font-size: 1rem;
+  border-radius: 0.75rem;
+  border: none;
+  cursor: pointer;
+  overflow: hidden;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  
+  /* Gradient background */
+  background: linear-gradient(135deg, var(--ifm-color-primary) 0%, var(--ifm-color-primary-darker) 100%);
+  color: white;
+  
+  /* Premium shadow */
+  box-shadow: 
+    0 4px 14px rgba(59, 130, 246, 0.4),
+    0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.newsletterButton::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+  transition: left 0.5s ease;
+}
+
+.newsletterButton:hover::before {
+  left: 100%;
+}
+
+.newsletterButton:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 
+    0 8px 24px rgba(59, 130, 246, 0.5),
+    0 4px 8px rgba(0, 0, 0, 0.15);
+}
+
+.newsletterButton:active:not(:disabled) {
+  transform: translateY(0);
+  box-shadow: 
+    0 4px 14px rgba(59, 130, 246, 0.4),
+    0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.newsletterButton:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
+}
+
+[data-theme='dark'] .newsletterButton {
+  background: linear-gradient(135deg, #60a5fa 0%, #3b82f6 100%);
+  box-shadow: 
+    0 4px 14px rgba(96, 165, 250, 0.4),
+    0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+[data-theme='dark'] .newsletterButton:hover:not(:disabled) {
+  box-shadow: 
+    0 8px 24px rgba(96, 165, 250, 0.5),
+    0 4px 8px rgba(0, 0, 0, 0.25);
+}
+
+.newsletterButtonContent {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+}
+
+.newsletterButtonSpinner {
+  width: 16px;
+  height: 16px;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  border-top-color: white;
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+/* ============================================
+   TRUST SIGNAL
+   ============================================ */
+
+.newsletterTrustSignal {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.8125rem;
+  color: var(--ifm-color-content-secondary);
+  margin-top: -0.5rem;
+  opacity: 0.8;
+}
+
+[data-theme='dark'] .newsletterTrustSignal {
+  color: rgba(255, 255, 255, 0.6);
+}
+
+.newsletterTrustIcon {
+  width: 14px;
+  height: 14px;
+  opacity: 0.7;
+}
+
+/* ============================================
+   MESSAGE STATES - Enhanced with Icons
+   ============================================ */
+
+.newsletterMessage {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 1rem 1.25rem;
+  border-radius: 0.75rem;
+  font-size: 0.9375rem;
+  margin-top: 0.5rem;
+  line-height: 1.5;
+  font-weight: 500;
+  animation: slideIn 0.3s ease-out;
+}
+
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.newsletterMessageIcon {
+  width: 20px;
+  height: 20px;
+  flex-shrink: 0;
+}
+
+.newsletterMessage--success {
+  background: rgba(16, 185, 129, 0.1);
+  color: #10b981;
+  border: 1px solid rgba(16, 185, 129, 0.3);
+}
+
+[data-theme='dark'] .newsletterMessage--success {
+  background: rgba(16, 185, 129, 0.15);
+  border-color: rgba(52, 211, 153, 0.3);
+  color: #34d399;
+}
+
+.newsletterMessage--error {
+  background: rgba(239, 68, 68, 0.1);
+  color: #ef4444;
+  border: 1px solid rgba(239, 68, 68, 0.3);
+  animation: shake 0.5s ease-out;
+}
+
+@keyframes shake {
+  0%, 100% { transform: translateX(0); }
+  10%, 30%, 50%, 70%, 90% { transform: translateX(-4px); }
+  20%, 40%, 60%, 80% { transform: translateX(4px); }
+}
+
+[data-theme='dark'] .newsletterMessage--error {
+  background: rgba(239, 68, 68, 0.15);
+  border-color: rgba(248, 113, 113, 0.3);
+  color: #f87171;
+}
+
+/* ============================================
+   RESPONSIVE DESIGN
+   ============================================ */
+
+@media (max-width: 768px) {
+  .newsletterContainer {
+    margin: 2.5rem 1rem;
+    padding: 2rem 1.5rem;
+    border-radius: 1rem;
+  }
+
+  .newsletterTitleRow {
+    gap: 0.75rem;
+  }
+
+  .newsletterIconWrapper {
+    width: 40px;
+    height: 40px;
+  }
+
+  .newsletterIcon {
+    width: 20px;
+    height: 20px;
+  }
+
+  .newsletterTitle {
+    font-size: 1.75rem;
+  }
+
+  .newsletterDescription {
+    font-size: 1rem;
+  }
+
+  .newsletterInput,
+  .newsletterButton {
+    width: 100%;
+    min-width: unset;
+  }
+
+  .newsletterButton {
+    padding: 1rem 1.5rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .newsletterContainer {
+    padding: 1.75rem 1.25rem;
+  }
+
+  .newsletterTitle {
+    font-size: 1.5rem;
+  }
+
+  .newsletterContent {
+    gap: 1.5rem;
+  }
+}
+
+/* ============================================
+   REDUCED MOTION SUPPORT
+   ============================================ */
+
+@media (prefers-reduced-motion: reduce) {
+  .newsletterContainer,
+  .newsletterInput,
+  .newsletterButton,
+  .newsletterMessage {
+    transition: none;
+    animation: none;
+  }
+
+  .newsletterContainer:hover {
+    transform: none;
+  }
+
+  .newsletterButton:hover:not(:disabled) {
+    transform: none;
+  }
+
+  .newsletterInput:focus {
+    transform: none;
+  }
+}

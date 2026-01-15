@@ -279,6 +279,13 @@ const config = {
           loading: process.env.GISCUS_LOADING || 'lazy'
         },
       }),
+      // Newsletter email collection configuratio
+      ...(process.env.NEWSLETTER_FORM_ID && {
+        newsletter: {
+          formId: process.env.NEWSLETTER_FORM_ID,
+          apiUrl: process.env.NEWSLETTER_API_URL || 'https://api.convertkit.com/v3',
+        },
+      }),
     }),
   plugins: [
     process.env.POSTHOG_API_KEY && [
