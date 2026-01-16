@@ -36,9 +36,9 @@ abstract contract Base_Test is Constants, Modifiers, StdAssertions, StdCheats {
         createTestUsers();
         defaults.setUsers(users);
 
-        setVariables(defaults, users); // set in modifier contract
+        setVariables(defaults, users);
 
-        setMsgSender(users.alice); // alice default caller
+        setMsgSender(users.alice);
     }
 
     /*//////////////////////////////////////////////////////////////
