@@ -15,7 +15,7 @@ import {Vm} from "forge-std/Vm.sol";
 library ERC20StorageUtils {
     Vm private constant vm = Vm(address(uint160(uint256(keccak256("hevm cheat code")))));
 
-    bytes32 internal constant ERC20_TRANSFER_STORAGE_POSITION = keccak256("compose.erc20.transfer");
+    bytes32 internal constant STORAGE_POSITION = keccak256("erc20");
 
     /*//////////////////////////////////////////////////////////////
                                 GETTERS
@@ -31,17 +31,17 @@ library ERC20StorageUtils {
      */
 
     function balanceOf(address target, address owner) internal view returns (uint256) {
-        bytes32 slot = keccak256(abi.encode(owner, uint256(ERC20_TRANSFER_STORAGE_POSITION)));
+        bytes32 slot = keccak256(abi.encode(owner, uint256(STORAGE_POSITION)));
         return uint256(vm.load(target, slot));
     }
 
     function totalSupply(address target) internal view returns (uint256) {
-        bytes32 slot = bytes32(uint256(ERC20_TRANSFER_STORAGE_POSITION) + 1);
+        bytes32 slot = bytes32(uint256(STORAGE_POSITION) + 1);
         return uint256(vm.load(target, slot));
     }
 
     function allowance(address target, address owner, address spender) internal view returns (uint256) {
-        bytes32 ownerSlot = keccak256(abi.encode(owner, uint256(ERC20_TRANSFER_STORAGE_POSITION) + 2));
+        bytes32 ownerSlot = keccak256(abi.encode(owner, uint256(STORAGE_POSITION) + 2));
         bytes32 slot = keccak256(abi.encode(spender, ownerSlot));
         return uint256(vm.load(target, slot));
     }
@@ -51,17 +51,17 @@ library ERC20StorageUtils {
     //////////////////////////////////////////////////////////////*/
 
     function setBalance(address target, address owner, uint256 balance) internal {
-        bytes32 slot = keccak256(abi.encode(owner, uint256(ERC20_TRANSFER_STORAGE_POSITION)));
+        bytes32 slot = keccak256(abi.encode(owner, uint256(STORAGE_POSITION)));
         vm.store(target, slot, bytes32(balance));
     }
 
     function setTotalSupply(address target, uint256 supply) internal {
-        bytes32 slot = bytes32(uint256(ERC20_TRANSFER_STORAGE_POSITION) + 1);
+        bytes32 slot = bytes32(uint256(STORAGE_POSITION) + 1);
         vm.store(target, slot, bytes32(supply));
     }
 
     function setAllowance(address target, address owner, address spender, uint256 amount) internal {
-        bytes32 ownerSlot = keccak256(abi.encode(owner, uint256(ERC20_TRANSFER_STORAGE_POSITION) + 2));
+        bytes32 ownerSlot = keccak256(abi.encode(owner, uint256(STORAGE_POSITION) + 2));
         bytes32 slot = keccak256(abi.encode(spender, ownerSlot));
         vm.store(target, slot, bytes32(amount));
     }
