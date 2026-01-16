@@ -8,7 +8,7 @@ pragma solidity >=0.8.30;
 import {ERC20TransferFacet_Base_Test} from "../ERC20TransferFacetBase.t.sol";
 import {ERC20StorageUtils} from "test/utils/storage/ERC20StorageUtils.sol";
 
-import {ERC20TransferFacet} from "src/token/ERC20/ERC20/ERC20TransferFacet.sol";
+import {ERC20TransferFacet} from "src/token/ERC20/Transfer/ERC20TransferFacet.sol";
 
 /**
  *  @dev BTT spec: test/trees/ERC20.tree
@@ -56,8 +56,8 @@ contract Transfer_ERC20TransferFacet_Fuzz_Unit_Test is ERC20TransferFacet_Base_T
         bool result = facet.transfer(to, 0);
 
         assertEq(result, true, "transfer failed");
-        assertEq(facet.balanceOf(users.alice), senderBalance, "balanceOf(users.alice)");
-        assertEq(facet.balanceOf(to), receiverBalance, "balanceOf(to)");
+        assertEq(address(facet).balanceOf(users.alice), senderBalance, "balanceOf(users.alice)");
+        assertEq(address(facet).balanceOf(to), receiverBalance, "balanceOf(to)");
     }
 
     function testFuzz_Transfer(address to, uint256 balance, uint256 value)
@@ -72,15 +72,15 @@ contract Transfer_ERC20TransferFacet_Fuzz_Unit_Test is ERC20TransferFacet_Base_T
 
         address(facet).mint(users.alice, balance);
 
-        uint256 beforeBalanceOfAlice = facet.balanceOf(users.alice);
-        uint256 beforeBalanceOfTo = facet.balanceOf(to);
+        uint256 beforeBalanceOfAlice = address(facet).balanceOf(users.alice);
+        uint256 beforeBalanceOfTo = address(facet).balanceOf(to);
 
         vm.expectEmit(address(facet));
         emit ERC20TransferFacet.Transfer(users.alice, to, value);
         bool result = facet.transfer(to, value);
 
         assertEq(result, true, "transfer failed");
-        assertEq(facet.balanceOf(users.alice), beforeBalanceOfAlice - value, "balanceOf(users.alice)");
-        assertEq(facet.balanceOf(to), beforeBalanceOfTo + value, "balanceOf(to)");
+        assertEq(address(facet).balanceOf(users.alice), beforeBalanceOfAlice - value, "balanceOf(users.alice)");
+        assertEq(address(facet).balanceOf(to), beforeBalanceOfTo + value, "balanceOf(to)");
     }
 }

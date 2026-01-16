@@ -8,7 +8,7 @@ pragma solidity >=0.8.30;
 import {ERC20TransferFacet_Base_Test} from "../ERC20TransferFacetBase.t.sol";
 import {ERC20StorageUtils} from "test/utils/storage/ERC20StorageUtils.sol";
 
-import {ERC20TransferFacet} from "src/token/ERC20/ERC20/ERC20TransferFacet.sol";
+import {ERC20TransferFacet} from "src/token/ERC20/Transfer/ERC20TransferFacet.sol";
 
 /**
  *  @dev BTT spec: test/trees/ERC20.tree
@@ -41,8 +41,7 @@ contract TransferFrom_ERC20TransferFacet_Fuzz_Unit_Test is ERC20TransferFacet_Ba
         allowance = bound(allowance, 0, MAX_UINT256 - 1);
         value = bound(value, allowance + 1, MAX_UINT256);
 
-        setMsgSender(from);
-        facet.approve(users.sender, allowance);
+        address(facet).setAllowance(from, users.sender, allowance);
         setMsgSender(users.sender);
 
         vm.expectRevert(
@@ -68,9 +67,7 @@ contract TransferFrom_ERC20TransferFacet_Fuzz_Unit_Test is ERC20TransferFacet_Ba
         balance = bound(balance, 0, value - 1); // balance < value
 
         address(facet).mint(from, balance);
-
-        setMsgSender(from);
-        facet.approve(users.sender, allowance);
+        address(facet).setAllowance(from, users.sender, allowance);
         setMsgSender(users.sender);
 
         vm.expectRevert(
@@ -104,20 +101,18 @@ contract TransferFrom_ERC20TransferFacet_Fuzz_Unit_Test is ERC20TransferFacet_Ba
         address(facet).mint(from, fromBalance);
         address(facet).mint(to, toBalance);
 
-        setMsgSender(from);
-        facet.approve(users.sender, allowance);
-        setMsgSender(users.sender);
+        address(facet).setAllowance(from, users.sender, allowance);
 
-        uint256 beforeAllowance = facet.allowance(from, users.sender);
+        uint256 beforeAllowance = address(facet).allowance(from, users.sender);
 
         vm.expectEmit(address(facet));
         emit ERC20TransferFacet.Transfer(from, to, 0);
         bool result = facet.transferFrom(from, to, 0);
 
         assertEq(result, true, "transferFrom failed");
-        assertEq(facet.balanceOf(from), fromBalance, "balanceOf(from)");
-        assertEq(facet.balanceOf(to), toBalance, "balanceOf(to)");
-        assertEq(facet.allowance(from, users.sender), beforeAllowance, "allowance should be unchanged");
+        assertEq(address(facet).balanceOf(from), fromBalance, "balanceOf(from)");
+        assertEq(address(facet).balanceOf(to), toBalance, "balanceOf(to)");
+        assertEq(address(facet).allowance(from, users.sender), beforeAllowance, "allowance should be unchanged");
     }
 
     function testFuzz_TransferFrom_InfiniteApproval(address from, address to, uint256 value, uint256 balance)
@@ -136,21 +131,19 @@ contract TransferFrom_ERC20TransferFacet_Fuzz_Unit_Test is ERC20TransferFacet_Ba
         balance = bound(balance, value, MAX_UINT256);
 
         address(facet).mint(from, balance);
-
-        setMsgSender(from);
-        facet.approve(users.sender, MAX_UINT256);
+        address(facet).setAllowance(from, users.sender, MAX_UINT256);
         setMsgSender(users.sender);
 
-        uint256 beforeBalanceOfFrom = facet.balanceOf(from);
-        uint256 beforeBalanceOfTo = facet.balanceOf(to);
+        uint256 beforeBalanceOfFrom = address(facet).balanceOf(from);
+        uint256 beforeBalanceOfTo = address(facet).balanceOf(to);
 
         vm.expectEmit(address(facet));
         emit ERC20TransferFacet.Transfer(from, to, value);
         bool result = facet.transferFrom(from, to, value);
 
         assertEq(result, true, "transfer failed");
-        assertEq(facet.balanceOf(from), beforeBalanceOfFrom - value, "balanceOf(from)");
-        assertEq(facet.balanceOf(to), beforeBalanceOfTo + value, "balanceOf(to)");
+        assertEq(address(facet).balanceOf(from), beforeBalanceOfFrom - value, "balanceOf(from)");
+        assertEq(address(facet).balanceOf(to), beforeBalanceOfTo + value, "balanceOf(to)");
     }
 
     function testFuzz_TransferFrom(address from, address to, uint256 value, uint256 allowance, uint256 balance)
@@ -170,21 +163,19 @@ contract TransferFrom_ERC20TransferFacet_Fuzz_Unit_Test is ERC20TransferFacet_Ba
         balance = bound(balance, value, MAX_UINT256);
 
         address(facet).mint(from, balance);
-
-        setMsgSender(from);
-        facet.approve(users.sender, allowance);
+        address(facet).setAllowance(from, users.sender, allowance);
         setMsgSender(users.sender);
 
-        uint256 beforeBalanceOfFrom = facet.balanceOf(from);
-        uint256 beforeBalanceOfTo = facet.balanceOf(to);
+        uint256 beforeBalanceOfFrom = address(facet).balanceOf(from);
+        uint256 beforeBalanceOfTo = address(facet).balanceOf(to);
 
         vm.expectEmit(address(facet));
         emit ERC20TransferFacet.Transfer(from, to, value);
         bool result = facet.transferFrom(from, to, value);
 
         assertEq(result, true, "transfer failed");
-        assertEq(facet.balanceOf(from), beforeBalanceOfFrom - value, "balanceOf(from)");
-        assertEq(facet.balanceOf(to), beforeBalanceOfTo + value, "balanceOf(to)");
-        assertEq(facet.allowance(from, users.sender), allowance - value, "allowance(from, users.sender)");
+        assertEq(address(facet).balanceOf(from), beforeBalanceOfFrom - value, "balanceOf(from)");
+        assertEq(address(facet).balanceOf(to), beforeBalanceOfTo + value, "balanceOf(to)");
+        assertEq(address(facet).allowance(from, users.sender), allowance - value, "allowance(from, users.sender)");
     }
 }

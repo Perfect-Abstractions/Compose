@@ -7,19 +7,22 @@ pragma solidity >=0.8.30;
 
 import {stdError} from "forge-std/StdError.sol";
 import {Base_Test} from "test/Base.t.sol";
-import {ERC20Harness} from "test/harnesses/token/ERC20/ERC20/ERC20Harness.sol";
+import {ERC20StorageUtils} from "test/utils/storage/ERC20StorageUtils.sol";
+import {ERC20ApproveModHarness} from "test/harnesses/token/ERC20/ERC20ApproveModHarness.sol";
 
-import "src/token/ERC20/ERC20/ERC20Mod.sol";
+import "src/token/ERC20/Approve/ERC20ApproveMod.sol";
 
 /**
  *  @dev BTT spec: test/trees/ERC20.tree
  */
-contract Approve_ERC20Mod_Fuzz_Unit_Test is Base_Test {
-    ERC20Harness internal harness;
+contract Approve_ERC20ApproveMod_Fuzz_Unit_Test is Base_Test {
+    using ERC20StorageUtils for address;
+
+    ERC20ApproveModHarness internal harness;
 
     function setUp() public override {
         Base_Test.setUp();
-        harness = new ERC20Harness();
+        harness = new ERC20ApproveModHarness();
     }
 
     function testFuzz_ShouldRevert_SpenderIsZeroAddress(uint256 value) external {
@@ -35,6 +38,6 @@ contract Approve_ERC20Mod_Fuzz_Unit_Test is Base_Test {
         bool result = harness.approve(spender, value);
 
         assertEq(result, true, "approve failed");
-        assertEq(harness.allowance(users.alice, spender), value);
+        assertEq(address(harness).allowance(users.alice, spender), value);
     }
 }
