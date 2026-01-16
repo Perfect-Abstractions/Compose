@@ -94,8 +94,9 @@ function getStorage() pure returns (ERC20Storage storage s) {
  * @param _from The address to send tokens from.
  * @param _to The address to send tokens to.
  * @param _value The number of tokens to transfer.
+ * @return True if the transfer was successful.
  */
-function transferFrom(address _from, address _to, uint256 _value) {
+function transferFrom(address _from, address _to, uint256 _value) returns (bool) {
     ERC20Storage storage s = getStorage();
     if (_from == address(0)) {
         revert ERC20InvalidSender(address(0));
@@ -119,6 +120,7 @@ function transferFrom(address _from, address _to, uint256 _value) {
     }
     s.balanceOf[_to] += _value;
     emit Transfer(_from, _to, _value);
+    return true;
 }
 
 /**
@@ -126,8 +128,9 @@ function transferFrom(address _from, address _to, uint256 _value) {
  * @dev Updates balances directly without allowance mechanism.
  * @param _to The address to send tokens to.
  * @param _value The number of tokens to transfer.
+ * @return True if the transfer was successful.
  */
-function transfer(address _to, uint256 _value) {
+function transfer(address _to, uint256 _value) returns (bool) {
     ERC20Storage storage s = getStorage();
     if (_to == address(0)) {
         revert ERC20InvalidReceiver(address(0));
@@ -141,5 +144,6 @@ function transfer(address _to, uint256 _value) {
     }
     s.balanceOf[_to] += _value;
     emit Transfer(msg.sender, _to, _value);
+    return true;
 }
 
