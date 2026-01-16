@@ -8,9 +8,8 @@ pragma solidity >=0.8.30;
 import "src/token/ERC20/Approve/ERC20ApproveMod.sol" as ERC20ApproveMod;
 
 /**
- * @title ERC20Harness
- * @notice Test harness that exposes LibERC20's internal functions as external
- * @dev Required for testing since LibERC20 only has internal functions
+ * @title ERC20ApproveModHarness
+ * @notice Test harness that exposes ERC20ApproveMod functions as external
  */
 contract ERC20ApproveModHarness {
     /**
