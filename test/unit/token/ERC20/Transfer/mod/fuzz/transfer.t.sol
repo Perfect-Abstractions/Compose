@@ -6,21 +6,16 @@ pragma solidity >=0.8.30;
  */
 
 import {stdError} from "forge-std/StdError.sol";
-import {Base_Test} from "test/Base.t.sol";
-import {ERC20Harness} from "test/harnesses/token/ERC20/ERC20/ERC20Harness.sol";
+import {ERC20TransferMod_Base_Test} from "../ERC20TransferModBase.t.sol";
+import {ERC20StorageUtils} from "test/utils/storage/ERC20StorageUtils.sol";
 
-import "src/token/ERC20/ERC20/ERC20Mod.sol";
+import "src/token/ERC20/Transfer/ERC20TransferMod.sol";
 
 /**
  *  @dev BTT spec: test/trees/ERC20.tree
  */
-contract Transfer_ERC20Mod_Fuzz_Unit_Test is Base_Test {
-    ERC20Harness internal harness;
-
-    function setUp() public override {
-        Base_Test.setUp();
-        harness = new ERC20Harness();
-    }
+contract Transfer_ERC20TransferMod_Fuzz_Unit_Test is ERC20TransferMod_Base_Test {
+    using ERC20StorageUtils for address;
 
     function testFuzz_ShouldRevert_ReceiverIsZeroAddress(uint256 value) external {
         vm.expectRevert(abi.encodeWithSelector(ERC20InvalidReceiver.selector, ADDRESS_ZERO));
@@ -35,7 +30,7 @@ contract Transfer_ERC20Mod_Fuzz_Unit_Test is Base_Test {
         vm.assume(balance < MAX_UINT256);
         value = bound(value, balance + 1, MAX_UINT256);
 
-        harness.mint(users.alice, balance);
+        address(harness).mint(users.alice, balance);
 
         vm.expectRevert(abi.encodeWithSelector(ERC20InsufficientBalance.selector, users.alice, balance, value));
         harness.transfer(to, value);
@@ -51,17 +46,17 @@ contract Transfer_ERC20Mod_Fuzz_Unit_Test is Base_Test {
         balance = bound(balance, 1, MAX_UINT256);
         value = bound(value, 1, balance);
 
-        harness.mint(users.alice, balance);
+        address(harness).mint(users.alice, balance);
 
-        uint256 beforeBalanceOfAlice = harness.balanceOf(users.alice);
-        uint256 beforeBalanceOfTo = harness.balanceOf(to);
+        uint256 beforeBalanceOfAlice = address(harness).balanceOf(users.alice);
+        uint256 beforeBalanceOfTo = address(harness).balanceOf(to);
 
         vm.expectEmit(address(harness));
         emit Transfer(users.alice, to, value);
         bool result = harness.transfer(to, value);
 
         assertEq(result, true, "transfer failed");
-        assertEq(harness.balanceOf(users.alice), beforeBalanceOfAlice - value, "balanceOf(users.alice)");
-        assertEq(harness.balanceOf(to), beforeBalanceOfTo + value, "balanceOf(to)");
+        assertEq(address(harness).balanceOf(users.alice), beforeBalanceOfAlice - value, "balanceOf(users.alice)");
+        assertEq(address(harness).balanceOf(to), beforeBalanceOfTo + value, "balanceOf(to)");
     }
 }

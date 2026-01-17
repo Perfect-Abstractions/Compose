@@ -7,19 +7,23 @@ pragma solidity >=0.8.30;
 
 import {stdError} from "forge-std/StdError.sol";
 import {Base_Test} from "test/Base.t.sol";
-import {ERC20Harness} from "test/harnesses/token/ERC20/ERC20/ERC20Harness.sol";
+import {ERC20StorageUtils} from "test/utils/storage/ERC20StorageUtils.sol";
+import {ERC20MintModHarness} from "test/harnesses/token/ERC20/ERC20MintModHarness.sol";
 
-import "src/token/ERC20/ERC20/ERC20Mod.sol";
+import "src/token/ERC20/Mint/ERC20MintMod.sol";
 
 /**
  *  @dev BTT spec: test/trees/ERC20.tree
  */
-contract Mint_ERC20Mod_Fuzz_Unit_Test is Base_Test {
-    ERC20Harness internal harness;
+contract Mint_ERC20MintMod_Fuzz_Unit_Test is Base_Test {
+    using ERC20StorageUtils for address;
+
+    ERC20MintModHarness internal harness;
 
     function setUp() public override {
         Base_Test.setUp();
-        harness = new ERC20Harness();
+        harness = new ERC20MintModHarness();
+        vm.label(address(harness), "ERC20MintModHarness");
     }
 
     function testFuzz_ShouldRevert_Account_ZeroAddress(uint256 value) external {
@@ -47,14 +51,14 @@ contract Mint_ERC20Mod_Fuzz_Unit_Test is Base_Test {
     {
         vm.assume(account != ADDRESS_ZERO);
 
-        uint256 beforeTotalSupply = harness.totalSupply();
-        uint256 beforeBalanceOfAccount = harness.balanceOf(account);
+        uint256 beforeTotalSupply = address(harness).totalSupply();
+        uint256 beforeBalanceOfAccount = address(harness).balanceOf(account);
 
         vm.expectEmit(address(harness));
         emit Transfer(ADDRESS_ZERO, account, value);
         harness.mint(account, value);
 
-        assertEq(harness.totalSupply(), beforeTotalSupply + value, "totalSupply");
-        assertEq(harness.balanceOf(account), beforeBalanceOfAccount + value, "balanceOf(account)");
+        assertEq(address(harness).totalSupply(), beforeTotalSupply + value, "totalSupply");
+        assertEq(address(harness).balanceOf(account), beforeBalanceOfAccount + value, "balanceOf(account)");
     }
 }

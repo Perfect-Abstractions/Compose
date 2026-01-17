@@ -51,12 +51,14 @@ function getStorage() pure returns (ERC20Storage storage s) {
  * @dev Sets the allowance for the spender.
  * @param _spender The address to approve for spending.
  * @param _value The amount of tokens to approve.
+ * @return True if the approval was successful.
  */
-function approve(address _spender, uint256 _value) {
+function approve(address _spender, uint256 _value) returns (bool) {
     if (_spender == address(0)) {
         revert ERC20InvalidSpender(address(0));
     }
     ERC20Storage storage s = getStorage();
     s.allowance[msg.sender][_spender] = _value;
     emit Approval(msg.sender, _spender, _value);
+    return true;
 }
