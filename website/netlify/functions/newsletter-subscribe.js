@@ -1,12 +1,12 @@
 /**
  * Netlify Serverless Function to handle newsletter form submissions
  * 
- * This function securely handles ConvertKit API integration by keeping
+ * This function securely handles Kit API integration by keeping
  * the API key on the server side. It validates input, sanitizes data,
  * and handles errors gracefully following Netlify best practices.
  * 
  * @see https://docs.netlify.com/functions/overview/
- * @see https://developers.convertkit.com/#subscribe-to-a-form
+ * @see https://developers.kit.com/api-reference/subscribers/create-a-subscriber
  */
 
 exports.handler = async (event, context) => {
@@ -70,13 +70,11 @@ exports.handler = async (event, context) => {
 
     // Get configuration from environment variables
     const newsletterApiKey = process.env.NEWSLETTER_API_KEY;
-    const newsletterFormId = process.env.NEWSLETTER_FORM_ID;
-    const apiUrl = process.env.NEWSLETTER_API_URL || 'https://api.convertkit.com/v3';
+    const apiUrl = process.env.NEWSLETTER_API_URL || 'https://api.kit.com/v4';
 
-    if (!newsletterApiKey || !newsletterFormId) {
+    if (!newsletterApiKey) {
       console.error('Newsletter API configuration missing:', {
         hasApiKey: !!newsletterApiKey,
-        hasFormId: !!newsletterFormId,
       });
       return {
         statusCode: 500,
@@ -88,25 +86,35 @@ exports.handler = async (event, context) => {
       };
     }
 
-    // Prepare subscriber data for ConvertKit
+    // Prepare subscriber data for Kit API v4
+    // Kit API expects: email_address, first_name, state, fields
     const subscriberData = {
-      email: email.trim().toLowerCase(),
+      email_address: email.trim().toLowerCase(),
       ...(firstName && { first_name: firstName.trim() }),
-      ...(lastName && { last_name: lastName.trim() }),
-      ...customFields,
+      state: 'active', // Default to active state
+      ...(Object.keys(customFields).length > 0 && {
+        fields: Object.entries(customFields).reduce((acc, [key, value]) => {
+          // Only include non-empty custom fields
+          if (value !== null && value !== undefined && value !== '') {
+            acc[key] = String(value);
+          }
+          return acc;
+        }, {}),
+      }),
     };
 
-    // Call ConvertKit API with timeout
-    // ConvertKit requires api_key as a query parameter
+    // Call Kit API with timeout
+    // Kit API requires X-Kit-Api-Key header
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), 10000); // 10 second timeout
 
     try {
-      const convertKitUrl = `${apiUrl}/forms/${newsletterFormId}/subscribe?api_key=${encodeURIComponent(newsletterApiKey)}`;
-      const convertKitResponse = await fetch(convertKitUrl, {
+      const kitUrl = `${apiUrl}/subscribers`;
+      const kitResponse = await fetch(kitUrl, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          'X-Kit-Api-Key': newsletterApiKey,
         },
         body: JSON.stringify(subscriberData),
         signal: controller.signal,
@@ -114,21 +122,21 @@ exports.handler = async (event, context) => {
 
       clearTimeout(timeoutId);
 
-      const convertKitData = await convertKitResponse.json();
+      const kitData = await kitResponse.json();
 
-      if (!convertKitResponse.ok) {
-        console.error('ConvertKit API error:', {
-          status: convertKitResponse.status,
-          statusText: convertKitResponse.statusText,
-          data: convertKitData,
+      if (!kitResponse.ok) {
+        console.error('Kit API error:', {
+          status: kitResponse.status,
+          statusText: kitResponse.statusText,
+          data: kitData,
         });
         
         // Don't expose internal API errors to client
-        const errorMessage = convertKitData.message || 'Failed to subscribe. Please try again.';
+        const errorMessage = kitData.message || 'Failed to subscribe. Please try again.';
         
         return {
-          statusCode: convertKitResponse.status >= 400 && convertKitResponse.status < 500 
-            ? convertKitResponse.status 
+          statusCode: kitResponse.status >= 400 && kitResponse.status < 500 
+            ? kitResponse.status 
             : 500,
           headers: {
             'Content-Type': 'application/json',
@@ -154,7 +162,7 @@ exports.handler = async (event, context) => {
         body: JSON.stringify({ 
           success: true,
           message: 'Successfully subscribed!',
-          data: convertKitData,
+          data: kitData,
         }),
       };
 
@@ -162,7 +170,7 @@ exports.handler = async (event, context) => {
       clearTimeout(timeoutId);
       
       if (fetchError.name === 'AbortError') {
-        console.error('Request timeout to ConvertKit API');
+        console.error('Request timeout to Kit API');
         return {
           statusCode: 504,
           headers: {

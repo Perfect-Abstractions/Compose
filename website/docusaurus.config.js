@@ -279,11 +279,11 @@ const config = {
           loading: process.env.GISCUS_LOADING || 'lazy'
         },
       }),
-      // Newsletter email collection configuratio
-      ...(process.env.NEWSLETTER_FORM_ID && {
+      // Newsletter email collection configuration (Kit API v4)
+      // Note: Kit API doesn't require form IDs, but formId is kept for backward compatibility
+      ...(process.env.NEWSLETTER_API_KEY && {
         newsletter: {
-          formId: process.env.NEWSLETTER_FORM_ID,
-          apiUrl: process.env.NEWSLETTER_API_URL || 'https://api.convertkit.com/v3',
+          apiUrl: process.env.NEWSLETTER_API_URL || 'https://api.kit.com/v4',
         },
       }),
     }),
