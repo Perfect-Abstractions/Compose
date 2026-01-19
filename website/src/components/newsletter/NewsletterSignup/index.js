@@ -6,13 +6,7 @@ import clsx from 'clsx';
 import styles from './styles.module.css';
 
 /**
- * Premium Newsletter Signup Component
- * 
- * A stunning newsletter subscription form with glass morphism, gradients,
- * and smooth animations. Uses the useNewsletterSubscribe hook directly.
- * 
- * Configuration is read from themeConfig.newsletter in docusaurus.config.js.
- * The component automatically adapts to the current Docusaurus theme (light/dark mode).
+ *  Newsletter Signup Component
  * 
  * @param {Object} props - Component props
  * @param {boolean} props.showNameFields - Whether to show first/last name fields
@@ -39,16 +33,13 @@ export default function NewsletterSignup({
   onError,
 }) {
   const { colorMode } = useColorMode();
-  const { siteConfig } = useDocusaurusContext();
-  const newsletterConfig = siteConfig.themeConfig?.newsletter;
   
-  const { subscribe, isSubmitting, message, isConfigured, clearMessage } = useNewsletterSubscribe();
+  const { subscribe, isSubmitting, isConfigured } = useNewsletterSubscribe();
   
   const [email, setEmail] = useState('');
   const [firstName, setFirstName] = useState('');
   const [lastName, setLastName] = useState('');
 
-  // Don't render if not configured
   if (!isConfigured) {
     return null;
   }
@@ -63,93 +54,20 @@ export default function NewsletterSignup({
         ...(showNameFields && lastName && { lastName }),
       });
 
-      // Reset form on success
       setEmail('');
       setFirstName('');
       setLastName('');
 
-      // Call success callback if provided
       if (onSuccess) {
         onSuccess({ email, firstName, lastName });
       }
     } catch (error) {
-      // Error is already handled by the hook, but call error callback if provided
       if (onError) {
         onError(error);
       }
     }
   };
 
-  // Envelope icon SVG
-  const EnvelopeIcon = () => (
-    <svg
-      className={styles.newsletterIcon}
-      fill="none"
-      viewBox="0 0 24 24"
-      stroke="currentColor"
-      aria-hidden="true"
-    >
-      <path
-        strokeLinecap="round"
-        strokeLinejoin="round"
-        d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"
-      />
-    </svg>
-  );
-
-  // Checkmark icon SVG
-  const CheckmarkIcon = () => (
-    <svg
-      className={styles.newsletterMessageIcon}
-      fill="none"
-      viewBox="0 0 24 24"
-      stroke="currentColor"
-      aria-hidden="true"
-    >
-      <path
-        strokeLinecap="round"
-        strokeLinejoin="round"
-        strokeWidth={2}
-        d="M5 13l4 4L19 7"
-      />
-    </svg>
-  );
-
-  // Alert/Error icon SVG
-  const AlertIcon = () => (
-    <svg
-      className={styles.newsletterMessageIcon}
-      fill="none"
-      viewBox="0 0 24 24"
-      stroke="currentColor"
-      aria-hidden="true"
-    >
-      <path
-        strokeLinecap="round"
-        strokeLinejoin="round"
-        strokeWidth={2}
-        d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-      />
-    </svg>
-  );
-
-  // Shield/Trust icon SVG
-  const ShieldIcon = () => (
-    <svg
-      className={styles.newsletterTrustIcon}
-      fill="none"
-      viewBox="0 0 24 24"
-      stroke="currentColor"
-      aria-hidden="true"
-    >
-      <path
-        strokeLinecap="round"
-        strokeLinejoin="round"
-        strokeWidth={2}
-        d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"
-      />
-    </svg>
-  );
 
   return (
     <div 
@@ -164,7 +82,14 @@ export default function NewsletterSignup({
         <div className={styles.newsletterHeader}>
           <div className={styles.newsletterTitleRow}>
             <div className={styles.newsletterIconWrapper}>
-              <EnvelopeIcon />
+              <img
+                src="/icons/envelope.svg"
+                alt=""
+                className={styles.newsletterIcon}
+                aria-hidden="true"
+                width="24"
+                height="24"
+              />
             </div>
             {title && <h3 className={styles.newsletterTitle}>{title}</h3>}
           </div>
@@ -238,25 +163,17 @@ export default function NewsletterSignup({
 
           {/* Trust Signal */}
           <div className={styles.newsletterTrustSignal}>
-            <ShieldIcon />
+            <img
+              src="/icons/shield-check.svg"
+              alt=""
+              className={styles.newsletterTrustIcon}
+              aria-hidden="true"
+              width="14"
+              height="14"
+            />
             <span>No spam. Unsubscribe anytime.</span>
           </div>
         </form>
-
-        {/* Message States with Icons */}
-        {message.text && (
-          <div
-            className={clsx(
-              styles.newsletterMessage,
-              styles[`newsletterMessage--${message.type}`]
-            )}
-            role={message.type === 'error' ? 'alert' : 'status'}
-            aria-live="polite"
-          >
-            {message.type === 'success' ? <CheckmarkIcon /> : <AlertIcon />}
-            <span>{message.text}</span>
-          </div>
-        )}
       </div>
     </div>
   );

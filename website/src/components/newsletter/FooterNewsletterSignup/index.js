@@ -8,7 +8,6 @@ import styles from './styles.module.css';
  * Footer Newsletter Signup Component
  * 
  * A compact newsletter signup form designed specifically for footer placement.
- * Uses the useNewsletterSubscribe hook and integrates seamlessly with the footer design.
  * 
  * @param {Object} props - Component props
  * @param {string} props.title - Optional title/label for the newsletter section
@@ -24,11 +23,10 @@ export default function FooterNewsletterSignup({
   className = '',
 }) {
   const { colorMode } = useColorMode();
-  const { subscribe, isSubmitting, message, isConfigured } = useNewsletterSubscribe();
+  const { subscribe, isSubmitting, isConfigured } = useNewsletterSubscribe();
   
   const [email, setEmail] = useState('');
 
-  // Don't render if not configured
   if (!isConfigured) {
     return null;
   }
@@ -38,31 +36,12 @@ export default function FooterNewsletterSignup({
 
     try {
       await subscribe({ email });
-
-      // Reset form on success
       setEmail('');
     } catch (error) {
       // Error is already handled by the hook
     }
   };
 
-  // Shield/Trust icon SVG
-  const ShieldIcon = () => (
-    <svg
-      className={styles.footerNewsletterTrustIcon}
-      fill="none"
-      viewBox="0 0 24 24"
-      stroke="currentColor"
-      aria-hidden="true"
-    >
-      <path
-        strokeLinecap="round"
-        strokeLinejoin="round"
-        strokeWidth={2}
-        d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"
-      />
-    </svg>
-  );
 
   return (
     <div 
@@ -104,22 +83,16 @@ export default function FooterNewsletterSignup({
 
         {/* Trust Signal */}
         <div className={styles.footerNewsletterTrustSignal}>
-          <ShieldIcon />
+          <img
+            src="/icons/shield-check.svg"
+            alt=""
+            className={styles.footerNewsletterTrustIcon}
+            aria-hidden="true"
+            width="14"
+            height="14"
+          />
           <span>No spam. Unsubscribe anytime.</span>
         </div>
-
-        {message.text && (
-          <div
-            className={clsx(
-              styles.footerNewsletterMessage,
-              styles[`footerNewsletterMessage--${message.type}`]
-            )}
-            role={message.type === 'error' ? 'alert' : 'status'}
-            aria-live="polite"
-          >
-            {message.text}
-          </div>
-        )}
       </form>
     </div>
   );

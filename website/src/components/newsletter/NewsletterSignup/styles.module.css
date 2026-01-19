@@ -118,8 +118,7 @@
 .newsletterIcon {
   width: 24px;
   height: 24px;
-  color: var(--ifm-color-primary);
-  stroke-width: 2;
+  display: block;
 }
 
 .newsletterTitle {

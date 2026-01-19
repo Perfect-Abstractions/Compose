@@ -1,4 +1,5 @@
 import { useState, useCallback } from 'react';
+import toast from 'react-hot-toast';
 import useDocusaurusContext from '@docusaurus/useDocusaurusContext';
 
 /**
@@ -13,9 +14,7 @@ import useDocusaurusContext from '@docusaurus/useDocusaurusContext';
  * @returns {Object} Subscribe function and state
  * @returns {Function} returns.subscribe - Subscribe function
  * @returns {boolean} returns.isSubmitting - Loading state
- * @returns {Object} returns.message - Message object { type: 'success'|'error'|null, text: string }
  * @returns {boolean} returns.isConfigured - Whether newsletter is configured
- * @returns {Function} returns.clearMessage - Function to clear current message
  */
 export function useNewsletterSubscribe({ 
   formId = null,
@@ -25,7 +24,6 @@ export function useNewsletterSubscribe({
   const newsletterConfig = siteConfig.themeConfig?.newsletter;
   
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [message, setMessage] = useState({ type: null, text: '' });
 
   const isConfigured = newsletterConfig?.isEnabled;
 
@@ -42,24 +40,17 @@ export function useNewsletterSubscribe({
   const subscribe = useCallback(async (subscriberData) => {
     if (!isConfigured) {
       const error = new Error('Newsletter is not configured');
-      setMessage({ 
-        type: 'error', 
-        text: 'Newsletter subscription is not available.' 
-      });
+      toast.error('Newsletter subscription is not available.');
       throw error;
     }
 
     if (!subscriberData.email) {
       const error = new Error('Email is required');
-      setMessage({ 
-        type: 'error', 
-        text: 'Email address is required.' 
-      });
+      toast.error('Email address is required.');
       throw error;
     }
 
     setIsSubmitting(true);
-    setMessage({ type: null, text: '' });
 
     try {
       const response = await fetch(endpoint, {
@@ -82,10 +73,7 @@ export function useNewsletterSubscribe({
       }
 
       // Success
-      setMessage({ 
-        type: 'success', 
-        text: data.message || 'Thank you for subscribing!' 
-      });
+      toast.success(data.message || 'Thank you for subscribing!');
 
       return data;
 
@@ -93,31 +81,18 @@ export function useNewsletterSubscribe({
       // Handle network errors
       if (error.name === 'TypeError' && error.message.includes('fetch')) {
         const errorMessage = 'Network error. Please check your connection and try again.';
-        setMessage({ 
-          type: 'error', 
-          text: errorMessage 
-        });
+        toast.error(errorMessage);
         throw new Error(errorMessage);
       }
 
       // Handle other errors
       const errorMessage = error.message || 'Something went wrong. Please try again.';
-      setMessage({ 
-        type: 'error', 
-        text: errorMessage 
-      });
+      toast.error(errorMessage);
       throw error;
     } finally {
       setIsSubmitting(false);
     }
   }, [isConfigured, endpoint]);
-
-  /**
-   * Clear the current message
-   */
-  const clearMessage = useCallback(() => {
-    setMessage({ type: null, text: '' });
-  }, []);
 
   // Warn in development if not configured
   if (!isConfigured && process.env.NODE_ENV === 'development') {
@@ -129,8 +104,6 @@ export function useNewsletterSubscribe({
   return {
     subscribe,
     isSubmitting,
-    message,
     isConfigured,
-    clearMessage,
   };
 }
