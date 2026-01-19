@@ -1,0 +1,246 @@
+/**
+ * Toast Notification Styles
+ * Styled to match Compose Documentation theme with light/dark mode support
+ */
+
+/* ============================================
+   TOAST CONTAINER
+   ============================================ */
+
+/* Main toast container */
+div[class*="react-hot-toast"] {
+  font-family: var(--ifm-font-family-base) !important;
+}
+
+/* Force dark mode background - highest specificity */
+[data-theme='dark'] div[class*="react-hot-toast"] > div[style] {
+  background: var(--ifm-background-surface-color) !important;
+  background-color: var(--ifm-background-surface-color) !important;
+  color: var(--ifm-font-color-base) !important;
+}
+
+/* Force light mode background */
+:root:not([data-theme='dark']) div[class*="react-hot-toast"] > div[style] {
+  background: #ffffff !important;
+  background-color: #ffffff !important;
+  color: var(--ifm-font-color-base) !important;
+}
+
+/* Individual toast notification - target all possible react-hot-toast classes */
+/* Using more specific selectors to override inline styles */
+div[class*="react-hot-toast"] > div,
+div[class*="react-hot-toast"] > div[class*="toast"],
+div[class*="react-hot-toast"] > div[class*="notification"],
+div[class*="react-hot-toast"] > div[style] {
+  /* Base styles using theme variables - these will override inline styles */
+  background: var(--ifm-background-surface-color) !important;
+  color: var(--ifm-font-color-base) !important;
+  border: 1px solid var(--ifm-color-emphasis-200) !important;
+  /* border-left will be set via inline styles from Root.js for type-specific colors */
+  border-left: 3px solid var(--ifm-color-emphasis-300) !important;
+  border-radius: var(--ifm-global-radius) !important;
+  box-shadow: var(--shadow-lg) !important;
+  padding: 0.875rem 1rem !important;
+  font-size: 0.875rem !important;
+  line-height: 1.5 !important;
+  max-width: 420px !important;
+  min-width: 300px !important;
+  backdrop-filter: blur(8px) saturate(180%) !important;
+  -webkit-backdrop-filter: blur(8px) saturate(180%) !important;
+  transition: all var(--motion-duration-normal) var(--motion-ease-standard) !important;
+  display: flex !important;
+  align-items: center !important;
+  gap: 0.75rem !important;
+}
+
+/* Toast hover state */
+div[class*="react-hot-toast"] > div:hover,
+div[class*="react-hot-toast"] > div[class*="toast"]:hover,
+div[class*="react-hot-toast"] > div[style]:hover {
+  box-shadow: var(--shadow-xl) !important;
+  transform: translateY(-1px) !important;
+}
+
+/* ============================================
+   LIGHT MODE SPECIFIC STYLES
+   ============================================ */
+
+:root div[class*="react-hot-toast"] > div,
+:root div[class*="react-hot-toast"] > div[class*="toast"],
+:root div[class*="react-hot-toast"] > div[style] {
+  background: #ffffff !important;
+  border-color: var(--ifm-color-emphasis-200) !important;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08), 0 2px 4px rgba(0, 0, 0, 0.04) !important;
+}
+
+:root div[class*="react-hot-toast"] > div:hover,
+:root div[class*="react-hot-toast"] > div[class*="toast"]:hover,
+:root div[class*="react-hot-toast"] > div[style]:hover {
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12), 0 4px 8px rgba(0, 0, 0, 0.06) !important;
+}
+
+/* ============================================
+   DARK MODE SPECIFIC STYLES
+   ============================================ */
+
+[data-theme='dark'] div[class*="react-hot-toast"] > div,
+[data-theme='dark'] div[class*="react-hot-toast"] > div[class*="toast"],
+[data-theme='dark'] div[class*="react-hot-toast"] > div[style] {
+  background: var(--ifm-background-surface-color) !important;
+  border-color: var(--ifm-color-emphasis-200) !important;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4), 0 4px 12px rgba(0, 0, 0, 0.3) !important;
+  color: var(--ifm-font-color-base) !important;
+}
+
+[data-theme='dark'] div[class*="react-hot-toast"] > div:hover,
+[data-theme='dark'] div[class*="react-hot-toast"] > div[class*="toast"]:hover,
+[data-theme='dark'] div[class*="react-hot-toast"] > div[style]:hover {
+  box-shadow: 0 12px 48px rgba(0, 0, 0, 0.5), 0 6px 16px rgba(0, 0, 0, 0.4) !important;
+  border-color: var(--ifm-color-emphasis-300) !important;
+}
+
+/* ============================================
+   TOAST ICONS
+   ============================================ */
+
+/* Icon container */
+div[class*="react-hot-toast"] svg {
+  flex-shrink: 0;
+  width: 20px !important;
+  height: 20px !important;
+}
+
+/* Icon colors are handled by iconTheme in Root.js */
+/* Additional icon styling if needed */
+div[class*="react-hot-toast"] svg path {
+  fill: currentColor;
+}
+
+/* Custom icon styling for react-hot-toast */
+div[class*="react-hot-toast"] > div > div:first-child,
+div[class*="react-hot-toast"] > div > span:first-child {
+  margin-right: 0.75rem !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  flex-shrink: 0 !important;
+}
+
+/* ============================================
+   TOAST CONTENT
+   ============================================ */
+
+/* Toast message text container */
+div[class*="react-hot-toast"] > div > div:last-child,
+div[class*="react-hot-toast"] > div > span:last-child {
+  flex: 1;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+  min-width: 0;
+}
+
+/* Toast message text styling */
+div[class*="react-hot-toast"] > div > div:last-child > div,
+div[class*="react-hot-toast"] > div > span:last-child > div,
+div[class*="react-hot-toast"] > div > div:last-child,
+div[class*="react-hot-toast"] > div > span:last-child {
+  color: var(--ifm-font-color-base) !important;
+  font-weight: 400;
+}
+
+/* ============================================
+   TOAST ANIMATIONS
+   ============================================ */
+
+/* Entry animation */
+@keyframes toast-enter {
+  from {
+    opacity: 0;
+    transform: translateX(100%) scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0) scale(1);
+  }
+}
+
+/* Exit animation */
+@keyframes toast-exit {
+  from {
+    opacity: 1;
+    transform: translateX(0) scale(1);
+  }
+  to {
+    opacity: 0;
+    transform: translateX(100%) scale(0.95);
+  }
+}
+
+/* Apply animations - react-hot-toast handles these internally */
+/* We just ensure smooth transitions */
+div[class*="react-hot-toast"] > div {
+  will-change: transform, opacity;
+}
+
+/* ============================================
+   TOAST CLOSE BUTTON
+   ============================================ */
+
+/* Close button styling */
+div[class*="react-hot-toast"] button {
+  color: var(--ifm-color-emphasis-600) !important;
+  background: transparent !important;
+  border: none !important;
+  padding: 0.25rem !important;
+  border-radius: 0.25rem !important;
+  cursor: pointer !important;
+  transition: all var(--motion-duration-fast) var(--motion-ease-standard) !important;
+  opacity: 0.7 !important;
+  margin-left: 0.5rem !important;
+}
+
+div[class*="react-hot-toast"] button:hover {
+  opacity: 1 !important;
+  background: var(--ifm-color-emphasis-100) !important;
+  color: var(--ifm-font-color-base) !important;
+}
+
+[data-theme='dark'] div[class*="react-hot-toast"] button:hover {
+  background: var(--ifm-color-emphasis-200) !important;
+}
+
+/* ============================================
+   RESPONSIVE DESIGN
+   ============================================ */
+
+@media (max-width: 768px) {
+  div[class*="react-hot-toast"] > div,
+  div[class*="react-hot-toast"] > div[class*="toast"] {
+    min-width: 280px !important;
+    max-width: calc(100vw - 2rem) !important;
+    padding: 0.75rem 0.875rem !important;
+    font-size: 0.8125rem !important;
+  }
+}
+
+/* ============================================
+   ACCESSIBILITY
+   ============================================ */
+
+/* Focus styles for keyboard navigation */
+div[class*="react-hot-toast"] button:focus-visible {
+  outline: 2px solid var(--focus-ring-color) !important;
+  outline-offset: 2px !important;
+}
+
+/* Reduced motion support */
+@media (prefers-reduced-motion: reduce) {
+  div[class*="react-hot-toast"] > div {
+    transition: none !important;
+    animation: none !important;
+  }
+  
+  div[class*="react-hot-toast"] > div:hover {
+    transform: none !important;
+  }
+}

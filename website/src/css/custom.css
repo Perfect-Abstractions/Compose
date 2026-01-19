@@ -77,6 +77,9 @@
 /* Import custom scrollbar styles */
 @import url('./scrollbar.css');
 
+/* Import toast notification styles */
+@import url('./toast.css');
+
 /* ============================================
    RESPONSIVE STYLES
    ============================================ */
