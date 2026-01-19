@@ -280,7 +280,7 @@ const config = {
         },
       }),
       // Newsletter email collection configuration (Kit API v4)
-      // Note: Kit API doesn't require form IDs, but formId is kept for backward compatibility
+      // See here for more information: https://developers.kit.com/api-reference/overview
       ...(process.env.NEWSLETTER_API_KEY && {
         newsletter: {
           apiUrl: process.env.NEWSLETTER_API_URL || 'https://api.kit.com/v4',

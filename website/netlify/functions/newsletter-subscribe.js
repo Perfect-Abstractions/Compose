@@ -9,17 +9,58 @@
  * @see https://developers.kit.com/api-reference/subscribers/create-a-subscriber
  */
 
+/**
+ * Get the allowed CORS origin based on environment
+ * @returns {string} The allowed origin (site URL in production, '*' in development)
+ */
+function getCorsOrigin() {
+  return process.env.NODE_ENV === 'production' 
+    ? process.env.URL || '*' 
+    : '*';
+}
+
+/**
+ * Build headers with CORS for JSON responses
+ * @param {Object} additionalHeaders - Additional headers to include
+ * @returns {Object} Headers object with CORS and content type
+ */
+function buildCorsHeaders(additionalHeaders = {}) {
+  return {
+    'Content-Type': 'application/json',
+    'Access-Control-Allow-Origin': getCorsOrigin(),
+    ...additionalHeaders,
+  };
+}
+
+/**
+ * Build full CORS headers for preflight responses (no Content-Type)
+ * @returns {Object} Complete CORS headers object
+ */
+function buildFullCorsHeaders() {
+  return {
+    'Access-Control-Allow-Origin': getCorsOrigin(),
+    'Access-Control-Allow-Methods': 'POST',
+    'Access-Control-Allow-Headers': 'Content-Type',
+  };
+}
+
+/**
+ * Build headers for JSON responses with full CORS support
+ * @returns {Object} Headers object with Content-Type and full CORS headers
+ */
+function buildJsonCorsHeaders() {
+  return {
+    'Content-Type': 'application/json',
+    ...buildFullCorsHeaders(),
+  };
+}
+
 exports.handler = async (event, context) => {
   // Only allow POST requests
   if (event.httpMethod !== 'POST') {
     return {
       statusCode: 405,
-      headers: {
-        'Content-Type': 'application/json',
-        'Access-Control-Allow-Origin': '*',
-        'Access-Control-Allow-Methods': 'POST',
-        'Access-Control-Allow-Headers': 'Content-Type',
-      },
+      headers: buildJsonCorsHeaders(),
       body: JSON.stringify({ error: 'Method not allowed' }),
     };
   }
@@ -28,11 +69,7 @@ exports.handler = async (event, context) => {
   if (event.httpMethod === 'OPTIONS') {
     return {
       statusCode: 200,
-      headers: {
-        'Access-Control-Allow-Origin': '*',
-        'Access-Control-Allow-Methods': 'POST',
-        'Access-Control-Allow-Headers': 'Content-Type',
-      },
+      headers: buildFullCorsHeaders(),
       body: '',
     };
   }
@@ -45,10 +82,7 @@ exports.handler = async (event, context) => {
     } catch (parseError) {
       return {
         statusCode: 400,
-        headers: {
-          'Content-Type': 'application/json',
-          'Access-Control-Allow-Origin': '*',
-        },
+        headers: buildCorsHeaders(),
         body: JSON.stringify({ error: 'Invalid JSON in request body' }),
       };
     }
@@ -60,10 +94,7 @@ exports.handler = async (event, context) => {
     if (!email || !emailRegex.test(email)) {
       return {
         statusCode: 400,
-        headers: {
-          'Content-Type': 'application/json',
-          'Access-Control-Allow-Origin': '*',
-        },
+        headers: buildCorsHeaders(),
         body: JSON.stringify({ error: 'Valid email is required' }),
       };
     }
@@ -78,10 +109,7 @@ exports.handler = async (event, context) => {
       });
       return {
         statusCode: 500,
-        headers: {
-          'Content-Type': 'application/json',
-          'Access-Control-Allow-Origin': '*',
-        },
+        headers: buildCorsHeaders(),
         body: JSON.stringify({ error: 'Server configuration error' }),
       };
     }
@@ -138,10 +166,7 @@ exports.handler = async (event, context) => {
           statusCode: kitResponse.status >= 400 && kitResponse.status < 500 
             ? kitResponse.status 
             : 500,
-          headers: {
-            'Content-Type': 'application/json',
-            'Access-Control-Allow-Origin': '*',
-          },
+          headers: buildCorsHeaders(),
           body: JSON.stringify({ 
             error: errorMessage,
           }),
@@ -151,14 +176,7 @@ exports.handler = async (event, context) => {
       // Success response
       return {
         statusCode: 200,
-        headers: {
-          'Content-Type': 'application/json',
-          'Access-Control-Allow-Origin': process.env.NODE_ENV === 'production' 
-            ? process.env.URL || '*' 
-            : '*',
-          'Access-Control-Allow-Methods': 'POST',
-          'Access-Control-Allow-Headers': 'Content-Type',
-        },
+        headers: buildJsonCorsHeaders(),
         body: JSON.stringify({ 
           success: true,
           message: 'Successfully subscribed!',
@@ -173,10 +191,7 @@ exports.handler = async (event, context) => {
         console.error('Request timeout to Kit API');
         return {
           statusCode: 504,
-          headers: {
-            'Content-Type': 'application/json',
-            'Access-Control-Allow-Origin': '*',
-          },
+          headers: buildCorsHeaders(),
           body: JSON.stringify({ 
             error: 'Request timeout. Please try again.',
           }),
@@ -194,10 +209,7 @@ exports.handler = async (event, context) => {
     
     return {
       statusCode: 500,
-      headers: {
-        'Content-Type': 'application/json',
-        'Access-Control-Allow-Origin': '*',
-      },
+      headers: buildCorsHeaders(),
       body: JSON.stringify({ 
         error: 'Internal server error',
         message: process.env.NODE_ENV === 'development' ? error.message : undefined,
