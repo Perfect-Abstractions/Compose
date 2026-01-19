@@ -27,9 +27,7 @@ export function useNewsletterSubscribe({
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [message, setMessage] = useState({ type: null, text: '' });
 
-  // Check if newsletter is configured
-  const finalFormId = formId || newsletterConfig?.formId;
-  const isConfigured = !!finalFormId;
+  const isConfigured = newsletterConfig?.isEnabled;
 
   /**
    * Subscribe function - handles the API call to newsletter service

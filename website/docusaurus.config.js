@@ -283,6 +283,7 @@ const config = {
       // See here for more information: https://developers.kit.com/api-reference/overview
       ...(process.env.NEWSLETTER_API_KEY && {
         newsletter: {
+          isEnabled: true,
           apiUrl: process.env.NEWSLETTER_API_URL || 'https://api.kit.com/v4',
         },
       }),
