@@ -98,11 +98,11 @@ contract DiamondUpgradeFacet {
      * @notice Emitted when a diamond's constructor function or function from a
      *         facet makes a `delegatecall`.
      *
-     * @param _delegate     The contract that was delegatecalled.
-     * @param _functionCall The function call, including function selector and
-     *                      any arguments.
+     * @param _delegate         The contract that was delegatecalled.
+     * @param _delegateCalldata The function call, including function selector and
+     *                          any arguments.
      */
-    event DiamondDelegateCall(address indexed _delegate, bytes _functionCall);
+    event DiamondDelegateCall(address indexed _delegate, bytes _delegateCalldata);
 
     /**
      * @notice Emitted to record information about a diamond.
@@ -124,7 +124,7 @@ contract DiamondUpgradeFacet {
     error CannotReplaceFunctionThatDoesNotExist(bytes4 _selector);
     error CannotRemoveFunctionThatDoesNotExist(bytes4 _selector);
     error CannotReplaceFunctionWithTheSameFacet(bytes4 _selector);
-    error DelegateCallReverted(address _delegate, bytes _functionCall);
+    error DelegateCallReverted(address _delegate, bytes _delegateCalldata);
 
     error CannotReplaceImmutableFunction(bytes4 _selector);
     error CannotRemoveImmutableFunction(bytes4 _selector);
@@ -233,7 +233,7 @@ contract DiamondUpgradeFacet {
      *
      * ### DelegateCall:
      * If `_delegate` is non-zero, the diamond performs a `delegatecall` to
-     * `_delegate` using `_functionCall`. The `DiamondDelegateCall` event is
+     * `_delegate` using `_delegateCalldata`. The `DiamondDelegateCall` event is
      *  emitted.
      *
      * The `delegatecall` is done to alter a diamond's state or to
@@ -250,7 +250,7 @@ contract DiamondUpgradeFacet {
      * @param _replaceFunctions Selectors to replace, grouped by facet.
      * @param _removeFunctions  Selectors to remove.
      * @param _delegate         Optional contract to delegatecall (zero address to skip).
-     * @param _functionCall     Optional calldata to execute on `_delegate`.
+     * @param _delegateCalldata Optional calldata to execute on `_delegate`.
      * @param _tag              Optional arbitrary metadata, such as release version.
      * @param _metadata         Optional arbitrary data.
      */
@@ -259,7 +259,7 @@ contract DiamondUpgradeFacet {
         FacetFunctions[] calldata _replaceFunctions,
         bytes4[] calldata _removeFunctions,
         address _delegate,
-        bytes calldata _functionCall,
+        bytes calldata _delegateCalldata,
         bytes32 _tag,
         bytes calldata _metadata
     ) external {
@@ -277,7 +277,7 @@ contract DiamondUpgradeFacet {
             if (_delegate.code.length == 0) {
                 revert NoBytecodeAtAddress(_delegate);
             }
-            (bool success, bytes memory error) = _delegate.delegatecall(_functionCall);
+            (bool success, bytes memory error) = _delegate.delegatecall(_delegateCalldata);
             if (!success) {
                 if (error.length > 0) {
                     /*
@@ -287,10 +287,10 @@ contract DiamondUpgradeFacet {
                         revert(add(error, 0x20), mload(error))
                     }
                 } else {
-                    revert DelegateCallReverted(_delegate, _functionCall);
+                    revert DelegateCallReverted(_delegate, _delegateCalldata);
                 }
             }
-            emit DiamondDelegateCall(_delegate, _functionCall);
+            emit DiamondDelegateCall(_delegate, _delegateCalldata);
         }
         if (_tag != 0 || _metadata.length > 0) {
             emit DiamondMetadata(_tag, _metadata);
