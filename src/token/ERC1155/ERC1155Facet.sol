@@ -1,6 +1,10 @@
 // SPDX-License-Identifier: MIT
 pragma solidity >=0.8.30;
 
+/* Compose
+ * https://compose.diamonds
+ */
+
 /**
  * @title ERC-1155 Token Receiver Interface
  * @notice Interface that must be implemented by smart contracts in order to receive ERC-1155 token transfers.
@@ -148,7 +152,7 @@ contract ERC1155Facet {
     /**
      * @dev Storage position determined by the keccak256 hash of the diamond storage identifier.
      */
-    bytes32 constant STORAGE_POSITION = keccak256("compose.erc1155");
+    bytes32 constant STORAGE_POSITION = keccak256("erc1155");
 
     /**
      * @dev ERC-8042 compliant storage struct for ERC-1155 token data.

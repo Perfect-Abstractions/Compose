@@ -1,6 +1,10 @@
 // SPDX-License-Identifier: MIT
 pragma solidity >=0.8.30;
 
+/* Compose
+ * https://compose.diamonds
+ */
+
 /**
  * @title ERC-20 Token Standard Interface
  * @notice Interface for ERC-20 token contracts with custom errors

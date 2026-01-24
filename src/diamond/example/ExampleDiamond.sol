@@ -1,20 +1,23 @@
 // SPDX-License-Identifier: MIT
 pragma solidity >=0.8.30;
 
-import "../LibDiamond.sol" as LibDiamond;
-import "../../access/Owner/LibOwner.sol" as LibOwner;
-import "../../token/ERC721/ERC721/LibERC721.sol" as LibERC721;
-import "../../interfaceDetection/ERC165/LibERC165.sol" as LibERC165;
+/* Compose
+ * https://compose.diamonds
+ */
+
+import "../DiamondMod.sol" as DiamondMod;
+import "../../access/Owner/OwnerMod.sol" as OwnerMod;
+import "../../token/ERC721/Metadata/ERC721MetadataMod.sol" as ERC721MetadataMod;
+import "../../interfaceDetection/ERC165/ERC165Mod.sol" as ERC165Mod;
 import {IERC721} from "../../interfaces/IERC721.sol";
 import {IERC721Metadata} from "../../interfaces/IERC721Metadata.sol";
 
 contract ExampleDiamond {
     /**
      * @notice Struct to hold facet address and its function selectors.
-     * struct FacetCut {
-     *    address facetAddress;
-     *    FacetCutAction action; // Add=0, Replace=1, Remove=2
-     *    bytes4[] functionSelectors;
+     * struct FacetFunctions {
+     *     address facet;
+     *     bytes4[] selectors;
      * }
      */
     /**
@@ -24,8 +27,8 @@ contract ExampleDiamond {
      * @param _facets Array of facet addresses and their corresponding function selectors to add to the diamond.
      * @param _diamondOwner Address that will be set as the owner of the diamond contract.
      */
-    constructor(LibDiamond.FacetCut[] memory _facets, address _diamondOwner) {
-        LibDiamond.addFacets(_facets);
+    constructor(DiamondMod.FacetFunctions[] memory _facets, address _diamondOwner) {
+        DiamondMod.addFacets(_facets);
 
         /*************************************
          * Initialize storage variables
@@ -34,20 +37,22 @@ contract ExampleDiamond {
         /**
          * Setting the contract owner
          */
-        LibOwner.setContractOwner(_diamondOwner);
+        OwnerMod.setContractOwner(_diamondOwner);
         /**
          * Setting ERC721 token details
          */
-        LibERC721.setMetadata({_name: "ExampleDiamondNFT", _symbol: "EDN", _baseURI: "https://example.com/metadata/"});
+        ERC721MetadataMod.setMetadata({
+            _name: "ExampleDiamondNFT", _symbol: "EDN", _baseURI: "https://example.com/metadata/"
+        });
         /**
          * Registering ERC165 interfaces
          */
-        LibERC165.registerInterface(type(IERC721).interfaceId);
-        LibERC165.registerInterface(type(IERC721Metadata).interfaceId);
+        ERC165Mod.registerInterface(type(IERC721).interfaceId);
+        ERC165Mod.registerInterface(type(IERC721Metadata).interfaceId);
     }
 
     fallback() external payable {
-        LibDiamond.diamondFallback();
+        DiamondMod.diamondFallback();
     }
 
     receive() external payable {}

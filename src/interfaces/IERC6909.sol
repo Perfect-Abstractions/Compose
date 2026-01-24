@@ -1,6 +1,10 @@
 // SPDX-License-Identifier: MIT
 pragma solidity >=0.8.30;
 
+/* Compose
+ * https://compose.diamonds
+ */
+
 /**
  * @title ERC-6909 Minimal Multi-Token Interface
  * @notice Interface for ERC-6909 multi-token contracts with custom errors.

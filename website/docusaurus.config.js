@@ -262,6 +262,31 @@ const config = {
           contextualSearch: true,
         },
       }),
+      // Giscus commenting system configuration
+      // See here for more information: https://github.com/giscus/giscus
+      ...(process.env.GISCUS_REPO && process.env.GISCUS_REPO_ID && process.env.GISCUS_CATEGORY_ID && {
+        giscus: {
+          repo: process.env.GISCUS_REPO,
+          repoId: process.env.GISCUS_REPO_ID,
+          category: process.env.GISCUS_CATEGORY || 'Blog',
+          categoryId: process.env.GISCUS_CATEGORY_ID,
+          mapping: process.env.GISCUS_MAPPING || 'pathname',
+          strict: process.env.GISCUS_STRICT || '0',
+          reactionsEnabled: process.env.GISCUS_REACTIONS_ENABLED || '1',
+          emitMetadata: process.env.GISCUS_EMIT_METADATA || '0',
+          inputPosition: process.env.GISCUS_INPUT_POSITION || 'top',
+          lang: process.env.GISCUS_LANG || 'en',
+          loading: process.env.GISCUS_LOADING || 'lazy'
+        },
+      }),
+      // Newsletter email collection configuration (Kit API v4)
+      // See here for more information: https://developers.kit.com/api-reference/overview
+      ...(process.env.NEWSLETTER_API_KEY && {
+        newsletter: {
+          isEnabled: true,
+          apiUrl: process.env.NEWSLETTER_API_URL || 'https://api.kit.com/v4',
+        },
+      }),
     }),
   plugins: [
     process.env.POSTHOG_API_KEY && [

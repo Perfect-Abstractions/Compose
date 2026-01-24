@@ -1,6 +1,10 @@
 // SPDX-License-Identifier: MIT
 pragma solidity >=0.8.30;
 
+/* Compose
+ * https://compose.diamonds
+ */
+
 /**
  * @title Royalty Facet - ERC-2981 NFT Royalty Standard Implementation
  * @notice Implements royalty queries for NFT secondary sales per ERC-2981 standard.

@@ -1,0 +1,76 @@
+Approve
+├── when the spender is the zero address
+│   └── it should revert
+└── when the spender is not the zero address
+    ├── it should set the caller's allowance for the spender to value
+    ├── it should emit an {Approval} event
+    └── it should return true
+
+Transfer
+├── when the receiver is the zero address
+│   └── it should revert
+└── when the receiver is not the zero address
+    ├── given when the sender's balance is less than the transfer amount
+    │   └── it should revert
+    └── given when the sender's balance is greater than, or equal to, the transfer amount
+        ├── when the amount is zero
+        │   ├── it should emit a {Transfer} event
+        │   ├── it should not change balances
+        │   └── it should return true
+        └── when the amount is > 0
+            ├── it should decrement the sender's balance by the transfer amount
+            ├── it should increment the receiver's balance by the transfer amount
+            ├── it should emit a {Transfer} event
+            └── it should return true
+
+TransferFrom
+├── when the sender is the zero address
+│   └── it should revert
+├── when the receiver is the zero address
+│   └── it should revert
+└── when both sender and receiver are non-zero addresses
+    ├── given allowance < amount
+    │   └── it should revert
+    └── given allowance >= amount
+        ├── given balance < amount
+        │   └── it should revert
+        └── given balance >= amount
+            ├── when amount is zero
+            │   ├── it should not change balances
+            │   ├── it should not decrement allowance
+            │   ├── it should emit a {Transfer} event
+            │   └── it should return true
+            ├── when amount > 0 and allowance is max uint256
+            │   ├── it should decrement the sender's balance by the transfer amount
+            │   ├── it should increment the receiver's balance by the transfer amount
+            │   ├── it should not change allowance
+            │   ├── it should emit a {Transfer} event
+            │   └── it should return true
+            └── when the amount is greater than zero and allowance is finite
+                ├── it should decrement the allowance by the transfer amount
+                ├── it should decrement the sender's balance by the transfer amount
+                ├── it should increment the receiver's balance by the transfer amount
+                ├── it should emit a {Transfer} event
+                └── it should return true
+
+Mint
+├── when the account to mint to is the zero address
+│   └── it should revert
+└── when the account to mint to is not the zero address
+    ├── given the mint amount would overflow total supply
+    │   └── it should revert
+    └── given the mint amount does not overflow total supply
+        ├── it should increment total supply by the mint amount
+        ├── it should increment the account's balance by the mint amount
+        └── it should emit a {Transfer} event from zero address to the account
+
+Burn
+├── when the account to burn from is the zero address
+│   └── it should revert
+└── when the account to burn from is not the zero address
+    ├── when the account balance is less than the burn amount
+    │   └── it should revert
+    └── when the account balance is greater than or equal to the burn amount
+        ├── it should decrement the account balance by the burn amount
+        ├── it should decrement total supply by the burn amount
+        └── it should emit a {Transfer} event to the zero address

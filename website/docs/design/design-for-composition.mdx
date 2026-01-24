@@ -1,7 +1,7 @@
 ---
-sidebar_position: 7
+sidebar_position: 5
 title: Design for Composition
-description: How to design Compose facets and libraries for composition.
+description: How to design Compose facets and modules for composition.
 ---
 
 Here are the guidelines and rules for creating composable facets.
@@ -20,17 +20,17 @@ We focus on building **small, independent, and easy-to-read facets**. Each facet
 6. Facets are fully self-contained. They do not import anything.
 
 
-## Writing Facet Libraries
+## Writing Facet Modules
 
-1. Facet libraries are self-contained code units. They do not import anything.
-2. Each facet should have one corresponding facet library.
-3. Facet libraries are used to initialize facets on deployment and during upgrades. 
-4. Facet libraries are also used to integrate custom facets with Compose facets.
-5. Facet libraries have one or more functions which are used to initialize storage variables during deployment.
+1. Facet modules are self-contained code units. They do not import anything.
+2. Each facet should have one corresponding facet module.
+3. Facet modules are used to initialize facets on deployment and during upgrades. 
+4. Facet modules are also used to integrate custom facets with Compose facets.
+5. Facet modules have one or more functions which are used to initialize storage variables during deployment.
 
-## Facets & Libraries
+## Facets & Modules
 
-1. Facets and facet libraries should not contain owner/admin authorization checks unless absolutely required or fundamental to the functionality being implemented. If permission or authorization checks are required, the facet should integrate with `OwnerFacet` or `AccessControlFacet`.
+1. Facets and facet modules should not contain owner/admin authorization checks unless absolutely required or fundamental to the functionality being implemented. If permission or authorization checks are required, the facet should integrate with `OwnerFacet` or `AccessControlFacet`.
 
 
 ## Extending Facets
@@ -47,7 +47,7 @@ We focus on building **small, independent, and easy-to-read facets**. Each facet
 9. Never add new variables to an existing struct.
 
 :::info Important
-Maintain the same order of variables in structs when reusing them across facets or libraries. Unused variables may only be removed from the end of a struct.
+Maintain the same order of variables in structs when reusing them across facets or modules. Unused variables may only be removed from the end of a struct.
 :::
 
 

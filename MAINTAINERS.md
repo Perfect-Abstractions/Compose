@@ -3,11 +3,15 @@
 
 Among Nick’s duties are defining the overall direction of the project, approving or rejecting the development of new functionality, and creating/approving and maintaining standards for the project. Nick also does regular maintainer activities.
 
-# Maintainers
+# Active Maintainers
 
 - @maxnorm
+- @lumoswiz
 - @panditdhamdhere
 - @Haroldwonder
+
+# Past Maintainers
+
 - @adamgall
 
 # Volunteer Basis

@@ -1,6 +1,10 @@
 // SPDX-License-Identifier: MIT
 pragma solidity >=0.8.30;
 
+/* Compose
+ * https://compose.diamonds
+ */
+
 /**
  * @title ERC-6909 Minimal Multi-Token Interface
  * @notice A complete, dependency-free ERC-6909 implementation using the diamond storage pattern.

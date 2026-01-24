@@ -1,6 +1,10 @@
 // SPDX-License-Identifier: MIT
 pragma solidity >=0.8.30;
 
+/* Compose
+ * https://compose.diamonds
+ */
+
 import {IERC1155Receiver} from "../../../../../src/interfaces/IERC1155Receiver.sol";
 
 /**

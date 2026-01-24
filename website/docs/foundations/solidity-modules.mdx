@@ -1,0 +1,152 @@
+---
+sidebar_position: 3
+title: Solidity Modules
+description: Description of what Solidity modules are and how they are used in Compose.
+---
+
+
+Solidity **modules** are Solidity files whose top-level code lives *outside* of contracts and Solidity libraries. They contain reusable logic that gets pulled into other contracts at compile time.
+
+A Solidity module may define **functions**, **constants**, **structs**, **events**, **enums**, **errors**, and **interfaces**.
+
+
+A precise technical definition:
+
+> A Solidity module is a Solidity file that produces **no standalone bytecode**. It is never deployed on-chain. Instead, its code is included into the bytecode of any contract that imports and uses it.
+
+Modules exist to enable **clean, explicit code reuse**. Common logic can be written once, placed in a module, and imported anywhere — without duplication or inheritance chains.
+
+
+Using modules is also **gas efficient**. Because all module functions are `internal` the compiler can inline them when profitable, or compile them to extremely cheap `JUMP` calls.
+
+Solidity modules avoid the overhead of external calls or library deployments.
+
+### File Naming Conventions in Compose
+
+Compose uses clear naming patterns to distinguish Solidity file types:
+
+- Files ending in **`Facet.sol`** (e.g., `ERC20Facet.sol`) contain facet contracts for diamonds.
+- Files ending in **`Diamond.sol`** (e.g., `ExampleDiamond.sol`) implement diamond contracts.
+- Files ending in **`Mod`** (e.g., `ERC20Mod.sol`) are **Solidity modules** — intended to be imported and used within facets or diamond contracts.
+
+### Example Solidity Module
+
+Here is an example of a Solidity module that implements contract ownership functionality:
+
+```solidity
+// SPDX-License-Identifier: MIT
+pragma solidity >=0.8.30;
+
+/*
+ * @title ERC-173 Contract Ownership
+ * @notice Provides internal functions and storage for owner management.
+ */
+
+/**
+ * @dev This emits when ownership of a contract changes.
+ */
+event OwnershipTransferred(address indexed previousOwner, address indexed newOwner);
+
+/*
+ * @notice Thrown when a non-owner attempts an action restricted to owner.
+ */
+error OwnerUnauthorizedAccount();
+
+bytes32 constant STORAGE_POSITION = keccak256("compose.owner");
+
+/**
+ * @custom:storage-location erc8042:compose.owner
+ */
+struct OwnerStorage {
+    address owner;
+}
+
+/**
+ * @notice Returns a pointer to the ERC-173 storage struct.
+ * @dev Uses inline assembly to access the storage slot defined by STORAGE_POSITION.
+ * @return s The OwnerStorage struct in storage.
+ */
+function getStorage() pure returns (OwnerStorage storage s) {
+    bytes32 position = STORAGE_POSITION;
+    assembly {
+        s.slot := position
+    }
+}
+
+function setContractOwner(address _initialOwner) {
+    OwnerStorage storage s = getStorage();
+    s.owner = _initialOwner;
+    emit OwnershipTransferred(address(0), _initialOwner);
+}
+
+
+/**
+ * @notice Reverts if the caller is not the owner.
+ */
+function requireOwner() view {
+    if (getStorage().owner != msg.sender) {
+        revert OwnerUnauthorizedAccount();
+    }
+}
+```
+
+Here is an example of a diamond contract that uses Solidity modules to implement ERC-2535 Diamonds: 
+
+```solidity
+// SPDX-License-Identifier: MIT
+pragma solidity >=0.8.30;
+
+import "../DiamondMod.sol" as DiamondMod;
+import "../../access/Owner/OwnerMod.sol" as OwnerMod;
+import "../../token/ERC721/ERC721/ERC721Mod.sol" as ERC721Mod;
+import "../../interfaceDetection/ERC165/ERC165Mod.sol" as ERC165Mod;
+import {IERC721} from "../../interfaces/IERC721.sol";
+import {IERC721Metadata} from "../../interfaces/IERC721Metadata.sol";
+
+contract ExampleDiamond {
+    /**
+     * @notice Struct to hold facet address and its function selectors.
+     * struct FacetCut {
+     *    address facetAddress;
+     *    FacetCutAction action; // Add=0, Replace=1, Remove=2
+     *    bytes4[] functionSelectors;
+     * }
+     */
+    /**
+     * @notice Initializes the diamond contract with facets, owner and other data.
+     * @dev Adds all provided facets to the diamond's function selector mapping and sets the contract owner.
+     *      Each facet in the array will have its function selectors registered to enable delegatecall routing.
+     * @param _facets Array of facet addresses and their corresponding function selectors to add to the diamond.
+     * @param _diamondOwner Address that will be set as the owner of the diamond contract.
+     */
+    constructor(DiamondMod.FacetCut[] memory _facets, address _diamondOwner) {
+        DiamondMod.addFacets(_facets);
+
+        /*************************************
+         * Initialize storage variables
+         ************************************/
+
+        /**
+         * Setting the contract owner
+         */
+        OwnerMod.setContractOwner(_diamondOwner);
+        /**
+         * Setting ERC721 token details
+         */
+        ERC721Mod.setMetadata({_name: "ExampleDiamondNFT", _symbol: "EDN", _baseURI: "https://example.com/metadata/"});
+        /**
+         * Registering ERC165 interfaces
+         */
+        ERC165Mod.registerInterface(type(IERC721).interfaceId);
+        ERC165Mod.registerInterface(type(IERC721Metadata).interfaceId);
+    }
+
+    fallback() external payable {
+        DiamondMod.diamondFallback();
+    }
+
+    receive() external payable {}
+}
+```
+
+
