@@ -55,33 +55,37 @@ struct FacetFunctions {
     bytes4[] selectors;
 }
 
-error NoBytecodeAtAddress(address _contractAddress);
+interface IFacet {
+    function functionSelectors() external view returns (bytes4[] memory);
+}
+
 error CannotAddFunctionToDiamondThatAlreadyExists(bytes4 _selector);
+error NoSelectorsForFacet(address _facet);
 
 /**
  * @notice Adds facets and their function selectors to the diamond.
  * @dev Only supports adding functions during diamond deployment.
  */
-function addFacets(FacetFunctions[] memory _facets) {
+function addFacets(address[] memory _facets) {
     DiamondStorage storage s = getStorage();
     uint32 selectorPosition = uint32(s.selectors.length);
     for (uint256 i; i < _facets.length; i++) {
-        address facet = _facets[i].facet;
-        bytes4[] memory functionSelectors = _facets[i].selectors;
-        if (facet.code.length == 0) {
-            revert NoBytecodeAtAddress(facet);
+        address facet = _facets[i];
+        bytes4[] memory facetSelectors = IFacet(facet).functionSelectors();
+        if (facetSelectors.length == 0) {
+            revert NoSelectorsForFacet(facet);
         }
-        for (uint256 selectorIndex; selectorIndex < functionSelectors.length; selectorIndex++) {
-            bytes4 selector = functionSelectors[selectorIndex];
+        s.selectors.push(facetSelectors[0]);
+        for (uint256 selectorIndex; selectorIndex < facetSelectors.length; selectorIndex++) {
+            bytes4 selector = facetSelectors[selectorIndex];
             address oldFacet = s.facetAndPosition[selector].facet;
             if (oldFacet != address(0)) {
                 revert CannotAddFunctionToDiamondThatAlreadyExists(selector);
             }
             s.facetAndPosition[selector] = FacetAndPosition(facet, selectorPosition);
-            s.selectors.push(selector);
-            selectorPosition++;
             emit DiamondFunctionAdded(selector, facet);
         }
+        selectorPosition++;
     }
 }
 
