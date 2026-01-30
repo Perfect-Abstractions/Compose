@@ -206,6 +206,7 @@ contract DiamondUpgradeFacet {
                     delete s.facetAndPosition[selector];
                 }
             }
+            emit FacetReplaced(oldFacet, newFacet);
         }
     }
 
@@ -241,8 +242,8 @@ contract DiamondUpgradeFacet {
                 bytes4 selector = facetSelectors[selectorIndex];
                 delete s.facetAndPosition[selector];
             }
+            emit FacetRemoved(facet);
         }
-        // emit DiamondFunctionRemoved(selector, oldFacet);
     }
 
     /**
