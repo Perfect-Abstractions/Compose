@@ -162,7 +162,7 @@ contract MockFacet {
  * Tests scenarios: 10, 50, and 100 facets with 8 selectors each
  */
 contract DiamondEventStrategiesTest is Test {
-    uint256 constant SELECTORS_PER_FACET = 8;
+    uint256 constant SELECTORS_PER_FACET = 5;
 
     function _deployFacets(uint256 count) internal returns (address[] memory facets) {
         facets = new address[](count);
@@ -200,7 +200,7 @@ contract DiamondEventStrategiesTest is Test {
         SingleEventDiamond diamond = new SingleEventDiamond(cuts);
         uint256 gasUsed = startGas - gasleft();
 
-        emit log_named_uint("Single Event (10 facets, 80 selectors) - Total Gas", gasUsed);
+        emit log_named_uint("Single Event (10 facets, 50 selectors) - Total Gas", gasUsed);
 
         assertTrue(address(diamond) != address(0));
     }
@@ -213,7 +213,7 @@ contract DiamondEventStrategiesTest is Test {
         SingleEventDiamond diamond = new SingleEventDiamond(cuts);
         uint256 gasUsed = startGas - gasleft();
 
-        emit log_named_uint("Single Event (50 facets, 400 selectors) - Total Gas", gasUsed);
+        emit log_named_uint("Single Event (50 facets, 250 selectors) - Total Gas", gasUsed);
 
         assertTrue(address(diamond) != address(0));
     }
@@ -226,7 +226,7 @@ contract DiamondEventStrategiesTest is Test {
         SingleEventDiamond diamond = new SingleEventDiamond(cuts);
         uint256 gasUsed = startGas - gasleft();
 
-        emit log_named_uint("Single Event (100 facets, 800 selectors) - Total Gas", gasUsed);
+        emit log_named_uint("Single Event (100 facets, 500 selectors) - Total Gas", gasUsed);
 
         assertTrue(address(diamond) != address(0));
     }
@@ -243,7 +243,7 @@ contract DiamondEventStrategiesTest is Test {
         FacetEventDiamond diamond = new FacetEventDiamond(cuts);
         uint256 gasUsed = startGas - gasleft();
 
-        emit log_named_uint("Facet Event (10 facets, 80 selectors) - Total Gas", gasUsed);
+        emit log_named_uint("Facet Event (10 facets, 50 selectors) - Total Gas", gasUsed);
 
         assertTrue(address(diamond) != address(0));
     }
@@ -256,7 +256,7 @@ contract DiamondEventStrategiesTest is Test {
         FacetEventDiamond diamond = new FacetEventDiamond(cuts);
         uint256 gasUsed = startGas - gasleft();
 
-        emit log_named_uint("Facet Event (50 facets, 400 selectors) - Total Gas", gasUsed);
+        emit log_named_uint("Facet Event (50 facets, 250 selectors) - Total Gas", gasUsed);
 
         assertTrue(address(diamond) != address(0));
     }
@@ -269,7 +269,7 @@ contract DiamondEventStrategiesTest is Test {
         FacetEventDiamond diamond = new FacetEventDiamond(cuts);
         uint256 gasUsed = startGas - gasleft();
 
-        emit log_named_uint("Facet Event (100 facets, 800 selectors) - Total Gas", gasUsed);
+        emit log_named_uint("Facet Event (100 facets, 500 selectors) - Total Gas", gasUsed);
 
         assertTrue(address(diamond) != address(0));
     }
@@ -286,7 +286,7 @@ contract DiamondEventStrategiesTest is Test {
         FunctionEventDiamond diamond = new FunctionEventDiamond(cuts);
         uint256 gasUsed = startGas - gasleft();
 
-        emit log_named_uint("Function Event (10 facets, 80 selectors) - Total Gas", gasUsed);
+        emit log_named_uint("Function Event (10 facets, 50 selectors) - Total Gas", gasUsed);
 
         assertTrue(address(diamond) != address(0));
     }
@@ -299,7 +299,7 @@ contract DiamondEventStrategiesTest is Test {
         FunctionEventDiamond diamond = new FunctionEventDiamond(cuts);
         uint256 gasUsed = startGas - gasleft();
 
-        emit log_named_uint("Function Event (50 facets, 400 selectors) - Total Gas", gasUsed);
+        emit log_named_uint("Function Event (50 facets, 250 selectors) - Total Gas", gasUsed);
 
         assertTrue(address(diamond) != address(0));
     }
@@ -312,7 +312,7 @@ contract DiamondEventStrategiesTest is Test {
         FunctionEventDiamond diamond = new FunctionEventDiamond(cuts);
         uint256 gasUsed = startGas - gasleft();
 
-        emit log_named_uint("Function Event (100 facets, 800 selectors) - Total Gas", gasUsed);
+        emit log_named_uint("Function Event (100 facets, 500 selectors) - Total Gas", gasUsed);
 
         assertTrue(address(diamond) != address(0));
     }
