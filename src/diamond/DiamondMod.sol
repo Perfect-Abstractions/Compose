@@ -81,7 +81,7 @@ error NoFacetsToAdd();
 /**
  * @notice Adds facets and their function selectors to the diamond.
  */
-function addFacets(address[] calldata _facets) {
+function addFacets(address[] memory _facets) {
     DiamondStorage storage s = getStorage();
     uint256 facetsLength = _facets.length;
     if (facetsLength == 0) {
