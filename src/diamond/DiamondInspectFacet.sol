@@ -13,24 +13,28 @@ contract DiamondInspectFacet {
     bytes32 constant DIAMOND_STORAGE_POSITION = keccak256("erc8109.diamond");
 
     /**
-     * @notice Data stored for each function selector.
-     * @dev Facet address of function selector.
-     *      Position of selector in the 'bytes4[] selectors' array.
+     * @notice Data stored for each function selector
+     * @dev Facet address of function selector
+     *      Position of selector in the 'bytes4[] selectors' array
      */
-    struct FacetAndPosition {
+    struct FacetNode {
         address facet;
-        uint32 position;
+        bytes4 prevFacetSelector;
+        bytes4 nextFacetSelector;
+    }
+
+    struct FacetList {
+        uint32 facetCount;
+        bytes4 firstFacetSelector;
+        bytes4 lastFacetSelector;
     }
 
     /**
      * @custom:storage-location erc8042:erc8109.diamond
      */
     struct DiamondStorage {
-        mapping(bytes4 functionSelector => FacetAndPosition) facetAndPosition;
-        /**
-         * Array of all function selectors that can be called in the diamond.
-         */
-        bytes4[] selectors;
+        mapping(bytes4 functionSelector => FacetNode) facetNodes;
+        FacetList facetList;
     }
 
     function getStorage() internal pure returns (DiamondStorage storage s) {
@@ -48,7 +52,7 @@ contract DiamondInspectFacet {
      */
     function facetAddress(bytes4 _functionSelector) external view returns (address facet) {
         DiamondStorage storage s = getStorage();
-        facet = s.facetAndPosition[_functionSelector].facet;
+        facet = s.facetNodes[_functionSelector].facet;
     }
 
     /**
@@ -60,7 +64,7 @@ contract DiamondInspectFacet {
     function facetFunctionSelectors(address _facet) external view returns (bytes4[] memory facetSelectors) {
         DiamondStorage storage s = getStorage();
         facetSelectors = IFacet(_facet).functionSelectors();
-        if (facetSelectors.length == 0 || s.facetAndPosition[facetSelectors[0]].facet == address(0)) {
+        if (facetSelectors.length == 0 || s.facetNodes[facetSelectors[0]].facet == address(0)) {
             facetSelectors = new bytes4[](0);
         }
     }
@@ -72,13 +76,14 @@ contract DiamondInspectFacet {
      */
     function facetAddresses() external view returns (address[] memory allFacets) {
         DiamondStorage storage s = getStorage();
-        bytes4[] memory selectors = s.selectors;
-        uint256 facetCount = selectors.length;
+        FacetList memory facetList = s.facetList;
+        uint256 facetCount = facetList.facetCount;
         allFacets = new address[](facetCount);
-        for (uint256 selectorIndex; selectorIndex < facetCount; selectorIndex++) {
-            bytes4 selector = selectors[selectorIndex];
-            address facet = s.facetAndPosition[selector].facet;
-            allFacets[selectorIndex] = facet;
+        bytes4 currentSelector = facetList.firstFacetSelector;
+        for (uint256 i; i < facetCount; i++) {
+            address facet = s.facetNodes[currentSelector].facet;
+            allFacets[i] = facet;
+            currentSelector = s.facetNodes[currentSelector].nextFacetSelector;
         }
     }
 
@@ -95,15 +100,63 @@ contract DiamondInspectFacet {
      */
     function facets() external view returns (Facet[] memory facetsAndSelectors) {
         DiamondStorage storage s = getStorage();
-        bytes4[] memory selectors = s.selectors;
-        uint256 facetCount = selectors.length;
+        FacetList memory facetList = s.facetList;
+        uint256 facetCount = facetList.facetCount;
+        bytes4 currentSelector = facetList.firstFacetSelector;
         facetsAndSelectors = new Facet[](facetCount);
-        for (uint256 selectorIndex; selectorIndex < facetCount; selectorIndex++) {
-            bytes4 selector = selectors[selectorIndex];
-            address facet = s.facetAndPosition[selector].facet;
+        for (uint256 i; i < facetCount; i++) {
+            address facet = s.facetNodes[currentSelector].facet;
             bytes4[] memory facetSelectors = IFacet(facet).functionSelectors();
-            facetsAndSelectors[selectorIndex].facet = facet;
-            facetsAndSelectors[selectorIndex].functionSelectors = facetSelectors;
+            facetsAndSelectors[i].facet = facet;
+            facetsAndSelectors[i].functionSelectors = facetSelectors;
+            currentSelector = s.facetNodes[currentSelector].nextFacetSelector;
+        }
+    }
+
+    struct FunctionFacetPair {
+        bytes4 selector;
+        address facet;
+    }
+
+    /**
+     * @notice Returns an array of all function selectors and their
+     *         corresponding facet addresses.
+     *
+     * @dev    Iterates through the diamond's stored selectors and pairs
+     *         each with its facet.
+     * @return pairs An array of `FunctionFacetPair` structs, each containing
+     *         a selector and its facet address.
+     */
+    function functionFacetPairs() external view returns (FunctionFacetPair[] memory pairs) {
+        DiamondStorage storage s = getStorage();
+        FacetList memory facetList = s.facetList;
+        uint256 facetCount = facetList.facetCount;
+        bytes4 currentSelector = facetList.firstFacetSelector;
+        uint256 selectorCount;
+        Facet[] memory facetsAndSelectors = new Facet[](facetCount);
+        for (uint256 i; i < facetCount; i++) {
+            address facet = s.facetNodes[currentSelector].facet;
+            bytes4[] memory facetSelectors = IFacet(facet).functionSelectors();
+            unchecked {
+                selectorCount += facetSelectors.length;
+            }
+            facetsAndSelectors[i].facet = facet;
+            facetsAndSelectors[i].functionSelectors = facetSelectors;
+            currentSelector = s.facetNodes[currentSelector].nextFacetSelector;
+        }
+        pairs = new FunctionFacetPair[](selectorCount);
+        selectorCount = 0;
+        for (uint256 i; i < facetCount; i++) {
+            Facet memory facetsAndSelector = facetsAndSelectors[i];
+            address facet = facetsAndSelector.facet;
+            uint256 selectorsLength = facetsAndSelector.functionSelectors.length;
+            for (uint256 selectorIndex; selectorIndex < selectorsLength; selectorIndex++) {
+                bytes4 selector = facetsAndSelector.functionSelectors[selectorIndex];
+                pairs[selectorCount] = FunctionFacetPair(selector, facet);
+                unchecked {
+                    selectorCount++;
+                }
+            }
         }
     }
 
