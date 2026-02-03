@@ -19,15 +19,15 @@ contract DiamondInspectFacet {
      */
     struct FacetNode {
         address facet;
-        bytes4 prevFacetNode;
-        bytes4 nextFacetNode;
+        bytes4 prevFacetNodeId;
+        bytes4 nextFacetNodeId;
     }
 
     struct FacetList {
         uint32 facetCount;
         uint32 selectorCount;
-        bytes4 firstFacetNode;
-        bytes4 lastFacetNode;
+        bytes4 firstFacetNodeId;
+        bytes4 lastFacetNodeId;
     }
 
     /**
@@ -79,11 +79,11 @@ contract DiamondInspectFacet {
         DiamondStorage storage s = getStorage();
         FacetList memory facetList = s.facetList;
         allFacets = new address[](facetList.facetCount);
-        bytes4 currentSelector = facetList.firstFacetNode;
+        bytes4 currentSelector = facetList.firstFacetNodeId;
         for (uint256 i; i < facetList.facetCount; i++) {
             address facet = s.facetNodes[currentSelector].facet;
             allFacets[i] = facet;
-            currentSelector = s.facetNodes[currentSelector].nextFacetNode;
+            currentSelector = s.facetNodes[currentSelector].nextFacetNodeId;
         }
     }
 
@@ -101,14 +101,14 @@ contract DiamondInspectFacet {
     function facets() external view returns (Facet[] memory facetsAndSelectors) {
         DiamondStorage storage s = getStorage();
         FacetList memory facetList = s.facetList;
-        bytes4 currentSelector = facetList.firstFacetNode;
+        bytes4 currentSelector = facetList.firstFacetNodeId;
         facetsAndSelectors = new Facet[](facetList.facetCount);
         for (uint256 i; i < facetList.facetCount; i++) {
             address facet = s.facetNodes[currentSelector].facet;
             bytes4[] memory facetSelectors = IFacet(facet).functionSelectors();
             facetsAndSelectors[i].facet = facet;
             facetsAndSelectors[i].functionSelectors = facetSelectors;
-            currentSelector = s.facetNodes[currentSelector].nextFacetNode;
+            currentSelector = s.facetNodes[currentSelector].nextFacetNodeId;
         }
     }
 
@@ -130,7 +130,7 @@ contract DiamondInspectFacet {
         DiamondStorage storage s = getStorage();
         FacetList memory facetList = s.facetList;
         pairs = new FunctionFacetPair[](facetList.selectorCount);
-        bytes4 currentSelector = facetList.firstFacetNode;
+        bytes4 currentSelector = facetList.firstFacetNodeId;
         uint256 selectorCount;
         for (uint256 i; i < facetList.facetCount; i++) {
             address facet = s.facetNodes[currentSelector].facet;
@@ -142,7 +142,7 @@ contract DiamondInspectFacet {
                     selectorCount++;
                 }
             }
-            currentSelector = s.facetNodes[currentSelector].nextFacetNode;
+            currentSelector = s.facetNodes[currentSelector].nextFacetNodeId;
         }
     }
 

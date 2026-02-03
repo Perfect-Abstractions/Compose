@@ -6,7 +6,8 @@ pragma solidity >=0.8.30;
  */
 
 /*
- * Reference implementation for upgrade function for ERC-8109 Diamonds, Simplified
+ * @title Reference implementation for upgrade function for
+ *        ERC-8109 Diamonds, Simplified
  *
  * @dev
  * Facets are stored as a doubly linked list and as a mapping of selectors to facet addresses.
@@ -19,22 +20,22 @@ pragma solidity >=0.8.30;
  *
  * The `FacetList` struct contains information about the linked list of facets.
  *
- * Only the first FacetNode of each facet is used to link facets.
- *     * prevFacetNode - Is the selector of the first FacetNode of the previous
+ * Only the first FacetNode of each facet contains linked list pointers.
+ *     * prevFacetNodeId - Is the selector of the first FacetNode of the previous
  *       facet.
- *     * nextFacetNode - Is the selector of the first FacetNode of the next
+ *     * nextFacetNodeId - Is the selector of the first FacetNode of the next
  *       facet.
  *
  * Here is a example that shows the structor:
  *
  * FacetList
- *   facetCount      = 3
- *   firstFacetNode  = selector1   // facetA
- *   lastFacetNode   = selector7   // facetC
+ *   facetCount          = 3
+ *   firstFacetNodeId  = selector1   // facetA
+ *   lastFacetNodeId   = selector7   // facetC
  *
  * facetNodes mapping (selector => FacetNode)
  *
- *   selector   facet    prevFacetNode   nextFacetNode
+ *   selector   facet    prevFacetNodeId   nextFacetNodeId
  *   ----------------------------------------------------------------
  *   selector1  facetA   0x00000000          selector4   ← facetA LIST NODE
  *   selector2  facetA   0x00000000          0x00000000
@@ -59,22 +60,22 @@ pragma solidity >=0.8.30;
  * Notes:
  * - Only the first selector of each facet participates in the linked list.
  * - The linked list connects facets, not individual selectors.
- * - Any values in "prevFacetNode" in non-first FacetNodes are ignored.
+ * - Any values in "prevFacetNodeId" in non-first FacetNodes are not used.
  */
 
 bytes32 constant DIAMOND_STORAGE_POSITION = keccak256("erc8109.diamond");
 
 struct FacetNode {
     address facet;
-    bytes4 prevFacetNode;
-    bytes4 nextFacetNode;
+    bytes4 prevFacetNodeId;
+    bytes4 nextFacetNodeId;
 }
 
 struct FacetList {
     uint32 facetCount;
     uint32 selectorCount;
-    bytes4 firstFacetNode;
-    bytes4 lastFacetNode;
+    bytes4 firstFacetNodeId;
+    bytes4 lastFacetNodeId;
 }
 
 /**
@@ -174,42 +175,54 @@ function functionSelectors(address _facet) view returns (bytes4[] memory) {
     return selectors;
 }
 
-/**
- * @dev This function never sets `facetList.firstFacetNode` because that is expected
- *      to happen during deployment of the diamond. This function assumes at least one
- *      function has already been added to the diamond.
- */
 function addFacets(address[] calldata _facets) {
     DiamondStorage storage s = getStorage();
     if (_facets.length == 0) {
         return;
     }
     FacetList memory facetList = s.facetList;
-    bytes4 prevFacetNode = facetList.lastFacetNode;
-    bytes4 currentSelector;
+    bytes4 prevFacetNodeId = facetList.lastFacetNodeId;
+    bytes4[] memory facetSelectors = functionSelectors(_facets[0]);
+    if (facetList.facetCount == 0) {
+        facetList.firstFacetNodeId = facetSelectors[0];
+    }
     for (uint256 i; i < _facets.length; i++) {
-        address facet = _facets[0];
-        bytes4[] memory facetSelectors = functionSelectors(facet);
+        uint256 nextI;
         unchecked {
+            nextI = i + 1;
             facetList.selectorCount += uint32(facetSelectors.length);
         }
-        currentSelector = facetSelectors[0];
-        s.facetNodes[prevFacetNode].nextFacetNode = currentSelector;
-        for (uint256 selectorIndex; selectorIndex < facetSelectors.length; selectorIndex++) {
+        bytes4[] memory nextFacetSelectors;
+        bytes4 nextFacetNodeId;
+        if (nextI < _facets.length) {
+            nextFacetSelectors = functionSelectors(_facets[nextI]);
+            nextFacetNodeId = nextFacetSelectors[0];
+        }
+        bytes4 currentFacetNodeId = facetSelectors[0];
+        address oldFacet = s.facetNodes[currentFacetNodeId].facet;
+        if (oldFacet != address(0)) {
+            revert CannotAddFunctionToDiamondThatAlreadyExists(currentFacetNodeId);
+        }
+        address facet = _facets[i];
+        s.facetNodes[currentFacetNodeId] = FacetNode(facet, prevFacetNodeId, nextFacetNodeId);
+        emit DiamondFunctionAdded(currentFacetNodeId, facet);
+
+        for (uint256 selectorIndex = 1; selectorIndex < facetSelectors.length; selectorIndex++) {
             bytes4 selector = facetSelectors[selectorIndex];
-            address oldFacet = s.facetNodes[selector].facet;
+            oldFacet = s.facetNodes[selector].facet;
             if (oldFacet != address(0)) {
                 revert CannotAddFunctionToDiamondThatAlreadyExists(selector);
             }
-            s.facetNodes[selector] = FacetNode(facet, prevFacetNode, bytes4(0));
+            s.facetNodes[selector] = FacetNode(facet, bytes4(0), bytes4(0));
             emit DiamondFunctionAdded(selector, facet);
         }
-        prevFacetNode = currentSelector;
+        prevFacetNodeId = currentFacetNodeId;
+        facetSelectors = nextFacetSelectors;
     }
     unchecked {
         facetList.facetCount += uint32(_facets.length);
     }
-    facetList.lastFacetNode = currentSelector;
+    facetList.lastFacetNodeId = prevFacetNodeId;
     s.facetList = facetList;
 }
 
@@ -232,37 +245,37 @@ function replaceFacets(FacetReplacement[] calldata _replaceFacets) {
         }
         bytes4[] memory oldSelectors = functionSelectors(oldFacet);
         bytes4[] memory newSelectors = functionSelectors(newFacet);
-        bytes4 oldSelector = oldSelectors[0];
-        bytes4 newSelector = newSelectors[0];
-        FacetNode storage firstFacetNode = s.facetNodes[oldSelector];
-        if (firstFacetNode.facet != oldFacet) {
+        bytes4 oldCurrentFacetNodeId = oldSelectors[0];
+        bytes4 newCurrentFacetNodeId = newSelectors[0];
+        FacetNode storage oldFacetNode = s.facetNodes[oldCurrentFacetNodeId];
+        if (oldFacetNode.facet != oldFacet) {
             revert FacetToReplaceDoesNotExist(oldFacet);
         }
-        bytes4 prevFacetNode = firstFacetNode.prevFacetNode;
-        bytes4 nextFacetNode = firstFacetNode.nextFacetNode;
+        bytes4 prevFacetNodeId = oldFacetNode.prevFacetNodeId;
+        bytes4 nextFacetNodeId = oldFacetNode.nextFacetNodeId;
         /**
          * Set the facet node for the new selector.
          */
-        s.facetNodes[newSelector] = FacetNode(newFacet, prevFacetNode, nextFacetNode);
+        s.facetNodes[newCurrentFacetNodeId] = FacetNode(newFacet, prevFacetNodeId, nextFacetNodeId);
         /**
          * Adjust facet list if needed and emit appropriate function event
          */
-        if (oldSelector != newSelector) {
-            if (oldSelector == facetList.firstFacetNode) {
-                facetList.firstFacetNode = newSelector;
+        if (oldCurrentFacetNodeId != newCurrentFacetNodeId) {
+            if (oldCurrentFacetNodeId == facetList.firstFacetNodeId) {
+                facetList.firstFacetNodeId = newCurrentFacetNodeId;
             } else {
-                s.facetNodes[prevFacetNode].nextFacetNode = newSelector;
+                s.facetNodes[prevFacetNodeId].nextFacetNodeId = newCurrentFacetNodeId;
             }
-            if (oldSelector == facetList.lastFacetNode) {
-                facetList.lastFacetNode = newSelector;
+            if (oldCurrentFacetNodeId == facetList.lastFacetNodeId) {
+                facetList.lastFacetNodeId = newCurrentFacetNodeId;
             } else {
-                s.facetNodes[nextFacetNode].prevFacetNode = newSelector;
+                s.facetNodes[nextFacetNodeId].prevFacetNodeId = newCurrentFacetNodeId;
             }
-            delete s.facetNodes[oldSelector];
-            emit DiamondFunctionRemoved(oldSelector, oldFacet);
-            emit DiamondFunctionAdded(newSelector, newFacet);
+            delete s.facetNodes[oldCurrentFacetNodeId];
+            emit DiamondFunctionRemoved(oldCurrentFacetNodeId, oldFacet);
+            emit DiamondFunctionAdded(newCurrentFacetNodeId, newFacet);
         } else {
-            emit DiamondFunctionReplaced(newSelector, oldFacet, newFacet);
+            emit DiamondFunctionReplaced(oldCurrentFacetNodeId, oldFacet, newFacet);
         }
         /**
          * Add or replace new selectors.
@@ -309,25 +322,25 @@ function removeFacets(address[] calldata _facets) {
         unchecked {
             facetList.selectorCount -= uint32(facetSelectors.length);
         }
-        bytes4 currentSelector = facetSelectors[0];
-        FacetNode storage facetNode = s.facetNodes[currentSelector];
+        bytes4 currentFacetNodeId = facetSelectors[0];
+        FacetNode storage facetNode = s.facetNodes[currentFacetNodeId];
         if (facetNode.facet != facet) {
             revert CannotRemoveFacetThatDoesNotExist(facet);
         }
         /**
          * Remove the facet from the linked list.
          */
-        bytes4 nextFacetNode = facetNode.nextFacetNode;
-        bytes4 prevFacetNode = facetNode.prevFacetNode;
-        if (currentSelector == facetList.firstFacetNode) {
-            facetList.firstFacetNode = nextFacetNode;
+        bytes4 nextFacetNodeId = facetNode.nextFacetNodeId;
+        bytes4 prevFacetNodeId = facetNode.prevFacetNodeId;
+        if (currentFacetNodeId == facetList.firstFacetNodeId) {
+            facetList.firstFacetNodeId = nextFacetNodeId;
         } else {
-            s.facetNodes[facetNode.prevFacetNode].nextFacetNode = nextFacetNode;
+            s.facetNodes[facetNode.prevFacetNodeId].nextFacetNodeId = nextFacetNodeId;
         }
-        if (currentSelector == facetList.lastFacetNode) {
-            facetList.lastFacetNode = prevFacetNode;
+        if (currentFacetNodeId == facetList.lastFacetNodeId) {
+            facetList.lastFacetNodeId = prevFacetNodeId;
         } else {
-            s.facetNodes[nextFacetNode].prevFacetNode = prevFacetNode;
+            s.facetNodes[nextFacetNodeId].prevFacetNodeId = prevFacetNodeId;
         }
         /**
          * Remove facet selectors.

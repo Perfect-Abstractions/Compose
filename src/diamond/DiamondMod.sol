@@ -21,15 +21,15 @@ bytes32 constant DIAMOND_STORAGE_POSITION = keccak256("erc8109.diamond");
  */
 struct FacetNode {
     address facet;
-    bytes4 prevFacetNode;
-    bytes4 nextFacetNode;
+    bytes4 prevFacetNodeId;
+    bytes4 nextFacetNodeId;
 }
 
 struct FacetList {
     uint32 facetCount;
     uint32 selectorCount;
-    bytes4 firstFacetNode;
-    bytes4 lastFacetNode;
+    bytes4 firstFacetNodeId;
+    bytes4 lastFacetNodeId;
 }
 
 /**
@@ -88,35 +88,48 @@ function addFacets(address[] memory _facets) {
         return;
     }
     FacetList memory facetList = s.facetList;
-    bytes4 prevFacetNode = facetList.lastFacetNode;
-    bytes4 currentSelector;
+    bytes4 prevFacetNodeId = facetList.lastFacetNodeId;
+    bytes4[] memory facetSelectors = functionSelectors(_facets[0]);
+    if (facetList.facetCount == 0) {
+        facetList.firstFacetNodeId = facetSelectors[0];
+    }
     for (uint256 i; i < _facets.length; i++) {
-        address facet = _facets[i];
-        bytes4[] memory facetSelectors = functionSelectors(facet);
+        uint256 nextI;
         unchecked {
+            nextI = i + 1;
             facetList.selectorCount += uint32(facetSelectors.length);
         }
-        currentSelector = facetSelectors[0];
-        if (i == 0 && facetList.facetCount == 0) {
-            facetList.firstFacetNode = currentSelector;
-        } else {
-            s.facetNodes[prevFacetNode].nextFacetNode = currentSelector;
+        bytes4[] memory nextFacetSelectors;
+        bytes4 nextFacetNodeId;
+        if (nextI < _facets.length) {
+            nextFacetSelectors = functionSelectors(_facets[nextI]);
+            nextFacetNodeId = nextFacetSelectors[0];
         }
-        for (uint256 selectorIndex; selectorIndex < facetSelectors.length; selectorIndex++) {
+        bytes4 currentFacetNodeId = facetSelectors[0];
+        address oldFacet = s.facetNodes[currentFacetNodeId].facet;
+        if (oldFacet != address(0)) {
+            revert CannotAddFunctionToDiamondThatAlreadyExists(currentFacetNodeId);
+        }
+        address facet = _facets[i];
+        s.facetNodes[currentFacetNodeId] = FacetNode(facet, prevFacetNodeId, nextFacetNodeId);
+        emit DiamondFunctionAdded(currentFacetNodeId, facet);
+
+        for (uint256 selectorIndex = 1; selectorIndex < facetSelectors.length; selectorIndex++) {
             bytes4 selector = facetSelectors[selectorIndex];
-            address oldFacet = s.facetNodes[selector].facet;
+            oldFacet = s.facetNodes[selector].facet;
             if (oldFacet != address(0)) {
                 revert CannotAddFunctionToDiamondThatAlreadyExists(selector);
             }
-            s.facetNodes[selector] = FacetNode(facet, prevFacetNode, bytes4(0));
+            s.facetNodes[selector] = FacetNode(facet, bytes4(0), bytes4(0));
             emit DiamondFunctionAdded(selector, facet);
         }
-        prevFacetNode = currentSelector;
+        prevFacetNodeId = currentFacetNodeId;
+        facetSelectors = nextFacetSelectors;
     }
     unchecked {
         facetList.facetCount += uint32(_facets.length);
     }
-    facetList.lastFacetNode = currentSelector;
+    facetList.lastFacetNodeId = prevFacetNodeId;
     s.facetList = facetList;
 }
 
