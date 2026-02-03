@@ -27,6 +27,7 @@ struct FacetNode {
 
 struct FacetList {
     uint32 facetCount;
+    uint32 selectorCount;
     bytes4 firstFacetSelector;
     bytes4 lastFacetSelector;
 }
@@ -91,16 +92,19 @@ function addFacets(address[] memory _facets) {
     bytes4 prevSelector = facetList.lastFacetSelector;
     bytes4 currentSelector;
     for (uint256 i; i < facetsLength; i++) {
-        address facet = _facets[0];
-        bytes4[] memory currentSelectors = functionSelectors(facet);
-        currentSelector = currentSelectors[0];
+        address facet = _facets[i];
+        bytes4[] memory facetSelectors = functionSelectors(facet);
+        unchecked {
+            facetList.selectorCount += uint32(facetSelectors.length);
+        }
+        currentSelector = facetSelectors[0];
         if (i == 0 && facetList.facetCount == 0) {
             facetList.firstFacetSelector = currentSelector;
         } else {
             s.facetNodes[prevSelector].nextFacetSelector = currentSelector;
         }
-        for (uint256 selectorIndex; selectorIndex < currentSelectors.length; selectorIndex++) {
-            bytes4 selector = currentSelectors[selectorIndex];
+        for (uint256 selectorIndex; selectorIndex < facetSelectors.length; selectorIndex++) {
+            bytes4 selector = facetSelectors[selectorIndex];
             address oldFacet = s.facetNodes[selector].facet;
             if (oldFacet != address(0)) {
                 revert CannotAddFunctionToDiamondThatAlreadyExists(selector);

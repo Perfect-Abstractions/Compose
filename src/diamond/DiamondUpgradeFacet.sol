@@ -91,11 +91,6 @@ contract DiamondUpgradeFacet {
 
     bytes32 constant DIAMOND_STORAGE_POSITION = keccak256("erc8109.diamond");
 
-    /**
-     * @notice Data stored for each function selector
-     * @dev Facet address of function selector
-     *      Position of selector in the 'bytes4[] selectors' array
-     */
     struct FacetNode {
         address facet;
         bytes4 prevFacetSelector;
@@ -104,6 +99,7 @@ contract DiamondUpgradeFacet {
 
     struct FacetList {
         uint32 facetCount;
+        uint32 selectorCount;
         bytes4 firstFacetSelector;
         bytes4 lastFacetSelector;
     }
@@ -222,6 +218,9 @@ contract DiamondUpgradeFacet {
         for (uint256 i; i < facetsLength; i++) {
             address facet = _facets[0];
             bytes4[] memory facetSelectors = functionSelectors(facet);
+            unchecked {
+                facetList.selectorCount += uint32(facetSelectors.length);
+            }
             currentSelector = facetSelectors[0];
             s.facetNodes[prevSelector].nextFacetSelector = currentSelector;
             for (uint256 selectorIndex; selectorIndex < facetSelectors.length; selectorIndex++) {
@@ -302,6 +301,9 @@ contract DiamondUpgradeFacet {
                 s.facetNodes[selector] = FacetNode(newFacet, bytes4(0), bytes4(0));
                 if (facet == address(0)) {
                     emit DiamondFunctionAdded(selector, newFacet);
+                    unchecked {
+                        facetList.selectorCount++;
+                    }
                 } else if (facet == oldFacet) {
                     emit DiamondFunctionReplaced(selector, oldFacet, newFacet);
                 } else {
@@ -316,6 +318,9 @@ contract DiamondUpgradeFacet {
                 address facet = s.facetNodes[selector].facet;
                 if (facet == oldFacet) {
                     delete s.facetNodes[selector];
+                    unchecked {
+                        facetList.selectorCount--;
+                    }
                     emit DiamondFunctionRemoved(selector, oldFacet);
                 }
             }
@@ -329,6 +334,9 @@ contract DiamondUpgradeFacet {
         for (uint256 i = 0; i < _facets.length; i++) {
             address facet = _facets[i];
             bytes4[] memory facetSelectors = functionSelectors(facet);
+            unchecked {
+                facetList.selectorCount -= uint32(facetSelectors.length);
+            }
             bytes4 currentSelector = facetSelectors[0];
             FacetNode storage facetNode = s.facetNodes[currentSelector];
             if (facetNode.facet != facet) {
