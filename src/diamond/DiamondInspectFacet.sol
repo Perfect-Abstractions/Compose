@@ -6,7 +6,7 @@ pragma solidity >=0.8.30;
  */
 
 interface IFacet {
-    function functionSelectors() external view returns (bytes4[] memory);
+    function packedSelectors() external view returns (bytes memory);
 }
 
 contract DiamondInspectFacet {
@@ -57,6 +57,60 @@ contract DiamondInspectFacet {
     }
 
     /**
+     * @notice Decodes a packed byte stream into a standard bytes4[] array.
+     * @param packed The packed bytes (e.g., from `bytes.concat`).
+     * @return unpacked The standard padded bytes4[] array.
+     */
+    function unpackSelectors(bytes memory packed) internal pure returns (bytes4[] memory unpacked) {
+        /*
+         * Allocate the output array
+        */
+        uint256 count = packed.length / 4;
+        unpacked = new bytes4[](count);
+        /*
+         * Copy from packed to unpacked
+        */
+        assembly ("memory-safe") {
+            /*
+             * 'src' points to the start of the data in the packed array (skip 32-byte length)
+            */
+            let src := add(packed, 32)
+            /*
+             * 'dst' points to the start of the data in the new selectors array (skip 32-byte length)
+             */
+            let dst := add(unpacked, 32)
+            /*
+             * 'end' is the stopping point for the destination pointer
+             */
+            let end := add(dst, mul(count, 32))
+            /*
+             * While 'dst' is less than 'end', keep copying
+            */
+            for {} lt(dst, end) {} {
+                /*
+                 * A. Load 32 bytes from the packed source.
+                 *    We read "dirty" data (neighboring bytes), but it doesn't matter
+                 *    because we truncate it when writing.
+                 */
+                let value := mload(src)
+                /*
+                 * B. Clearn up the value to extract only the 4 bytes we want.
+                 */
+                value := and(value, 0xFFFFFFFF00000000000000000000000000000000000000000000000000000000)
+                /*
+                 * C. Store the value into the destination
+                 */
+                mstore(dst, value)
+                /*
+                 * D. Advance pointers
+                 */
+                src := add(src, 4) // Move forward 4 bytes in packed source
+                dst := add(dst, 32) // Move forward 32 bytes in destination target
+            }
+        }
+    }
+
+    /**
      * @notice Gets the function selectors that are handled by the given facet.
      * @dev If facet is not found return empty array.
      * @param _facet The facet address.
@@ -64,7 +118,7 @@ contract DiamondInspectFacet {
      */
     function facetFunctionSelectors(address _facet) external view returns (bytes4[] memory facetSelectors) {
         DiamondStorage storage s = getStorage();
-        facetSelectors = IFacet(_facet).functionSelectors();
+        facetSelectors = unpackSelectors(IFacet(_facet).packedSelectors());
         if (facetSelectors.length == 0 || s.facetNodes[facetSelectors[0]].facet == address(0)) {
             facetSelectors = new bytes4[](0);
         }
@@ -105,10 +159,27 @@ contract DiamondInspectFacet {
         facetsAndSelectors = new Facet[](facetList.facetCount);
         for (uint256 i; i < facetList.facetCount; i++) {
             address facet = s.facetNodes[currentSelector].facet;
-            bytes4[] memory facetSelectors = IFacet(facet).functionSelectors();
+            bytes4[] memory facetSelectors = unpackSelectors(IFacet(facet).packedSelectors());
             facetsAndSelectors[i].facet = facet;
             facetsAndSelectors[i].functionSelectors = facetSelectors;
             currentSelector = s.facetNodes[currentSelector].nextFacetNodeId;
+        }
+    }
+
+    function at(bytes memory selectors, uint256 index) internal pure returns (bytes4 selector) {
+        assembly ("memory-safe") {
+            /**
+             * 1. Calculate Pointer
+             * add(selectors, 32) - skips the length field of the bytes array
+             * shl(2, index) is the same as index * 4 but cheaper
+             */
+            let ptr := add(add(selectors, 32), shl(2, index))
+            /**
+             * 2. Load & Return
+             * We load 32 bytes, but Solidity truncates to 4 bytes automatically
+             * upon return assignment, so masking is unnecessary.
+             */
+            selector := mload(ptr)
         }
     }
 
@@ -134,9 +205,13 @@ contract DiamondInspectFacet {
         uint256 selectorCount;
         for (uint256 i; i < facetList.facetCount; i++) {
             address facet = s.facetNodes[currentSelector].facet;
-            bytes4[] memory facetSelectors = IFacet(facet).functionSelectors();
-            for (uint256 selectorIndex; selectorIndex < facetSelectors.length; selectorIndex++) {
-                bytes4 selector = facetSelectors[selectorIndex];
+            bytes memory selectors = IFacet(facet).packedSelectors();
+            uint256 selectorLength;
+            unchecked {
+                selectorLength = selectors.length / 4;
+            }
+            for (uint256 selectorIndex; selectorIndex < selectorLength; selectorIndex++) {
+                bytes4 selector = at(selectors, selectorIndex);
                 pairs[selectorCount] = FunctionFacetPair(selector, facet);
                 unchecked {
                     selectorCount++;
@@ -146,12 +221,13 @@ contract DiamondInspectFacet {
         }
     }
 
-    function functionSelectors() external pure returns (bytes4[] memory selectors) {
-        selectors = new bytes4[](5);
-        selectors[0] = DiamondInspectFacet.facetAddress.selector;
-        selectors[1] = DiamondInspectFacet.facetFunctionSelectors.selector;
-        selectors[2] = DiamondInspectFacet.facetAddresses.selector;
-        selectors[3] = DiamondInspectFacet.facets.selector;
-        selectors[4] = DiamondInspectFacet.functionFacetPairs.selector;
+    function packedSelectors() external pure returns (bytes memory) {
+        return bytes.concat(
+            DiamondInspectFacet.facetAddress.selector,
+            DiamondInspectFacet.facetFunctionSelectors.selector,
+            DiamondInspectFacet.facetAddresses.selector,
+            DiamondInspectFacet.facets.selector,
+            DiamondInspectFacet.functionFacetPairs.selector
+        );
     }
 }

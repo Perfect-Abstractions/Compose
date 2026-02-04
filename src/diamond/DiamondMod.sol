@@ -51,23 +51,6 @@ error FunctionSelectorsCallFailed(address _facet);
 error NoSelectorsForFacet(address _facet);
 error NoBytecodeAtAddress(address _contractAddress);
 
-function functionSelectors(address _facet) view returns (bytes4[] memory) {
-    if (_facet.code.length == 0) {
-        revert NoBytecodeAtAddress(_facet);
-    }
-    (bool success, bytes memory data) =
-        _facet.staticcall(abi.encodeWithSelector(bytes4(keccak256("functionSelectors()"))));
-
-    if (success == false) {
-        revert FunctionSelectorsCallFailed(_facet);
-    }
-    bytes4[] memory selectors = abi.decode(data, (bytes4[]));
-    if (selectors.length == 0) {
-        revert NoSelectorsForFacet(_facet);
-    }
-    return selectors;
-}
-
 /**
  * @notice Emitted when a function is added to a diamond.
  *
@@ -79,9 +62,39 @@ event DiamondFunctionAdded(bytes4 indexed _selector, address indexed _facet);
 error CannotAddFunctionToDiamondThatAlreadyExists(bytes4 _selector);
 error NoFacetsToAdd();
 
-/**
- * @notice Adds facets and their function selectors to the diamond.
- */
+function packedSelectors(address _facet) view returns (bytes memory) {
+    if (_facet.code.length == 0) {
+        revert NoBytecodeAtAddress(_facet);
+    }
+    (bool success, bytes memory selectors) =
+        _facet.staticcall(abi.encodeWithSelector(bytes4(keccak256("packedSelectors()"))));
+
+    if (success == false) {
+        revert FunctionSelectorsCallFailed(_facet);
+    }
+    if (selectors.length < 4) {
+        revert NoSelectorsForFacet(_facet);
+    }
+    return selectors;
+}
+
+function at(bytes memory selectors, uint256 index) pure returns (bytes4 selector) {
+    assembly ("memory-safe") {
+        /**
+         * 1. Calculate Pointer
+         * add(selectors, 32) - skips the length field of the bytes array
+         * shl(2, index) is the same as index * 4 but cheaper
+         */
+        let ptr := add(add(selectors, 32), shl(2, index))
+        /**
+         * 2. Load & Return
+         * We load 32 bytes, but Solidity truncates to 4 bytes automatically
+         * upon return assignment, so masking is unnecessary.
+         */
+        selector := mload(ptr)
+    }
+}
+
 function addFacets(address[] memory _facets) {
     DiamondStorage storage s = getStorage();
     if (_facets.length == 0) {
@@ -89,23 +102,27 @@ function addFacets(address[] memory _facets) {
     }
     FacetList memory facetList = s.facetList;
     bytes4 prevFacetNodeId = facetList.lastFacetNodeId;
-    bytes4[] memory facetSelectors = functionSelectors(_facets[0]);
+    bytes memory selectors = packedSelectors(_facets[0]);
+    bytes4 currentFacetNodeId = at(selectors, 0);
     if (facetList.facetCount == 0) {
-        facetList.firstFacetNodeId = facetSelectors[0];
+        facetList.firstFacetNodeId = currentFacetNodeId;
+    } else {
+        s.facetNodes[prevFacetNodeId].nextFacetNodeId = currentFacetNodeId;
     }
     for (uint256 i; i < _facets.length; i++) {
+        uint256 selectorsLength;
         uint256 nextI;
         unchecked {
             nextI = i + 1;
-            facetList.selectorCount += uint32(facetSelectors.length);
+            selectorsLength = selectors.length / 4;
+            facetList.selectorCount += uint32(selectorsLength);
         }
-        bytes4[] memory nextFacetSelectors;
+        bytes memory nextSelectors;
         bytes4 nextFacetNodeId;
         if (nextI < _facets.length) {
-            nextFacetSelectors = functionSelectors(_facets[nextI]);
-            nextFacetNodeId = nextFacetSelectors[0];
+            nextSelectors = packedSelectors(_facets[nextI]);
+            nextFacetNodeId = at(nextSelectors, 0);
         }
-        bytes4 currentFacetNodeId = facetSelectors[0];
         address oldFacet = s.facetNodes[currentFacetNodeId].facet;
         if (oldFacet != address(0)) {
             revert CannotAddFunctionToDiamondThatAlreadyExists(currentFacetNodeId);
@@ -114,8 +131,8 @@ function addFacets(address[] memory _facets) {
         s.facetNodes[currentFacetNodeId] = FacetNode(facet, prevFacetNodeId, nextFacetNodeId);
         emit DiamondFunctionAdded(currentFacetNodeId, facet);
 
-        for (uint256 selectorIndex = 1; selectorIndex < facetSelectors.length; selectorIndex++) {
-            bytes4 selector = facetSelectors[selectorIndex];
+        for (uint256 selectorIndex = 1; selectorIndex < selectorsLength; selectorIndex++) {
+            bytes4 selector = at(selectors, selectorIndex);
             oldFacet = s.facetNodes[selector].facet;
             if (oldFacet != address(0)) {
                 revert CannotAddFunctionToDiamondThatAlreadyExists(selector);
@@ -124,7 +141,8 @@ function addFacets(address[] memory _facets) {
             emit DiamondFunctionAdded(selector, facet);
         }
         prevFacetNodeId = currentFacetNodeId;
-        facetSelectors = nextFacetSelectors;
+        selectors = nextSelectors;
+        currentFacetNodeId = nextFacetNodeId;
     }
     unchecked {
         facetList.facetCount += uint32(_facets.length);
