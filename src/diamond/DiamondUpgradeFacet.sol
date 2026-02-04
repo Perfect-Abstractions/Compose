@@ -307,25 +307,6 @@ contract DiamondUpgradeFacet {
                 }
                 prevFacetNodeId = oldFacetNode.prevFacetNodeId;
                 nextFacetNodeId = oldFacetNode.nextFacetNodeId;
-                if (keccak256(oldSelectors) == keccak256(newSelectors)) {
-                    /**
-                     * Same selectors, replace.
-                     */
-                    emit DiamondFunctionReplaced(newCurrentFacetNodeId, oldFacet, newFacet);
-                    s.facetNodes[newCurrentFacetNodeId] = FacetNode(newFacet, prevFacetNodeId, nextFacetNodeId);
-                    /**
-                     * Replace remaining selectors.
-                     */
-                    unchecked {
-                        selectorsLength = newSelectors.length / 4;
-                    }
-                    for (uint256 selectorIndex = 1; selectorIndex < selectorsLength; selectorIndex++) {
-                        bytes4 selector = at(newSelectors, selectorIndex);
-                        emit DiamondFunctionReplaced(selector, oldFacet, newFacet);
-                        s.facetNodes[selector] = FacetNode(newFacet, bytes4(0), bytes4(0));
-                    }
-                    continue;
-                }
             }
 
             if (oldCurrentFacetNodeId != newCurrentFacetNodeId) {
@@ -357,6 +338,25 @@ contract DiamondUpgradeFacet {
                     s.facetNodes[nextFacetNodeId].prevFacetNodeId = newCurrentFacetNodeId;
                 }
             } else {
+                if (keccak256(oldSelectors) == keccak256(newSelectors)) {
+                    /**
+                     * Same selectors, replace.
+                     */
+                    emit DiamondFunctionReplaced(newCurrentFacetNodeId, oldFacet, newFacet);
+                    s.facetNodes[newCurrentFacetNodeId] = FacetNode(newFacet, prevFacetNodeId, nextFacetNodeId);
+                    /**
+                     * Replace remaining selectors.
+                     */
+                    unchecked {
+                        selectorsLength = newSelectors.length / 4;
+                    }
+                    for (uint256 selectorIndex = 1; selectorIndex < selectorsLength; selectorIndex++) {
+                        bytes4 selector = at(newSelectors, selectorIndex);
+                        emit DiamondFunctionReplaced(selector, oldFacet, newFacet);
+                        s.facetNodes[selector] = FacetNode(newFacet, bytes4(0), bytes4(0));
+                    }
+                    continue;
+                }
                 /**
                  * Same first selector, just replace in place.
                  */
