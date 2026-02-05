@@ -256,9 +256,15 @@ contract DiamondUpgradeFacet {
             /**
              * 6. Update Free Memory Pointer
              * New Free Memory Pointer is after the copied selectors.
-             * Notice that this is not 32-byte aligned.
+             * Solidity requires the Free Memory Pointer to be aligned to 32 bytes.
+             * 1. add(ptr, size) - end of copied selectors
+             * 2. add(..., 0x1f) - round up to next 32-byte boundary
+             * 3. and(..., not(0x1f)) - clear lower 5 bits to align to 32 bytes
              */
-            mstore(0x40, add(ptr, size))
+            mstore(
+                0x40,
+                and(add(add(ptr, size), 0x1f), 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffe0)
+            )
         }
     }
 
