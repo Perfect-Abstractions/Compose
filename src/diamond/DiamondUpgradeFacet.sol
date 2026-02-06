@@ -186,22 +186,31 @@ contract DiamondUpgradeFacet {
 
     function packedSelectors(address _facet) internal view returns (bytes memory selectors) {
         assembly ("memory-safe") {
+            if iszero(extcodesize(_facet)) {
+                /**
+                 * error NoBytecodeAtAddress(address)
+                 */
+                mstore(0x00, 0xd94e3bbf00000000000000000000000000000000000000000000000000000000)
+                mstore(0x04, _facet)
+                revert(0x00, 0x24)
+            }
             /**
-             * 1. Point to the current Free Memory Pointer (0x40).
-             * We use this as the start of our "Static Buffer" workspace.
+             * 1. Initialize Pointer.
+             * Load the Free Memory Pointer (0x40). This points to the start of currently
+             * unallocated memory. We will use this space to build our 'selectors' array.
              */
             let ptr := mload(0x40)
             /**
-             * 2. Prepare calldata for packedSelectors()
-             * "0x3e62267c" is the function selector for packedSelectors()
-             * "0x3e62267c" is bytes4(keccak256("packedSelectors()"))
-             * We store it at ptr to reuse that memory immediately.
+             * 2. Prepare Calldata.
+             * We reuse the 'ptr' memory temporarily to store the function selector for the call.
+             * 0x3e62267c = bytes4(keccak256("packedSelectors()"))
+             * Layout at 'ptr': [0x3e62267c... (padded to 32 bytes)]
              */
             mstore(ptr, 0x3e62267c00000000000000000000000000000000000000000000000000000000)
             /**
-             * 3. Perform the staticcall.
-             * We pass 0 for out and outSize to keep the return data in the
-             * "Free Waiting Room" (Return Data Buffer) until we verify it.
+             * 3. Perform Staticcall.
+             * out/outSize are 0 because we handle the output dynamically using returndatacopy.
+             * The return data remains in the contract's "Return Data Buffer" for now.
              */
             let success :=
                 staticcall(
@@ -209,65 +218,92 @@ contract DiamondUpgradeFacet {
                     _facet, // target address
                     ptr, // pointer to start of input
                     0x4, // input length (4 bytes for selector)
-                    0, // output pointer, not used
-                    0 // output length, not used
+                    0, // out pointer, not used
+                    0 // outSize, not used
                 )
             /**
              * 4. Basic Safety Check.
-             * Ensure the call succeeded and returned at least 68 bytes
+             * We verify two things:
+             * a) The call succeeded.
+             * b) The return data is at least 68 bytes (Standard ABI Encoded Bytes).
+             * 68 bytes = 32 (Offset) + 32 (Length) + 4 (Minimum 1 selector).
              */
-            if iszero(success) {
+            if or(iszero(success), lt(returndatasize(), 68)) {
                 /**
-                 * error FunctionSelectorsCallFailed(address) selector: 0x30319baa
+                 * Handle Failure.
+                 * If success is false, we revert with FunctionSelectorsCallFailed(address).
+                 * If size < 68, we revert with NoSelectorsForFacet(address).
                  */
-                mstore(0x00, 0x30319baa00000000000000000000000000000000000000000000000000000000)
-                mstore(0x04, _facet)
-                revert(0x00, 0x24)
-            }
-            /**
-             * Minimum return data size is 68 bytes:
-             * 32 bytes offset + 32 bytes array length + 4 bytes (at least one selector).
-             * If facet address has no bytecode then return size will be 0.
-             */
-            if lt(returndatasize(), 68) {
-                /**
-                 * error NoSelectorsForFacet(address) selector: 0x9c23886b
-                 */
+                if iszero(success) {
+                    /**
+                     * error FunctionSelectorsCallFailed(address)
+                     */
+                    mstore(0x00, 0x30319baa00000000000000000000000000000000000000000000000000000000)
+                    mstore(0x04, _facet)
+                    revert(0x00, 0x24)
+                }
+                // error NoSelectorsForFacet(address)
                 mstore(0x00, 0x9c23886b00000000000000000000000000000000000000000000000000000000)
                 mstore(0x04, _facet)
                 revert(0x00, 0x24)
             }
+
             /**
-             * 5. Extraction.
-             * Move the data from the hidden Return Data Buffer.
-             * This overwrites the 4-byte selector and facet address we stored earlier.
+             * 5. Initialize the Array & "Peek" Length.
+             * We copy the Length word from the Return Data Buffer directly to 'ptr'.
+             * - Source Offset: 0x20 (We skip the first 32 bytes, which is the ABI Offset).
+             * - Length: 0x20 (We copy exactly 32 bytes).
+             * Result: ptr now holds the declared length of the bytes array.
+             */
+            returndatacopy(ptr, 0x20, 0x20)
+            let declaredLength := mload(ptr)
+            /**
+             * 6. Bounds Check.
+             * Verify the Return Data Buffer actually contains the data declared by 'declaredLength'.
+             * Formula: 32 (Offset) + 32 (Length Word) + declaredLength <= returndatasize()
+             */
+            if lt(returndatasize(), add(declaredLength, 0x40)) {
+                revert(0, 0)
+            }
+            /**
+             * 7. Domain Validation (4-Byte Alignment).
+             * Function selectors are strictly 4 bytes. We ensure the length is a multiple of 4.
+             * Logic: (x % 4 == 0) is equivalent to (x & 3 == 0).
+             */
+            if and(declaredLength, 3) {
+                revert(0, 0)
+            }
+            /**
+             * 8. Calculate Memory Size.
+             * Solidity requires arrays to be padded to 32-byte boundaries in memory.
+             * Formula: RoundUp32(x) = (x + 31) & ~31
+             */
+            let paddedLength := and(add(declaredLength, 0x1f), not(0x1f))
+
+            /**
+             * 9. Extraction & Auto-Padding.
+             * We copy the data payload from the Return Data Buffer to memory.
+             * - Dest:   ptr + 0x20 (After the Length word we set in Step 5).
+             * - Source: 0x40 (Skip the 32-byte ABI Offset + 32-byte Length Word).
+             * - Size:   paddedLength.
              *
-             * ABI encoding for 'bytes' includes a 32-byte offset word at the start.
-             * We point 'selectors' to ptr + 0x20 to skip the offset and point
-             * directly to the Length word, making it a valid Solidity bytes array.
+             * MAGIC: If returndatasize is smaller than (64 + paddedLength), returndatacopy
+             * automatically fills the remaining bytes with 0x00. This ensures the
+             * memory is clean and perfectly padded without manual masking.
              */
-            let size := sub(returndatasize(), 0x20) // Adjust size to account for the 32-byte offset word
-            returndatacopy(ptr, 0x20, size)
-
+            returndatacopy(add(ptr, 0x20), 0x40, paddedLength)
             /**
-             * 6. Integrity check
-             * @param selectors
-             * @param index
+             * 10. Finalize Pointer.
+             * Set the return variable 'selectors' to point to our new array in memory.
              */
-
             selectors := ptr
             /**
-             * 6. Update Free Memory Pointer
-             * New Free Memory Pointer is after the copied selectors.
-             * Solidity requires the Free Memory Pointer to be aligned to 32 bytes.
-             * 1. add(ptr, size) - end of copied selectors
-             * 2. add(..., 0x1f) - round up to next 32-byte boundary (0x1f is 31)
-             * 3. and(..., not(0x1f)) - clear lower 5 bits to align to 32 bytes
+             * 11. Update Free Memory Pointer.
+             * We advance the Free Memory Pointer to protect the data we just allocated.
+             * New 0x40 = Start(ptr) + LengthWord(32) + Data(paddedLength).
+             * No rounding is needed here because 'paddedLength' is already 32-byte aligned.
              */
-            mstore(
-                0x40,
-                and(add(add(ptr, size), 0x1f), 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffe0)
-            )
+            mstore(0x40, add(ptr, add(0x20, paddedLength)))
         }
     }
 
