@@ -308,12 +308,6 @@ contract DiamondUpgradeFacet {
         } else {
             s.facetNodes[prevFacetNodeId].nextFacetNodeId = currentFacetNodeId;
         }
-        if (facetLength == 1) {
-            if (s.facetNodes[currentFacetNodeId].facet != address(0)) {
-                revert CannotAddFunctionToDiamondThatAlreadyExists(currentFacetNodeId);
-            }
-            s.facetNodes[currentFacetNodeId] = FacetNode(facet, prevFacetNodeId, bytes4(0));
-        }
         emit DiamondFunctionAdded(currentFacetNodeId, facet);
         for (uint256 selectorIndex = 1; selectorIndex < selectorsLength; selectorIndex++) {
             bytes4 selector = at(selectors, selectorIndex);
