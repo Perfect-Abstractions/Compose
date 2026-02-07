@@ -5,7 +5,7 @@ pragma solidity >=0.8.30;
  * https://compose.diamonds
  */
 
-/*
+/**
  * @title Reference implementation for upgrade function for
  *        ERC-8109 Diamonds, Simplified
  *
@@ -26,7 +26,7 @@ pragma solidity >=0.8.30;
  *     * nextFacetNodeId - Is the selector of the first FacetNode of the next
  *       facet.
  *
- * Here is a example that shows the structor:
+ * Here is a example that shows the structure:
  *
  * FacetList
  *   facetCount          = 3
@@ -61,7 +61,17 @@ pragma solidity >=0.8.30;
  * - Only the first selector of each facet participates in the linked list.
  * - The linked list connects facets, not individual selectors.
  * - Any values in "prevFacetNodeId" in non-first FacetNodes are not used.
+ *
+ * Checked/unchecked math note:
+ * We use unchecked math with `facetList.selectorCount` because that variable does not affect the adding,
+ * replacing, and removing of selectors and facets. It is used by some introspection functions. Checked math
+ * is used with facetList.facetCount because that affects adding, replacing, and removing selectors and facets.
+ * Of course these variables should never overflow/underflow anyway.
  */
+
+interface IFacet {
+    function packedSelectors() external pure returns (bytes memory);
+}
 
 bytes32 constant DIAMOND_STORAGE_POSITION = keccak256("erc8109.diamond");
 
@@ -151,6 +161,7 @@ error CannotReplaceFacetWithSameFacet(address _facet);
 error FacetToReplaceDoesNotExist(address _oldFacet);
 error DelegateCallReverted(address _delegate, bytes _delegateCalldata);
 error FunctionSelectorsCallFailed(address _facet);
+error IncorrectSelectorsEncoding(address _facet);
 
 /**
  * @dev This error means that a function to replace exists in a
@@ -158,18 +169,56 @@ error FunctionSelectorsCallFailed(address _facet);
  */
 error CannotReplaceFunctionFromNonReplacementFacet(bytes4 _selector);
 
-function packedSelectors(address _facet) view returns (bytes memory) {
-    if (_facet.code.length == 0) {
-        revert NoBytecodeAtAddress(_facet);
-    }
-    (bool success, bytes memory selectors) =
-        _facet.staticcall(abi.encodeWithSelector(bytes4(keccak256("packedSelectors()"))));
-
+function packedSelectors(address _facet) view returns (bytes memory selectors) {
+    (bool success, bytes memory data) = _facet.staticcall(abi.encodeWithSelector(IFacet.packedSelectors.selector));
     if (success == false) {
         revert FunctionSelectorsCallFailed(_facet);
     }
-    if (selectors.length < 4) {
+    /*
+     * Ensure the data is large enough.
+     * Offset (32 bytes) + array length (32 bytes)
+     */
+    if (data.length < 64) {
+        if (_facet.code.length == 0) {
+            revert NoBytecodeAtAddress(_facet);
+        } else {
+            revert IncorrectSelectorsEncoding(_facet);
+        }
+    }
+
+    // Validate ABI offset == 0x20 for a single dynamic return
+    uint256 offset;
+    assembly ("memory-safe") {
+        offset := mload(add(data, 0x20))
+    }
+    if (offset != 0x20) {
+        revert IncorrectSelectorsEncoding(_facet);
+    }
+    /*
+     * ZERO-COPY DECODE
+     * Instead of abi.decode(wrapper, (bytes)), which copies memory,
+     * we use assembly to point 'selectors' to the bytes array inside 'data'.
+     * The length of `data` is stored at 0 and an ABI offset is located at 0x20 (32).
+     * We skip over those to point `selectors` to the length of the
+     * bytes array.
+     */
+    assembly ("memory-safe") {
+        selectors := add(data, 0x40)
+    }
+    uint256 selectorsLength = selectors.length;
+    unchecked {
+        if (selectorsLength > data.length - 64) {
+            revert IncorrectSelectorsEncoding(_facet);
+        }
+    }
+    if (selectorsLength < 4) {
         revert NoSelectorsForFacet(_facet);
+    }
+    /*
+     * Function selectors are strictly 4 bytes. We ensure the length is a multiple of 4.
+     */
+    if (selectorsLength % 4 != 0) {
+        revert IncorrectSelectorsEncoding(_facet);
     }
     return selectors;
 }
@@ -180,70 +229,185 @@ function at(bytes memory selectors, uint256 index) pure returns (bytes4 selector
          * 1. Calculate Pointer
          * add(selectors, 32) - skips the length field of the bytes array
          * shl(2, index) is the same as index * 4 but cheaper
+         * This line executes: ptr = selectorsLength + (4 * index)
          */
         let ptr := add(add(selectors, 32), shl(2, index))
         /**
          * 2. Load & Return
-         * We load 32 bytes.
-         * AND with a mask to zero-out the lower 28 bytes
+         * We load 32 bytes, but Solidity truncates to 4 bytes automatically
+         * upon return of this function, so masking is unnecessary.
          */
-        selector := and(mload(ptr), 0xFFFFFFFF00000000000000000000000000000000000000000000000000000000)
+        selector := mload(ptr)
     }
 }
 
 function addFacets(address[] calldata _facets) {
     DiamondStorage storage s = getDiamondStorage();
-    if (_facets.length == 0) {
+    uint256 facetLength = _facets.length;
+    if (facetLength == 0) {
         return;
     }
     FacetList memory facetList = s.facetList;
+    /*
+     * Snapshot free memory pointer. We restore this at the end of every loop
+     * to prevent memory expansion costs from repeated `packedSelectors` calls.
+     */
+    uint256 freeMemPtr;
+    assembly ("memory-safe") {
+        freeMemPtr := mload(0x40)
+    }
+    /* Algorithm Description:
+     * The first facet is handled separately to initialize the linked list pointers in the FacetNodes.
+     * This allows us to avoid additional conditional checks for linked list management in the main facet loop.
+     *
+     * For the first facet, we link the first selector to the previous facet or if this is the first facet in
+     * the diamond then we assign the first selector to facetList.firstFacetNodeId.
+     *
+     * Then we emit the DiamondFunctionAdded event for the first selector. But don't actually add the first
+     * selector to the diamond at this point because we don't have the nextFacetNodeId value for the facet yet.
+     * We emit the DiamondFunctionAdded event at this point so the event order is consistent with the order of
+     * selectors returned by the facet.
+     *
+     * All the selectors (except the first one) in the first facet are then added to the diamond.
+     *
+     * In the first iteration of the main facet loop the the selectors for the next facet are retrieved.
+     * This makes available the nextFacetNodeId value that is needed to store the first selector of the
+     * first facet. So then the first selector is stored.
+     *
+     * The main facet loop continues in a similar way, emitting the DiamondFunctionAdded for the first
+     * selector of the facet, but not adding it, adding the other selectors, and in the next iteration adding
+     * the first selector after nextFacetNodeId is available.
+     *
+     * After the main facet loop ends, the first selector from the last facet is added to the diamond.
+     */
+
     bytes4 prevFacetNodeId = facetList.lastFacetNodeId;
-    bytes memory selectors = packedSelectors(_facets[0]);
+    address facet = _facets[0];
+    bytes memory selectors = packedSelectors(facet);
+    /*
+     * Shift right by 2 is the same as dividing by 4, but cheaper.
+     * We do this to get the number of selectors
+     */
+    uint256 selectorsLength = selectors.length >> 2;
+    unchecked {
+        facetList.selectorCount += uint32(selectorsLength);
+    }
+    /*
+     * currentFacetNodeId is the head node of the current facet.
+     * We cannot write it to storage yet because we don't know the `next` pointer.
+     */
     bytes4 currentFacetNodeId = at(selectors, 0);
     if (facetList.facetCount == 0) {
         facetList.firstFacetNodeId = currentFacetNodeId;
     } else {
+        /*
+         * Link the previous tail of the diamond to this new batch
+         */
         s.facetNodes[prevFacetNodeId].nextFacetNodeId = currentFacetNodeId;
     }
-    for (uint256 i; i < _facets.length; i++) {
-        uint256 selectorsLength;
-        uint256 nextI;
+    /*
+     * Emit event for the first selector now to preserve order, even though storage write is deferred.
+     */
+    emit DiamondFunctionAdded(currentFacetNodeId, facet);
+    /*
+     * Add all selectors, except the first, to the diamond.
+     */
+    for (uint256 selectorIndex = 1; selectorIndex < selectorsLength; selectorIndex++) {
+        bytes4 selector = at(selectors, selectorIndex);
+        if (s.facetNodes[selector].facet != address(0)) {
+            revert CannotAddFunctionToDiamondThatAlreadyExists(selector);
+        }
+        s.facetNodes[selector] = FacetNode(facet, bytes4(0), bytes4(0));
+        emit DiamondFunctionAdded(selector, facet);
+    }
+    /*
+     * Reset memory for the main loop.
+     */
+    assembly ("memory-safe") {
+        mstore(0x40, freeMemPtr)
+    }
+    /*
+     * Main facet loop.
+     * 1. Gets the next facet's selectors.
+     * 2. Now that the nextFacetNodeId value for the previous facet is available, adds the previous
+     *    facet's first selector to the diamond.
+     * 3. Updates facet values: facet = nextFacet, etc.
+     * 4. Emits the DiamondFunctionAdded for facet's first selector.
+     * 5. Adds all the selectors (except the first) to the diamond.
+     * 6. Repeat loop.
+     * Note: All selectors of a facet, except the first selector, are added the diamond. After that the first
+     * selector is added. However the DiamondEvent event for the first selector is emitted before the rest of
+     * the selectors. This maintains the order of events with the order given by facets.
+     */
+    for (uint256 i = 1; i < facetLength; i++) {
+        address nextFacet = _facets[i];
+        selectors = packedSelectors(nextFacet);
+        /*
+         * Shift right by 2 is the same as dividing by 4, but cheaper.
+         * We do this to get the number of selectors.
+         */
+        selectorsLength = selectors.length >> 2;
         unchecked {
-            nextI = i + 1;
-            selectorsLength = selectors.length / 4;
             facetList.selectorCount += uint32(selectorsLength);
         }
-        bytes memory nextSelectors;
-        bytes4 nextFacetNodeId;
-        if (nextI < _facets.length) {
-            nextSelectors = packedSelectors(_facets[nextI]);
-            nextFacetNodeId = at(nextSelectors, 0);
-        }
-        address oldFacet = s.facetNodes[currentFacetNodeId].facet;
-        if (oldFacet != address(0)) {
+        /*
+         * Check to see if the PENDING first selector (from previous iteration) already exists in the diamond.
+         */
+        if (s.facetNodes[currentFacetNodeId].facet != address(0)) {
             revert CannotAddFunctionToDiamondThatAlreadyExists(currentFacetNodeId);
         }
-        address facet = _facets[i];
+        /*
+         * Identify the link to the next facet
+         */
+        bytes4 nextFacetNodeId = at(selectors, 0);
+        /*
+         * Store the previous facet's first selector.
+         */
         s.facetNodes[currentFacetNodeId] = FacetNode(facet, prevFacetNodeId, nextFacetNodeId);
+        /*
+         * Move pointers forward.
+         * These assignments switch us from processing the previous facet's first selector to
+         * processing the next facet's selectors.
+         * `currentFacetNodeId` becomes the new pending first selector.
+         */
+        facet = nextFacet;
+        prevFacetNodeId = currentFacetNodeId;
+        currentFacetNodeId = nextFacetNodeId;
+        /*
+         * Here we emit the DiamondFunctionAdded event for for the first selector of the facet.
+         * But we don't actually add the selector here.
+         * The selector gets added in the next iteration of the loop when the nextFacetNodeId
+         * value is available for it.
+         */
         emit DiamondFunctionAdded(currentFacetNodeId, facet);
-
+        /*
+         * Add all the selectors of the facet to the diamond, except the first selector.
+         */
         for (uint256 selectorIndex = 1; selectorIndex < selectorsLength; selectorIndex++) {
             bytes4 selector = at(selectors, selectorIndex);
-            oldFacet = s.facetNodes[selector].facet;
-            if (oldFacet != address(0)) {
+            if (s.facetNodes[selector].facet != address(0)) {
                 revert CannotAddFunctionToDiamondThatAlreadyExists(selector);
             }
             s.facetNodes[selector] = FacetNode(facet, bytes4(0), bytes4(0));
             emit DiamondFunctionAdded(selector, facet);
         }
-        prevFacetNodeId = currentFacetNodeId;
-        selectors = nextSelectors;
-        currentFacetNodeId = nextFacetNodeId;
+        /*
+         * Restore Free Memory Pointer to reuse memory from packedSelector() calls.
+         */
+        assembly ("memory-safe") {
+            mstore(0x40, freeMemPtr)
+        }
     }
-    unchecked {
-        facetList.facetCount += uint32(_facets.length);
+    /*
+     * Validates and adds the first selector of the last facet to the diamond.
+     */
+    if (s.facetNodes[currentFacetNodeId].facet != address(0)) {
+        revert CannotAddFunctionToDiamondThatAlreadyExists(currentFacetNodeId);
     }
-    facetList.lastFacetNodeId = prevFacetNodeId;
+    s.facetNodes[currentFacetNodeId] = FacetNode(facet, prevFacetNodeId, bytes4(0));
+    facetList.facetCount += uint32(facetLength);
+
+    facetList.lastFacetNodeId = currentFacetNodeId;
     s.facetList = facetList;
 }
 
@@ -258,6 +422,14 @@ struct FacetReplacement {
 function replaceFacets(FacetReplacement[] calldata _replaceFacets) {
     DiamondStorage storage s = getDiamondStorage();
     FacetList memory facetList = s.facetList;
+    /*
+     * Snapshot free memory pointer. We restore this within the loop to prevent
+     * memory expansion costs from repeated `packedSelectors` calls.
+     */
+    uint256 freeMemPtr;
+    assembly ("memory-safe") {
+        freeMemPtr := mload(0x40)
+    }
     for (uint256 i; i < _replaceFacets.length; i++) {
         address oldFacet = _replaceFacets[i].oldFacet;
         address newFacet = _replaceFacets[i].newFacet;
@@ -266,61 +438,85 @@ function replaceFacets(FacetReplacement[] calldata _replaceFacets) {
         }
         bytes memory oldSelectors = packedSelectors(oldFacet);
         bytes memory newSelectors = packedSelectors(newFacet);
+        /*
+         * Shift right by 2 is the same as dividing by 4, but cheaper.
+         * We do this to get the number of selectors
+         */
+        uint256 selectorsLength = newSelectors.length >> 2;
         bytes4 oldCurrentFacetNodeId = at(oldSelectors, 0);
         bytes4 newCurrentFacetNodeId = at(newSelectors, 0);
-        FacetNode storage oldFacetNode = s.facetNodes[oldCurrentFacetNodeId];
+
+        /**
+         * Validate old facet exists.
+         */
+        FacetNode memory oldFacetNode = s.facetNodes[oldCurrentFacetNodeId];
         if (oldFacetNode.facet != oldFacet) {
             revert FacetToReplaceDoesNotExist(oldFacet);
         }
-        {
-            bytes4 prevFacetNodeId = oldFacetNode.prevFacetNodeId;
-            bytes4 nextFacetNodeId = oldFacetNode.nextFacetNodeId;
+        if (oldCurrentFacetNodeId != newCurrentFacetNodeId) {
             /**
-             * Adjust facet list if needed
+             * Write first selector with linking info, then process remaining.
              */
-            if (oldCurrentFacetNodeId != newCurrentFacetNodeId) {
-                if (oldCurrentFacetNodeId == facetList.firstFacetNodeId) {
-                    facetList.firstFacetNodeId = newCurrentFacetNodeId;
-                } else {
-                    s.facetNodes[prevFacetNodeId].nextFacetNodeId = newCurrentFacetNodeId;
+            address facet = s.facetNodes[newCurrentFacetNodeId].facet;
+            if (facet == address(0)) {
+                emit DiamondFunctionAdded(newCurrentFacetNodeId, newFacet);
+                unchecked {
+                    facetList.selectorCount++;
                 }
-                if (oldCurrentFacetNodeId == facetList.lastFacetNodeId) {
-                    facetList.lastFacetNodeId = newCurrentFacetNodeId;
-                } else {
-                    s.facetNodes[nextFacetNodeId].prevFacetNodeId = newCurrentFacetNodeId;
-                }
-                /**
-                 * Validate facet node id and emit event.
-                 */
-                address facet = s.facetNodes[newCurrentFacetNodeId].facet;
-                if (facet == address(0)) {
-                    emit DiamondFunctionAdded(newCurrentFacetNodeId, newFacet);
-                    unchecked {
-                        facetList.selectorCount++;
-                    }
-                } else if (facet == oldFacet) {
-                    emit DiamondFunctionReplaced(newCurrentFacetNodeId, oldFacet, newFacet);
-                } else {
-                    revert CannotAddFunctionToDiamondThatAlreadyExists(newCurrentFacetNodeId);
-                }
-            } else {
+            } else if (facet == oldFacet) {
                 emit DiamondFunctionReplaced(newCurrentFacetNodeId, oldFacet, newFacet);
+            } else {
+                revert CannotReplaceFunctionFromNonReplacementFacet(newCurrentFacetNodeId);
             }
+            s.facetNodes[newCurrentFacetNodeId] =
+                FacetNode(newFacet, oldFacetNode.prevFacetNodeId, oldFacetNode.nextFacetNodeId);
             /**
-             * Set the facet node for the selector.
+             * Update linked list.
              */
-            s.facetNodes[newCurrentFacetNodeId] = FacetNode(newFacet, prevFacetNodeId, nextFacetNodeId);
+            if (oldCurrentFacetNodeId == facetList.firstFacetNodeId) {
+                facetList.firstFacetNodeId = newCurrentFacetNodeId;
+            } else {
+                s.facetNodes[oldFacetNode.prevFacetNodeId].nextFacetNodeId = newCurrentFacetNodeId;
+            }
+            if (oldCurrentFacetNodeId == facetList.lastFacetNodeId) {
+                facetList.lastFacetNodeId = newCurrentFacetNodeId;
+            } else {
+                s.facetNodes[oldFacetNode.nextFacetNodeId].prevFacetNodeId = newCurrentFacetNodeId;
+            }
+        } else {
+            /**
+             * Same first selector, just replace in place.
+             */
+            s.facetNodes[newCurrentFacetNodeId] =
+                FacetNode(newFacet, oldFacetNode.prevFacetNodeId, oldFacetNode.nextFacetNodeId);
+            emit DiamondFunctionReplaced(newCurrentFacetNodeId, oldFacet, newFacet);
+            /*
+             * If the selectors are same from both facets, then we can safely and very efficiently
+             * replace the old facet address with the new facet address for all the selctors.
+             */
+            if (keccak256(oldSelectors) == keccak256(newSelectors)) {
+                /**
+                 * Replace remaining selectors.
+                 */
+                for (uint256 selectorIndex = 1; selectorIndex < selectorsLength; selectorIndex++) {
+                    bytes4 selector = at(newSelectors, selectorIndex);
+                    s.facetNodes[selector] = FacetNode(newFacet, bytes4(0), bytes4(0));
+                    emit DiamondFunctionReplaced(selector, oldFacet, newFacet);
+                }
+                /*
+                 * Restore Free Memory Pointer to reuse memory.
+                 */
+                assembly ("memory-safe") {
+                    mstore(0x40, freeMemPtr)
+                }
+                continue;
+            }
         }
-        uint256 newSelectorsLength;
-        uint256 oldSelectorsLength;
-        unchecked {
-            newSelectorsLength = newSelectors.length / 4;
-            oldSelectorsLength = oldSelectors.length / 4;
-        }
+
         /**
          * Add or replace new selectors.
          */
-        for (uint256 selectorIndex = 1; selectorIndex < newSelectorsLength; selectorIndex++) {
+        for (uint256 selectorIndex = 1; selectorIndex < selectorsLength; selectorIndex++) {
             bytes4 selector = at(newSelectors, selectorIndex);
             address facet = s.facetNodes[selector].facet;
             if (facet == address(0)) {
@@ -337,8 +533,12 @@ function replaceFacets(FacetReplacement[] calldata _replaceFacets) {
         }
         /**
          * Remove old selectors that were not replaced.
+         *
+         * Shift right by 2 is the same as dividing by 4, but cheaper.
+         * We do this to get the number of selectors.
          */
-        for (uint256 selectorIndex; selectorIndex < oldSelectorsLength; selectorIndex++) {
+        selectorsLength = oldSelectors.length >> 2;
+        for (uint256 selectorIndex; selectorIndex < selectorsLength; selectorIndex++) {
             bytes4 selector = at(oldSelectors, selectorIndex);
             address facet = s.facetNodes[selector].facet;
             if (facet == oldFacet) {
@@ -349,6 +549,12 @@ function replaceFacets(FacetReplacement[] calldata _replaceFacets) {
                 emit DiamondFunctionRemoved(selector, oldFacet);
             }
         }
+        /*
+         * Restore Free Memory Pointer to reuse memory.
+         */
+        assembly ("memory-safe") {
+            mstore(0x40, freeMemPtr)
+        }
     }
     s.facetList = facetList;
 }
@@ -356,33 +562,47 @@ function replaceFacets(FacetReplacement[] calldata _replaceFacets) {
 function removeFacets(address[] calldata _facets) {
     DiamondStorage storage s = getDiamondStorage();
     FacetList memory facetList = s.facetList;
+    /*
+     * Snapshot free memory pointer. We restore this at the end of every loop
+     * to prevent memory expansion costs from repeated `packedSelectors` calls.
+     */
+    uint256 freeMemPtr;
+    assembly ("memory-safe") {
+        freeMemPtr := mload(0x40)
+    }
     for (uint256 i = 0; i < _facets.length; i++) {
         address facet = _facets[i];
         bytes memory selectors = packedSelectors(facet);
-        uint256 selectorsLength;
+        /*
+         * Shift right by 2 is the same as dividing by 4, but cheaper.
+         * We do this to get the number of selectors
+         */
+        uint256 selectorsLength = selectors.length >> 2;
         unchecked {
-            selectorsLength = selectors.length / 4;
             facetList.selectorCount -= uint32(selectorsLength);
         }
+
         bytes4 currentFacetNodeId = at(selectors, 0);
-        FacetNode storage facetNode = s.facetNodes[currentFacetNodeId];
+        FacetNode memory facetNode = s.facetNodes[currentFacetNodeId];
+        /*
+         * This verifies that the facet we are removing exists in the
+         * diamond, so we can trust the rest of the selectors from `facet`.
+         */
         if (facetNode.facet != facet) {
             revert CannotRemoveFacetThatDoesNotExist(facet);
         }
         /**
          * Remove the facet from the linked list.
          */
-        bytes4 nextFacetNodeId = facetNode.nextFacetNodeId;
-        bytes4 prevFacetNodeId = facetNode.prevFacetNodeId;
         if (currentFacetNodeId == facetList.firstFacetNodeId) {
-            facetList.firstFacetNodeId = nextFacetNodeId;
+            facetList.firstFacetNodeId = facetNode.nextFacetNodeId;
         } else {
-            s.facetNodes[prevFacetNodeId].nextFacetNodeId = nextFacetNodeId;
+            s.facetNodes[facetNode.prevFacetNodeId].nextFacetNodeId = facetNode.nextFacetNodeId;
         }
         if (currentFacetNodeId == facetList.lastFacetNodeId) {
-            facetList.lastFacetNodeId = prevFacetNodeId;
+            facetList.lastFacetNodeId = facetNode.prevFacetNodeId;
         } else {
-            s.facetNodes[nextFacetNodeId].prevFacetNodeId = prevFacetNodeId;
+            s.facetNodes[facetNode.nextFacetNodeId].prevFacetNodeId = facetNode.prevFacetNodeId;
         }
         /**
          * Remove facet selectors.
@@ -392,10 +612,15 @@ function removeFacets(address[] calldata _facets) {
             delete s.facetNodes[selector];
             emit DiamondFunctionRemoved(selector, facet);
         }
+        /*
+         * Restore Free Memory Pointer to reuse memory.
+         */
+        assembly ("memory-safe") {
+            mstore(0x40, freeMemPtr)
+        }
     }
-    unchecked {
-        facetList.facetCount -= uint32(_facets.length);
-    }
+    facetList.facetCount -= uint32(_facets.length);
+
     s.facetList = facetList;
 }
 

@@ -61,7 +61,18 @@ pragma solidity >=0.8.30;
  * - Only the first selector of each facet participates in the linked list.
  * - The linked list connects facets, not individual selectors.
  * - Any values in "prevFacetNodeId" in non-first FacetNodes are not used.
+ *
+ * Checked/unchecked math note:
+ * We use unchecked math with `facetList.selectorCount` because that variable does not affect the adding,
+ * replacing, and removing of selectors and facets. It is used by some introspection functions. Checked math
+ * is used with facetList.facetCount because that affects adding, replacing, and removing selectors and facets.
+ * Of course these variables should never overflow/underflow anyway.
  */
+
+interface IFacet {
+    function packedSelectors() external pure returns (bytes memory);
+}
+
 contract DiamondUpgradeFacet {
     /**
      * @notice Thrown when a non-owner attempts an action restricted to owner.
@@ -71,7 +82,7 @@ contract DiamondUpgradeFacet {
     bytes32 constant OWNER_STORAGE_POSITION = keccak256("erc173.owner");
 
     /**
-     * @custom:storage-location erc8042:erc8109.owner
+     * @custom:storage-location erc8042:erc173.owner
      */
     struct OwnerStorage {
         address owner;
@@ -186,8 +197,7 @@ contract DiamondUpgradeFacet {
     error CannotReplaceFunctionFromNonReplacementFacet(bytes4 _selector);
 
     function packedSelectors(address _facet) internal view returns (bytes memory selectors) {
-        (bool success, bytes memory data) =
-            _facet.staticcall(abi.encodeWithSelector(bytes4(keccak256("packedSelectors()"))));
+        (bool success, bytes memory data) = _facet.staticcall(abi.encodeWithSelector(IFacet.packedSelectors.selector));
         if (success == false) {
             revert FunctionSelectorsCallFailed(_facet);
         }
@@ -422,9 +432,8 @@ contract DiamondUpgradeFacet {
             revert CannotAddFunctionToDiamondThatAlreadyExists(currentFacetNodeId);
         }
         s.facetNodes[currentFacetNodeId] = FacetNode(facet, prevFacetNodeId, bytes4(0));
-        unchecked {
-            facetList.facetCount += uint32(facetLength);
-        }
+        facetList.facetCount += uint32(facetLength);
+
         facetList.lastFacetNodeId = currentFacetNodeId;
         s.facetList = facetList;
     }
@@ -599,6 +608,7 @@ contract DiamondUpgradeFacet {
             unchecked {
                 facetList.selectorCount -= uint32(selectorsLength);
             }
+
             bytes4 currentFacetNodeId = at(selectors, 0);
             FacetNode memory facetNode = s.facetNodes[currentFacetNodeId];
             /*
@@ -636,9 +646,8 @@ contract DiamondUpgradeFacet {
                 mstore(0x40, freeMemPtr)
             }
         }
-        unchecked {
-            facetList.facetCount -= uint32(_facets.length);
-        }
+        facetList.facetCount -= uint32(_facets.length);
+
         s.facetList = facetList;
     }
 
