@@ -137,7 +137,7 @@ function at(bytes memory selectors, uint256 index) pure returns (bytes4 selector
     }
 }
 
-function addFacets(address[] calldata _facets) {
+function addFacets(address[] memory _facets) {
     DiamondStorage storage s = getStorage();
     uint256 facetLength = _facets.length;
     if (facetLength == 0) {
