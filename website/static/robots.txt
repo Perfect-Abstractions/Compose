@@ -1,8 +1,25 @@
+# Robots.txt for Compose Documentation
+
+# Allow all search engines to crawl the site
 User-agent: *
 Allow: /
 
+# Disallow tag pages (low-value, duplicate content)
 Disallow: /tags/
 
-# Update this to your final production domain when ready
-Sitemap: https://docusaurus-test-seven-sage.vercel.app/sitemap.xml
+# Disallow search pages (dynamic, no-index content)
+Disallow: /search
+
+# Disallow any admin or internal paths
+Disallow: /admin/
+Disallow: /_next/
+Disallow: /api/
+
+# Allow important content paths explicitly
+Allow: /docs
+Allow: /blog
+Allow: /
+
+# Sitemap location
+Sitemap: https://compose.diamonds/sitemap.xml
 

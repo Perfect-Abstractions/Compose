@@ -36,9 +36,13 @@ jobs:
 
       - name: Generate gas snapshot for base
         run: |
-          forge snapshot --snap .gas-snapshot-base
-          # Copy base snapshot to temp location so it survives checkout
-          cp .gas-snapshot-base /tmp/gas-snapshot-base
+          forge snapshot --snap .gas-snapshot-base || echo "::warning::Base branch snapshot failed (base may have compilation errors)"
+          # Copy base snapshot to temp location if it exists, create empty one if base was broken
+          if [ -f .gas-snapshot-base ]; then
+            cp .gas-snapshot-base /tmp/gas-snapshot-base
+          else
+            touch /tmp/gas-snapshot-base
+          fi
 
       - name: Checkout PR branch again
         uses: actions/checkout@v4

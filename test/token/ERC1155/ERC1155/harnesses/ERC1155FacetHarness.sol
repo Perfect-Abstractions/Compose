@@ -1,6 +1,10 @@
 // SPDX-License-Identifier: MIT
 pragma solidity >=0.8.30;
 
+/* Compose
+ * https://compose.diamonds
+ */
+
 import {ERC1155Facet} from "../../../../../src/token/ERC1155/ERC1155Facet.sol";
 
 /**

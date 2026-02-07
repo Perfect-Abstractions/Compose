@@ -1,6 +1,10 @@
 // SPDX-License-Identifier: MIT
 pragma solidity >=0.8.30;
 
+/* Compose
+ * https://compose.diamonds
+ */
+
 import {Test} from "forge-std/Test.sol";
 import {ERC1155FacetHarness} from "./harnesses/ERC1155FacetHarness.sol";
 import {ERC1155Facet} from "../../../../src/token/ERC1155/ERC1155Facet.sol";
