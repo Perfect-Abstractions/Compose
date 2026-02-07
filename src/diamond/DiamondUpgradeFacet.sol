@@ -26,7 +26,7 @@ pragma solidity >=0.8.30;
  *     * nextFacetNodeId - Is the selector of the first FacetNode of the next
  *       facet.
  *
- * Here is a example that shows the structor:
+ * Here is a example that shows the structure:
  *
  * FacetList
  *   facetCount          = 3
@@ -177,6 +177,7 @@ contract DiamondUpgradeFacet {
     error FacetToReplaceDoesNotExist(address _oldFacet);
     error DelegateCallReverted(address _delegate, bytes _delegateCalldata);
     error FunctionSelectorsCallFailed(address _facet);
+    error IncorrectSelectorsEncoding(address _facet);
 
     /**
      * @dev This error means that a function to replace exists in a
@@ -185,129 +186,58 @@ contract DiamondUpgradeFacet {
     error CannotReplaceFunctionFromNonReplacementFacet(bytes4 _selector);
 
     function packedSelectors(address _facet) internal view returns (bytes memory selectors) {
-        assembly ("memory-safe") {
-            /*
-             * Check if _facet address has bytecode.
-            */
-            if iszero(extcodesize(_facet)) {
-                /**
-                 * error NoBytecodeAtAddress(address)
-                 */
-                mstore(0x00, 0xd94e3bbf00000000000000000000000000000000000000000000000000000000)
-                mstore(0x04, _facet)
-                revert(0x00, 0x24)
-            }
-            /**
-             * 1. Initialize Pointer.
-             * Load the Free Memory Pointer (0x40). This points to the start of currently
-             * unallocated memory. We will use this space to build our 'selectors' array.
-             */
-            let ptr := mload(0x40)
-            /**
-             * 2. Prepare Calldata.
-             * We reuse the 'ptr' memory temporarily to store the function selector for the call.
-             * 0x3e62267c = bytes4(keccak256("packedSelectors()"))
-             * Layout at 'ptr': [0x3e62267c... (padded to 32 bytes)]
-             */
-            mstore(ptr, 0x3e62267c00000000000000000000000000000000000000000000000000000000)
-            /**
-             * 3. Perform Staticcall.
-             * out/outSize are 0 because we handle the output dynamically using returndatacopy.
-             * The return data remains in the contract's "Return Data Buffer" for now.
-             */
-            let success :=
-                staticcall(
-                    gas(), // pass all available gas
-                    _facet, // target address
-                    ptr, // pointer to start of input
-                    0x4, // input length (4 bytes for selector)
-                    0, // out pointer, not used
-                    0 // outSize, not used
-                )
-            /**
-             * 4. Basic Safety Check.
-             * We verify two things:
-             * a) The call succeeded.
-             * b) The return data is at least 68 bytes (Standard ABI Encoded Bytes).
-             * 68 bytes = 32 (Offset) + 32 (Length) + 4 (Minimum 1 selector).
-             */
-            if or(iszero(success), lt(returndatasize(), 68)) {
-                /**
-                 * Handle Failure.
-                 * If success is false, we revert with FunctionSelectorsCallFailed(address).
-                 * If size < 68, we revert with NoSelectorsForFacet(address).
-                 */
-                if iszero(success) {
-                    /**
-                     * error FunctionSelectorsCallFailed(address)
-                     */
-                    mstore(0x00, 0x30319baa00000000000000000000000000000000000000000000000000000000)
-                    mstore(0x04, _facet)
-                    revert(0x00, 0x24)
-                }
-                // error NoSelectorsForFacet(address)
-                mstore(0x00, 0x9c23886b00000000000000000000000000000000000000000000000000000000)
-                mstore(0x04, _facet)
-                revert(0x00, 0x24)
-            }
-
-            /**
-             * 5. Initialize the Array & "Peek" Length.
-             * We copy the Length word from the Return Data Buffer directly to 'ptr'.
-             * - Source Offset: 0x20 (We skip the first 32 bytes, which is the ABI Offset).
-             * - Length: 0x20 (We copy exactly 32 bytes).
-             * Result: ptr now holds the declared length of the bytes array.
-             */
-            returndatacopy(ptr, 0x20, 0x20)
-            let declaredLength := mload(ptr)
-            /**
-             * 6. Bounds Check.
-             * Verify the Return Data Buffer actually contains the data declared by 'declaredLength'.
-             * Formula: 32 (Offset) + 32 (Length Word) + declaredLength <= returndatasize()
-             */
-            if lt(returndatasize(), add(declaredLength, 0x40)) {
-                revert(0, 0)
-            }
-            /**
-             * 7. Domain Validation (4-Byte Alignment).
-             * Function selectors are strictly 4 bytes. We ensure the length is a multiple of 4.
-             * Logic: (x % 4 == 0) is equivalent to (x & 3 == 0).
-             */
-            if and(declaredLength, 3) {
-                revert(0, 0)
-            }
-            /**
-             * 8. Calculate Memory Size.
-             * Solidity requires arrays to be padded to 32-byte boundaries in memory.
-             * Formula: RoundUp32(x) = (x + 31) & ~31
-             */
-            let paddedLength := and(add(declaredLength, 0x1f), not(0x1f))
-
-            /**
-             * 9. Extraction & Auto-Padding.
-             * We copy the data payload from the Return Data Buffer to memory.
-             * - Dest:   ptr + 0x20 (After the Length word we set in Step 5).
-             * - Source: 0x40 (Skip the 32-byte ABI Offset + 32-byte Length Word).
-             * - Size:   paddedLength.
-             *
-             * MAGIC: If returndatasize is smaller than (64 + paddedLength), returndatacopy
-             * automatically fills the remaining bytes with 0x00. This ensures the
-             * memory is clean and perfectly padded without manual masking.
-             */
-            returndatacopy(add(ptr, 0x20), 0x40, paddedLength)
-            /**
-             * 10. Finalize Pointer.
-             * Set the return variable 'selectors' to point to our new array in memory.
-             */
-            selectors := ptr
-            /**
-             * 11. Update Free Memory Pointer.
-             * We advance the Free Memory Pointer to protect the data we just allocated.
-             * New 0x40 = Start(ptr) + LengthWord(32) + Data(paddedLength).
-             * No rounding is needed here because 'paddedLength' is already 32-byte aligned.
-             */
-            mstore(0x40, add(ptr, add(0x20, paddedLength)))
+        (bool success, bytes memory data) =
+            _facet.staticcall(abi.encodeWithSelector(bytes4(keccak256("packedSelectors()"))));
+        if (success == false) {
+            revert FunctionSelectorsCallFailed(_facet);
         }
+        /*
+         * Ensure the data is large enough.
+         * Offset (32 bytes) + array length (32 bytes)
+         */
+        if (data.length < 64) {
+            if (_facet.code.length == 0) {
+                revert NoBytecodeAtAddress(_facet);
+            } else {
+                revert IncorrectSelectorsEncoding(_facet);
+            }
+        }
+
+        // Validate ABI offset == 0x20 for a single dynamic return
+        uint256 offset;
+        assembly ("memory-safe") {
+            offset := mload(add(data, 0x20))
+        }
+        if (offset != 0x20) {
+            revert IncorrectSelectorsEncoding(_facet);
+        }
+        /*
+         * ZERO-COPY DECODE
+         * Instead of abi.decode(wrapper, (bytes)), which copies memory,
+         * we use assembly to point 'selectors' to the bytes array inside 'data'.
+         * The length of `data` is stored at 0 and an ABI offset is located at 0x20 (32).
+         * We skip over those to point `selectors` to the length of the
+         * bytes array.
+         */
+        assembly ("memory-safe") {
+            selectors := add(data, 0x40)
+        }
+        uint256 selectorsLength = selectors.length;
+        unchecked {
+            if (selectorsLength > data.length - 64) {
+                revert IncorrectSelectorsEncoding(_facet);
+            }
+        }
+        if (selectorsLength < 4) {
+            revert NoSelectorsForFacet(_facet);
+        }
+        /*
+         * Function selectors are strictly 4 bytes. We ensure the length is a multiple of 4.
+         */
+        if (selectorsLength % 4 != 0) {
+            revert IncorrectSelectorsEncoding(_facet);
+        }
+        return selectors;
     }
 
     function at(bytes memory selectors, uint256 index) internal pure returns (bytes4 selector) {
@@ -316,12 +246,13 @@ contract DiamondUpgradeFacet {
              * 1. Calculate Pointer
              * add(selectors, 32) - skips the length field of the bytes array
              * shl(2, index) is the same as index * 4 but cheaper
+             * This line executes: ptr = selectorsLength + (4 * index)
              */
             let ptr := add(add(selectors, 32), shl(2, index))
             /**
              * 2. Load & Return
              * We load 32 bytes, but Solidity truncates to 4 bytes automatically
-             * upon return assignment, so masking is unnecessary.
+             * upon return of this function, so masking is unnecessary.
              */
             selector := mload(ptr)
         }
@@ -422,7 +353,7 @@ contract DiamondUpgradeFacet {
          * 5. Adds all the selectors (except the first) to the diamond.
          * 6. Repeat loop.
          * Note: All selectors of a facet, except the first selector, are added the diamond. After that the first
-         * selector is added. However the DiamondEvent event for the first selecor is emitted before the rest of
+         * selector is added. However the DiamondEvent event for the first selector is emitted before the rest of
          * the selectors. This maintains the order of events with the order given by facets.
          */
         for (uint256 i = 1; i < facetLength; i++) {
@@ -452,7 +383,7 @@ contract DiamondUpgradeFacet {
             s.facetNodes[currentFacetNodeId] = FacetNode(facet, prevFacetNodeId, nextFacetNodeId);
             /*
              * Move pointers forward.
-             * These assignments switche us from processing the previous facet's first selector to
+             * These assignments switch us from processing the previous facet's first selector to
              * processing the next facet's selectors.
              * `currentFacetNodeId` becomes the new pending first selector.
              */
