@@ -186,7 +186,9 @@ function packedSelectors(address _facet) view returns (bytes memory selectors) {
         }
     }
 
-    // Validate ABI offset == 0x20 for a single dynamic return
+    /**
+     * Validate ABI offset == 0x20 for a single dynamic return
+     */
     uint256 offset;
     assembly ("memory-safe") {
         offset := mload(add(data, 0x20))

@@ -83,7 +83,9 @@ function packedSelectors(address _facet) view returns (bytes memory selectors) {
         }
     }
 
-    // Validate ABI offset == 0x20 for a single dynamic return
+    /**
+     * Validate ABI offset == 0x20 for a single dynamic return
+     */
     uint256 offset;
     assembly ("memory-safe") {
         offset := mload(add(data, 0x20))
@@ -137,7 +139,7 @@ function at(bytes memory selectors, uint256 index) pure returns (bytes4 selector
     }
 }
 
-function addFacets(address[] calldata _facets) {
+function addFacets(address[] memory _facets) {
     DiamondStorage storage s = getStorage();
     uint256 facetLength = _facets.length;
     if (facetLength == 0) {
