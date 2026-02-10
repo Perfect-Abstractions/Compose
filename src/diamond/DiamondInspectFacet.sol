@@ -222,7 +222,7 @@ contract DiamondInspectFacet {
     }
 
     function packedSelectors() external pure returns (bytes memory) {
-        return abi.encodePacked(
+        return bytes.concat(
             this.facetAddress.selector,
             this.facetFunctionSelectors.selector,
             this.facetAddresses.selector,
