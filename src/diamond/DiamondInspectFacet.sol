@@ -222,12 +222,12 @@ contract DiamondInspectFacet {
     }
 
     function packedSelectors() external pure returns (bytes memory) {
-        return bytes.concat(
-            DiamondInspectFacet.facetAddress.selector,
-            DiamondInspectFacet.facetFunctionSelectors.selector,
-            DiamondInspectFacet.facetAddresses.selector,
-            DiamondInspectFacet.facets.selector,
-            DiamondInspectFacet.functionFacetPairs.selector
+        return abi.encodePacked(
+            this.facetAddress.selector,
+            this.facetFunctionSelectors.selector,
+            this.facetAddresses.selector,
+            this.facets.selector,
+            this.functionFacetPairs.selector
         );
     }
 }

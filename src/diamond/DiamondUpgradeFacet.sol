@@ -723,6 +723,6 @@ contract DiamondUpgradeFacet {
     }
 
     function packedSelectors() external pure returns (bytes memory) {
-        return bytes.concat(DiamondUpgradeFacet.upgradeDiamond.selector);
+        return abi.encodePacked(DiamondUpgradeFacet.upgradeDiamond.selector);
     }
 }
