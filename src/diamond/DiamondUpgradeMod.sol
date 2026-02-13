@@ -67,6 +67,11 @@ pragma solidity >=0.8.30;
  * replacing, and removing of selectors and facets. It is used by some introspection functions. Checked math
  * is used with facetList.facetCount because that affects adding, replacing, and removing selectors and facets.
  * Of course these variables should never overflow/underflow anyway.
+ *
+ * Security:
+ * This implementation relies on the assumption that the owner of the diamond that has added or replaced any
+ * facet in the diamond has verified that each facet is not malicious, that each facet is immutable (not upgradeable),
+ * and that the `exportSelectors()` function in each facet is pure (is marked as a pure function and does not access state.)
  */
 
 interface IFacet {
@@ -587,6 +592,9 @@ function removeFacets(address[] calldata _facets) {
         uint256 selectorsLength = selectors.length >> 2;
         /**
          * Remove facet selectors.
+         * Because this facet is in the diamond and the `exportSelectors()` function is pure and
+         * immutable from the facet and we trust that, we can safely remove the selectors without
+         * checking that each selector belongs to the facet being removed. We know it does.
          */
         for (uint256 selectorIndex; selectorIndex < selectorsLength; selectorIndex++) {
             bytes4 selector = at(selectors, selectorIndex);
