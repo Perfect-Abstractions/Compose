@@ -139,7 +139,7 @@ event FacetReplaced(address indexed _oldFacet, address indexed _newFacet);
  * @dev The function selectors this facet handles can be retrieved by calling
  *      `IFacet(_facet).exportSelectors()`
  *
- * @param _facet The address of the facet that previouly handled function calls to the diamond.
+ * @param _facet The address of the facet that previously handled function calls to the diamond.
  */
 event FacetRemoved(address indexed _facet);
 
@@ -622,10 +622,10 @@ function removeFacets(address[] calldata _facets) {
  * @dev
  * Facets are added first, then replaced, then removed.
  *
- * These events are emitted to record changes to functions:
- * - `DiamondFunctionAdded`
- * - `DiamondFunctionReplaced`
- * - `DiamondFunctionRemoved`
+ * These events are emitted to record changes to facets:
+ * - `FacetAdded(address indexed _facet)`
+ * - `FacetReplaced(address indexed _oldFacet, address indexed _newFacet)`
+ * - `FacetRemoved(address indexed _facet)`
  *
  * If `_delegate` is non-zero, the diamond performs a `delegatecall` to
  * `_delegate` using `_delegateCalldata`. The `DiamondDelegateCall` event is
