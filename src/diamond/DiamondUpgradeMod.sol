@@ -175,7 +175,7 @@ error CannotRemoveFacetThatDoesNotExist(address _facet);
 error CannotReplaceFacetWithSameFacet(address _facet);
 error FacetToReplaceDoesNotExist(address _oldFacet);
 error DelegateCallReverted(address _delegate, bytes _delegateCalldata);
-error FunctionSelectorsCallFailed(address _facet);
+error ExportSelectorsCallFailed(address _facet);
 error IncorrectSelectorsEncoding(address _facet);
 
 /**
@@ -187,7 +187,7 @@ error CannotReplaceFunctionFromNonReplacementFacet(bytes4 _selector);
 function importSelectors(address _facet) view returns (bytes memory selectors) {
     (bool success, bytes memory data) = _facet.staticcall(abi.encodeWithSelector(IFacet.exportSelectors.selector));
     if (success == false) {
-        revert FunctionSelectorsCallFailed(_facet);
+        revert ExportSelectorsCallFailed(_facet);
     }
     /*
      * Ensure the data is large enough.

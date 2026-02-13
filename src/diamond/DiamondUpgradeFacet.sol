@@ -202,7 +202,7 @@ contract DiamondUpgradeFacet {
     error CannotReplaceFacetWithSameFacet(address _facet);
     error FacetToReplaceDoesNotExist(address _oldFacet);
     error DelegateCallReverted(address _delegate, bytes _delegateCalldata);
-    error FunctionSelectorsCallFailed(address _facet);
+    error ExportSelectorsCallFailed(address _facet);
     error IncorrectSelectorsEncoding(address _facet);
 
     /**
@@ -214,7 +214,7 @@ contract DiamondUpgradeFacet {
     function importSelectors(address _facet) internal view returns (bytes memory selectors) {
         (bool success, bytes memory data) = _facet.staticcall(abi.encodeWithSelector(IFacet.exportSelectors.selector));
         if (success == false) {
-            revert FunctionSelectorsCallFailed(_facet);
+            revert ExportSelectorsCallFailed(_facet);
         }
         /*
          * Ensure the data is large enough.
