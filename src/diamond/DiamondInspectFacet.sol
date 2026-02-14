@@ -6,17 +6,12 @@ pragma solidity >=0.8.30;
  */
 
 interface IFacet {
-    function packedSelectors() external view returns (bytes memory);
+    function exportSelectors() external view returns (bytes memory);
 }
 
 contract DiamondInspectFacet {
-    bytes32 constant DIAMOND_STORAGE_POSITION = keccak256("erc8109.diamond");
+    bytes32 constant DIAMOND_STORAGE_POSITION = keccak256("erc8153.diamond");
 
-    /**
-     * @notice Data stored for each function selector
-     * @dev Facet address of function selector
-     *      Position of selector in the 'bytes4[] selectors' array
-     */
     struct FacetNode {
         address facet;
         bytes4 prevFacetNodeId;
@@ -24,14 +19,14 @@ contract DiamondInspectFacet {
     }
 
     struct FacetList {
+        bytes4 headFacetNodeId;
+        bytes4 tailFacetNodeId;
         uint32 facetCount;
         uint32 selectorCount;
-        bytes4 firstFacetNodeId;
-        bytes4 lastFacetNodeId;
     }
 
     /**
-     * @custom:storage-location erc8042:erc8109.diamond
+     * @custom:storage-location erc8042:erc8153.diamond
      */
     struct DiamondStorage {
         mapping(bytes4 functionSelector => FacetNode) facetNodes;
@@ -57,7 +52,7 @@ contract DiamondInspectFacet {
     }
 
     /**
-     * @notice Decodes a packed byte stream into a standard bytes4[] array.
+     * @notice Decodes a packed bytes array into a standard bytes4[] array.
      * @param packed The packed bytes (e.g., from `bytes.concat`).
      * @return unpacked The standard padded bytes4[] array.
      */
@@ -118,7 +113,7 @@ contract DiamondInspectFacet {
      */
     function facetFunctionSelectors(address _facet) external view returns (bytes4[] memory facetSelectors) {
         DiamondStorage storage s = getStorage();
-        facetSelectors = unpackSelectors(IFacet(_facet).packedSelectors());
+        facetSelectors = unpackSelectors(IFacet(_facet).exportSelectors());
         if (facetSelectors.length == 0 || s.facetNodes[facetSelectors[0]].facet == address(0)) {
             facetSelectors = new bytes4[](0);
         }
@@ -133,7 +128,7 @@ contract DiamondInspectFacet {
         DiamondStorage storage s = getStorage();
         FacetList memory facetList = s.facetList;
         allFacets = new address[](facetList.facetCount);
-        bytes4 currentSelector = facetList.firstFacetNodeId;
+        bytes4 currentSelector = facetList.headFacetNodeId;
         for (uint256 i; i < facetList.facetCount; i++) {
             address facet = s.facetNodes[currentSelector].facet;
             allFacets[i] = facet;
@@ -155,79 +150,23 @@ contract DiamondInspectFacet {
     function facets() external view returns (Facet[] memory facetsAndSelectors) {
         DiamondStorage storage s = getStorage();
         FacetList memory facetList = s.facetList;
-        bytes4 currentSelector = facetList.firstFacetNodeId;
+        bytes4 currentSelector = facetList.headFacetNodeId;
         facetsAndSelectors = new Facet[](facetList.facetCount);
         for (uint256 i; i < facetList.facetCount; i++) {
             address facet = s.facetNodes[currentSelector].facet;
-            bytes4[] memory facetSelectors = unpackSelectors(IFacet(facet).packedSelectors());
+            bytes4[] memory facetSelectors = unpackSelectors(IFacet(facet).exportSelectors());
             facetsAndSelectors[i].facet = facet;
             facetsAndSelectors[i].functionSelectors = facetSelectors;
             currentSelector = s.facetNodes[currentSelector].nextFacetNodeId;
         }
     }
 
-    function at(bytes memory selectors, uint256 index) internal pure returns (bytes4 selector) {
-        assembly ("memory-safe") {
-            /**
-             * 1. Calculate Pointer
-             * add(selectors, 32) - skips the length field of the bytes array
-             * shl(2, index) is the same as index * 4 but cheaper
-             */
-            let ptr := add(add(selectors, 32), shl(2, index))
-            /**
-             * 2. Load & Return
-             * We load 32 bytes, but Solidity truncates to 4 bytes automatically
-             * upon return assignment, so masking is unnecessary.
-             */
-            selector := mload(ptr)
-        }
-    }
-
-    struct FunctionFacetPair {
-        bytes4 selector;
-        address facet;
-    }
-
-    /**
-     * @notice Returns an array of all function selectors and their
-     *         corresponding facet addresses.
-     *
-     * @dev    Iterates through the diamond's stored selectors and pairs
-     *         each with its facet.
-     * @return pairs An array of `FunctionFacetPair` structs, each containing
-     *         a selector and its facet address.
-     */
-    function functionFacetPairs() external view returns (FunctionFacetPair[] memory pairs) {
-        DiamondStorage storage s = getStorage();
-        FacetList memory facetList = s.facetList;
-        pairs = new FunctionFacetPair[](facetList.selectorCount);
-        bytes4 currentSelector = facetList.firstFacetNodeId;
-        uint256 selectorCount;
-        for (uint256 i; i < facetList.facetCount; i++) {
-            address facet = s.facetNodes[currentSelector].facet;
-            bytes memory selectors = IFacet(facet).packedSelectors();
-            uint256 selectorLength;
-            unchecked {
-                selectorLength = selectors.length / 4;
-            }
-            for (uint256 selectorIndex; selectorIndex < selectorLength; selectorIndex++) {
-                bytes4 selector = at(selectors, selectorIndex);
-                pairs[selectorCount] = FunctionFacetPair(selector, facet);
-                unchecked {
-                    selectorCount++;
-                }
-            }
-            currentSelector = s.facetNodes[currentSelector].nextFacetNodeId;
-        }
-    }
-
-    function packedSelectors() external pure returns (bytes memory) {
+    function exportSelectors() external pure returns (bytes memory) {
         return bytes.concat(
             this.facetAddress.selector,
             this.facetFunctionSelectors.selector,
             this.facetAddresses.selector,
-            this.facets.selector,
-            this.functionFacetPairs.selector
+            this.facets.selector
         );
     }
 }

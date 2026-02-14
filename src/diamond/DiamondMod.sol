@@ -31,7 +31,7 @@ struct FacetList {
 }
 
 /**
- * @custom:storage-location erc8042:erc8109.diamond
+ * @custom:storage-location erc8042:erc8153.diamond
  */
 struct DiamondStorage {
     mapping(bytes4 functionSelector => FacetNode) facetNodes;
