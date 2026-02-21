@@ -4,8 +4,12 @@
 // There are various equivalent ways to declare your Docusaurus config.
 // See: https://docusaurus.io/docs/api/docusaurus-config
 
+import path from 'path';
+import {fileURLToPath} from 'url';
 import dotenv from 'dotenv';
 import {themes as prismThemes} from 'prism-react-renderer';
+
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 dotenv.config();
 
@@ -289,6 +293,8 @@ const config = {
       }),
     }),
   plugins: [
+    path.join(__dirname, 'plugins', 'markdown-source-docs.js'),
+    
     process.env.POSTHOG_API_KEY && [
       "posthog-docusaurus",
       {

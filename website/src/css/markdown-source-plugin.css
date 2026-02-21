@@ -1,0 +1,125 @@
+/**
+ * Markdown Actions Dropdown Styles
+ * For docusaurus-markdown-source-plugin
+ * @see https://github.com/FlyNumber/markdown_docusaurus_plugin
+ */
+
+/* Row: breadcrumbs (left) + markdown dropdown (right) */
+.markdown-actions-breadcrumbs-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-bottom: 0.5rem;
+  width: 100%;
+}
+
+.markdown-actions-breadcrumbs-row nav {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+/* Container for the markdown actions dropdown (right side of row) */
+.markdown-actions-breadcrumbs-row .markdown-actions-container {
+  flex-shrink: 0;
+  position: relative;
+}
+
+/* Style the dropdown button to match the active breadcrumb (light and dark mode) */
+.markdown-actions-breadcrumbs-row .markdown-actions-container .button {
+  display: inline-flex;
+  align-items: center;
+  background: var(--ifm-breadcrumb-item-background-active);
+  color: var(--ifm-breadcrumb-color-active);
+  border: none;
+  border-radius: var(--ifm-breadcrumb-border-radius);
+  padding: calc(var(--ifm-breadcrumb-padding-vertical) * var(--ifm-breadcrumb-size-multiplier))
+    calc(var(--ifm-breadcrumb-padding-horizontal) * var(--ifm-breadcrumb-size-multiplier));
+  font-weight: inherit;
+  box-shadow: none;
+}
+
+.markdown-actions-breadcrumbs-row .markdown-actions-container .button:hover {
+  background: var(--ifm-breadcrumb-item-background-active);
+  color: var(--ifm-breadcrumb-color-active);
+  opacity: 0.9;
+}
+
+.markdown-actions-breadcrumbs-row .markdown-actions-container .button[aria-expanded='true'] {
+  background: var(--ifm-breadcrumb-item-background-active);
+  color: var(--ifm-breadcrumb-color-active);
+}
+
+/* Match project's dark mode active breadcrumb color (breadcrumbs.css) */
+[data-theme='dark'] .markdown-actions-breadcrumbs-row .markdown-actions-container .button {
+  color: #d0d0d0;
+}
+
+[data-theme='dark'] .markdown-actions-breadcrumbs-row .markdown-actions-container .button:hover,
+[data-theme='dark'] .markdown-actions-breadcrumbs-row .markdown-actions-container .button[aria-expanded='true'] {
+  color: #d0d0d0;
+}
+
+/* Ensure dropdown wrapper has proper positioning */
+.markdown-actions-container .dropdown {
+  position: relative;
+}
+
+/* Base dropdown menu styles */
+.markdown-actions-container .dropdown__menu {
+  z-index: 1000;
+  min-width: 220px;
+  right: auto;
+  left: 0;
+}
+
+/* Add hover effect for dropdown items */
+.dropdown__link:hover {
+  background-color: var(--ifm-hover-overlay);
+}
+
+/* Responsive adjustments for mobile */
+@media (max-width: 768px) {
+  .markdown-actions-breadcrumbs-row {
+    margin-bottom: 0.75rem;
+  }
+
+  .markdown-actions-breadcrumbs-row .markdown-actions-container {
+    margin-right: 0;
+  }
+
+  .markdown-actions-breadcrumbs-row .markdown-actions-container .button {
+    padding: 0.35rem 0.7rem;
+  }
+
+  /* Right-align menu on mobile to prevent cutoff */
+  .markdown-actions-container .dropdown__menu {
+    right: 0;
+    left: auto;
+    min-width: min(220px, calc(100vw - 2rem));
+    max-width: calc(100vw - 2rem);
+    padding-bottom: 0.75rem;
+  }
+}
+
+/* RTL language support */
+[dir="rtl"] .markdown-actions-breadcrumbs-row {
+  flex-direction: row-reverse;
+}
+
+[dir="rtl"] .markdown-actions-breadcrumbs-row nav {
+  text-align: right;
+}
+
+[dir="rtl"] .markdown-actions-container .dropdown__menu {
+  right: auto;
+  left: 0;
+}
+
+@media (max-width: 768px) {
+  [dir="rtl"] .markdown-actions-container .dropdown__menu {
+    left: 0;
+    right: auto;
+  }
+}

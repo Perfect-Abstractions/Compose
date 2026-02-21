@@ -87,7 +87,8 @@
 /* Import responsive breakpoints */
 @import url('./responsive.css');
 
-
+/* Import markdown source plugin dropdown styles */
+@import url('./markdown-source-plugin.css');
 
 /* Make accordion body white in both light and dark mode */
 [class^="accordionContent_"] {
