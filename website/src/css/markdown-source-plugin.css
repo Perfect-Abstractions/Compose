@@ -69,7 +69,7 @@
 /* Base dropdown menu styles */
 .markdown-actions-container .dropdown__menu {
   z-index: 1000;
-  min-width: 220px;
+  min-width: 8rem;
   right: auto;
   left: 0;
 }
@@ -97,7 +97,7 @@
   .markdown-actions-container .dropdown__menu {
     right: 0;
     left: auto;
-    min-width: min(220px, calc(100vw - 2rem));
+    min-width: min(8rem, calc(100vw - 2rem));
     max-width: calc(100vw - 2rem);
     padding-bottom: 0.75rem;
   }

@@ -44,6 +44,46 @@ function convertDetailsToMarkdown(content) {
   });
 }
 
+/**
+ * Convert DocCardGrid + DocCard blocks to markdown list of links so the
+ * generated .md is readable and we avoid leaving JSX fragments.
+ */
+function convertDocCardGridToMarkdown(content) {
+  return content.replace(
+    /<DocCardGrid[^>]*>([\s\S]*?)<\/DocCardGrid>/g,
+    (_, inner) => {
+      // Remove icon={...} so nested JSX doesn't break the DocCard match
+      const withoutIcon = inner.replace(/icon=\{[^}]*\}/g, 'icon=""');
+      // DocCard attributes can be in any order; match full tag (no nested /> now)
+      const cardPattern = /<DocCard\s+([\s\S]*?)\s*\/>/g;
+      const items = [];
+      let m;
+      while ((m = cardPattern.exec(withoutIcon)) !== null) {
+        const attrs = m[1];
+        const title = attrs.match(/title="([^"]*)"/)?.[1] ?? '';
+        const description = attrs.match(/description="([^"]*)"/)?.[1] ?? '';
+        const href = attrs.match(/href="([^"]*)"/)?.[1] ?? '';
+        if (title && href) items.push(`- [${title}](${href}): ${description}`);
+      }
+      return items.length ? items.join('\n') + '\n' : '';
+    }
+  );
+}
+
+/**
+ * Remove JSX tags (including nested ones) by repeatedly stripping the
+ * outermost component until no match. Avoids leaving fragments like " />" or "}".
+ */
+function stripJsxComponents(content) {
+  const componentTag = /<([A-Z][a-zA-Z]*)(?:\s[^>]*?)?(?:\/>|>[\s\S]*?<\/\1>)/g;
+  let prev;
+  do {
+    prev = content;
+    content = content.replace(componentTag, '');
+  } while (content !== prev);
+  return content;
+}
+
 function cleanMarkdownForDisplay(content, filepath) {
   const fileDir = filepath.replace(/[^/]*$/, '');
   content = content.replace(/^---\r?\n[\s\S]*?\r?\n---\r?\n/, '');
@@ -64,9 +104,21 @@ function cleanMarkdownForDisplay(content, filepath) {
     '<video controls>\n  <source src="$1" type="video/mp4" />\n  <p>Video demonstration: $1</p>\n</video>'
   );
   content = content.replace(/<Head>[\s\S]*?<\/Head>/g, '');
+  // Convert SvgThemeRenderer to markdown image so diagram appears in source .md view
+  content = content.replace(/<SvgThemeRenderer\s+([\s\S]+?)\/>/g, (_, attrs) => {
+    const lightMatch = attrs.match(/lightSrc=\{?["']([^"']+)["']\}?/);
+    const darkMatch = attrs.match(/darkSrc=\{?["']([^"']+)["']\}?/);
+    const altMatch = attrs.match(/alt=["']([^"']*)["']/);
+    const src = (lightMatch && lightMatch[1]) || (darkMatch && darkMatch[1]);
+    const alt = (altMatch && altMatch[1]) || 'Diagram';
+    return src ? `![${alt}](${src})\n\n` : '';
+  });
   content = convertTabsToMarkdown(content);
   content = convertDetailsToMarkdown(content);
-  content = content.replace(/<[A-Z][a-zA-Z]*[\s\S]*?(?:\/>|<\/[A-Z][a-zA-Z]*>)/g, '');
+  // Convert DocCardGrid + DocCard to markdown links first so .md is readable
+  content = convertDocCardGridToMarkdown(content);
+  // Strip any remaining JSX (nested-aware) so we don't leave fragments
+  content = stripJsxComponents(content);
   content = content.replace(
     /!\[([^\]]*)\]\((\.\/)?img\/([^)]+)\)/g,
     (match, alt, relPrefix, filename) => `![${alt}](/docs/${fileDir}img/${filename})`
