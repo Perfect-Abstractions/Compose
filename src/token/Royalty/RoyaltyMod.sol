@@ -40,7 +40,7 @@ error ERC2981InvalidTokenRoyalty(uint256 _tokenId, uint256 _numerator, uint256 _
  */
 error ERC2981InvalidTokenRoyaltyReceiver(uint256 _tokenId, address _receiver);
 
-bytes32 constant STORAGE_POSITION = keccak256("compose.erc2981");
+bytes32 constant STORAGE_POSITION = keccak256("erc2981");
 
 /**
  * @dev The denominator with which to interpret royalty fees as a percentage of sale price.
@@ -62,7 +62,7 @@ struct RoyaltyInfo {
 }
 
 /**
- * @custom:storage-location erc8042:compose.erc2981
+ * @custom:storage-location erc8042:erc2981
  */
 struct RoyaltyStorage {
     RoyaltyInfo defaultRoyaltyInfo;

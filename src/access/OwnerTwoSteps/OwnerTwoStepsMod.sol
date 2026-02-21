@@ -28,10 +28,10 @@ error OwnerUnauthorizedAccount();
  */
 error OwnerAlreadyRenounced();
 
-bytes32 constant OWNER_STORAGE_POSITION = keccak256("compose.owner");
+bytes32 constant OWNER_STORAGE_POSITION = keccak256("erc173.owner");
 
 /**
- * @custom:storage-location erc8042:compose.owner
+ * @custom:storage-location erc8042:erc173.owner
  */
 struct OwnerStorage {
     address owner;
@@ -49,10 +49,10 @@ function getOwnerStorage() pure returns (OwnerStorage storage s) {
     }
 }
 
-bytes32 constant PENDING_OWNER_STORAGE_POSITION = keccak256("compose.owner.pending");
+bytes32 constant PENDING_OWNER_STORAGE_POSITION = keccak256("erc173.owner.pending");
 
 /**
- * @custom:storage-location erc8042:compose.owner.pending
+ * @custom:storage-location erc8042:erc173.owner.pending
  */
 struct PendingOwnerStorage {
     address pendingOwner;

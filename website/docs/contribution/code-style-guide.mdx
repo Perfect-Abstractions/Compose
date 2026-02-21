@@ -32,6 +32,13 @@ Follow the [Solidity feature ban](/docs/design/banned-solidity-features).
     delete balances[_owner];
     ```
 
+### Storage Position Conventions
+
+Diamond storage slots (and the matching `@custom:storage-location erc8042:...` annotations on structs) follow:
+
+- **ERC standards:** Use the `erc` prefix and the standard number or name (e.g. `erc20`, `erc721`, `erc1155`, `erc165`, `erc2981`, `erc6909`, `erc173.owner`, `erc8153.diamond`). Sub-features use a dot (e.g. `erc20.metadata`, `erc721.enumerable`).
+- **Custom / Compose features:** Use the `compose.` prefix (e.g. `compose.accesscontrol`, `compose.accesscontrol.pausable`, `compose.accesscontrol.temporal`).
+
 ### Avoid Assembly
  - Avoid using assembly if you can. If you can't and you access memory, do it [safely](https://docs.soliditylang.org/en/latest/assembly.html#memory-safety), and use `assembly ("memory-safe")`.
    `"memory safe"` tells the Solidity compiler that memory is being used safely so it should not disable optimizations.

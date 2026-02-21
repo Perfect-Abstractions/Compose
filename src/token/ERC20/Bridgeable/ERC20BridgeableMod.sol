@@ -114,8 +114,9 @@ function getERC20Storage() pure returns (ERC20Storage storage s) {
  */
 bytes32 constant ACCESS_STORAGE_POSITION = keccak256("compose.accesscontrol");
 
-/*
+/**
  * @notice storage struct for the AccessControl.
+ * @custom:storage-location erc8042:compose.accesscontrol
  */
 struct AccessControlStorage {
     mapping(address account => mapping(bytes32 role => bool hasRole)) hasRole;

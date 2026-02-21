@@ -60,7 +60,7 @@ interface IERC1155Receiver {
  *
  *      For developers creating custom facets that need to interact with ERC-1155 storage (e.g., custom minting logic),
  *      use the LibERC1155 library which provides helper functions to access this facet's storage.
- *      This facet does NOT depend on LibERC1155 - both access the same storage at keccak256("compose.erc1155").
+ *      This facet does NOT depend on LibERC1155 - both access the same storage at keccak256("erc1155").
  */
 contract ERC1155Facet {
     /**
@@ -156,7 +156,7 @@ contract ERC1155Facet {
 
     /**
      * @dev ERC-8042 compliant storage struct for ERC-1155 token data.
-     * @custom:storage-location erc8042:compose.erc1155
+     * @custom:storage-location erc8042:erc1155
      */
     struct ERC1155Storage {
         mapping(uint256 id => mapping(address account => uint256 balance)) balanceOf;

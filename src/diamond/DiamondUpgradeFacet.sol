@@ -121,7 +121,7 @@ contract DiamondUpgradeFacet {
     }
 
     /**
-     * @custom:storage-location erc8042:erc8109.diamond
+     * @custom:storage-location erc8042:erc8153.diamond
      */
     struct DiamondStorage {
         mapping(bytes4 functionSelector => FacetNode) facetNodes;
@@ -228,7 +228,7 @@ contract DiamondUpgradeFacet {
             }
         }
 
-        // Validate ABI offset == 0x20 for a single dynamic return
+        /* Validate ABI offset == 0x20 for a single dynamic return */
         uint256 offset;
         assembly ("memory-safe") {
             offset := mload(add(data, 0x20))
