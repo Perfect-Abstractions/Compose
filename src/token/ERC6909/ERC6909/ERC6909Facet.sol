@@ -55,7 +55,7 @@ contract ERC6909Facet {
     /**
      * @dev Storage position determined by the keccak256 hash of the diamond storage identifier.
      */
-    bytes32 constant STORAGE_POSITION = keccak256("compose.erc6909");
+    bytes32 constant STORAGE_POSITION = keccak256("erc6909");
 
     /**
      * @custom:storage-location erc8042:compose.erc6909

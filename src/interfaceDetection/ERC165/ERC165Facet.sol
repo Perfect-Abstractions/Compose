@@ -33,11 +33,11 @@ contract ERC165Facet {
      * @notice Storage slot identifier for ERC-165 interface detection
      * @dev Defined using keccak256 hash following ERC-8042 standard
      */
-    bytes32 constant STORAGE_POSITION = keccak256("compose.erc165");
+    bytes32 constant STORAGE_POSITION = keccak256("erc165");
 
     /**
      * @notice ERC-165 storage layout using the ERC-8042 standard
-     * @custom:storage-location erc8042:compose.erc165
+     * @custom:storage-location erc8042:erc165
      */
     struct ERC165Storage {
         /**

@@ -129,7 +129,7 @@ event URI(string _value, uint256 indexed _id);
 /**
  * @dev Storage position determined by the keccak256 hash of the diamond storage identifier.
  */
-bytes32 constant STORAGE_POSITION = keccak256("compose.erc1155");
+bytes32 constant STORAGE_POSITION = keccak256("erc1155");
 
 /**
  * @dev ERC-8042 compliant storage struct for ERC-1155 token data.

@@ -16,7 +16,7 @@ contract RoyaltyFacet {
     /**
      * @notice Storage slot identifier for royalty storage.
      */
-    bytes32 constant STORAGE_POSITION = keccak256("compose.erc2981");
+    bytes32 constant STORAGE_POSITION = keccak256("erc2981");
 
     /**
      * @dev The denominator with which to interpret royalty fees as a percentage of sale price.

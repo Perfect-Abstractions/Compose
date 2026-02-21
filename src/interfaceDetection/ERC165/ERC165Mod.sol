@@ -14,7 +14,7 @@ pragma solidity >=0.8.30;
 /*
  * Storage slot identifier, defined using keccak256 hash of the library diamond storage identifier.
  */
-bytes32 constant STORAGE_POSITION = keccak256("compose.erc165");
+bytes32 constant STORAGE_POSITION = keccak256("erc165");
 
 /*
  * @notice ERC-165 storage layout using the ERC-8042 standard.
