@@ -2,12 +2,14 @@
  * Root component wrapper
  * Adds global enhancements and effects
  */
-
 import React from 'react';
 import { Toaster } from 'react-hot-toast';
 import NavbarEnhancements from '@site/src/components/navigation/NavbarEnhancements';
+import useInjectMarkdownActionsDropdown from '@site/src/hooks/useInjectMarkdownActionsDropdown';
 
 export default function Root({children}) {
+  useInjectMarkdownActionsDropdown();
+
   return (
     <>
       <NavbarEnhancements />

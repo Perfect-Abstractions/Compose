@@ -1,6 +1,7 @@
 import React from 'react';
 import clsx from 'clsx';
 import {useColorMode} from '@docusaurus/theme-common';
+import useBaseUrl from '@docusaurus/useBaseUrl';
 
 /**
  * SvgThemeRenderer Component
@@ -30,9 +31,11 @@ export default function SvgThemeRenderer({
     return null;
   }
 
+  const resolvedSrc = activeSrc.startsWith('/') ? useBaseUrl(activeSrc) : activeSrc;
+
   return (
     <img
-      src={activeSrc}
+      src={resolvedSrc}
       alt={alt}
       className={clsx(className)}
       {...props}

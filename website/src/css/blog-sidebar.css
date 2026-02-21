@@ -6,17 +6,15 @@
 /* Target blog sidebar with more specific selectors */
 .theme-blog-wrapper .col--3,
 .theme-blog-wrapper [class*="col--3"],
-[class*="blog"] [class*="col--3"],
-.col--3:has(strong) {
+[class*="blog"] [class*="col--3"] {
   position: relative;
   padding: 1.5rem 0 1.5rem 2rem !important;
 }
 
-/* Timeline vertical line */
+/* Timeline vertical line (blog sidebar only) */
 .theme-blog-wrapper .col--3::before,
 .theme-blog-wrapper [class*="col--3"]::before,
-[class*="blog"] [class*="col--3"]::before,
-.col--3:has(strong)::before {
+[class*="blog"] [class*="col--3"]::before {
   content: '';
   position: absolute;
   left: 0.625rem;
@@ -33,8 +31,7 @@
 
 [data-theme='dark'] .theme-blog-wrapper .col--3::before,
 [data-theme='dark'] .theme-blog-wrapper [class*="col--3"]::before,
-[data-theme='dark'] [class*="blog"] [class*="col--3"]::before,
-[data-theme='dark'] .col--3:has(strong)::before {
+[data-theme='dark'] [class*="blog"] [class*="col--3"]::before {
   background: linear-gradient(180deg, 
     #60a5fa 0%,
     #93c5fd 10%,
