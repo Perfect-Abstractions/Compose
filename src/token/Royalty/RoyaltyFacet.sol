@@ -36,7 +36,7 @@ contract RoyaltyFacet {
     }
 
     /**
-     * @custom:storage-location erc8042:compose.erc2981
+     * @custom:storage-location erc8042:erc2981
      */
     struct RoyaltyStorage {
         RoyaltyInfo defaultRoyaltyInfo;

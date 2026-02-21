@@ -29,7 +29,7 @@ contract ERC721BurnFacet {
     bytes32 constant STORAGE_POSITION = keccak256("erc721");
 
     /**
-     * @custom:storage-location erc8042:compose.erc721
+     * @custom:storage-location erc8042:erc721
      */
     struct ERC721Storage {
         mapping(uint256 tokenId => address owner) ownerOf;

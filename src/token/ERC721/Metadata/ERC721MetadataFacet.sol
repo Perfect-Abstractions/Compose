@@ -20,7 +20,7 @@ contract ERC721MetadataFacet {
     bytes32 constant STORAGE_POSITION = keccak256("erc721.metadata");
 
     /**
-     * @custom:storage-location erc8042:erc721
+     * @custom:storage-location erc8042:erc721.metadata
      */
     struct ERC721MetadataStorage {
         string name;

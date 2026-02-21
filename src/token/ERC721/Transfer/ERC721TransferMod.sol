@@ -42,10 +42,10 @@ event Transfer(address indexed _from, address indexed _to, uint256 indexed _toke
  */
 bytes32 constant STORAGE_POSITION = keccak256("erc721");
 
-/*
- * @custom:storage-location erc8042:erc721
+/**
  * @notice Storage layout for ERC-721 token management.
  * @dev Defines ownership, balances, approvals, and operator mappings per ERC-721 standard.
+ * @custom:storage-location erc8042:erc721
  */
 struct ERC721Storage {
     mapping(uint256 tokenId => address owner) ownerOf;

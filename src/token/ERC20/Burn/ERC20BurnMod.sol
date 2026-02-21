@@ -38,7 +38,7 @@ event Transfer(address indexed _from, address indexed _to, uint256 _value);
  */
 bytes32 constant STORAGE_POSITION = keccak256("erc20");
 
-/*
+/**
  * @notice ERC-20 storage layout using the ERC-8042 standard.
  * @custom:storage-location erc8042:erc20
  */

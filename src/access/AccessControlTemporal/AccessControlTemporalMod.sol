@@ -48,7 +48,7 @@ bytes32 constant ACCESS_CONTROL_STORAGE_POSITION = keccak256("compose.accesscont
  */
 bytes32 constant TEMPORAL_STORAGE_POSITION = keccak256("compose.accesscontrol.temporal");
 
-/*
+/**
  * @notice Storage struct for AccessControl (reused struct definition).
  * @dev Must match the struct definition in AccessControlFacet.
  * @custom:storage-location erc8042:compose.accesscontrol
@@ -58,7 +58,7 @@ struct AccessControlStorage {
     mapping(bytes32 role => bytes32 adminRole) adminRole;
 }
 
-/*
+/**
  * @notice Storage struct for AccessControlTemporal.
  * @custom:storage-location erc8042:compose.accesscontrol.temporal
  */
