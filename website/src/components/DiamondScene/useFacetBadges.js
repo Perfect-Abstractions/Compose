@@ -2,18 +2,18 @@ import { useState, useCallback } from 'react';
 
 // A list of realistic facet names related to EIP-2535 Diamond Standard
 const FACET_NAMES = [
-  "DiamondCutFacet",
-  "DiamondLoupeFacet",
+  "DiamondUpgradeFacet",
+  "DiamondInspectFacet",
   "OwnerFacet",
   "AccessControlFacet",
-  "ERC20Facet",
-  "ERC721Facet",
+  "ERC20DataFacet",
+  "ERC20MetadataFacet",
+  "ERC20MintFacet",
+  "ERC721DataFacet",
+  "ERC721MetadataFacet",
   "ERC721EnumerableFacet",
-  "ERC1155Facet",
-  "RoyaltyFacet",
   "ERC165Facet",
-  "AccessControlPausableFacet",
-  "AccessControlTemporalFacet"
+  "RoyaltyFacet",
 ];
 
 export function useFacetBadges() {
