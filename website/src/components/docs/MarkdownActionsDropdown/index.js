@@ -2,19 +2,26 @@
  * Markdown actions dropdown (view/copy as .md).
  * Local override of docusaurus-markdown-source-plugin's dropdown so that
  * category index pages (e.g. /docs/foundations/) resolve to index.md instead
- * of intro.md (which only exists for the root /docs/ page).
+ * of intro.md (which only exists for the root /docs & /docs/ page).
  */
 import React, { useState, useRef, useEffect } from 'react';
 
+/** Normalize path so /docs is treated as /docs/ for URL building. */
+function normalizeDocsPath(path) {
+  if (path === '/docs') return '/docs/';
+  return path;
+}
+
 function getMarkdownUrl(currentPath) {
-  if (!currentPath.startsWith('/docs/')) return null;
-  if (currentPath.endsWith('/')) {
+  const path = normalizeDocsPath(currentPath);
+  if (path !== '/docs/' && !path.startsWith('/docs/')) return null;
+  if (path.endsWith('/')) {
     // Root docs index is intro; all other category indexes are index.md
-    return currentPath === '/docs/'
-      ? `${currentPath}intro.md`
-      : `${currentPath}index.md`;
+    return path === '/docs/'
+      ? `${path}intro.md`
+      : `${path}index.md`;
   }
-  return `${currentPath}.md`;
+  return `${path}.md`;
 }
 
 export default function MarkdownActionsDropdown() {
@@ -22,9 +29,9 @@ export default function MarkdownActionsDropdown() {
   const [isOpen, setIsOpen] = useState(false);
   const dropdownRef = useRef(null);
 
-  const currentPath = typeof window !== 'undefined' ? window.location.pathname : '';
-  const isDocsPage = currentPath.startsWith('/docs/');
-  const markdownUrl = getMarkdownUrl(currentPath);
+  const rawPath = typeof window !== 'undefined' ? window.location.pathname : '';
+  const isDocsPage = rawPath === '/docs' || rawPath.startsWith('/docs/');
+  const markdownUrl = getMarkdownUrl(rawPath);
 
   useEffect(() => {
     if (!isOpen) return;
