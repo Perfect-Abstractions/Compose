@@ -6,10 +6,12 @@
 
 import path from 'path';
 import {fileURLToPath} from 'url';
+import {createRequire} from 'module';
 import dotenv from 'dotenv';
 import {themes as prismThemes} from 'prism-react-renderer';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
+const require = createRequire(import.meta.url);
 
 dotenv.config();
 
@@ -294,7 +296,16 @@ const config = {
     }),
   plugins: [
     path.join(__dirname, 'plugins', 'markdown-source-docs.js'),
-    
+    [
+      '@acid-info/docusaurus-og',
+      {
+        path: './preview-images',
+        imageRenderers: {
+          'docusaurus-plugin-content-docs': require('./lib/ImageRenderers.js').docs,
+          'docusaurus-plugin-content-blog': require('./lib/ImageRenderers.js').blog,
+        },
+      },
+    ],
     process.env.POSTHOG_API_KEY && [
       "posthog-docusaurus",
       {
