@@ -48,12 +48,26 @@ export default function MarkdownActionsDropdown() {
 
   const handleCopyMarkdown = async () => {
     try {
-      const response = await fetch(markdownUrl);
-      if (!response.ok) {
-        throw new Error('Failed to fetch markdown');
+      // iOS Safari requires clipboard API to be invoked synchronously from the user
+      // gesture; after await fetch() the transient activation is lost and writeText
+      // throws NotAllowedError. Passing a Promise into ClipboardItem and calling
+      // clipboard.write() immediately keeps the gesture context (Safari/Chrome).
+      if (typeof ClipboardItem !== 'undefined') {
+        const item = new ClipboardItem({
+          'text/plain': fetch(markdownUrl)
+            .then((r) => {
+              if (!r.ok) throw new Error('Failed to fetch markdown');
+              return r.text();
+            })
+            .then((text) => new Blob([text], { type: 'text/plain' })),
+        });
+        await navigator.clipboard.write([item]);
+      } else {
+        const response = await fetch(markdownUrl);
+        if (!response.ok) throw new Error('Failed to fetch markdown');
+        const markdown = await response.text();
+        await navigator.clipboard.writeText(markdown);
       }
-      const markdown = await response.text();
-      await navigator.clipboard.writeText(markdown);
 
       setCopied(true);
       setTimeout(() => {
