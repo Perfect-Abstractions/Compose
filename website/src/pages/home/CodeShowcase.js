@@ -55,16 +55,11 @@ export default function CodeShowcase() {
           <div className={styles.showcaseCode}>
             <div className={styles.codeWindow}>
               <div className={styles.codeWindowHeader}>
-                <div className={styles.codeWindowDots}>
-                  <span></span>
-                  <span></span>
-                  <span></span>
-                </div>
                 <span className={styles.codeWindowTitle}>GameNFTFacet.sol</span>
               </div>
               <pre className={styles.codeWindowContent}>
-{`// Your custom facet uses LibERC721
-import {LibERC721} from "compose/LibERC721.sol";
+{`// Your custom facet uses the ERC721 module
+import { ERC721Mod } from "compose/ERC721Mod.sol";
 
 contract GameNFTFacet {
     function mintWithGameLogic(
@@ -77,11 +72,10 @@ contract GameNFTFacet {
             "Not enough points"
         );
 
-        // Use LibERC721 - same storage!
-        LibERC721.mint(player, tokenId);
+        // Use ERC721Mod - same storage
+        ERC721Mod.mint(player, tokenId);
 
-        // Standard ERC721Facet functions
-        // work seamlessly
+        // Standard ERC721Facet functions work seamlessly
         updatePlayerStats(player);
     }
 }`}
