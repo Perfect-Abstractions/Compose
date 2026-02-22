@@ -29,6 +29,20 @@ const options = {
   fonts: fontConfig,
 };
 
+// Logo as PNG data URI (Satori does not reliably render SVG in img; use pre-generated PNG)
+const logoPngPath = path.join(__dirname, '../static/img/logo-og-white.png');
+let logoDataUri = null;
+function getLogoDataUri() {
+  if (logoDataUri !== null) return logoDataUri;
+  try {
+    const png = fs.readFileSync(logoPngPath);
+    logoDataUri = 'data:image/png;base64,' + png.toString('base64');
+  } catch (_) {
+    logoDataUri = '';
+  }
+  return logoDataUri;
+}
+
 function truncateTitle(title, maxChars = 60) {
   if (!title || typeof title !== 'string') return 'Compose';
   const t = title.trim();
@@ -36,7 +50,11 @@ function truncateTitle(title, maxChars = 60) {
   return t.slice(0, maxChars - 3).trim() + '...';
 }
 
+// Same blue gradient as default socialcard-compose.png: dark (top-left) to medium blue (bottom-right)
+const BACKGROUND_GRADIENT = 'linear-gradient(135deg, #0F172A 0%, #1A3B8A 100%)';
+
 function buildLayout(title, subtitle = 'Smart Contract Oriented Programming for ERC-2535 Diamonds') {
+  const logoSrc = getLogoDataUri();
   return React.createElement(
     'div',
     {
@@ -45,23 +63,44 @@ function buildLayout(title, subtitle = 'Smart Contract Oriented Programming for 
         flexDirection: 'column',
         width: '100%',
         height: '100%',
-        background: 'linear-gradient(135deg, #0f172a 0%, #1e293b 100%)',
-        color: '#f8fafc',
+        background: BACKGROUND_GRADIENT,
+        color: '#ffffff',
         fontFamily: 'Inter',
         padding: 80,
         justifyContent: 'center',
       },
     },
+    // Logo + "Compose" in one row (like default social card)
     React.createElement(
       'div',
       {
         style: {
-          fontSize: 28,
-          marginBottom: 24,
-          opacity: 0.9,
+          display: 'flex',
+          flexDirection: 'row',
+          alignItems: 'center',
+          marginBottom: 32,
+          gap: 20,
         },
       },
-      'Compose'
+      logoSrc
+        ? React.createElement('img', {
+            src: logoSrc,
+            width: 100,
+            height: 100,
+            style: { display: 'flex' },
+          })
+        : null,
+      React.createElement(
+        'div',
+        {
+          style: {
+            fontSize: 56,
+            fontWeight: 600,
+            opacity: 0.95,
+          },
+        },
+        'Compose'
+      )
     ),
     React.createElement(
       'div',
@@ -80,13 +119,14 @@ function buildLayout(title, subtitle = 'Smart Contract Oriented Programming for 
           'div',
           {
             style: {
-              fontSize: 24,
-              opacity: 0.85,
-              lineHeight: 1.4,
-              maxWidth: 900,
+              fontSize: 26,
+              opacity: 0.95,
+              lineHeight: 1.5,
+              maxWidth: 880,
+              marginTop: 1,
             },
           },
-          typeof subtitle === 'string' && subtitle.length > 120 ? subtitle.slice(0, 120) + '...' : subtitle
+          typeof subtitle === 'string' && subtitle.length > 140 ? subtitle.slice(0, 140).trim() + '...' : subtitle
         )
       : null
   );
