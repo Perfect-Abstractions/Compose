@@ -53,6 +53,48 @@
   z-index: 0; /* Behind content */
 }
 
+/* ----- Mobile: content around small centered diamond ----- */
+.heroBannerMobile {
+  padding: 3rem 0 6rem;
+  align-items: flex-start;
+}
+
+.heroGridMobile {
+  display: grid;
+  grid-template-rows: auto auto auto;
+  gap: 0;
+  width: 100%;
+  max-width: 100%;
+  text-align: center;
+}
+
+.heroContentTop {
+  margin-bottom: 0.5rem;
+}
+
+.heroContentBottom {
+  margin-top: 0.5rem;
+}
+
+.diamondSlot {
+  position: relative;
+  width: 100%;
+  height: 260px;
+  min-height: 260px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0.75rem 0;
+}
+
+.diamondInline {
+  width: 100%;
+  height: 100%;
+  position: relative;
+  border-radius: 0.75rem;
+  overflow: hidden;
+}
+
 .heroContent {
   position: relative;
   z-index: 1;
@@ -90,16 +132,14 @@
   color: white;
   margin-bottom: 1.5rem;
   animation: fadeInUp var(--motion-duration-normal) var(--motion-ease-standard) 0.2s both;
-  text-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
 }
 
 .heroTitleGradient {
-  background: linear-gradient(135deg, #60a5fa 0%, #3b82f6 50%, #2563eb 100%);
+  background: linear-gradient(135deg, #3b82f6 0%, #4087F6 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
   display: inline-block;
-  filter: drop-shadow(0 0 20px rgba(6, 37, 88, 0.6));
 }
 
 .heroDescriptionWrapper {
@@ -221,15 +261,10 @@
 
 /* Responsive */
 @media screen and (max-width: 1024px) {
-  .heroBanner { padding: 8rem 0 10rem; min-height: 80vh; }
-  
-  /* Reset canvas container on mobile */
-  .canvasContainer {
-    /* Still absolute, but maybe we center diamond via JS */
-  }
+  .heroBanner:not(.heroBannerMobile) { padding: 8rem 0 10rem; min-height: 80vh; }
   
   .heroContent {
-    text-align: center; /* Center text on mobile */
+    text-align: center;
     margin: 0 auto;
     max-width: 100%;
   }
@@ -237,13 +272,6 @@
   .heroDescriptionWrapper {
     margin: 0 auto 1.5rem;
     text-align: center;
-    background: rgba(15, 23, 42, 0.6);
-    backdrop-filter: blur(12px);
-    -webkit-backdrop-filter: blur(12px);
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    border-radius: 1rem;
-    padding: 1.5rem;
-    box-shadow: 0 4px 24px rgba(0, 0, 0, 0.2);
   }
 
   .heroSubtitle, .heroDescription {
@@ -253,7 +281,6 @@
   }
   
   .heroDescription {
-    /* Remove previous mobile-only styles since wrapper handles it */
     background: none;
     backdrop-filter: none;
     -webkit-backdrop-filter: none;
@@ -265,21 +292,86 @@
   .heroLinks { justify-content: center; }
 }
 
+/* Mobile grid layout uses heroBannerMobile; these refine non-mobile tablet */
 @media screen and (max-width: 768px) {
-  .heroBanner { padding: 6rem 0 8rem; min-height: auto; }
+  .heroBanner:not(.heroBannerMobile) { padding: 6rem 0 8rem; min-height: auto; }
   .heroTitle { font-size: 2.5rem; margin-bottom: 1rem; }
   .heroSubtitle { font-size: 1.125rem; margin-bottom: 1rem; }
   .heroDescription { font-size: 1rem;}
-  .heroCta { flex-direction: column; gap: 0.75rem; margin-bottom: 2rem; }
-  .ctaButton { width: 100%; max-width: 320px; justify-content: center; }
+  .heroCta { flex-direction: row; flex-wrap: wrap; justify-content: center; gap: 0.75rem; margin-bottom: 2rem; }
+  .ctaButton { width: auto; flex: 0 1 auto; justify-content: center; }
   .heroLinks { flex-direction: column; gap: 0.75rem; }
   .heroLink { width: 100%; max-width: 320px; justify-content: center; }
 }
+
+/* Mobile-first de-clutter: smaller badge, tighter hero, compact links */
+@media screen and (max-width: 996px) {
+  .heroBannerMobile .badgeWrapper {
+    margin-bottom: 1rem;
+  }
+  .heroBannerMobile .badge {
+    font-size: 0.75rem;
+    padding: 0.5rem 1rem;
+  }
+  .heroBannerMobile .heroTitle {
+    font-size: 1.875rem;
+    margin-bottom: 0.75rem;
+  }
+  .heroBannerMobile .heroDescriptionWrapper {
+    margin-bottom: 1.25rem;
+    padding: 1rem 1.25rem;
+  }
+  .heroBannerMobile .heroSubtitle {
+    font-size: 1rem;
+    margin-bottom: 0.5rem;
+  }
+  .heroBannerMobile .heroDescription {
+    font-size: 0.9375rem;
+  }
+  .heroBannerMobile .heroCta {
+    flex-direction: row;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 0.75rem;
+    margin-bottom: 1rem;
+  }
+  .heroBannerMobile .ctaButton {
+    width: auto;
+    flex: 0 1 auto;
+    justify-content: center;
+    padding: 0.875rem 1.5rem;
+    font-size: 0.9375rem;
+  }
+  .heroBannerMobile .heroLinks {
+    flex-direction: row;
+    justify-content: center;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+  }
+  .heroBannerMobile .heroLink {
+    width: auto;
+    max-width: none;
+    padding: 0.5rem 0.75rem;
+    font-size: 0.8125rem;
+  }
+  .heroBannerMobile .diamondSlot {
+    height: 240px;
+    min-height: 240px;
+  }
+}
+
 @media screen and (max-width: 480px) {
-  .heroBanner { padding: 5rem 0 6rem; }
+  .heroBanner:not(.heroBannerMobile) { padding: 5rem 0 6rem; }
   .heroTitle { font-size: 2rem; }
   .heroSubtitle { font-size: 1rem; }
   .badge { font-size: 0.8125rem; padding: 0.625rem 1.25rem; }
+  .heroBannerMobile .heroTitle {
+    font-size: 1.625rem;
+  }
+  .heroBannerMobile .diamondSlot {
+    height: 200px;
+    min-height: 200px;
+  }
 }
 
 /* Theme-specific wave colors */

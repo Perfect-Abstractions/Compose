@@ -4,7 +4,7 @@ import gsap from 'gsap';
 import { DiamondShader, ParticleShader, FacetHighlightShader } from './shaders';
 import { createDiamondGeometry, addFacetIds } from './geometry';
 
-export default function DiamondScene({ className, onHoverChange }) {
+export default function DiamondScene({ className, onHoverChange, inline = false }) {
   const canvasContainerRef = useRef(null);
 
   useEffect(() => {
@@ -81,34 +81,39 @@ export default function DiamondScene({ className, onHoverChange }) {
     diamondGroup.add(highlightMesh);
     diamondGroup.add(wireframe);
 
-    // PARTICLES: FLOATING WAVE (PRO GRADE - DENSE & UNORDERED)
+    // Inline mode: centered diamond (e.g. mobile hero) — larger for visibility
+    if (inline) {
+      diamondGroup.scale.setScalar(2);
+    }
+
+    // PARTICLES: FLOATING WAVE — desktop = dense; mobile (inline) = fewer, tighter for performance and balance
     const particlesGeometry = new THREE.BufferGeometry();
-    const countX = 200;
-    const countZ = 100;
+    const countX = inline ? 80 : 200;
+    const countZ = inline ? 50 : 100;
     const particlesCount = countX * countZ;
     const posArray = new Float32Array(particlesCount * 3);
-    
-    let i = 0;
-    const separation = 0.5; 
+    const separation = 0.5;
     const offsetX = (countX * separation) / 2;
     const offsetZ = (countZ * separation) / 2;
 
-    for(let x = 0; x < countX; x++) {
-      for(let z = 0; z < countZ; z++) {
+    let i = 0;
+    for (let x = 0; x < countX; x++) {
+      for (let z = 0; z < countZ; z++) {
         posArray[i] = (x * separation) - offsetX + (Math.random() - 0.5) * separation * 0.8;
-        posArray[i+1] = 0; 
-        posArray[i+2] = (z * separation) - offsetZ + (Math.random() - 0.5) * separation * 0.8;
+        posArray[i + 1] = 0;
+        posArray[i + 2] = (z * separation) - offsetZ + (Math.random() - 0.5) * separation * 0.8;
         i += 3;
       }
     }
-    
+
     particlesGeometry.setAttribute('position', new THREE.BufferAttribute(posArray, 3));
-    
+
     const particlesMaterial = new THREE.ShaderMaterial({
       uniforms: {
         ...ParticleShader.uniforms,
         uWidth: { value: countX * separation },
-        uDepth: { value: countZ * separation }
+        uDepth: { value: countZ * separation },
+        uPointSizeScale: { value: inline ? 0.5 : 1.0 }
       },
       vertexShader: ParticleShader.vertexShader,
       fragmentShader: ParticleShader.fragmentShader,
@@ -116,21 +121,25 @@ export default function DiamondScene({ className, onHoverChange }) {
       blending: THREE.AdditiveBlending,
       depthWrite: false
     });
-    
+
     const particlesMesh = new THREE.Points(particlesGeometry, particlesMaterial);
-    
+
     const particlesGroup = new THREE.Group();
     particlesGroup.add(particlesMesh);
-    
-    particlesGroup.position.y = -1; 
-    particlesGroup.position.z = -1; 
-    particlesGroup.rotation.x = 0.05; 
-    
+
+    particlesGroup.position.y = inline ? -1.5 : -1;
+    particlesGroup.position.z = inline ? -1 : -1;
+    particlesGroup.rotation.x = 0.05;
+
+    if (inline) {
+      particlesGroup.scale.setScalar(0.7);
+    }
+
     scene.add(diamondGroup);
     scene.add(particlesGroup);
 
-    // INITIAL POSITION
-    diamondGroup.position.x = window.innerWidth > 1024 ? 2.2 : 0;
+    // INITIAL POSITION: inline = always centered; desktop = offset right
+    diamondGroup.position.x = inline ? 0 : (window.innerWidth > 1024 ? 2.2 : 0);
     diamondGroup.position.y = 0.1;
     diamondGroup.rotation.x = 0.25; 
     
@@ -157,8 +166,8 @@ export default function DiamondScene({ className, onHoverChange }) {
     const mouse = new THREE.Vector2(-100, -100); // Start off-screen
     
     const onMouseMove = (event) => {
-      // Disable interaction on mobile
-      if (window.innerWidth <= 1024) {
+      // Disable interaction on mobile or when inline (small hero diamond)
+      if (inline || window.innerWidth <= 1024) {
         mouse.x = -100;
         mouse.y = -100;
         return;
@@ -240,7 +249,11 @@ export default function DiamondScene({ className, onHoverChange }) {
       
       const isDesktop = window.innerWidth > 1024;
       
-      if (isDesktop) {
+      if (inline) {
+        gsap.to(diamondGroup.position, { x: 0, duration: 0.5 });
+        mesh.material.opacity = 1.0;
+        wireframe.material.opacity = 0.25;
+      } else if (isDesktop) {
         gsap.to(diamondGroup.position, { x: 2.2, duration: 0.5 });
         mesh.material.opacity = 1.0;
         wireframe.material.opacity = 0.2; 
@@ -267,7 +280,7 @@ export default function DiamondScene({ className, onHoverChange }) {
       particlesGeometry.dispose(); 
       renderer.dispose();
     };
-  }, [onHoverChange]); // Depend on callback
+  }, [onHoverChange, inline]); // Depend on callback and inline
 
   return <div className={className} ref={canvasContainerRef} />;
 }

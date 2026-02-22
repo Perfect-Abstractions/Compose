@@ -186,11 +186,13 @@ export const ParticleShader = {
     uTime: { value: 0 },
     uColor: { value: new THREE.Color('#3b82f6') }, // Blue-500
     uPixelSize: { value: 2.0 },
-    uWidth: { value: 100.0 } // Width of the field for wrapping
+    uWidth: { value: 100.0 }, // Width of the field for wrapping
+    uPointSizeScale: { value: 1.0 } // Scale point size (e.g. 0.5 for smaller on mobile)
   },
   vertexShader: `
     uniform float uTime;
     uniform float uWidth;
+    uniform float uPointSizeScale;
     varying vec3 vPos;
     varying float vDist; 
     
@@ -230,8 +232,8 @@ export const ParticleShader = {
       // Calculate distance for depth fade
       vDist = length(mvPosition.xyz);
       
-      // Size attenuation - Dust Size
-      gl_PointSize = (4.0 * 12.0) / -mvPosition.z;
+      // Size attenuation - Dust Size (uPointSizeScale for mobile)
+      gl_PointSize = (4.0 * 12.0 * uPointSizeScale) / -mvPosition.z;
     }
   `,
   fragmentShader: `
