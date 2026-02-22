@@ -11,10 +11,10 @@ export default function CodeShowcase() {
           <div className={styles.showcaseContent}>
             <span className={styles.showcaseBadge}>Shared Storage Architecture</span>
             <Heading as="h2" className={styles.showcaseTitle}>
-              Facets and Libraries Working Together
+              Facets and Modules Working Together
             </Heading>
             <p className={styles.showcaseDescription}>
-              Both facets and libraries access the same storage in your diamond. 
+              Both facets and modules access the same storage in your diamond. 
               Your custom facets can extend Compose functionality without inheritance.
             </p>
             <div className={styles.showcaseFeatures}>
@@ -32,7 +32,7 @@ export default function CodeShowcase() {
                   <Icon name="showcase-library" size={24} />
                 </div>
                 <div>
-                  <h4>Libraries</h4>
+                  <h4>Modules</h4>
                   <p>Helper functions for custom facets</p>
                 </div>
               </div>
@@ -55,16 +55,11 @@ export default function CodeShowcase() {
           <div className={styles.showcaseCode}>
             <div className={styles.codeWindow}>
               <div className={styles.codeWindowHeader}>
-                <div className={styles.codeWindowDots}>
-                  <span></span>
-                  <span></span>
-                  <span></span>
-                </div>
                 <span className={styles.codeWindowTitle}>GameNFTFacet.sol</span>
               </div>
               <pre className={styles.codeWindowContent}>
-{`// Your custom facet uses LibERC721
-import {LibERC721} from "compose/LibERC721.sol";
+{`// Your custom facet uses the ERC721 module
+import { ERC721Mod } from "compose/ERC721Mod.sol";
 
 contract GameNFTFacet {
     function mintWithGameLogic(
@@ -77,11 +72,10 @@ contract GameNFTFacet {
             "Not enough points"
         );
 
-        // Use LibERC721 - same storage!
-        LibERC721.mint(player, tokenId);
+        // Use ERC721Mod - same storage
+        ERC721Mod.mint(player, tokenId);
 
-        // Standard ERC721Facet functions
-        // work seamlessly
+        // Standard ERC721Facet functions work seamlessly
         updatePlayerStats(player);
     }
 }`}
