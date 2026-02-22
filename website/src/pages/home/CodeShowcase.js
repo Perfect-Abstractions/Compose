@@ -11,10 +11,10 @@ export default function CodeShowcase() {
           <div className={styles.showcaseContent}>
             <span className={styles.showcaseBadge}>Shared Storage Architecture</span>
             <Heading as="h2" className={styles.showcaseTitle}>
-              Facets and Libraries Working Together
+              Facets and Modules Working Together
             </Heading>
             <p className={styles.showcaseDescription}>
-              Both facets and libraries access the same storage in your diamond. 
+              Both facets and modules access the same storage in your diamond. 
               Your custom facets can extend Compose functionality without inheritance.
             </p>
             <div className={styles.showcaseFeatures}>
@@ -32,7 +32,7 @@ export default function CodeShowcase() {
                   <Icon name="showcase-library" size={24} />
                 </div>
                 <div>
-                  <h4>Libraries</h4>
+                  <h4>Modules</h4>
                   <p>Helper functions for custom facets</p>
                 </div>
               </div>
