@@ -51,7 +51,7 @@ contract AccessControlTemporalFacet {
 
     /**
      * @notice Storage struct for AccessControl (reused struct definition).
-     * @dev Must match the struct definition in AccessControlFacet.
+     * @dev Must match the struct definition in AccessControlDataFacet.
      * @custom:storage-location erc8042:compose.accesscontrol
      */
     struct AccessControlStorage {
@@ -234,5 +234,19 @@ contract AccessControlTemporalFacet {
         if (expiry > 0 && block.timestamp >= expiry) {
             revert AccessControlRoleExpired(_role, _account);
         }
+    }
+
+    /**
+     * @notice Exports the selectors that are exposed by the facet.
+     * @return Selectors that are exported by the facet.
+     */
+    function exportSelectors() external pure returns (bytes memory) {
+        return bytes.concat(
+            this.getRoleExpiry.selector,
+            this.isRoleExpired.selector,
+            this.grantRoleWithExpiry.selector,
+            this.revokeTemporalRole.selector,
+            this.requireValidRole.selector
+        );
     }
 }

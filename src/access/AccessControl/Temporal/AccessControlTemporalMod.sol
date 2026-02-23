@@ -50,7 +50,7 @@ bytes32 constant TEMPORAL_STORAGE_POSITION = keccak256("compose.accesscontrol.te
 
 /**
  * @notice Storage struct for AccessControl (reused struct definition).
- * @dev Must match the struct definition in AccessControlFacet.
+ * @dev Must match the struct definition in AccessControlDataFacet / AccessControlDataMod.
  * @custom:storage-location erc8042:compose.accesscontrol
  */
 struct AccessControlStorage {
