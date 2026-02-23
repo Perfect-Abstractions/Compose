@@ -74,8 +74,6 @@ contract AccessControlRenounceFacet {
      * @return Selectors that are exported by the facet.
      */
     function exportSelectors() external pure returns (bytes memory) {
-        return bytes.concat(
-            this.renounceRole.selector
-        );
+        return bytes.concat(this.renounceRole.selector);
     }
 }

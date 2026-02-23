@@ -117,9 +117,6 @@ contract AccessControlRolesBatchFacet {
      * @return Selectors that are exported by the facet.
      */
     function exportSelectors() external pure returns (bytes memory) {
-        return bytes.concat(
-            this.grantRoleBatch.selector,
-            this.revokeRoleBatch.selector
-        );
+        return bytes.concat(this.grantRoleBatch.selector, this.revokeRoleBatch.selector);
     }
 }
