@@ -18,7 +18,7 @@ export default function CodeShowcase() {
               Your custom facets can extend Compose functionality without inheritance.
             </p>
             <div className={styles.showcaseFeatures}>
-              <div className={styles.showcaseFeature}>
+              <Link to="/docs/foundations/facets-and-modules" className={styles.showcaseFeature}>
                 <div className={styles.showcaseFeatureIcon}>
                   <Icon name="showcase-facet" size={24} />
                 </div>
@@ -26,8 +26,8 @@ export default function CodeShowcase() {
                   <h4>Facets</h4>
                   <p>Complete, reusable implementations</p>
                 </div>
-              </div>
-              <div className={styles.showcaseFeature}>
+              </Link>
+              <Link to="/docs/foundations/solidity-modules" className={styles.showcaseFeature}>
                 <div className={styles.showcaseFeatureIcon}>
                   <Icon name="showcase-library" size={24} />
                 </div>
@@ -35,8 +35,8 @@ export default function CodeShowcase() {
                   <h4>Modules</h4>
                   <p>Helper functions for custom facets</p>
                 </div>
-              </div>
-              <div className={styles.showcaseFeature}>
+              </Link>
+              <Link to="/docs/foundations/facets-and-modules#the-key-insight-shared-storage" className={styles.showcaseFeature}>
                 <div className={styles.showcaseFeatureIcon}>
                   <Icon name="showcase-storage" size={24} />
                 </div>
@@ -44,13 +44,8 @@ export default function CodeShowcase() {
                   <h4>Shared Storage</h4>
                   <p>Both work with the same data</p>
                 </div>
-              </div>
+              </Link>
             </div>
-            
-            {/* <Link to="/docs/foundations/facets-and-libraries" className={styles.showcaseLink}>
-              Learn More
-              <Icon name="arrow-right" size={20} />
-            </Link> */}
           </div>
           <div className={styles.showcaseCode}>
             <div className={styles.codeWindow}>

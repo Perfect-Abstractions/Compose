@@ -10,7 +10,7 @@
 .showcaseDescription { font-size: 1.125rem; line-height: 1.8; color: #64748b; margin-bottom: 2.5rem; }
 
 .showcaseFeatures { display: flex; flex-direction: column; gap: 1.5rem; margin-bottom: 2.5rem; width: 100%; max-width: 600px; }
-.showcaseFeature { display: flex; align-items: flex-start; gap: 1rem; padding: 1.5rem; background: white; border: 1px solid #e2e8f0; border-radius: 1rem; transition: all 0.25s ease; text-align: left; }
+.showcaseFeature { display: flex; align-items: flex-start; gap: 1rem; padding: 1.5rem; background: white; border: 1px solid #e2e8f0; border-radius: 1rem; transition: all 0.25s ease; text-align: left; text-decoration: none; color: inherit; }
 .showcaseFeature:hover { border-color: #cbd5e1; box-shadow: 0 8px 20px rgba(0,0,0,0.06); transform: translateX(8px); }
 .showcaseFeatureIcon { width: 48px; height: 48px; display: flex; align-items: center; justify-content: center; background: linear-gradient(135deg, rgba(59,130,246,0.1), rgba(37,99,235,0.1)); border-radius: 0.75rem; color: var(--compose-primary-500); flex-shrink: 0; }
 .showcaseFeatureIcon svg { width: 24px; height: 24px; }
