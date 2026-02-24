@@ -53,10 +53,8 @@ export default function BlogArticleBreadcrumbs() {
     : 'Hide recent blog posts sidebar';
 
   return (
-    <nav
-      className={styles.breadcrumbsContainer}
-      aria-label="Breadcrumbs">
-      <div className={styles.breadcrumbsInner}>
+    <nav className={styles.breadcrumbsContainer} aria-label="Breadcrumbs">
+      <div className={styles.breadcrumbsInnerBlogArticle}>
         {hasSidebar && (
           <>
             <SidebarToggleButton

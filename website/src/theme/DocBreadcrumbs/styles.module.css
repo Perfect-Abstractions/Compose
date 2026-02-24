@@ -18,6 +18,50 @@
   gap: 0.5rem;
 }
 
+/* Blog article breadcrumbs: keep everything on a single line */
+.breadcrumbsInnerBlogArticle {
+  display: flex;
+  align-items: center;
+  flex-wrap: nowrap;
+  gap: 0.5rem;
+  min-width: 0;
+  white-space: nowrap;
+  overflow-x: auto;
+  overflow-y: hidden;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none; /* Firefox */
+  -ms-overflow-style: none; /* IE/Edge */
+}
+
+.breadcrumbsInnerBlogArticle::-webkit-scrollbar {
+  display: none; /* Chrome, Safari, Edge */
+}
+
+.breadcrumbsInnerBlogArticle .breadcrumbs {
+  display: flex;
+  flex-wrap: nowrap;
+  min-width: 0;
+  flex: 1 1 auto;
+  overflow: hidden;
+}
+
+.breadcrumbsInnerBlogArticle .breadcrumbs__item {
+  min-width: 0;
+  flex-shrink: 0;
+}
+
+.breadcrumbsInnerBlogArticle .breadcrumbs__item--active {
+  flex: 1 1 auto;
+}
+
+.breadcrumbsInnerBlogArticle .breadcrumbs__item--active .breadcrumbs__link {
+  display: block;
+  width: 100%;
+  white-space: nowrap !important;
+  overflow: visible;
+  text-overflow: clip;
+}
+
 /* Same colors as .breadcrumbs__link in breadcrumbs.css */
 .breadcrumbsContainer {
   --breadcrumb-link-color: #64748b;

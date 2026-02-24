@@ -73,7 +73,7 @@ export default function DocBreadcrumbs() {
             message: 'Breadcrumbs',
             description: 'The ARIA label for the breadcrumbs',
           })}>
-          <div className={styles.breadcrumbsInner}>
+          <div className={styles.breadcrumbsInnerBlogArticle}>
             {sidebar && (
               <>
                 <SidebarToggleButton
