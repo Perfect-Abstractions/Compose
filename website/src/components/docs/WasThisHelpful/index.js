@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import clsx from 'clsx';
+import Icon from '../../ui/Icon';
 import styles from './styles.module.css';
 
 /**
@@ -33,15 +34,7 @@ export default function WasThisHelpful({
   if (submitted) {
     return (
       <div className={styles.feedbackSubmitted}>
-        <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
-          <path
-            d="M16.667 5L7.5 14.167 3.333 10"
-            stroke="currentColor"
-            strokeWidth="2"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-          />
-        </svg>
+        <Icon name="checkmark-stroke" size={20} />
         <span>Thank you for your feedback!</span>
       </div>
     );
@@ -60,15 +53,7 @@ export default function WasThisHelpful({
             onClick={() => handleFeedback('yes')}
             aria-label="Yes, this was helpful"
           >
-            <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
-              <path
-                d="M5.833 8.333H4.167A1.667 1.667 0 002.5 10v5a1.667 1.667 0 001.667 1.667h1.666M5.833 8.333V6.667a1.667 1.667 0 011.667-1.667h1.666M5.833 8.333h8.334M10.833 5v3.333M10.833 5h1.667a1.667 1.667 0 011.667 1.667v1.666M10.833 8.333h2.5"
-                stroke="currentColor"
-                strokeWidth="1.5"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              />
-            </svg>
+            <Icon name="thumbs-up-outline" size={20} />
             Yes
           </button>
           <button
@@ -79,15 +64,7 @@ export default function WasThisHelpful({
             onClick={() => handleFeedback('no')}
             aria-label="No, this was not helpful"
           >
-            <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
-              <path
-                d="M5.833 11.667H4.167A1.667 1.667 0 002.5 10V5a1.667 1.667 0 001.667-1.667h1.666M5.833 11.667V13.333a1.667 1.667 0 001.667 1.667h1.666M5.833 11.667h8.334M10.833 15v-3.333M10.833 15h1.667a1.667 1.667 0 001.667-1.667v-1.666M10.833 11.667h2.5"
-                stroke="currentColor"
-                strokeWidth="1.5"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              />
-            </svg>
+            <Icon name="thumbs-down-outline" size={20} />
             No
           </button>
         </div>

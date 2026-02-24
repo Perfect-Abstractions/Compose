@@ -7,7 +7,7 @@ import React from 'react';
  * @param {string} className - Optional CSS class
  * @param {number} size - Icon size in pixels (default: 24)
  */
-export default function Icon({ name, className, size = 24, decorative = true, alt = '' }) {
+export default function Icon({ name, className, size = 24, decorative = true, alt = '', style }) {
   return (
     <img
       src={`/icons/${name}.svg`}
@@ -17,7 +17,7 @@ export default function Icon({ name, className, size = 24, decorative = true, al
       width={size}
       height={size}
       className={className}
-      style={{ display: 'inline-block', verticalAlign: 'middle' }}
+      style={{ display: 'inline-block', verticalAlign: 'middle', ...style }}
     />
   );
 }

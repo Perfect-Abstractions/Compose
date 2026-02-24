@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import clsx from 'clsx';
+import Icon from '../../ui/Icon';
 import styles from './styles.module.css';
 
 /**
@@ -74,21 +75,11 @@ export default function SchemaViewer({
               onClick={() => setIsExpanded(!isExpanded)}
               aria-label={isExpanded ? 'Collapse' : 'Expand'}
             >
-              <svg
-                width="12"
-                height="12"
-                viewBox="0 0 12 12"
-                fill="none"
+              <Icon
+                name="schema-expand"
+                size={12}
                 className={clsx(styles.expandIcon, isExpanded && styles.expandIconOpen)}
-              >
-                <path
-                  d="M3 4.5L6 7.5L9 4.5"
-                  stroke="currentColor"
-                  strokeWidth="1.5"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                />
-              </svg>
+              />
             </button>
           )}
           {!isComplex && (
