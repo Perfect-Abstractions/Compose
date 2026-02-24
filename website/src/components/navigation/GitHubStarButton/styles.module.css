@@ -31,23 +31,20 @@
 }
 
 .starIconStarred {
-  fill: #fbbf24;
-  stroke: #fbbf24;
   opacity: 1;
+  filter: invert(76%) sepia(45%) saturate(1200%) hue-rotate(358deg);
 }
 
 /* Yellow star when starred */
 .starButton.starred .starIcon {
-  fill: #fbbf24;
-  stroke: #fbbf24;
   opacity: 1;
+  filter: invert(76%) sepia(45%) saturate(1200%) hue-rotate(358deg);
 }
 
 /* Yellow star on hover */
 .starButton:hover .starIcon {
-  fill: #fbbf24;
-  stroke: #fbbf24;
   opacity: 0.95;
+  filter: invert(76%) sepia(45%) saturate(1200%) hue-rotate(358deg);
 }
 
 /* Mobile responsive */

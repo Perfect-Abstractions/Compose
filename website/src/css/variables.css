@@ -44,7 +44,15 @@
   /* Spacing and borders */
   --ifm-global-radius: 0.5rem;
   --ifm-button-border-radius: 0.5rem;
-  
+  /** Horizontal padding for main content when blog sidebar is closed */
+  --ifm-sidebar-content-margin-x: 2rem;
+
+  /** Docs content wrapper padding when left sidebar is closed (top right bottom left) */
+  --ifm-docs-sidebar-closed-padding-top: 0.5rem;
+  --ifm-docs-sidebar-closed-padding-right: 0rem;
+  --ifm-docs-sidebar-closed-padding-bottom: 0;
+  --ifm-docs-sidebar-closed-padding-left: 2.5rem;
+
   /* Brand tokens for homepage sections */
   --compose-bg-900: #0f172a; /* dark navy */
   --compose-bg-800: #1e293b; /* slate */
