@@ -1,0 +1,54 @@
+/**
+ * Sidebar toggle button (used in DocBreadcrumbs and BlogArticleBreadcrumbs).
+ * Desktop only; breakpoint matches sidebar (997px).
+ */
+.sidebarToggleButton {
+  display: none;
+  align-items: center;
+  justify-content: center;
+  padding: 0.25rem;
+  margin: 0;
+  border: none;
+  border-radius: var(--ifm-global-radius);
+  background: transparent;
+  color: var(--breadcrumb-link-color, #64748b);
+  cursor: pointer;
+  transition: color 0.2s ease;
+}
+
+@media (min-width: 997px) {
+  .sidebarToggleButton {
+    display: inline-flex;
+  }
+}
+
+.sidebarToggleButton:hover {
+  color: var(--breadcrumb-link-color-hover, #3b82f6);
+}
+
+.sidebarToggleButton:focus-visible {
+  outline: 2px solid var(--breadcrumb-link-color-hover, #3b82f6);
+  outline-offset: 2px;
+}
+
+.sidebarToggleIcon {
+  display: block;
+  width: 20px;
+  height: 20px;
+  flex-shrink: 0;
+  opacity: 0.9;
+  transition: opacity 0.2s ease, background-color 0.2s ease;
+  background-color: currentColor;
+  -webkit-mask-image: url('/icons/sidebar-left.svg');
+  mask-image: url('/icons/sidebar-left.svg');
+  -webkit-mask-size: contain;
+  mask-size: contain;
+  -webkit-mask-repeat: no-repeat;
+  mask-repeat: no-repeat;
+  -webkit-mask-position: center;
+  mask-position: center;
+}
+
+.sidebarToggleButton:hover .sidebarToggleIcon {
+  opacity: 1;
+}

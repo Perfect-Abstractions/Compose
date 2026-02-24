@@ -9,3 +9,39 @@
   --ifm-breadcrumb-size-multiplier: 0.8;
   margin-bottom: 0.8rem;
 }
+
+/* Inline sidebar toggle + separator before breadcrumbs (docs only) */
+.breadcrumbsInner {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+/* Same colors as .breadcrumbs__link in breadcrumbs.css */
+.breadcrumbsContainer {
+  --breadcrumb-link-color: #64748b;
+  --breadcrumb-link-color-hover: #3b82f6;
+  --breadcrumb-sep-color: #64748b;
+}
+
+[data-theme='dark'] .breadcrumbsContainer {
+  --breadcrumb-link-color: #909090;
+  --breadcrumb-link-color-hover: #60a5fa;
+  --breadcrumb-sep-color: #909090;
+}
+
+/* Separator between sidebar toggle (see SidebarToggleButton) and breadcrumbs */
+.sidebarToggleSep {
+  display: none;
+  color: var(--breadcrumb-sep-color);
+  font-size: 0.875rem;
+  user-select: none;
+  opacity: 0.85;
+}
+
+@media (min-width: 997px) {
+  .sidebarToggleSep {
+    display: inline;
+  }
+}

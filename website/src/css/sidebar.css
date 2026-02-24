@@ -85,3 +85,29 @@
   background: rgba(96, 165, 250, 0.2);
   color: #bfdbfe !important;
 }
+
+/* Desktop-only: hide docs sidebar for focus mode (toggle in layout) */
+@media (min-width: 997px) {
+  .docs-sidebar-hidden .theme-doc-sidebar-container {
+    width: 0 !important;
+    min-width: 0 !important;
+    overflow: hidden;
+    border-right-width: 0;
+    margin: 0;
+    padding: 0;
+    transition: width var(--ifm-transition-fast) ease;
+  }
+
+  .docs-sidebar-hidden .docs-main-full-width {
+    max-width: 100% !important;
+  }
+
+  /* Content wrapper padding when docs sidebar is closed (same as blog – see variables.css) */
+  .docs-sidebar-hidden main .container {
+    max-width: var(--ifm-container-width) !important;
+    padding: var(--ifm-docs-sidebar-closed-padding-top, 1rem)
+      var(--ifm-docs-sidebar-closed-padding-right, 0rem)
+      var(--ifm-docs-sidebar-closed-padding-bottom, 0)
+      var(--ifm-docs-sidebar-closed-padding-left, 2.5rem) !important;
+  }
+}

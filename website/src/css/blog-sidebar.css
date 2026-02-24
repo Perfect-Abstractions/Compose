@@ -264,3 +264,45 @@
   }
 }
 
+/* Desktop-only: hide blog sidebar for focus mode (toggle in BlogLayout) */
+@media (min-width: 997px) {
+  /* Collapsed left sidebar takes no space so content + ToC can fill the row */
+  .blog-sidebar-hidden .theme-blog-wrapper > .col--3 {
+    flex: 0 0 0 !important;
+    width: 0 !important;
+    min-width: 0 !important;
+    overflow: hidden;
+    padding: 0 !important;
+    margin: 0 !important;
+    border: none;
+    transition: width var(--ifm-transition-fast) ease;
+  }
+
+  .blog-sidebar-hidden .theme-blog-wrapper .col--3::before,
+  .blog-sidebar-hidden .theme-blog-wrapper [class*="col--3"]::before {
+    display: none;
+  }
+
+  /* Content wrapper width and padding when blog sidebar is closed (match docs) */
+  .container.blog-sidebar-hidden {
+    max-width: var(--ifm-container-width) !important;
+    margin-left: auto !important;
+    margin-right: auto !important;
+    padding: var(--ifm-docs-sidebar-closed-padding-top, 1rem)
+      var(--ifm-docs-sidebar-closed-padding-right, 0rem)
+      var(--ifm-docs-sidebar-closed-padding-bottom, 0)
+      var(--ifm-docs-sidebar-closed-padding-left, 2.5rem) !important;
+  }
+
+  /* Main content grows to fill space; right ToC keeps fixed width */
+  .blog-sidebar-hidden .theme-blog-wrapper > main.col--9 {
+    flex: 1 1 0 !important;
+    min-width: 0;
+    max-width: none !important;
+  }
+
+  .blog-sidebar-hidden .theme-blog-wrapper > .col--2 {
+    flex: 0 0 calc(2 / 12 * 100%) !important;
+  }
+}
+
