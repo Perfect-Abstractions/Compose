@@ -5,6 +5,12 @@ pragma solidity >=0.8.30;
  * https://compose.diamonds
  */
 
+
+/**
+ * @title ERC20PermitFacet
+ * @notice Facet for ERC20 permit functionality
+ * @dev Implements EIP-2612: https://eips.ethereum.org/EIPS/eip-2612
+ */
 contract ERC20PermitFacet {
     /**
      * @notice Thrown when a permit signature is invalid or expired.
@@ -176,5 +182,18 @@ contract ERC20PermitFacet {
         erc20Storage.allowance[_owner][_spender] = _value;
         s.nonces[_owner] = currentNonce + 1;
         emit Approval(_owner, _spender, _value);
+    }
+
+    /**
+     * @notice Exports the function selectors of the ERC20Burn facet
+     * @dev This function is used to export the function selectors of the ERC20Burn facet
+     * @return selectors The function selectors of the ERC20Burn facet
+     */
+    function exportSelectors() external pure returns (bytes memory) {
+        return bytes.concat(
+            this.nonces.selector,
+            this.DOMAIN_SEPARATOR.selector,
+            this.permit.selector
+        );
     }
 }

@@ -101,4 +101,16 @@ contract ERC20BurnFacet {
         }
         emit Transfer(_account, address(0), _value);
     }
+
+    /**
+     * @notice Exports the function selectors of the ERC20Burn facet
+     * @dev This function is used to export the function selectors of the ERC20Burn facet
+     * @return selectors The function selectors of the ERC20Burn facet
+     */
+    function exportSelectors() external pure returns (bytes memory) {
+        return bytes.concat(
+            this.burnERC20.selector,
+            this.burnERC20From.selector
+        );
+    }
 }

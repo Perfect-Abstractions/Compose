@@ -212,4 +212,17 @@ contract ERC20BridgeableFacet {
             revert ERC20InvalidBridgeAccount(_caller);
         }
     }
+
+    /**
+     * @notice Exports the function selectors of the ERC20Bridgeable facet
+     * @dev This function is used to export the function selectors of the ERC20Bridgeable facet
+     * @return selectors The function selectors of the ERC20Bridgeable facet
+     */
+    function exportSelectors() external pure returns (bytes memory) {
+        return bytes.concat(
+            this.crosschainMint.selector,
+            this.crosschainBurn.selector,
+            this.checkTokenBridge.selector
+        );
+    }
 }

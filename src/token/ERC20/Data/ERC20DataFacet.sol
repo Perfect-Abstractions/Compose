@@ -59,4 +59,16 @@ contract ERC20DataFacet {
     function allowance(address _owner, address _spender) external view returns (uint256) {
         return getStorage().allowance[_owner][_spender];
     }
+
+    /**
+     * @notice Exports the function selectors of the ERC20Data facet
+     * @dev This function is used to export the function selectors of the ERC20Data facet
+     * @return selectors The function selectors of the ERC20Data facet
+     */
+    function exportSelectors() external pure returns (bytes memory) {
+        return bytes.concat(
+            this.totalSupply.selector,
+            this.balanceOf.selector,
+            this.allowance.selector
+        );
 }

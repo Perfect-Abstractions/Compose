@@ -133,4 +133,16 @@ contract ERC20TransferFacet {
         emit Transfer(_from, _to, _value);
         return true;
     }
+
+    /**
+     * @notice Exports the function selectors of the ERC20Transfer facet
+     * @dev This function is used to export the function selectors of the ERC20Transfer facet
+     * @return selectors The function selectors of the ERC20Transfer facet
+     */
+    function exportSelectors() external pure returns (bytes memory) {
+        return bytes.concat(
+            this.transfer.selector,
+            this.transferFrom.selector
+        );
+    }
 }

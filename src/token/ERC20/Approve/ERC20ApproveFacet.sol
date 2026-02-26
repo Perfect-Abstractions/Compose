@@ -63,4 +63,15 @@ contract ERC20ApproveFacet {
         emit Approval(msg.sender, _spender, _value);
         return true;
     }
+
+    /**
+     * @notice Exports the function selectors of the ERC20Approve facet
+     * @dev This function is used to export the function selectors of the ERC20Approve facet
+     * @return selectors The function selectors of the ERC20Approve facet
+     */
+    function exportSelectors() external pure returns (bytes memory) {
+        return bytes.concat(
+            this.approve.selector
+        );
+    }
 }

@@ -78,4 +78,15 @@ contract ERC165Facet {
 
         return s.supportedInterfaces[_interfaceId];
     }
+
+    /**
+     * @notice Exports the function selectors of the ERC165 facet
+     * @dev This function is used to export the function selectors of the ERC165 facet
+     * @return selectors The function selectors of the ERC165 facet
+     */
+    function exportSelectors() external pure returns (bytes memory) {
+        return bytes.concat(
+            this.supportsInterface.selector
+        );
+    }
 }

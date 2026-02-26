@@ -56,4 +56,16 @@ contract ERC20MetadataFacet {
     function decimals() external view returns (uint8) {
         return getStorage().decimals;
     }
+
+    /**
+     * @notice Exports the function selectors of the ERC20Metadata facet
+     * @dev This function is used to export the function selectors of the ERC20Metadata facet
+     * @return selectors The function selectors of the ERC20Metadata facet
+     */
+    function exportSelectors() external pure returns (bytes memory) {
+        return bytes.concat(
+            this.name.selector,
+            this.symbol.selector,
+            this.decimals.selector
+        );
 }
