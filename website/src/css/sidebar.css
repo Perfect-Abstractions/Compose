@@ -11,6 +11,14 @@
   position: relative;
 }
 
+/* Hide sidebar scrollbar while keeping scroll behavior (menu is the scrollable element) */
+.theme-doc-sidebar-container .menu {
+  scrollbar-width: none; /* Firefox */
+}
+.theme-doc-sidebar-container .menu::-webkit-scrollbar {
+  display: none; /* Chrome, Safari, Edge */
+}
+
 /* Dark mode sidebar */
 [data-theme='dark'] .theme-doc-sidebar-container {
   background-color: #0f172a;
