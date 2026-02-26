@@ -133,4 +133,13 @@ contract ERC20TransferFacet {
         emit Transfer(_from, _to, _value);
         return true;
     }
+
+    /**
+     * @notice Exports the function selectors of the ERC20TransferFacet
+     * @dev This function is use as a selector discovery mechanism for diamonds
+     * @return selectors The exported function selectors of the ERC20TransferFacet
+     */
+    function exportSelectors() external pure returns (bytes memory) {
+        return bytes.concat(this.transfer.selector, this.transferFrom.selector);
+    }
 }

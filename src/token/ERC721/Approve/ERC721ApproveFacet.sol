@@ -88,4 +88,13 @@ contract ERC721ApproveFacet {
         getStorage().isApprovedForAll[msg.sender][_operator] = _approved;
         emit ApprovalForAll(msg.sender, _operator, _approved);
     }
+
+    /**
+     * @notice Exports the function selectors of the ERC721ApproveFacet
+     * @dev This function is use as a selector discovery mechanism for diamonds
+     * @return selectors The exported function selectors of the ERC721ApproveFacet
+     */
+    function exportSelectors() external pure returns (bytes memory) {
+        return bytes.concat(this.approve.selector, this.setApprovalForAll.selector);
+    }
 }

@@ -91,4 +91,13 @@ contract ERC721EnumerableDataFacet {
         }
         return s.allTokens[_index];
     }
+
+    /**
+     * @notice Exports the function selectors of the ERC721EnumerableDataFacet
+     * @dev This function is use as a selector discovery mechanism for diamonds
+     * @return selectors The exported function selectors of the ERC721EnumerableDataFacet
+     */
+    function exportSelectors() external pure returns (bytes memory) {
+        return bytes.concat(this.totalSupply.selector, this.tokenOfOwnerByIndex.selector, this.tokenByIndex.selector);
+    }
 }

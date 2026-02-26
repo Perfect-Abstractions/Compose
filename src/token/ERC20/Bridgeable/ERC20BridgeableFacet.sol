@@ -212,4 +212,13 @@ contract ERC20BridgeableFacet {
             revert ERC20InvalidBridgeAccount(_caller);
         }
     }
+
+    /**
+     * @notice Exports the function selectors of the ERC20BridgeableFacet
+     * @dev This function is use as a selector discovery mechanism for diamonds
+     * @return selectors The exported function selectors of the ERC20BridgeableFacet
+     */
+    function exportSelectors() external pure returns (bytes memory) {
+        return bytes.concat(this.crosschainMint.selector, this.crosschainBurn.selector, this.checkTokenBridge.selector);
+    }
 }
