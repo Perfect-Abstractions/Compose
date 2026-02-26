@@ -219,10 +219,6 @@ contract ERC20BridgeableFacet {
      * @return selectors The exported function selectors of the ERC20BridgeableFacet
      */
     function exportSelectors() external pure returns (bytes memory) {
-        return bytes.concat(
-            this.crosschainMint.selector,
-            this.crosschainBurn.selector,
-            this.checkTokenBridge.selector
-        );
+        return bytes.concat(this.crosschainMint.selector, this.crosschainBurn.selector, this.checkTokenBridge.selector);
     }
 }

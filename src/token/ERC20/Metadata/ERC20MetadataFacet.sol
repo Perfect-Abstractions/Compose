@@ -63,9 +63,6 @@ contract ERC20MetadataFacet {
      * @return selectors The exported function selectors of the ERC20MetadataFacet
      */
     function exportSelectors() external pure returns (bytes memory) {
-        return bytes.concat(
-            this.name.selector,
-            this.symbol.selector,
-            this.decimals.selector
-        );
+        return bytes.concat(this.name.selector, this.symbol.selector, this.decimals.selector);
+    }
 }

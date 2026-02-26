@@ -5,7 +5,6 @@ pragma solidity >=0.8.30;
  * https://compose.diamonds
  */
 
-
 /**
  * @title ERC20PermitFacet
  * @notice Facet for ERC20 permit functionality
@@ -190,10 +189,6 @@ contract ERC20PermitFacet {
      * @return selectors The exported function selectors of the ERC20PermitFacet
      */
     function exportSelectors() external pure returns (bytes memory) {
-        return bytes.concat(
-            this.nonces.selector,
-            this.DOMAIN_SEPARATOR.selector,
-            this.permit.selector
-        );
+        return bytes.concat(this.nonces.selector, this.DOMAIN_SEPARATOR.selector, this.permit.selector);
     }
 }

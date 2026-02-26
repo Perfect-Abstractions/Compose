@@ -70,8 +70,6 @@ contract ERC20ApproveFacet {
      * @return selectors The exported function selectors of the ERC20ApproveFacet
      */
     function exportSelectors() external pure returns (bytes memory) {
-        return bytes.concat(
-            this.approve.selector
-        );
+        return bytes.concat(this.approve.selector);
     }
 }

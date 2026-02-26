@@ -108,9 +108,6 @@ contract ERC20BurnFacet {
      * @return selectors The exported function selectors of the ERC20BurnFacet
      */
     function exportSelectors() external pure returns (bytes memory) {
-        return bytes.concat(
-            this.burnERC20.selector,
-            this.burnERC20From.selector
-        );
+        return bytes.concat(this.burnERC20.selector, this.burnERC20From.selector);
     }
 }

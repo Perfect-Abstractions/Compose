@@ -98,10 +98,6 @@ contract ERC721EnumerableDataFacet {
      * @return selectors The exported function selectors of the ERC721EnumerableDataFacet
      */
     function exportSelectors() external pure returns (bytes memory) {
-        return bytes.concat(
-            this.totalSupply.selector,
-            this.tokenOfOwnerByIndex.selector,
-            this.tokenByIndex.selector
-        );
+        return bytes.concat(this.totalSupply.selector, this.tokenOfOwnerByIndex.selector, this.tokenByIndex.selector);
     }
 }

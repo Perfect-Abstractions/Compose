@@ -177,7 +177,7 @@ contract ERC721TransferFacet {
         return bytes.concat(
             this.transferFrom.selector,
             bytes4(keccak256("safeTransferFrom(address,address,uint256)")),
-            bytes4(keccak256("safeTransferFrom(address,address,uint256,bytes)"))    
+            bytes4(keccak256("safeTransferFrom(address,address,uint256,bytes)"))
         );
     }
 }

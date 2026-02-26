@@ -129,8 +129,6 @@ contract ERC721EnumerableBurnFacet {
      * @return selectors The exported function selectors of the ERC721EnumerableBurnFacet
      */
     function exportSelectors() external pure returns (bytes memory) {
-        return bytes.concat(
-            this.burn.selector
-        );
+        return bytes.concat(this.burn.selector);
     }
 }

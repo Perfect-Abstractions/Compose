@@ -98,10 +98,7 @@ contract ERC721DataFacet {
      */
     function exportSelectors() external pure returns (bytes memory) {
         return bytes.concat(
-            this.balanceOf.selector,
-            this.ownerOf.selector,
-            this.getApproved.selector,
-            this.isApprovedForAll.selector
+            this.balanceOf.selector, this.ownerOf.selector, this.getApproved.selector, this.isApprovedForAll.selector
         );
     }
 }

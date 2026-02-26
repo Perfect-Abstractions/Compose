@@ -66,9 +66,6 @@ contract ERC20DataFacet {
      * @return selectors The exported function selectors of the ERC20DataFacet
      */
     function exportSelectors() external pure returns (bytes memory) {
-        return bytes.concat(
-            this.totalSupply.selector,
-            this.balanceOf.selector,
-            this.allowance.selector
-        );
+        return bytes.concat(this.totalSupply.selector, this.balanceOf.selector, this.allowance.selector);
+    }
 }

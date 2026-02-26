@@ -165,7 +165,7 @@ contract DiamondInspectFacet {
      * @notice Exports the function selectors of the DiamondInspectFacet
      * @dev This function is use as a selector discovery mechanism for diamonds
      * @return selectors The exported function selectors of the DiamondInspectFacet
-     */ 
+     */
     function exportSelectors() external pure returns (bytes memory) {
         return bytes.concat(
             this.facetAddress.selector,

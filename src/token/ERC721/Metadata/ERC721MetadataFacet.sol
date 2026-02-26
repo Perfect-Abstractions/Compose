@@ -127,10 +127,6 @@ contract ERC721MetadataFacet {
      * @return selectors The exported function selectors of the ERC721MetadataFacet
      */
     function exportSelectors() external pure returns (bytes memory) {
-        return bytes.concat(
-            this.name.selector,
-            this.symbol.selector,
-            this.tokenURI.selector
-        );
+        return bytes.concat(this.name.selector, this.symbol.selector, this.tokenURI.selector);
     }
 }

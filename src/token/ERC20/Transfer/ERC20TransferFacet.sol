@@ -140,9 +140,6 @@ contract ERC20TransferFacet {
      * @return selectors The exported function selectors of the ERC20TransferFacet
      */
     function exportSelectors() external pure returns (bytes memory) {
-        return bytes.concat(
-            this.transfer.selector,
-            this.transferFrom.selector
-        );
+        return bytes.concat(this.transfer.selector, this.transferFrom.selector);
     }
 }

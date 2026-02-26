@@ -95,9 +95,6 @@ contract ERC721ApproveFacet {
      * @return selectors The exported function selectors of the ERC721ApproveFacet
      */
     function exportSelectors() external pure returns (bytes memory) {
-        return bytes.concat(
-            this.approve.selector,
-            this.setApprovalForAll.selector
-        );
+        return bytes.concat(this.approve.selector, this.setApprovalForAll.selector);
     }
 }

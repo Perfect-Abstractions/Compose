@@ -85,8 +85,6 @@ contract ERC165Facet {
      * @return selectors The exported function selectors of the ERC165Facet
      */
     function exportSelectors() external pure returns (bytes memory) {
-        return bytes.concat(
-            this.supportsInterface.selector
-        );
+        return bytes.concat(this.supportsInterface.selector);
     }
 }
