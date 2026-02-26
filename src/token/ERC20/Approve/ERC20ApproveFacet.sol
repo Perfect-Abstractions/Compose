@@ -65,9 +65,9 @@ contract ERC20ApproveFacet {
     }
 
     /**
-     * @notice Exports the function selectors of the ERC20Approve facet
-     * @dev This function is used to export the function selectors of the ERC20Approve facet
-     * @return selectors The function selectors of the ERC20Approve facet
+     * @notice Exports the function selectors of the ERC20ApproveFacet
+     * @dev This function is use as a selector discovery mechanism for diamonds
+     * @return selectors The exported function selectors of the ERC20ApproveFacet
      */
     function exportSelectors() external pure returns (bytes memory) {
         return bytes.concat(

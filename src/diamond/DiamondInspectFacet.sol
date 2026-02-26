@@ -162,10 +162,10 @@ contract DiamondInspectFacet {
     }
 
     /**
-     * @notice Exports the function selectors of the ERC165 facet
-     * @dev This function is used to export the function selectors of the ERC165 facet
-     * @return selectors The function selectors of the ERC165 facet
-     */
+     * @notice Exports the function selectors of the DiamondInspectFacet
+     * @dev This function is use as a selector discovery mechanism for diamonds
+     * @return selectors The exported function selectors of the DiamondInspectFacet
+     */ 
     function exportSelectors() external pure returns (bytes memory) {
         return bytes.concat(
             this.facetAddress.selector,

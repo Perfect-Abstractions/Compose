@@ -135,9 +135,9 @@ contract ERC20TransferFacet {
     }
 
     /**
-     * @notice Exports the function selectors of the ERC20Transfer facet
-     * @dev This function is used to export the function selectors of the ERC20Transfer facet
-     * @return selectors The function selectors of the ERC20Transfer facet
+     * @notice Exports the function selectors of the ERC20TransferFacet
+     * @dev This function is use as a selector discovery mechanism for diamonds
+     * @return selectors The exported function selectors of the ERC20TransferFacet
      */
     function exportSelectors() external pure returns (bytes memory) {
         return bytes.concat(

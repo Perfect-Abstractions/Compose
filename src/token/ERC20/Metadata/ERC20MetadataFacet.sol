@@ -59,8 +59,8 @@ contract ERC20MetadataFacet {
 
     /**
      * @notice Exports the function selectors of the ERC20Metadata facet
-     * @dev This function is used to export the function selectors of the ERC20Metadata facet
-     * @return selectors The function selectors of the ERC20Metadata facet
+     * @dev This function is use as a selector discovery mechanism for diamonds
+     * @return selectors The exported function selectors of the ERC20MetadataFacet
      */
     function exportSelectors() external pure returns (bytes memory) {
         return bytes.concat(
