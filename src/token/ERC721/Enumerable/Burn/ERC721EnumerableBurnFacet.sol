@@ -122,4 +122,15 @@ contract ERC721EnumerableBurnFacet {
 
         emit Transfer(owner, address(0), _tokenId);
     }
+
+    /**
+     * @notice Exports the function selectors of the ERC721EnumerableBurnFacet
+     * @dev This function is use as a selector discovery mechanism for diamonds
+     * @return selectors The exported function selectors of the ERC721EnumerableBurnFacet
+     */
+    function exportSelectors() external pure returns (bytes memory) {
+        return bytes.concat(
+            this.burn.selector
+        );
+    }
 }

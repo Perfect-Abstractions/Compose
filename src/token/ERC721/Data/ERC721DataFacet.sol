@@ -90,4 +90,18 @@ contract ERC721DataFacet {
     function isApprovedForAll(address _owner, address _operator) external view returns (bool) {
         return getStorage().isApprovedForAll[_owner][_operator];
     }
+
+    /**
+     * @notice Exports the function selectors of the ERC721DataFacet
+     * @dev This function is use as a selector discovery mechanism for diamonds
+     * @return selectors The exported function selectors of the ERC721DataFacet
+     */
+    function exportSelectors() external pure returns (bytes memory) {
+        return bytes.concat(
+            this.balanceOf.selector,
+            this.ownerOf.selector,
+            this.getApproved.selector,
+            this.isApprovedForAll.selector
+        );
+    }
 }

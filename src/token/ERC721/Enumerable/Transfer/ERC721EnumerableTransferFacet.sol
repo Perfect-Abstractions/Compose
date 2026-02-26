@@ -201,4 +201,17 @@ contract ERC721EnumerableTransferFacet {
             }
         }
     }
+
+    /**
+     * @notice Exports the function selectors of the ERC721EnumerableTransferFacet
+     * @dev This function is use as a selector discovery mechanism for diamonds
+     * @return selectors The exported function selectors of the ERC721EnumerableTransferFacet
+     */
+    function exportSelectors() external pure returns (bytes memory) {
+        return bytes.concat(
+            this.transferFrom.selector,
+            bytes4(keccak256("safeTransferFrom(address,address,uint256)")),
+            bytes4(keccak256("safeTransferFrom(address,address,uint256,bytes)"))
+        );
+    }
 }
