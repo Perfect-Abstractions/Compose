@@ -6,12 +6,11 @@ pragma solidity >=0.8.30;
  */
 
 /**
- * @notice Emitted when the admin role for a role is changed.
- * @param _role The role that was changed.
- * @param _previousAdminRole The previous admin role.
- * @param _newAdminRole The new admin role.
+ * @notice Thrown when the account does not have a specific role.
+ * @param _role The role that the account does not have.
+ * @param _account The account that does not have the role.
  */
-event RoleAdminChanged(bytes32 indexed _role, bytes32 indexed _previousAdminRole, bytes32 indexed _newAdminRole);
+error AccessControlUnauthorizedAccount(address _account, bytes32 _role);
 
 /**
  * @notice Emitted when a role is granted to an account.
@@ -29,24 +28,12 @@ event RoleGranted(bytes32 indexed _role, address indexed _account, address index
  */
 event RoleRevoked(bytes32 indexed _role, address indexed _account, address indexed _sender);
 
-/**
- * @notice Thrown when the account does not have a specific role.
- * @param _role The role that the account does not have.
- * @param _account The account that does not have the role.
- */
-error AccessControlUnauthorizedAccount(address _account, bytes32 _role);
-
 /*
  * @notice Storage slot identifier.
  */
 bytes32 constant STORAGE_POSITION = keccak256("compose.accesscontrol");
 
-/*
- * @notice Default admin role.
- */
-bytes32 constant DEFAULT_ADMIN_ROLE = 0x00;
-
-/*
+/**
  * @notice storage struct for the AccessControl.
  * @custom:storage-location erc8042:compose.accesscontrol
  */
@@ -67,42 +54,6 @@ function getStorage() pure returns (AccessControlStorage storage _s) {
 }
 
 /**
- * @notice function to check if an account has a required role.
- * @param _role The role to assert.
- * @param _account The account to assert the role for.
- * @custom:error AccessControlUnauthorizedAccount If the account does not have the role.
- */
-function requireRole(bytes32 _role, address _account) view {
-    AccessControlStorage storage s = getStorage();
-    if (!s.hasRole[_account][_role]) {
-        revert AccessControlUnauthorizedAccount(_account, _role);
-    }
-}
-
-/**
- * @notice function to check if an account has a role.
- * @param _role The role to check.
- * @param _account The account to check the role for.
- * @return True if the account has the role, false otherwise.
- */
-function hasRole(bytes32 _role, address _account) view returns (bool) {
-    AccessControlStorage storage s = getStorage();
-    return s.hasRole[_account][_role];
-}
-
-/**
- * @notice function to set the admin role for a role.
- * @param _role The role to set the admin for.
- * @param _adminRole The admin role to set.
- */
-function setRoleAdmin(bytes32 _role, bytes32 _adminRole) {
-    AccessControlStorage storage s = getStorage();
-    bytes32 previousAdminRole = s.adminRole[_role];
-    s.adminRole[_role] = _adminRole;
-    emit RoleAdminChanged(_role, previousAdminRole, _adminRole);
-}
-
-/**
  * @notice function to grant a role to an account.
  * @param _role The role to grant.
  * @param _account The account to grant the role to.
@@ -110,14 +61,19 @@ function setRoleAdmin(bytes32 _role, bytes32 _adminRole) {
  */
 function grantRole(bytes32 _role, address _account) returns (bool) {
     AccessControlStorage storage s = getStorage();
+    bytes32 adminRole = s.adminRole[_role];
+
+    if (!s.hasRole[msg.sender][adminRole]) {
+        revert AccessControlUnauthorizedAccount(msg.sender, adminRole);
+    }
+
     bool _hasRole = s.hasRole[_account][_role];
     if (!_hasRole) {
         s.hasRole[_account][_role] = true;
         emit RoleGranted(_role, _account, msg.sender);
         return true;
-    } else {
-        return false;
     }
+    return false;
 }
 
 /**
@@ -128,12 +84,17 @@ function grantRole(bytes32 _role, address _account) returns (bool) {
  */
 function revokeRole(bytes32 _role, address _account) returns (bool) {
     AccessControlStorage storage s = getStorage();
+    bytes32 adminRole = s.adminRole[_role];
+
+    if (!s.hasRole[msg.sender][adminRole]) {
+        revert AccessControlUnauthorizedAccount(msg.sender, adminRole);
+    }
+
     bool _hasRole = s.hasRole[_account][_role];
     if (_hasRole) {
         s.hasRole[_account][_role] = false;
         emit RoleRevoked(_role, _account, msg.sender);
         return true;
-    } else {
-        return false;
     }
+    return false;
 }
