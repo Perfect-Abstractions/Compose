@@ -5,11 +5,7 @@ pragma solidity >=0.8.30;
  * https://compose.diamonds
  */
 
-/**
- * @title ERC-6909 Minimal Multi-Token Interface
- * @notice A complete, dependency-free ERC-6909 implementation using the diamond storage pattern.
- */
-contract ERC6909Facet {
+contract ERC6909TransferFacet {
     /**
      * @notice Thrown when the sender has insufficient balance.
      */
@@ -29,28 +25,12 @@ contract ERC6909Facet {
      * @notice Thrown when the sender address is invalid.
      */
     error ERC6909InvalidSender(address _sender);
-
-    /**
-     * @notice Thrown when the spender address is invalid.
-     */
-    error ERC6909InvalidSpender(address _spender);
-
     /**
      * @notice Emitted when a transfer occurs.
      */
     event Transfer(
         address _caller, address indexed _sender, address indexed _receiver, uint256 indexed _id, uint256 _amount
     );
-
-    /**
-     * @notice Emitted when an operator is set.
-     */
-    event OperatorSet(address indexed _owner, address indexed _spender, bool _approved);
-
-    /**
-     * @notice Emitted when an approval occurs.
-     */
-    event Approval(address indexed _owner, address indexed _spender, uint256 indexed _id, uint256 _amount);
 
     /**
      * @dev Storage position determined by the keccak256 hash of the diamond storage identifier.
@@ -76,37 +56,6 @@ contract ERC6909Facet {
         assembly {
             s.slot := position
         }
-    }
-
-    /**
-     * @notice Owner balance of an id.
-     * @param _owner The address of the owner.
-     * @param _id The id of the token.
-     * @return The balance of the token.
-     */
-    function balanceOf(address _owner, uint256 _id) external view returns (uint256) {
-        return getStorage().balanceOf[_owner][_id];
-    }
-
-    /**
-     * @notice Spender allowance of an id.
-     * @param _owner The address of the owner.
-     * @param _spender The address of the spender.
-     * @param _id The id of the token.
-     * @return The allowance of the token.
-     */
-    function allowance(address _owner, address _spender, uint256 _id) external view returns (uint256) {
-        return getStorage().allowance[_owner][_spender][_id];
-    }
-
-    /**
-     * @notice Checks if a spender is approved by an owner as an operator.
-     * @param _owner The address of the owner.
-     * @param _spender The address of the spender.
-     * @return The approval status.
-     */
-    function isOperator(address _owner, address _spender) external view returns (bool) {
-        return getStorage().isOperator[_owner][_spender];
     }
 
     /**
@@ -187,43 +136,11 @@ contract ERC6909Facet {
     }
 
     /**
-     * @notice Approves an amount of an id to a spender.
-     * @param _spender The address of the spender.
-     * @param _id The id of the token.
-     * @param _amount The amount of the token.
-     * @return Whether the approval succeeded.
+     * @notice Exports the function selectors of the ERC6909TransferFacet
+     * @dev This function is use as a selector discovery mechanism for diamonds
+     * @return selectors The exported function selectors of the ERC6909TransferFacet
      */
-    function approve(address _spender, uint256 _id, uint256 _amount) external returns (bool) {
-        if (_spender == address(0)) {
-            revert ERC6909InvalidSpender(address(0));
-        }
-
-        ERC6909Storage storage s = getStorage();
-
-        s.allowance[msg.sender][_spender][_id] = _amount;
-
-        emit Approval(msg.sender, _spender, _id, _amount);
-
-        return true;
-    }
-
-    /**
-     * @notice Sets or removes a spender as an operator for the caller.
-     * @param _spender The address of the spender.
-     * @param _approved The approval status.
-     * @return Whether the operator update succeeded.
-     */
-    function setOperator(address _spender, bool _approved) external returns (bool) {
-        if (_spender == address(0)) {
-            revert ERC6909InvalidSpender(address(0));
-        }
-
-        ERC6909Storage storage s = getStorage();
-
-        s.isOperator[msg.sender][_spender] = _approved;
-
-        emit OperatorSet(msg.sender, _spender, _approved);
-
-        return true;
+    function exportSelectors() external pure returns (bytes memory) {
+        return bytes.concat(this.transfer.selector, this.transferFrom.selector);
     }
 }
