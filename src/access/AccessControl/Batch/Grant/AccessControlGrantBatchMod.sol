@@ -20,14 +20,6 @@ error AccessControlUnauthorizedAccount(address _account, bytes32 _role);
  */
 event RoleGranted(bytes32 indexed _role, address indexed _account, address indexed _sender);
 
-/**
- * @notice Emitted when a role is revoked from an account.
- * @param _role The role that was revoked.
- * @param _account The account from which the role was revoked.
- * @param _sender The account that revoked the role.
- */
-event RoleRevoked(bytes32 indexed _role, address indexed _account, address indexed _sender);
-
 /*
  * @notice Storage slot identifier.
  */
@@ -79,28 +71,3 @@ function grantRoleBatch(bytes32 _role, address[] calldata _accounts) {
     }
 }
 
-/**
- * @notice function to revoke a role from multiple accounts in a single transaction.
- * @param _role The role to revoke.
- * @param _accounts The accounts to revoke the role from.
- * @dev Emits a {RoleRevoked} event for each account the role is revoked from.
- * @custom:error AccessControlUnauthorizedAccount If the caller is not the admin of the role.
- */
-function revokeRoleBatch(bytes32 _role, address[] calldata _accounts) {
-    AccessControlStorage storage s = getStorage();
-    bytes32 adminRole = s.adminRole[_role];
-
-    if (!s.hasRole[msg.sender][adminRole]) {
-        revert AccessControlUnauthorizedAccount(msg.sender, adminRole);
-    }
-
-    uint256 length = _accounts.length;
-    for (uint256 i = 0; i < length; i++) {
-        address account = _accounts[i];
-        bool _hasRole = s.hasRole[account][_role];
-        if (_hasRole) {
-            s.hasRole[account][_role] = false;
-            emit RoleRevoked(_role, account, msg.sender);
-        }
-    }
-}

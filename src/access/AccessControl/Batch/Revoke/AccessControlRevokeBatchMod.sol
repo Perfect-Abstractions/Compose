@@ -13,14 +13,6 @@ pragma solidity >=0.8.30;
 error AccessControlUnauthorizedAccount(address _account, bytes32 _role);
 
 /**
- * @notice Emitted when a role is granted to an account.
- * @param _role The role that was granted.
- * @param _account The account that was granted the role.
- * @param _sender The sender that granted the role.
- */
-event RoleGranted(bytes32 indexed _role, address indexed _account, address indexed _sender);
-
-/**
  * @notice Emitted when a role is revoked from an account.
  * @param _role The role that was revoked.
  * @param _account The account from which the role was revoked.
@@ -54,35 +46,13 @@ function getStorage() pure returns (AccessControlStorage storage _s) {
 }
 
 /**
- * @notice function to grant a role to an account.
- * @param _role The role to grant.
- * @param _account The account to grant the role to.
- * @return True if the role was granted, false otherwise.
- */
-function grantRole(bytes32 _role, address _account) returns (bool) {
-    AccessControlStorage storage s = getStorage();
-    bytes32 adminRole = s.adminRole[_role];
-
-    if (!s.hasRole[msg.sender][adminRole]) {
-        revert AccessControlUnauthorizedAccount(msg.sender, adminRole);
-    }
-
-    bool _hasRole = s.hasRole[_account][_role];
-    if (!_hasRole) {
-        s.hasRole[_account][_role] = true;
-        emit RoleGranted(_role, _account, msg.sender);
-        return true;
-    }
-    return false;
-}
-
-/**
- * @notice function to revoke a role from an account.
+ * @notice function to revoke a role from multiple accounts in a single transaction.
  * @param _role The role to revoke.
- * @param _account The account to revoke the role from.
- * @return True if the role was revoked, false otherwise.
+ * @param _accounts The accounts to revoke the role from.
+ * @dev Emits a {RoleRevoked} event for each account the role is revoked from.
+ * @custom:error AccessControlUnauthorizedAccount If the caller is not the admin of the role.
  */
-function revokeRole(bytes32 _role, address _account) returns (bool) {
+function revokeRoleBatch(bytes32 _role, address[] calldata _accounts) {
     AccessControlStorage storage s = getStorage();
     bytes32 adminRole = s.adminRole[_role];
 
@@ -90,11 +60,14 @@ function revokeRole(bytes32 _role, address _account) returns (bool) {
         revert AccessControlUnauthorizedAccount(msg.sender, adminRole);
     }
 
-    bool _hasRole = s.hasRole[_account][_role];
-    if (_hasRole) {
-        s.hasRole[_account][_role] = false;
-        emit RoleRevoked(_role, _account, msg.sender);
-        return true;
+    uint256 length = _accounts.length;
+    for (uint256 i = 0; i < length; i++) {
+        address account = _accounts[i];
+        bool _hasRole = s.hasRole[account][_role];
+        if (_hasRole) {
+            s.hasRole[account][_role] = false;
+            emit RoleRevoked(_role, account, msg.sender);
+        }
     }
-    return false;
 }
+
