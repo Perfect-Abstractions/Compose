@@ -6,9 +6,9 @@ pragma solidity >=0.8.30;
  */
 
 /**
- * @title ERC-173 Two-Step Contract Ownership
+ * @title OwnerTwoStepTransferFacet
  */
-contract OwnerTwoStepsFacet {
+contract OwnerTwoStepTransferFacet {
     /**
      * @dev This emits when ownership of a contract started transferring to the new owner for accepting the ownership.
      */
@@ -67,22 +67,6 @@ contract OwnerTwoStepsFacet {
     }
 
     /**
-     * @notice Get the address of the owner
-     * @return The address of the owner.
-     */
-    function owner() external view returns (address) {
-        return getOwnerStorage().owner;
-    }
-
-    /**
-     * @notice Get the address of the pending owner
-     * @return The address of the pending owner.
-     */
-    function pendingOwner() external view returns (address) {
-        return getPendingOwnerStorage().pendingOwner;
-    }
-
-    /**
      * @notice Set the address of the new owner of the contract
      * @param _newOwner The address of the new owner of the contract
      */
@@ -109,21 +93,5 @@ contract OwnerTwoStepsFacet {
         ownerStorage.owner = pendingStorage.pendingOwner;
         pendingStorage.pendingOwner = address(0);
         emit OwnershipTransferred(oldOwner, ownerStorage.owner);
-    }
-
-    /**
-     * @notice Renounce ownership of the contract
-     * @dev Sets the owner to address(0), disabling all functions restricted to the owner.
-     */
-    function renounceOwnership() external {
-        OwnerStorage storage ownerStorage = getOwnerStorage();
-        PendingOwnerStorage storage pendingStorage = getPendingOwnerStorage();
-        if (msg.sender != ownerStorage.owner) {
-            revert OwnerUnauthorizedAccount();
-        }
-        address previousOwner = ownerStorage.owner;
-        ownerStorage.owner = address(0);
-        pendingStorage.pendingOwner = address(0);
-        emit OwnershipTransferred(previousOwner, address(0));
     }
 }

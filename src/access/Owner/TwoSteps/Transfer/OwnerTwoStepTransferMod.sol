@@ -6,14 +6,15 @@ pragma solidity >=0.8.30;
  */
 
 /*
- * @title ERC-173 Two-Step Contract Ownership Library
- * @notice Provides two-step ownership transfer logic for facets or modular contracts.
+ * @title ERC-173 Two-Step Ownership Transfer Module
+ * @notice Provides logic for two-step ownership transfers.
  */
 
 /**
  * @dev Emitted when ownership transfer is initiated (pending owner set).
  */
 event OwnershipTransferStarted(address indexed _previousOwner, address indexed _newOwner);
+
 /**
  * @dev Emitted when ownership transfer is finalized.
  */
@@ -23,6 +24,7 @@ event OwnershipTransferred(address indexed _previousOwner, address indexed _newO
  * @notice Thrown when a non-owner attempts an action restricted to owner.
  */
 error OwnerUnauthorizedAccount();
+
 /*
  * @notice Thrown when attempting to transfer ownership from a renounced state.
  */
@@ -71,31 +73,8 @@ function getPendingOwnerStorage() pure returns (PendingOwnerStorage storage s) {
 }
 
 /**
- * @notice Returns the current owner.
- */
-function owner() view returns (address) {
-    return getOwnerStorage().owner;
-}
-
-/**
- * @notice Returns the pending owner (if any).
- */
-function pendingOwner() view returns (address) {
-    return getPendingOwnerStorage().pendingOwner;
-}
-
-/**
- * @notice Reverts if the caller is not the owner.
- */
-function requireOwner() view {
-    if (getOwnerStorage().owner != msg.sender) {
-        revert OwnerUnauthorizedAccount();
-    }
-}
-
-/**
  * @notice Initiates a two-step ownership transfer.
- * @param _newOwner The address of the new owner of the contract
+ * @param _newOwner The address of the new owner of the contract.
  */
 function transferOwnership(address _newOwner) {
     OwnerStorage storage ownerStorage = getOwnerStorage();
@@ -108,7 +87,7 @@ function transferOwnership(address _newOwner) {
 }
 
 /**
- * @notice Finalizes ownership transfer; must be called by the pending owner.
+ * @notice Finalizes ownership transfer; must be called after appropriate access checks.
  */
 function acceptOwnership() {
     OwnerStorage storage ownerStorage = getOwnerStorage();
@@ -119,15 +98,3 @@ function acceptOwnership() {
     emit OwnershipTransferred(oldOwner, ownerStorage.owner);
 }
 
-/**
- * @notice Renounce ownership of the contract
- * @dev Sets the owner to address(0), disabling all functions restricted to the owner.
- */
-function renounceOwnership() {
-    OwnerStorage storage ownerStorage = getOwnerStorage();
-    PendingOwnerStorage storage pendingStorage = getPendingOwnerStorage();
-    address previousOwner = ownerStorage.owner;
-    ownerStorage.owner = address(0);
-    pendingStorage.pendingOwner = address(0);
-    emit OwnershipTransferred(previousOwner, address(0));
-}
