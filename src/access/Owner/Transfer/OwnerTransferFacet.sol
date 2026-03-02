@@ -62,5 +62,13 @@ contract OwnerTransferFacet {
         s.owner = _newOwner;
         emit OwnershipTransferred(previousOwner, _newOwner);
     }
-}
 
+    /**
+     * @notice Exports the function selectors of the OwnerTransferFacet
+     * @dev This function is use as a selector discovery mechanism for diamonds
+     * @return selectors The exported function selectors of the OwnerTransferFacet
+     */
+    function exportSelectors() external pure returns (bytes memory) {
+        return bytes.concat(this.transferOwnership.selector);
+    }
+}

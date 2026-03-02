@@ -53,4 +53,13 @@ contract OwnerRenounceFacet {
         s.owner = address(0);
         emit OwnershipTransferred(previousOwner, address(0));
     }
+
+    /**
+     * @notice Exports the function selectors of the OwnerRenounceFacet
+     * @dev This function is use as a selector discovery mechanism for diamonds
+     * @return selectors The exported function selectors of the OwnerRenounceFacet
+     */
+    function exportSelectors() external pure returns (bytes memory) {
+        return bytes.concat(this.renounceOwnership.selector);
+    }
 }

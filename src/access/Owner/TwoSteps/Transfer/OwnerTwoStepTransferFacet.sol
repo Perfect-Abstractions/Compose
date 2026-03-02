@@ -94,4 +94,13 @@ contract OwnerTwoStepTransferFacet {
         pendingStorage.pendingOwner = address(0);
         emit OwnershipTransferred(oldOwner, ownerStorage.owner);
     }
+
+    /**
+     * @notice Exports the function selectors of the OwnerTwoStepTransferFacet
+     * @dev This function is use as a selector discovery mechanism for diamonds
+     * @return selectors The exported function selectors of the OwnerTwoStepTransferFacet
+     */
+    function exportSelectors() external pure returns (bytes memory) {
+        return bytes.concat(this.transferOwnership.selector, this.acceptOwnership.selector);
+    }
 }
