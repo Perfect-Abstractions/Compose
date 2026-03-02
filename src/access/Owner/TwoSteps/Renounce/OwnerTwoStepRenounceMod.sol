@@ -69,10 +69,10 @@ function getPendingOwnerStorage() pure returns (PendingOwnerStorage storage s) {
  */
 function renounceOwnership() {
     OwnerStorage storage ownerStorage = getOwnerStorage();
+    PendingOwnerStorage storage pendingStorage = getPendingOwnerStorage();
     if (msg.sender != ownerStorage.owner) {
         revert OwnerUnauthorizedAccount();
     }
-    PendingOwnerStorage storage pendingStorage = getPendingOwnerStorage();
     address previousOwner = ownerStorage.owner;
     ownerStorage.owner = address(0);
     pendingStorage.pendingOwner = address(0);

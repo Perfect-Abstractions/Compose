@@ -19,11 +19,6 @@ contract OwnerTransferFacet {
      */
     error OwnerUnauthorizedAccount();
 
-    /**
-     * @notice Thrown when attempting to transfer ownership from a renounced state.
-     */
-    error OwnerAlreadyRenounced();
-
     bytes32 constant STORAGE_POSITION = keccak256("erc173.owner");
 
     /**
@@ -56,9 +51,6 @@ contract OwnerTransferFacet {
             revert OwnerUnauthorizedAccount();
         }
         address previousOwner = s.owner;
-        if (previousOwner == address(0)) {
-            revert OwnerAlreadyRenounced();
-        }
         s.owner = _newOwner;
         emit OwnershipTransferred(previousOwner, _newOwner);
     }

@@ -78,23 +78,26 @@ function getPendingOwnerStorage() pure returns (PendingOwnerStorage storage s) {
  */
 function transferOwnership(address _newOwner) {
     OwnerStorage storage ownerStorage = getOwnerStorage();
-    address previousOwner = ownerStorage.owner;
-    if (previousOwner == address(0)) {
-        revert OwnerAlreadyRenounced();
+    if (msg.sender != ownerStorage.owner) {
+        revert OwnerUnauthorizedAccount();
     }
     getPendingOwnerStorage().pendingOwner = _newOwner;
-    emit OwnershipTransferStarted(previousOwner, _newOwner);
+    emit OwnershipTransferStarted(ownerStorage.owner, _newOwner);
 }
 
 /**
- * @notice Finalizes ownership transfer; must be called after appropriate access checks.
+ * @notice Finalizes ownership transfer.
+ * @dev Only the pending owner can call this function.
  */
 function acceptOwnership() {
     OwnerStorage storage ownerStorage = getOwnerStorage();
     PendingOwnerStorage storage pendingStorage = getPendingOwnerStorage();
-    address oldOwner = ownerStorage.owner;
+    if (msg.sender != pendingStorage.pendingOwner) {
+        revert OwnerUnauthorizedAccount();
+    }
+    address previousOwner = ownerStorage.owner;
     ownerStorage.owner = pendingStorage.pendingOwner;
     pendingStorage.pendingOwner = address(0);
-    emit OwnershipTransferred(oldOwner, ownerStorage.owner);
+    emit OwnershipTransferred(previousOwner, ownerStorage.owner);
 }
 

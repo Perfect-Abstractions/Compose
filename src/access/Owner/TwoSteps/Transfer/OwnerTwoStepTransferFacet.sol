@@ -89,10 +89,10 @@ contract OwnerTwoStepTransferFacet {
         if (msg.sender != pendingStorage.pendingOwner) {
             revert OwnerUnauthorizedAccount();
         }
-        address oldOwner = ownerStorage.owner;
+        address previousOwner = ownerStorage.owner;
         ownerStorage.owner = pendingStorage.pendingOwner;
         pendingStorage.pendingOwner = address(0);
-        emit OwnershipTransferred(oldOwner, ownerStorage.owner);
+        emit OwnershipTransferred(previousOwner, ownerStorage.owner);
     }
 
     /**

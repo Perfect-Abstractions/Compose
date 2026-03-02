@@ -20,11 +20,6 @@ event OwnershipTransferred(address indexed previousOwner, address indexed newOwn
  */
 error OwnerUnauthorizedAccount();
 
-/*
- * @notice Thrown when attempting to transfer ownership from a renounced state.
- */
-error OwnerAlreadyRenounced();
-
 bytes32 constant STORAGE_POSITION = keccak256("erc173.owner");
 
 /**
@@ -53,10 +48,10 @@ function getStorage() pure returns (OwnerStorage storage s) {
  */
 function transferOwnership(address _newOwner) {
     OwnerStorage storage s = getStorage();
-    address previousOwner = s.owner;
-    if (previousOwner == address(0)) {
-        revert OwnerAlreadyRenounced();
+    if (msg.sender != s.owner) {
+        revert OwnerUnauthorizedAccount();
     }
+    address previousOwner = s.owner;
     s.owner = _newOwner;
     emit OwnershipTransferred(previousOwner, _newOwner);
 }
