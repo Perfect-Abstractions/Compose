@@ -25,10 +25,6 @@ event OwnershipTransferred(address indexed _previousOwner, address indexed _newO
  */
 error OwnerUnauthorizedAccount();
 
-/*
- * @notice Thrown when attempting to transfer ownership from a renounced state.
- */
-error OwnerAlreadyRenounced();
 
 bytes32 constant OWNER_STORAGE_POSITION = keccak256("erc173.owner");
 
