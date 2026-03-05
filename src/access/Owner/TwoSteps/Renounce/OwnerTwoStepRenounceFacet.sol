@@ -28,6 +28,15 @@ contract OwnerTwoStepRenounceFacet {
         address owner;
     }
 
+    bytes32 constant PENDING_OWNER_STORAGE_POSITION = keccak256("erc173.owner.pending");
+
+    /**
+     * @custom:storage-location erc8042:erc173.owner.pending
+     */
+    struct PendingOwnerStorage {
+        address pendingOwner;
+    }
+
     /**
      * @notice Returns a pointer to the Owner storage struct.
      * @dev Uses inline assembly to access the storage slot defined by OWNER_STORAGE_POSITION.
@@ -38,15 +47,6 @@ contract OwnerTwoStepRenounceFacet {
         assembly {
             s.slot := position
         }
-    }
-
-    bytes32 constant PENDING_OWNER_STORAGE_POSITION = keccak256("erc173.owner.pending");
-
-    /**
-     * @custom:storage-location erc8042:erc173.owner.pending
-     */
-    struct PendingOwnerStorage {
-        address pendingOwner;
     }
 
     /**
