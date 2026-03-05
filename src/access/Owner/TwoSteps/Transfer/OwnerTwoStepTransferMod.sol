@@ -25,7 +25,6 @@ event OwnershipTransferred(address indexed _previousOwner, address indexed _newO
  */
 error OwnerUnauthorizedAccount();
 
-
 bytes32 constant OWNER_STORAGE_POSITION = keccak256("erc173.owner");
 
 /**
