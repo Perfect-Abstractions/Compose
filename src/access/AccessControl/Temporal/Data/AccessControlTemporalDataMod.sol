@@ -39,24 +39,24 @@ error AccessControlUnauthorizedAccount(address _account, bytes32 _role);
 error AccessControlRoleExpired(bytes32 _role, address _account);
 
 /*
- * @notice Storage slot identifier for AccessControl (reused to access roles).
+ * @notice Storage slot identifier for AccessControl.
  */
 bytes32 constant ACCESS_CONTROL_STORAGE_POSITION = keccak256("compose.accesscontrol");
 
-/*
- * @notice Storage slot identifier for Temporal functionality.
- */
-bytes32 constant TEMPORAL_STORAGE_POSITION = keccak256("compose.accesscontrol.temporal");
-
 /**
  * @notice Storage struct for AccessControl (reused struct definition).
- * @dev Must match the struct definition in AccessControlFacet.
+ * @dev Must match the struct definition in AccessControlDataFacet.
  * @custom:storage-location erc8042:compose.accesscontrol
  */
 struct AccessControlStorage {
     mapping(address account => mapping(bytes32 role => bool hasRole)) hasRole;
     mapping(bytes32 role => bytes32 adminRole) adminRole;
 }
+
+/*
+ * @notice Storage slot identifier for Temporal functionality.
+ */
+bytes32 constant TEMPORAL_STORAGE_POSITION = keccak256("compose.accesscontrol.temporal");
 
 /**
  * @notice Storage struct for AccessControlTemporal.
@@ -89,18 +89,17 @@ function getStorage() pure returns (AccessControlTemporalStorage storage s) {
 }
 
 /**
- * @notice function to get the expiry timestamp for a role assignment.
+ * @notice Returns the expiry timestamp for a role assignment.
  * @param _role The role to check.
  * @param _account The account to check.
  * @return The expiry timestamp, or 0 if no expiry is set.
  */
 function getRoleExpiry(bytes32 _role, address _account) view returns (uint256) {
-    AccessControlTemporalStorage storage s = getStorage();
-    return s.roleExpiry[_account][_role];
+    return getStorage().roleExpiry[_account][_role];
 }
 
 /**
- * @notice function to check if a role assignment has expired.
+ * @notice Checks if a role assignment has expired.
  * @param _role The role to check.
  * @param _account The account to check.
  * @return True if the role has expired or doesn't exist, false if still valid.
@@ -124,62 +123,7 @@ function isRoleExpired(bytes32 _role, address _account) view returns (bool) {
 }
 
 /**
- * @notice function to grant a role with an expiry timestamp.
- * @param _role The role to grant.
- * @param _account The account to grant the role to.
- * @param _expiresAt The timestamp when the role should expire.
- * @return True if the role was granted, false otherwise.
- */
-function grantRoleWithExpiry(bytes32 _role, address _account, uint256 _expiresAt) returns (bool) {
-    AccessControlStorage storage acs = getAccessControlStorage();
-    AccessControlTemporalStorage storage s = getStorage();
-
-    /**
-     * Grant the role
-     */
-    bool _hasRole = acs.hasRole[_account][_role];
-    if (!_hasRole) {
-        acs.hasRole[_account][_role] = true;
-    }
-
-    /**
-     * Set expiry timestamp
-     */
-    s.roleExpiry[_account][_role] = _expiresAt;
-    emit RoleGrantedWithExpiry(_role, _account, _expiresAt, msg.sender);
-
-    return true;
-}
-
-/**
- * @notice function to revoke a temporal role.
- * @param _role The role to revoke.
- * @param _account The account to revoke the role from.
- * @return True if the role was revoked, false otherwise.
- */
-function revokeTemporalRole(bytes32 _role, address _account) returns (bool) {
-    AccessControlStorage storage acs = getAccessControlStorage();
-    AccessControlTemporalStorage storage s = getStorage();
-
-    bool _hasRole = acs.hasRole[_account][_role];
-    if (!_hasRole) {
-        return false;
-    }
-
-    acs.hasRole[_account][_role] = false;
-
-    /**
-     * Clear expiry timestamp only when the role existed
-     */
-    s.roleExpiry[_account][_role] = 0;
-
-    emit TemporalRoleRevoked(_role, _account, msg.sender);
-
-    return true;
-}
-
-/**
- * @notice function to check if an account has a valid (non-expired) role.
+ * @notice Checks if an account has a valid (non-expired) role.
  * @param _role The role to check.
  * @param _account The account to check the role for.
  * @custom:error AccessControlUnauthorizedAccount If the account does not have the role.
