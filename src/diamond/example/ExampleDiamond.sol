@@ -6,7 +6,7 @@ pragma solidity >=0.8.30;
  */
 
 import "../DiamondMod.sol" as DiamondMod;
-import "../../access/Owner/OwnerMod.sol" as OwnerMod;
+import "../../access/Owner/Data/OwnerDataMod.sol" as OwnerDataMod;
 import "../../token/ERC721/Metadata/ERC721MetadataMod.sol" as ERC721MetadataMod;
 import "../../interfaceDetection/ERC165/ERC165Mod.sol" as ERC165Mod;
 import {IERC721} from "../../interfaces/IERC721.sol";
@@ -30,7 +30,7 @@ contract ExampleDiamond {
         /**
          * Setting the contract owner
          */
-        OwnerMod.setContractOwner(_diamondOwner);
+        OwnerDataMod.setContractOwner(_diamondOwner);
         /**
          * Setting ERC721 token details
          */
