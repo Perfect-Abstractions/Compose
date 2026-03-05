@@ -39,19 +39,19 @@ contract AccessControlPausableFacet {
     bytes32 constant ACCESS_CONTROL_STORAGE_POSITION = keccak256("compose.accesscontrol");
 
     /**
-     * @notice Storage slot identifier for Pausable functionality.
-     */
-    bytes32 constant PAUSABLE_STORAGE_POSITION = keccak256("compose.accesscontrol.pausable");
-
-    /**
      * @notice Storage struct for AccessControl (reused struct definition).
-     * @dev Must match the struct definition in AccessControlDataFacet.
+     * @dev Must match the struct definition in AccessControlDataFacet / AccessControlDataMod.
      * @custom:storage-location erc8042:compose.accesscontrol
      */
     struct AccessControlStorage {
         mapping(address account => mapping(bytes32 role => bool hasRole)) hasRole;
         mapping(bytes32 role => bytes32 adminRole) adminRole;
     }
+
+    /**
+     * @notice Storage slot identifier for Pausable functionality.
+     */
+    bytes32 constant PAUSABLE_STORAGE_POSITION = keccak256("compose.accesscontrol.pausable");
 
     /**
      * @notice Storage struct for AccessControlPausable.

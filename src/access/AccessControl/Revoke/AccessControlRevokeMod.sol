@@ -56,6 +56,9 @@ function revokeRole(bytes32 _role, address _account) returns (bool) {
     AccessControlStorage storage s = getStorage();
     bytes32 adminRole = s.adminRole[_role];
 
+    /**
+     * Check if the caller is the admin of the role.
+     */
     if (!s.hasRole[msg.sender][adminRole]) {
         revert AccessControlUnauthorizedAccount(msg.sender, adminRole);
     }
