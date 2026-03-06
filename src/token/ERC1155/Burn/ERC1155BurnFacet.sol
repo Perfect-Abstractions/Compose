@@ -159,4 +159,13 @@ contract ERC1155BurnFacet {
 
         emit TransferBatch(msg.sender, _from, address(0), _ids, _values);
     }
+
+    /**
+     * @notice Exports the function selectors of the ERC1155BurnFacet
+     * @dev This function is use as a selector discovery mechanism for diamonds
+     * @return selectors The exported function selectors of the ERC1155BurnFacet
+     */
+    function exportSelectors() external pure returns (bytes memory) {
+        return bytes.concat(this.burn.selector, this.burnBatch.selector);
+    }
 }

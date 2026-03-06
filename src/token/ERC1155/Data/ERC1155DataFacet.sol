@@ -85,4 +85,13 @@ contract ERC1155DataFacet {
     function isApprovedForAll(address _account, address _operator) external view returns (bool) {
         return getStorage().isApprovedForAll[_account][_operator];
     }
+
+    /**
+     * @notice Exports the function selectors of the ERC1155DataFacet
+     * @dev This function is use as a selector discovery mechanism for diamonds
+     * @return selectors The exported function selectors of the ERC1155DataFacet
+     */
+    function exportSelectors() external pure returns (bytes memory) {
+        return bytes.concat(this.balanceOf.selector, this.balanceOfBatch.selector, this.isApprovedForAll.selector);
+    }
 }

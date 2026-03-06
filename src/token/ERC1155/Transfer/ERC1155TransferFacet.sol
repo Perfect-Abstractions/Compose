@@ -271,4 +271,13 @@ contract ERC1155TransferFacet {
             }
         }
     }
+
+    /**
+     * @notice Exports the function selectors of the ERC1155TransferFacet
+     * @dev This function is use as a selector discovery mechanism for diamonds
+     * @return selectors The exported function selectors of the ERC1155TransferFacet
+     */
+    function exportSelectors() external pure returns (bytes memory) {
+        return bytes.concat(this.safeTransferFrom.selector, this.safeBatchTransferFrom.selector);
+    }
 }

@@ -63,4 +63,13 @@ contract ERC1155ApproveFacet {
         getStorage().isApprovedForAll[msg.sender][_operator] = _approved;
         emit ApprovalForAll(msg.sender, _operator, _approved);
     }
+
+    /**
+     * @notice Exports the function selectors of the ERC1155ApproveFacet
+     * @dev This function is use as a selector discovery mechanism for diamonds
+     * @return selectors The exported function selectors of the ERC1155ApproveFacet
+     */
+    function exportSelectors() external pure returns (bytes memory) {
+        return bytes.concat(this.setApprovalForAll.selector);
+    }
 }
