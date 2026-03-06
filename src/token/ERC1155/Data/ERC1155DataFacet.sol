@@ -6,8 +6,7 @@ pragma solidity >=0.8.30;
  */
 
 /**
- * @title ERC-1155 Multi Token Standard
- *
+ * @title ERC-1155 Data Facet
  */
 contract ERC1155DataFacet {
     /**

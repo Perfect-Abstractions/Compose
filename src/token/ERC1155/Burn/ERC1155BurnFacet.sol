@@ -97,7 +97,7 @@ contract ERC1155BurnFacet {
      * @param _id The token type to burn.
      * @param _value The amount of tokens to burn.
      */
-    function burn(address _from, uint256 _id, uint256 _value) external {
+    function burnERC1155(address _from, uint256 _id, uint256 _value) external {
         if (_from == address(0)) {
             revert ERC1155InvalidSender(address(0));
         }
@@ -129,7 +129,7 @@ contract ERC1155BurnFacet {
      * @param _ids The token types to burn.
      * @param _values The amounts of tokens to burn for each type.
      */
-    function burnBatch(address _from, uint256[] calldata _ids, uint256[] calldata _values) external {
+    function burnERC1155Batch(address _from, uint256[] calldata _ids, uint256[] calldata _values) external {
         if (_from == address(0)) {
             revert ERC1155InvalidSender(address(0));
         }
@@ -166,6 +166,6 @@ contract ERC1155BurnFacet {
      * @return selectors The exported function selectors of the ERC1155BurnFacet
      */
     function exportSelectors() external pure returns (bytes memory) {
-        return bytes.concat(this.burn.selector, this.burnBatch.selector);
+        return bytes.concat(this.burnERC1155.selector, this.burnERC1155Batch.selector);
     }
 }

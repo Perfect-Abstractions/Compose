@@ -90,7 +90,7 @@ function getStorage() pure returns (ERC1155Storage storage s) {
  * @param _id The token type to burn.
  * @param _value The amount of tokens to burn.
  */
-function burn(address _from, uint256 _id, uint256 _value) {
+function burnERC1155(address _from, uint256 _id, uint256 _value) {
     if (_from == address(0)) {
         revert ERC1155InvalidSender(address(0));
     }
@@ -117,7 +117,7 @@ function burn(address _from, uint256 _id, uint256 _value) {
  * @param _ids The token types to burn.
  * @param _values The amounts of tokens to burn for each type.
  */
-function burnBatch(address _from, uint256[] memory _ids, uint256[] memory _values) {
+function burnERC1155Batch(address _from, uint256[] memory _ids, uint256[] memory _values) {
     if (_from == address(0)) {
         revert ERC1155InvalidSender(address(0));
     }
