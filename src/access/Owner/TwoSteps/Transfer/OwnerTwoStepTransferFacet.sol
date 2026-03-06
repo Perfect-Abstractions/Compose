@@ -6,9 +6,9 @@ pragma solidity >=0.8.30;
  */
 
 /**
- * @title ERC-173 Two-Step Contract Ownership
+ * @title OwnerTwoStepTransferFacet
  */
-contract OwnerTwoStepsFacet {
+contract OwnerTwoStepTransferFacet {
     /**
      * @dev This emits when ownership of a contract started transferring to the new owner for accepting the ownership.
      */
@@ -33,6 +33,15 @@ contract OwnerTwoStepsFacet {
         address owner;
     }
 
+    bytes32 constant PENDING_OWNER_STORAGE_POSITION = keccak256("erc173.owner.pending");
+
+    /**
+     * @custom:storage-location erc8042:erc173.owner.pending
+     */
+    struct PendingOwnerStorage {
+        address pendingOwner;
+    }
+
     /**
      * @notice Returns a pointer to the Owner storage struct.
      * @dev Uses inline assembly to access the storage slot defined by OWNER_STORAGE_POSITION.
@@ -45,15 +54,6 @@ contract OwnerTwoStepsFacet {
         }
     }
 
-    bytes32 constant PENDING_OWNER_STORAGE_POSITION = keccak256("erc173.owner.pending");
-
-    /**
-     * @custom:storage-location erc8042:erc173.owner.pending
-     */
-    struct PendingOwnerStorage {
-        address pendingOwner;
-    }
-
     /**
      * @notice Returns a pointer to the PendingOwner storage struct.
      * @dev Uses inline assembly to access the storage slot defined by PENDING_OWNER_STORAGE_POSITION.
@@ -64,22 +64,6 @@ contract OwnerTwoStepsFacet {
         assembly {
             s.slot := position
         }
-    }
-
-    /**
-     * @notice Get the address of the owner
-     * @return The address of the owner.
-     */
-    function owner() external view returns (address) {
-        return getOwnerStorage().owner;
-    }
-
-    /**
-     * @notice Get the address of the pending owner
-     * @return The address of the pending owner.
-     */
-    function pendingOwner() external view returns (address) {
-        return getPendingOwnerStorage().pendingOwner;
     }
 
     /**
@@ -105,25 +89,18 @@ contract OwnerTwoStepsFacet {
         if (msg.sender != pendingStorage.pendingOwner) {
             revert OwnerUnauthorizedAccount();
         }
-        address oldOwner = ownerStorage.owner;
+        address previousOwner = ownerStorage.owner;
         ownerStorage.owner = pendingStorage.pendingOwner;
         pendingStorage.pendingOwner = address(0);
-        emit OwnershipTransferred(oldOwner, ownerStorage.owner);
+        emit OwnershipTransferred(previousOwner, ownerStorage.owner);
     }
 
     /**
-     * @notice Renounce ownership of the contract
-     * @dev Sets the owner to address(0), disabling all functions restricted to the owner.
+     * @notice Exports the function selectors of the OwnerTwoStepTransferFacet
+     * @dev This function is use as a selector discovery mechanism for diamonds
+     * @return selectors The exported function selectors of the OwnerTwoStepTransferFacet
      */
-    function renounceOwnership() external {
-        OwnerStorage storage ownerStorage = getOwnerStorage();
-        PendingOwnerStorage storage pendingStorage = getPendingOwnerStorage();
-        if (msg.sender != ownerStorage.owner) {
-            revert OwnerUnauthorizedAccount();
-        }
-        address previousOwner = ownerStorage.owner;
-        ownerStorage.owner = address(0);
-        pendingStorage.pendingOwner = address(0);
-        emit OwnershipTransferred(previousOwner, address(0));
+    function exportSelectors() external pure returns (bytes memory) {
+        return bytes.concat(this.transferOwnership.selector, this.acceptOwnership.selector);
     }
 }

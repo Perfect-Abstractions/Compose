@@ -5,7 +5,7 @@ pragma solidity >=0.8.30;
  * https://compose.diamonds
  */
 
-contract AccessControlTemporalFacet {
+contract AccessControlTemporalDataFacet {
     /**
      * @notice Event emitted when a role is granted with an expiry timestamp.
      * @param _role The role that was granted.
@@ -45,19 +45,19 @@ contract AccessControlTemporalFacet {
     bytes32 constant ACCESS_CONTROL_STORAGE_POSITION = keccak256("compose.accesscontrol");
 
     /**
-     * @notice Storage slot identifier for Temporal functionality.
-     */
-    bytes32 constant TEMPORAL_STORAGE_POSITION = keccak256("compose.accesscontrol.temporal");
-
-    /**
      * @notice Storage struct for AccessControl (reused struct definition).
-     * @dev Must match the struct definition in AccessControlFacet.
+     * @dev Must match the struct definition in AccessControlDataFacet.
      * @custom:storage-location erc8042:compose.accesscontrol
      */
     struct AccessControlStorage {
         mapping(address account => mapping(bytes32 role => bool hasRole)) hasRole;
         mapping(bytes32 role => bytes32 adminRole) adminRole;
     }
+
+    /**
+     * @notice Storage slot identifier for Temporal functionality.
+     */
+    bytes32 constant TEMPORAL_STORAGE_POSITION = keccak256("compose.accesscontrol.temporal");
 
     /**
      * @notice Storage struct for AccessControlTemporal.
@@ -124,92 +124,6 @@ contract AccessControlTemporalFacet {
     }
 
     /**
-     * @notice Grants a role to an account with an expiry timestamp.
-     * @param _role The role to grant.
-     * @param _account The account to grant the role to.
-     * @param _expiresAt The timestamp when the role should expire (must be in the future).
-     * @dev Only the admin of the role can grant it with expiry.
-     *      Emits a {RoleGrantedWithExpiry} event.
-     * @custom:error AccessControlUnauthorizedAccount If the caller is not the admin of the role.
-     */
-    function grantRoleWithExpiry(bytes32 _role, address _account, uint256 _expiresAt) external {
-        AccessControlStorage storage acs = getAccessControlStorage();
-        AccessControlTemporalStorage storage s = getStorage();
-        bytes32 adminRole = acs.adminRole[_role];
-
-        /**
-         * Check if the caller is the admin of the role.
-         */
-        if (!acs.hasRole[msg.sender][adminRole]) {
-            revert AccessControlUnauthorizedAccount(msg.sender, adminRole);
-        }
-
-        /**
-         * Require expiry is in the future
-         */
-        if (_expiresAt <= block.timestamp) {
-            revert AccessControlRoleExpired(_role, _account);
-        }
-
-        /**
-         * Grant the role
-         */
-        bool _hasRole = acs.hasRole[_account][_role];
-        if (!_hasRole) {
-            acs.hasRole[_account][_role] = true;
-        }
-
-        /**
-         * Set expiry timestamp
-         */
-        s.roleExpiry[_account][_role] = _expiresAt;
-        emit RoleGrantedWithExpiry(_role, _account, _expiresAt, msg.sender);
-    }
-
-    /**
-     * @notice Revokes a temporal role from an account.
-     * @param _role The role to revoke.
-     * @param _account The account to revoke the role from.
-     * @dev Only the admin of the role can revoke it.
-     *      Emits a {TemporalRoleRevoked} event.
-     * @custom:error AccessControlUnauthorizedAccount If the caller is not the admin of the role.
-     */
-    function revokeTemporalRole(bytes32 _role, address _account) external {
-        AccessControlStorage storage acs = getAccessControlStorage();
-        AccessControlTemporalStorage storage s = getStorage();
-        bytes32 adminRole = acs.adminRole[_role];
-
-        /**
-         * Check if the caller is the admin of the role.
-         */
-        if (!acs.hasRole[msg.sender][adminRole]) {
-            revert AccessControlUnauthorizedAccount(msg.sender, adminRole);
-        }
-
-        /**
-         * Revoke the role
-         */
-        bool _hasRole = acs.hasRole[_account][_role];
-
-        /**
-         * Only revoke if the role is currently granted
-         */
-        if (_hasRole) {
-            /**
-             * Revoke the role from AccessControl storage
-             */
-            acs.hasRole[_account][_role] = false;
-
-            /**
-             * Clear expiry timestamp
-             */
-            s.roleExpiry[_account][_role] = 0;
-
-            emit TemporalRoleRevoked(_role, _account, msg.sender);
-        }
-    }
-
-    /**
      * @notice Checks if an account has a valid (non-expired) role.
      * @param _role The role to check.
      * @param _account The account to check the role for.
@@ -234,5 +148,13 @@ contract AccessControlTemporalFacet {
         if (expiry > 0 && block.timestamp >= expiry) {
             revert AccessControlRoleExpired(_role, _account);
         }
+    }
+
+    /**
+     * @notice Exports the selectors that are exposed by the facet.
+     * @return Selectors that are exported by the facet.
+     */
+    function exportSelectors() external pure returns (bytes memory) {
+        return bytes.concat(this.getRoleExpiry.selector, this.isRoleExpired.selector, this.requireValidRole.selector);
     }
 }
