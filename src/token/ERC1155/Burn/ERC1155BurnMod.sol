@@ -86,7 +86,7 @@ function getStorage() pure returns (ERC1155Storage storage s) {
  * @notice Burns a single token type from an address.
  * @dev Decreases the balance and emits a TransferSingle event.
  *      Reverts if the account has insufficient balance.
- *      This module does not check for approval. Use the facet for approval-checked burns.
+ *      This module does not perform approval checks. Ensure proper ownership or approval validation before calling this function.
  * @param _from The address whose tokens will be burned.
  * @param _id The token type to burn.
  * @param _value The amount of tokens to burn.
@@ -114,7 +114,7 @@ function burn(address _from, uint256 _id, uint256 _value) {
  * @notice Burns multiple token types from an address in a single transaction.
  * @dev Decreases balances for each token type and emits a TransferBatch event.
  *      Reverts if the account has insufficient balance for any token type.
- *      This module does not check for approval. Use the facet for approval-checked burns.
+ *      This module does not perform approval checks. Ensure proper ownership or approval validation before calling this function.
  * @param _from The address whose tokens will be burned.
  * @param _ids The token types to burn.
  * @param _values The amounts of tokens to burn for each type.
