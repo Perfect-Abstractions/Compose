@@ -3,6 +3,17 @@
  * Styles for blog post cards in the blog feed
  */
 
+/* Override theme BlogPostItem/Header/Title (.title_xxxx) from 3rem to 2rem */
+.theme-blog-wrapper [class*="title_"] {
+  font-size: 2.5rem !important;
+}
+
+@media (max-width: 576px) {
+  .theme-blog-wrapper [class*="title_"] {
+    font-size: 2rem !important;
+  }
+}
+
 /* Remove any vertical lines/borders from blog article elements */
 article.article *,
 article a,
