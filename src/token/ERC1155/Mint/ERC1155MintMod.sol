@@ -130,7 +130,7 @@ function getStorage() pure returns (ERC1155Storage storage s) {
  * @param _value The amount of tokens to mint.
  * @param _data Additional data with no specified format.
  */
-function mintERC1155(address _to, uint256 _id, uint256 _value, bytes memory _data) {
+function mint(address _to, uint256 _id, uint256 _value, bytes memory _data) {
     if (_to == address(0)) {
         revert ERC1155InvalidReceiver(address(0));
     }
@@ -168,7 +168,7 @@ function mintERC1155(address _to, uint256 _id, uint256 _value, bytes memory _dat
  * @param _values The amounts of tokens to mint for each type.
  * @param _data Additional data with no specified format.
  */
-function mintERC1155Batch(address _to, uint256[] memory _ids, uint256[] memory _values, bytes memory _data) {
+function mintBatch(address _to, uint256[] memory _ids, uint256[] memory _values, bytes memory _data) {
     if (_to == address(0)) {
         revert ERC1155InvalidReceiver(address(0));
     }
