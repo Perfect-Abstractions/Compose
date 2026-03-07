@@ -54,15 +54,10 @@ interface IERC1155Receiver {
 }
 
 /**
- * @title ERC-1155 Multi Token Standard
- * @notice A complete, dependency-free ERC-1155 implementation using the diamond storage pattern.
- * @dev This facet provides balance queries, approvals, safe transfers, and URI management for multi-token contracts.
- *
- *      For developers creating custom facets that need to interact with ERC-1155 storage (e.g., custom minting logic),
- *      use the LibERC1155 library which provides helper functions to access this facet's storage.
- *      This facet does NOT depend on LibERC1155 - both access the same storage at keccak256("erc1155").
+ * @title ERC-1155 Transfer Facet
+ * @notice Provides transfer functionality for ERC-1155 tokens.
  */
-contract ERC1155Facet {
+contract ERC1155TransferFacet {
     /**
      * @notice Error indicating insufficient balance for a transfer.
      * @param _sender Address attempting the transfer.
@@ -90,18 +85,6 @@ contract ERC1155Facet {
      * @param _owner The token owner.
      */
     error ERC1155MissingApprovalForAll(address _operator, address _owner);
-
-    /**
-     * @notice Error indicating the approver address is invalid.
-     * @param _approver Invalid approver address.
-     */
-    error ERC1155InvalidApprover(address _approver);
-
-    /**
-     * @notice Error indicating the operator address is invalid.
-     * @param _operator Invalid operator address.
-     */
-    error ERC1155InvalidOperator(address _operator);
 
     /**
      * @notice Error indicating array length mismatch in batch operations.
@@ -135,21 +118,6 @@ contract ERC1155Facet {
     );
 
     /**
-     * @notice Emitted when `account` grants or revokes permission to `operator` to transfer their tokens.
-     * @param _account The token owner granting/revoking approval.
-     * @param _operator The address being approved/revoked.
-     * @param _approved True if approval is granted, false if revoked.
-     */
-    event ApprovalForAll(address indexed _account, address indexed _operator, bool _approved);
-
-    /**
-     * @notice Emitted when the URI for token type `id` changes to `value`.
-     * @param _value The new URI for the token type.
-     * @param _id The token type whose URI changed.
-     */
-    event URI(string _value, uint256 indexed _id);
-
-    /**
      * @dev Storage position determined by the keccak256 hash of the diamond storage identifier.
      */
     bytes32 constant STORAGE_POSITION = keccak256("erc1155");
@@ -161,9 +129,6 @@ contract ERC1155Facet {
     struct ERC1155Storage {
         mapping(uint256 id => mapping(address account => uint256 balance)) balanceOf;
         mapping(address account => mapping(address operator => bool)) isApprovedForAll;
-        string uri;
-        string baseURI;
-        mapping(uint256 tokenId => string) tokenURIs;
     }
 
     /**
@@ -176,79 +141,6 @@ contract ERC1155Facet {
         assembly {
             s.slot := position
         }
-    }
-
-    /**
-     * @notice Returns the URI for token type `_id`.
-     * @dev If a token-specific URI is set in tokenURIs[_id], returns the concatenation of baseURI and tokenURIs[_id].
-     *      Note that baseURI is empty by default and must be set explicitly if concatenation is desired.
-     *      If no token-specific URI is set, returns the default URI which applies to all token types.
-     *      The default URI may contain the substring `{id}` which clients should replace with the actual token ID.
-     * @param _id The token ID to query.
-     * @return The URI for the token type.
-     */
-    function uri(uint256 _id) external view returns (string memory) {
-        ERC1155Storage storage s = getStorage();
-        string memory tokenURI = s.tokenURIs[_id];
-
-        return bytes(tokenURI).length > 0 ? string.concat(s.baseURI, tokenURI) : s.uri;
-    }
-
-    /**
-     * @notice Returns the amount of tokens of token type `id` owned by `account`.
-     * @param _account The address to query the balance of.
-     * @param _id The token type to query.
-     * @return The balance of the token type.
-     */
-    function balanceOf(address _account, uint256 _id) external view returns (uint256) {
-        return getStorage().balanceOf[_id][_account];
-    }
-
-    /**
-     * @notice Batched version of {balanceOf}.
-     * @param _accounts The addresses to query the balances of.
-     * @param _ids The token types to query.
-     * @return balances The balances of the token types.
-     */
-    function balanceOfBatch(address[] calldata _accounts, uint256[] calldata _ids)
-        external
-        view
-        returns (uint256[] memory balances)
-    {
-        if (_accounts.length != _ids.length) {
-            revert ERC1155InvalidArrayLength(_ids.length, _accounts.length);
-        }
-
-        ERC1155Storage storage s = getStorage();
-        balances = new uint256[](_accounts.length);
-
-        for (uint256 i = 0; i < _accounts.length; i++) {
-            balances[i] = s.balanceOf[_ids[i]][_accounts[i]];
-        }
-    }
-
-    /**
-     * @notice Grants or revokes permission to `operator` to transfer the caller's tokens.
-     * @dev Emits an {ApprovalForAll} event.
-     * @param _operator The address to grant/revoke approval to.
-     * @param _approved True to approve, false to revoke.
-     */
-    function setApprovalForAll(address _operator, bool _approved) external {
-        if (_operator == address(0)) {
-            revert ERC1155InvalidOperator(address(0));
-        }
-        getStorage().isApprovedForAll[msg.sender][_operator] = _approved;
-        emit ApprovalForAll(msg.sender, _operator, _approved);
-    }
-
-    /**
-     * @notice Returns true if `operator` is approved to transfer `account`'s tokens.
-     * @param _account The token owner.
-     * @param _operator The operator to query.
-     * @return True if the operator is approved, false otherwise.
-     */
-    function isApprovedForAll(address _account, address _operator) external view returns (bool) {
-        return getStorage().isApprovedForAll[_account][_operator];
     }
 
     /**
@@ -378,5 +270,14 @@ contract ERC1155Facet {
                 }
             }
         }
+    }
+
+    /**
+     * @notice Exports the function selectors of the ERC1155TransferFacet
+     * @dev This function is use as a selector discovery mechanism for diamonds
+     * @return selectors The exported function selectors of the ERC1155TransferFacet
+     */
+    function exportSelectors() external pure returns (bytes memory) {
+        return bytes.concat(this.safeTransferFrom.selector, this.safeBatchTransferFrom.selector);
     }
 }
