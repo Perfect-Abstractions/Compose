@@ -57,4 +57,40 @@ abstract contract Modifiers is Utils {
     modifier givenWhenSpenderAllowanceGETransferAmount() {
         _;
     }
+
+    /*//////////////////////////////////////////////////////////////
+                                ERC-721
+    //////////////////////////////////////////////////////////////*/
+
+    modifier whenOwnerNotZeroAddress() {
+        _;
+    }
+
+    modifier whenTokenExists() {
+        _;
+    }
+
+    modifier whenToNotZeroAddress() {
+        _;
+    }
+
+    modifier whenFromIsOwner() {
+        _;
+    }
+
+    modifier whenCallerIsAuthorized() {
+        _;
+    }
+
+    modifier whenOperatorNotZeroAddress() {
+        _;
+    }
+
+    modifier whenRecipientNotZeroAddress() {
+        _;
+    }
+
+    modifier givenWhenTokenDoesNotExist() {
+        _;
+    }
 }

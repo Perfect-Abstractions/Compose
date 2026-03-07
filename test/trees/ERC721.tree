@@ -1,0 +1,140 @@
+BalanceOf
+├── when the owner is the zero address
+│   └── it should revert
+└── when the owner is not the zero address
+    └── it should return the number of tokens owned by the owner
+
+OwnerOf
+├── when the token does not exist
+│   └── it should revert
+└── when the token exists
+    └── it should return the owner of the token
+
+Approve
+├── when the token does not exist
+│   └── it should revert
+└── when the token exists
+    ├── when the caller is not the owner and not an approved operator
+    │   └── it should revert
+    └── when the caller is the owner or an approved operator
+        ├── it should set the approved address for the token
+        └── it should emit an {Approval} event
+
+SetApprovalForAll
+├── when the operator is the zero address
+│   └── it should revert
+└── when the operator is not the zero address
+    ├── it should set the operator approval status for the caller
+    └── it should emit an {ApprovalForAll} event
+
+GetApproved
+├── when the token does not exist
+│   └── it should revert
+└── when the token exists
+    └── it should return the approved address for the token
+
+IsApprovedForAll
+└── it should return the operator approval status
+
+TransferFrom
+├── when the token does not exist
+│   └── it should revert
+└── when the token exists
+    ├── when the from address is not the owner
+    │   └── it should revert
+    └── when the from address is the owner
+        ├── when the to address is the zero address
+        │   └── it should revert
+        └── when the to address is not the zero address
+            ├── when the caller is not authorized
+            │   └── it should revert
+            └── when the caller is authorized
+                ├── it should transfer ownership of the token to the recipient
+                ├── it should decrement the sender's balance
+                ├── it should increment the receiver's balance
+                ├── it should clear the approval for the token
+                └── it should emit a {Transfer} event
+
+SafeTransferFrom (without data)
+├── when the token does not exist
+│   └── it should revert
+└── when the token exists
+    ├── when the from address is not the owner
+    │   └── it should revert
+    └── when the from address is the owner
+        ├── when the to address is the zero address
+        │   └── it should revert
+        └── when the to address is not the zero address
+            ├── when the caller is not authorized
+            │   └── it should revert
+            └── when the caller is authorized
+                ├── when the receiver is a contract that does not implement onERC721Received
+                │   └── it should revert
+                ├── when the receiver is a contract that returns an incorrect value
+                │   └── it should revert
+                └── when the receiver is an EOA or returns the correct selector
+                    ├── it should transfer ownership of the token to the recipient
+                    ├── it should decrement the sender's balance
+                    ├── it should increment the receiver's balance
+                    ├── it should clear the approval for the token
+                    └── it should emit a {Transfer} event
+
+SafeTransferFrom (with data)
+├── when the token does not exist
+│   └── it should revert
+└── when the token exists
+    ├── when the from address is not the owner
+    │   └── it should revert
+    └── when the from address is the owner
+        ├── when the to address is the zero address
+        │   └── it should revert
+        └── when the to address is not the zero address
+            ├── when the caller is not authorized
+            │   └── it should revert
+            └── when the caller is authorized
+                ├── when the receiver is a contract that does not implement onERC721Received
+                │   └── it should revert
+                ├── when the receiver is a contract that returns an incorrect value
+                │   └── it should revert
+                └── when the receiver is an EOA or returns the correct selector
+                    ├── it should transfer ownership of the token to the recipient
+                    ├── it should decrement the sender's balance
+                    ├── it should increment the receiver's balance
+                    ├── it should clear the approval for the token
+                    ├── it should pass the data to onERC721Received
+                    └── it should emit a {Transfer} event
+
+Mint
+├── when the recipient is the zero address
+│   └── it should revert
+└── when the recipient is not the zero address
+    ├── when the token already exists
+    │   └── it should revert
+    └── when the token does not exist
+        ├── it should assign the token to the recipient
+        ├── it should increment the recipient's balance
+        └── it should emit a {Transfer} event from the zero address
+
+Burn
+├── when the token does not exist
+│   └── it should revert
+└── when the token exists
+    ├── when the caller is not authorized
+    │   └── it should revert
+    └── when the caller is authorized
+        ├── it should remove the token (set owner to zero address)
+        ├── it should decrement the owner's balance
+        ├── it should clear the approval for the token
+        └── it should emit a {Transfer} event to the zero address
+
+Name
+└── it should return the token collection name
+
+Symbol
+└── it should return the token collection symbol
+
+TokenURI
+├── when the token does not exist
+│   └── it should revert
+└── when the token exists
+    └── it should return the token URI
