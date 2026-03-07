@@ -13,9 +13,9 @@ import "src/token/ERC20/Mint/ERC20MintMod.sol" as ERC20MintMod;
  */
 contract ERC20MintModHarness {
     /**
-     * @notice Exposes ERC20Mod.mintERC20 as an external function
+     * @notice Exposes ERC20MintMod.mint as an external function
      */
     function mint(address _account, uint256 _value) external {
-        ERC20MintMod.mintERC20(_account, _value);
+        ERC20MintMod.mint(_account, _value);
     }
 }

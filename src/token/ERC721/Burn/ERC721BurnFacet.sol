@@ -54,7 +54,7 @@ contract ERC721BurnFacet {
      * @notice Burns (destroys) a token, removing it from enumeration tracking.
      * @param _tokenId The ID of the token to burn.
      */
-    function burnERC721(uint256 _tokenId) external {
+    function burn(uint256 _tokenId) external {
         ERC721Storage storage s = getStorage();
         address owner = s.ownerOf[_tokenId];
         if (owner == address(0)) {
@@ -77,7 +77,7 @@ contract ERC721BurnFacet {
      * @notice Burns (destroys) a token, removing it from enumeration tracking.
      * @param _tokenIds The ID of the token to burn.
      */
-    function burnERC721s(uint256[] memory _tokenIds) external {
+    function burnBatch(uint256[] memory _tokenIds) external {
         ERC721Storage storage s = getStorage();
         for (uint256 i; i < _tokenIds.length; i++) {
             uint256 tokenId = _tokenIds[i];
@@ -105,6 +105,6 @@ contract ERC721BurnFacet {
      * @return selectors The exported function selectors of the ERC721BurnFacet
      */
     function exportSelectors() external pure returns (bytes memory) {
-        return bytes.concat(this.burnERC721.selector, this.burnERC721s.selector);
+        return bytes.concat(this.burn.selector, this.burnBatch.selector);
     }
 }

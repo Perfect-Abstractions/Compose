@@ -13,9 +13,9 @@ import "src/token/ERC20/Burn/ERC20BurnMod.sol" as ERC20BurnMod;
  */
 contract ERC20BurnModHarness {
     /**
-     * @notice Exposes ERC20BurnMod.burnERC20 as an external function
+     * @notice Exposes ERC20BurnMod.burn as an external function
      */
     function burn(address _account, uint256 _value) external {
-        ERC20BurnMod.burnERC20(_account, _value);
+        ERC20BurnMod.burn(_account, _value);
     }
 }

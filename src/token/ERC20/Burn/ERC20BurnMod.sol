@@ -62,10 +62,11 @@ function getStorage() pure returns (ERC20Storage storage s) {
 /**
  * @notice Burns tokens from a specified address.
  * @dev Decreases both total supply and the sender's balance.
+ *      This module does not check for approval. Use the facet for approval-checked burns.
  * @param _account The address whose tokens will be burned.
  * @param _value The number of tokens to burn.
  */
-function burnERC20(address _account, uint256 _value) {
+function burn(address _account, uint256 _value) {
     ERC20Storage storage s = getStorage();
     if (_account == address(0)) {
         revert ERC20InvalidSender(address(0));
