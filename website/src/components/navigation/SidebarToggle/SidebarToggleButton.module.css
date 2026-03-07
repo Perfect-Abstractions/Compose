@@ -39,14 +39,24 @@
   opacity: 0.9;
   transition: opacity 0.2s ease, background-color 0.2s ease;
   background-color: currentColor;
-  -webkit-mask-image: url('/icons/sidebar-left.svg');
-  mask-image: url('/icons/sidebar-left.svg');
   -webkit-mask-size: contain;
   mask-size: contain;
   -webkit-mask-repeat: no-repeat;
   mask-repeat: no-repeat;
   -webkit-mask-position: center;
   mask-position: center;
+}
+
+/* Sidebar visible: arrow left = "Hide sidebar" */
+.sidebarToggleIconHide {
+  -webkit-mask-image: url('/icons/sidebar-arrow-left.svg');
+  mask-image: url('/icons/sidebar-arrow-left.svg');
+}
+
+/* Sidebar hidden: arrow right = "Show sidebar" */
+.sidebarToggleIconShow {
+  -webkit-mask-image: url('/icons/sidebar-arrow-right.svg');
+  mask-image: url('/icons/sidebar-arrow-right.svg');
 }
 
 .sidebarToggleButton:hover .sidebarToggleIcon {

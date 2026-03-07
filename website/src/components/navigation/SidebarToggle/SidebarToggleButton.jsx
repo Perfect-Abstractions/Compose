@@ -21,6 +21,10 @@ export default function SidebarToggleButton({
     [onToggle]
   );
 
+  const iconClass = isHidden
+    ? styles.sidebarToggleIconHide
+    : styles.sidebarToggleIconShow;
+
   return (
     <button
       type="button"
@@ -31,7 +35,10 @@ export default function SidebarToggleButton({
       aria-pressed={isHidden}
       title={ariaLabel}
       {...rest}>
-      <span className={styles.sidebarToggleIcon} aria-hidden="true" />
+      <span
+        className={`${styles.sidebarToggleIcon} ${iconClass}`}
+        aria-hidden="true"
+      />
     </button>
   );
 }
