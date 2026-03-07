@@ -51,7 +51,7 @@ function getStorage() pure returns (ERC721Storage storage s) {
 /**
  * @notice Burns (destroys) a specific ERC-721 token.
  * @dev Reverts if the token does not exist. Clears ownership and approval.
- *      This module does not check for approval. Use the facet for approval-checked burns.
+ *      This module does not perform approval checks. Ensure proper ownership or approval validation before calling this function.
  * @param _tokenId The ID of the token to burn.
  */
 function burn(uint256 _tokenId) {
