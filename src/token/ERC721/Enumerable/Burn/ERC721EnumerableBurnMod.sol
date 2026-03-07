@@ -64,6 +64,7 @@ function getERC721Storage() pure returns (ERC721Storage storage s) {
 
 /**
  * @notice Burns (destroys) a token, removing it from enumeration tracking.
+ * @dev This module does not check for approval. Use the facet for approval-checked burns.
  * @param _tokenId The ID of the token to burn.
  */
 function burn(uint256 _tokenId) {
