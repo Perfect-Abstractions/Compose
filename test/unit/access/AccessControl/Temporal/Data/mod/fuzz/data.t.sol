@@ -5,7 +5,9 @@ pragma solidity >=0.8.30;
  * https://compose.diamonds
  */
 
-import {AccessControlTemporalData_Base_Test} from "test/unit/access/AccessControl/Temporal/Data/AccessControlTemporalDataBase.t.sol";
+import {
+    AccessControlTemporalData_Base_Test
+} from "test/unit/access/AccessControl/Temporal/Data/AccessControlTemporalDataBase.t.sol";
 import {AccessControlTemporalModHarness} from "test/harnesses/access/AccessControl/AccessControlTemporalModHarness.sol";
 
 /**
@@ -96,12 +98,8 @@ contract Data_AccessControlTemporalDataMod_Fuzz_Unit_Test is AccessControlTempor
         harness.requireValidRole(role, account);
     }
 
-    function testFuzz_ShouldRevert_RequireValidRole_WhenAccountDoesNotHaveRole(bytes32 role, address account)
-        external
-    {
-        vm.expectRevert(
-            abi.encodeWithSignature("AccessControlUnauthorizedAccount(address,bytes32)", account, role)
-        );
+    function testFuzz_ShouldRevert_RequireValidRole_WhenAccountDoesNotHaveRole(bytes32 role, address account) external {
+        vm.expectRevert(abi.encodeWithSignature("AccessControlUnauthorizedAccount(address,bytes32)", account, role));
         harness.requireValidRole(role, account);
     }
 

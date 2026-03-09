@@ -42,7 +42,9 @@ contract SetRoleAdmin_AccessControlAdminFacet_Fuzz_Unit_Test is AccessControlAdm
         vm.assume(caller != users.admin);
 
         vm.expectRevert(
-            abi.encodeWithSelector(AccessControlAdminFacet.AccessControlUnauthorizedAccount.selector, caller, DEFAULT_ADMIN_ROLE)
+            abi.encodeWithSelector(
+                AccessControlAdminFacet.AccessControlUnauthorizedAccount.selector, caller, DEFAULT_ADMIN_ROLE
+            )
         );
         vm.prank(caller);
         facet.setRoleAdmin(role, newAdminRole);

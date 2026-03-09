@@ -7,7 +7,9 @@ pragma solidity >=0.8.30;
 
 import {Vm} from "forge-std/Vm.sol";
 
-import {AccessControlGrantBatch_Base_Test} from "test/unit/access/AccessControl/Batch/Grant/AccessControlGrantBatchBase.t.sol";
+import {
+    AccessControlGrantBatch_Base_Test
+} from "test/unit/access/AccessControl/Batch/Grant/AccessControlGrantBatchBase.t.sol";
 import {AccessControlStorageUtils} from "test/utils/storage/AccessControlStorageUtils.sol";
 import {AccessControlCoreModHarness} from "test/harnesses/access/AccessControl/AccessControlCoreModHarness.sol";
 

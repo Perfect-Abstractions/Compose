@@ -53,9 +53,7 @@ contract RenounceRole_AccessControlRenounceMod_Fuzz_Unit_Test is AccessControlRe
     {
         vm.assume(sender != account);
 
-        vm.expectRevert(
-            abi.encodeWithSignature("AccessControlUnauthorizedSender(address,address)", sender, account)
-        );
+        vm.expectRevert(abi.encodeWithSignature("AccessControlUnauthorizedSender(address,address)", sender, account));
         vm.prank(sender);
         harness.renounceRole(role, account);
     }

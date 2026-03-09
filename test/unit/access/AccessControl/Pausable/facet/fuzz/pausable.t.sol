@@ -71,9 +71,7 @@ contract Pausable_AccessControlPausableFacet_Fuzz_Unit_Test is AccessControlPaus
         assertEq(address(facet).isRolePaused(role), false, "isRolePaused");
     }
 
-    function testFuzz_ShouldRevert_UnpauseRole_WhenCallerDoesNotHaveAdminRole(bytes32 role, address caller)
-        external
-    {
+    function testFuzz_ShouldRevert_UnpauseRole_WhenCallerDoesNotHaveAdminRole(bytes32 role, address caller) external {
         vm.assume(caller != users.admin);
 
         vm.expectRevert(

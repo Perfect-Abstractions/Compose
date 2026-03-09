@@ -56,7 +56,9 @@ contract RevokeRole_AccessControlRevokeFacet_Fuzz_Unit_Test is AccessControlRevo
         vm.assume(caller != users.admin);
 
         vm.expectRevert(
-            abi.encodeWithSelector(AccessControlRevokeFacet.AccessControlUnauthorizedAccount.selector, caller, DEFAULT_ADMIN_ROLE)
+            abi.encodeWithSelector(
+                AccessControlRevokeFacet.AccessControlUnauthorizedAccount.selector, caller, DEFAULT_ADMIN_ROLE
+            )
         );
         vm.prank(caller);
         facet.revokeRole(role, account);

@@ -30,7 +30,10 @@ contract Data_AccessControlDataFacet_Fuzz_Unit_Test is AccessControlData_Base_Te
         assertEq(facet.hasRole(role, account), true, "hasRole");
     }
 
-    function testFuzz_ShouldReturnFalse_HasRole_WhenAccountDoesNotHaveRole(address account, bytes32 role) external view {
+    function testFuzz_ShouldReturnFalse_HasRole_WhenAccountDoesNotHaveRole(address account, bytes32 role)
+        external
+        view
+    {
         assertEq(facet.hasRole(role, account), false, "hasRole");
     }
 

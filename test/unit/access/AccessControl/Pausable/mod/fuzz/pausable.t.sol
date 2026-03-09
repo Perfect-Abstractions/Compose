@@ -70,9 +70,7 @@ contract Pausable_AccessControlPausableMod_Fuzz_Unit_Test is AccessControlPausab
     function testFuzz_ShouldRevert_RequireRoleNotPaused_WhenAccountDoesNotHaveRole(bytes32 role, address account)
         external
     {
-        vm.expectRevert(
-            abi.encodeWithSignature("AccessControlUnauthorizedAccount(address,bytes32)", account, role)
-        );
+        vm.expectRevert(abi.encodeWithSignature("AccessControlUnauthorizedAccount(address,bytes32)", account, role));
         harness.requireRoleNotPaused(role, account);
     }
 

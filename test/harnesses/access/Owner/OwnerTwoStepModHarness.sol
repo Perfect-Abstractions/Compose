@@ -11,7 +11,9 @@ import {
     transferOwnership as twoStepTransferOwnership,
     acceptOwnership as twoStepAcceptOwnership
 } from "src/access/Owner/TwoSteps/Transfer/OwnerTwoStepTransferMod.sol";
-import {renounceOwnership as twoStepRenounceOwnership} from "src/access/Owner/TwoSteps/Renounce/OwnerTwoStepRenounceMod.sol";
+import {
+    renounceOwnership as twoStepRenounceOwnership
+} from "src/access/Owner/TwoSteps/Renounce/OwnerTwoStepRenounceMod.sol";
 
 contract OwnerTwoStepModHarness {
     function owner() external view returns (address) {

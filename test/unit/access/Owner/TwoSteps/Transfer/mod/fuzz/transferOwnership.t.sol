@@ -43,9 +43,7 @@ contract TransferOwnership_OwnerTwoStepMod_Fuzz_Unit_Test is OwnerTwoStepTransfe
         harness.transferOwnership(newOwner);
     }
 
-    function testFuzz_ShouldRevert_TransferOwnership_WhenCallerIsNotOwner(address caller, address newOwner)
-        external
-    {
+    function testFuzz_ShouldRevert_TransferOwnership_WhenCallerIsNotOwner(address caller, address newOwner) external {
         vm.assume(caller != users.admin);
 
         vm.prank(caller);

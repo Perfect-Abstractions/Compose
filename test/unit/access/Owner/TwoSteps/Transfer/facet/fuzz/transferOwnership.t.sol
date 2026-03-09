@@ -43,9 +43,7 @@ contract TransferOwnership_OwnerTwoStepTransferFacet_Fuzz_Unit_Test is OwnerTwoS
         facet.transferOwnership(newOwner);
     }
 
-    function testFuzz_ShouldRevert_TransferOwnership_WhenCallerIsNotOwner(address caller, address newOwner)
-        external
-    {
+    function testFuzz_ShouldRevert_TransferOwnership_WhenCallerIsNotOwner(address caller, address newOwner) external {
         vm.assume(caller != users.admin);
 
         vm.prank(caller);
@@ -97,8 +95,7 @@ contract TransferOwnership_OwnerTwoStepTransferFacet_Fuzz_Unit_Test is OwnerTwoS
     function test_ShouldReturnSelectors_ExportSelectors() external view {
         bytes memory selectors = facet.exportSelectors();
         bytes memory expected = abi.encodePacked(
-            OwnerTwoStepTransferFacet.transferOwnership.selector,
-            OwnerTwoStepTransferFacet.acceptOwnership.selector
+            OwnerTwoStepTransferFacet.transferOwnership.selector, OwnerTwoStepTransferFacet.acceptOwnership.selector
         );
         assertEq(selectors, expected, "exportSelectors");
     }

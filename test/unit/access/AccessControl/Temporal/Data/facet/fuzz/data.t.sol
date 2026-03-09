@@ -5,8 +5,12 @@ pragma solidity >=0.8.30;
  * https://compose.diamonds
  */
 
-import {AccessControlTemporalData_Base_Test} from "test/unit/access/AccessControl/Temporal/Data/AccessControlTemporalDataBase.t.sol";
-import {AccessControlTemporalDataFacet} from "src/access/AccessControl/Temporal/Data/AccessControlTemporalDataFacet.sol";
+import {
+    AccessControlTemporalData_Base_Test
+} from "test/unit/access/AccessControl/Temporal/Data/AccessControlTemporalDataBase.t.sol";
+import {
+    AccessControlTemporalDataFacet
+} from "src/access/AccessControl/Temporal/Data/AccessControlTemporalDataFacet.sol";
 
 /**
  *  @dev BTT spec: test/trees/AccessControl.tree
@@ -96,11 +100,11 @@ contract Data_AccessControlTemporalDataFacet_Fuzz_Unit_Test is AccessControlTemp
         facet.requireValidRole(role, account);
     }
 
-    function testFuzz_ShouldRevert_RequireValidRole_WhenAccountDoesNotHaveRole(bytes32 role, address account)
-        external
-    {
+    function testFuzz_ShouldRevert_RequireValidRole_WhenAccountDoesNotHaveRole(bytes32 role, address account) external {
         vm.expectRevert(
-            abi.encodeWithSelector(AccessControlTemporalDataFacet.AccessControlUnauthorizedAccount.selector, account, role)
+            abi.encodeWithSelector(
+                AccessControlTemporalDataFacet.AccessControlUnauthorizedAccount.selector, account, role
+            )
         );
         facet.requireValidRole(role, account);
     }

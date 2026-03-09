@@ -56,7 +56,9 @@ contract GrantRole_AccessControlGrantFacet_Fuzz_Unit_Test is AccessControlGrant_
         vm.assume(caller != users.admin);
 
         vm.expectRevert(
-            abi.encodeWithSelector(AccessControlGrantFacet.AccessControlUnauthorizedAccount.selector, caller, DEFAULT_ADMIN_ROLE)
+            abi.encodeWithSelector(
+                AccessControlGrantFacet.AccessControlUnauthorizedAccount.selector, caller, DEFAULT_ADMIN_ROLE
+            )
         );
         vm.prank(caller);
         facet.grantRole(role, account);

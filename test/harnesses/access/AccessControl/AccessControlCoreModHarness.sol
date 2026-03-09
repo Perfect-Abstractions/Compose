@@ -13,9 +13,15 @@ import {
 import {setRoleAdmin as accessControlSetRoleAdmin} from "src/access/AccessControl/Admin/AccessControlAdminMod.sol";
 import {grantRole as accessControlGrantRole} from "src/access/AccessControl/Grant/AccessControlGrantMod.sol";
 import {revokeRole as accessControlRevokeRole} from "src/access/AccessControl/Revoke/AccessControlRevokeMod.sol";
-import {renounceRole as accessControlRenounceRole} from "src/access/AccessControl/Renounce/AccessControlRenounceMod.sol";
-import {grantRoleBatch as accessControlGrantRoleBatch} from "src/access/AccessControl/Batch/Grant/AccessControlGrantBatchMod.sol";
-import {revokeRoleBatch as accessControlRevokeRoleBatch} from "src/access/AccessControl/Batch/Revoke/AccessControlRevokeBatchMod.sol";
+import {
+    renounceRole as accessControlRenounceRole
+} from "src/access/AccessControl/Renounce/AccessControlRenounceMod.sol";
+import {
+    grantRoleBatch as accessControlGrantRoleBatch
+} from "src/access/AccessControl/Batch/Grant/AccessControlGrantBatchMod.sol";
+import {
+    revokeRoleBatch as accessControlRevokeRoleBatch
+} from "src/access/AccessControl/Batch/Revoke/AccessControlRevokeBatchMod.sol";
 
 contract AccessControlCoreModHarness {
     function DEFAULT_ADMIN_ROLE_VALUE() external pure returns (bytes32) {

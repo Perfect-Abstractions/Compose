@@ -10,10 +10,12 @@ import {
     isRoleExpired as accessControlIsRoleExpired,
     requireValidRole as accessControlRequireValidRole
 } from "src/access/AccessControl/Temporal/Data/AccessControlTemporalDataMod.sol";
-import {grantRoleWithExpiry as accessControlGrantRoleWithExpiry} from
-    "src/access/AccessControl/Temporal/Grant/AccessControlTemporalGrantMod.sol";
-import {revokeTemporalRole as accessControlRevokeTemporalRole} from
-    "src/access/AccessControl/Temporal/Revoke/AccessControlTemporalRevokeMod.sol";
+import {
+    grantRoleWithExpiry as accessControlGrantRoleWithExpiry
+} from "src/access/AccessControl/Temporal/Grant/AccessControlTemporalGrantMod.sol";
+import {
+    revokeTemporalRole as accessControlRevokeTemporalRole
+} from "src/access/AccessControl/Temporal/Revoke/AccessControlTemporalRevokeMod.sol";
 
 contract AccessControlTemporalModHarness {
     function getRoleExpiry(bytes32 role, address account) external view returns (uint256) {

@@ -7,7 +7,9 @@ pragma solidity >=0.8.30;
 
 import {Vm} from "forge-std/Vm.sol";
 
-import {AccessControlRevokeBatch_Base_Test} from "test/unit/access/AccessControl/Batch/Revoke/AccessControlRevokeBatchBase.t.sol";
+import {
+    AccessControlRevokeBatch_Base_Test
+} from "test/unit/access/AccessControl/Batch/Revoke/AccessControlRevokeBatchBase.t.sol";
 import {AccessControlStorageUtils} from "test/utils/storage/AccessControlStorageUtils.sol";
 import {AccessControlRevokeBatchFacet} from "src/access/AccessControl/Batch/Revoke/AccessControlRevokeBatchFacet.sol";
 
