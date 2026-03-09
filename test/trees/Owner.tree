@@ -1,0 +1,62 @@
+Data
+├── Owner
+│   ├── when the owner has been set
+│   │   └── it should return the stored owner address
+│   └── when the owner has been renounced (zero address)
+│       └── it should return the zero address
+└── RequireOwner
+    ├── when the caller is the owner
+    │   └── it should not revert
+    └── when the caller is not the owner
+        └── it should revert with {OwnerUnauthorizedAccount}
+
+Transfer
+└── TransferOwnership
+    ├── when the caller is the owner
+    │   ├── it should update the owner to the new address
+    │   ├── it should emit an {OwnershipTransferred} event
+    │   ├── when the new owner is the zero address
+    │   │   └── it should set owner to zero (renounce)
+    │   └── when the new owner is the current owner (self)
+    │       └── it should leave owner unchanged
+    └── when the caller is not the owner
+        └── it should revert with {OwnerUnauthorizedAccount}
+
+Renounce
+└── RenounceOwnership
+    ├── when the caller is the owner
+    │   ├── it should set the owner to the zero address
+    │   └── it should emit an {OwnershipTransferred} event
+    └── when the caller is not the owner
+        └── it should revert with {OwnerUnauthorizedAccount}
+
+TwoSteps
+├── Data
+│   └── PendingOwner
+│       ├── when a pending owner has been set
+│       │   └── it should return the pending owner address
+│       └── when no pending owner has been set
+│           └── it should return the zero address
+├── Transfer
+│   ├── TransferOwnership
+│   │   ├── when the caller is the owner
+│   │   │   ├── it should set pendingOwner to the new address
+│   │   │   ├── it should emit an {OwnershipTransferStarted} event
+│   │   │   └── it should leave the current owner unchanged until acceptance
+│   │   └── when the caller is not the owner
+│   │       └── it should revert with {OwnerUnauthorizedAccount}
+│   └── AcceptOwnership
+│       ├── when the caller is the pending owner
+│       │   ├── it should set the owner to the pending owner
+│       │   ├── it should clear the pending owner to zero
+│       │   └── it should emit an {OwnershipTransferred} event
+│       └── when the caller is not the pending owner
+│           └── it should revert with {OwnerUnauthorizedAccount}
+└── Renounce
+    └── RenounceOwnership
+        ├── when the caller is the owner
+        │   ├── it should set the owner to the zero address
+        │   ├── it should clear the pending owner to zero
+        │   └── it should emit an {OwnershipTransferred} event
+        └── when the caller is not the owner
+            └── it should revert with {OwnerUnauthorizedAccount}

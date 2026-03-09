@@ -1,0 +1,179 @@
+Data
+├── HasRole
+│   ├── when the account has been granted the role
+│   │   └── it should return true
+│   ├── when the account has not been granted the role
+│   │   └── it should return false
+│   └── when the account is the zero address
+│       └── it should return false
+└── RequireRole
+    ├── when the account has the role
+    │   └── it should not revert
+    └── when the account does not have the role
+        └── it should revert with {AccessControlUnauthorizedAccount}
+
+Admin
+├── GetRoleAdmin
+│   ├── when the role has never had an explicit admin set
+│   │   └── it should return the default admin role
+│   └── when the role has an explicit admin set
+│       └── it should return the stored admin role
+└── SetRoleAdmin
+    ├── when the caller has the current admin role for the target role
+    │   ├── it should update the admin role mapping
+    │   └── it should emit a {RoleAdminChanged} event
+    └── when the caller does not have the current admin role for the target role
+        └── it should revert with {AccessControlUnauthorizedAccount}
+
+Grant
+└── GrantRole
+    ├── when the caller has the admin role for the target role
+    │   ├── and the account does not yet have the role
+    │   │   ├── it should set hasRole[account][role] to true
+    │   │   ├── it should emit a {RoleGranted} event
+    │   │   └── it should return true from the module function
+    │   └── and the account already has the role
+    │       ├── it should leave hasRole[account][role] unchanged
+    │       ├── it should not emit an additional {RoleGranted} event
+    │       └── it should return false from the module function
+    └── when the caller does not have the admin role for the target role
+        └── it should revert with {AccessControlUnauthorizedAccount}
+
+Revoke
+└── RevokeRole
+    ├── when the caller has the admin role for the target role
+    │   ├── and the account currently has the role
+    │   │   ├── it should set hasRole[account][role] to false
+    │   │   ├── it should emit a {RoleRevoked} event
+    │   │   └── it should return true from the module function
+    │   └── and the account does not have the role
+    │       ├── it should leave hasRole[account][role] unchanged
+    │       └── it should return false from the module function
+    └── when the caller does not have the admin role for the target role
+        └── it should revert with {AccessControlUnauthorizedAccount}
+
+Renounce
+└── RenounceRole
+    ├── when msg.sender equals the account
+    │   ├── and the account currently has the role
+    │   │   ├── it should set hasRole[account][role] to false
+    │   │   └── it should emit a {RoleRevoked} event
+    │   └── and the account does not have the role
+    │       └── it should be a no-op and not emit any event
+    └── when msg.sender does not equal the account
+        └── it should revert with {AccessControlUnauthorizedSender}
+
+Batch
+├── Grant
+│   └── GrantRoleBatch
+│       ├── when the caller has the admin role for the target role
+│       │   ├── and the accounts array is empty
+│       │   │   └── it should succeed without emitting any events
+│       │   └── and the accounts array is non-empty
+│       │       ├── for each account without the role
+│       │       │   ├── it should set hasRole[account][role] to true
+│       │       │   └── it should emit a {RoleGranted} event
+│       │       └── for each account that already has the role
+│       │           └── it should not change storage or emit {RoleGranted}
+│       └── when the caller does not have the admin role for the target role
+│           └── it should revert with {AccessControlUnauthorizedAccount}
+└── Revoke
+    └── RevokeRoleBatch
+        ├── when the caller has the admin role for the target role
+        │   ├── and the accounts array is empty
+        │   │   └── it should succeed without emitting any events
+        │   └── and the accounts array is non-empty
+        │       ├── for each account with the role
+        │       │   ├── it should set hasRole[account][role] to false
+        │       │   └── it should emit a {RoleRevoked} event
+        │       └── for each account that does not have the role
+        │           └── it should not change storage or emit {RoleRevoked}
+        └── when the caller does not have the admin role for the target role
+            └── it should revert with {AccessControlUnauthorizedAccount}
+
+RoleHierarchy
+├── when a role’s admin role is itself
+│   └── an account with the role should be able to grant and revoke that same role
+├── when roles form a linear hierarchy (role1 admin is DEFAULT_ADMIN_ROLE, role2 admin is role1, role3 admin is role2)
+│   ├── only DEFAULT_ADMIN_ROLE holders can grant role1
+│   ├── only role1 holders can grant role2
+│   └── only role2 holders can grant role3
+└── when roles form a circular admin relationship
+    └── each grant or revoke must still satisfy the immediate admin-role check
+
+Pausable
+├── IsRolePaused
+│   ├── when the role has not been paused
+│   │   └── it should return false
+│   └── when the role has been paused
+│       └── it should return true
+├── PauseRole
+│   ├── when the caller has the admin role for the target role
+│   │   ├── it should set pausedRoles[role] to true
+│   │   └── it should emit a {RolePaused} event
+│   └── when the caller does not have the admin role for the target role
+│       ├── on the facet surface it should revert with {AccessControlUnauthorizedAccount}
+│       └── on the module surface it should follow the current split implementation semantics
+├── UnpauseRole
+│   ├── when the caller has the admin role for the target role
+│   │   ├── it should set pausedRoles[role] to false
+│   │   └── it should emit a {RoleUnpaused} event
+│   └── when the caller does not have the admin role for the target role
+│       ├── on the facet surface it should revert with {AccessControlUnauthorizedAccount}
+│       └── on the module surface it should follow the current split implementation semantics
+└── RequireRoleNotPaused
+    ├── when the account does not have the role
+    │   └── it should revert with {AccessControlUnauthorizedAccount}
+    ├── when the account has the role and the role is paused
+    │   └── it should revert with {AccessControlRolePaused}
+    └── when the account has the role and the role is not paused
+        └── it should not revert
+
+Temporal
+├── Data
+│   ├── GetRoleExpiry
+│   │   ├── when no expiry has been set for the role assignment
+│   │   │   └── it should return 0
+│   │   └── when an expiry has been set for the role assignment
+│   │       └── it should return the stored expiry timestamp
+│   ├── IsRoleExpired
+│   │   ├── when no expiry is set and the account does not have the role
+│   │   │   └── it should return true
+│   │   ├── when no expiry is set and the account has the role
+│   │   │   └── it should return false
+│   │   ├── when an expiry is set in the future
+│   │   │   └── it should return false
+│   │   └── when block.timestamp is greater than or equal to the stored expiry
+│   │       └── it should return true
+│   └── RequireValidRole
+│       ├── when the account does not have the role
+│       │   └── it should revert with {AccessControlUnauthorizedAccount}
+│       ├── when the account has the role and no expiry is set
+│       │   └── it should not revert
+│       ├── when the account has the role and the expiry is in the future
+│       │   └── it should not revert
+│       └── when the account has the role and block.timestamp is greater than or equal to the stored expiry
+│           └── it should revert with {AccessControlRoleExpired}
+├── Grant
+│   └── GrantRoleWithExpiry
+│       ├── when the caller has the admin role for the target role
+│       │   ├── and the expiry is in the future
+│       │   │   ├── it should grant the role if it is not already granted
+│       │   │   ├── it should set the expiry timestamp
+│       │   │   └── it should emit a {RoleGrantedWithExpiry} event
+│       │   └── and the expiry is less than or equal to block.timestamp
+│       │       └── it should revert with {AccessControlRoleExpired}
+│       └── when the caller does not have the admin role for the target role
+│           └── it should revert with {AccessControlUnauthorizedAccount}
+└── Revoke
+    └── RevokeTemporalRole
+        ├── when the caller has the admin role for the target role
+        │   ├── and the account currently has the role
+        │   │   ├── it should set hasRole[account][role] to false
+        │   │   ├── it should clear the expiry timestamp
+        │   │   └── it should emit a {TemporalRoleRevoked} event
+        │   └── and the account does not have the role
+        │       └── it should be a no-op
+        └── when the caller does not have the admin role for the target role
+            └── it should revert with {AccessControlUnauthorizedAccount}
+
