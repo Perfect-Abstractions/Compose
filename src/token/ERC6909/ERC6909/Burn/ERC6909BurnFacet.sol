@@ -17,8 +17,14 @@ contract ERC6909BurnFacet {
     error ERC6909InsufficientAllowance(address _spender, uint256 _allowance, uint256 _needed, uint256 _id);
 
     /**
+     * @notice Thrown when the sender address is invalid.
+     */
+    error ERC6909InvalidSender(address _sender);
+
+    /**
      * @notice Emitted when a transfer occurs.
      */
+
     event Transfer(
         address _caller, address indexed _sender, address indexed _receiver, uint256 indexed _id, uint256 _amount
     );
@@ -54,7 +60,7 @@ contract ERC6909BurnFacet {
      * @dev Emits a {Transfer} event to the zero address.
      * @param _amount The amount of tokens to burn.
      */
-    function burnERC6909(uint256 _id, uint256 _amount) external {
+    function burn(uint256 _id, uint256 _amount) external {
         ERC6909Storage storage s = getStorage();
 
         uint256 fromBalance = s.balanceOf[msg.sender][_id];
@@ -73,24 +79,32 @@ contract ERC6909BurnFacet {
     /**
      * @notice Burns tokens from another account, deducting from the caller's allowance.
      * @dev Emits a {Transfer} event to the zero address.
-     * @param _account The address whose tokens will be burned.
+     * @param _from The address whose tokens will be burned.
      * @param _amount The amount of tokens to burn.
      */
-    function burnERC6909From(address _account, uint256 _id, uint256 _amount) external {
+    function burnFrom(address _from, uint256 _id, uint256 _amount) external {
         ERC6909Storage storage s = getStorage();
-        uint256 currentAllowance = s.allowance[_account][msg.sender][_id];
-        uint256 fromBalance = s.balanceOf[msg.sender][_id];
+        if (_from == address(0)) {
+            revert ERC6909InvalidSender(_from);
+        }
+
+        uint256 currentAllowance = s.allowance[_from][msg.sender][_id];
 
         if (currentAllowance < type(uint256).max) {
             if (currentAllowance < _amount) {
                 revert ERC6909InsufficientAllowance(msg.sender, currentAllowance, _amount, _id);
             }
             unchecked {
-                s.allowance[_account][msg.sender][_id] = currentAllowance - _amount;
-                s.balanceOf[_account][_id] = fromBalance - _amount;
+                s.allowance[_from][msg.sender][_id] = currentAllowance - _amount;
+            }
+
+            uint256 fromBalance = s.balanceOf[_from][_id];
+
+            unchecked {
+                s.balanceOf[_from][_id] = fromBalance - _amount;
             }
         }
-        emit Transfer(_account, msg.sender, address(0), _id, _amount);
+        emit Transfer(msg.sender, _from, address(0), _id, _amount);
     }
 
     /**
