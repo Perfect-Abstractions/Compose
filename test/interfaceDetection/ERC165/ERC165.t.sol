@@ -33,12 +33,12 @@ contract LibERC165Test is Test {
      */
 
     function test_GetStorage_ReturnsCorrectStoragePosition() public view {
-        bytes32 expectedSlot = keccak256("compose.erc165");
+        bytes32 expectedSlot = keccak256("erc165");
         assertEq(harness.getStoragePosition(), expectedSlot);
     }
 
     function test_StorageSlot_UsesCorrectPosition() public {
-        bytes32 expectedSlot = keccak256("compose.erc165");
+        bytes32 expectedSlot = keccak256("erc165");
 
         harness.registerInterface(IERC721_INTERFACE_ID);
 

@@ -49,10 +49,10 @@ contract ERC165Harness {
     }
 
     /**
-     * @notice Get the storage position
+     * @notice Get the storage position (must match ERC165Mod.sol STORAGE_POSITION)
      */
     function getStoragePosition() external pure returns (bytes32) {
-        return keccak256("compose.erc165");
+        return keccak256("erc165");
     }
 
     /**

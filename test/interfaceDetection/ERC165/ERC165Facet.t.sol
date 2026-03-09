@@ -158,12 +158,12 @@ contract ERC165FacetTest is Test {
      */
 
     function test_StorageSlot_UsesCorrectPosition() public view {
-        bytes32 expectedSlot = keccak256("compose.erc165");
+        bytes32 expectedSlot = keccak256("erc165");
         assertEq(erc165Facet.exposedGetStorage(), expectedSlot);
     }
 
     function test_StorageSlot_Consistency() public {
-        bytes32 expectedSlot = keccak256("compose.erc165");
+        bytes32 expectedSlot = keccak256("erc165");
 
         erc165Facet.registerInterface(IERC721_INTERFACE_ID);
 
