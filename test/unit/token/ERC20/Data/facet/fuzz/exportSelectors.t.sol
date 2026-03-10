@@ -15,9 +15,7 @@ contract ExportSelectors_ERC20DataFacet_Unit_Test is ERC20DataFacet_Base_Test {
     function test_ShouldReturnSelectors_ExportSelectors() external view {
         bytes memory selectors = facet.exportSelectors();
         bytes memory expected = abi.encodePacked(
-            ERC20DataFacet.totalSupply.selector,
-            ERC20DataFacet.balanceOf.selector,
-            ERC20DataFacet.allowance.selector
+            ERC20DataFacet.totalSupply.selector, ERC20DataFacet.balanceOf.selector, ERC20DataFacet.allowance.selector
         );
         assertEq(selectors, expected, "exportSelectors");
     }

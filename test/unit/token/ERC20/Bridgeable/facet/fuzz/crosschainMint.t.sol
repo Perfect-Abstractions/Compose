@@ -24,9 +24,7 @@ contract CrosschainMint_ERC20BridgeableFacet_Fuzz_Unit_Test is ERC20BridgeableFa
         vm.prank(to);
         vm.expectRevert(
             abi.encodeWithSelector(
-                ERC20BridgeableFacet.AccessControlUnauthorizedAccount.selector,
-                to,
-                ERC20_BRIDGE_ROLE
+                ERC20BridgeableFacet.AccessControlUnauthorizedAccount.selector, to, ERC20_BRIDGE_ROLE
             )
         );
         facet.crosschainMint(to, value);

@@ -6,7 +6,9 @@ pragma solidity >=0.8.30;
  */
 
 import {Base_Test} from "test/Base.t.sol";
-import {AccessControlTemporalGrantFacet} from "src/access/AccessControl/Temporal/Grant/AccessControlTemporalGrantFacet.sol";
+import {
+    AccessControlTemporalGrantFacet
+} from "src/access/AccessControl/Temporal/Grant/AccessControlTemporalGrantFacet.sol";
 
 /**
  *  @dev BTT spec: test/trees/AccessControl.tree

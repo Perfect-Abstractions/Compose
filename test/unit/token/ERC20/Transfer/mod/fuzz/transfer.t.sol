@@ -40,11 +40,7 @@ contract Transfer_ERC20TransferMod_Fuzz_Unit_Test is ERC20TransferMod_Base_Test 
         address to,
         uint256 senderBalance,
         uint256 receiverBalance
-    )
-        external
-        whenReceiverNotZeroAddress
-        givenWhenSenderBalanceGETransferAmount
-    {
+    ) external whenReceiverNotZeroAddress givenWhenSenderBalanceGETransferAmount {
         vm.assume(to != ADDRESS_ZERO);
         vm.assume(to != users.alice);
 

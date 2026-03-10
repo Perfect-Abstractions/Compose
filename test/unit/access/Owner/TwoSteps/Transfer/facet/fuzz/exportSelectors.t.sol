@@ -23,8 +23,7 @@ contract ExportSelectors_OwnerTwoStepTransferFacet_Unit_Test is Base_Test {
     function test_ShouldReturnSelectors_ExportSelectors() external view {
         bytes memory selectors = facet.exportSelectors();
         bytes memory expected = abi.encodePacked(
-            OwnerTwoStepTransferFacet.transferOwnership.selector,
-            OwnerTwoStepTransferFacet.acceptOwnership.selector
+            OwnerTwoStepTransferFacet.transferOwnership.selector, OwnerTwoStepTransferFacet.acceptOwnership.selector
         );
         assertEq(selectors, expected, "exportSelectors");
     }

@@ -21,11 +21,7 @@ contract Mint_ERC1155MintMod_Fuzz_Test is ERC1155MintMod_Base_Test {
         harness.mint(address(0), id, value, "");
     }
 
-    function testFuzz_ShouldIncrementBalanceAndEmit_Mint_WhenToNotZero(
-        address to,
-        uint256 id,
-        uint256 value
-    ) external {
+    function testFuzz_ShouldIncrementBalanceAndEmit_Mint_WhenToNotZero(address to, uint256 id, uint256 value) external {
         vm.assume(to != address(0));
         vm.assume(to.code.length == 0);
         vm.assume(value != type(uint256).max);
@@ -38,9 +34,7 @@ contract Mint_ERC1155MintMod_Fuzz_Test is ERC1155MintMod_Base_Test {
     function testFuzz_ShouldIncrementBalance_Mint_WhenToIsReceiverContract(uint256 id, uint256 value) external {
         vm.assume(value != type(uint256).max);
         ERC1155ReceiverMock receiver = new ERC1155ReceiverMock(
-            RECEIVER_SINGLE_MAGIC_VALUE,
-            RECEIVER_BATCH_MAGIC_VALUE,
-            ERC1155ReceiverMock.RevertType.None
+            RECEIVER_SINGLE_MAGIC_VALUE, RECEIVER_BATCH_MAGIC_VALUE, ERC1155ReceiverMock.RevertType.None
         );
 
         harness.mint(address(receiver), id, value, "");
@@ -50,11 +44,8 @@ contract Mint_ERC1155MintMod_Fuzz_Test is ERC1155MintMod_Base_Test {
 
     function testFuzz_ShouldRevert_Mint_WhenReceiverContractReturnsWrongValue(uint256 id, uint256 value) external {
         vm.assume(value != type(uint256).max);
-        ERC1155ReceiverMock receiver = new ERC1155ReceiverMock(
-            bytes4(0),
-            bytes4(0),
-            ERC1155ReceiverMock.RevertType.None
-        );
+        ERC1155ReceiverMock receiver =
+            new ERC1155ReceiverMock(bytes4(0), bytes4(0), ERC1155ReceiverMock.RevertType.None);
 
         vm.expectRevert(abi.encodeWithSelector(ERC1155InvalidReceiver.selector, address(receiver)));
         harness.mint(address(receiver), id, value, "");
@@ -63,9 +54,7 @@ contract Mint_ERC1155MintMod_Fuzz_Test is ERC1155MintMod_Base_Test {
     function test_ShouldRevert_Mint_WhenReceiverContractRevertsWithMessage(uint256 id, uint256 value) external {
         vm.assume(value != type(uint256).max);
         ERC1155ReceiverMock receiver = new ERC1155ReceiverMock(
-            RECEIVER_SINGLE_MAGIC_VALUE,
-            RECEIVER_BATCH_MAGIC_VALUE,
-            ERC1155ReceiverMock.RevertType.RevertWithMessage
+            RECEIVER_SINGLE_MAGIC_VALUE, RECEIVER_BATCH_MAGIC_VALUE, ERC1155ReceiverMock.RevertType.RevertWithMessage
         );
         vm.expectRevert("ERC1155ReceiverMock: reverting on receive");
         harness.mint(address(receiver), id, value, "");

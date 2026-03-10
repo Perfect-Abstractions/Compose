@@ -15,11 +15,7 @@ import {ERC20PermitFacet} from "src/token/ERC20/Permit/ERC20PermitFacet.sol";
 contract Permit_ERC20PermitFacet_Fuzz_Unit_Test is ERC20PermitFacet_Base_Test {
     using ERC20StorageUtils for address;
 
-    function testFuzz_ShouldRevert_WhenSpenderIsZeroAddress(
-        address owner,
-        uint256 value,
-        uint256 deadline
-    ) external {
+    function testFuzz_ShouldRevert_WhenSpenderIsZeroAddress(address owner, uint256 value, uint256 deadline) external {
         uint256 ownerPrivateKey = 0xA11CE;
         owner = vm.addr(ownerPrivateKey);
         deadline = bound(deadline, block.timestamp + 1, type(uint256).max);
@@ -31,11 +27,7 @@ contract Permit_ERC20PermitFacet_Fuzz_Unit_Test is ERC20PermitFacet_Base_Test {
         facet.permit(owner, ADDRESS_ZERO, value, deadline, v, r, s);
     }
 
-    function testFuzz_ShouldRevert_WhenDeadlineExpired(
-        address owner,
-        address spender,
-        uint256 value
-    ) external {
+    function testFuzz_ShouldRevert_WhenDeadlineExpired(address owner, address spender, uint256 value) external {
         vm.assume(spender != ADDRESS_ZERO);
         uint256 ownerPrivateKey = 0xB0B;
         owner = vm.addr(ownerPrivateKey);
@@ -46,24 +38,13 @@ contract Permit_ERC20PermitFacet_Fuzz_Unit_Test is ERC20PermitFacet_Base_Test {
 
         vm.expectRevert(
             abi.encodeWithSelector(
-                ERC20PermitFacet.ERC2612InvalidSignature.selector,
-                owner,
-                spender,
-                value,
-                deadline,
-                v,
-                r,
-                s
+                ERC20PermitFacet.ERC2612InvalidSignature.selector, owner, spender, value, deadline, v, r, s
             )
         );
         facet.permit(owner, spender, value, deadline, v, r, s);
     }
 
-    function testFuzz_ShouldRevert_WhenSignatureInvalid(
-        address spender,
-        uint256 value,
-        uint256 deadline
-    ) external {
+    function testFuzz_ShouldRevert_WhenSignatureInvalid(address spender, uint256 value, uint256 deadline) external {
         vm.assume(spender != ADDRESS_ZERO);
         uint256 ownerPrivateKey = 0xA11CE;
         address owner = vm.addr(ownerPrivateKey);
@@ -75,24 +56,13 @@ contract Permit_ERC20PermitFacet_Fuzz_Unit_Test is ERC20PermitFacet_Base_Test {
 
         vm.expectRevert(
             abi.encodeWithSelector(
-                ERC20PermitFacet.ERC2612InvalidSignature.selector,
-                owner,
-                spender,
-                value,
-                deadline,
-                v,
-                r,
-                s
+                ERC20PermitFacet.ERC2612InvalidSignature.selector, owner, spender, value, deadline, v, r, s
             )
         );
         facet.permit(owner, spender, value, deadline, v, r, s);
     }
 
-    function testFuzz_Permit(
-        address spender,
-        uint256 value,
-        uint256 deadline
-    ) external {
+    function testFuzz_Permit(address spender, uint256 value, uint256 deadline) external {
         vm.assume(spender != ADDRESS_ZERO);
         uint256 ownerPrivateKey = 0xA11CE;
         address owner = vm.addr(ownerPrivateKey);

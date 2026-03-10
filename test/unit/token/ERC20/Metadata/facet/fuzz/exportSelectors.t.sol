@@ -15,9 +15,7 @@ contract ExportSelectors_ERC20MetadataFacet_Unit_Test is ERC20MetadataFacet_Base
     function test_ShouldReturnSelectors_ExportSelectors() external view {
         bytes memory selectors = facet.exportSelectors();
         bytes memory expected = abi.encodePacked(
-            ERC20MetadataFacet.name.selector,
-            ERC20MetadataFacet.symbol.selector,
-            ERC20MetadataFacet.decimals.selector
+            ERC20MetadataFacet.name.selector, ERC20MetadataFacet.symbol.selector, ERC20MetadataFacet.decimals.selector
         );
         assertEq(selectors, expected, "exportSelectors");
     }

@@ -19,14 +19,10 @@ abstract contract ERC20PermitFacet_Base_Test is Base_Test {
         vm.label(address(facet), "ERC20PermitFacetHarness");
     }
 
-    /// @dev Computes EIP-712 digest for Permit(owner, spender, value, nonce, deadline) for the current facet.
-    function _getPermitDigest(
-        address owner,
-        address spender,
-        uint256 value,
-        uint256 nonce,
-        uint256 deadline
-    )
+    /**
+     * @dev Computes EIP-712 digest for Permit(owner, spender, value, nonce, deadline) for the current facet.
+     */
+    function _getPermitDigest(address owner, address spender, uint256 value, uint256 nonce, uint256 deadline)
         internal
         view
         returns (bytes32)

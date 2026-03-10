@@ -28,11 +28,9 @@ contract SafeTransferFrom_ERC1155TransferMod_Fuzz_Test is ERC1155TransferMod_Bas
         harness.safeTransferFrom(from, address(0), id, value, operator);
     }
 
-    function testFuzz_ShouldRevert_SafeTransferFrom_WhenFromIsZeroAddress(
-        address to,
-        uint256 id,
-        uint256 value
-    ) external {
+    function testFuzz_ShouldRevert_SafeTransferFrom_WhenFromIsZeroAddress(address to, uint256 id, uint256 value)
+        external
+    {
         vm.assume(to != address(0));
         vm.assume(to.code.length == 0);
         vm.expectRevert(abi.encodeWithSelector(ERC1155InvalidSender.selector, address(0)));
@@ -53,9 +51,7 @@ contract SafeTransferFrom_ERC1155TransferMod_Fuzz_Test is ERC1155TransferMod_Bas
         vm.assume(operator != from);
         vm.assume(value != type(uint256).max);
         address(harness).setBalanceOf(id, from, value);
-        vm.expectRevert(
-            abi.encodeWithSelector(ERC1155MissingApprovalForAll.selector, operator, from)
-        );
+        vm.expectRevert(abi.encodeWithSelector(ERC1155MissingApprovalForAll.selector, operator, from));
         harness.safeTransferFrom(from, to, id, value, operator);
     }
 

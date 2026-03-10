@@ -31,8 +31,12 @@ contract SafeBatchTransferFrom_ERC1155TransferFacet_Fuzz_Test is ERC1155Transfer
         if (idsLen == valuesLen) valuesLen = (valuesLen + 1) % 6;
         uint256[] memory ids = new uint256[](idsLen);
         uint256[] memory values = new uint256[](valuesLen);
-        for (uint256 i = 0; i < idsLen; i++) ids[i] = i;
-        for (uint256 i = 0; i < valuesLen; i++) values[i] = 1;
+        for (uint256 i = 0; i < idsLen; i++) {
+            ids[i] = i;
+        }
+        for (uint256 i = 0; i < valuesLen; i++) {
+            values[i] = 1;
+        }
         vm.stopPrank();
         vm.prank(from);
         vm.expectRevert(
@@ -52,11 +56,9 @@ contract SafeBatchTransferFrom_ERC1155TransferFacet_Fuzz_Test is ERC1155Transfer
         facet.safeBatchTransferFrom(address(0), users.bob, ids, values, "");
     }
 
-    function testFuzz_ShouldRevert_SafeBatchTransferFrom_WhenToIsZeroAddress(
-        address from,
-        uint256 id,
-        uint256 value
-    ) external {
+    function testFuzz_ShouldRevert_SafeBatchTransferFrom_WhenToIsZeroAddress(address from, uint256 id, uint256 value)
+        external
+    {
         vm.assume(from != address(0));
         address(facet).setBalanceOf(id, from, value);
         uint256[] memory ids = new uint256[](1);
@@ -90,13 +92,7 @@ contract SafeBatchTransferFrom_ERC1155TransferFacet_Fuzz_Test is ERC1155Transfer
         vm.stopPrank();
         vm.prank(from);
         vm.expectRevert(
-            abi.encodeWithSelector(
-                ERC1155TransferFacet.ERC1155InsufficientBalance.selector,
-                from,
-                balance,
-                value,
-                id
-            )
+            abi.encodeWithSelector(ERC1155TransferFacet.ERC1155InsufficientBalance.selector, from, balance, value, id)
         );
         facet.safeBatchTransferFrom(from, to, ids, values, "");
     }
@@ -134,9 +130,7 @@ contract SafeBatchTransferFrom_ERC1155TransferFacet_Fuzz_Test is ERC1155Transfer
 
     function test_ShouldUpdateBalances_SafeBatchTransferFrom_WhenToIsReceiverContractAccepting() external {
         ERC1155ReceiverMock receiver = new ERC1155ReceiverMock(
-            RECEIVER_SINGLE_MAGIC_VALUE,
-            RECEIVER_BATCH_MAGIC_VALUE,
-            ERC1155ReceiverMock.RevertType.None
+            RECEIVER_SINGLE_MAGIC_VALUE, RECEIVER_BATCH_MAGIC_VALUE, ERC1155ReceiverMock.RevertType.None
         );
         address(facet).setBalanceOf(1, users.alice, 20);
         address(facet).setBalanceOf(2, users.alice, 30);
@@ -154,11 +148,8 @@ contract SafeBatchTransferFrom_ERC1155TransferFacet_Fuzz_Test is ERC1155Transfer
     }
 
     function test_ShouldRevert_SafeBatchTransferFrom_WhenReceiverContractReturnsWrongValue() external {
-        ERC1155ReceiverMock receiver = new ERC1155ReceiverMock(
-            bytes4(0),
-            bytes4(0),
-            ERC1155ReceiverMock.RevertType.None
-        );
+        ERC1155ReceiverMock receiver =
+            new ERC1155ReceiverMock(bytes4(0), bytes4(0), ERC1155ReceiverMock.RevertType.None);
         address(facet).setBalanceOf(1, users.alice, 10);
         uint256[] memory ids = new uint256[](1);
         uint256[] memory values = new uint256[](1);
@@ -198,9 +189,7 @@ contract SafeBatchTransferFrom_ERC1155TransferFacet_Fuzz_Test is ERC1155Transfer
 
     function test_ShouldRevert_SafeBatchTransferFrom_WhenReceiverPanics() external {
         ERC1155ReceiverMock receiver = new ERC1155ReceiverMock(
-            RECEIVER_SINGLE_MAGIC_VALUE,
-            RECEIVER_BATCH_MAGIC_VALUE,
-            ERC1155ReceiverMock.RevertType.Panic
+            RECEIVER_SINGLE_MAGIC_VALUE, RECEIVER_BATCH_MAGIC_VALUE, ERC1155ReceiverMock.RevertType.Panic
         );
         address(facet).setBalanceOf(1, users.alice, 10);
         uint256[] memory ids = new uint256[](1);
@@ -226,17 +215,13 @@ contract SafeBatchTransferFrom_ERC1155TransferFacet_Fuzz_Test is ERC1155Transfer
         values[0] = 10;
         vm.stopPrank();
         vm.prank(users.alice);
-        vm.expectRevert(
-            abi.encodeWithSelector(ERC1155ReceiverMock.CustomError.selector, RECEIVER_BATCH_MAGIC_VALUE)
-        );
+        vm.expectRevert(abi.encodeWithSelector(ERC1155ReceiverMock.CustomError.selector, RECEIVER_BATCH_MAGIC_VALUE));
         facet.safeBatchTransferFrom(users.alice, address(receiver), ids, values, "");
     }
 
     function test_ShouldForwardData_SafeBatchTransferFrom_WhenToIsReceiverContract() external {
         ERC1155ReceiverMock receiver = new ERC1155ReceiverMock(
-            RECEIVER_SINGLE_MAGIC_VALUE,
-            RECEIVER_BATCH_MAGIC_VALUE,
-            ERC1155ReceiverMock.RevertType.None
+            RECEIVER_SINGLE_MAGIC_VALUE, RECEIVER_BATCH_MAGIC_VALUE, ERC1155ReceiverMock.RevertType.None
         );
         address(facet).setBalanceOf(1, users.alice, 50);
         address(facet).setBalanceOf(2, users.alice, 100);

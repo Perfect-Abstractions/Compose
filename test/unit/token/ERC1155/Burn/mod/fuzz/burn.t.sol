@@ -30,17 +30,13 @@ contract Burn_ERC1155BurnMod_Fuzz_Test is ERC1155BurnMod_Base_Test {
         vm.assume(balance < type(uint256).max);
         value = bound(value, balance + 1, type(uint256).max);
         address(harness).setBalanceOf(id, from, balance);
-        vm.expectRevert(
-            abi.encodeWithSelector(ERC1155InsufficientBalance.selector, from, balance, value, id)
-        );
+        vm.expectRevert(abi.encodeWithSelector(ERC1155InsufficientBalance.selector, from, balance, value, id));
         harness.burn(from, id, value);
     }
 
-    function testFuzz_ShouldDecrementBalance_Burn_WhenPreconditionsHold(
-        address from,
-        uint256 id,
-        uint256 value
-    ) external {
+    function testFuzz_ShouldDecrementBalance_Burn_WhenPreconditionsHold(address from, uint256 id, uint256 value)
+        external
+    {
         vm.assume(from != address(0));
         vm.assume(value != type(uint256).max);
         address(harness).setBalanceOf(id, from, value);

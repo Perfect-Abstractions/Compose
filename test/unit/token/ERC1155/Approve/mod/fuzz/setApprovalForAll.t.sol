@@ -15,10 +15,7 @@ import "src/token/ERC1155/Approve/ERC1155ApproveMod.sol";
 contract SetApprovalForAll_ERC1155ApproveMod_Fuzz_Test is ERC1155ApproveMod_Base_Test {
     using ERC1155StorageUtils for address;
 
-    function testFuzz_ShouldRevert_SetApprovalForAll_WhenOperatorIsZeroAddress(
-        address user,
-        bool approved
-    ) external {
+    function testFuzz_ShouldRevert_SetApprovalForAll_WhenOperatorIsZeroAddress(address user, bool approved) external {
         vm.expectRevert(abi.encodeWithSelector(ERC1155InvalidOperator.selector, address(0)));
         harness.setApprovalForAll(user, address(0), approved);
     }

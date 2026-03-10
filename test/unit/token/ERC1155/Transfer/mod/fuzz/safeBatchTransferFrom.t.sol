@@ -30,11 +30,13 @@ contract SafeBatchTransferFrom_ERC1155TransferMod_Fuzz_Test is ERC1155TransferMo
         if (idsLen == valuesLen) valuesLen = (valuesLen + 1) % 6;
         uint256[] memory ids = new uint256[](idsLen);
         uint256[] memory values = new uint256[](valuesLen);
-        for (uint256 i = 0; i < idsLen; i++) ids[i] = i;
-        for (uint256 i = 0; i < valuesLen; i++) values[i] = 1;
-        vm.expectRevert(
-            abi.encodeWithSelector(ERC1155InvalidArrayLength.selector, idsLen, valuesLen)
-        );
+        for (uint256 i = 0; i < idsLen; i++) {
+            ids[i] = i;
+        }
+        for (uint256 i = 0; i < valuesLen; i++) {
+            values[i] = 1;
+        }
+        vm.expectRevert(abi.encodeWithSelector(ERC1155InvalidArrayLength.selector, idsLen, valuesLen));
         harness.safeBatchTransferFrom(from, to, ids, values, operator);
     }
 

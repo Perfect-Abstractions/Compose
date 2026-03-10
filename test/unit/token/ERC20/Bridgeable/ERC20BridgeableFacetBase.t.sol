@@ -11,7 +11,9 @@ import {AccessControlStorageUtils} from "test/utils/storage/AccessControlStorage
 import {ERC20StorageUtils} from "test/utils/storage/ERC20StorageUtils.sol";
 
 abstract contract ERC20BridgeableFacet_Base_Test is Base_Test {
-    /// @dev Role identifier used by ERC20BridgeableFacet (literal "trusted-bridge" as bytes32).
+    /**
+     * @dev Role identifier used by ERC20BridgeableFacet (literal "trusted-bridge" as bytes32).
+     */
     bytes32 internal constant ERC20_BRIDGE_ROLE = bytes32("trusted-bridge");
     using AccessControlStorageUtils for address;
     using ERC20StorageUtils for address;

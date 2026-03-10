@@ -15,10 +15,7 @@ import "src/token/ERC1155/Burn/ERC1155BurnMod.sol";
 contract BurnBatch_ERC1155BurnMod_Fuzz_Test is ERC1155BurnMod_Base_Test {
     using ERC1155StorageUtils for address;
 
-    function testFuzz_ShouldRevert_BurnBatch_WhenFromIsZeroAddress(
-        uint256 id,
-        uint256 value
-    ) external {
+    function testFuzz_ShouldRevert_BurnBatch_WhenFromIsZeroAddress(uint256 id, uint256 value) external {
         uint256[] memory ids = new uint256[](1);
         uint256[] memory values = new uint256[](1);
         ids[0] = id;
@@ -38,11 +35,13 @@ contract BurnBatch_ERC1155BurnMod_Fuzz_Test is ERC1155BurnMod_Base_Test {
         if (idsLen == valuesLen) valuesLen = (valuesLen + 1) % 6;
         uint256[] memory ids = new uint256[](idsLen);
         uint256[] memory values = new uint256[](valuesLen);
-        for (uint256 i = 0; i < idsLen; i++) ids[i] = i;
-        for (uint256 i = 0; i < valuesLen; i++) values[i] = 1;
-        vm.expectRevert(
-            abi.encodeWithSelector(ERC1155InvalidArrayLength.selector, idsLen, valuesLen)
-        );
+        for (uint256 i = 0; i < idsLen; i++) {
+            ids[i] = i;
+        }
+        for (uint256 i = 0; i < valuesLen; i++) {
+            values[i] = 1;
+        }
+        vm.expectRevert(abi.encodeWithSelector(ERC1155InvalidArrayLength.selector, idsLen, valuesLen));
         harness.burnBatch(from, ids, values);
     }
 

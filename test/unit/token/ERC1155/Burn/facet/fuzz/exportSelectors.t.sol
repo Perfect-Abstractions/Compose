@@ -14,10 +14,7 @@ import {ERC1155BurnFacet} from "src/token/ERC1155/Burn/ERC1155BurnFacet.sol";
 contract ExportSelectors_ERC1155BurnFacet_Unit_Test is ERC1155BurnFacet_Base_Test {
     function test_ShouldReturnSelectors_ExportSelectors() external view {
         bytes memory selectors = facet.exportSelectors();
-        bytes memory expected = abi.encodePacked(
-            ERC1155BurnFacet.burn.selector,
-            ERC1155BurnFacet.burnBatch.selector
-        );
+        bytes memory expected = abi.encodePacked(ERC1155BurnFacet.burn.selector, ERC1155BurnFacet.burnBatch.selector);
         assertEq(selectors, expected, "exportSelectors");
     }
 }

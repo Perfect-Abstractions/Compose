@@ -40,6 +40,5 @@ contract Approve_ERC20ApproveFacet_Fuzz_Unit_Test is Base_Test {
         assertEq(result, true, "approve failed");
         assertEq(address(facet).allowance(users.alice, spender), value);
     }
-
 }
 

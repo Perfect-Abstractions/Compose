@@ -41,12 +41,14 @@ contract MintBatch_ERC1155MintMod_Fuzz_Test is ERC1155MintMod_Base_Test {
 
         uint256[] memory ids = new uint256[](idsLen);
         uint256[] memory values = new uint256[](valuesLen);
-        for (uint256 i = 0; i < idsLen; i++) ids[i] = i;
-        for (uint256 i = 0; i < valuesLen; i++) values[i] = 1;
+        for (uint256 i = 0; i < idsLen; i++) {
+            ids[i] = i;
+        }
+        for (uint256 i = 0; i < valuesLen; i++) {
+            values[i] = 1;
+        }
 
-        vm.expectRevert(
-            abi.encodeWithSelector(ERC1155InvalidArrayLength.selector, idsLen, valuesLen)
-        );
+        vm.expectRevert(abi.encodeWithSelector(ERC1155InvalidArrayLength.selector, idsLen, valuesLen));
         harness.mintBatch(to, ids, values, "");
     }
 
@@ -92,9 +94,7 @@ contract MintBatch_ERC1155MintMod_Fuzz_Test is ERC1155MintMod_Base_Test {
         vm.assume(id0 != id1);
         vm.assume(v0 != type(uint256).max && v1 != type(uint256).max);
         ERC1155ReceiverMock receiver = new ERC1155ReceiverMock(
-            RECEIVER_SINGLE_MAGIC_VALUE,
-            RECEIVER_BATCH_MAGIC_VALUE,
-            ERC1155ReceiverMock.RevertType.None
+            RECEIVER_SINGLE_MAGIC_VALUE, RECEIVER_BATCH_MAGIC_VALUE, ERC1155ReceiverMock.RevertType.None
         );
 
         uint256[] memory ids = new uint256[](2);
@@ -111,11 +111,9 @@ contract MintBatch_ERC1155MintMod_Fuzz_Test is ERC1155MintMod_Base_Test {
     }
 
     function test_ShouldRevert_MintBatch_WhenReceiverContractReturnsWrongValue() external {
-        // Receiver returns single magic for batch (wrong return for onERC1155BatchReceived)
+        /* Receiver returns single magic for batch (wrong return for onERC1155BatchReceived) */
         ERC1155ReceiverMock receiver = new ERC1155ReceiverMock(
-            RECEIVER_SINGLE_MAGIC_VALUE,
-            RECEIVER_SINGLE_MAGIC_VALUE,
-            ERC1155ReceiverMock.RevertType.None
+            RECEIVER_SINGLE_MAGIC_VALUE, RECEIVER_SINGLE_MAGIC_VALUE, ERC1155ReceiverMock.RevertType.None
         );
         uint256[] memory ids = new uint256[](1);
         uint256[] memory values = new uint256[](1);

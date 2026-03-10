@@ -48,11 +48,9 @@ contract RevertingReceiver is IERC1155Receiver {
 contract SafeTransferFrom_ERC1155TransferFacet_Fuzz_Test is ERC1155TransferFacet_Base_Test {
     using ERC1155StorageUtils for address;
 
-    function testFuzz_ShouldRevert_SafeTransferFrom_WhenToIsZeroAddress(
-        address from,
-        uint256 id,
-        uint256 value
-    ) external {
+    function testFuzz_ShouldRevert_SafeTransferFrom_WhenToIsZeroAddress(address from, uint256 id, uint256 value)
+        external
+    {
         vm.assume(from != address(0));
         address(facet).setBalanceOf(id, from, value);
         vm.stopPrank();
@@ -61,11 +59,9 @@ contract SafeTransferFrom_ERC1155TransferFacet_Fuzz_Test is ERC1155TransferFacet
         facet.safeTransferFrom(from, address(0), id, value, "");
     }
 
-    function testFuzz_ShouldRevert_SafeTransferFrom_WhenFromIsZeroAddress(
-        address to,
-        uint256 id,
-        uint256 value
-    ) external {
+    function testFuzz_ShouldRevert_SafeTransferFrom_WhenFromIsZeroAddress(address to, uint256 id, uint256 value)
+        external
+    {
         vm.assume(to != address(0));
         vm.assume(to.code.length == 0);
         vm.stopPrank();
@@ -112,13 +108,7 @@ contract SafeTransferFrom_ERC1155TransferFacet_Fuzz_Test is ERC1155TransferFacet
         vm.stopPrank();
         vm.prank(from);
         vm.expectRevert(
-            abi.encodeWithSelector(
-                ERC1155TransferFacet.ERC1155InsufficientBalance.selector,
-                from,
-                balance,
-                value,
-                id
-            )
+            abi.encodeWithSelector(ERC1155TransferFacet.ERC1155InsufficientBalance.selector, from, balance, value, id)
         );
         facet.safeTransferFrom(from, to, id, value, "");
     }
@@ -174,9 +164,7 @@ contract SafeTransferFrom_ERC1155TransferFacet_Fuzz_Test is ERC1155TransferFacet
 
     function test_ShouldUpdateBalances_SafeTransferFrom_WhenToIsReceiverContractAccepting() external {
         ERC1155ReceiverMock receiver = new ERC1155ReceiverMock(
-            RECEIVER_SINGLE_MAGIC_VALUE,
-            RECEIVER_BATCH_MAGIC_VALUE,
-            ERC1155ReceiverMock.RevertType.None
+            RECEIVER_SINGLE_MAGIC_VALUE, RECEIVER_BATCH_MAGIC_VALUE, ERC1155ReceiverMock.RevertType.None
         );
         address(facet).setBalanceOf(1, users.alice, 50);
         vm.stopPrank();
@@ -187,11 +175,8 @@ contract SafeTransferFrom_ERC1155TransferFacet_Fuzz_Test is ERC1155TransferFacet
     }
 
     function test_ShouldRevert_SafeTransferFrom_WhenReceiverContractReturnsWrongValue() external {
-        ERC1155ReceiverMock receiver = new ERC1155ReceiverMock(
-            bytes4(0),
-            bytes4(0),
-            ERC1155ReceiverMock.RevertType.None
-        );
+        ERC1155ReceiverMock receiver =
+            new ERC1155ReceiverMock(bytes4(0), bytes4(0), ERC1155ReceiverMock.RevertType.None);
         address(facet).setBalanceOf(1, users.alice, 10);
         vm.stopPrank();
         vm.prank(users.alice);
@@ -219,9 +204,7 @@ contract SafeTransferFrom_ERC1155TransferFacet_Fuzz_Test is ERC1155TransferFacet
 
     function test_ShouldRevert_SafeTransferFrom_WhenReceiverPanics() external {
         ERC1155ReceiverMock receiver = new ERC1155ReceiverMock(
-            RECEIVER_SINGLE_MAGIC_VALUE,
-            RECEIVER_BATCH_MAGIC_VALUE,
-            ERC1155ReceiverMock.RevertType.Panic
+            RECEIVER_SINGLE_MAGIC_VALUE, RECEIVER_BATCH_MAGIC_VALUE, ERC1155ReceiverMock.RevertType.Panic
         );
         address(facet).setBalanceOf(1, users.alice, 10);
         vm.stopPrank();
@@ -239,17 +222,13 @@ contract SafeTransferFrom_ERC1155TransferFacet_Fuzz_Test is ERC1155TransferFacet
         address(facet).setBalanceOf(1, users.alice, 10);
         vm.stopPrank();
         vm.prank(users.alice);
-        vm.expectRevert(
-            abi.encodeWithSelector(ERC1155ReceiverMock.CustomError.selector, RECEIVER_SINGLE_MAGIC_VALUE)
-        );
+        vm.expectRevert(abi.encodeWithSelector(ERC1155ReceiverMock.CustomError.selector, RECEIVER_SINGLE_MAGIC_VALUE));
         facet.safeTransferFrom(users.alice, address(receiver), 1, 10, "");
     }
 
     function test_ShouldForwardData_SafeTransferFrom_WhenToIsReceiverContract() external {
         ERC1155ReceiverMock receiver = new ERC1155ReceiverMock(
-            RECEIVER_SINGLE_MAGIC_VALUE,
-            RECEIVER_BATCH_MAGIC_VALUE,
-            ERC1155ReceiverMock.RevertType.None
+            RECEIVER_SINGLE_MAGIC_VALUE, RECEIVER_BATCH_MAGIC_VALUE, ERC1155ReceiverMock.RevertType.None
         );
         address(facet).setBalanceOf(1, users.alice, 50);
         bytes memory data = hex"deadbeef";

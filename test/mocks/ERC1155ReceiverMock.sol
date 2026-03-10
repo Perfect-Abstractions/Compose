@@ -25,14 +25,7 @@ contract ERC1155ReceiverMock is IERC1155Receiver {
     error CustomError(bytes4);
 
     event Received(address operator, address from, uint256 id, uint256 value, bytes data, uint256 gas);
-    event BatchReceived(
-        address operator,
-        address from,
-        uint256[] ids,
-        uint256[] values,
-        bytes data,
-        uint256 gas
-    );
+    event BatchReceived(address operator, address from, uint256[] ids, uint256[] values, bytes data, uint256 gas);
 
     bytes4 private immutable _singleRetval;
     bytes4 private immutable _batchRetval;
@@ -44,13 +37,11 @@ contract ERC1155ReceiverMock is IERC1155Receiver {
         _revertType = revertType;
     }
 
-    function onERC1155Received(
-        address operator,
-        address from,
-        uint256 id,
-        uint256 value,
-        bytes calldata data
-    ) external override returns (bytes4) {
+    function onERC1155Received(address operator, address from, uint256 id, uint256 value, bytes calldata data)
+        external
+        override
+        returns (bytes4)
+    {
         if (_revertType == RevertType.RevertWithoutMessage) {
             revert();
         }

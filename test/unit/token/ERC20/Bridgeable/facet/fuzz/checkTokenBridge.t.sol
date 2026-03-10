@@ -13,17 +13,13 @@ import {ERC20BridgeableFacet} from "src/token/ERC20/Bridgeable/ERC20BridgeableFa
  */
 contract CheckTokenBridge_ERC20BridgeableFacet_Fuzz_Unit_Test is ERC20BridgeableFacet_Base_Test {
     function testFuzz_ShouldRevert_WhenCallerIsZeroAddress() external {
-        vm.expectRevert(
-            abi.encodeWithSelector(ERC20BridgeableFacet.ERC20InvalidBridgeAccount.selector, ADDRESS_ZERO)
-        );
+        vm.expectRevert(abi.encodeWithSelector(ERC20BridgeableFacet.ERC20InvalidBridgeAccount.selector, ADDRESS_ZERO));
         facet.checkTokenBridge(ADDRESS_ZERO);
     }
 
     function testFuzz_ShouldRevert_WhenCallerDoesNotHaveBridgeRole(address account) external {
         vm.assume(account != ADDRESS_ZERO);
-        vm.expectRevert(
-            abi.encodeWithSelector(ERC20BridgeableFacet.ERC20InvalidBridgeAccount.selector, account)
-        );
+        vm.expectRevert(abi.encodeWithSelector(ERC20BridgeableFacet.ERC20InvalidBridgeAccount.selector, account));
         facet.checkTokenBridge(account);
     }
 

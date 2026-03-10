@@ -14,10 +14,8 @@ import {ERC20TransferFacet} from "src/token/ERC20/Transfer/ERC20TransferFacet.so
 contract ExportSelectors_ERC20TransferFacet_Unit_Test is ERC20TransferFacet_Base_Test {
     function test_ShouldReturnSelectors_ExportSelectors() external view {
         bytes memory selectors = facet.exportSelectors();
-        bytes memory expected = abi.encodePacked(
-            ERC20TransferFacet.transfer.selector,
-            ERC20TransferFacet.transferFrom.selector
-        );
+        bytes memory expected =
+            abi.encodePacked(ERC20TransferFacet.transfer.selector, ERC20TransferFacet.transferFrom.selector);
         assertEq(selectors, expected, "exportSelectors");
     }
 }

@@ -15,9 +15,7 @@ import {ERC20BurnFacet} from "src/token/ERC20/Burn/ERC20BurnFacet.sol";
 contract Burn_ERC20BurnFacet_Fuzz_Unit_Test is ERC20BurnFacet_Base_Test {
     using ERC20StorageUtils for address;
 
-    function testFuzz_ShouldRevert_CallerInsufficientBalance(address caller, uint256 balance, uint256 value)
-        external
-    {
+    function testFuzz_ShouldRevert_CallerInsufficientBalance(address caller, uint256 balance, uint256 value) external {
         vm.assume(balance < MAX_UINT256);
         value = bound(value, balance + 1, MAX_UINT256);
 

@@ -6,7 +6,9 @@ pragma solidity >=0.8.30;
  */
 
 import {Base_Test} from "test/Base.t.sol";
-import {AccessControlTemporalRevokeFacet} from "src/access/AccessControl/Temporal/Revoke/AccessControlTemporalRevokeFacet.sol";
+import {
+    AccessControlTemporalRevokeFacet
+} from "src/access/AccessControl/Temporal/Revoke/AccessControlTemporalRevokeFacet.sol";
 
 /**
  *  @dev BTT spec: test/trees/AccessControl.tree

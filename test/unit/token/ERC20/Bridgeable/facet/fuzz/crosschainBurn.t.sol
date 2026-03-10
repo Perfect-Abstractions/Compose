@@ -25,9 +25,7 @@ contract CrosschainBurn_ERC20BridgeableFacet_Fuzz_Unit_Test is ERC20BridgeableFa
         vm.prank(from);
         vm.expectRevert(
             abi.encodeWithSelector(
-                ERC20BridgeableFacet.AccessControlUnauthorizedAccount.selector,
-                from,
-                ERC20_BRIDGE_ROLE
+                ERC20BridgeableFacet.AccessControlUnauthorizedAccount.selector, from, ERC20_BRIDGE_ROLE
             )
         );
         facet.crosschainBurn(from, value);
@@ -41,11 +39,7 @@ contract CrosschainBurn_ERC20BridgeableFacet_Fuzz_Unit_Test is ERC20BridgeableFa
         facet.crosschainBurn(ADDRESS_ZERO, value);
     }
 
-    function testFuzz_ShouldRevert_WhenInsufficientBalance(
-        address from,
-        uint256 balance,
-        uint256 value
-    ) external {
+    function testFuzz_ShouldRevert_WhenInsufficientBalance(address from, uint256 balance, uint256 value) external {
         vm.assume(from != ADDRESS_ZERO);
         vm.assume(balance < MAX_UINT256);
         value = bound(value, balance + 1, MAX_UINT256);
@@ -54,12 +48,7 @@ contract CrosschainBurn_ERC20BridgeableFacet_Fuzz_Unit_Test is ERC20BridgeableFa
         vm.stopPrank();
         vm.prank(users.admin);
         vm.expectRevert(
-            abi.encodeWithSelector(
-                ERC20BridgeableFacet.ERC20InsufficientBalance.selector,
-                from,
-                balance,
-                value
-            )
+            abi.encodeWithSelector(ERC20BridgeableFacet.ERC20InsufficientBalance.selector, from, balance, value)
         );
         facet.crosschainBurn(from, value);
     }

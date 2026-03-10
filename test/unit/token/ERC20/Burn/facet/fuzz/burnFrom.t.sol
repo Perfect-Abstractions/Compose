@@ -32,12 +32,7 @@ contract BurnFrom_ERC20BurnFacet_Fuzz_Unit_Test is ERC20BurnFacet_Base_Test {
         vm.stopPrank();
         vm.prank(spender);
         vm.expectRevert(
-            abi.encodeWithSelector(
-                ERC20BurnFacet.ERC20InsufficientAllowance.selector,
-                spender,
-                allowance,
-                value
-            )
+            abi.encodeWithSelector(ERC20BurnFacet.ERC20InsufficientAllowance.selector, spender, allowance, value)
         );
         facet.burnFrom(account, value);
     }
@@ -95,12 +90,9 @@ contract BurnFrom_ERC20BurnFacet_Fuzz_Unit_Test is ERC20BurnFacet_Base_Test {
         assertEq(address(facet).allowance(account, spender), allowance - value, "allowance");
     }
 
-    function testFuzz_BurnFrom_InfiniteApproval(
-        address account,
-        address spender,
-        uint256 value,
-        uint256 balance
-    ) external {
+    function testFuzz_BurnFrom_InfiniteApproval(address account, address spender, uint256 value, uint256 balance)
+        external
+    {
         vm.assume(account != ADDRESS_ZERO);
         vm.assume(spender != ADDRESS_ZERO);
         vm.assume(account != spender);

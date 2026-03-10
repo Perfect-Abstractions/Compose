@@ -15,8 +15,7 @@ contract ExportSelectors_ERC1155TransferFacet_Unit_Test is ERC1155TransferFacet_
     function test_ShouldReturnSelectors_ExportSelectors() external view {
         bytes memory selectors = facet.exportSelectors();
         bytes memory expected = abi.encodePacked(
-            ERC1155TransferFacet.safeTransferFrom.selector,
-            ERC1155TransferFacet.safeBatchTransferFrom.selector
+            ERC1155TransferFacet.safeTransferFrom.selector, ERC1155TransferFacet.safeBatchTransferFrom.selector
         );
         assertEq(selectors, expected, "exportSelectors");
     }
