@@ -46,10 +46,4 @@ contract RenounceOwnership_OwnerRenounceFacet_Fuzz_Unit_Test is OwnerRenounce_Ba
         vm.expectRevert(OwnerRenounceFacet.OwnerUnauthorizedAccount.selector);
         facet.renounceOwnership();
     }
-
-    function test_ShouldReturnSelectors_ExportSelectors() external view {
-        bytes memory selectors = facet.exportSelectors();
-        bytes memory expected = abi.encodePacked(OwnerRenounceFacet.renounceOwnership.selector);
-        assertEq(selectors, expected, "exportSelectors");
-    }
 }

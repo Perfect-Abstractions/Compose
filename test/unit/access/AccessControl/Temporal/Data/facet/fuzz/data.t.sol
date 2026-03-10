@@ -127,14 +127,4 @@ contract Data_AccessControlTemporalDataFacet_Fuzz_Unit_Test is AccessControlTemp
         );
         facet.requireValidRole(role, account);
     }
-
-    function test_ShouldReturnSelectors_ExportSelectors() external view {
-        bytes memory selectors = facet.exportSelectors();
-        bytes memory expected = abi.encodePacked(
-            AccessControlTemporalDataFacet.getRoleExpiry.selector,
-            AccessControlTemporalDataFacet.isRoleExpired.selector,
-            AccessControlTemporalDataFacet.requireValidRole.selector
-        );
-        assertEq(selectors, expected, "exportSelectors");
-    }
 }

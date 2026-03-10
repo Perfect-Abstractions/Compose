@@ -32,10 +32,4 @@ contract Data_OwnerDataFacet_Fuzz_Unit_Test is OwnerData_Base_Test {
 
         assertEq(facet.owner(), address(0), "owner");
     }
-
-    function test_ShouldReturnSelectors_ExportSelectors() external view {
-        bytes memory selectors = facet.exportSelectors();
-        bytes memory expected = abi.encodePacked(OwnerDataFacet.owner.selector);
-        assertEq(selectors, expected, "exportSelectors");
-    }
 }

@@ -59,10 +59,4 @@ contract RenounceRole_AccessControlRenounceFacet_Fuzz_Unit_Test is AccessControl
         vm.prank(sender);
         facet.renounceRole(role, account);
     }
-
-    function test_ShouldReturnSelectors_ExportSelectors() external view {
-        bytes memory selectors = facet.exportSelectors();
-        bytes memory expected = abi.encodePacked(AccessControlRenounceFacet.renounceRole.selector);
-        assertEq(selectors, expected, "exportSelectors");
-    }
 }

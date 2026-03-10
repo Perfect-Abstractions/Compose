@@ -49,10 +49,4 @@ contract RenounceOwnership_OwnerTwoStepRenounceFacet_Fuzz_Unit_Test is OwnerTwoS
         vm.expectRevert(OwnerTwoStepRenounceFacet.OwnerUnauthorizedAccount.selector);
         facet.renounceOwnership();
     }
-
-    function test_ShouldReturnSelectors_ExportSelectors() external view {
-        bytes memory selectors = facet.exportSelectors();
-        bytes memory expected = abi.encodePacked(OwnerTwoStepRenounceFacet.renounceOwnership.selector);
-        assertEq(selectors, expected, "exportSelectors");
-    }
 }

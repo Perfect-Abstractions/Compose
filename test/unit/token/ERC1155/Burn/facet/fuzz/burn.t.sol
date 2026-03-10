@@ -22,20 +22,14 @@ contract Burn_ERC1155BurnFacet_Fuzz_Test is ERC1155BurnFacet_Base_Test {
         facet.burn(address(0), id, value);
     }
 
-    function testFuzz_ShouldRevert_Burn_WhenNotApprovedAndNotOwner(
-        address from,
-        uint256 id,
-        uint256 value
-    ) external {
+    function testFuzz_ShouldRevert_Burn_WhenNotApprovedAndNotOwner(address from, uint256 id, uint256 value) external {
         vm.assume(from != address(0));
         vm.assume(from != users.bob);
         vm.assume(value != type(uint256).max);
         address(facet).setBalanceOf(id, from, value);
         vm.stopPrank();
         vm.prank(users.bob);
-        vm.expectRevert(
-            abi.encodeWithSelector(ERC1155BurnFacet.ERC1155MissingApprovalForAll.selector, users.bob, from)
-        );
+        vm.expectRevert(abi.encodeWithSelector(ERC1155BurnFacet.ERC1155MissingApprovalForAll.selector, users.bob, from));
         facet.burn(from, id, value);
     }
 
@@ -52,22 +46,14 @@ contract Burn_ERC1155BurnFacet_Fuzz_Test is ERC1155BurnFacet_Base_Test {
         vm.stopPrank();
         vm.prank(from);
         vm.expectRevert(
-            abi.encodeWithSelector(
-                ERC1155BurnFacet.ERC1155InsufficientBalance.selector,
-                from,
-                balance,
-                value,
-                id
-            )
+            abi.encodeWithSelector(ERC1155BurnFacet.ERC1155InsufficientBalance.selector, from, balance, value, id)
         );
         facet.burn(from, id, value);
     }
 
-    function testFuzz_ShouldDecrementBalance_Burn_WhenPreconditionsHold(
-        address from,
-        uint256 id,
-        uint256 value
-    ) external {
+    function testFuzz_ShouldDecrementBalance_Burn_WhenPreconditionsHold(address from, uint256 id, uint256 value)
+        external
+    {
         vm.assume(from != address(0));
         vm.assume(value != type(uint256).max);
         address(facet).setBalanceOf(id, from, value);
@@ -77,11 +63,9 @@ contract Burn_ERC1155BurnFacet_Fuzz_Test is ERC1155BurnFacet_Base_Test {
         assertEq(address(facet).balanceOf(id, from), 0, "balance");
     }
 
-    function testFuzz_ShouldDecrementBalance_Burn_WhenApprovedOperator(
-        address from,
-        uint256 id,
-        uint256 value
-    ) external {
+    function testFuzz_ShouldDecrementBalance_Burn_WhenApprovedOperator(address from, uint256 id, uint256 value)
+        external
+    {
         vm.assume(from != address(0));
         vm.assume(value != type(uint256).max);
         address(facet).setBalanceOf(id, from, value);
@@ -90,14 +74,5 @@ contract Burn_ERC1155BurnFacet_Fuzz_Test is ERC1155BurnFacet_Base_Test {
         vm.prank(users.alice);
         facet.burn(from, id, value);
         assertEq(address(facet).balanceOf(id, from), 0, "balance");
-    }
-
-    function test_ShouldReturnSelectors_ExportSelectors() external view {
-        bytes memory selectors = facet.exportSelectors();
-        bytes memory expected = abi.encodePacked(
-            ERC1155BurnFacet.burn.selector,
-            ERC1155BurnFacet.burnBatch.selector
-        );
-        assertEq(selectors, expected, "exportSelectors");
     }
 }

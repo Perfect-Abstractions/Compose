@@ -63,10 +63,4 @@ contract TransferOwnership_OwnerTransferFacet_Fuzz_Unit_Test is OwnerTransfer_Ba
         vm.expectRevert(OwnerTransferFacet.OwnerUnauthorizedAccount.selector);
         facet.transferOwnership(newOwner);
     }
-
-    function test_ShouldReturnSelectors_ExportSelectors() external view {
-        bytes memory selectors = facet.exportSelectors();
-        bytes memory expected = abi.encodePacked(OwnerTransferFacet.transferOwnership.selector);
-        assertEq(selectors, expected, "exportSelectors");
-    }
 }

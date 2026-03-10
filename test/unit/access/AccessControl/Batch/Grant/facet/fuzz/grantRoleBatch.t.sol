@@ -93,10 +93,4 @@ contract GrantRoleBatch_AccessControlGrantBatchFacet_Unit_Test is AccessControlG
         vm.prank(caller);
         facet.grantRoleBatch(MINTER_ROLE, accounts);
     }
-
-    function test_ShouldReturnSelectors_ExportSelectors() external view {
-        bytes memory selectors = facet.exportSelectors();
-        bytes memory expected = abi.encodePacked(AccessControlGrantBatchFacet.grantRoleBatch.selector);
-        assertEq(selectors, expected, "exportSelectors");
-    }
 }

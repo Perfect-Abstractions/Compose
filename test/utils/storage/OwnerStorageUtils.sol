@@ -19,6 +19,20 @@ library OwnerStorageUtils {
     bytes32 internal constant OWNER_STORAGE_POSITION = keccak256("erc173.owner");
     bytes32 internal constant PENDING_OWNER_STORAGE_POSITION = keccak256("erc173.owner.pending");
 
+    /*//////////////////////////////////////////////////////////////
+                                GETTERS
+    //////////////////////////////////////////////////////////////*/
+    /*
+     * @notice ERC-173 Owner storage layout (ERC-8042 standard)
+     * @custom:storage-location erc8042:erc173.owner
+     *
+     * Slot 0: address owner
+     *
+     * @custom:storage-location erc8042:erc173.owner.pending
+     *
+     * Slot 0: address pendingOwner
+     */
+
     function owner(address target) internal view returns (address) {
         return address(uint160(uint256(vm.load(target, OWNER_STORAGE_POSITION))));
     }

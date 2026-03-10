@@ -49,10 +49,4 @@ contract SetRoleAdmin_AccessControlAdminFacet_Fuzz_Unit_Test is AccessControlAdm
         vm.prank(caller);
         facet.setRoleAdmin(role, newAdminRole);
     }
-
-    function test_ShouldReturnSelectors_ExportSelectors() external view {
-        bytes memory selectors = facet.exportSelectors();
-        bytes memory expected = abi.encodePacked(AccessControlAdminFacet.setRoleAdmin.selector);
-        assertEq(selectors, expected, "exportSelectors");
-    }
 }

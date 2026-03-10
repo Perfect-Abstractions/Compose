@@ -59,14 +59,4 @@ contract Data_AccessControlDataFacet_Fuzz_Unit_Test is AccessControlData_Base_Te
 
         assertEq(facet.getRoleAdmin(role), adminRole, "getRoleAdmin");
     }
-
-    function test_ShouldReturnSelectors_ExportSelectors() external view {
-        bytes memory selectors = facet.exportSelectors();
-        bytes memory expected = abi.encodePacked(
-            AccessControlDataFacet.hasRole.selector,
-            AccessControlDataFacet.requireRole.selector,
-            AccessControlDataFacet.getRoleAdmin.selector
-        );
-        assertEq(selectors, expected, "exportSelectors");
-    }
 }

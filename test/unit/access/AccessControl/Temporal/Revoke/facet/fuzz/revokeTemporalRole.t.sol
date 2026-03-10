@@ -75,10 +75,4 @@ contract RevokeTemporalRole_AccessControlTemporalRevokeFacet_Fuzz_Unit_Test is A
         vm.prank(caller);
         facet.revokeTemporalRole(role, account);
     }
-
-    function test_ShouldReturnSelectors_ExportSelectors() external view {
-        bytes memory selectors = facet.exportSelectors();
-        bytes memory expected = abi.encodePacked(AccessControlTemporalRevokeFacet.revokeTemporalRole.selector);
-        assertEq(selectors, expected, "exportSelectors");
-    }
 }

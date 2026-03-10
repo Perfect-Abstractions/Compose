@@ -19,6 +19,26 @@ library AccessControlStorageUtils {
     bytes32 internal constant PAUSABLE_STORAGE_POSITION = keccak256("compose.accesscontrol.pausable");
     bytes32 internal constant TEMPORAL_STORAGE_POSITION = keccak256("compose.accesscontrol.temporal");
 
+    /*//////////////////////////////////////////////////////////////
+                                GETTERS
+    //////////////////////////////////////////////////////////////*/
+
+    /*
+     * @notice AccessControl storage layout (ERC-8042 standard)
+     * @custom:storage-location erc8042:compose.accesscontrol
+     *
+     * Slot 0: mapping(address account => mapping(bytes32 role => bool)) hasRole
+     * Slot 1: mapping(bytes32 role => bytes32) adminRole
+     *
+     * @custom:storage-location erc8042:compose.accesscontrol.pausable
+     *
+     * Slot 0: mapping(bytes32 role => bool) isRolePaused
+     *
+     * @custom:storage-location erc8042:compose.accesscontrol.temporal
+     *
+     * Slot 0: mapping(address account => mapping(bytes32 role => uint256)) roleExpiry
+     */
+
     function hasRole(address target, address account, bytes32 role) internal view returns (bool) {
         bytes32 accountSlot = keccak256(abi.encode(account, uint256(ACCESS_CONTROL_STORAGE_POSITION)));
         bytes32 slot = keccak256(abi.encode(role, accountSlot));

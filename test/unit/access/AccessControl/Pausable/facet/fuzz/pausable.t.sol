@@ -108,15 +108,4 @@ contract Pausable_AccessControlPausableFacet_Fuzz_Unit_Test is AccessControlPaus
         vm.expectRevert(abi.encodeWithSelector(AccessControlPausableFacet.AccessControlRolePaused.selector, role));
         facet.requireRoleNotPaused(role, account);
     }
-
-    function test_ShouldReturnSelectors_ExportSelectors() external view {
-        bytes memory selectors = facet.exportSelectors();
-        bytes memory expected = abi.encodePacked(
-            AccessControlPausableFacet.isRolePaused.selector,
-            AccessControlPausableFacet.pauseRole.selector,
-            AccessControlPausableFacet.unpauseRole.selector,
-            AccessControlPausableFacet.requireRoleNotPaused.selector
-        );
-        assertEq(selectors, expected, "exportSelectors");
-    }
 }

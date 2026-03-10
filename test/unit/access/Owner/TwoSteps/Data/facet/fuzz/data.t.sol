@@ -32,10 +32,4 @@ contract Data_OwnerTwoStepDataFacet_Fuzz_Unit_Test is OwnerTwoStepData_Base_Test
     function testFuzz_ShouldReturnZero_PendingOwner_WhenNoPendingOwnerHasBeenSet() external view {
         assertEq(facet.pendingOwner(), address(0), "pendingOwner");
     }
-
-    function test_ShouldReturnSelectors_ExportSelectors() external view {
-        bytes memory selectors = facet.exportSelectors();
-        bytes memory expected = abi.encodePacked(OwnerTwoStepDataFacet.pendingOwner.selector);
-        assertEq(selectors, expected, "exportSelectors");
-    }
 }

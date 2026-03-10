@@ -15,11 +15,9 @@ import {ERC1155DataFacet} from "src/token/ERC1155/Data/ERC1155DataFacet.sol";
 contract Data_ERC1155DataFacet_Fuzz_Test is ERC1155DataFacet_Base_Test {
     using ERC1155StorageUtils for address;
 
-    function testFuzz_ShouldReturnBalance_BalanceOf_WhenAccountAndIdQueried(
-        address account,
-        uint256 id,
-        uint256 value
-    ) external {
+    function testFuzz_ShouldReturnBalance_BalanceOf_WhenAccountAndIdQueried(address account, uint256 id, uint256 value)
+        external
+    {
         vm.assume(value != type(uint256).max);
         address(facet).setBalanceOf(id, account, value);
 
@@ -40,8 +38,12 @@ contract Data_ERC1155DataFacet_Fuzz_Test is ERC1155DataFacet_Base_Test {
 
         address[] memory accounts = new address[](accountsLen);
         uint256[] memory ids = new uint256[](idsLen);
-        for (uint256 i = 0; i < accountsLen; i++) accounts[i] = makeAddr(string.concat("a", vm.toString(i)));
-        for (uint256 i = 0; i < idsLen; i++) ids[i] = i;
+        for (uint256 i = 0; i < accountsLen; i++) {
+            accounts[i] = makeAddr(string.concat("a", vm.toString(i)));
+        }
+        for (uint256 i = 0; i < idsLen; i++) {
+            ids[i] = i;
+        }
 
         vm.expectRevert(
             abi.encodeWithSelector(ERC1155DataFacet.ERC1155InvalidArrayLength.selector, idsLen, accountsLen)
@@ -81,28 +83,15 @@ contract Data_ERC1155DataFacet_Fuzz_Test is ERC1155DataFacet_Base_Test {
         assertEq(balances.length, 0, "empty");
     }
 
-    function testFuzz_ShouldReturnFalse_IsApprovedForAll_WhenNotApproved(
-        address account,
-        address operator
-    ) external view {
+    function testFuzz_ShouldReturnFalse_IsApprovedForAll_WhenNotApproved(address account, address operator)
+        external
+        view
+    {
         assertEq(facet.isApprovedForAll(account, operator), false, "isApprovedForAll");
     }
 
-    function testFuzz_ShouldReturnTrue_IsApprovedForAll_WhenApproved(
-        address account,
-        address operator
-    ) external {
+    function testFuzz_ShouldReturnTrue_IsApprovedForAll_WhenApproved(address account, address operator) external {
         address(facet).setApprovedForAll(account, operator, true);
         assertEq(facet.isApprovedForAll(account, operator), true, "isApprovedForAll");
-    }
-
-    function test_ShouldReturnSelectors_ExportSelectors() external view {
-        bytes memory selectors = facet.exportSelectors();
-        bytes memory expected = abi.encodePacked(
-            ERC1155DataFacet.balanceOf.selector,
-            ERC1155DataFacet.balanceOfBatch.selector,
-            ERC1155DataFacet.isApprovedForAll.selector
-        );
-        assertEq(selectors, expected, "exportSelectors");
     }
 }

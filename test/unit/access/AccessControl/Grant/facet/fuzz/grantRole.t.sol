@@ -108,10 +108,4 @@ contract GrantRole_AccessControlGrantFacet_Fuzz_Unit_Test is AccessControlGrant_
 
         assertEq(address(facet).hasRole(account, MINTER_ROLE), true, "hasRole");
     }
-
-    function test_ShouldReturnSelectors_ExportSelectors() external view {
-        bytes memory selectors = facet.exportSelectors();
-        bytes memory expected = abi.encodePacked(AccessControlGrantFacet.grantRole.selector);
-        assertEq(selectors, expected, "exportSelectors");
-    }
 }

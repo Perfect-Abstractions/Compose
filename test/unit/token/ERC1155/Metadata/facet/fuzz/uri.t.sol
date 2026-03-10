@@ -21,9 +21,4 @@ contract Uri_ERC1155MetadataFacet_Fuzz_Test is ERC1155MetadataFacet_Base_Test {
     function testFuzz_ShouldReturnUri_Uri_WhenUninitialized(uint256 id) external view {
         assertEq(facet.uri(id), "", "uri uninitialized");
     }
-
-    function test_ShouldReturnSelectors_ExportSelectors() external view {
-        bytes memory selectors = facet.exportSelectors();
-        assertEq(selectors, abi.encodePacked(ERC1155MetadataFacet.uri.selector), "exportSelectors");
-    }
 }

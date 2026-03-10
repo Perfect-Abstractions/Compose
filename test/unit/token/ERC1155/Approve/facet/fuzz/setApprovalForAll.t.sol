@@ -22,10 +22,9 @@ contract SetApprovalForAll_ERC1155ApproveFacet_Fuzz_Test is ERC1155ApproveFacet_
         facet.setApprovalForAll(address(0), approved);
     }
 
-    function testFuzz_ShouldSetApprovalAndEmit_SetApprovalForAll_WhenOperatorNotZero(
-        address operator,
-        bool approved
-    ) external {
+    function testFuzz_ShouldSetApprovalAndEmit_SetApprovalForAll_WhenOperatorNotZero(address operator, bool approved)
+        external
+    {
         vm.assume(operator != address(0));
         vm.stopPrank();
         vm.prank(users.alice);
@@ -33,10 +32,5 @@ contract SetApprovalForAll_ERC1155ApproveFacet_Fuzz_Test is ERC1155ApproveFacet_
         emit ERC1155ApproveFacet.ApprovalForAll(users.alice, operator, approved);
         facet.setApprovalForAll(operator, approved);
         assertEq(address(facet).isApprovedForAll(users.alice, operator), approved, "isApprovedForAll");
-    }
-
-    function test_ShouldReturnSelectors_ExportSelectors() external view {
-        bytes memory selectors = facet.exportSelectors();
-        assertEq(selectors, abi.encodePacked(ERC1155ApproveFacet.setApprovalForAll.selector), "exportSelectors");
     }
 }

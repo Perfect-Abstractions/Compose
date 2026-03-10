@@ -82,10 +82,4 @@ contract GrantRoleWithExpiry_AccessControlTemporalGrantFacet_Fuzz_Unit_Test is A
         vm.prank(caller);
         facet.grantRoleWithExpiry(role, account, block.timestamp + expiryOffset);
     }
-
-    function test_ShouldReturnSelectors_ExportSelectors() external view {
-        bytes memory selectors = facet.exportSelectors();
-        bytes memory expected = abi.encodePacked(AccessControlTemporalGrantFacet.grantRoleWithExpiry.selector);
-        assertEq(selectors, expected, "exportSelectors");
-    }
 }

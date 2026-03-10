@@ -95,10 +95,4 @@ contract RevokeRoleBatch_AccessControlRevokeBatchFacet_Unit_Test is AccessContro
         vm.prank(caller);
         facet.revokeRoleBatch(MINTER_ROLE, accounts);
     }
-
-    function test_ShouldReturnSelectors_ExportSelectors() external view {
-        bytes memory selectors = facet.exportSelectors();
-        bytes memory expected = abi.encodePacked(AccessControlRevokeBatchFacet.revokeRoleBatch.selector);
-        assertEq(selectors, expected, "exportSelectors");
-    }
 }

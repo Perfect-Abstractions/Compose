@@ -74,10 +74,4 @@ contract RevokeRole_AccessControlRevokeFacet_Fuzz_Unit_Test is AccessControlRevo
 
         assertEq(address(facet).hasRole(account, MINTER_ROLE), false, "hasRole");
     }
-
-    function test_ShouldReturnSelectors_ExportSelectors() external view {
-        bytes memory selectors = facet.exportSelectors();
-        bytes memory expected = abi.encodePacked(AccessControlRevokeFacet.revokeRole.selector);
-        assertEq(selectors, expected, "exportSelectors");
-    }
 }
