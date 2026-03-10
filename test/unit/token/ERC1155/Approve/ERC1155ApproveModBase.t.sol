@@ -6,7 +6,7 @@ pragma solidity >=0.8.30 <0.9.0;
  */
 
 import {Base_Test} from "test/Base.t.sol";
-import {ERC1155ApproveModHarness} from "test/harnesses/token/ERC1155/ERC1155ApproveModHarness.sol";
+import {ERC1155ApproveModHarness} from "test/utils/harnesses/token/ERC1155/ERC1155ApproveModHarness.sol";
 import {ERC1155StorageUtils} from "test/utils/storage/ERC1155StorageUtils.sol";
 
 abstract contract ERC1155ApproveMod_Base_Test is Base_Test {

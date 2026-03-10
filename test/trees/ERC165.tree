@@ -1,0 +1,91 @@
+Data
+├── ERC165Interface
+│   ├── when querying IERC165.interfaceId
+│   │   └── it should always return true
+│   └── when attempting to unregister IERC165.interfaceId
+│       └── it should still return true
+├── RegisteredInterfaces
+│   ├── when an interface has been registered
+│   │   └── it should return true for that interfaceId
+│   ├── when multiple interfaces have been registered
+│   │   └── it should return true for each registered interfaceId
+│   └── when the same interface is registered multiple times
+│       └── it should still return true (idempotent)
+├── UnregisteredInterfaces
+│   ├── when an interface has never been registered
+│   │   └── it should return false
+│   └── when an interface has been unregistered
+│       └── it should return false
+└── SpecialInterfaceIds
+    ├── when querying 0xffffffff and it has not been registered
+    │   └── it should return false per ERC-165
+    ├── when querying 0x00000000 and it has not been registered
+    │   └── it should return false
+    ├── when 0xffffffff has been explicitly registered
+    │   └── it should return true
+    └── when 0x00000000 has been explicitly registered
+        └── it should return true
+
+Register
+├── SingleInterface
+│   ├── when registering a standard interface (e.g. ERC721)
+│   │   └── it should mark that interface as supported
+│   └── when registering IERC165.interfaceId
+│       └── it should remain supported (no regression)
+├── MultipleInterfaces
+│   ├── when registering a list of distinct interfaceIds
+│   │   └── it should mark all as supported
+│   └── when registering a list containing duplicates
+│       └── it should still end up with all interfaces supported
+└── CallerIndependence
+    └── when any caller invokes the library register function
+        └── it should update interface support without checking msg.sender
+
+Unregister
+├── SingleInterface
+│   ├── when unregistering a previously registered interface
+│   │   └── it should mark that interface as unsupported
+│   └── when unregistering an interface twice
+│       └── it should remain unsupported (idempotent)
+├── EffectIsolation
+│   └── when unregistering one interface
+│       └── it should not affect support for other interfaces
+└── ERC165Sticky
+    └── when attempting to unregister IERC165.interfaceId
+        └── it should remain supported
+
+Storage
+├── Slot
+│   ├── when reading the ERC165 storage slot
+│   │   └── it should equal keccak256("erc165")
+│   └── when computing the mapping slot for a registered interfaceId
+│       └── it should contain 1 at keccak256(abi.encode(interfaceId, slot))
+└── Consistency
+    └── when comparing supportsInterface to the raw storage value
+        └── it should return the same boolean
+
+IntegrationWithDiamond
+├── BaseSetup
+│   ├── when the diamond is deployed with ERC165Facet installed
+│   │   └── it should support IERC165.interfaceId via the diamond proxy
+│   └── when querying via the diamond before any facet registers extra interfaces
+│       └── it should return false for unregistered interfaceIds
+├── FeatureFacets
+│   ├── when an ERC20 facet has registered its interfaceId
+│   │   └── the diamond supportsInterface should return true for ERC20
+│   ├── when an ERC1155 facet has registered its interfaceId
+│   │   └── the diamond supportsInterface should return true for ERC1155
+│   └── when a facet is removed and its interfaceId unregistered
+│       └── the diamond supportsInterface should return false for that interfaceId
+└── Upgrades
+    └── when upgrading facets that add or remove interfaceIds
+        └── supportsInterface should reflect the new set of interfaces
+
+Gas
+├── when calling supportsInterface for IERC165.interfaceId
+│   └── it should consume less than 30,000 gas
+├── when calling supportsInterface for a registered interfaceId
+│   └── it should consume less than 30,000 gas
+└── when calling supportsInterface for an unregistered interfaceId
+    └── it should consume less than 30,000 gas
+

@@ -8,7 +8,7 @@ pragma solidity >=0.8.30;
 import {
     AccessControlTemporalData_Base_Test
 } from "test/unit/access/AccessControl/Temporal/Data/AccessControlTemporalDataBase.t.sol";
-import {AccessControlTemporalModHarness} from "test/harnesses/access/AccessControl/AccessControlTemporalModHarness.sol";
+import {AccessControlTemporalModHarness} from "test/utils/harnesses/access/AccessControl/AccessControlTemporalModHarness.sol";
 
 /**
  *  @dev BTT spec: test/trees/AccessControl.tree

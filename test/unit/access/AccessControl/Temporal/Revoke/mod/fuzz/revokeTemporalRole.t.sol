@@ -11,7 +11,7 @@ import {AccessControlStorageUtils} from "test/utils/storage/AccessControlStorage
 import {
     AccessControlTemporalRevoke_Base_Test
 } from "test/unit/access/AccessControl/Temporal/Revoke/AccessControlTemporalRevokeBase.t.sol";
-import {AccessControlTemporalModHarness} from "test/harnesses/access/AccessControl/AccessControlTemporalModHarness.sol";
+import {AccessControlTemporalModHarness} from "test/utils/harnesses/access/AccessControl/AccessControlTemporalModHarness.sol";
 
 /**
  *  @dev BTT spec: test/trees/AccessControl.tree

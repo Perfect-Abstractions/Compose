@@ -6,7 +6,7 @@ pragma solidity >=0.8.30 <0.9.0;
  */
 
 import {Base_Test} from "test/Base.t.sol";
-import {ERC20TransferModHarness} from "test/harnesses/token/ERC20/ERC20TransferModHarness.sol";
+import {ERC20TransferModHarness} from "test/utils/harnesses/token/ERC20/ERC20TransferModHarness.sol";
 
 contract ERC20TransferMod_Base_Test is Base_Test {
     ERC20TransferModHarness internal harness;

@@ -9,7 +9,7 @@ import {Vm} from "forge-std/Vm.sol";
 
 import {AccessControlRenounce_Base_Test} from "test/unit/access/AccessControl/Renounce/AccessControlRenounceBase.t.sol";
 import {AccessControlStorageUtils} from "test/utils/storage/AccessControlStorageUtils.sol";
-import {AccessControlCoreModHarness} from "test/harnesses/access/AccessControl/AccessControlCoreModHarness.sol";
+import {AccessControlCoreModHarness} from "test/utils/harnesses/access/AccessControl/AccessControlCoreModHarness.sol";
 
 /**
  *  @dev BTT spec: test/trees/AccessControl.tree

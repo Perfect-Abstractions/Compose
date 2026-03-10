@@ -7,7 +7,7 @@ pragma solidity >=0.8.30;
 
 import {OwnerRenounce_Base_Test} from "test/unit/access/Owner/Renounce/OwnerRenounceBase.t.sol";
 import {OwnerStorageUtils} from "test/utils/storage/OwnerStorageUtils.sol";
-import {OwnerCoreModHarness} from "test/harnesses/access/Owner/OwnerCoreModHarness.sol";
+import {OwnerCoreModHarness} from "test/utils/harnesses/access/Owner/OwnerCoreModHarness.sol";
 
 /**
  *  @dev BTT spec: test/trees/Owner.tree

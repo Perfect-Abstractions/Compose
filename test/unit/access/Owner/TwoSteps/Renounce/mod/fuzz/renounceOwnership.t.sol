@@ -7,7 +7,7 @@ pragma solidity >=0.8.30;
 
 import {OwnerTwoStepRenounce_Base_Test} from "test/unit/access/Owner/TwoSteps/Renounce/OwnerTwoStepRenounceBase.t.sol";
 import {OwnerStorageUtils} from "test/utils/storage/OwnerStorageUtils.sol";
-import {OwnerTwoStepModHarness} from "test/harnesses/access/Owner/OwnerTwoStepModHarness.sol";
+import {OwnerTwoStepModHarness} from "test/utils/harnesses/access/Owner/OwnerTwoStepModHarness.sol";
 
 /**
  *  @dev BTT spec: test/trees/Owner.tree

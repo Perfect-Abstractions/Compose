@@ -7,7 +7,7 @@ pragma solidity >=0.8.30 <0.9.0;
 
 import {Base_Test} from "test/Base.t.sol";
 import {ERC20MetadataFacet} from "src/token/ERC20/Metadata/ERC20MetadataFacet.sol";
-import {ERC20MetadataModHarness} from "test/harnesses/token/ERC20/ERC20MetadataModHarness.sol";
+import {ERC20MetadataModHarness} from "test/utils/harnesses/token/ERC20/ERC20MetadataModHarness.sol";
 
 abstract contract ERC20MetadataFacet_Base_Test is Base_Test {
     ERC20MetadataModHarness internal facet;

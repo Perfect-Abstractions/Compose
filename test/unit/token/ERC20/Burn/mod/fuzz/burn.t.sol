@@ -8,7 +8,7 @@ pragma solidity >=0.8.30;
 import {stdError} from "forge-std/StdError.sol";
 import {Base_Test} from "test/Base.t.sol";
 import {ERC20StorageUtils} from "test/utils/storage/ERC20StorageUtils.sol";
-import {ERC20BurnModHarness} from "test/harnesses/token/ERC20/ERC20BurnModHarness.sol";
+import {ERC20BurnModHarness} from "test/utils/harnesses/token/ERC20/ERC20BurnModHarness.sol";
 
 import "src/token/ERC20/Burn/ERC20BurnMod.sol";
 

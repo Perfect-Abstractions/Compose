@@ -7,7 +7,7 @@ pragma solidity >=0.8.30 <0.9.0;
 
 import {Base_Test} from "test/Base.t.sol";
 import {ERC20PermitFacet} from "src/token/ERC20/Permit/ERC20PermitFacet.sol";
-import {ERC20PermitFacetHarness} from "test/harnesses/token/ERC20/ERC20PermitFacetHarness.sol";
+import {ERC20PermitFacetHarness} from "test/utils/harnesses/token/ERC20/ERC20PermitFacetHarness.sol";
 
 abstract contract ERC20PermitFacet_Base_Test is Base_Test {
     ERC20PermitFacetHarness internal facet;
