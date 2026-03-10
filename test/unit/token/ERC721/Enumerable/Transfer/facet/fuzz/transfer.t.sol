@@ -310,5 +310,203 @@ contract Transfer_ERC721EnumerableTransferFacet_Fuzz_Unit_Test is ERC721Enumerab
         assertEq(address(facet).balanceOf(owner), 0, "old owner balance");
         assertEq(address(facet).balanceOf(to), 1, "new owner balance");
     }
+
+    function testFuzz_ShouldRevert_TransferFrom_WhenFromIsNotOwner(
+        address owner,
+        address wrongFrom,
+        address to,
+        uint256 tokenId
+    ) external {
+        vm.assume(owner != address(0));
+        vm.assume(wrongFrom != address(0));
+        vm.assume(wrongFrom != owner);
+        vm.assume(to != address(0));
+        vm.assume(to != owner);
+        tokenId = bound(tokenId, 1, type(uint128).max);
+
+        _seedOwnerToken(owner, tokenId);
+
+        vm.stopPrank();
+        vm.prank(owner);
+
+        vm.expectRevert(
+            abi.encodeWithSelector(ERC721EnumerableTransferFacet.ERC721IncorrectOwner.selector, wrongFrom, tokenId, owner)
+        );
+        facet.transferFrom(wrongFrom, to, tokenId);
+    }
+
+    function testFuzz_ShouldAppendEnumerationOnTransfer_WhenRecipientHasExistingTokens(address owner, address to)
+        external
+    {
+        vm.assume(owner != address(0));
+        vm.assume(to != address(0));
+        vm.assume(to != owner);
+
+        uint256 existingTokenId = 1;
+        uint256 transferredTokenId = 2;
+
+        _seedOwnerToken(to, existingTokenId);
+        _seedOwnerToken(owner, transferredTokenId);
+
+        uint256 previousToBalance = address(facet).balanceOf(to);
+
+        vm.stopPrank();
+        vm.prank(owner);
+        facet.transferFrom(owner, to, transferredTokenId);
+
+        assertEq(address(facet).balanceOf(to), previousToBalance + 1, "new owner balance");
+        assertEq(
+            address(facet).ownerTokenByIndex(to, previousToBalance), transferredTokenId, "transferred token index for to"
+        );
+        assertEq(
+            address(facet).ownerTokensIndex(transferredTokenId),
+            previousToBalance,
+            "ownerTokensIndex for transferred token"
+        );
+    }
+
+    function testFuzz_ShouldClearApprovalAndEmitTransfer_OnTransferFrom(address owner, address approved, address to, uint256 tokenId)
+        external
+    {
+        vm.assume(owner != address(0));
+        vm.assume(approved != address(0));
+        vm.assume(approved != owner);
+        vm.assume(to != address(0));
+        vm.assume(to != owner);
+        vm.assume(to != approved);
+        tokenId = bound(tokenId, 1, type(uint128).max);
+
+        _seedOwnerToken(owner, tokenId);
+        address(facet).setApproved(tokenId, approved);
+
+        vm.stopPrank();
+        vm.prank(owner);
+
+        vm.expectEmit(true, true, true, true);
+        emit ERC721EnumerableTransferFacet.Transfer(owner, to, tokenId);
+
+        facet.transferFrom(owner, to, tokenId);
+
+        assertEq(address(facet).getApproved(tokenId), address(0), "approval cleared");
+
+        vm.stopPrank();
+        vm.prank(approved);
+
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                ERC721EnumerableTransferFacet.ERC721InsufficientApproval.selector, approved, tokenId
+            )
+        );
+        facet.transferFrom(to, owner, tokenId);
+    }
+
+    function testFuzz_ShouldCallOnERC721Received_SafeTransferFromSimple_WhenReceiverContractAccepts(
+        address owner,
+        uint256 tokenId
+    ) external {
+        vm.assume(owner != address(0));
+        tokenId = bound(tokenId, 1, type(uint128).max);
+
+        _seedOwnerToken(owner, tokenId);
+        ERC721Enumerable_ReceiverMock receiver =
+            new ERC721Enumerable_ReceiverMock(ERC721Enumerable_ReceiverMock.RevertType.None);
+
+        vm.stopPrank();
+        vm.prank(owner);
+
+        vm.expectEmit(true, true, true, true);
+        emit ERC721Enumerable_ReceiverMock.Received(owner, owner, tokenId, "");
+        facet.safeTransferFrom(owner, address(receiver), tokenId);
+
+        assertEq(address(facet).ownerOf(tokenId), address(receiver), "new owner");
+    }
+
+    function testFuzz_ShouldTransferToEOA_SafeTransferFromSimple(address owner, address to, uint256 tokenId) external {
+        vm.assume(owner != address(0));
+        vm.assume(to != address(0));
+        vm.assume(to != owner);
+        vm.assume(to.code.length == 0);
+        tokenId = bound(tokenId, 1, type(uint128).max);
+
+        _seedOwnerToken(owner, tokenId);
+
+        vm.stopPrank();
+        vm.prank(owner);
+
+        facet.safeTransferFrom(owner, to, tokenId);
+
+        assertEq(address(facet).ownerOf(tokenId), to, "new owner");
+        assertEq(address(facet).balanceOf(owner), 0, "old owner balance");
+        assertEq(address(facet).balanceOf(to), 1, "new owner balance");
+    }
+
+    function testFuzz_ShouldTransferToEOA_SafeTransferFromWithData(
+        address owner,
+        address to,
+        uint256 tokenId,
+        bytes calldata data
+    ) external {
+        vm.assume(owner != address(0));
+        vm.assume(to != address(0));
+        vm.assume(to != owner);
+        vm.assume(to.code.length == 0);
+        tokenId = bound(tokenId, 1, type(uint128).max);
+
+        _seedOwnerToken(owner, tokenId);
+
+        vm.stopPrank();
+        vm.prank(owner);
+
+        facet.safeTransferFrom(owner, to, tokenId, data);
+
+        assertEq(address(facet).ownerOf(tokenId), to, "new owner");
+        assertEq(address(facet).balanceOf(owner), 0, "old owner balance");
+        assertEq(address(facet).balanceOf(to), 1, "new owner balance");
+    }
+
+    function testFuzz_ShouldRevert_SafeTransferFrom_WhenToIsZeroAddress(address owner, uint256 tokenId) external {
+        vm.assume(owner != address(0));
+        tokenId = bound(tokenId, 1, type(uint128).max);
+
+        _seedOwnerToken(owner, tokenId);
+
+        vm.stopPrank();
+        vm.prank(owner);
+
+        vm.expectRevert(
+            abi.encodeWithSelector(ERC721EnumerableTransferFacet.ERC721InvalidReceiver.selector, address(0))
+        );
+        facet.safeTransferFrom(owner, address(0), tokenId);
+    }
+
+    function testFuzz_ShouldRevert_SafeTransferFromWithData_WhenToIsZeroAddress(address owner, uint256 tokenId, bytes calldata data)
+        external
+    {
+        vm.assume(owner != address(0));
+        tokenId = bound(tokenId, 1, type(uint128).max);
+
+        _seedOwnerToken(owner, tokenId);
+
+        vm.stopPrank();
+        vm.prank(owner);
+
+        vm.expectRevert(
+            abi.encodeWithSelector(ERC721EnumerableTransferFacet.ERC721InvalidReceiver.selector, address(0))
+        );
+        facet.safeTransferFrom(owner, address(0), tokenId, data);
+    }
+
+    function testFuzz_ShouldRevert_SafeTransferFrom_WhenTokenDoesNotExist(address from, address to, uint256 tokenId)
+        external
+    {
+        vm.assume(from != address(0));
+        vm.assume(to != address(0));
+        tokenId = bound(tokenId, 1, type(uint128).max);
+
+        vm.expectRevert(
+            abi.encodeWithSelector(ERC721EnumerableTransferFacet.ERC721NonexistentToken.selector, tokenId)
+        );
+        facet.safeTransferFrom(from, to, tokenId);
+    }
 }
 

@@ -48,6 +48,8 @@ Transfer
 ├── TransferFrom
 │   ├── when token does not exist
 │   │   └── it should revert with ERC721NonexistentToken
+│   ├── when from is not the current owner
+│   │   └── it should revert with ERC721IncorrectOwner or equivalent
 │   ├── when to is the zero address
 │   │   └── it should revert with ERC721InvalidReceiver
 │   ├── when caller is not owner, not approved, and not operator
@@ -61,6 +63,8 @@ Transfer
 └── SafeTransferFrom
     ├── when token does not exist
     │   └── it should revert with ERC721NonexistentToken
+    ├── when to is an externally owned account
+    │   └── it should transfer ownership, update balances, clear approval, emit Transfer, and not revert
     ├── when to is the zero address
     │   └── it should revert with ERC721InvalidReceiver
     ├── when to is a non-receiver contract
