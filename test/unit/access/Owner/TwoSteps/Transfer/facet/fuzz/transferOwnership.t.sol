@@ -105,9 +105,7 @@ contract TransferOwnership_OwnerTwoStepTransferFacet_Fuzz_Unit_Test is OwnerTwoS
     function testFuzz_ShouldOverwritePendingOwner_TransferOwnership_WhenCalledAgainByOwner(
         address firstPending,
         address secondPending
-    )
-        external
-    {
+    ) external {
         vm.assume(firstPending != address(0));
         vm.assume(secondPending != address(0));
         vm.assume(secondPending != firstPending);
