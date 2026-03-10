@@ -64,6 +64,8 @@ contract GrantRole_AccessControlGrantMod_Fuzz_Unit_Test is AccessControlGrant_Ba
     }
 
     function testFuzz_ShouldReturnTrue_WhenRoleIsSelfAdmin(address caller, address account) external {
+        vm.assume(caller != account);
+
         seedAdminRole(address(harness), MINTER_ROLE, MINTER_ROLE);
         seedRole(address(harness), MINTER_ROLE, caller);
 
