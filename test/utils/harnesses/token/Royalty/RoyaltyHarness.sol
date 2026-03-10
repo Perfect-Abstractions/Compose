@@ -5,12 +5,12 @@ pragma solidity >=0.8.30;
  * https://compose.diamonds
  */
 
-import "../../../../src/token/Royalty/RoyaltyMod.sol" as RoyaltyMod;
+import "src/token/Royalty/RoyaltyMod.sol" as RoyaltyMod;
 
 /**
  * @title RoyaltyHarness
- * @notice Test harness that exposes LibRoyalty's internal functions as external
- * @dev Required for testing since LibRoyalty only has internal functions
+ * @notice Test harness that exposes RoyaltyMod's internal functions as external
+ * @dev Required for testing since RoyaltyMod only has internal functions
  */
 contract RoyaltyHarness {
     /**
@@ -80,3 +80,4 @@ contract RoyaltyHarness {
         return RoyaltyMod.getStorage().tokenRoyaltyInfo[_tokenId].royaltyFraction;
     }
 }
+

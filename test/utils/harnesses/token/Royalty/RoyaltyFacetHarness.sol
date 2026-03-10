@@ -5,7 +5,7 @@ pragma solidity >=0.8.30;
  * https://compose.diamonds
  */
 
-import {RoyaltyFacet} from "../../../../src/token/Royalty/RoyaltyFacet.sol";
+import {RoyaltyFacet} from "src/token/Royalty/RoyaltyFacet.sol";
 
 /**
  * @title RoyaltyFacetHarness
@@ -31,3 +31,4 @@ contract RoyaltyFacetHarness is RoyaltyFacet {
         s.tokenRoyaltyInfo[_tokenId] = RoyaltyInfo(_receiver, _feeNumerator);
     }
 }
+
