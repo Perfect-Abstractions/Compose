@@ -330,7 +330,9 @@ contract Transfer_ERC721EnumerableTransferFacet_Fuzz_Unit_Test is ERC721Enumerab
         vm.prank(owner);
 
         vm.expectRevert(
-            abi.encodeWithSelector(ERC721EnumerableTransferFacet.ERC721IncorrectOwner.selector, wrongFrom, tokenId, owner)
+            abi.encodeWithSelector(
+                ERC721EnumerableTransferFacet.ERC721IncorrectOwner.selector, wrongFrom, tokenId, owner
+            )
         );
         facet.transferFrom(wrongFrom, to, tokenId);
     }
@@ -356,7 +358,9 @@ contract Transfer_ERC721EnumerableTransferFacet_Fuzz_Unit_Test is ERC721Enumerab
 
         assertEq(address(facet).balanceOf(to), previousToBalance + 1, "new owner balance");
         assertEq(
-            address(facet).ownerTokenByIndex(to, previousToBalance), transferredTokenId, "transferred token index for to"
+            address(facet).ownerTokenByIndex(to, previousToBalance),
+            transferredTokenId,
+            "transferred token index for to"
         );
         assertEq(
             address(facet).ownerTokensIndex(transferredTokenId),
@@ -365,9 +369,12 @@ contract Transfer_ERC721EnumerableTransferFacet_Fuzz_Unit_Test is ERC721Enumerab
         );
     }
 
-    function testFuzz_ShouldClearApprovalAndEmitTransfer_OnTransferFrom(address owner, address approved, address to, uint256 tokenId)
-        external
-    {
+    function testFuzz_ShouldClearApprovalAndEmitTransfer_OnTransferFrom(
+        address owner,
+        address approved,
+        address to,
+        uint256 tokenId
+    ) external {
         vm.assume(owner != address(0));
         vm.assume(approved != address(0));
         vm.assume(approved != owner);
@@ -393,9 +400,7 @@ contract Transfer_ERC721EnumerableTransferFacet_Fuzz_Unit_Test is ERC721Enumerab
         vm.prank(approved);
 
         vm.expectRevert(
-            abi.encodeWithSelector(
-                ERC721EnumerableTransferFacet.ERC721InsufficientApproval.selector, approved, tokenId
-            )
+            abi.encodeWithSelector(ERC721EnumerableTransferFacet.ERC721InsufficientApproval.selector, approved, tokenId)
         );
         facet.transferFrom(to, owner, tokenId);
     }
@@ -479,9 +484,11 @@ contract Transfer_ERC721EnumerableTransferFacet_Fuzz_Unit_Test is ERC721Enumerab
         facet.safeTransferFrom(owner, address(0), tokenId);
     }
 
-    function testFuzz_ShouldRevert_SafeTransferFromWithData_WhenToIsZeroAddress(address owner, uint256 tokenId, bytes calldata data)
-        external
-    {
+    function testFuzz_ShouldRevert_SafeTransferFromWithData_WhenToIsZeroAddress(
+        address owner,
+        uint256 tokenId,
+        bytes calldata data
+    ) external {
         vm.assume(owner != address(0));
         tokenId = bound(tokenId, 1, type(uint128).max);
 
@@ -503,9 +510,7 @@ contract Transfer_ERC721EnumerableTransferFacet_Fuzz_Unit_Test is ERC721Enumerab
         vm.assume(to != address(0));
         tokenId = bound(tokenId, 1, type(uint128).max);
 
-        vm.expectRevert(
-            abi.encodeWithSelector(ERC721EnumerableTransferFacet.ERC721NonexistentToken.selector, tokenId)
-        );
+        vm.expectRevert(abi.encodeWithSelector(ERC721EnumerableTransferFacet.ERC721NonexistentToken.selector, tokenId));
         facet.safeTransferFrom(from, to, tokenId);
     }
 }
