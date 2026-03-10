@@ -41,6 +41,10 @@ library OwnerStorageUtils {
         return address(uint160(uint256(vm.load(target, PENDING_OWNER_STORAGE_POSITION))));
     }
 
+    /*//////////////////////////////////////////////////////////////
+                                SETTERS
+    //////////////////////////////////////////////////////////////*/
+
     function setOwner(address target, address value) internal {
         vm.store(target, OWNER_STORAGE_POSITION, bytes32(uint256(uint160(value))));
     }

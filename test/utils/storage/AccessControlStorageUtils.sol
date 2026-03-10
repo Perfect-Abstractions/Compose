@@ -61,6 +61,10 @@ library AccessControlStorageUtils {
         return uint256(vm.load(target, slot));
     }
 
+    /*//////////////////////////////////////////////////////////////
+                                SETTERS
+    //////////////////////////////////////////////////////////////*/
+
     function setHasRole(address target, address account, bytes32 role, bool value) internal {
         bytes32 accountSlot = keccak256(abi.encode(account, uint256(ACCESS_CONTROL_STORAGE_POSITION)));
         bytes32 slot = keccak256(abi.encode(role, accountSlot));

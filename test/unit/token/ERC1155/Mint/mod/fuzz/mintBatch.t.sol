@@ -7,7 +7,7 @@ pragma solidity >=0.8.30;
 
 import {ERC1155MintMod_Base_Test} from "test/unit/token/ERC1155/Mint/ERC1155MintModBase.t.sol";
 import {ERC1155StorageUtils} from "test/utils/storage/ERC1155StorageUtils.sol";
-import {ERC1155ReceiverMock} from "test/mocks/ERC1155ReceiverMock.sol";
+import {ERC1155ReceiverMock} from "test/utils/mocks/ERC1155ReceiverMock.sol";
 import "src/token/ERC1155/Mint/ERC1155MintMod.sol";
 
 /**

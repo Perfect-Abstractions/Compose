@@ -36,16 +36,20 @@ library ERC1155StorageUtils {
         return uint256(vm.load(target, slot));
     }
 
-    function setBalanceOf(address target, uint256 id, address account, uint256 value) internal {
-        bytes32 idSlot = keccak256(abi.encode(id, uint256(ERC1155_STORAGE_POSITION)));
-        bytes32 slot = keccak256(abi.encode(account, idSlot));
-        vm.store(target, slot, bytes32(value));
-    }
-
     function isApprovedForAll(address target, address account, address operator) internal view returns (bool) {
         bytes32 accountSlot = keccak256(abi.encode(account, uint256(ERC1155_STORAGE_POSITION) + 1));
         bytes32 slot = keccak256(abi.encode(operator, accountSlot));
         return uint256(vm.load(target, slot)) != 0;
+    }
+
+    /*//////////////////////////////////////////////////////////////
+                                SETTERS
+    //////////////////////////////////////////////////////////////*/
+
+    function setBalanceOf(address target, uint256 id, address account, uint256 value) internal {
+        bytes32 idSlot = keccak256(abi.encode(id, uint256(ERC1155_STORAGE_POSITION)));
+        bytes32 slot = keccak256(abi.encode(account, idSlot));
+        vm.store(target, slot, bytes32(value));
     }
 
     function setApprovedForAll(address target, address account, address operator, bool value) internal {
