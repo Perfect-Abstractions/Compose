@@ -13,7 +13,7 @@ import "src/interfaceDetection/ERC165/ERC165Mod.sol" as ERC165Mod;
  */
 contract ERC165Harness {
     function initialize() external {
-        // No-op; storage is implicitly available
+        /* No-op; storage is implicitly available */
     }
 
     function registerInterface(bytes4 _interfaceId) external {

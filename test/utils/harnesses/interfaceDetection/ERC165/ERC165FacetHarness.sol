@@ -13,7 +13,7 @@ import {ERC165Facet} from "src/interfaceDetection/ERC165/ERC165Facet.sol";
  */
 contract ERC165FacetHarness is ERC165Facet {
     function initialize() external {
-        // No-op; storage is implicitly available
+        /* No-op; storage is implicitly available */
     }
 
     function registerInterface(bytes4 _interfaceId) external {

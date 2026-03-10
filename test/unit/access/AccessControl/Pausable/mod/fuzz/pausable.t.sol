@@ -7,7 +7,9 @@ pragma solidity >=0.8.30;
 
 import {AccessControlPausable_Base_Test} from "test/unit/access/AccessControl/Pausable/AccessControlPausableBase.t.sol";
 import {AccessControlStorageUtils} from "test/utils/storage/AccessControlStorageUtils.sol";
-import {AccessControlPausableModHarness} from "test/utils/harnesses/access/AccessControl/AccessControlPausableModHarness.sol";
+import {
+    AccessControlPausableModHarness
+} from "test/utils/harnesses/access/AccessControl/AccessControlPausableModHarness.sol";
 
 /**
  *  @dev BTT spec: test/trees/AccessControl.tree
