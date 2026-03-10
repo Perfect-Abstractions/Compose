@@ -112,24 +112,31 @@ Pausable
 ├── PauseRole
 │   ├── when the caller has the admin role for the target role
 │   │   ├── it should set pausedRoles[role] to true
-│   │   └── it should emit a {RolePaused} event
+│   │   ├── it should emit a {RolePaused} event
+│   │   └── when the role is already paused and PauseRole is called again
+│   │       └── it should remain paused (idempotent)
 │   └── when the caller does not have the admin role for the target role
 │       ├── on the facet surface it should revert with {AccessControlUnauthorizedAccount}
 │       └── on the module surface it should follow the current split implementation semantics
 ├── UnpauseRole
 │   ├── when the caller has the admin role for the target role
 │   │   ├── it should set pausedRoles[role] to false
-│   │   └── it should emit a {RoleUnpaused} event
+│   │   ├── it should emit a {RoleUnpaused} event
+│   │   └── when the role is already unpaused and UnpauseRole is called again
+│   │       └── it should remain unpaused (idempotent)
 │   └── when the caller does not have the admin role for the target role
 │       ├── on the facet surface it should revert with {AccessControlUnauthorizedAccount}
 │       └── on the module surface it should follow the current split implementation semantics
-└── RequireRoleNotPaused
-    ├── when the account does not have the role
-    │   └── it should revert with {AccessControlUnauthorizedAccount}
-    ├── when the account has the role and the role is paused
-    │   └── it should revert with {AccessControlRolePaused}
-    └── when the account has the role and the role is not paused
-        └── it should not revert
+├── RequireRoleNotPaused
+│   ├── when the account does not have the role
+│   │   └── it should revert with {AccessControlUnauthorizedAccount}
+│   ├── when the account has the role and the role is paused
+│   │   └── it should revert with {AccessControlRolePaused}
+│   └── when the account has the role and the role is not paused
+│       └── it should not revert
+└── PauseUnpauseCycles
+    └── when multiple pause and unpause cycles are performed for the same role
+        └── it should end in the unpaused state when last action is unpause
 
 Temporal
 ├── Data

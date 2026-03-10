@@ -100,11 +100,27 @@ Enumerable
 │   │   └── it should revert with ERC721OutOfBoundsIndex or equivalent
 │   └── when index is within bounds
 │       └── it should return the tokenId at that index for the owner
-└── TokenByIndex
-    ├── when index is out of bounds
-    │   └── it should revert with ERC721OutOfBoundsIndex or equivalent
-    └── when index is within bounds
-        └── it should return the tokenId at that index in the global list
+├── TokenByIndex
+│   ├── when index is out of bounds
+│   │   └── it should revert with ERC721OutOfBoundsIndex or equivalent
+│   └── when index is within bounds
+│       └── it should return the tokenId at that index in the global list
+├── TransferFrom
+│   ├── when transfer occurs (owner, approved, or operator)
+│   │   └── it should update enumeration (owner's token list and global list)
+│   ├── when to is zero address
+│   │   └── it should revert with ERC721InvalidReceiver
+│   ├── when token does not exist
+│   │   └── it should revert with ERC721NonexistentToken
+│   └── when to is a contract
+│       └── it should call onERC721Received and respect return value or revert
+└── Burn
+    ├── when token does not exist
+    │   └── it should revert with ERC721NonexistentToken
+    ├── when caller is not owner, not approved, and not operator
+    │   └── it should revert with ERC721InsufficientApproval or equivalent
+    └── when caller is owner, approved, or operator
+        └── it should update enumeration (remove from owner list and global list) and burn
 
 Metadata
 ├── Name
