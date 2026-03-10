@@ -61,7 +61,7 @@ contract Integration_RoyaltyMod_Integration_Test is RoyaltyMod_Base_Test {
 
         harness.deleteDefaultRoyalty();
 
-        // token-specific royalties remain unchanged
+        /* token-specific royalties remain unchanged */
         (receiver1, royalty1) = harness.royaltyInfo(token1, salePrice);
         (receiver2, royalty2) = harness.royaltyInfo(token2, salePrice);
         assertEq(receiver1, users.bob, "receiver1 after delete");

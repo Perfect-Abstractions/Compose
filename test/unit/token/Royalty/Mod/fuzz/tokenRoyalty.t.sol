@@ -17,11 +17,9 @@ import "src/token/Royalty/RoyaltyMod.sol" as RoyaltyMod;
 contract TokenRoyalty_RoyaltyMod_Fuzz_Unit_Test is RoyaltyMod_Base_Test {
     /* SetTokenRoyalty */
 
-    function testFuzz_SetTokenRoyalty_SetsReceiverAndFraction(
-        uint256 tokenId,
-        address receiver,
-        uint96 feeNumerator
-    ) external {
+    function testFuzz_SetTokenRoyalty_SetsReceiverAndFraction(uint256 tokenId, address receiver, uint96 feeNumerator)
+        external
+    {
         vm.assume(receiver != ADDRESS_ZERO);
         vm.assume(feeNumerator <= FEE_DENOMINATOR);
 
@@ -86,10 +84,7 @@ contract TokenRoyalty_RoyaltyMod_Fuzz_Unit_Test is RoyaltyMod_Base_Test {
 
     /* ResetTokenRoyalty */
 
-    function testFuzz_ResetTokenRoyalty_NoDefault_ClearsTokenRoyalty(
-        uint256 tokenId,
-        uint96 feeNumerator
-    ) external {
+    function testFuzz_ResetTokenRoyalty_NoDefault_ClearsTokenRoyalty(uint256 tokenId, uint96 feeNumerator) external {
         vm.assume(feeNumerator <= FEE_DENOMINATOR);
 
         harness.setTokenRoyalty(tokenId, users.receiver, feeNumerator);

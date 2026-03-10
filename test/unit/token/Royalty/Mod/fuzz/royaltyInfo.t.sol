@@ -34,11 +34,7 @@ contract RoyaltyInfo_RoyaltyMod_Fuzz_Unit_Test is RoyaltyMod_Base_Test {
         assertEq(royaltyAmount, (salePrice * feeNumerator) / FEE_DENOMINATOR, "royaltyAmount");
     }
 
-    function testFuzz_RoyaltyInfo_OnlyTokenRoyalty(
-        uint256 tokenId,
-        uint96 feeNumerator,
-        uint256 salePrice
-    ) external {
+    function testFuzz_RoyaltyInfo_OnlyTokenRoyalty(uint256 tokenId, uint96 feeNumerator, uint256 salePrice) external {
         vm.assume(feeNumerator <= FEE_DENOMINATOR);
         vm.assume(salePrice <= 1_000_000 ether);
 

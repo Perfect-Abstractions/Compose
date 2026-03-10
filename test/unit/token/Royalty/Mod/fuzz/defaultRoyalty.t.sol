@@ -52,9 +52,7 @@ contract DefaultRoyalty_RoyaltyMod_Fuzz_Unit_Test is RoyaltyMod_Base_Test {
     }
 
     function test_RevertWhen_SetDefaultRoyalty_ZeroReceiver() external {
-        vm.expectRevert(
-            abi.encodeWithSelector(RoyaltyMod.ERC2981InvalidDefaultRoyaltyReceiver.selector, ADDRESS_ZERO)
-        );
+        vm.expectRevert(abi.encodeWithSelector(RoyaltyMod.ERC2981InvalidDefaultRoyaltyReceiver.selector, ADDRESS_ZERO));
         harness.setDefaultRoyalty(ADDRESS_ZERO, 500);
     }
 
