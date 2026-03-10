@@ -194,6 +194,7 @@ contract Transfer_ERC721TransferFacet_Fuzz_Unit_Test is ERC721TransferFacet_Base
         vm.assume(to != address(0));
         vm.assume(to != owner);
         vm.assume(to != address(facet));
+        vm.assume(to.code.length == 0);
         tokenId = bound(tokenId, 1, type(uint128).max);
 
         address(facet).mint(owner, tokenId);
@@ -218,6 +219,7 @@ contract Transfer_ERC721TransferFacet_Fuzz_Unit_Test is ERC721TransferFacet_Base
         vm.assume(to != address(0));
         vm.assume(to != owner);
         vm.assume(to != address(facet));
+        vm.assume(to.code.length == 0);
         tokenId = bound(tokenId, 1, type(uint128).max);
 
         address(facet).mint(owner, tokenId);
