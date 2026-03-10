@@ -36,6 +36,33 @@ contract Transfer_ERC20TransferMod_Fuzz_Unit_Test is ERC20TransferMod_Base_Test 
         harness.transfer(to, value);
     }
 
+    function testFuzz_ShouldReturnTrue_AmountIsZero_NoBalanceChange(
+        address to,
+        uint256 senderBalance,
+        uint256 receiverBalance
+    )
+        external
+        whenReceiverNotZeroAddress
+        givenWhenSenderBalanceGETransferAmount
+    {
+        vm.assume(to != ADDRESS_ZERO);
+        vm.assume(to != users.alice);
+
+        senderBalance = bound(senderBalance, 0, MAX_UINT256 / 2);
+        receiverBalance = bound(receiverBalance, 0, MAX_UINT256 / 2);
+
+        address(harness).mint(users.alice, senderBalance);
+        address(harness).mint(to, receiverBalance);
+
+        vm.expectEmit(address(harness));
+        emit Transfer(users.alice, to, 0);
+        bool result = harness.transfer(to, 0);
+
+        assertEq(result, true, "transfer failed");
+        assertEq(address(harness).balanceOf(users.alice), senderBalance, "balanceOf(users.alice)");
+        assertEq(address(harness).balanceOf(to), receiverBalance, "balanceOf(to)");
+    }
+
     function testFuzz_Transfer(address to, uint256 balance, uint256 value)
         external
         whenReceiverNotZeroAddress

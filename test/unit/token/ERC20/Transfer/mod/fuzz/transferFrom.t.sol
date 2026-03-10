@@ -71,6 +71,45 @@ contract TransferFrom_ERC20TransferMod_Fuzz_Unit_Test is ERC20TransferMod_Base_T
         harness.transferFrom(from, to, value);
     }
 
+    function testFuzz_ShouldReturnTrue_AmountIsZero_NoBalanceChange_NoAllowanceDecrement(
+        address from,
+        address to,
+        uint256 allowance,
+        uint256 fromBalance,
+        uint256 toBalance
+    )
+        external
+        whenSenderNotZeroAddress
+        whenReceiverNotZeroAddress
+        givenWhenSpenderAllowanceGETransferAmount
+        givenWhenSenderBalanceGETransferAmount
+    {
+        vm.assume(from != ADDRESS_ZERO);
+        vm.assume(to != ADDRESS_ZERO);
+        vm.assume(to != from);
+        vm.assume(users.sender != from);
+
+        allowance = bound(allowance, 0, MAX_UINT256);
+        fromBalance = bound(fromBalance, 0, MAX_UINT256 / 2);
+        toBalance = bound(toBalance, 0, MAX_UINT256 / 2);
+
+        address(harness).mint(from, fromBalance);
+        address(harness).mint(to, toBalance);
+        address(harness).setAllowance(from, users.sender, allowance);
+        setMsgSender(users.sender);
+
+        uint256 beforeAllowance = address(harness).allowance(from, users.sender);
+
+        vm.expectEmit(address(harness));
+        emit Transfer(from, to, 0);
+        bool result = harness.transferFrom(from, to, 0);
+
+        assertEq(result, true, "transferFrom failed");
+        assertEq(address(harness).balanceOf(from), fromBalance, "balanceOf(from)");
+        assertEq(address(harness).balanceOf(to), toBalance, "balanceOf(to)");
+        assertEq(address(harness).allowance(from, users.sender), beforeAllowance, "allowance should be unchanged");
+    }
+
     function testFuzz_TransferFrom_InfiniteApproval(address from, address to, uint256 value, uint256 balance)
         external
         whenSenderNotZeroAddress
