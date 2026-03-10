@@ -24,6 +24,10 @@ contract Data_AccessControlDataFacet_Fuzz_Unit_Test is AccessControlData_Base_Te
         seedDefaultAdmin(address(facet));
     }
 
+    function _getDataTarget() internal view override returns (address) {
+        return address(facet);
+    }
+
     function testFuzz_ShouldReturnTrue_HasRole_WhenAccountHasRole(address account, bytes32 role) external {
         address(facet).setHasRole(account, role, true);
 
@@ -48,6 +52,11 @@ contract Data_AccessControlDataFacet_Fuzz_Unit_Test is AccessControlData_Base_Te
             abi.encodeWithSelector(AccessControlDataFacet.AccessControlUnauthorizedAccount.selector, account, role)
         );
         facet.requireRole(role, account);
+    }
+
+    function test_GetRoleAdmin_ReturnsDefaultAdminForNewRole() external view {
+        bytes32 newRole = bytes32(uint256(1));
+        assertEq(facet.getRoleAdmin(newRole), DEFAULT_ADMIN_ROLE, "getRoleAdmin");
     }
 
     function testFuzz_ShouldReturnDefaultAdminRole_GetRoleAdmin_WhenAdminNotSet(bytes32 role) external view {

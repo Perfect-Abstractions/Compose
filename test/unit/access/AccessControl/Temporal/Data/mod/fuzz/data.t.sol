@@ -24,6 +24,19 @@ contract Data_AccessControlTemporalDataMod_Fuzz_Unit_Test is AccessControlTempor
         vm.label(address(harness), "AccessControlTemporalModHarness");
     }
 
+    function test_TemporalRole_IsActive_JustAfterExpiryIsFalse() public {
+        bytes32 role = bytes32(uint256(1));
+        address account = users.alice;
+        uint256 expiry = block.timestamp + 1;
+        seedRole(address(harness), role, account);
+        seedRoleExpiry(address(harness), role, account, expiry);
+
+        vm.warp(expiry + 1);
+        assertTrue(harness.isRoleExpired(role, account), "isRoleExpired");
+        vm.expectRevert(abi.encodeWithSignature("AccessControlRoleExpired(bytes32,address)", role, account));
+        harness.requireValidRole(role, account);
+    }
+
     function testFuzz_ShouldReturnZero_GetRoleExpiry_WhenExpiryNotSet(bytes32 role, address account) external view {
         assertEq(harness.getRoleExpiry(role, account), 0, "getRoleExpiry");
     }

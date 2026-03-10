@@ -83,4 +83,35 @@ contract Pausable_AccessControlPausableMod_Fuzz_Unit_Test is AccessControlPausab
         vm.expectRevert(abi.encodeWithSignature("AccessControlRolePaused(bytes32)", role));
         harness.requireRoleNotPaused(role, account);
     }
+
+    function testFuzz_ShouldEndUnpaused_WhenMultiplePauseUnpauseCycles(bytes32 role) external {
+        vm.startPrank(users.admin);
+        harness.pauseRole(role);
+        harness.unpauseRole(role);
+        harness.pauseRole(role);
+        harness.unpauseRole(role);
+        vm.stopPrank();
+
+        assertEq(harness.isRolePaused(role), false, "role unpaused after cycles");
+    }
+
+    function testFuzz_ShouldRemainPaused_PauseRole_WhenCalledTwice(bytes32 role) external {
+        vm.prank(users.admin);
+        harness.pauseRole(role);
+        vm.prank(users.admin);
+        harness.pauseRole(role);
+
+        assertEq(harness.isRolePaused(role), true, "role paused");
+    }
+
+    function testFuzz_ShouldRemainUnpaused_UnpauseRole_WhenCalledTwice(bytes32 role) external {
+        seedPausedRole(address(harness), role, true);
+
+        vm.prank(users.admin);
+        harness.unpauseRole(role);
+        vm.prank(users.admin);
+        harness.unpauseRole(role);
+
+        assertEq(harness.isRolePaused(role), false, "role unpaused");
+    }
 }

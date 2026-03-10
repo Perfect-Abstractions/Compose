@@ -24,6 +24,21 @@ contract Data_AccessControlTemporalDataFacet_Fuzz_Unit_Test is AccessControlTemp
         vm.label(address(facet), "AccessControlTemporalDataFacet");
     }
 
+    function test_TemporalRole_IsActive_JustAfterExpiryIsFalse() public {
+        bytes32 role = bytes32(uint256(1));
+        address account = users.alice;
+        uint256 expiry = block.timestamp + 1;
+        seedRole(address(facet), role, account);
+        seedRoleExpiry(address(facet), role, account, expiry);
+
+        vm.warp(expiry + 1);
+        assertTrue(facet.isRoleExpired(role, account), "isRoleExpired");
+        vm.expectRevert(
+            abi.encodeWithSelector(AccessControlTemporalDataFacet.AccessControlRoleExpired.selector, role, account)
+        );
+        facet.requireValidRole(role, account);
+    }
+
     function testFuzz_ShouldReturnZero_GetRoleExpiry_WhenExpiryNotSet(bytes32 role, address account) external view {
         assertEq(facet.getRoleExpiry(role, account), 0, "getRoleExpiry");
     }

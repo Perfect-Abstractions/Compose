@@ -91,4 +91,37 @@ contract TransferOwnership_OwnerTwoStepMod_Fuzz_Unit_Test is OwnerTwoStepTransfe
         vm.expectRevert(abi.encodeWithSignature("OwnerUnauthorizedAccount()"));
         harness.acceptOwnership();
     }
+
+    function testFuzz_ShouldRevert_AcceptOwnership_WhenNoPendingTransfer(address caller) external {
+        vm.assume(caller != address(0));
+        seedOwner(address(harness), users.admin);
+        /* no pending owner set */
+
+        vm.prank(caller);
+        vm.expectRevert(abi.encodeWithSignature("OwnerUnauthorizedAccount()"));
+        harness.acceptOwnership();
+    }
+
+    function testFuzz_ShouldOverwritePendingOwner_TransferOwnership_WhenCalledAgainByOwner(
+        address firstPending,
+        address secondPending
+    )
+        external
+    {
+        vm.assume(firstPending != address(0));
+        vm.assume(secondPending != address(0));
+        vm.assume(secondPending != firstPending);
+
+        vm.prank(users.admin);
+        harness.transferOwnership(firstPending);
+        assertEq(OwnerStorageUtils.pendingOwner(address(harness)), firstPending, "pending after first");
+
+        vm.expectEmit(address(harness));
+        emit OwnershipTransferStarted(users.admin, secondPending);
+        vm.prank(users.admin);
+        harness.transferOwnership(secondPending);
+
+        assertEq(OwnerStorageUtils.pendingOwner(address(harness)), secondPending, "pending overwritten");
+        assertEq(harness.owner(), users.admin, "owner unchanged");
+    }
 }

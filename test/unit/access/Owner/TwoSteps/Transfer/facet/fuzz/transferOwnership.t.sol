@@ -91,4 +91,37 @@ contract TransferOwnership_OwnerTwoStepTransferFacet_Fuzz_Unit_Test is OwnerTwoS
         vm.expectRevert(OwnerTwoStepTransferFacet.OwnerUnauthorizedAccount.selector);
         facet.acceptOwnership();
     }
+
+    function testFuzz_ShouldRevert_AcceptOwnership_WhenNoPendingTransfer(address caller) external {
+        vm.assume(caller != address(0));
+        seedOwner(address(facet), users.admin);
+        /* no pending owner set */
+
+        vm.prank(caller);
+        vm.expectRevert(OwnerTwoStepTransferFacet.OwnerUnauthorizedAccount.selector);
+        facet.acceptOwnership();
+    }
+
+    function testFuzz_ShouldOverwritePendingOwner_TransferOwnership_WhenCalledAgainByOwner(
+        address firstPending,
+        address secondPending
+    )
+        external
+    {
+        vm.assume(firstPending != address(0));
+        vm.assume(secondPending != address(0));
+        vm.assume(secondPending != firstPending);
+
+        vm.prank(users.admin);
+        facet.transferOwnership(firstPending);
+        assertEq(OwnerStorageUtils.pendingOwner(address(facet)), firstPending, "pending after first");
+
+        vm.expectEmit(address(facet));
+        emit OwnershipTransferStarted(users.admin, secondPending);
+        vm.prank(users.admin);
+        facet.transferOwnership(secondPending);
+
+        assertEq(OwnerStorageUtils.pendingOwner(address(facet)), secondPending, "pending overwritten");
+        assertEq(OwnerStorageUtils.owner(address(facet)), users.admin, "owner unchanged");
+    }
 }

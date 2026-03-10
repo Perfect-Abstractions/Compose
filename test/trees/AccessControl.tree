@@ -4,6 +4,8 @@ Data
 │   │   └── it should return true
 │   ├── when the account has not been granted the role
 │   │   └── it should return false
+│   ├── when the role has never been granted to any account
+│   │   └── it should return false
 │   └── when the account is the zero address
 │       └── it should return false
 └── RequireRole

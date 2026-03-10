@@ -108,4 +108,35 @@ contract Pausable_AccessControlPausableFacet_Fuzz_Unit_Test is AccessControlPaus
         vm.expectRevert(abi.encodeWithSelector(AccessControlPausableFacet.AccessControlRolePaused.selector, role));
         facet.requireRoleNotPaused(role, account);
     }
+
+    function testFuzz_ShouldEndUnpaused_WhenMultiplePauseUnpauseCycles(bytes32 role) external {
+        vm.startPrank(users.admin);
+        facet.pauseRole(role);
+        facet.unpauseRole(role);
+        facet.pauseRole(role);
+        facet.unpauseRole(role);
+        vm.stopPrank();
+
+        assertEq(facet.isRolePaused(role), false, "role unpaused after cycles");
+    }
+
+    function testFuzz_ShouldRemainPaused_PauseRole_WhenCalledTwice(bytes32 role) external {
+        vm.prank(users.admin);
+        facet.pauseRole(role);
+        vm.prank(users.admin);
+        facet.pauseRole(role);
+
+        assertEq(facet.isRolePaused(role), true, "role paused");
+    }
+
+    function testFuzz_ShouldRemainUnpaused_UnpauseRole_WhenCalledTwice(bytes32 role) external {
+        seedPausedRole(address(facet), role, true);
+
+        vm.prank(users.admin);
+        facet.unpauseRole(role);
+        vm.prank(users.admin);
+        facet.unpauseRole(role);
+
+        assertEq(facet.isRolePaused(role), false, "role unpaused");
+    }
 }

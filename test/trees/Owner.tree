@@ -42,7 +42,9 @@ TwoSteps
 │   │   ├── when the caller is the owner
 │   │   │   ├── it should set pendingOwner to the new address
 │   │   │   ├── it should emit an {OwnershipTransferStarted} event
-│   │   │   └── it should leave the current owner unchanged until acceptance
+│   │   │   ├── it should leave the current owner unchanged until acceptance
+│   │   │   └── when a pending transfer already exists
+│   │   │       └── it should overwrite pendingOwner and emit {OwnershipTransferStarted}
 │   │   └── when the caller is not the owner
 │   │       └── it should revert with {OwnerUnauthorizedAccount}
 │   └── AcceptOwnership
@@ -50,7 +52,9 @@ TwoSteps
 │       │   ├── it should set the owner to the pending owner
 │       │   ├── it should clear the pending owner to zero
 │       │   └── it should emit an {OwnershipTransferred} event
-│       └── when the caller is not the pending owner
+│       ├── when the caller is not the pending owner
+│       │   └── it should revert with {OwnerUnauthorizedAccount}
+│       └── when no transfer is pending
 │           └── it should revert with {OwnerUnauthorizedAccount}
 └── Renounce
     └── RenounceOwnership

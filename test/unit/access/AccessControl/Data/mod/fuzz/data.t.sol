@@ -24,6 +24,10 @@ contract Data_AccessControlMod_Fuzz_Unit_Test is AccessControlData_Base_Test {
         seedDefaultAdmin(address(harness));
     }
 
+    function _getDataTarget() internal view override returns (address) {
+        return address(harness);
+    }
+
     function testFuzz_ShouldReturnTrue_HasRole_WhenAccountHasRole(address account, bytes32 role) external {
         address(harness).setHasRole(account, role, true);
 
@@ -46,6 +50,11 @@ contract Data_AccessControlMod_Fuzz_Unit_Test is AccessControlData_Base_Test {
     function testFuzz_ShouldRevert_RequireRole_WhenAccountDoesNotHaveRole(address account, bytes32 role) external {
         vm.expectRevert(abi.encodeWithSignature("AccessControlUnauthorizedAccount(address,bytes32)", account, role));
         harness.requireRole(role, account);
+    }
+
+    function test_GetRoleAdmin_ReturnsDefaultAdminForNewRole() external view {
+        bytes32 newRole = bytes32(uint256(1));
+        assertEq(address(harness).adminRole(newRole), DEFAULT_ADMIN_ROLE, "getRoleAdmin");
     }
 
     function testFuzz_ShouldReturnDefaultAdminRole_GetRoleAdmin_WhenAdminNotSet(bytes32 role) external view {
