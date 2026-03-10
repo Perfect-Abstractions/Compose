@@ -8,9 +8,7 @@ pragma solidity >=0.8.30;
 import {
     ERC721EnumerableTransferFacet_Base_Test
 } from "test/unit/token/ERC721/Enumerable/ERC721EnumerableTransferFacetBase.t.sol";
-import {
-    ERC721EnumerableTransferFacet
-} from "src/token/ERC721/Enumerable/Transfer/ERC721EnumerableTransferFacet.sol";
+import {ERC721EnumerableTransferFacet} from "src/token/ERC721/Enumerable/Transfer/ERC721EnumerableTransferFacet.sol";
 
 /**
  *  @dev BTT spec: test/trees/ERC721.tree

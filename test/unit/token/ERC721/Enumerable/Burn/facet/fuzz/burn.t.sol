@@ -134,7 +134,7 @@ contract Burn_ERC721EnumerableBurnFacet_Fuzz_Unit_Test is ERC721EnumerableBurnFa
         assertEq(address(facet).ownerTokensIndex(tokenId3), 1, "ownerTokensIndex tokenId3");
 
         assertEq(address(facet).allTokensLength(), 2, "allTokens length");
-        // Ensure indices are in range and consistent
+        /* Ensure indices are in range and consistent */
         uint256 idx1 = address(facet).allTokensIndex(tokenId1);
         uint256 idx3 = address(facet).allTokensIndex(tokenId3);
         assertLt(idx1, 2, "allTokensIndex tokenId1 in range");

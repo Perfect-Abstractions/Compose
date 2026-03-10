@@ -97,7 +97,7 @@ library ERC721StorageUtils {
         uint256 currentBalance = balanceOf(target, owner);
         setBalanceOf(target, owner, currentBalance - 1);
 
-        // Clear single-token approval
+        /* Clear single-token approval */
         setApproved(target, tokenId, address(0));
     }
 
@@ -130,7 +130,7 @@ library ERC721StorageUtils {
     }
 
     function allTokensLength(address target) internal view returns (uint256) {
-        // Dynamic array length is stored at the base slot
+        /* Dynamic array length is stored at the base slot */
         bytes32 slot = bytes32(uint256(ERC721_ENUMERABLE_STORAGE_POSITION) + 2);
         return uint256(vm.load(target, slot));
     }
@@ -154,9 +154,10 @@ library ERC721StorageUtils {
     function pushAllToken(address target, uint256 tokenId) internal {
         uint256 length = allTokensLength(target);
 
-        // Dynamic array layout:
-        // - length stored at slot `p`
-        // - elements stored starting at slot `keccak256(abi.encode(p)) + index`
+        /* Dynamic array layout:
+         * - length stored at slot `p`
+         * - elements stored starting at slot `keccak256(abi.encode(p)) + index`
+         */
         bytes32 arraySlot = bytes32(uint256(ERC721_ENUMERABLE_STORAGE_POSITION) + 2);
         bytes32 baseSlot = keccak256(abi.encode(arraySlot));
         bytes32 elementSlot = bytes32(uint256(baseSlot) + length);
@@ -164,7 +165,7 @@ library ERC721StorageUtils {
         vm.store(target, elementSlot, bytes32(tokenId));
         vm.store(target, arraySlot, bytes32(length + 1));
 
-        // Track index
+        /* Track index */
         bytes32 indexSlot = keccak256(abi.encode(tokenId, uint256(ERC721_ENUMERABLE_STORAGE_POSITION) + 3));
         vm.store(target, indexSlot, bytes32(length));
     }

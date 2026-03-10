@@ -143,9 +143,7 @@ contract Burn_ERC721BurnFacet_Fuzz_Unit_Test is ERC721BurnFacet_Base_Test {
         ids[0] = existingTokenId;
         ids[1] = nonexistentTokenId;
 
-        vm.expectRevert(
-            abi.encodeWithSelector(ERC721BurnFacet.ERC721NonexistentToken.selector, nonexistentTokenId)
-        );
+        vm.expectRevert(abi.encodeWithSelector(ERC721BurnFacet.ERC721NonexistentToken.selector, nonexistentTokenId));
         facet.burnBatch(ids);
     }
 
@@ -172,9 +170,7 @@ contract Burn_ERC721BurnFacet_Fuzz_Unit_Test is ERC721BurnFacet_Base_Test {
         ids[0] = tokenId1;
         ids[1] = tokenId2;
 
-        vm.expectRevert(
-            abi.encodeWithSelector(ERC721BurnFacet.ERC721InsufficientApproval.selector, caller, tokenId1)
-        );
+        vm.expectRevert(abi.encodeWithSelector(ERC721BurnFacet.ERC721InsufficientApproval.selector, caller, tokenId1));
         facet.burnBatch(ids);
     }
 }

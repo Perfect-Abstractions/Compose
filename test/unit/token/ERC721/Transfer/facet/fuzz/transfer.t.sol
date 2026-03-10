@@ -189,11 +189,7 @@ contract Transfer_ERC721TransferFacet_Fuzz_Unit_Test is ERC721TransferFacet_Base
         assertEq(address(facet).ownerOf(tokenId), to, "new owner");
     }
 
-    function testFuzz_ShouldSafeTransfer_WhenReceiverIsEOA(
-        address owner,
-        address to,
-        uint256 tokenId
-    ) external {
+    function testFuzz_ShouldSafeTransfer_WhenReceiverIsEOA(address owner, address to, uint256 tokenId) external {
         vm.assume(owner != address(0));
         vm.assume(to != address(0));
         vm.assume(to != owner);

@@ -55,7 +55,7 @@ contract Transfer_ERC721EnumerableTransferFacet_Fuzz_Unit_Test is ERC721Enumerab
     using ERC721StorageUtils for address;
 
     function _seedOwnerToken(address owner, uint256 tokenId) internal {
-        // push into ownerTokens and allTokens arrays
+        /* push into ownerTokens and allTokens arrays */
         uint256 ownerIndex = address(facet).balanceOf(owner);
         address(facet).setOwnerTokenByIndex(owner, ownerIndex, tokenId);
         address(facet).setOwnerTokensIndex(tokenId, ownerIndex);
@@ -70,12 +70,12 @@ contract Transfer_ERC721EnumerableTransferFacet_Fuzz_Unit_Test is ERC721Enumerab
     function _seedTwoOwnerTokens(address owner, uint256 firstTokenId, uint256 secondTokenId) internal {
         uint256 ownerIndex = address(facet).balanceOf(owner);
 
-        // first token
+        /* first token */
         address(facet).setOwnerTokenByIndex(owner, ownerIndex, firstTokenId);
         address(facet).setOwnerTokensIndex(firstTokenId, ownerIndex);
         address(facet).setBalanceOf(owner, ownerIndex + 1);
 
-        // second token
+        /* second token */
         address(facet).setOwnerTokenByIndex(owner, ownerIndex + 1, secondTokenId);
         address(facet).setOwnerTokensIndex(secondTokenId, ownerIndex + 1);
         address(facet).setBalanceOf(owner, ownerIndex + 2);
@@ -110,9 +110,7 @@ contract Transfer_ERC721EnumerableTransferFacet_Fuzz_Unit_Test is ERC721Enumerab
         assertEq(address(facet).balanceOf(to), 1, "new owner balance");
     }
 
-    function testFuzz_ShouldUpdateEnumerationOnTransfer_WhenMovingMiddleToken(address owner, address to)
-        external
-    {
+    function testFuzz_ShouldUpdateEnumerationOnTransfer_WhenMovingMiddleToken(address owner, address to) external {
         vm.assume(owner != address(0));
         vm.assume(to != address(0));
         vm.assume(to != owner);
@@ -126,10 +124,10 @@ contract Transfer_ERC721EnumerableTransferFacet_Fuzz_Unit_Test is ERC721Enumerab
         vm.prank(owner);
         facet.transferFrom(owner, to, firstTokenId);
 
-        // original owner should now only own the second token at index 0
+        /* original owner should now only own the second token at index 0 */
         assertEq(address(facet).balanceOf(owner), 1, "old owner balance");
         assertEq(address(facet).ownerTokenByIndex(owner, 0), secondTokenId, "remaining token");
-        // new owner should own the first token
+        /* new owner should own the first token */
         assertEq(address(facet).balanceOf(to), 1, "new owner balance");
         assertEq(address(facet).ownerOf(firstTokenId), to, "transferred token owner");
     }
@@ -178,7 +176,9 @@ contract Transfer_ERC721EnumerableTransferFacet_Fuzz_Unit_Test is ERC721Enumerab
         vm.stopPrank();
         vm.prank(owner);
 
-        vm.expectRevert(abi.encodeWithSelector(ERC721EnumerableTransferFacet.ERC721InvalidReceiver.selector, address(0)));
+        vm.expectRevert(
+            abi.encodeWithSelector(ERC721EnumerableTransferFacet.ERC721InvalidReceiver.selector, address(0))
+        );
         facet.transferFrom(owner, address(0), tokenId);
     }
 

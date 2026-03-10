@@ -37,7 +37,7 @@ contract Data_ERC721EnumerableDataFacet_Fuzz_Unit_Test is ERC721EnumerableDataFa
         balance = bound(balance, 0, 10);
         index = bound(index, balance, type(uint256).max);
 
-        // Seed owner balance without ownerTokens to hit out-of-bounds branch
+        /* Seed owner balance without ownerTokens to hit out-of-bounds branch */
         address(facet).setBalanceOf(owner, balance);
 
         vm.expectRevert(abi.encodeWithSelector(ERC721EnumerableDataFacet.ERC721OutOfBoundsIndex.selector, owner, index));

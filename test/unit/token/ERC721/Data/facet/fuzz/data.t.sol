@@ -19,7 +19,7 @@ contract Data_ERC721DataFacet_Fuzz_Unit_Test is ERC721DataFacet_Base_Test {
         vm.assume(owner != address(0));
         count = bound(count, 0, 10);
 
-        // Seed balances by minting sequential tokenIds to the same owner.
+        /* Seed balances by minting sequential tokenIds to the same owner. */
         for (uint256 i; i < count; i++) {
             address(facet).mint(owner, i + 1);
         }
@@ -73,10 +73,9 @@ contract Data_ERC721DataFacet_Fuzz_Unit_Test is ERC721DataFacet_Base_Test {
         assertEq(result, approved, "isApprovedForAll(owner, operator)");
     }
 
-    function testFuzz_ShouldReturnFalse_IsApprovedForAll_WhenNotPreviouslyApproved(
-        address owner,
-        address operator
-    ) external {
+    function testFuzz_ShouldReturnFalse_IsApprovedForAll_WhenNotPreviouslyApproved(address owner, address operator)
+        external
+    {
         vm.assume(owner != address(0));
         vm.assume(operator != address(0));
         vm.assume(owner != operator);

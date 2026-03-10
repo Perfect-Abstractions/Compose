@@ -37,7 +37,7 @@ contract Metadata_ERC721MetadataFacet_Fuzz_Unit_Test is ERC721MetadataFacet_Base
         vm.assume(owner != address(0));
         tokenId = bound(tokenId, 1, type(uint128).max);
 
-        // seed ownership without touching metadata baseURI (remains empty)
+        /* seed ownership without touching metadata baseURI (remains empty) */
         _mint(owner, tokenId);
 
         string memory uri = facet.tokenURI(tokenId);

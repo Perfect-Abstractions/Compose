@@ -40,7 +40,7 @@ contract ERC721MetadataFacet {
         mapping(uint256 tokenId => address approved) approved;
     }
 
-       /**
+    /**
      * @notice Returns a pointer to the ERC-721 storage struct.
      * @dev Uses inline assembly to access the storage slot defined by STORAGE_POSITION.
      * @return s The ERC721Storage struct in storage.
