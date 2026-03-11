@@ -83,10 +83,11 @@ contract ERC6909BurnFacet {
      * @param _amount The amount of tokens to burn.
      */
     function burnFrom(address _from, uint256 _id, uint256 _amount) external {
-        ERC6909Storage storage s = getStorage();
         if (_from == address(0)) {
             revert ERC6909InvalidSender(_from);
         }
+
+        ERC6909Storage storage s = getStorage();
 
         uint256 currentAllowance = s.allowance[_from][msg.sender][_id];
 
