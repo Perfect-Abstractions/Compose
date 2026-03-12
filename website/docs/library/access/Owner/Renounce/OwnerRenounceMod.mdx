@@ -1,0 +1,195 @@
+---
+sidebar_position: 100
+title: "OwnerRenounceMod"
+description: "Renounce ownership of the contract"
+gitSource: "https://github.com/Perfect-Abstractions/Compose/tree/main/src/access/Owner/Renounce/OwnerRenounceMod.sol"
+---
+
+import DocSubtitle  from '@site/src/components/docs/DocSubtitle';
+import Badge from '@site/src/components/ui/Badge';
+import Callout from '@site/src/components/ui/Callout';
+import CalloutBox from '@site/src/components/ui/CalloutBox';
+import Accordion, { AccordionGroup } from '@site/src/components/ui/Accordion';
+import PropertyTable from '@site/src/components/api/PropertyTable';
+import ExpandableCode from '@site/src/components/code/ExpandableCode';
+import CodeShowcase from '@site/src/components/code/CodeShowcase';
+import RelatedDocs from '@site/src/components/docs/RelatedDocs';
+import WasThisHelpful from '@site/src/components/docs/WasThisHelpful';
+import LastUpdated from '@site/src/components/docs/LastUpdated';
+import ReadingTime from '@site/src/components/docs/ReadingTime';
+import GradientText from '@site/src/components/ui/GradientText';
+import GradientButton from '@site/src/components/ui/GradientButton';
+
+<DocSubtitle>
+Renounce ownership of the contract
+</DocSubtitle>
+
+<Callout type="info" title="Key Features">
+- Provides the `renounceOwnership` function to permanently relinquish ownership.
+- Uses the diamond storage pattern for ownership state.
+- Disables all owner-restricted functions after execution.
+- Emits an `OwnershipTransferred` event upon successful renunciation.
+</Callout>
+
+<Callout type="info" title="Module Usage">
+This module provides internal functions for use in your custom facets. Import it to access shared logic and storage.
+</Callout>
+
+## Overview
+
+This module provides logic to renounce ownership of the diamond. Calling `renounceOwnership` sets the owner to address(0), effectively disabling all owner-restricted functions. Changes to ownership are immediately visible to all facets interacting with the diamond's storage.
+
+---
+
+## Storage
+
+### OwnerStorage
+
+storage-location: erc8042:erc173.owner
+
+<ExpandableCode language="solidity" maxLines={15} title="Definition">
+{`struct OwnerStorage {
+    address owner;
+}`}
+</ExpandableCode>
+
+### State Variables
+
+<PropertyTable
+  properties={[
+    {
+      name: "STORAGE_POSITION",
+      type: "bytes32",
+      description: "Diamond storage slot position for this module (Value: `keccak256(\"erc173.owner\")`)"
+    }
+  ]}
+  showRequired={false}
+/>
+
+## Functions
+
+### getStorage
+
+Returns a pointer to the ERC-173 storage struct. Uses inline assembly to access the storage slot defined by STORAGE_POSITION.
+
+<ExpandableCode language="solidity" maxLines={8}>
+{`function getStorage() pure returns (OwnerStorage storage s);`}
+</ExpandableCode>
+
+**Returns:**
+
+<PropertyTable
+  properties={[
+    {
+      name: "s",
+      type: "OwnerStorage",
+      description: "The OwnerStorage struct in storage."
+    }
+  ]}
+  showRequired={false}
+/>
+
+---
+### renounceOwnership
+
+Renounce ownership of the contract. Sets the owner to address(0), disabling all functions restricted to the owner.
+
+<ExpandableCode language="solidity" maxLines={8}>
+{`function renounceOwnership() ;`}
+</ExpandableCode>
+
+## Events
+
+<AccordionGroup>
+  <Accordion title="OwnershipTransferred" defaultOpen={false}>
+    <div style={{marginBottom: "1rem"}}>
+      This emits when ownership of a contract changes.
+    </div>
+
+    <div style={{marginBottom: "1rem"}}>
+      <strong>Signature:</strong>
+      <ExpandableCode language="solidity" maxLines={5}>
+{`event OwnershipTransferred(address indexed previousOwner, address indexed newOwner);`}
+      </ExpandableCode>
+    </div>
+
+  </Accordion>
+</AccordionGroup>
+
+## Errors
+
+<AccordionGroup>
+  <Accordion title="OwnerUnauthorizedAccount" defaultOpen={false}>
+
+    <div>
+      <strong>Signature:</strong>
+      <ExpandableCode language="solidity" maxLines={5}>
+error OwnerUnauthorizedAccount();
+      </ExpandableCode>
+    </div>
+  </Accordion>
+</AccordionGroup>
+
+<!-- Usage Example section commented out for now -->
+<!--
+## Usage Example
+
+<ExpandableCode language="solidity" maxLines={20} title="Example Implementation">
+{`pragma solidity >=0.8.30;
+
+import {OwnerRenounceMod} from "@compose/access/Owner/Renounce/OwnerRenounceMod";
+
+contract MyOwnerFacet {
+    OwnerRenounceMod private ownerRenounceMod;
+
+    constructor(address _diamondAddress) {
+        // Assuming OwnerRenounceMod is added to the diamond and its implementation address is known.
+        // In a real scenario, you would get this address via a diamond storage lookup or initialization.
+        // For this example, we'll use a placeholder.
+        address ownerRenounceModAddress = _diamondAddress; // Placeholder address
+        ownerRenounceMod = OwnerRenounceMod(ownerRenounceModAddress);
+    }
+
+    /**
+     * @notice Renounces ownership of the diamond.
+     */
+    function renounceDiamondOwnership() external {
+        // Call the internal function to renounce ownership.
+        ownerRenounceMod.renounceOwnership();
+    }
+}`}
+</ExpandableCode>
+-->
+
+## Best Practices
+
+<Callout type="tip" title="Best Practice">
+- Call `renounceOwnership` only when ownership is no longer required.
+- Ensure all critical owner-only functions are migrated or removed before renouncing ownership.
+- Verify the `OwnerStorage` struct layout compatibility when upgrading facets.
+</Callout>
+
+## Integration Notes
+
+<Callout type="success" title="Shared Storage">
+This module interacts with diamond storage at the `STORAGE_POSITION` defined by `keccak2535.owner`. It directly modifies the `owner` field within the `OwnerStorage` struct. All facets that read this storage position will immediately see the owner address updated to `address(0)` after `renounceOwnership` is called.
+</Callout>
+
+<div style={{marginTop: "3rem", paddingTop: "2rem", borderTop: "1px solid var(--ifm-color-emphasis-200)"}}>
+  <RelatedDocs
+    items={[
+      {
+        title: "OwnerDataMod",
+        href: "/docs/library/access/Owner/Data/OwnerDataMod",
+        description: "Related module in access",
+        icon: "📦"
+      }
+    ]}
+  />
+</div>
+
+<div style={{marginTop: "3rem", paddingTop: "2rem", borderTop: "1px solid var(--ifm-color-emphasis-200)"}}>
+  <WasThisHelpful pageId="OwnerRenounceMod" />
+</div>
+
+<LastUpdated date="2026-03-12T19:46:43.164Z" />

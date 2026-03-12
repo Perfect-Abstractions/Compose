@@ -1,0 +1,288 @@
+---
+sidebar_position: 200
+title: "ERC721TransferMod"
+description: "Transfers ERC-721 tokens within a diamond"
+gitSource: "https://github.com/Perfect-Abstractions/Compose/tree/main/src/token/ERC721/Transfer/ERC721TransferMod.sol"
+---
+
+import DocSubtitle  from '@site/src/components/docs/DocSubtitle';
+import Badge from '@site/src/components/ui/Badge';
+import Callout from '@site/src/components/ui/Callout';
+import CalloutBox from '@site/src/components/ui/CalloutBox';
+import Accordion, { AccordionGroup } from '@site/src/components/ui/Accordion';
+import PropertyTable from '@site/src/components/api/PropertyTable';
+import ExpandableCode from '@site/src/components/code/ExpandableCode';
+import CodeShowcase from '@site/src/components/code/CodeShowcase';
+import RelatedDocs from '@site/src/components/docs/RelatedDocs';
+import WasThisHelpful from '@site/src/components/docs/WasThisHelpful';
+import LastUpdated from '@site/src/components/docs/LastUpdated';
+import ReadingTime from '@site/src/components/docs/ReadingTime';
+import GradientText from '@site/src/components/ui/GradientText';
+import GradientButton from '@site/src/components/ui/GradientButton';
+
+<DocSubtitle>
+Transfers ERC-721 tokens within a diamond
+</DocSubtitle>
+
+<Callout type="info" title="Key Features">
+- Exposes `internal` functions for direct use within facets.
+- Utilizes the diamond storage pattern for shared state.
+- Implements core ERC-721 transfer logic with necessary validations.
+- Emits `Transfer` events upon successful token transfers.
+</Callout>
+
+<Callout type="info" title="Module Usage">
+This module provides internal functions for use in your custom facets. Import it to access shared logic and storage.
+</Callout>
+
+## Overview
+
+This module provides internal functions for transferring ERC-721 token ownership. Facets can import and utilize this module to manage token transfers, leveraging shared diamond storage. It ensures that token ownership changes are atomic and visible across all interacting facets.
+
+---
+
+## Storage
+
+### ERC721Storage
+
+Storage layout for ERC-721 token management. Defines ownership, balances, approvals, and operator mappings per ERC-721 standard. storage-location: erc8042:erc721
+
+<ExpandableCode language="solidity" maxLines={15} title="Definition">
+{`struct ERC721Storage {
+    mapping(uint256 tokenId => address owner) ownerOf;
+    mapping(address owner => uint256 balance) balanceOf;
+    mapping(address owner => mapping(address operator => bool approved)) isApprovedForAll;
+    mapping(uint256 tokenId => address approved) approved;
+}`}
+</ExpandableCode>
+
+### State Variables
+
+<PropertyTable
+  properties={[
+    {
+      name: "STORAGE_POSITION",
+      type: "bytes32",
+      description: "Diamond storage slot position for this module (Value: `keccak256(\"erc721\")`)"
+    }
+  ]}
+  showRequired={false}
+/>
+
+## Functions
+
+### getStorage
+
+Returns the ERC-721 storage struct from its predefined slot. Uses inline assembly to access diamond storage location.
+
+<ExpandableCode language="solidity" maxLines={8}>
+{`function getStorage() pure returns (ERC721Storage storage s);`}
+</ExpandableCode>
+
+**Returns:**
+
+<PropertyTable
+  properties={[
+    {
+      name: "s",
+      type: "ERC721Storage",
+      description: "The storage reference for ERC-721 state variables."
+    }
+  ]}
+  showRequired={false}
+/>
+
+---
+### transferFrom
+
+Transfers ownership of a token ID from one address to another. Validates ownership, approval, and receiver address before updating state.
+
+<ExpandableCode language="solidity" maxLines={8}>
+{`function transferFrom(address _from, address _to, uint256 _tokenId) ;`}
+</ExpandableCode>
+
+**Parameters:**
+
+<PropertyTable
+  properties={[
+    {
+      name: "_from",
+      type: "address",
+      description: "The current owner of the token."
+    },
+    {
+      name: "_to",
+      type: "address",
+      description: "The address that will receive the token."
+    },
+    {
+      name: "_tokenId",
+      type: "uint256",
+      description: "The ID of the token being transferred."
+    }
+  ]}
+  showRequired={false}
+/>
+
+## Events
+
+<AccordionGroup>
+  <Accordion title="Transfer" defaultOpen={false}>
+    <div style={{marginBottom: "1rem"}}>
+      Emitted when ownership of a token changes, including minting and burning.
+    </div>
+
+    <div style={{marginBottom: "1rem"}}>
+      <strong>Signature:</strong>
+      <ExpandableCode language="solidity" maxLines={5}>
+{`event Transfer(address indexed _from, address indexed _to, uint256 indexed _tokenId);`}
+      </ExpandableCode>
+    </div>
+
+    <div style={{marginBottom: "1rem"}}>
+      <strong>Parameters:</strong>
+      <PropertyTable
+        properties={[
+          {
+            name: "_from",
+            type: "address",
+            description: "The address transferring the token, or zero for minting."
+          },
+          {
+            name: "_to",
+            type: "address",
+            description: "The address receiving the token, or zero for burning."
+          },
+          {
+            name: "_tokenId",
+            type: "uint256",
+            description: "The ID of the token being transferred."
+          }
+        ]}
+        showRequired={false}
+      />
+    </div>
+  </Accordion>
+</AccordionGroup>
+
+## Errors
+
+<AccordionGroup>
+  <Accordion title="ERC721IncorrectOwner" defaultOpen={false}>
+    <div style={{marginBottom: "1rem"}}>
+      Thrown when the sender is not the owner of the token.
+    </div>
+
+    <div>
+      <strong>Signature:</strong>
+      <ExpandableCode language="solidity" maxLines={5}>
+error ERC721IncorrectOwner(address _sender, uint256 _tokenId, address _owner);
+      </ExpandableCode>
+    </div>
+  </Accordion>
+  <Accordion title="ERC721InvalidReceiver" defaultOpen={false}>
+    <div style={{marginBottom: "1rem"}}>
+      Thrown when the receiver address is invalid (e.g., zero address).
+    </div>
+
+    <div>
+      <strong>Signature:</strong>
+      <ExpandableCode language="solidity" maxLines={5}>
+error ERC721InvalidReceiver(address _receiver);
+      </ExpandableCode>
+    </div>
+  </Accordion>
+  <Accordion title="ERC721NonexistentToken" defaultOpen={false}>
+    <div style={{marginBottom: "1rem"}}>
+      Thrown when attempting to interact with a non-existent token.
+    </div>
+
+    <div>
+      <strong>Signature:</strong>
+      <ExpandableCode language="solidity" maxLines={5}>
+error ERC721NonexistentToken(uint256 _tokenId);
+      </ExpandableCode>
+    </div>
+  </Accordion>
+</AccordionGroup>
+
+<!-- Usage Example section commented out for now -->
+<!--
+## Usage Example
+
+<ExpandableCode language="solidity" maxLines={20} title="Example Implementation">
+{`pragma solidity >=0.8.30;
+
+import {ERC721TransferMod, ERC721Storage} from "@compose/token/ERC721/Transfer/ERC721TransferMod";
+
+contract MyERC721Facet {
+    // Assume ERC721Storage is correctly initialized in diamond storage
+    // and accessed via getStorage()
+
+    function safeTransfer(address _from, address _to, uint256 _tokenId) external {
+        ERC721Storage storage storageRef = ERC721TransferMod.getStorage();
+
+        // Call the internal transfer function from the module
+        ERC721TransferMod.transferFrom(_from, _to, _tokenId);
+
+        // Additional logic specific to this facet can go here
+    }
+
+    // Example of accessing storage (though not directly needed for transfer)
+    function getERC721Storage() external pure returns (ERC721Storage memory) {
+        return ERC721TransferMod.getStorage();
+    }
+}`}
+</ExpandableCode>
+-->
+
+## Best Practices
+
+<Callout type="tip" title="Best Practice">
+- Call `transferFrom` only after verifying caller permissions and token ownership.
+- Handle custom errors like `ERC721IncorrectOwner`, `ERC721InvalidReceiver`, and `ERC721NonexistentToken`.
+- Ensure the ERC721Storage is correctly initialized in the diamond's storage layout.
+</Callout>
+
+## Integration Notes
+
+<Callout type="success" title="Shared Storage">
+This module interacts with diamond storage at the `STORAGE_POSITION` defined by `keccak256(\"erc721\")`. All functions, including `transferFrom`, are internal and directly manipulate the `ERC721Storage` struct within the diamond's shared storage. Changes to token ownership made via this module are immediately reflected for any facet reading from the same storage slot.
+</Callout>
+
+<div style={{marginTop: "3rem", paddingTop: "2rem", borderTop: "1px solid var(--ifm-color-emphasis-200)"}}>
+  <RelatedDocs
+    items={[
+      {
+        title: "ERC1155ApproveMod",
+        href: "/docs/library/token/ERC1155/Approve/ERC1155ApproveMod",
+        description: "Related module in token",
+        icon: "📦"
+      },
+      {
+        title: "ERC1155MetadataMod",
+        href: "/docs/library/token/ERC1155/Metadata/ERC1155MetadataMod",
+        description: "Related module in token",
+        icon: "📦"
+      },
+      {
+        title: "ERC1155MintMod",
+        href: "/docs/library/token/ERC1155/Mint/ERC1155MintMod",
+        description: "Related module in token",
+        icon: "📦"
+      },
+      {
+        title: "ERC1155BurnMod",
+        href: "/docs/library/token/ERC1155/Burn/ERC1155BurnMod",
+        description: "Related module in token",
+        icon: "📦"
+      }
+    ]}
+  />
+</div>
+
+<div style={{marginTop: "3rem", paddingTop: "2rem", borderTop: "1px solid var(--ifm-color-emphasis-200)"}}>
+  <WasThisHelpful pageId="ERC721TransferMod" />
+</div>
+
+<LastUpdated date="2026-03-12T19:45:15.164Z" />

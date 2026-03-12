@@ -1,0 +1,266 @@
+---
+sidebar_position: 200
+title: "ERC20ApproveMod"
+description: "Approve spender allowance for ERC-20 tokens"
+gitSource: "https://github.com/Perfect-Abstractions/Compose/tree/main/src/token/ERC20/Approve/ERC20ApproveMod.sol"
+---
+
+import DocSubtitle  from '@site/src/components/docs/DocSubtitle';
+import Badge from '@site/src/components/ui/Badge';
+import Callout from '@site/src/components/ui/Callout';
+import CalloutBox from '@site/src/components/ui/CalloutBox';
+import Accordion, { AccordionGroup } from '@site/src/components/ui/Accordion';
+import PropertyTable from '@site/src/components/api/PropertyTable';
+import ExpandableCode from '@site/src/components/code/ExpandableCode';
+import CodeShowcase from '@site/src/components/code/CodeShowcase';
+import RelatedDocs from '@site/src/components/docs/RelatedDocs';
+import WasThisHelpful from '@site/src/components/docs/WasThisHelpful';
+import LastUpdated from '@site/src/components/docs/LastUpdated';
+import ReadingTime from '@site/src/components/docs/ReadingTime';
+import GradientText from '@site/src/components/ui/GradientText';
+import GradientButton from '@site/src/components/ui/GradientButton';
+
+<DocSubtitle>
+Approve spender allowance for ERC-20 tokens
+</DocSubtitle>
+
+<Callout type="info" title="Key Features">
+- All functions are `internal` for use within custom facets.
+- Utilizes the diamond storage pattern for ERC-20 state.
+- Emits an `Approval` event upon successful allowance updates.
+- Includes a custom error `ERC20InvalidSpender` for validation.
+</Callout>
+
+<Callout type="info" title="Module Usage">
+This module provides internal functions for use in your custom facets. Import it to access shared logic and storage.
+</Callout>
+
+## Overview
+
+This module enables facets to manage ERC-20 token approvals. Facets can grant allowances to spenders using diamond storage, ensuring consistent state across the diamond. Changes made through this module are immediately visible to all facets interacting with the same ERC-20 storage.
+
+---
+
+## Storage
+
+### ERC20Storage
+
+ERC-8042 compliant storage struct for ERC20 token data. storage-location: erc8042:erc20
+
+<ExpandableCode language="solidity" maxLines={15} title="Definition">
+{`struct ERC20Storage {
+    mapping(address owner => uint256 balance) balanceOf;
+    uint256 totalSupply;
+    mapping(address owner => mapping(address spender => uint256 allowance)) allowance;
+}`}
+</ExpandableCode>
+
+### State Variables
+
+<PropertyTable
+  properties={[
+    {
+      name: "STORAGE_POSITION",
+      type: "bytes32",
+      description: "Diamond storage slot position for this module (Value: `keccak256(\"erc20\")`)"
+    }
+  ]}
+  showRequired={false}
+/>
+
+## Functions
+
+### approve
+
+Approves a spender to transfer tokens on behalf of the caller. Sets the allowance for the spender.
+
+<ExpandableCode language="solidity" maxLines={8}>
+{`function approve(address _spender, uint256 _value) returns (bool);`}
+</ExpandableCode>
+
+**Parameters:**
+
+<PropertyTable
+  properties={[
+    {
+      name: "_spender",
+      type: "address",
+      description: "The address to approve for spending."
+    },
+    {
+      name: "_value",
+      type: "uint256",
+      description: "The amount of tokens to approve."
+    }
+  ]}
+  showRequired={false}
+/>
+
+**Returns:**
+
+<PropertyTable
+  properties={[
+    {
+      name: "-",
+      type: "bool",
+      description: "True if the approval was successful."
+    }
+  ]}
+  showRequired={false}
+/>
+
+---
+### getStorage
+
+Returns the ERC20 storage struct from the predefined diamond storage slot. Uses inline assembly to set the storage slot reference.
+
+<ExpandableCode language="solidity" maxLines={8}>
+{`function getStorage() pure returns (ERC20Storage storage s);`}
+</ExpandableCode>
+
+**Returns:**
+
+<PropertyTable
+  properties={[
+    {
+      name: "s",
+      type: "ERC20Storage",
+      description: "The ERC20 storage struct reference."
+    }
+  ]}
+  showRequired={false}
+/>
+
+## Events
+
+<AccordionGroup>
+  <Accordion title="Approval" defaultOpen={false}>
+    <div style={{marginBottom: "1rem"}}>
+      Emitted when an approval is made for a spender by an owner.
+    </div>
+
+    <div style={{marginBottom: "1rem"}}>
+      <strong>Signature:</strong>
+      <ExpandableCode language="solidity" maxLines={5}>
+{`event Approval(address indexed _owner, address indexed _spender, uint256 _value);`}
+      </ExpandableCode>
+    </div>
+
+    <div style={{marginBottom: "1rem"}}>
+      <strong>Parameters:</strong>
+      <PropertyTable
+        properties={[
+          {
+            name: "_owner",
+            type: "address",
+            description: "The address granting the allowance."
+          },
+          {
+            name: "_spender",
+            type: "address",
+            description: "The address receiving the allowance."
+          },
+          {
+            name: "_value",
+            type: "uint256",
+            description: "The amount approved."
+          }
+        ]}
+        showRequired={false}
+      />
+    </div>
+  </Accordion>
+</AccordionGroup>
+
+## Errors
+
+<AccordionGroup>
+  <Accordion title="ERC20InvalidSpender" defaultOpen={false}>
+    <div style={{marginBottom: "1rem"}}>
+      Thrown when the spender address is invalid (e.g., zero address).
+    </div>
+
+    <div>
+      <strong>Signature:</strong>
+      <ExpandableCode language="solidity" maxLines={5}>
+error ERC20InvalidSpender(address _spender);
+      </ExpandableCode>
+    </div>
+  </Accordion>
+</AccordionGroup>
+
+<!-- Usage Example section commented out for now -->
+<!--
+## Usage Example
+
+<ExpandableCode language="solidity" maxLines={20} title="Example Implementation">
+{`pragma solidity >=0.8.30;
+import @compose/token/ERC20/Approve/ERC20ApproveMod;
+
+contract MyERC20Facet {
+    using ERC20ApproveMod for ERC20Storage;
+
+    function grantApproval(address spender, uint256 amount) external {
+        ERC20Storage storage storageSlot = ERC20ApproveMod.getStorage();
+        storageSlot.approve(msg.sender, spender, amount);
+    }
+
+    function viewApproval(address owner, address spender) external view returns (uint256) {
+        ERC20Storage storage storageSlot = ERC20ApproveMod.getStorage();
+        return storageSlot.allowance(owner, spender);
+    }
+}
+`}
+</ExpandableCode>
+-->
+
+## Best Practices
+
+<Callout type="tip" title="Best Practice">
+- Call `approve` with `msg.sender` as the owner to grant allowances.
+- Ensure the `spender` address is valid before calling `approve`.
+- Handle the `ERC20InvalidSpender` error if the spender address is zero.
+</Callout>
+
+## Integration Notes
+
+<Callout type="success" title="Shared Storage">
+This module interacts with diamond storage at the `STORAGE_POSITION` defined by `keccak256("erc20")`. The `getStorage()` function retrieves a reference to the `ERC20Storage` struct, allowing internal functions like `approve` to modify allowances directly within the diamond's shared storage. Changes are immediately reflected for all facets accessing this storage slot.
+</Callout>
+
+<div style={{marginTop: "3rem", paddingTop: "2rem", borderTop: "1px solid var(--ifm-color-emphasis-200)"}}>
+  <RelatedDocs
+    items={[
+      {
+        title: "ERC1155ApproveMod",
+        href: "/docs/library/token/ERC1155/Approve/ERC1155ApproveMod",
+        description: "Related module in token",
+        icon: "📦"
+      },
+      {
+        title: "ERC1155MetadataMod",
+        href: "/docs/library/token/ERC1155/Metadata/ERC1155MetadataMod",
+        description: "Related module in token",
+        icon: "📦"
+      },
+      {
+        title: "ERC1155MintMod",
+        href: "/docs/library/token/ERC1155/Mint/ERC1155MintMod",
+        description: "Related module in token",
+        icon: "📦"
+      },
+      {
+        title: "ERC1155BurnMod",
+        href: "/docs/library/token/ERC1155/Burn/ERC1155BurnMod",
+        description: "Related module in token",
+        icon: "📦"
+      }
+    ]}
+  />
+</div>
+
+<div style={{marginTop: "3rem", paddingTop: "2rem", borderTop: "1px solid var(--ifm-color-emphasis-200)"}}>
+  <WasThisHelpful pageId="ERC20ApproveMod" />
+</div>
+
+<LastUpdated date="2026-03-12T19:45:22.944Z" />

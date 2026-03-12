@@ -1,0 +1,361 @@
+---
+sidebar_position: 210
+title: "ERC721EnumerableTransferFacet"
+description: "ERC-721 token transfers within a diamond"
+gitSource: "https://github.com/Perfect-Abstractions/Compose/tree/main/src/token/ERC721/Enumerable/Transfer/ERC721EnumerableTransferFacet.sol"
+---
+
+import DocSubtitle  from '@site/src/components/docs/DocSubtitle';
+import Badge from '@site/src/components/ui/Badge';
+import Callout from '@site/src/components/ui/Callout';
+import CalloutBox from '@site/src/components/ui/CalloutBox';
+import Accordion, { AccordionGroup } from '@site/src/components/ui/Accordion';
+import PropertyTable from '@site/src/components/api/PropertyTable';
+import ExpandableCode from '@site/src/components/code/ExpandableCode';
+import CodeShowcase from '@site/src/components/code/CodeShowcase';
+import RelatedDocs from '@site/src/components/docs/RelatedDocs';
+import WasThisHelpful from '@site/src/components/docs/WasThisHelpful';
+import LastUpdated from '@site/src/components/docs/LastUpdated';
+import ReadingTime from '@site/src/components/docs/ReadingTime';
+import GradientText from '@site/src/components/ui/GradientText';
+import GradientButton from '@site/src/components/ui/GradientButton';
+
+<DocSubtitle>
+ERC-721 token transfers within a diamond
+</DocSubtitle>
+
+<Callout type="info" title="Key Features">
+- Exposes external functions for ERC-721 token transfers.
+- Utilizes internal `internalTransferFrom` for core transfer logic.
+- Accesses ERC-721 storage via `getERC721Storage`.
+- Compatible with ERC-2535 diamond standard.
+</Callout>
+
+## Overview
+
+This facet implements ERC-721 token transfers as external functions within a diamond proxy. It routes calls to the internal transfer logic and accesses shared storage. Developers add this facet to expose ERC-721 transfer functionality while maintaining diamond upgradeability.
+
+---
+
+## Storage
+
+### ERC721EnumerableStorage
+
+<ExpandableCode language="solidity" maxLines={15} title="Definition">
+{`struct ERC721EnumerableStorage {
+    mapping(address owner => mapping(uint256 index => uint256 tokenId)) ownerTokens;
+    mapping(uint256 tokenId => uint256 ownerTokensIndex) ownerTokensIndex;
+    uint256[] allTokens;
+    mapping(uint256 tokenId => uint256 allTokensIndex) allTokensIndex;
+}`}
+</ExpandableCode>
+
+---
+### ERC721Storage
+
+<ExpandableCode language="solidity" maxLines={15} title="Definition">
+{`struct ERC721Storage {
+    mapping(uint256 tokenId => address owner) ownerOf;
+    mapping(address owner => uint256 balance) balanceOf;
+    mapping(address owner => mapping(address operator => bool approved)) isApprovedForAll;
+    mapping(uint256 tokenId => address approved) approved;
+}`}
+</ExpandableCode>
+
+### State Variables
+
+<PropertyTable
+  properties={[
+    {
+      name: "STORAGE_POSITION",
+      type: "bytes32",
+      description: "Diamond storage slot position for this module (Value: `keccak256(\"erc721.enumerable\")`)"
+    },
+    {
+      name: "ERC721_STORAGE_POSITION",
+      type: "bytes32",
+      description: "Diamond storage slot position for this module (Value: `keccak256(\"erc721\")`)"
+    }
+  ]}
+  showRequired={false}
+/>
+
+## Functions
+
+### transferFrom
+
+Transfers a token from one address to another.
+
+<ExpandableCode language="solidity" maxLines={8}>
+{`function transferFrom(address _from, address _to, uint256 _tokenId) external;`}
+</ExpandableCode>
+
+**Parameters:**
+
+<PropertyTable
+  properties={[
+    {
+      name: "_from",
+      type: "address",
+      description: "The current owner of the token."
+    },
+    {
+      name: "_to",
+      type: "address",
+      description: "The recipient address."
+    },
+    {
+      name: "_tokenId",
+      type: "uint256",
+      description: "The token ID to transfer."
+    }
+  ]}
+  showRequired={false}
+/>
+
+---
+### safeTransferFrom
+
+Safely transfers a token, checking for receiver contract compatibility.
+
+<ExpandableCode language="solidity" maxLines={8}>
+{`function safeTransferFrom(address _from, address _to, uint256 _tokenId) external;`}
+</ExpandableCode>
+
+**Parameters:**
+
+<PropertyTable
+  properties={[
+    {
+      name: "_from",
+      type: "address",
+      description: "The current owner of the token."
+    },
+    {
+      name: "_to",
+      type: "address",
+      description: "The recipient address."
+    },
+    {
+      name: "_tokenId",
+      type: "uint256",
+      description: "The token ID to transfer."
+    }
+  ]}
+  showRequired={false}
+/>
+
+---
+### safeTransferFrom
+
+Safely transfers a token with additional data.
+
+<ExpandableCode language="solidity" maxLines={8}>
+{`function safeTransferFrom(address _from, address _to, uint256 _tokenId, bytes calldata _data) external;`}
+</ExpandableCode>
+
+**Parameters:**
+
+<PropertyTable
+  properties={[
+    {
+      name: "_from",
+      type: "address",
+      description: "The current owner of the token."
+    },
+    {
+      name: "_to",
+      type: "address",
+      description: "The recipient address."
+    },
+    {
+      name: "_tokenId",
+      type: "uint256",
+      description: "The token ID to transfer."
+    },
+    {
+      name: "_data",
+      type: "bytes",
+      description: "Additional data to send to the receiver contract."
+    }
+  ]}
+  showRequired={false}
+/>
+
+---
+### exportSelectors
+
+Exports the function selectors of the ERC721EnumerableTransferFacet This function is use as a selector discovery mechanism for diamonds
+
+<ExpandableCode language="solidity" maxLines={8}>
+{`function exportSelectors() external pure returns (bytes memory);`}
+</ExpandableCode>
+
+**Returns:**
+
+<PropertyTable
+  properties={[
+    {
+      name: "-",
+      type: "bytes",
+      description: "selectors The exported function selectors of the ERC721EnumerableTransferFacet"
+    }
+  ]}
+  showRequired={false}
+/>
+
+## Events
+
+<AccordionGroup>
+  <Accordion title="Transfer" defaultOpen={false}>
+
+    <div style={{marginBottom: "1rem"}}>
+      <strong>Signature:</strong>
+      <ExpandableCode language="solidity" maxLines={5}>
+{`event Transfer(address indexed _from, address indexed _to, uint256 indexed _tokenId);`}
+      </ExpandableCode>
+    </div>
+
+  </Accordion>
+</AccordionGroup>
+
+## Errors
+
+<AccordionGroup>
+  <Accordion title="ERC721NonexistentToken" defaultOpen={false}>
+
+    <div>
+      <strong>Signature:</strong>
+      <ExpandableCode language="solidity" maxLines={5}>
+error ERC721NonexistentToken(uint256 _tokenId);
+      </ExpandableCode>
+    </div>
+  </Accordion>
+  <Accordion title="ERC721IncorrectOwner" defaultOpen={false}>
+
+    <div>
+      <strong>Signature:</strong>
+      <ExpandableCode language="solidity" maxLines={5}>
+error ERC721IncorrectOwner(address _sender, uint256 _tokenId, address _owner);
+      </ExpandableCode>
+    </div>
+  </Accordion>
+  <Accordion title="ERC721InvalidReceiver" defaultOpen={false}>
+
+    <div>
+      <strong>Signature:</strong>
+      <ExpandableCode language="solidity" maxLines={5}>
+error ERC721InvalidReceiver(address _receiver);
+      </ExpandableCode>
+    </div>
+  </Accordion>
+  <Accordion title="ERC721InsufficientApproval" defaultOpen={false}>
+
+    <div>
+      <strong>Signature:</strong>
+      <ExpandableCode language="solidity" maxLines={5}>
+error ERC721InsufficientApproval(address _operator, uint256 _tokenId);
+      </ExpandableCode>
+    </div>
+  </Accordion>
+</AccordionGroup>
+
+<!-- Usage Example section commented out for now -->
+<!--
+## Usage Example
+
+<ExpandableCode language="solidity" maxLines={20} title="Example Implementation">
+{`pragma solidity >=0.8.30;
+
+import {ERC721EnumerableTransferFacet} from "@compose/token/ERC721/Enumerable/Transfer/ERC721EnumerableTransferFacet";
+
+interface IDiamond {
+    function transferFrom(address _from, address _to, uint256 _tokenId) external;
+    function safeTransferFrom(address _from, address _to, uint256 _tokenId) external;
+    function safeTransferFrom(address _from, address _to, uint256 _tokenId, bytes _data) external;
+}
+
+contract Consumer {
+    IDiamond public diamond;
+
+    constructor(address _diamondAddress) {
+        diamond = IDiamond(_diamondAddress);
+    }
+
+    /**
+     * @notice Transfers an ERC-721 token.
+     * @dev Calls the diamond's transferFrom function.
+     */
+    function executeTransfer(address _from, address _to, uint256 _tokenId) external {
+        diamond.transferFrom(_from, _to, _tokenId);
+    }
+
+    /**
+     * @notice Safely transfers an ERC-721 token.
+     * @dev Calls the diamond's safeTransferFrom function.
+     */
+    function executeSafeTransfer(address _from, address _to, uint256 _tokenId) external {
+        diamond.safeTransferFrom(_from, _to, _tokenId);
+    }
+
+    /**
+     * @notice Safely transfers an ERC-721 token with additional data.
+     * @dev Calls the diamond's safeTransferFrom function.
+     */
+    function executeSafeTransferWithData(address _from, address _to, uint256 _tokenId, bytes _data) external {
+        diamond.safeTransferFrom(_from, _to, _tokenId, _data);
+    }
+}`}
+</ExpandableCode>
+-->
+
+## Best Practices
+
+<Callout type="tip" title="Best Practice">
+- Initialize the facet with correct ownership and approvals during diamond deployment.
+- Ensure the diamond's access control mechanism grants necessary permissions for transfer functions.
+- Verify storage compatibility with existing ERC-721 facets before upgrading.
+</Callout>
+
+## Security Considerations
+
+<Callout type="warning" title="Security">
+The `transferFrom` and `safeTransferFrom` functions are external and require appropriate access control. Input validation is handled internally to prevent invalid transfers. The `safeTransferFrom` functions include checks for receiver contract compatibility. Follow standard Solidity security practices for external calls and state changes.
+</Callout>
+
+<div style={{marginTop: "3rem", paddingTop: "2rem", borderTop: "1px solid var(--ifm-color-emphasis-200)"}}>
+  <RelatedDocs
+    items={[
+      {
+        title: "ERC1155ApproveFacet",
+        href: "/docs/library/token/ERC1155/Approve/ERC1155ApproveFacet",
+        description: "Related facet in token",
+        icon: "💎"
+      },
+      {
+        title: "ERC1155MetadataFacet",
+        href: "/docs/library/token/ERC1155/Metadata/ERC1155MetadataFacet",
+        description: "Related facet in token",
+        icon: "💎"
+      },
+      {
+        title: "ERC1155DataFacet",
+        href: "/docs/library/token/ERC1155/Data/ERC1155DataFacet",
+        description: "Related facet in token",
+        icon: "💎"
+      },
+      {
+        title: "ERC1155BurnFacet",
+        href: "/docs/library/token/ERC1155/Burn/ERC1155BurnFacet",
+        description: "Related facet in token",
+        icon: "💎"
+      }
+    ]}
+  />
+</div>
+
+<div style={{marginTop: "3rem", paddingTop: "2rem", borderTop: "1px solid var(--ifm-color-emphasis-200)"}}>
+  <WasThisHelpful pageId="ERC721EnumerableTransferFacet" />
+</div>
+
+<LastUpdated date="2026-03-12T19:44:59.427Z" />

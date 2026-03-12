@@ -1,0 +1,29 @@
+---
+title: "Renounce"
+description: "Renounce components for Compose diamonds."
+---
+
+import DocCard, { DocCardGrid } from '@site/src/components/docs/DocCard';
+import DocSubtitle from '@site/src/components/docs/DocSubtitle';
+import Icon from '@site/src/components/ui/Icon';
+
+<DocSubtitle>
+  Renounce components for Compose diamonds.
+</DocSubtitle>
+
+<DocCardGrid columns={2}>
+  <DocCard
+    title="AccessControlRenounceFacet"
+    description={"Renounce roles within a diamond"}
+    href="/docs/library/access/AccessControl/Renounce/AccessControlRenounceFacet"
+    icon={<Icon name="book" size={28} />}
+    size="medium"
+  />
+  <DocCard
+    title="AccessControlRenounceMod"
+    description={"Renounce roles using diamond storage"}
+    href="/docs/library/access/AccessControl/Renounce/AccessControlRenounceMod"
+    icon={<Icon name="book" size={28} />}
+    size="medium"
+  />
+</DocCardGrid>
