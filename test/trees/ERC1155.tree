@@ -100,3 +100,7 @@ Metadata
 │       └── it should return baseURI + tokenURIs[id] or documented behavior
 └── SetBaseURI_SetTokenURI
     └── it should update storage so uri(id) returns the expected value
+
+ExportSelectors
+└── for each ERC1155 facet (core, metadata, etc.)
+    └── it should return an abi.encodePacked list of that facet's external function selectors in the expected order

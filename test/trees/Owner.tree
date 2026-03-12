@@ -64,3 +64,7 @@ TwoSteps
         │   └── it should emit an {OwnershipTransferred} event
         └── when the caller is not the owner
             └── it should revert with {OwnerUnauthorizedAccount}
+
+ExportSelectors
+└── for each Owner facet (data, transfer, renounce, two-steps)
+    └── it should return an abi.encodePacked list of that facet's external function selectors in the expected order

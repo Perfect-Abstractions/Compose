@@ -135,3 +135,7 @@ Metadata
     └── when baseURI is empty
         └── it should return an empty string or documented behavior
 
+ExportSelectors
+└── for each ERC721 facet (core, enumerable, metadata, etc.)
+    └── it should return an abi.encodePacked list of that facet's external function selectors in the expected order
+

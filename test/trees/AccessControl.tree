@@ -186,3 +186,6 @@ Temporal
         └── when the caller does not have the admin role for the target role
             └── it should revert with {AccessControlUnauthorizedAccount}
 
+ExportSelectors
+└── for each AccessControl facet (data, admin, grant, revoke, renounce, batch, pausable, temporal)
+    └── it should return an abi.encodePacked list of that facet's external function selectors in the expected order

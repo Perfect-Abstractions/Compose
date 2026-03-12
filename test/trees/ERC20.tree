@@ -146,3 +146,7 @@ Permit
         ├── it should set allowance(owner, spender) to value
         ├── it should increment nonces(owner)
         └── it should emit {Approval}
+
+ExportSelectors
+└── for each ERC20 facet
+    └── it should return an abi.encodePacked list of that facet's external function selectors in the expected order

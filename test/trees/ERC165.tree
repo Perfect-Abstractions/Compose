@@ -64,7 +64,7 @@ Storage
     └── when comparing supportsInterface to the raw storage value
         └── it should return the same boolean
 
-IntegrationWithDiamond
+Integration
 ├── BaseSetup
 │   ├── when the diamond is deployed with ERC165Facet installed
 │   │   └── it should support IERC165.interfaceId via the diamond proxy
@@ -80,6 +80,10 @@ IntegrationWithDiamond
 └── Upgrades
     └── when upgrading facets that add or remove interfaceIds
         └── supportsInterface should reflect the new set of interfaces
+
+ExportSelectors
+└── for the ERC165 data facet and related interface-registration facets
+    └── it should return an abi.encodePacked list of that facet's external function selectors in the expected order
 
 Gas
 ├── when calling supportsInterface for IERC165.interfaceId
