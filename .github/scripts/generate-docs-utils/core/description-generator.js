@@ -42,7 +42,40 @@ function generateDescriptionFromName(contractName) {
   return `${readable} ${typeLabel} for Compose diamonds`;
 }
 
+/**
+ * Compute an optional sidebar label for a contract.
+ *
+ * Sidebar labels are intentionally minimal – just "Facet" or "Module" –
+ * and are only applied for regular library categories. Diamond core and
+ * utilities keep their existing behavior.
+ *
+ * @param {'facet' | 'module' | string} contractType
+ * @param {string} category
+ * @returns {string|null} "Facet" | "Module" | null when no override should be used
+ */
+function getSidebarLabel(contractType, category) {
+  if (!contractType) return null;
+
+  const normalizedCategory = (category || '').toLowerCase();
+
+  // Do not override sidebar labels for diamond core or utilities
+  if (normalizedCategory === 'diamond' || normalizedCategory === 'utils') {
+    return null;
+  }
+
+  if (contractType === 'facet') {
+    return 'Facet';
+  }
+
+  if (contractType === 'module') {
+    return 'Module';
+  }
+
+  return null;
+}
+
 module.exports = {
   generateDescriptionFromName,
+  getSidebarLabel,
 };
 

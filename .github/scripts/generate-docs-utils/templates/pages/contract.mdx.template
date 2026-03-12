@@ -2,6 +2,9 @@
 sidebar_position: {{position}}
 title: "{{escapeYaml title}}"
 description: "{{escapeYaml description}}"
+{{#if sidebarLabel}}
+sidebar_label: "{{sidebarLabel}}"
+{{/if}}
 {{#if gitSource}}
 gitSource: "{{gitSource}}"
 {{/if}}

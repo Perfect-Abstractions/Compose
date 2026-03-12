@@ -7,6 +7,7 @@ const { loadAndRenderTemplate } = require('./template-engine-handlebars');
 const { sanitizeForMdx } = require('./helpers');
 const { readFileSafe } = require('../../workflow-utils');
 const { enrichWithRelationships } = require('../core/relationship-detector');
+const { getSidebarLabel } = require('../core/description-generator');
 
 /**
  * Extract function parameters directly from Solidity source file
@@ -538,18 +539,24 @@ function generateStateVariableDescription(name, moduleName) {
  * Prepare base data common to both facet and module templates
  * @param {object} data - Documentation data
  * @param {number} position - Sidebar position
+ * @param {object} [options] - Additional context (contract type, category, etc.)
  * @returns {object} Base prepared data
  */
-function prepareBaseData(data, position = 99) {
+function prepareBaseData(data, position = 99, options = {}) {
   validateData(data);
+  const { contractType, category } = options || {};
   
   const description = data.description || `Contract documentation for ${data.title}`;
   const subtitle = data.subtitle || data.description || `Contract documentation for ${data.title}`;
   const overview = data.overview || data.description || `Documentation for ${data.title}.`;
 
+  // Optional sidebar label override (Facet / Module) for non-diamond, non-utils categories
+  const sidebarLabel = getSidebarLabel(contractType, category);
+
   return {
     position,
     title: data.title,
+    sidebarLabel: sidebarLabel || null,
     description,
     subtitle,
     overview,
@@ -616,7 +623,10 @@ function prepareBaseData(data, position = 99) {
  * @returns {object} Prepared data for facet template
  */
 function prepareFacetData(data, position = 99, pathInfo = null, registry = null) {
-  const baseData = prepareBaseData(data, position);
+  const baseData = prepareBaseData(data, position, {
+    contractType: 'facet',
+    category: pathInfo && pathInfo.category,
+  });
   const sourceFilePath = data.sourceFilePath;
   
   // Filter out internal functions for facets (they act as pre-deploy logic blocks)
@@ -651,7 +661,10 @@ function prepareFacetData(data, position = 99, pathInfo = null, registry = null)
  * @returns {object} Prepared data for module template
  */
 function prepareModuleData(data, position = 99, pathInfo = null, registry = null) {
-  const baseData = prepareBaseData(data, position);
+  const baseData = prepareBaseData(data, position, {
+    contractType: 'module',
+    category: pathInfo && pathInfo.category,
+  });
   const sourceFilePath = data.sourceFilePath;
   
   const preparedData = {
