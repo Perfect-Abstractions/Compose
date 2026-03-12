@@ -114,6 +114,6 @@ contract ERC6909BurnFacet {
      * @return selectors The exported function selectors of the ERC6909BurnFacet
      */
     function exportSelectors() external pure returns (bytes memory) {
-        return bytes.concat(this.burnERC6909.selector, this.burnERC6909From.selector);
+        return bytes.concat(this.burn.selector, this.burnFrom.selector);
     }
 }
