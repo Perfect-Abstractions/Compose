@@ -54,7 +54,7 @@ TokenRoyalty
     └── when multiple tokenIds have token-specific royalty and some are reset
         └── it should only clear royalty for the reset tokenIds and leave the others unchanged
 
-Integration
+Sequences
 ├── when default royalty is set, then token-specific royalty is set, then token-specific royalty is reset
 │   └── royaltyInfo should first use the default, then the token-specific, then fall back to the default again
 └── when default royalty is set, multiple tokens have different token-specific royalties, and default royalty is deleted

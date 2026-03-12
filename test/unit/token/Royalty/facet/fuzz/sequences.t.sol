@@ -10,9 +10,9 @@ import {RoyaltyFacet_Base_Test} from "test/unit/token/Royalty/RoyaltyFacetBase.t
 /**
  *  @dev BTT spec: test/trees/Royalty.tree
  *
- *  Integration (Facet)
+ *  Sequences (Facet)
  */
-contract Integration_RoyaltyFacet_Integration_Test is RoyaltyFacet_Base_Test {
+contract Sequences_RoyaltyFacet_Fuzz_Unit_Test is RoyaltyFacet_Base_Test {
     function test_DefaultThenTokenThenReset_ThroughRoyaltyInfo() external {
         uint256 tokenId = 5;
         uint256 salePrice = 100 ether;
@@ -66,3 +66,4 @@ contract Integration_RoyaltyFacet_Integration_Test is RoyaltyFacet_Base_Test {
         assertEq(royalty3, 0, "royalty3 after delete");
     }
 }
+
