@@ -1,0 +1,167 @@
+---
+sidebar_position: 110
+title: "OwnerDataFacet"
+description: "Manages the owner address within a diamond"
+gitSource: "https://github.com/Perfect-Abstractions/Compose/tree/main/src/access/Owner/Data/OwnerDataFacet.sol"
+---
+
+import DocSubtitle  from '@site/src/components/docs/DocSubtitle';
+import Badge from '@site/src/components/ui/Badge';
+import Callout from '@site/src/components/ui/Callout';
+import CalloutBox from '@site/src/components/ui/CalloutBox';
+import Accordion, { AccordionGroup } from '@site/src/components/ui/Accordion';
+import PropertyTable from '@site/src/components/api/PropertyTable';
+import ExpandableCode from '@site/src/components/code/ExpandableCode';
+import CodeShowcase from '@site/src/components/code/CodeShowcase';
+import RelatedDocs from '@site/src/components/docs/RelatedDocs';
+import WasThisHelpful from '@site/src/components/docs/WasThisHelpful';
+import LastUpdated from '@site/src/components/docs/LastUpdated';
+import ReadingTime from '@site/src/components/docs/ReadingTime';
+import GradientText from '@site/src/components/ui/GradientText';
+import GradientButton from '@site/src/components/ui/GradientButton';
+
+<DocSubtitle>
+Manages the owner address within a diamond
+</DocSubtitle>
+
+<Callout type="info" title="Key Features">
+- External `owner()` function for retrieving the owner address.
+- `exportSelectors()` for diamond upgradeability and discovery.
+- Leverages diamond storage for state management.
+- Minimal dependencies, following Compose facet design.
+</Callout>
+
+## Overview
+
+This facet provides functions to manage and retrieve the owner address of a diamond. It uses diamond storage to store the owner, ensuring state is managed according to the diamond pattern. Developers add this facet to establish clear ownership and control over diamond operations.
+
+---
+
+## Storage
+
+### OwnerStorage
+
+<ExpandableCode language="solidity" maxLines={15} title="Definition">
+{`struct OwnerStorage {
+    address owner;
+}`}
+</ExpandableCode>
+
+### State Variables
+
+<PropertyTable
+  properties={[
+    {
+      name: "STORAGE_POSITION",
+      type: "bytes32",
+      description: "Diamond storage slot position for this module (Value: `keccak256(\"erc173.owner\")`)"
+    }
+  ]}
+  showRequired={false}
+/>
+
+## Functions
+
+### owner
+
+Get the address of the owner
+
+<ExpandableCode language="solidity" maxLines={8}>
+{`function owner() external view returns (address);`}
+</ExpandableCode>
+
+**Returns:**
+
+<PropertyTable
+  properties={[
+    {
+      name: "-",
+      type: "address",
+      description: "The address of the owner."
+    }
+  ]}
+  showRequired={false}
+/>
+
+---
+### exportSelectors
+
+Exports the function selectors of the OwnerDataFacet This function is use as a selector discovery mechanism for diamonds
+
+<ExpandableCode language="solidity" maxLines={8}>
+{`function exportSelectors() external pure returns (bytes memory);`}
+</ExpandableCode>
+
+**Returns:**
+
+<PropertyTable
+  properties={[
+    {
+      name: "-",
+      type: "bytes",
+      description: "selectors The exported function selectors of the OwnerDataFacet"
+    }
+  ]}
+  showRequired={false}
+/>
+
+<!-- Usage Example section commented out for now -->
+<!--
+## Usage Example
+
+<ExpandableCode language="solidity" maxLines={20} title="Example Implementation">
+{`pragma solidity >=0.8.30;
+
+import {IOwnerDataFacet} from "@compose/access/Owner/Data/OwnerDataFacet";
+
+contract DiamondUser {
+    address public immutable diamondAddress;
+
+    constructor(address _diamondAddress) {
+        diamondAddress = _diamondAddress;
+    }
+
+    function getDiamondOwner() public view returns (address) {
+        IOwnerDataFacet ownerFacet = IOwnerDataFacet(diamondAddress);
+        return ownerFacet.owner();
+    }
+
+    function exportOwnerSelectors() public pure returns (bytes memory) {
+        return IOwnerDataFacet.exportSelectors();
+    }
+}`}
+</ExpandableCode>
+-->
+
+## Best Practices
+
+<Callout type="tip" title="Best Practice">
+- Initialize the owner address during diamond deployment.
+- Use the `owner()` function to verify administrative control.
+- Ensure the `OwnerDataMod` module is correctly configured for this facet.
+</Callout>
+
+## Security Considerations
+
+<Callout type="warning" title="Security">
+All state-changing operations related to ownership should be managed through the designated owner. Input validation is handled by the diamond proxy and underlying modules. Follow standard Solidity security practices.
+</Callout>
+
+<div style={{marginTop: "3rem", paddingTop: "2rem", borderTop: "1px solid var(--ifm-color-emphasis-200)"}}>
+  <RelatedDocs
+    items={[
+      {
+        title: "OwnerDataMod",
+        href: "/docs/library/access/Owner/Data/OwnerDataMod",
+        description: "Module used by OwnerDataFacet",
+        icon: "📦"
+      }
+    ]}
+  />
+</div>
+
+<div style={{marginTop: "3rem", paddingTop: "2rem", borderTop: "1px solid var(--ifm-color-emphasis-200)"}}>
+  <WasThisHelpful pageId="OwnerDataFacet" />
+</div>
+
+<LastUpdated date="2026-03-12T19:46:38.142Z" />

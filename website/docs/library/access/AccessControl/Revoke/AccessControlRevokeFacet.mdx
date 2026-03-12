@@ -1,0 +1,251 @@
+---
+sidebar_position: 110
+title: "AccessControlRevokeFacet"
+description: "Revokes roles from accounts within a diamond"
+gitSource: "https://github.com/Perfect-Abstractions/Compose/tree/main/src/access/AccessControl/Revoke/AccessControlRevokeFacet.sol"
+---
+
+import DocSubtitle  from '@site/src/components/docs/DocSubtitle';
+import Badge from '@site/src/components/ui/Badge';
+import Callout from '@site/src/components/ui/Callout';
+import CalloutBox from '@site/src/components/ui/CalloutBox';
+import Accordion, { AccordionGroup } from '@site/src/components/ui/Accordion';
+import PropertyTable from '@site/src/components/api/PropertyTable';
+import ExpandableCode from '@site/src/components/code/ExpandableCode';
+import CodeShowcase from '@site/src/components/code/CodeShowcase';
+import RelatedDocs from '@site/src/components/docs/RelatedDocs';
+import WasThisHelpful from '@site/src/components/docs/WasThisHelpful';
+import LastUpdated from '@site/src/components/docs/LastUpdated';
+import ReadingTime from '@site/src/components/docs/ReadingTime';
+import GradientText from '@site/src/components/ui/GradientText';
+import GradientButton from '@site/src/components/ui/GradientButton';
+
+<DocSubtitle>
+Revokes roles from accounts within a diamond
+</DocSubtitle>
+
+<Callout type="info" title="Key Features">
+- Exposes an external `revokeRole` function for managing permissions.
+- Emits `RoleRevoked` event upon successful role revocation.
+- Includes `exportSelectors` for diamond facet registration.
+- Reverts with `AccessControlUnauthorizedAccount` if caller lacks permission.
+</Callout>
+
+## Overview
+
+This facet provides external functions for revoking roles from accounts within a Compose diamond. It integrates with the diamond's access control system, allowing administrators to manage permissions. Developers add this facet to grant and revoke roles, ensuring fine-grained control over diamond functionality.
+
+---
+
+## Storage
+
+### AccessControlStorage
+
+<ExpandableCode language="solidity" maxLines={15} title="Definition">
+{`struct AccessControlStorage {
+    mapping(address account => mapping(bytes32 role => bool hasRole)) hasRole;
+    mapping(bytes32 role => bytes32 adminRole) adminRole;
+}`}
+</ExpandableCode>
+
+### State Variables
+
+<PropertyTable
+  properties={[
+    {
+      name: "STORAGE_POSITION",
+      type: "bytes32",
+      description: "Diamond storage slot position for this module (Value: `keccak256(\"compose.accesscontrol\")`)"
+    }
+  ]}
+  showRequired={false}
+/>
+
+## Functions
+
+### revokeRole
+
+Revokes a role from an account. Emits a RoleRevoked event. Reverts with AccessControlUnauthorizedAccount If the caller is not the admin of the role.
+
+<ExpandableCode language="solidity" maxLines={8}>
+{`function revokeRole(bytes32 _role, address _account) external;`}
+</ExpandableCode>
+
+**Parameters:**
+
+<PropertyTable
+  properties={[
+    {
+      name: "_role",
+      type: "bytes32",
+      description: "The role to revoke."
+    },
+    {
+      name: "_account",
+      type: "address",
+      description: "The account to revoke the role from."
+    }
+  ]}
+  showRequired={false}
+/>
+
+---
+### exportSelectors
+
+Exports the selectors that are exposed by the facet.
+
+<ExpandableCode language="solidity" maxLines={8}>
+{`function exportSelectors() external pure returns (bytes memory);`}
+</ExpandableCode>
+
+**Returns:**
+
+<PropertyTable
+  properties={[
+    {
+      name: "-",
+      type: "bytes",
+      description: "Selectors that are exported by the facet."
+    }
+  ]}
+  showRequired={false}
+/>
+
+## Events
+
+<AccordionGroup>
+  <Accordion title="RoleRevoked" defaultOpen={false}>
+    <div style={{marginBottom: "1rem"}}>
+      Emitted when a role is revoked from an account.
+    </div>
+
+    <div style={{marginBottom: "1rem"}}>
+      <strong>Signature:</strong>
+      <ExpandableCode language="solidity" maxLines={5}>
+{`event RoleRevoked(bytes32 indexed _role, address indexed _account, address indexed _sender);`}
+      </ExpandableCode>
+    </div>
+
+    <div style={{marginBottom: "1rem"}}>
+      <strong>Parameters:</strong>
+      <PropertyTable
+        properties={[
+          {
+            name: "_role",
+            type: "bytes32",
+            description: "The role that was revoked."
+          },
+          {
+            name: "_account",
+            type: "address",
+            description: "The account from which the role was revoked."
+          },
+          {
+            name: "_sender",
+            type: "address",
+            description: "The account that revoked the role."
+          }
+        ]}
+        showRequired={false}
+      />
+    </div>
+  </Accordion>
+</AccordionGroup>
+
+## Errors
+
+<AccordionGroup>
+  <Accordion title="AccessControlUnauthorizedAccount" defaultOpen={false}>
+    <div style={{marginBottom: "1rem"}}>
+      Thrown when the account does not have a specific role.
+    </div>
+
+    <div>
+      <strong>Signature:</strong>
+      <ExpandableCode language="solidity" maxLines={5}>
+error AccessControlUnauthorizedAccount(address _account, bytes32 _role);
+      </ExpandableCode>
+    </div>
+  </Accordion>
+</AccordionGroup>
+
+<!-- Usage Example section commented out for now -->
+<!--
+## Usage Example
+
+<ExpandableCode language="solidity" maxLines={20} title="Example Implementation">
+{`pragma solidity >=0.8.30;
+
+import { IDiamond } from "@compose/diamond/Diamond.sol";
+import { AccessControlRevokeFacet } from "@compose/access/AccessControl/Revoke/AccessControlRevokeFacet";
+
+contract DiamondUser {
+    address immutable DIAMOND_ADDRESS;
+
+    constructor(address diamondAddress) {
+        DIAMOND_ADDRESS = diamondAddress;
+    }
+
+    function revokeUserRole(bytes32 _role, address _account) external {
+        // Calls are routed through the diamond proxy
+        IDiamond(DIAMOND_ADDRESS).revokeRole(_role, _account);
+    }
+
+    // Example of exporting selectors (typically done during deployment)
+    function getRevokeSelectors() external pure returns (bytes memory) {
+        return AccessControlRevokeFacet.exportSelectors();
+    }
+}`}
+</ExpandableCode>
+-->
+
+## Best Practices
+
+<Callout type="tip" title="Best Practice">
+- Ensure the AccessControlRevokeFacet is properly initialized with an admin role during diamond deployment.
+- Enforce that only authorized accounts can call the `revokeRole` function.
+- Verify that `revokeRole` is called with valid role and account parameters to prevent unintended consequences.
+</Callout>
+
+## Security Considerations
+
+<Callout type="warning" title="Security">
+The `revokeRole` function is protected by access control, reverting with `AccessControlUnauthorizedAccount` if the caller is not the admin of the specified role. Input validation for `_role` and `_account` is crucial to prevent unintended revocations. Follow standard Solidity security practices for all interactions.
+</Callout>
+
+<div style={{marginTop: "3rem", paddingTop: "2rem", borderTop: "1px solid var(--ifm-color-emphasis-200)"}}>
+  <RelatedDocs
+    items={[
+      {
+        title: "AccessControlRevokeMod",
+        href: "/docs/library/access/AccessControl/Revoke/AccessControlRevokeMod",
+        description: "Module used by AccessControlRevokeFacet",
+        icon: "📦"
+      },
+      {
+        title: "OwnerDataFacet",
+        href: "/docs/library/access/Owner/Data/OwnerDataFacet",
+        description: "Related facet in access",
+        icon: "💎"
+      },
+      {
+        title: "OwnerRenounceFacet",
+        href: "/docs/library/access/Owner/Renounce/OwnerRenounceFacet",
+        description: "Related facet in access",
+        icon: "💎"
+      },
+      {
+        title: "OwnerTransferFacet",
+        href: "/docs/library/access/Owner/Transfer/OwnerTransferFacet",
+        description: "Related facet in access",
+        icon: "💎"
+      }
+    ]}
+  />
+</div>
+
+<div style={{marginTop: "3rem", paddingTop: "2rem", borderTop: "1px solid var(--ifm-color-emphasis-200)"}}>
+  <WasThisHelpful pageId="AccessControlRevokeFacet" />
+</div>
+
+<LastUpdated date="2026-03-12T19:47:59.575Z" />

@@ -1,0 +1,366 @@
+---
+sidebar_position: 200
+title: "ERC1155BurnMod"
+description: "Internal ERC-1155 token burning functionality"
+gitSource: "https://github.com/Perfect-Abstractions/Compose/tree/main/src/token/ERC1155/Burn/ERC1155BurnMod.sol"
+---
+
+import DocSubtitle  from '@site/src/components/docs/DocSubtitle';
+import Badge from '@site/src/components/ui/Badge';
+import Callout from '@site/src/components/ui/Callout';
+import CalloutBox from '@site/src/components/ui/CalloutBox';
+import Accordion, { AccordionGroup } from '@site/src/components/ui/Accordion';
+import PropertyTable from '@site/src/components/api/PropertyTable';
+import ExpandableCode from '@site/src/components/code/ExpandableCode';
+import CodeShowcase from '@site/src/components/code/CodeShowcase';
+import RelatedDocs from '@site/src/components/docs/RelatedDocs';
+import WasThisHelpful from '@site/src/components/docs/WasThisHelpful';
+import LastUpdated from '@site/src/components/docs/LastUpdated';
+import ReadingTime from '@site/src/components/docs/ReadingTime';
+import GradientText from '@site/src/components/ui/GradientText';
+import GradientButton from '@site/src/components/ui/GradientButton';
+
+<DocSubtitle>
+Internal ERC-1155 token burning functionality
+</DocSubtitle>
+
+<Callout type="info" title="Key Features">
+- Provides `internal` functions for burning single and batch ERC-1155 tokens.
+- Uses the diamond storage pattern for state management.
+- Emits `TransferSingle` and `TransferBatch` events upon successful burns.
+- Does not include approval logic; requires external checks.
+</Callout>
+
+<Callout type="info" title="Module Usage">
+This module provides internal functions for use in your custom facets. Import it to access shared logic and storage.
+</Callout>
+
+## Overview
+
+This module provides internal functions for burning ERC-1155 tokens. Facets can import this module to decrease token balances and emit transfer events, utilizing shared diamond storage. It does not perform approval checks, requiring external validation before use.
+
+---
+
+## Storage
+
+### ERC1155Storage
+
+ERC-8042 compliant storage struct for ERC-1155 token data. storage-location: erc8042:erc1155
+
+<ExpandableCode language="solidity" maxLines={15} title="Definition">
+{`struct ERC1155Storage {
+    mapping(uint256 id => mapping(address account => uint256 balance)) balanceOf;
+    mapping(address account => mapping(address operator => bool)) isApprovedForAll;
+}`}
+</ExpandableCode>
+
+### State Variables
+
+<PropertyTable
+  properties={[
+    {
+      name: "STORAGE_POSITION",
+      type: "bytes32",
+      description: "Diamond storage slot position for this module (Value: `keccak256(\"erc1155\")`)"
+    }
+  ]}
+  showRequired={false}
+/>
+
+## Functions
+
+### burn
+
+Burns a single token type from an address. Decreases the balance and emits a TransferSingle event. Reverts if the account has insufficient balance. This module does not perform approval checks. Ensure proper ownership or approval validation before calling this function.
+
+<ExpandableCode language="solidity" maxLines={8}>
+{`function burn(address _from, uint256 _id, uint256 _value) ;`}
+</ExpandableCode>
+
+**Parameters:**
+
+<PropertyTable
+  properties={[
+    {
+      name: "_from",
+      type: "address",
+      description: "The address whose tokens will be burned."
+    },
+    {
+      name: "_id",
+      type: "uint256",
+      description: "The token type to burn."
+    },
+    {
+      name: "_value",
+      type: "uint256",
+      description: "The amount of tokens to burn."
+    }
+  ]}
+  showRequired={false}
+/>
+
+---
+### burnBatch
+
+Burns multiple token types from an address in a single transaction. Decreases balances for each token type and emits a TransferBatch event. Reverts if the account has insufficient balance for any token type. This module does not perform approval checks. Ensure proper ownership or approval validation before calling this function.
+
+<ExpandableCode language="solidity" maxLines={8}>
+{`function burnBatch(address _from, uint256[] memory _ids, uint256[] memory _values) ;`}
+</ExpandableCode>
+
+**Parameters:**
+
+<PropertyTable
+  properties={[
+    {
+      name: "_from",
+      type: "address",
+      description: "The address whose tokens will be burned."
+    },
+    {
+      name: "_ids",
+      type: "uint256[]",
+      description: "The token types to burn."
+    },
+    {
+      name: "_values",
+      type: "uint256[]",
+      description: "The amounts of tokens to burn for each type."
+    }
+  ]}
+  showRequired={false}
+/>
+
+---
+### getStorage
+
+Returns the ERC-1155 storage struct from the predefined diamond storage slot. Uses inline assembly to set the storage slot reference.
+
+<ExpandableCode language="solidity" maxLines={8}>
+{`function getStorage() pure returns (ERC1155Storage storage s);`}
+</ExpandableCode>
+
+**Returns:**
+
+<PropertyTable
+  properties={[
+    {
+      name: "s",
+      type: "ERC1155Storage",
+      description: "The ERC-1155 storage struct reference."
+    }
+  ]}
+  showRequired={false}
+/>
+
+## Events
+
+<AccordionGroup>
+  <Accordion title="TransferBatch" defaultOpen={false}>
+    <div style={{marginBottom: "1rem"}}>
+      Equivalent to multiple &#123;TransferSingle&#125; events, where `operator`, `from` and `to` are the same for all transfers.
+    </div>
+
+    <div style={{marginBottom: "1rem"}}>
+      <strong>Signature:</strong>
+      <ExpandableCode language="solidity" maxLines={5}>
+{`event TransferBatch(
+address indexed _operator, address indexed _from, address indexed _to, uint256[] _ids, uint256[] _values
+);`}
+      </ExpandableCode>
+    </div>
+
+    <div style={{marginBottom: "1rem"}}>
+      <strong>Parameters:</strong>
+      <PropertyTable
+        properties={[
+          {
+            name: "_operator",
+            type: "address",
+            description: "The address which initiated the batch transfer."
+          },
+          {
+            name: "_from",
+            type: "address",
+            description: "The address which previously owned the tokens."
+          },
+          {
+            name: "_to",
+            type: "address",
+            description: "The address which now owns the tokens."
+          },
+          {
+            name: "_ids",
+            type: "uint256[]",
+            description: "The token types being transferred."
+          },
+          {
+            name: "_values",
+            type: "uint256[]",
+            description: "The amounts of tokens transferred."
+          }
+        ]}
+        showRequired={false}
+      />
+    </div>
+  </Accordion>
+  <Accordion title="TransferSingle" defaultOpen={false}>
+    <div style={{marginBottom: "1rem"}}>
+      Emitted when `value` amount of tokens of type `id` are transferred from `from` to `to` by `operator`.
+    </div>
+
+    <div style={{marginBottom: "1rem"}}>
+      <strong>Signature:</strong>
+      <ExpandableCode language="solidity" maxLines={5}>
+{`event TransferSingle(
+address indexed _operator, address indexed _from, address indexed _to, uint256 _id, uint256 _value
+);`}
+      </ExpandableCode>
+    </div>
+
+    <div style={{marginBottom: "1rem"}}>
+      <strong>Parameters:</strong>
+      <PropertyTable
+        properties={[
+          {
+            name: "_operator",
+            type: "address",
+            description: "The address which initiated the transfer."
+          },
+          {
+            name: "_from",
+            type: "address",
+            description: "The address which previously owned the token."
+          },
+          {
+            name: "_to",
+            type: "address",
+            description: "The address which now owns the token."
+          },
+          {
+            name: "_id",
+            type: "uint256",
+            description: "The token type being transferred."
+          },
+          {
+            name: "_value",
+            type: "uint256",
+            description: "The amount of tokens transferred."
+          }
+        ]}
+        showRequired={false}
+      />
+    </div>
+  </Accordion>
+</AccordionGroup>
+
+## Errors
+
+<AccordionGroup>
+  <Accordion title="ERC1155InsufficientBalance" defaultOpen={false}>
+    <div style={{marginBottom: "1rem"}}>
+      **Title:** ERC-1155 Burn Module Provides internal burn functionality for ERC-1155 tokens. Error indicating insufficient balance for a burn operation.
+    </div>
+
+    <div>
+      <strong>Signature:</strong>
+      <ExpandableCode language="solidity" maxLines={5}>
+error ERC1155InsufficientBalance(address _sender, uint256 _balance, uint256 _needed, uint256 _tokenId);
+      </ExpandableCode>
+    </div>
+  </Accordion>
+  <Accordion title="ERC1155InvalidArrayLength" defaultOpen={false}>
+    <div style={{marginBottom: "1rem"}}>
+      Error indicating array length mismatch in batch operations.
+    </div>
+
+    <div>
+      <strong>Signature:</strong>
+      <ExpandableCode language="solidity" maxLines={5}>
+error ERC1155InvalidArrayLength(uint256 _idsLength, uint256 _valuesLength);
+      </ExpandableCode>
+    </div>
+  </Accordion>
+  <Accordion title="ERC1155InvalidSender" defaultOpen={false}>
+    <div style={{marginBottom: "1rem"}}>
+      Error indicating the sender address is invalid.
+    </div>
+
+    <div>
+      <strong>Signature:</strong>
+      <ExpandableCode language="solidity" maxLines={5}>
+error ERC1155InvalidSender(address _sender);
+      </ExpandableCode>
+    </div>
+  </Accordion>
+</AccordionGroup>
+
+<!-- Usage Example section commented out for now -->
+<!--
+## Usage Example
+
+<ExpandableCode language="solidity" maxLines={20} title="Example Implementation">
+{`pragma solidity >=0.8.30;
+import @compose/token/ERC1155/Burn/ERC1155BurnMod;
+
+contract MyERC1155Facet {
+    ERC1155BurnMod internal burnModule;
+
+    function burnTokens(address _from, uint256 _id, uint256 _value) external {
+        // Ensure _from has sufficient balance and approval before calling burn
+        burnModule.burn(_from, _id, _value);
+    }
+
+    function burnBatchTokens(address _from, uint256[] memory _ids, uint256[] memory _values) external {
+        // Ensure _from has sufficient balances and approvals before calling burnBatch
+        burnModule.burnBatch(_from, _ids, _values);
+    }
+}`}
+</ExpandableCode>
+-->
+
+## Best Practices
+
+<Callout type="tip" title="Best Practice">
+- Ensure caller ownership or approval for token burning before invoking `burn` or `burnBatch`.
+- Handle `ERC1155InsufficientBalance`, `ERC1155InvalidArrayLength`, and `ERC1155InvalidSender` errors gracefully.
+- Verify that the storage layout is compatible if upgrading facets that interact with this module.
+</Callout>
+
+## Integration Notes
+
+<Callout type="success" title="Shared Storage">
+This module interacts with diamond storage at the `STORAGE_POSITION` slot, identified by `keccak256(\"erc1155\")`. All state changes made through the `burn` and `burnBatch` functions are immediately visible to any facet that accesses the `ERC1155Storage` struct from the same storage slot.
+</Callout>
+
+<div style={{marginTop: "3rem", paddingTop: "2rem", borderTop: "1px solid var(--ifm-color-emphasis-200)"}}>
+  <RelatedDocs
+    items={[
+      {
+        title: "ERC1155ApproveMod",
+        href: "/docs/library/token/ERC1155/Approve/ERC1155ApproveMod",
+        description: "Related module in token",
+        icon: "📦"
+      },
+      {
+        title: "ERC1155MetadataMod",
+        href: "/docs/library/token/ERC1155/Metadata/ERC1155MetadataMod",
+        description: "Related module in token",
+        icon: "📦"
+      },
+      {
+        title: "ERC1155MintMod",
+        href: "/docs/library/token/ERC1155/Mint/ERC1155MintMod",
+        description: "Related module in token",
+        icon: "📦"
+      }
+    ]}
+  />
+</div>
+
+<div style={{marginTop: "3rem", paddingTop: "2rem", borderTop: "1px solid var(--ifm-color-emphasis-200)"}}>
+  <WasThisHelpful pageId="ERC1155BurnMod" />
+</div>
+
+<LastUpdated date="2026-03-12T19:44:02.990Z" />

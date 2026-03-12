@@ -1,0 +1,182 @@
+---
+sidebar_position: 100
+title: "OwnerTwoStepDataMod"
+description: "Manages pending owner data for two-step ownership transfers"
+gitSource: "https://github.com/Perfect-Abstractions/Compose/tree/main/src/access/Owner/TwoSteps/Data/OwnerTwoStepDataMod.sol"
+---
+
+import DocSubtitle  from '@site/src/components/docs/DocSubtitle';
+import Badge from '@site/src/components/ui/Badge';
+import Callout from '@site/src/components/ui/Callout';
+import CalloutBox from '@site/src/components/ui/CalloutBox';
+import Accordion, { AccordionGroup } from '@site/src/components/ui/Accordion';
+import PropertyTable from '@site/src/components/api/PropertyTable';
+import ExpandableCode from '@site/src/components/code/ExpandableCode';
+import CodeShowcase from '@site/src/components/code/CodeShowcase';
+import RelatedDocs from '@site/src/components/docs/RelatedDocs';
+import WasThisHelpful from '@site/src/components/docs/WasThisHelpful';
+import LastUpdated from '@site/src/components/docs/LastUpdated';
+import ReadingTime from '@site/src/components/docs/ReadingTime';
+import GradientText from '@site/src/components/ui/GradientText';
+import GradientButton from '@site/src/components/ui/GradientButton';
+
+<DocSubtitle>
+Manages pending owner data for two-step ownership transfers
+</DocSubtitle>
+
+<Callout type="info" title="Key Features">
+- Provides data storage for ERC-173 two-step ownership transfers.
+- Uses diamond storage pattern at a defined `STORAGE_POSITION`.
+- Functions are `internal` and `view`/`pure` for read-only access.
+- No external dependencies, promoting composability.
+</Callout>
+
+<Callout type="info" title="Module Usage">
+This module provides internal functions for use in your custom facets. Import it to access shared logic and storage.
+</Callout>
+
+## Overview
+
+This module stores pending owner addresses for two-step ownership transfers, crucial for secure asset management in diamonds. Facets can access this data to verify ownership states, leveraging the diamond storage pattern for immediate visibility across all interacting facets. This ensures consistent state management for ownership operations.
+
+---
+
+## Storage
+
+### PendingOwnerStorage
+
+storage-location: erc8042:erc173.owner.pending
+
+<ExpandableCode language="solidity" maxLines={15} title="Definition">
+{`struct PendingOwnerStorage {
+    address pendingOwner;
+}`}
+</ExpandableCode>
+
+### State Variables
+
+<PropertyTable
+  properties={[
+    {
+      name: "STORAGE_POSITION",
+      type: "bytes32",
+      description: "Diamond storage slot position for this module (Value: `keccak256(\"erc173.owner.pending\")`)"
+    }
+  ]}
+  showRequired={false}
+/>
+
+## Functions
+
+### getStorage
+
+Returns a pointer to the PendingOwner storage struct. Uses inline assembly to access the storage slot defined by STORAGE_POSITION.
+
+<ExpandableCode language="solidity" maxLines={8}>
+{`function getStorage() pure returns (PendingOwnerStorage storage s);`}
+</ExpandableCode>
+
+**Returns:**
+
+<PropertyTable
+  properties={[
+    {
+      name: "s",
+      type: "PendingOwnerStorage",
+      description: "The PendingOwnerStorage struct in storage."
+    }
+  ]}
+  showRequired={false}
+/>
+
+---
+### pendingOwner
+
+Get the address of the pending owner
+
+<ExpandableCode language="solidity" maxLines={8}>
+{`function pendingOwner() view returns (address);`}
+</ExpandableCode>
+
+**Returns:**
+
+<PropertyTable
+  properties={[
+    {
+      name: "-",
+      type: "address",
+      description: "The address of the pending owner."
+    }
+  ]}
+  showRequired={false}
+/>
+
+<!-- Usage Example section commented out for now -->
+<!--
+## Usage Example
+
+<ExpandableCode language="solidity" maxLines={20} title="Example Implementation">
+{`pragma solidity >=0.8.30;
+
+import {OwnerTwoStepDataMod} from "@compose/access/Owner/TwoSteps/Data/OwnerTwoStepDataMod";
+
+contract OwnershipFacet {
+    function getPendingOwnerAddress() external view returns (address) {
+        // Access the storage slot for pending owner data
+        OwnerTwoStepDataMod.PendingOwnerStorage storage pendingOwnerData = OwnerTwoStepDataMod.getStorage();
+
+        // Retrieve and return the pending owner address
+        return pendingOwnerData.pendingOwner;
+    }
+
+    function getPendingOwnerViaFunction() external view returns (address) {
+        return OwnerTwoStepDataMod.pendingOwner();
+    }
+}`}
+</ExpandableCode>
+-->
+
+## Best Practices
+
+<Callout type="tip" title="Best Practice">
+- Call `pendingOwner()` to retrieve the pending owner address.
+- Ensure storage layout compatibility when upgrading facets that interact with this module.
+- Design related ownership facets to correctly interpret and act upon the pending owner state.
+</Callout>
+
+## Integration Notes
+
+<Callout type="success" title="Shared Storage">
+This module utilizes diamond storage at the `STORAGE_POSITION` (keccak256("erc173.owner.pending")) to store the `PendingOwnerStorage` struct. The `pendingOwner` variable within this struct holds the address of the pending owner. All facets that interact with ownership logic can access this storage slot directly or via the provided `getStorage()` and `pendingOwner()` functions, ensuring that changes made by one facet are immediately visible to all others using the same storage pattern.
+</Callout>
+
+<div style={{marginTop: "3rem", paddingTop: "2rem", borderTop: "1px solid var(--ifm-color-emphasis-200)"}}>
+  <RelatedDocs
+    items={[
+      {
+        title: "OwnerDataMod",
+        href: "/docs/library/access/Owner/Data/OwnerDataMod",
+        description: "Related module in access",
+        icon: "📦"
+      },
+      {
+        title: "OwnerRenounceMod",
+        href: "/docs/library/access/Owner/Renounce/OwnerRenounceMod",
+        description: "Related module in access",
+        icon: "📦"
+      },
+      {
+        title: "OwnerTransferMod",
+        href: "/docs/library/access/Owner/Transfer/OwnerTransferMod",
+        description: "Related module in access",
+        icon: "📦"
+      }
+    ]}
+  />
+</div>
+
+<div style={{marginTop: "3rem", paddingTop: "2rem", borderTop: "1px solid var(--ifm-color-emphasis-200)"}}>
+  <WasThisHelpful pageId="OwnerTwoStepDataMod" />
+</div>
+
+<LastUpdated date="2026-03-12T19:46:59.260Z" />

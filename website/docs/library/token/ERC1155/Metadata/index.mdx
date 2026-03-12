@@ -1,0 +1,29 @@
+---
+title: "Metadata"
+description: "Metadata components for Compose diamonds."
+---
+
+import DocCard, { DocCardGrid } from '@site/src/components/docs/DocCard';
+import DocSubtitle from '@site/src/components/docs/DocSubtitle';
+import Icon from '@site/src/components/ui/Icon';
+
+<DocSubtitle>
+  Metadata components for Compose diamonds.
+</DocSubtitle>
+
+<DocCardGrid columns={2}>
+  <DocCard
+    title="ERC1155MetadataFacet"
+    description={"ERC-1155 metadata management for diamonds"}
+    href="/docs/library/token/ERC1155/Metadata/ERC1155MetadataFacet"
+    icon={<Icon name="book" size={28} />}
+    size="medium"
+  />
+  <DocCard
+    title="ERC1155MetadataMod"
+    description={"Manage ERC-1155 token metadata via diamond storage"}
+    href="/docs/library/token/ERC1155/Metadata/ERC1155MetadataMod"
+    icon={<Icon name="book" size={28} />}
+    size="medium"
+  />
+</DocCardGrid>
