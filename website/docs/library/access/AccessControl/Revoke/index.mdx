@@ -1,0 +1,29 @@
+---
+title: "Revoke"
+description: "Revoke components for Compose diamonds."
+---
+
+import DocCard, { DocCardGrid } from '@site/src/components/docs/DocCard';
+import DocSubtitle from '@site/src/components/docs/DocSubtitle';
+import Icon from '@site/src/components/ui/Icon';
+
+<DocSubtitle>
+  Revoke components for Compose diamonds.
+</DocSubtitle>
+
+<DocCardGrid columns={2}>
+  <DocCard
+    title="AccessControlRevokeFacet"
+    description={"Revokes roles from accounts within a diamond"}
+    href="/docs/library/access/AccessControl/Revoke/AccessControlRevokeFacet"
+    icon={<Icon name="book" size={28} />}
+    size="medium"
+  />
+  <DocCard
+    title="AccessControlRevokeMod"
+    description={"Revoke roles from accounts using diamond storage"}
+    href="/docs/library/access/AccessControl/Revoke/AccessControlRevokeMod"
+    icon={<Icon name="book" size={28} />}
+    size="medium"
+  />
+</DocCardGrid>

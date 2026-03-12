@@ -1,0 +1,10 @@
+{
+  "label": "ERC-6909",
+  "position": 4,
+  "collapsible": true,
+  "collapsed": true,
+  "link": {
+    "type": "doc",
+    "id": "library/token/ERC6909/index"
+  }
+}

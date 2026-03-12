@@ -1,0 +1,29 @@
+---
+title: "Revoke"
+description: "Revoke components for Compose diamonds."
+---
+
+import DocCard, { DocCardGrid } from '@site/src/components/docs/DocCard';
+import DocSubtitle from '@site/src/components/docs/DocSubtitle';
+import Icon from '@site/src/components/ui/Icon';
+
+<DocSubtitle>
+  Revoke components for Compose diamonds.
+</DocSubtitle>
+
+<DocCardGrid columns={2}>
+  <DocCard
+    title="AccessControlRevokeBatchFacet"
+    description={"Batch revoke roles from multiple accounts"}
+    href="/docs/library/access/AccessControl/Batch/Revoke/AccessControlRevokeBatchFacet"
+    icon={<Icon name="book" size={28} />}
+    size="medium"
+  />
+  <DocCard
+    title="AccessControlRevokeBatchMod"
+    description={"Revoke roles from multiple accounts efficiently"}
+    href="/docs/library/access/AccessControl/Batch/Revoke/AccessControlRevokeBatchMod"
+    icon={<Icon name="book" size={28} />}
+    size="medium"
+  />
+</DocCardGrid>

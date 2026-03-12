@@ -1,0 +1,29 @@
+---
+title: "Grant"
+description: "Grant components for Compose diamonds."
+---
+
+import DocCard, { DocCardGrid } from '@site/src/components/docs/DocCard';
+import DocSubtitle from '@site/src/components/docs/DocSubtitle';
+import Icon from '@site/src/components/ui/Icon';
+
+<DocSubtitle>
+  Grant components for Compose diamonds.
+</DocSubtitle>
+
+<DocCardGrid columns={2}>
+  <DocCard
+    title="AccessControlTemporalGrantFacet"
+    description={"Grants roles with time-based expiry"}
+    href="/docs/library/access/AccessControl/Temporal/Grant/AccessControlTemporalGrantFacet"
+    icon={<Icon name="book" size={28} />}
+    size="medium"
+  />
+  <DocCard
+    title="AccessControlTemporalGrantMod"
+    description={"Access Control Temporal Grant module for Compose diamonds"}
+    href="/docs/library/access/AccessControl/Temporal/Grant/AccessControlTemporalGrantMod"
+    icon={<Icon name="book" size={28} />}
+    size="medium"
+  />
+</DocCardGrid>

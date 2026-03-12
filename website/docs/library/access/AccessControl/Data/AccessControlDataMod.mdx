@@ -1,0 +1,271 @@
+---
+sidebar_position: 100
+title: "AccessControlDataMod"
+description: "Manage roles and check account permissions"
+gitSource: "https://github.com/Perfect-Abstractions/Compose/tree/main/src/access/AccessControl/Data/AccessControlDataMod.sol"
+---
+
+import DocSubtitle  from '@site/src/components/docs/DocSubtitle';
+import Badge from '@site/src/components/ui/Badge';
+import Callout from '@site/src/components/ui/Callout';
+import CalloutBox from '@site/src/components/ui/CalloutBox';
+import Accordion, { AccordionGroup } from '@site/src/components/ui/Accordion';
+import PropertyTable from '@site/src/components/api/PropertyTable';
+import ExpandableCode from '@site/src/components/code/ExpandableCode';
+import CodeShowcase from '@site/src/components/code/CodeShowcase';
+import RelatedDocs from '@site/src/components/docs/RelatedDocs';
+import WasThisHelpful from '@site/src/components/docs/WasThisHelpful';
+import LastUpdated from '@site/src/components/docs/LastUpdated';
+import ReadingTime from '@site/src/components/docs/ReadingTime';
+import GradientText from '@site/src/components/ui/GradientText';
+import GradientButton from '@site/src/components/ui/GradientButton';
+
+<DocSubtitle>
+Manage roles and check account permissions
+</DocSubtitle>
+
+<Callout type="info" title="Key Features">
+- Provides internal functions for role checking (`hasRole`, `requireRole`).
+- Utilizes diamond storage pattern for shared state management.
+- Reverts with a custom error `AccessControlUnauthorizedAccount` for permission failures.
+- No external dependencies, promoting composability.
+</Callout>
+
+<Callout type="info" title="Module Usage">
+This module provides internal functions for use in your custom facets. Import it to access shared logic and storage.
+</Callout>
+
+## Overview
+
+This module provides internal functions for role management and permission checks within a diamond. Facets can import and utilize these functions to interact with shared diamond storage, ensuring consistent access control logic across the diamond. Changes to roles and permissions are immediately visible to all facets sharing the same storage.
+
+---
+
+## Storage
+
+### AccessControlStorage
+
+storage struct for the AccessControl. storage-location: erc8042:compose.accesscontrol
+
+<ExpandableCode language="solidity" maxLines={15} title="Definition">
+{`struct AccessControlStorage {
+    mapping(address account => mapping(bytes32 role => bool hasRole)) hasRole;
+    mapping(bytes32 role => bytes32 adminRole) adminRole;
+}`}
+</ExpandableCode>
+
+### State Variables
+
+<PropertyTable
+  properties={[
+    {
+      name: "STORAGE_POSITION",
+      type: "bytes32",
+      description: "Diamond storage slot position for this module (Value: `keccak256(\"compose.accesscontrol\")`)"
+    },
+    {
+      name: "DEFAULT_ADMIN_ROLE",
+      type: "bytes32",
+      description: "Default administrative role identifier (bytes32(0)) (Value: `0x00`)"
+    }
+  ]}
+  showRequired={false}
+/>
+
+## Functions
+
+### getStorage
+
+Returns the storage for the AccessControl.
+
+<ExpandableCode language="solidity" maxLines={8}>
+{`function getStorage() pure returns (AccessControlStorage storage _s);`}
+</ExpandableCode>
+
+**Returns:**
+
+<PropertyTable
+  properties={[
+    {
+      name: "_s",
+      type: "AccessControlStorage",
+      description: "The storage for the AccessControl."
+    }
+  ]}
+  showRequired={false}
+/>
+
+---
+### hasRole
+
+function to check if an account has a role.
+
+<ExpandableCode language="solidity" maxLines={8}>
+{`function hasRole(bytes32 _role, address _account) view returns (bool);`}
+</ExpandableCode>
+
+**Parameters:**
+
+<PropertyTable
+  properties={[
+    {
+      name: "_role",
+      type: "bytes32",
+      description: "The role to check."
+    },
+    {
+      name: "_account",
+      type: "address",
+      description: "The account to check the role for."
+    }
+  ]}
+  showRequired={false}
+/>
+
+**Returns:**
+
+<PropertyTable
+  properties={[
+    {
+      name: "-",
+      type: "bool",
+      description: "True if the account has the role, false otherwise."
+    }
+  ]}
+  showRequired={false}
+/>
+
+---
+### requireRole
+
+function to check if an account has a required role. Reverts with AccessControlUnauthorizedAccount If the account does not have the role.
+
+<ExpandableCode language="solidity" maxLines={8}>
+{`function requireRole(bytes32 _role, address _account) view;`}
+</ExpandableCode>
+
+**Parameters:**
+
+<PropertyTable
+  properties={[
+    {
+      name: "_role",
+      type: "bytes32",
+      description: "The role to assert."
+    },
+    {
+      name: "_account",
+      type: "address",
+      description: "The account to assert the role for."
+    }
+  ]}
+  showRequired={false}
+/>
+
+## Errors
+
+<AccordionGroup>
+  <Accordion title="AccessControlUnauthorizedAccount" defaultOpen={false}>
+    <div style={{marginBottom: "1rem"}}>
+      Thrown when the account does not have a specific role.
+    </div>
+
+    <div>
+      <strong>Signature:</strong>
+      <ExpandableCode language="solidity" maxLines={5}>
+error AccessControlUnauthorizedAccount(address _account, bytes32 _role);
+      </ExpandableCode>
+    </div>
+  </Accordion>
+</AccordionGroup>
+
+<!-- Usage Example section commented out for now -->
+<!--
+## Usage Example
+
+<ExpandableCode language="solidity" maxLines={20} title="Example Implementation">
+{`pragma solidity >=0.8.30;
+
+import {AccessControlDataMod, AccessControlStorage} from "@compose/access/AccessControl/Data/AccessControlDataMod";
+
+contract AccessControlFacet {
+    AccessControlDataMod internal accessControl;
+
+    constructor(address diamondStorageAddress) {
+        // In a real deployment, diamondStorageAddress would be the diamond's address
+        // and AccessControlDataMod would be initialized to point to the correct storage slot.
+        // For this example, we simulate direct access to the module's logic.
+        accessControl = AccessControlDataMod(diamondStorageAddress); // Placeholder for actual initialization
+    }
+
+    function checkUserRole(address _user, bytes32 _role) external view returns (bool) {
+        return accessControl.hasRole(_role, _user);
+    }
+
+    function enforceAdminRole(address _account) external view {
+        bytes32 adminRole = keccak256("COMPOSE_ADMIN_ROLE"); // Example role
+        accessControl.requireRole(adminRole, _account);
+    }
+
+    // Example of how a facet might interact with the storage struct directly if needed
+    // Note: This is generally discouraged in favor of module functions for consistency
+    function getAccessControlStorage() external view returns (AccessControlStorage memory) {
+        // In a real scenario, this would involve reading from the diamond's storage
+        // at the specific slot defined by AccessControlDataMod.
+        // For demonstration, we call the module's pure function.
+        return AccessControlDataMod.getStorage();
+    }
+}`}
+</ExpandableCode>
+-->
+
+## Best Practices
+
+<Callout type="tip" title="Best Practice">
+- Ensure access control roles are properly initialized before calling `requireRole`.
+- Verify that the `AccessControlDataMod` module is correctly configured with the diamond's storage slot.
+- Handle the `AccessControlUnauthorizedAccount` error when `requireRole` reverts.
+</Callout>
+
+## Integration Notes
+
+<Callout type="success" title="Shared Storage">
+This module interacts with diamond storage at a specific position identified by `STORAGE_POSITION` (which resolves to `keccak256(\"compose.accesscontrol\")`). The `AccessControlStorage` struct is used to organize data within this slot. All functions operate directly on this shared storage, making any modifications immediately visible to other facets that access the same storage slot. The module itself is designed to be imported and used by other facets, not directly deployed as a standalone contract.
+</Callout>
+
+<div style={{marginTop: "3rem", paddingTop: "2rem", borderTop: "1px solid var(--ifm-color-emphasis-200)"}}>
+  <RelatedDocs
+    items={[
+      {
+        title: "AccessControlDataFacet",
+        href: "/docs/library/access/AccessControl/Data/AccessControlDataFacet",
+        description: "Facet using AccessControlDataMod",
+        icon: "💎"
+      },
+      {
+        title: "OwnerDataMod",
+        href: "/docs/library/access/Owner/Data/OwnerDataMod",
+        description: "Related module in access",
+        icon: "📦"
+      },
+      {
+        title: "OwnerRenounceMod",
+        href: "/docs/library/access/Owner/Renounce/OwnerRenounceMod",
+        description: "Related module in access",
+        icon: "📦"
+      },
+      {
+        title: "OwnerTransferMod",
+        href: "/docs/library/access/Owner/Transfer/OwnerTransferMod",
+        description: "Related module in access",
+        icon: "📦"
+      }
+    ]}
+  />
+</div>
+
+<div style={{marginTop: "3rem", paddingTop: "2rem", borderTop: "1px solid var(--ifm-color-emphasis-200)"}}>
+  <WasThisHelpful pageId="AccessControlDataMod" />
+</div>
+
+<LastUpdated date="2026-03-12T21:07:23.495Z" />

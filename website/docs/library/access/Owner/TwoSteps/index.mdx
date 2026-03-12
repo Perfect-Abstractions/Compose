@@ -1,0 +1,36 @@
+---
+title: "Two Steps"
+description: "Two Steps components for Compose diamonds."
+---
+
+import DocCard, { DocCardGrid } from '@site/src/components/docs/DocCard';
+import DocSubtitle from '@site/src/components/docs/DocSubtitle';
+import Icon from '@site/src/components/ui/Icon';
+
+<DocSubtitle>
+  Two Steps components for Compose diamonds.
+</DocSubtitle>
+
+<DocCardGrid columns={2}>
+  <DocCard
+    title="Data"
+    description={"Data components for Compose diamonds."}
+    href="/docs/library/access/Owner/TwoSteps/Data"
+    icon={<Icon name="package" size={28} />}
+    size="medium"
+  />
+  <DocCard
+    title="Renounce"
+    description={"Renounce components for Compose diamonds."}
+    href="/docs/library/access/Owner/TwoSteps/Renounce"
+    icon={<Icon name="package" size={28} />}
+    size="medium"
+  />
+  <DocCard
+    title="Transfer"
+    description={"Transfer components for Compose diamonds."}
+    href="/docs/library/access/Owner/TwoSteps/Transfer"
+    icon={<Icon name="package" size={28} />}
+    size="medium"
+  />
+</DocCardGrid>
