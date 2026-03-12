@@ -1,10 +1,6 @@
 name: Generate Docs
 
 on:
-  push:
-    branches: [main]
-    paths:
-      - 'src/**/*.sol'
   workflow_dispatch:
     inputs:
       target_file:
