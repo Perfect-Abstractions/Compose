@@ -2,7 +2,7 @@
 name: Testing
 about: Suggest new tests or test improvements
 title: '[TESTING] '
-labels: ['testing']
+labels: ['Testing']
 assignees: ''
 ---
 

@@ -1,0 +1,73 @@
+RoyaltyInfo
+├── when no default or token royalty is set
+│   └── it should return zero address and zero royalty amount
+├── when only default royalty is set
+│   └── it should return the default receiver and salePrice * defaultFee / FEE_DENOMINATOR
+├── when only token-specific royalty is set
+│   └── it should return the token-specific receiver and salePrice * tokenFee / FEE_DENOMINATOR
+├── when both default and token-specific royalty are set
+│   └── it should prefer the token-specific royalty over the default
+├── when sale price is zero
+│   └── it should return zero royalty amount while preserving the configured receiver
+└── when royalty fee is zero
+    └── it should return zero royalty amount while preserving the configured receiver
+
+DefaultRoyalty
+├── SetDefaultRoyalty
+│   ├── when called with a valid receiver and fee <= FEE_DENOMINATOR
+│   │   └── it should set the default royalty receiver and fraction
+│   ├── when called multiple times with different values
+│   │   └── it should overwrite the previous default royalty receiver and fraction
+│   ├── when called with fee equal to zero
+│   │   └── it should set default royalty with zero fraction but keep the receiver
+│   ├── when called with fee greater than FEE_DENOMINATOR
+│   │   └── it should revert with ERC2981InvalidDefaultRoyalty
+│   └── when called with the zero address as receiver
+│       └── it should revert with ERC2981InvalidDefaultRoyaltyReceiver
+└── DeleteDefaultRoyalty
+    ├── when a default royalty is set and then deleted
+    │   └── it should clear the default royalty receiver and fraction in storage
+    ├── when a default royalty is deleted and no token-specific royalty exists
+    │   └── royaltyInfo should return zero address and zero royalty amount
+    └── when a default royalty is deleted but token-specific royalty exists
+        └── royaltyInfo for tokens with token-specific royalty should remain unchanged
+
+TokenRoyalty
+├── SetTokenRoyalty
+│   ├── when called with a valid receiver and fee <= FEE_DENOMINATOR
+│   │   └── it should set the token-specific royalty receiver and fraction for that tokenId
+│   ├── when called for multiple tokenIds
+│   │   └── it should maintain independent royalty settings per tokenId
+│   ├── when called again for the same tokenId
+│   │   └── it should overwrite the previous token-specific royalty receiver and fraction
+│   ├── when called with fee equal to zero
+│   │   └── it should set token-specific royalty with zero fraction but keep the receiver
+│   ├── when called with fee greater than FEE_DENOMINATOR
+│   │   └── it should revert with ERC2981InvalidTokenRoyalty
+│   └── when called with the zero address as receiver
+│       └── it should revert with ERC2981InvalidTokenRoyaltyReceiver
+└── ResetTokenRoyalty
+    ├── when token-specific royalty exists and default royalty is set
+    │   └── it should clear token-specific royalty and cause royaltyInfo to fall back to the default royalty
+    ├── when token-specific royalty exists and no default royalty is set
+    │   └── it should clear token-specific royalty and cause royaltyInfo to return zero address and zero royalty amount
+    └── when multiple tokenIds have token-specific royalty and some are reset
+        └── it should only clear royalty for the reset tokenIds and leave the others unchanged
+
+Sequences
+├── when default royalty is set, then token-specific royalty is set, then token-specific royalty is reset
+│   └── royaltyInfo should first use the default, then the token-specific, then fall back to the default again
+└── when default royalty is set, multiple tokens have different token-specific royalties, and default royalty is deleted
+    ├── royaltyInfo for tokens with token-specific royalty should continue using their token-specific configuration
+    └── royaltyInfo for tokens without token-specific royalty should return zero address and zero royalty amount
+
+EdgeCases
+├── when sale price and fee create fractional royalty amounts
+│   └── it should compute the royalty amount correctly without overflow
+├── when sale price is very large but below overflow thresholds
+│   └── it should compute the royalty amount without reverting
+├── when tokenId is zero
+│   └── it should behave the same as for other valid tokenIds
+└── when tokenId is the maximum uint256 value
+    └── it should behave the same as for other valid tokenIds
+

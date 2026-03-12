@@ -1,5 +1,5 @@
 import React from 'react';
-import clsx from 'clsx';
+import Icon from '../../ui/Icon';
 import styles from './styles.module.css';
 
 /**
@@ -41,22 +41,7 @@ export default function ReadingTime({
 
   return (
     <div className={styles.readingTime}>
-      <svg width="16" height="16" viewBox="0 0 20 20" fill="none">
-        <path
-          d="M10 18.333a8.333 8.333 0 100-16.666 8.333 8.333 0 000 16.666z"
-          stroke="currentColor"
-          strokeWidth="1.5"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-        />
-        <path
-          d="M10 6.667v5l3.333 2"
-          stroke="currentColor"
-          strokeWidth="1.5"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-        />
-      </svg>
+      <Icon name="clock-outline" size={16} />
       <span>{minutes} {timeText} read</span>
     </div>
   );

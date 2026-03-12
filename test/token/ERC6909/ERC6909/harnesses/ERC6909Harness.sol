@@ -1,6 +1,10 @@
 // SPDX-License-Identifier: MIT
 pragma solidity >=0.8.30;
 
+/* Compose
+ * https://compose.diamonds
+ */
+
 import "../../../../../src/token/ERC6909/ERC6909/ERC6909Mod.sol" as ERC6909Mod;
 
 /**

@@ -1,6 +1,10 @@
 // SPDX-License-Identifier: MIT
 pragma solidity >=0.8.30;
 
+/* Compose
+ * https://compose.diamonds
+ */
+
 /*
  * @title LibERC165 — ERC-165 Standard Interface Detection Library
  * @notice Provides internal functions and storage layout for ERC-165 interface detection.
@@ -10,11 +14,11 @@ pragma solidity >=0.8.30;
 /*
  * Storage slot identifier, defined using keccak256 hash of the library diamond storage identifier.
  */
-bytes32 constant STORAGE_POSITION = keccak256("compose.erc165");
+bytes32 constant STORAGE_POSITION = keccak256("erc165");
 
 /*
  * @notice ERC-165 storage layout using the ERC-8042 standard.
- * @custom:storage-location erc8042:compose.erc165
+ * @custom:storage-location erc8042:erc165
  */
 struct ERC165Storage {
     /*

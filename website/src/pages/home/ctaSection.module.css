@@ -1,6 +1,6 @@
 /* CTA Section */
 
-.ctaSection { padding: 8rem 0; background: linear-gradient(180deg, #ffffff 0%, #f8fafc 100%); position: relative; }
+.ctaSection { padding: 5rem 0; background: linear-gradient(180deg, #ffffff 0%, #f8fafc 100%); position: relative; }
 
 .ctaContent { max-width: 800px; margin: 0 auto; text-align: center; padding: 4rem 2rem; background: white; border: 1px solid #e2e8f0; border-radius: 2rem; box-shadow: 0 20px 40px rgba(0,0,0,0.08); }
 .ctaTitle { font-size: clamp(2rem, 4vw, 3rem); font-weight: 800; line-height: 1.2; letter-spacing: -0.03em; color: #0f172a; margin-bottom: 1.5rem; text-align: center; }

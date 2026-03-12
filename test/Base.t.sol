@@ -1,6 +1,10 @@
 // SPDX-License-Identifier: MIT
 pragma solidity >=0.8.30 <0.9.0;
 
+/* Compose
+ * https://compose.diamonds
+ */
+
 import {StdCheats} from "forge-std/StdCheats.sol";
 import {StdAssertions} from "forge-std/StdAssertions.sol";
 
@@ -32,9 +36,9 @@ abstract contract Base_Test is Constants, Modifiers, StdAssertions, StdCheats {
         createTestUsers();
         defaults.setUsers(users);
 
-        setVariables(defaults, users); // set in modifier contract
+        setVariables(defaults, users);
 
-        setMsgSender(users.alice); // alice default caller
+        setMsgSender(users.alice);
     }
 
     /*//////////////////////////////////////////////////////////////

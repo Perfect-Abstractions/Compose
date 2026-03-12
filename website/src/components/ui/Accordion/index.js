@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import clsx from 'clsx';
+import Icon from '../Icon';
 import styles from './styles.module.css';
 
 /**
@@ -31,22 +32,11 @@ export default function Accordion({
         aria-controls={`accordion-content-${title?.replace(/\s+/g, '-').toLowerCase()}`}
       >
         <span className={styles.accordionTitle}>{title}</span>
-        <svg
+        <Icon
+          name="accordion-chevron"
+          size={20}
           className={clsx(styles.accordionIcon, isOpen && styles.accordionIconOpen)}
-          width="20"
-          height="20"
-          viewBox="0 0 20 20"
-          fill="none"
-          aria-hidden="true"
-        >
-          <path
-            d="M5 7.5L10 12.5L15 7.5"
-            stroke="currentColor"
-            strokeWidth="2"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-          />
-        </svg>
+        />
       </button>
       <div
         id={`accordion-content-${title?.replace(/\s+/g, '-').toLowerCase()}`}

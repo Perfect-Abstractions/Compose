@@ -1,0 +1,170 @@
+.banner {
+ position: relative;
+ width: 100%;
+ box-sizing: border-box;
+ display: flex;
+ align-items: center;
+ justify-content: center;
+ padding: 0.75rem 1rem;
+ gap: 0.75rem;
+ /* Light mode: blend into navbar glass */
+ background: radial-gradient(
+   circle at 50% 0%,
+   rgba(191, 219, 254, 0.9) 0%,
+   rgba(226, 232, 240, 0.9) 35%,
+   rgba(248, 250, 252, 0.98) 70%,
+   rgba(248, 250, 252, 1) 100%
+ );
+ border-bottom: 1px solid rgba(148, 163, 184, 0.22);
+ color: #0f172a;
+ text-shadow: 0 1px 2px rgba(255, 255, 255, 0.7);
+ font-size: 0.9rem;
+ font-weight: 600;
+ overflow: hidden;
+}
+
+.banner::before {
+ content: "";
+ position: absolute;
+ inset: -22%;
+ /* Light mode: gentle blue focus behind text */
+ background: radial-gradient(
+   circle at 50% 0%,
+   rgba(148, 189, 255, 0.55) 0%,
+   rgba(148, 189, 255, 0.25) 26%,
+   transparent 70%
+ );
+ opacity: 0;
+ transform: scale(0.55);
+ pointer-events: none;
+ animation: bannerPulse 12s ease-in-out infinite;
+}
+
+.bannerInner {
+ position: relative;
+ width: 100%;
+ max-width: 1200px;
+ display: flex;
+ align-items: center;
+ justify-content: center;
+ gap: 0.75rem;
+}
+
+.bannerInner::before {
+ content: none;
+}
+
+.bannerMessage {
+ display: flex;
+ align-items: center;
+ justify-content: center;
+ flex-wrap: wrap;
+ gap: 0.5rem;
+ text-align: center;
+ flex: 1;
+}
+
+.bannerLink {
+  font-weight: 600;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+  color: var(--ifm-color-primary-darkest);
+}
+
+.bannerLink:hover {
+  text-decoration-thickness: 2px;
+}
+
+.closeButton {
+  border: none;
+  background: transparent;
+  color: inherit;
+  cursor: pointer;
+  padding: 0.15rem;
+ display: flex;
+ align-items: center;
+ justify-content: center;
+ margin-left: auto;
+}
+
+.closeButton:focus-visible {
+  outline: 2px solid var(--ifm-color-emphasis-0);
+  outline-offset: 2px;
+}
+
+/* Ensure close icon has good contrast in both themes */
+.closeButton img {
+  opacity: 0.7;
+}
+
+[data-theme='dark'] .closeButton img {
+  filter: invert(1) brightness(1.6);
+  opacity: 0.9;
+}
+
+@keyframes bannerPulse {
+ 0% {
+  opacity: 0;
+  transform: scale(0.55);
+ }
+ 25% {
+  opacity: 0.7;
+ }
+ 55% {
+  opacity: 0.3;
+  transform: scale(1.25);
+ }
+ 100% {
+  opacity: 0;
+  transform: scale(1.45);
+ }
+}
+
+/* Dark theme overrides: keep current deep blue band look */
+[data-theme='dark'] .banner {
+  background: radial-gradient(
+    circle at 50% 0%,
+    var(--compose-primary-500) 0%,
+    var(--compose-bg-800) 45%,
+    var(--compose-bg-900) 100%
+  );
+  border-bottom: 1px solid rgba(148, 163, 184, 0.25);
+  color: #f9fbff;
+  text-shadow: 0 1px 2px rgba(15, 23, 42, 0.85);
+}
+
+[data-theme='dark'] .banner::before {
+  background: radial-gradient(
+    circle at 50% 0%,
+    rgba(15, 23, 42, 0.9) 0%,
+    rgba(15, 23, 42, 0.75) 28%,
+    transparent 70%
+  );
+}
+
+[data-theme='dark'] .bannerLink {
+  color: var(--ifm-color-primary-lightest);
+}
+
+@media (prefers-reduced-motion: reduce) {
+ .banner::before,
+ .bannerInner::before {
+  animation: none !important;
+  opacity: 0;
+ }
+
+ .banner {
+  background: linear-gradient(90deg, #2148ff, #3f7fff);
+ }
+}
+
+@media (max-width: 600px) {
+.banner {
+ font-size: 0.8rem;
+}
+
+ .bannerInner {
+  align-items: center;
+ }
+}
+

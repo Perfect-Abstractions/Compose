@@ -3,7 +3,11 @@
 .statsSection { padding: 6rem 0; background: var(--compose-bg-900); position: relative; overflow: hidden; }
 .statsSection::before { content: ''; position: absolute; inset: 0; background: radial-gradient(ellipse 60% 50% at 50% 50%, rgba(59,130,246,0.1), transparent); pointer-events: none; }
 
-.statsGrid { position: relative; display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 2rem; max-width: 1200px; margin: 0 auto; }
+/* 2 col on mobile/tablet → 4 col on desktop; never 3+1 orphan */
+.statsGrid { position: relative; display: grid; grid-template-columns: repeat(2, 1fr); gap: 2rem; max-width: 1200px; margin: 0 auto; }
+@media screen and (min-width: 960px) {
+  .statsGrid { grid-template-columns: repeat(4, 1fr); }
+}
 
 .statCard { position: relative; text-align: center; padding: 3rem 2rem; background: rgba(255,255,255,0.03); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); border: 1px solid rgba(255,255,255,0.08); border-radius: 1.25rem; transition: all var(--motion-duration-normal) var(--motion-ease-standard); overflow: hidden; display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 220px; }
 .statCard::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px; background: linear-gradient(90deg, #60a5fa, var(--compose-primary-500), var(--compose-primary-600)); opacity: 0; transition: opacity var(--motion-duration-normal) ease; }
@@ -18,7 +22,7 @@
 /* Responsive */
 @media screen and (max-width: 768px) {
   .statsSection { padding: 4rem 0; }
-  .statsGrid { grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 1.25rem; }
+  .statsGrid { gap: 1.25rem; }
   .statCard { padding: 2rem 1rem; }
   .statIcon { font-size: 2.5rem; margin-bottom: 1rem; }
   .statValue { font-size: 2rem; }

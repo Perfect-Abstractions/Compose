@@ -15,22 +15,27 @@
     "generate-docs": "cd .. && forge doc && SKIP_ENHANCEMENT=true node .github/scripts/generate-docs.js --all"
   },
   "dependencies": {
+    "@acid-info/docusaurus-og": "^1.0.3-beta.2",
     "@docusaurus/core": "3.9.2",
     "@docusaurus/preset-classic": "3.9.2",
     "@docusaurus/theme-mermaid": "^3.9.2",
+    "@giscus/react": "^3.1.0",
     "@mdx-js/react": "^3.0.0",
     "clsx": "^2.0.0",
+    "docusaurus-markdown-source-plugin": "^2.0.1",
     "dotenv": "^17.2.3",
     "gsap": "^3.13.0",
     "posthog-docusaurus": "^2.0.5",
     "prism-react-renderer": "^2.3.0",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
+    "react-hot-toast": "^2.4.1",
     "three": "^0.181.2"
   },
   "devDependencies": {
     "@docusaurus/module-type-aliases": "3.9.2",
-    "@docusaurus/types": "3.9.2"
+    "@docusaurus/types": "3.9.2",
+    "@fontsource/inter": "^5.2.8"
   },
   "browserslist": {
     "production": [

@@ -1,0 +1,26 @@
+// SPDX-License-Identifier: MIT
+pragma solidity >=0.8.30;
+
+/* Compose
+ * https://compose.diamonds
+ */
+
+import {ERC721DataFacet_Base_Test} from "test/unit/token/ERC721/Data/ERC721DataFacetBase.t.sol";
+import {ERC721DataFacet} from "src/token/ERC721/Data/ERC721DataFacet.sol";
+
+/**
+ *  @dev BTT spec: test/trees/ERC721.tree
+ */
+contract ExportSelectors_ERC721DataFacet_Unit_Test is ERC721DataFacet_Base_Test {
+    function test_ShouldReturnSelectors_ExportSelectors() external view {
+        bytes memory selectors = facet.exportSelectors();
+        bytes memory expected = abi.encodePacked(
+            ERC721DataFacet.balanceOf.selector,
+            ERC721DataFacet.ownerOf.selector,
+            ERC721DataFacet.getApproved.selector,
+            ERC721DataFacet.isApprovedForAll.selector
+        );
+        assertEq(selectors, expected, "exportSelectors");
+    }
+}
+

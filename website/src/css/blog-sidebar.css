@@ -6,17 +6,15 @@
 /* Target blog sidebar with more specific selectors */
 .theme-blog-wrapper .col--3,
 .theme-blog-wrapper [class*="col--3"],
-[class*="blog"] [class*="col--3"],
-.col--3:has(strong) {
+[class*="blog"] [class*="col--3"] {
   position: relative;
   padding: 1.5rem 0 1.5rem 2rem !important;
 }
 
-/* Timeline vertical line */
+/* Timeline vertical line (blog sidebar only) */
 .theme-blog-wrapper .col--3::before,
 .theme-blog-wrapper [class*="col--3"]::before,
-[class*="blog"] [class*="col--3"]::before,
-.col--3:has(strong)::before {
+[class*="blog"] [class*="col--3"]::before {
   content: '';
   position: absolute;
   left: 0.625rem;
@@ -33,8 +31,7 @@
 
 [data-theme='dark'] .theme-blog-wrapper .col--3::before,
 [data-theme='dark'] .theme-blog-wrapper [class*="col--3"]::before,
-[data-theme='dark'] [class*="blog"] [class*="col--3"]::before,
-[data-theme='dark'] .col--3:has(strong)::before {
+[data-theme='dark'] [class*="blog"] [class*="col--3"]::before {
   background: linear-gradient(180deg, 
     #60a5fa 0%,
     #93c5fd 10%,
@@ -264,6 +261,48 @@
   .theme-blog-wrapper [class*="col--3"] ul li a,
   [class*="blog"] [class*="col--3"] ul li a {
     padding-left: 0;
+  }
+}
+
+/* Desktop-only: hide blog sidebar for focus mode (toggle in BlogLayout) */
+@media (min-width: 997px) {
+  /* Collapsed left sidebar takes no space so content + ToC can fill the row */
+  .blog-sidebar-hidden .theme-blog-wrapper > .col--3 {
+    flex: 0 0 0 !important;
+    width: 0 !important;
+    min-width: 0 !important;
+    overflow: hidden;
+    padding: 0 !important;
+    margin: 0 !important;
+    border: none;
+    transition: width var(--ifm-transition-fast) ease;
+  }
+
+  .blog-sidebar-hidden .theme-blog-wrapper .col--3::before,
+  .blog-sidebar-hidden .theme-blog-wrapper [class*="col--3"]::before {
+    display: none;
+  }
+
+  /* Content wrapper width and padding when blog sidebar is closed (match docs) */
+  .container.blog-sidebar-hidden {
+    max-width: var(--ifm-container-width) !important;
+    margin-left: auto !important;
+    margin-right: auto !important;
+    padding: var(--ifm-docs-sidebar-closed-padding-top, 1rem)
+      var(--ifm-docs-sidebar-closed-padding-right, 0rem)
+      var(--ifm-docs-sidebar-closed-padding-bottom, 0)
+      var(--ifm-docs-sidebar-closed-padding-left, 2.5rem) !important;
+  }
+
+  /* Main content grows to fill space; right ToC keeps fixed width */
+  .blog-sidebar-hidden .theme-blog-wrapper > main.col--9 {
+    flex: 1 1 0 !important;
+    min-width: 0;
+    max-width: none !important;
+  }
+
+  .blog-sidebar-hidden .theme-blog-wrapper > .col--2 {
+    flex: 0 0 calc(2 / 12 * 100%) !important;
   }
 }
 

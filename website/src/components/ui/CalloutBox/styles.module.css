@@ -89,12 +89,12 @@
 }
 
 .callout.note {
-  border-left-color: #6366f1;
-  background: linear-gradient(135deg, rgba(99, 102, 241, 0.05) 0%, transparent 100%);
+  border-left-color: #3b82f6;
+  background: linear-gradient(135deg, rgba(59, 130, 246, 0.05) 0%, transparent 100%);
 }
 
 .callout.note .calloutTitle {
-  color: #6366f1;
+  color: #3b82f6;
 }
 
 @media (max-width: 768px) {

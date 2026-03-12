@@ -1,0 +1,287 @@
+/**
+ * Footer Newsletter Signup Component Styles
+ * Compact, inline newsletter form designed for footer placement
+ */
+
+.footerNewsletter {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  width: 100%;
+  box-sizing: border-box;
+  padding: 0;
+  margin: 0;
+}
+
+.footerNewsletterTitle {
+  margin: 0 0 0.25rem 0;
+  padding: 0;
+  color: var(--ifm-color-primary-lighter);
+  font-weight: 700;
+}
+
+[data-theme='dark'] .footerNewsletterTitle {
+  color: #ffffff;
+}
+
+.footerNewsletterDescription {
+  margin: 0 0 1rem 0;
+  font-size: 0.8125rem;
+  line-height: 1.5;
+  color: rgba(255, 255, 255, 0.8);
+  padding: 0;
+}
+
+[data-theme='dark'] .footerNewsletterDescription {
+  color: rgba(255, 255, 255, 0.7);
+}
+
+.footerNewsletterForm {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.footerNewsletterInputGroup {
+  display: flex;
+  gap: 0.5rem;
+  align-items: stretch;
+  flex-wrap: wrap;
+  padding: 0;
+  margin: 0;
+}
+
+/* Desktop: side-by-side layout */
+@media (min-width: 577px) {
+  .footerNewsletterInputGroup {
+    flex-wrap: nowrap;
+  }
+  
+  .footerNewsletterInput {
+    min-width: 200px;
+    flex: 1 1 auto;
+  }
+  
+  .footerNewsletterButton {
+    flex: 0 0 auto;
+  }
+}
+
+/* Larger desktop: maximize input field width */
+@media (min-width: 997px) {
+  .footerNewsletterInput {
+    min-width: 320px;
+    font-size: 1rem;
+    padding: 0.625rem 1rem;
+  }
+  
+  .footerNewsletterButton {
+    min-width: 120px;
+    padding: 0.625rem 1.5rem;
+    font-size: 0.9375rem;
+  }
+}
+
+/* Mobile: stacked layout */
+@media (max-width: 576px) {
+  .footerNewsletterInputGroup {
+    flex-direction: column;
+  }
+  
+  .footerNewsletterInput,
+  .footerNewsletterButton {
+    width: 100%;
+    min-width: 0;
+  }
+}
+
+.footerNewsletterInput {
+  flex: 1;
+  min-width: 0;
+  width: 100%;
+  padding: 0.5rem 0.75rem;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 4px;
+  font-size: 0.875rem;
+  font-family: var(--ifm-font-family-base);
+  background: rgba(255, 255, 255, 0.1);
+  color: #ffffff;
+  transition: border-color 0.2s, box-shadow 0.2s, background 0.2s;
+  box-sizing: border-box;
+  -webkit-appearance: none;
+  appearance: none;
+}
+
+/* Ensure input is visible on footer background */
+.footerNewsletterInput::placeholder {
+  color: rgba(255, 255, 255, 0.6);
+  opacity: 1;
+}
+
+.footerNewsletterInput::placeholder {
+  color: rgba(255, 255, 255, 0.6);
+  opacity: 1;
+}
+
+.footerNewsletterInput:focus {
+  outline: none;
+  border-color: var(--ifm-color-primary-lighter);
+  background: rgba(255, 255, 255, 0.15);
+  box-shadow: 0 0 0 2px rgba(96, 165, 250, 0.2);
+}
+
+[data-theme='dark'] .footerNewsletterInput {
+  background: rgba(255, 255, 255, 0.1);
+  border-color: rgba(255, 255, 255, 0.2);
+  color: #ffffff;
+}
+
+[data-theme='dark'] .footerNewsletterInput::placeholder {
+  color: rgba(255, 255, 255, 0.6);
+}
+
+[data-theme='dark'] .footerNewsletterInput:focus {
+  background: rgba(255, 255, 255, 0.15);
+  border-color: var(--ifm-color-primary-lighter);
+}
+
+.footerNewsletterInput:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.footerNewsletterButton {
+  padding: 0.5rem 1rem;
+  white-space: nowrap;
+  min-width: 100px;
+  font-size: 0.875rem;
+  font-weight: 500;
+  border-radius: 4px;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  cursor: pointer;
+  transition: opacity 0.2s, transform 0.2s, background 0.2s, border-color 0.2s;
+  background: rgba(96, 165, 250, 0.2);
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+}
+
+.footerNewsletterButton:hover:not(:disabled) {
+  background: rgba(96, 165, 250, 0.3);
+  border-color: rgba(96, 165, 250, 0.5);
+}
+
+.footerNewsletterButton:hover:not(:disabled) {
+  opacity: 0.9;
+  transform: translateY(-1px);
+}
+
+.footerNewsletterButton:active:not(:disabled) {
+  transform: translateY(0);
+}
+
+.footerNewsletterButton:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.footerNewsletterButtonSpinner {
+  width: 14px;
+  height: 14px;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  border-top-color: white;
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+/* ============================================
+   TRUST SIGNAL
+   ============================================ */
+
+.footerNewsletterTrustSignal {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.75rem;
+  color: rgba(255, 255, 255, 0.7);
+  margin: 0.25rem 0 0 0;
+  padding: 0;
+  opacity: 0.9;
+}
+
+[data-theme='dark'] .footerNewsletterTrustSignal {
+  color: rgba(255, 255, 255, 0.6);
+}
+
+.footerNewsletterTrustIcon {
+  width: 14px;
+  height: 14px;
+  opacity: 0.8;
+  flex-shrink: 0;
+}
+
+.footerNewsletterMessage {
+  font-size: 0.8125rem;
+  line-height: 1.4;
+  padding: 0.5rem 0.75rem;
+  border-radius: 4px;
+  margin-top: 0.25rem;
+  animation: slideIn 0.2s ease-out;
+}
+
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.footerNewsletterMessage--success {
+  background: rgba(16, 185, 129, 0.1);
+  color: #10b981;
+  border: 1px solid rgba(16, 185, 129, 0.2);
+}
+
+[data-theme='dark'] .footerNewsletterMessage--success {
+  background: rgba(16, 185, 129, 0.15);
+  border-color: rgba(52, 211, 153, 0.3);
+  color: #34d399;
+}
+
+.footerNewsletterMessage--error {
+  background: rgba(239, 68, 68, 0.1);
+  color: #ef4444;
+  border: 1px solid rgba(239, 68, 68, 0.2);
+}
+
+[data-theme='dark'] .footerNewsletterMessage--error {
+  background: rgba(239, 68, 68, 0.15);
+  border-color: rgba(248, 113, 113, 0.3);
+  color: #f87171;
+}
+
+/* Reduced motion support */
+@media (prefers-reduced-motion: reduce) {
+  .footerNewsletterInput,
+  .footerNewsletterButton,
+  .footerNewsletterMessage,
+  .footerNewsletterButtonSpinner {
+    transition: none;
+    animation: none;
+  }
+
+  .footerNewsletterButton:hover:not(:disabled) {
+    transform: none;
+  }
+}

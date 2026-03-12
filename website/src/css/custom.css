@@ -77,6 +77,9 @@
 /* Import custom scrollbar styles */
 @import url('./scrollbar.css');
 
+/* Import toast notification styles */
+@import url('./toast.css');
+
 /* ============================================
    RESPONSIVE STYLES
    ============================================ */
@@ -84,7 +87,8 @@
 /* Import responsive breakpoints */
 @import url('./responsive.css');
 
-
+/* Import markdown source plugin dropdown styles */
+@import url('./markdown-source-plugin.css');
 
 /* Make accordion body white in both light and dark mode */
 [class^="accordionContent_"] {
@@ -109,4 +113,27 @@
 .token.constant,
 .token.important {
   font-style: normal !important;
+}
+
+/* ============================================
+   GISCUS COMMENTS STYLING
+   ============================================ */
+
+/* Ensure Giscus iframe container matches our design */
+.giscus,
+.giscus-frame {
+  width: 100%;
+  border: none;
+  margin-top: 1.5rem;
+}
+
+/* Style the Giscus container wrapper */
+[class*="giscus"] {
+  font-family: var(--ifm-font-family-base);
+}
+
+/* Ensure proper spacing for comments section in blog posts */
+article .giscus {
+  margin-top: 2rem;
+  margin-bottom: 2rem;
 }

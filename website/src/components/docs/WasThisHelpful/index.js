@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import clsx from 'clsx';
+import Icon from '../../ui/Icon';
 import styles from './styles.module.css';
 import { useDocumentationFeedback } from '../../../hooks/useDocumentationFeedback';
 
@@ -34,15 +35,7 @@ export default function WasThisHelpful({
   if (submitted) {
     return (
       <div className={styles.feedbackSubmitted}>
-        <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
-          <path
-            d="M16.667 5L7.5 14.167 3.333 10"
-            stroke="currentColor"
-            strokeWidth="2"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-          />
-        </svg>
+        <Icon name="checkmark-stroke" size={20} />
         <span>Thank you for your feedback!</span>
       </div>
     );

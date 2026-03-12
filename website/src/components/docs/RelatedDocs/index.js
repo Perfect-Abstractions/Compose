@@ -1,6 +1,6 @@
 import React from 'react';
 import Link from '@docusaurus/Link';
-import clsx from 'clsx';
+import Icon from '../../ui/Icon';
 import styles from './styles.module.css';
 
 /**
@@ -34,21 +34,7 @@ export default function RelatedDocs({
                 <p className={styles.relatedDocDescription}>{item.description}</p>
               )}
             </div>
-            <svg
-              className={styles.relatedDocArrow}
-              width="20"
-              height="20"
-              viewBox="0 0 20 20"
-              fill="none"
-            >
-              <path
-                d="M7.5 5L12.5 10L7.5 15"
-                stroke="currentColor"
-                strokeWidth="2"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              />
-            </svg>
+            <Icon name="arrow-right-stroke" size={20} className={styles.relatedDocArrow} />
           </Link>
         ))}
       </div>

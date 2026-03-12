@@ -1,6 +1,10 @@
 // SPDX-License-Identifier: MIT
 pragma solidity >=0.8.30;
 
+/* Compose
+ * https://compose.diamonds
+ */
+
 /**
  * @title ERC-165 Standard Interface Detection Interface
  * @notice Interface for detecting what interfaces a contract implements
@@ -29,11 +33,11 @@ contract ERC165Facet {
      * @notice Storage slot identifier for ERC-165 interface detection
      * @dev Defined using keccak256 hash following ERC-8042 standard
      */
-    bytes32 constant STORAGE_POSITION = keccak256("compose.erc165");
+    bytes32 constant STORAGE_POSITION = keccak256("erc165");
 
     /**
      * @notice ERC-165 storage layout using the ERC-8042 standard
-     * @custom:storage-location erc8042:compose.erc165
+     * @custom:storage-location erc8042:erc165
      */
     struct ERC165Storage {
         /**
@@ -73,5 +77,14 @@ contract ERC165Facet {
         }
 
         return s.supportedInterfaces[_interfaceId];
+    }
+
+    /**
+     * @notice Exports the function selectors of the ERC165Facet
+     * @dev This function is use as a selector discovery mechanism for diamonds
+     * @return selectors The exported function selectors of the ERC165Facet
+     */
+    function exportSelectors() external pure returns (bytes memory) {
+        return bytes.concat(this.supportsInterface.selector);
     }
 }

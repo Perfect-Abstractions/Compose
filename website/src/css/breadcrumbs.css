@@ -3,6 +3,13 @@
  * Breadcrumb navigation styling
  */
 
+/* Remove bottom margin from breadcrumbs nav (override theme's .breadcrumbsContainer) */
+.theme-doc-breadcrumbs,
+nav[aria-label="Breadcrumbs"],
+[class*="breadcrumbsContainer"] {
+  margin-bottom: 0;
+}
+
 /* Light mode breadcrumbs */
 .breadcrumbs__link {
   color: #64748b;

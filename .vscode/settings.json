@@ -25,5 +25,11 @@
         "strings": true
     },
     "editor.suggestOnTriggerCharacters": true,
-    "editor.suggestSelection": "first"
+    "editor.suggestSelection": "first",
+    "cSpell.words": [
+        "accesscontrol",
+        "chainid",
+        "crosschain",
+        "mulmod"
+    ]
 }

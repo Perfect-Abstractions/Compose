@@ -11,3 +11,67 @@
   padding-bottom: 0;
 }
 
+/* Integrate newsletter into footer links grid as a column */
+.footerWrapper :global(.footer__links) {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 2rem;
+}
+
+/* Newsletter section styling - appears as a footer column */
+.footerNewsletterSection {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+/* Desktop: Newsletter appears as rightmost column with larger width */
+@media (min-width: 997px) {
+  .footerWrapper :global(.footer__links) {
+    grid-template-columns: repeat(3, 1fr) 480px;
+    gap: 2rem;
+  }
+  
+  /* Newsletter is naturally last in DOM on desktop, no order needed */
+}
+
+/* Tablet and Mobile: Newsletter appears first */
+@media (max-width: 996px) {
+  .footerWrapper :global(.footer__links) {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+  }
+  
+  .footerNewsletterSection {
+    order: -1; /* Move to the start on mobile/tablet */
+    margin-top: 0;
+    margin-bottom: 0;
+    /* Match padding of other footer columns */
+    padding: 0 var(--ifm-spacing-horizontal);
+    margin-left: 0;
+    margin-right: 0;
+  }
+  
+  /* Ensure other footer columns maintain their order */
+  .footerWrapper :global(.footer__links > *:not(.footerNewsletterSection)) {
+    order: 0;
+  }
+}
+
+/* Mobile: Full width with matching padding */
+@media (max-width: 576px) {
+  .footerWrapper :global(.footer__links) {
+    gap: 1.5rem;
+  }
+  
+  .footerNewsletterSection {
+    order: -1; /* First on mobile */
+    margin-bottom: 1rem;
+    /* Match padding of other footer columns */
+    padding: 0 var(--ifm-spacing-horizontal);
+    margin-left: 0;
+    margin-right: 0;
+  }
+}
+

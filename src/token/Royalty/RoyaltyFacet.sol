@@ -1,6 +1,10 @@
 // SPDX-License-Identifier: MIT
 pragma solidity >=0.8.30;
 
+/* Compose
+ * https://compose.diamonds
+ */
+
 /**
  * @title Royalty Facet - ERC-2981 NFT Royalty Standard Implementation
  * @notice Implements royalty queries for NFT secondary sales per ERC-2981 standard.
@@ -12,7 +16,7 @@ contract RoyaltyFacet {
     /**
      * @notice Storage slot identifier for royalty storage.
      */
-    bytes32 constant STORAGE_POSITION = keccak256("compose.erc2981");
+    bytes32 constant STORAGE_POSITION = keccak256("erc2981");
 
     /**
      * @dev The denominator with which to interpret royalty fees as a percentage of sale price.
@@ -32,7 +36,7 @@ contract RoyaltyFacet {
     }
 
     /**
-     * @custom:storage-location erc8042:compose.erc2981
+     * @custom:storage-location erc8042:erc2981
      */
     struct RoyaltyStorage {
         RoyaltyInfo defaultRoyaltyInfo;

@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import clsx from 'clsx';
+import Icon from '../../ui/Icon';
 import styles from './styles.module.css';
 
 /**
@@ -46,28 +46,12 @@ export default function TerminalCommand({
           >
             {copied ? (
               <>
-                <svg width="16" height="16" viewBox="0 0 20 20" fill="none">
-                  <path
-                    d="M16.667 5L7.5 14.167 3.333 10"
-                    stroke="currentColor"
-                    strokeWidth="2"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                  />
-                </svg>
+                <Icon name="checkmark-stroke" size={16} />
                 Copied!
               </>
             ) : (
               <>
-                <svg width="16" height="16" viewBox="0 0 20 20" fill="none">
-                  <path
-                    d="M13.333 8.333H15A1.667 1.667 0 0116.667 10v6.667A1.667 1.667 0 0115 18.333H5A1.667 1.667 0 013.333 16.667V10A1.667 1.667 0 015 8.333h1.667m0-3.333h5m-5 0v5m0-5h5m-5 0v5m5-5v5"
-                    stroke="currentColor"
-                    strokeWidth="1.5"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                  />
-                </svg>
+                <Icon name="clipboard-outline" size={16} />
                 Copy
               </>
             )}

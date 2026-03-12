@@ -1,6 +1,10 @@
 // SPDX-License-Identifier: MIT
 pragma solidity >=0.8.30;
 
+/* Compose
+ * https://compose.diamonds
+ */
+
 import {Defaults} from "./Defaults.sol";
 import {Users} from "./Types.sol";
 import {Utils} from "./Utils.sol";
