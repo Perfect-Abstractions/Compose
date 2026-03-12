@@ -1,0 +1,13 @@
+NonReentrancy
+├── GuardedIncrement
+│   ├── when called once
+│   │   └── it should increment the counter by 1
+│   └── when called twice sequentially
+│       └── it should increment the counter to 2
+├── ReentrancyProtection
+│   └── when a guarded function attempts to reenter itself (direct or via external call)
+│       └── it should revert with Reentrancy
+└── GuardResetOnRevert
+    └── when a guarded function reverts after enter and before exit
+        └── it should clear the guard so that future guarded calls succeed
+

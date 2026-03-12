@@ -1,0 +1,106 @@
+Data
+├── BalanceOf
+│   ├── when account and id are queried
+│   │   └── it should return the balance for that (account, id)
+│   └── when account is zero address
+│       └── it may return 0 (no revert)
+├── BalanceOfBatch
+│   ├── when accounts.length != ids.length
+│   │   └── it should revert with ERC1155InvalidArrayLength
+│   └── when accounts.length == ids.length
+│       ├── it should return an array of balances in order
+│       └── when arrays are empty
+│           └── it should return an empty array
+└── IsApprovedForAll
+    ├── when operator has not been approved
+    │   └── it should return false
+    └── when operator has been approved
+        └── it should return true
+
+Approve
+└── SetApprovalForAll
+    ├── when operator is the zero address
+    │   └── it should revert (if enforced) or document behavior
+    └── when operator is not the zero address
+        ├── it should set isApprovedForAll[account][operator] to approved
+        └── it should emit ApprovalForAll
+
+Transfer
+├── SafeTransferFrom
+│   ├── when from or to is zero address
+│   │   └── it should revert
+│   ├── when caller is not owner and not approved for all
+│   │   └── it should revert with ERC1155MissingApprovalForAll
+│   ├── when balance of from for id is less than value
+│   │   └── it should revert with ERC1155InsufficientBalance
+│   └── when preconditions hold
+│       ├── it should decrement balance of from for id by value
+│       ├── it should increment balance of to for id by value
+│       ├── it should emit TransferSingle
+│       └── when to is a contract
+│           └── it should call onERC1155Received and respect return value or revert
+└── SafeBatchTransferFrom
+    ├── when ids.length != values.length
+    │   └── it should revert with ERC1155InvalidArrayLength
+    ├── when from or to is zero address
+    │   └── it should revert
+    ├── when caller is not owner and not approved for all
+    │   └── it should revert with ERC1155MissingApprovalForAll
+    ├── when any balance is insufficient
+    │   └── it should revert with ERC1155InsufficientBalance
+    └── when preconditions hold
+        ├── it should update all balances and emit TransferBatch
+        └── when to is a contract
+            └── it should call onERC1155BatchReceived and respect return value or revert
+
+Mint
+├── Mint
+│   ├── when to is zero address
+│   │   └── it should revert with ERC1155InvalidReceiver
+│   └── when to is not zero address
+│       ├── it should increment balance of to for id by value
+│       ├── it should emit TransferSingle from address(0) to to
+│       └── when to is a contract
+│           └── it should call onERC1155Received and respect return value or revert
+└── MintBatch
+    ├── when to is zero address
+    │   └── it should revert with ERC1155InvalidReceiver
+    ├── when ids.length != values.length
+    │   └── it should revert with ERC1155InvalidArrayLength
+    └── when preconditions hold
+        ├── it should increment balances and emit TransferBatch
+        └── when to is a contract
+            └── it should call onERC1155BatchReceived and respect return value or revert
+
+Burn
+├── Burn
+│   ├── when from is zero address
+│   │   └── it should revert
+│   ├── when balance of from for id is less than value
+│   │   └── it should revert with ERC1155InsufficientBalance
+│   └── when balance is sufficient
+│       ├── it should decrement balance of from for id by value
+│       └── it should emit TransferSingle to address(0)
+└── BurnBatch
+    ├── when from is zero address
+    │   └── it should revert
+    ├── when ids.length != values.length
+    │   └── it should revert with ERC1155InvalidArrayLength
+    ├── when any balance is insufficient
+    │   └── it should revert with ERC1155InsufficientBalance
+    └── when preconditions hold
+        ├── it should decrement all balances
+        └── it should emit TransferBatch to address(0)
+
+Metadata
+├── Uri
+│   ├── when no token-specific URI is set
+│   │   └── it should return the default uri
+│   └── when a token-specific URI is set (via Mod)
+│       └── it should return baseURI + tokenURIs[id] or documented behavior
+└── SetBaseURI_SetTokenURI
+    └── it should update storage so uri(id) returns the expected value
+
+ExportSelectors
+└── for each ERC1155 facet (core, metadata, etc.)
+    └── it should return an abi.encodePacked list of that facet's external function selectors in the expected order

@@ -28,18 +28,6 @@ contract ERC721MetadataFacet {
         string baseURI;
     }
 
-    /**
-     * @notice Returns a pointer to the ERC-721 storage struct.
-     * @dev Uses inline assembly to access the storage slot defined by STORAGE_POSITION.
-     * @return s The ERC721Storage struct in storage.
-     */
-    function getStorage() internal pure returns (ERC721MetadataStorage storage s) {
-        bytes32 position = STORAGE_POSITION;
-        assembly {
-            s.slot := position
-        }
-    }
-
     bytes32 constant ERC721_STORAGE_POSITION = keccak256("erc721");
 
     /**
@@ -57,8 +45,20 @@ contract ERC721MetadataFacet {
      * @dev Uses inline assembly to access the storage slot defined by STORAGE_POSITION.
      * @return s The ERC721Storage struct in storage.
      */
-    function getERC721Storage() internal pure returns (ERC721Storage storage s) {
+    function getStorage() internal pure returns (ERC721MetadataStorage storage s) {
         bytes32 position = STORAGE_POSITION;
+        assembly {
+            s.slot := position
+        }
+    }
+
+    /**
+     * @notice Returns a pointer to the ERC-721 storage struct.
+     * @dev Uses inline assembly to access the storage slot defined by STORAGE_POSITION.
+     * @return s The ERC721Storage struct in storage.
+     */
+    function getERC721Storage() internal pure returns (ERC721Storage storage s) {
+        bytes32 position = ERC721_STORAGE_POSITION;
         assembly {
             s.slot := position
         }
