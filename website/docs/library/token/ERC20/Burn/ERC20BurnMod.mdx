@@ -1,0 +1,278 @@
+---
+sidebar_position: 200
+title: "ERC20BurnMod"
+description: "Internal functions for burning ERC-20 tokens"
+gitSource: "https://github.com/Perfect-Abstractions/Compose/tree/main/src/token/ERC20/Burn/ERC20BurnMod.sol"
+---
+
+import DocSubtitle  from '@site/src/components/docs/DocSubtitle';
+import Badge from '@site/src/components/ui/Badge';
+import Callout from '@site/src/components/ui/Callout';
+import CalloutBox from '@site/src/components/ui/CalloutBox';
+import Accordion, { AccordionGroup } from '@site/src/components/ui/Accordion';
+import PropertyTable from '@site/src/components/api/PropertyTable';
+import ExpandableCode from '@site/src/components/code/ExpandableCode';
+import CodeShowcase from '@site/src/components/code/CodeShowcase';
+import RelatedDocs from '@site/src/components/docs/RelatedDocs';
+import WasThisHelpful from '@site/src/components/docs/WasThisHelpful';
+import LastUpdated from '@site/src/components/docs/LastUpdated';
+import ReadingTime from '@site/src/components/docs/ReadingTime';
+import GradientText from '@site/src/components/ui/GradientText';
+import GradientButton from '@site/src/components/ui/GradientButton';
+
+<DocSubtitle>
+Internal functions for burning ERC-20 tokens
+</DocSubtitle>
+
+<Callout type="info" title="Key Features">
+- Provides only `internal` functions for burning tokens.
+- Operates on shared diamond storage via EIP-8042.
+- Does not perform allowance checks; requires external validation.
+- Emits `Transfer` event upon successful burning.
+</Callout>
+
+<Callout type="info" title="Module Usage">
+This module provides internal functions for use in your custom facets. Import it to access shared logic and storage.
+</Callout>
+
+## Overview
+
+This module provides internal functions for burning ERC-20 tokens, reducing both total supply and individual balances. Facets can import this module to implement token burning logic within a diamond, leveraging shared diamond storage for state management. Changes to token supply and balances are immediately reflected across all facets interacting with the same storage.
+
+---
+
+## Storage
+
+### ERC20Storage
+
+ERC-20 storage layout using the ERC-8042 standard. storage-location: erc8042:erc20
+
+<ExpandableCode language="solidity" maxLines={15} title="Definition">
+{`struct ERC20Storage {
+    mapping(address owner => uint256 balance) balanceOf;
+    uint256 totalSupply;
+}`}
+</ExpandableCode>
+
+### State Variables
+
+<PropertyTable
+  properties={[
+    {
+      name: "STORAGE_POSITION",
+      type: "bytes32",
+      description: "Diamond storage slot position for this module (Value: `keccak256(\"erc20\")`)"
+    }
+  ]}
+  showRequired={false}
+/>
+
+## Functions
+
+### burn
+
+Burns tokens from a specified address. Decreases both total supply and the sender's balance. This module does not perform allowance checks. Ensure proper allowance or authorization validation before calling this function.
+
+<ExpandableCode language="solidity" maxLines={8}>
+{`function burn(address _account, uint256 _value) ;`}
+</ExpandableCode>
+
+**Parameters:**
+
+<PropertyTable
+  properties={[
+    {
+      name: "_account",
+      type: "address",
+      description: "The address whose tokens will be burned."
+    },
+    {
+      name: "_value",
+      type: "uint256",
+      description: "The number of tokens to burn."
+    }
+  ]}
+  showRequired={false}
+/>
+
+---
+### getStorage
+
+Returns a pointer to the ERC-20 storage struct. Uses inline assembly to bind the storage struct to the fixed storage position.
+
+<ExpandableCode language="solidity" maxLines={8}>
+{`function getStorage() pure returns (ERC20Storage storage s);`}
+</ExpandableCode>
+
+**Returns:**
+
+<PropertyTable
+  properties={[
+    {
+      name: "s",
+      type: "ERC20Storage",
+      description: "The ERC-20 storage struct."
+    }
+  ]}
+  showRequired={false}
+/>
+
+## Events
+
+<AccordionGroup>
+  <Accordion title="Transfer" defaultOpen={false}>
+    <div style={{marginBottom: "1rem"}}>
+      Emitted when tokens are transferred between addresses.
+    </div>
+
+    <div style={{marginBottom: "1rem"}}>
+      <strong>Signature:</strong>
+      <ExpandableCode language="solidity" maxLines={5}>
+{`event Transfer(address indexed _from, address indexed _to, uint256 _value);`}
+      </ExpandableCode>
+    </div>
+
+    <div style={{marginBottom: "1rem"}}>
+      <strong>Parameters:</strong>
+      <PropertyTable
+        properties={[
+          {
+            name: "_from",
+            type: "address",
+            description: "The address tokens are transferred from."
+          },
+          {
+            name: "_to",
+            type: "address",
+            description: "The address tokens are transferred to."
+          },
+          {
+            name: "_value",
+            type: "uint256",
+            description: "The amount of tokens transferred."
+          }
+        ]}
+        showRequired={false}
+      />
+    </div>
+  </Accordion>
+</AccordionGroup>
+
+## Errors
+
+<AccordionGroup>
+  <Accordion title="ERC20InsufficientBalance" defaultOpen={false}>
+    <div style={{marginBottom: "1rem"}}>
+      Thrown when a sender attempts to transfer or burn more tokens than their balance.
+    </div>
+
+    <div>
+      <strong>Signature:</strong>
+      <ExpandableCode language="solidity" maxLines={5}>
+error ERC20InsufficientBalance(address _sender, uint256 _balance, uint256 _needed);
+      </ExpandableCode>
+    </div>
+  </Accordion>
+  <Accordion title="ERC20InvalidSender" defaultOpen={false}>
+    <div style={{marginBottom: "1rem"}}>
+      Thrown when the sender address is invalid (e.g., zero address).
+    </div>
+
+    <div>
+      <strong>Signature:</strong>
+      <ExpandableCode language="solidity" maxLines={5}>
+error ERC20InvalidSender(address _sender);
+      </ExpandableCode>
+    </div>
+  </Accordion>
+</AccordionGroup>
+
+<!-- Usage Example section commented out for now -->
+<!--
+## Usage Example
+
+<ExpandableCode language="solidity" maxLines={20} title="Example Implementation">
+{`pragma solidity >=0.8.30;
+import @compose/token/ERC20/Burn/ERC20BurnMod;
+
+contract ERC20BurnFacet {
+    ERC20BurnMod private immutable _burnModule;
+
+    constructor(address burnModuleAddress) {
+        _burnModule = ERC20BurnMod(burnModuleAddress);
+    }
+
+    /**
+     * @notice Burns a specified amount of tokens from the caller's balance.
+     * @param _value The amount of tokens to burn.
+     */
+    function burnTokens(uint256 _value) external {
+        // In a real scenario, you would check allowances or ownership here.
+        // This facet calls the internal module function directly.
+        _burnModule.burn(msg.sender, _value);
+    }
+
+    /**
+     * @notice Burns a specified amount of tokens from a specific account.
+     * @param _account The address of the account whose tokens will be burned.
+     * @param _value The amount of tokens to burn.
+     */
+    function burnFromAccount(address _account, uint256 _value) external {
+        // This function assumes appropriate authorization checks are performed
+        // by the caller or other facets before invoking this burn operation.
+        _burnModule.burn(_account, _value);
+    }
+}`}
+</ExpandableCode>
+-->
+
+## Best Practices
+
+<Callout type="tip" title="Best Practice">
+- Ensure access control and authorization checks are performed by the calling facet before invoking `burn`.
+- Verify that the `ERC20BurnMod` is correctly initialized with the expected diamond storage address.
+- Handle `ERC20InsufficientBalance` and `ERC20InvalidSender` errors appropriately in calling facets.
+</Callout>
+
+## Integration Notes
+
+<Callout type="success" title="Shared Storage">
+This module interacts with diamond storage at the `STORAGE_POSITION` slot, identified by `keccak256("erc20")`. The `burn` function directly modifies the `totalSupply` within the shared `ERC20Storage` struct. Any facet reading from this storage position will see the updated total supply immediately after a `burn` operation completes. The `getStorage` function provides a pure reference to this storage struct via inline assembly, ensuring it operates on the correct storage slot.
+</Callout>
+
+<div style={{marginTop: "3rem", paddingTop: "2rem", borderTop: "1px solid var(--ifm-color-emphasis-200)"}}>
+  <RelatedDocs
+    items={[
+      {
+        title: "ERC20BurnFacet",
+        href: "/docs/library/token/ERC20/Burn/ERC20BurnFacet",
+        description: "Facet using ERC20BurnMod",
+        icon: "💎"
+      },
+      {
+        title: "ERC1155ApproveMod",
+        href: "/docs/library/token/ERC1155/Approve/ERC1155ApproveMod",
+        description: "Related module in token",
+        icon: "📦"
+      },
+      {
+        title: "ERC1155MetadataMod",
+        href: "/docs/library/token/ERC1155/Metadata/ERC1155MetadataMod",
+        description: "Related module in token",
+        icon: "📦"
+      },
+      {
+        title: "ERC1155MintMod",
+        href: "/docs/library/token/ERC1155/Mint/ERC1155MintMod",
+        description: "Related module in token",
+        icon: "📦"
+      }
+    ]}
+  />
+</div>
+
+<div style={{marginTop: "3rem", paddingTop: "2rem", borderTop: "1px solid var(--ifm-color-emphasis-200)"}}>
+  <WasThisHelpful pageId="ERC20BurnMod" />
+</div>
+
+<LastUpdated date="2026-03-12T21:05:44.964Z" />

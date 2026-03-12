@@ -1,0 +1,259 @@
+---
+sidebar_position: 100
+title: "OwnerTransferMod"
+description: "Manages ERC-173 ownership and transfers within a diamond"
+gitSource: "https://github.com/Perfect-Abstractions/Compose/tree/main/src/access/Owner/Transfer/OwnerTransferMod.sol"
+---
+
+import DocSubtitle  from '@site/src/components/docs/DocSubtitle';
+import Badge from '@site/src/components/ui/Badge';
+import Callout from '@site/src/components/ui/Callout';
+import CalloutBox from '@site/src/components/ui/CalloutBox';
+import Accordion, { AccordionGroup } from '@site/src/components/ui/Accordion';
+import PropertyTable from '@site/src/components/api/PropertyTable';
+import ExpandableCode from '@site/src/components/code/ExpandableCode';
+import CodeShowcase from '@site/src/components/code/CodeShowcase';
+import RelatedDocs from '@site/src/components/docs/RelatedDocs';
+import WasThisHelpful from '@site/src/components/docs/WasThisHelpful';
+import LastUpdated from '@site/src/components/docs/LastUpdated';
+import ReadingTime from '@site/src/components/docs/ReadingTime';
+import GradientText from '@site/src/components/ui/GradientText';
+import GradientButton from '@site/src/components/ui/GradientButton';
+
+<DocSubtitle>
+Manages ERC-173 ownership and transfers within a diamond
+</DocSubtitle>
+
+<Callout type="info" title="Key Features">
+- Manages ERC-173 ownership semantics.
+- Operates using shared diamond storage at a predefined `STORAGE_POSITION`.
+- Provides `internal` functions for use within custom diamond facets.
+- No external dependencies, promoting composability.
+</Callout>
+
+<Callout type="info" title="Module Usage">
+This module provides internal functions for use in your custom facets. Import it to access shared logic and storage.
+</Callout>
+
+## Overview
+
+This module provides ERC-173 ownership management logic, allowing diamond facets to transfer ownership. It operates using shared diamond storage, ensuring ownership changes are immediately visible across all facets. This enables a single source of truth for contract ownership.
+
+---
+
+## Storage
+
+### OwnerStorage
+
+storage-location: erc8042:erc173.owner
+
+<ExpandableCode language="solidity" maxLines={15} title="Definition">
+{`struct OwnerStorage {
+    address owner;
+}`}
+</ExpandableCode>
+
+### State Variables
+
+<PropertyTable
+  properties={[
+    {
+      name: "STORAGE_POSITION",
+      type: "bytes32",
+      description: "Diamond storage slot position for this module (Value: `keccak256(\"erc173.owner\")`)"
+    }
+  ]}
+  showRequired={false}
+/>
+
+## Functions
+
+### getStorage
+
+Returns a pointer to the ERC-173 storage struct. Uses inline assembly to access the storage slot defined by STORAGE_POSITION.
+
+<ExpandableCode language="solidity" maxLines={8}>
+{`function getStorage() pure returns (OwnerStorage storage s);`}
+</ExpandableCode>
+
+**Returns:**
+
+<PropertyTable
+  properties={[
+    {
+      name: "s",
+      type: "OwnerStorage",
+      description: "The OwnerStorage struct in storage."
+    }
+  ]}
+  showRequired={false}
+/>
+
+---
+### transferOwnership
+
+Set the address of the new owner of the contract. Set _newOwner to address(0) to renounce any ownership.
+
+<ExpandableCode language="solidity" maxLines={8}>
+{`function transferOwnership(address _newOwner) ;`}
+</ExpandableCode>
+
+**Parameters:**
+
+<PropertyTable
+  properties={[
+    {
+      name: "_newOwner",
+      type: "address",
+      description: "The address of the new owner of the contract."
+    }
+  ]}
+  showRequired={false}
+/>
+
+## Events
+
+<AccordionGroup>
+  <Accordion title="OwnershipTransferred" defaultOpen={false}>
+    <div style={{marginBottom: "1rem"}}>
+      This emits when ownership of a contract changes.
+    </div>
+
+    <div style={{marginBottom: "1rem"}}>
+      <strong>Signature:</strong>
+      <ExpandableCode language="solidity" maxLines={5}>
+{`event OwnershipTransferred(address indexed previousOwner, address indexed newOwner);`}
+      </ExpandableCode>
+    </div>
+
+  </Accordion>
+</AccordionGroup>
+
+## Errors
+
+<AccordionGroup>
+  <Accordion title="OwnerUnauthorizedAccount" defaultOpen={false}>
+
+    <div>
+      <strong>Signature:</strong>
+      <ExpandableCode language="solidity" maxLines={5}>
+error OwnerUnauthorizedAccount();
+      </ExpandableCode>
+    </div>
+  </Accordion>
+</AccordionGroup>
+
+<!-- Usage Example section commented out for now -->
+<!--
+## Usage Example
+
+<ExpandableCode language="solidity" maxLines={20} title="Example Implementation">
+{`pragma solidity >=0.8.30;
+
+import {OwnerTransferMod} from "@compose/access/Owner/Transfer/OwnerTransferMod";
+
+contract OwnershipFacet {
+    OwnerTransferMod internal ownerTransferMod;
+
+    function initialize(OwnerTransferMod _ownerTransferMod) external {
+        ownerTransferMod = _ownerTransferMod;
+    }
+
+    /**
+     * @notice Transfers ownership of the diamond to a new address.
+     * @param _newOwner The address of the new owner.
+     */
+    function transferDiamondOwnership(address _newOwner) external {
+        // Assumes access control is handled by the calling facet
+        ownerTransferMod.transferOwnership(_newOwner);
+    }
+
+    /**
+     * @notice Renounces ownership of the diamond.
+     */
+    function renounceDiamondOwnership() external {
+        // Assumes access control is handled by the calling facet
+        ownerTransferMod.transferOwnership(address(0));
+    }
+
+    /**
+     * @notice Gets the current owner of the diamond.
+     * @return owner The address of the current owner.
+     */
+    function getDiamondOwner() external view returns (address owner) {
+        // Assumes OwnerStorage struct and STORAGE_POSITION are accessible, or uses a getter from another facet
+        // For demonstration, directly calling a hypothetical getter from OwnerDataMod or similar
+        // In a real scenario, this might be a direct storage read via assembly or a helper function.
+        // For this example, we'll simulate reading from OwnerStorage directly if it were accessible.
+        // In practice, a facet would likely have access to the STORAGE_POSITION or a dedicated getter.
+
+        // Placeholder for actual storage read if OwnerStorage were directly accessible or via a helper
+        // owner = OwnerStorage(STORAGE_POSITION).owner;
+        // For this example, we'll rely on a conceptual 'OwnerDataMod' to provide this.
+        // In a real diamond, a dedicated facet would expose this read.
+
+        // If OwnerTransferMod itself provided a getter:
+        // return ownerTransferMod.getOwner(); // Hypothetical getter
+
+        // Based on provided contract data, OwnerTransferMod doesn't expose a direct read.
+        // A related facet like OwnerDataMod would typically provide this.
+        // For this example, we demonstrate calling transferOwnership, not reading.
+
+        // To make this runnable, we'll assume a separate facet provides getOwner.
+        // This example focuses on calling transferOwnership.
+
+        // The following is a conceptual call to a separate facet that might expose ownership.
+        // return IYourOwnershipFacet(_diamondAddress).getOwner();
+
+        // Since this example is for OwnerTransferMod, we'll focus on its primary function.
+        // The actual read of ownership is typically handled by a separate facet.
+
+        // To satisfy the example context without introducing external dependencies not defined:
+        // We will not provide a functional \`getDiamondOwner\` call here as OwnerTransferMod only
+        // provides \`getStorage()\` which returns the struct pointer, not a direct owner address.
+        // A facet would typically use \`OwnerStorage(OwnerTransferMod.STORAGE_POSITION).owner\`.
+        revert("getDiamondOwner not directly implemented by OwnerTransferMod in this example context");
+    }
+}
+`}
+</ExpandableCode>
+-->
+
+## Best Practices
+
+<Callout type="tip" title="Best Practice">
+- Ensure access control is enforced by the calling facet before invoking `transferOwnership`.
+- Use `address(0)` to renounce ownership when necessary, understanding this removes the owner.
+- Verify storage layout compatibility, especially `STORAGE_POSITION`, when upgrading diamond facets to prevent storage collisions.
+</Callout>
+
+## Integration Notes
+
+<Callout type="success" title="Shared Storage">
+This module reads and writes to diamond storage at the slot identified by `STORAGE_POSITION`, keyed by `keccak256("erc173.owner")`. The `OwnerStorage` struct, which contains the `owner` field, is managed at this position. Any facet that can access this storage slot will observe changes made by `transferOwnership` immediately. The `transferOwnership` function modifies the `owner` field within the shared `OwnerStorage` struct.
+</Callout>
+
+<div style={{marginTop: "3rem", paddingTop: "2rem", borderTop: "1px solid var(--ifm-color-emphasis-200)"}}>
+  <RelatedDocs
+    items={[
+      {
+        title: "OwnerDataMod",
+        href: "/docs/library/access/Owner/Data/OwnerDataMod",
+        description: "Related module in access",
+        icon: "📦"
+      },
+      {
+        title: "OwnerRenounceMod",
+        href: "/docs/library/access/Owner/Renounce/OwnerRenounceMod",
+        description: "Related module in access",
+        icon: "📦"
+      }
+    ]}
+  />
+</div>
+
+<div style={{marginTop: "3rem", paddingTop: "2rem", borderTop: "1px solid var(--ifm-color-emphasis-200)"}}>
+  <WasThisHelpful pageId="OwnerTransferMod" />
+</div>
+
+<LastUpdated date="2026-03-12T21:06:31.495Z" />

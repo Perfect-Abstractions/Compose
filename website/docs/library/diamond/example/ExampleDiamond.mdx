@@ -1,0 +1,161 @@
+---
+sidebar_position: 510
+title: "ExampleDiamond"
+description: "Example diamond library for Compose diamonds"
+gitSource: "https://github.com/Perfect-Abstractions/Compose/tree/main/src/diamond/example/ExampleDiamond.sol"
+---
+
+import DocSubtitle  from '@site/src/components/docs/DocSubtitle';
+import Badge from '@site/src/components/ui/Badge';
+import Callout from '@site/src/components/ui/Callout';
+import CalloutBox from '@site/src/components/ui/CalloutBox';
+import Accordion, { AccordionGroup } from '@site/src/components/ui/Accordion';
+import PropertyTable from '@site/src/components/api/PropertyTable';
+import ExpandableCode from '@site/src/components/code/ExpandableCode';
+import CodeShowcase from '@site/src/components/code/CodeShowcase';
+import RelatedDocs from '@site/src/components/docs/RelatedDocs';
+import WasThisHelpful from '@site/src/components/docs/WasThisHelpful';
+import LastUpdated from '@site/src/components/docs/LastUpdated';
+import ReadingTime from '@site/src/components/docs/ReadingTime';
+import GradientText from '@site/src/components/ui/GradientText';
+import GradientButton from '@site/src/components/ui/GradientButton';
+
+<DocSubtitle>
+Example diamond library for Compose diamonds
+</DocSubtitle>
+
+<Callout type="info" title="Key Features">
+- Demonstrates diamond initialization with facets and owner.
+- Includes basic `fallback` and `receive` functions for ether handling.
+- Provides a template for understanding diamond deployment patterns.
+- Follows Compose readability-first conventions.
+</Callout>
+
+## Overview
+
+This contract serves as an example diamond library, demonstrating initialization and basic fallback/receive functionalities. It registers facets and their function selectors during deployment. Developers can use this as a template to understand diamond initialization patterns within the Compose framework.
+
+---
+
+## Storage
+
+## Functions
+
+### constructor
+
+Initializes the diamond contract with facets, owner and other data. Adds all provided facets to the diamond's function selector mapping and sets the contract owner. Each facet in the array will have its function selectors registered to enable delegatecall routing.
+
+<ExpandableCode language="solidity" maxLines={8}>
+{`constructor(address[] memory _facets, address _diamondOwner) ;`}
+</ExpandableCode>
+
+**Parameters:**
+
+<PropertyTable
+  properties={[
+    {
+      name: "_facets",
+      type: "address[]",
+      description: "Array of facet addresses and their corresponding function selectors to add to the diamond."
+    },
+    {
+      name: "_diamondOwner",
+      type: "address",
+      description: "Address that will be set as the owner of the diamond contract."
+    }
+  ]}
+  showRequired={false}
+/>
+
+---
+### fallback
+
+<ExpandableCode language="solidity" maxLines={8}>
+{`fallback() external payable;`}
+</ExpandableCode>
+
+---
+### receive
+
+<ExpandableCode language="solidity" maxLines={8}>
+{`receive() external payable;`}
+</ExpandableCode>
+
+<!-- Usage Example section commented out for now -->
+<!--
+## Usage Example
+
+<ExpandableCode language="solidity" maxLines={20} title="Example Implementation">
+{`pragma solidity >=0.8.30;
+
+import @compose/diamond/example/ExampleDiamond;
+
+contract DeployExampleDiamond {
+    address public diamondAddress;
+
+    function deploy() public {
+        address[] memory facets = new address[](1);
+        // Assume ExampleFacet is deployed and its address is known
+        // facets[0] = address of ExampleFacet;
+
+        // For demonstration, we'll use the ExampleDiamond itself as a facet
+        // In a real scenario, you'd deploy separate facets and pass their addresses.
+        facets[0] = address(this);
+
+        address owner = msg.sender;
+
+        // Deploy ExampleDiamond with initial facets and owner
+        ExampleDiamond exampleDiamond = new ExampleDiamond(facets, owner);
+        diamondAddress = address(exampleDiamond);
+
+        // In a real deployment, you would now add more facets to the diamond
+        // using the diamond's owner/admin functions.
+    }
+
+    // Example of calling a function through the diamond (assuming a facet was added)
+    // This is a conceptual example, as ExampleDiamond itself doesn't expose specific functions
+    // beyond initialization and fallback/receive.
+    function callDiamondFunction(address _recipient, uint256 _amount) public {
+        // If a facet like an ERC20 token facet was added, you could call it like this:
+        // IDiamond(diamondAddress).transfer(_recipient, _amount);
+    }
+
+    // Fallback and receive are handled by the ExampleDiamond contract itself
+    receive() external payable {}
+    fallback() external payable {}
+}`}
+</ExpandableCode>
+-->
+
+## Best Practices
+
+<Callout type="tip" title="Best Practice">
+- Initialize the diamond with all required facets and the owner during deployment.
+- Ensure facets are deployed and their addresses are correctly provided during initialization.
+- Understand that the `constructor` of this example contract registers facets, but actual facet logic resides in separate deployed contracts.
+</Callout>
+
+## Security Considerations
+
+<Callout type="warning" title="Security">
+This contract is an example and does not implement complex access control. The `constructor` is called only once during deployment. The `fallback` and `receive` functions are `payable` and will accept ether sent to the diamond. Follow standard Solidity security practices for any added facets.
+</Callout>
+
+<div style={{marginTop: "3rem", paddingTop: "2rem", borderTop: "1px solid var(--ifm-color-emphasis-200)"}}>
+  <RelatedDocs
+    items={[
+      {
+        title: "ExampleDiamond",
+        href: "/docs/library/diamond/example/ExampleDiamond",
+        description: "Module used by ExampleDiamond",
+        icon: "📦"
+      }
+    ]}
+  />
+</div>
+
+<div style={{marginTop: "3rem", paddingTop: "2rem", borderTop: "1px solid var(--ifm-color-emphasis-200)"}}>
+  <WasThisHelpful pageId="ExampleDiamond" />
+</div>
+
+<LastUpdated date="2026-03-12T21:02:52.775Z" />

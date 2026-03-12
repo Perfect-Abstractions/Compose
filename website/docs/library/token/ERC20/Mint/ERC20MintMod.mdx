@@ -1,0 +1,261 @@
+---
+sidebar_position: 200
+title: "ERC20MintMod"
+description: "Internal functions for minting ERC-20 tokens"
+gitSource: "https://github.com/Perfect-Abstractions/Compose/tree/main/src/token/ERC20/Mint/ERC20MintMod.sol"
+---
+
+import DocSubtitle  from '@site/src/components/docs/DocSubtitle';
+import Badge from '@site/src/components/ui/Badge';
+import Callout from '@site/src/components/ui/Callout';
+import CalloutBox from '@site/src/components/ui/CalloutBox';
+import Accordion, { AccordionGroup } from '@site/src/components/ui/Accordion';
+import PropertyTable from '@site/src/components/api/PropertyTable';
+import ExpandableCode from '@site/src/components/code/ExpandableCode';
+import CodeShowcase from '@site/src/components/code/CodeShowcase';
+import RelatedDocs from '@site/src/components/docs/RelatedDocs';
+import WasThisHelpful from '@site/src/components/docs/WasThisHelpful';
+import LastUpdated from '@site/src/components/docs/LastUpdated';
+import ReadingTime from '@site/src/components/docs/ReadingTime';
+import GradientText from '@site/src/components/ui/GradientText';
+import GradientButton from '@site/src/components/ui/GradientButton';
+
+<DocSubtitle>
+Internal functions for minting ERC-20 tokens
+</DocSubtitle>
+
+<Callout type="info" title="Key Features">
+- All functions are `internal` for use within custom facets.
+- Utilizes the diamond storage pattern (EIP-8042) for shared state.
+- No external dependencies or `using` directives, promoting explicitness.
+- Emits a `Transfer` event upon successful minting.
+</Callout>
+
+<Callout type="info" title="Module Usage">
+This module provides internal functions for use in your custom facets. Import it to access shared logic and storage.
+</Callout>
+
+## Overview
+
+This module exposes internal functions for minting ERC-20 tokens within a diamond. Facets import this module to manage total supply and recipient balances using shared diamond storage. Minting operations directly affect the supply and are immediately visible to all facets interacting with the same storage.
+
+---
+
+## Storage
+
+### ERC20Storage
+
+<ExpandableCode language="solidity" maxLines={15} title="Definition">
+{`struct ERC20Storage {
+    mapping(address owner => uint256 balance) balanceOf;
+    uint256 totalSupply;
+}`}
+</ExpandableCode>
+
+### State Variables
+
+<PropertyTable
+  properties={[
+    {
+      name: "STORAGE_POSITION",
+      type: "bytes32",
+      description: "Diamond storage slot position for this module (Value: `keccak256(\"erc20\")`)"
+    }
+  ]}
+  showRequired={false}
+/>
+
+## Functions
+
+### getStorage
+
+Returns a pointer to the ERC-20 storage struct. Uses inline assembly to bind the storage struct to the fixed storage position.
+
+<ExpandableCode language="solidity" maxLines={8}>
+{`function getStorage() pure returns (ERC20Storage storage s);`}
+</ExpandableCode>
+
+**Returns:**
+
+<PropertyTable
+  properties={[
+    {
+      name: "s",
+      type: "ERC20Storage",
+      description: "The ERC-20 storage struct."
+    }
+  ]}
+  showRequired={false}
+/>
+
+---
+### mint
+
+Mints new tokens to a specified address. Increases both total supply and the recipient's balance.
+
+<ExpandableCode language="solidity" maxLines={8}>
+{`function mint(address _account, uint256 _value) ;`}
+</ExpandableCode>
+
+**Parameters:**
+
+<PropertyTable
+  properties={[
+    {
+      name: "_account",
+      type: "address",
+      description: "The address receiving the newly minted tokens."
+    },
+    {
+      name: "_value",
+      type: "uint256",
+      description: "The number of tokens to mint."
+    }
+  ]}
+  showRequired={false}
+/>
+
+## Events
+
+<AccordionGroup>
+  <Accordion title="Transfer" defaultOpen={false}>
+    <div style={{marginBottom: "1rem"}}>
+      Emitted when tokens are transferred between addresses.
+    </div>
+
+    <div style={{marginBottom: "1rem"}}>
+      <strong>Signature:</strong>
+      <ExpandableCode language="solidity" maxLines={5}>
+{`event Transfer(address indexed _from, address indexed _to, uint256 _value);`}
+      </ExpandableCode>
+    </div>
+
+    <div style={{marginBottom: "1rem"}}>
+      <strong>Parameters:</strong>
+      <PropertyTable
+        properties={[
+          {
+            name: "_from",
+            type: "address",
+            description: "The address tokens are transferred from."
+          },
+          {
+            name: "_to",
+            type: "address",
+            description: "The address tokens are transferred to."
+          },
+          {
+            name: "_value",
+            type: "uint256",
+            description: "The amount of tokens transferred."
+          }
+        ]}
+        showRequired={false}
+      />
+    </div>
+  </Accordion>
+</AccordionGroup>
+
+## Errors
+
+<AccordionGroup>
+  <Accordion title="ERC20InvalidReceiver" defaultOpen={false}>
+    <div style={{marginBottom: "1rem"}}>
+      Thrown when the receiver address is invalid (e.g., zero address).
+    </div>
+
+    <div>
+      <strong>Signature:</strong>
+      <ExpandableCode language="solidity" maxLines={5}>
+error ERC20InvalidReceiver(address _receiver);
+      </ExpandableCode>
+    </div>
+  </Accordion>
+</AccordionGroup>
+
+<!-- Usage Example section commented out for now -->
+<!--
+## Usage Example
+
+<ExpandableCode language="solidity" maxLines={20} title="Example Implementation">
+{`pragma solidity >=0.8.30;
+import @compose/token/ERC20/Mint/ERC20MintMod;
+
+contract MyTokenFacet {
+    ERC20MintMod internal erc20MintMod;
+
+    function initialize(address erc20MintModAddress) external {
+        erc20MintMod = ERC20MintMod(erc20MintModAddress);
+    }
+
+    /**
+     * @notice Mints new tokens to an account.
+     * @param _account The address to mint tokens to.
+     * @param _value The amount of tokens to mint.
+     */
+    function mintTokens(address _account, uint256 _value) external {
+        // Access control checks would typically happen here in a real facet
+        erc20MintMod.mint(_account, _value);
+    }
+
+    /**
+     * @notice Retrieves the ERC20Storage struct pointer.
+     * @return The ERC20Storage struct.
+     */
+    function getErc20Storage() external pure returns (ERC20Storage) {
+        return ERC20MintMod.getStorage();
+    }
+}`}
+</ExpandableCode>
+-->
+
+## Best Practices
+
+<Callout type="tip" title="Best Practice">
+- Ensure any necessary access control is enforced within the calling facet before invoking `mint`.
+- Verify that the `ERC20Storage` struct layout remains compatible when upgrading diamond facets.
+- Handle the `ERC20InvalidReceiver` error if the `_account` address is invalid.
+</Callout>
+
+## Integration Notes
+
+<Callout type="success" title="Shared Storage">
+This module interacts with diamond storage at the `STORAGE_POSITION` defined by `keccak256("erc20")`. The `mint` function reads and writes to the `totalSupply` field within the `ERC20Storage` struct. Changes to `totalSupply` made through this module are immediately visible to any other facet that accesses the same storage slot.
+</Callout>
+
+<div style={{marginTop: "3rem", paddingTop: "2rem", borderTop: "1px solid var(--ifm-color-emphasis-200)"}}>
+  <RelatedDocs
+    items={[
+      {
+        title: "ERC1155ApproveMod",
+        href: "/docs/library/token/ERC1155/Approve/ERC1155ApproveMod",
+        description: "Related module in token",
+        icon: "📦"
+      },
+      {
+        title: "ERC1155MetadataMod",
+        href: "/docs/library/token/ERC1155/Metadata/ERC1155MetadataMod",
+        description: "Related module in token",
+        icon: "📦"
+      },
+      {
+        title: "ERC1155MintMod",
+        href: "/docs/library/token/ERC1155/Mint/ERC1155MintMod",
+        description: "Related module in token",
+        icon: "📦"
+      },
+      {
+        title: "ERC1155BurnMod",
+        href: "/docs/library/token/ERC1155/Burn/ERC1155BurnMod",
+        description: "Related module in token",
+        icon: "📦"
+      }
+    ]}
+  />
+</div>
+
+<div style={{marginTop: "3rem", paddingTop: "2rem", borderTop: "1px solid var(--ifm-color-emphasis-200)"}}>
+  <WasThisHelpful pageId="ERC20MintMod" />
+</div>
+
+<LastUpdated date="2026-03-12T21:05:36.373Z" />

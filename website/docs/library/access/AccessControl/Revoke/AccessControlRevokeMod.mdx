@@ -1,0 +1,304 @@
+---
+sidebar_position: 100
+title: "AccessControlRevokeMod"
+description: "Revoke roles from accounts using diamond storage"
+gitSource: "https://github.com/Perfect-Abstractions/Compose/tree/main/src/access/AccessControl/Revoke/AccessControlRevokeMod.sol"
+---
+
+import DocSubtitle  from '@site/src/components/docs/DocSubtitle';
+import Badge from '@site/src/components/ui/Badge';
+import Callout from '@site/src/components/ui/Callout';
+import CalloutBox from '@site/src/components/ui/CalloutBox';
+import Accordion, { AccordionGroup } from '@site/src/components/ui/Accordion';
+import PropertyTable from '@site/src/components/api/PropertyTable';
+import ExpandableCode from '@site/src/components/code/ExpandableCode';
+import CodeShowcase from '@site/src/components/code/CodeShowcase';
+import RelatedDocs from '@site/src/components/docs/RelatedDocs';
+import WasThisHelpful from '@site/src/components/docs/WasThisHelpful';
+import LastUpdated from '@site/src/components/docs/LastUpdated';
+import ReadingTime from '@site/src/components/docs/ReadingTime';
+import GradientText from '@site/src/components/ui/GradientText';
+import GradientButton from '@site/src/components/ui/GradientButton';
+
+<DocSubtitle>
+Revoke roles from accounts using diamond storage
+</DocSubtitle>
+
+<Callout type="info" title="Key Features">
+- Internal functions designed for use within custom diamond facets.
+- Leverages the diamond storage pattern for shared state management.
+- Emits `RoleRevoked` event upon successful revocation.
+- No external dependencies, promoting composability.
+</Callout>
+
+<Callout type="info" title="Module Usage">
+This module provides internal functions for use in your custom facets. Import it to access shared logic and storage.
+</Callout>
+
+## Overview
+
+This module provides internal functions to revoke roles from accounts within a diamond. Facets can import and utilize these functions to manage role assignments by interacting with shared diamond storage. Changes to role revocations are immediately visible to all facets sharing the same storage.
+
+---
+
+## Storage
+
+### AccessControlStorage
+
+storage struct for the AccessControl. storage-location: erc8042:compose.accesscontrol
+
+<ExpandableCode language="solidity" maxLines={15} title="Definition">
+{`struct AccessControlStorage {
+    mapping(address account => mapping(bytes32 role => bool hasRole)) hasRole;
+    mapping(bytes32 role => bytes32 adminRole) adminRole;
+}`}
+</ExpandableCode>
+
+### State Variables
+
+<PropertyTable
+  properties={[
+    {
+      name: "STORAGE_POSITION",
+      type: "bytes32",
+      description: "Diamond storage slot position for this module (Value: `keccak256(\"compose.accesscontrol\")`)"
+    }
+  ]}
+  showRequired={false}
+/>
+
+## Functions
+
+### getStorage
+
+Returns the storage for the AccessControl.
+
+<ExpandableCode language="solidity" maxLines={8}>
+{`function getStorage() pure returns (AccessControlStorage storage _s);`}
+</ExpandableCode>
+
+**Returns:**
+
+<PropertyTable
+  properties={[
+    {
+      name: "_s",
+      type: "AccessControlStorage",
+      description: "The storage for the AccessControl."
+    }
+  ]}
+  showRequired={false}
+/>
+
+---
+### revokeRole
+
+function to revoke a role from an account. Reverts with AccessControlUnauthorizedAccount If the caller is not the admin of the role.
+
+<ExpandableCode language="solidity" maxLines={8}>
+{`function revokeRole(bytes32 _role, address _account) returns (bool);`}
+</ExpandableCode>
+
+**Parameters:**
+
+<PropertyTable
+  properties={[
+    {
+      name: "_role",
+      type: "bytes32",
+      description: "The role to revoke."
+    },
+    {
+      name: "_account",
+      type: "address",
+      description: "The account to revoke the role from."
+    }
+  ]}
+  showRequired={false}
+/>
+
+**Returns:**
+
+<PropertyTable
+  properties={[
+    {
+      name: "-",
+      type: "bool",
+      description: "True if the role was revoked, false otherwise."
+    }
+  ]}
+  showRequired={false}
+/>
+
+## Events
+
+<AccordionGroup>
+  <Accordion title="RoleRevoked" defaultOpen={false}>
+    <div style={{marginBottom: "1rem"}}>
+      Emitted when a role is revoked from an account.
+    </div>
+
+    <div style={{marginBottom: "1rem"}}>
+      <strong>Signature:</strong>
+      <ExpandableCode language="solidity" maxLines={5}>
+{`event RoleRevoked(bytes32 indexed _role, address indexed _account, address indexed _sender);`}
+      </ExpandableCode>
+    </div>
+
+    <div style={{marginBottom: "1rem"}}>
+      <strong>Parameters:</strong>
+      <PropertyTable
+        properties={[
+          {
+            name: "_role",
+            type: "bytes32",
+            description: "The role that was revoked."
+          },
+          {
+            name: "_account",
+            type: "address",
+            description: "The account from which the role was revoked."
+          },
+          {
+            name: "_sender",
+            type: "address",
+            description: "The account that revoked the role."
+          }
+        ]}
+        showRequired={false}
+      />
+    </div>
+  </Accordion>
+</AccordionGroup>
+
+## Errors
+
+<AccordionGroup>
+  <Accordion title="AccessControlUnauthorizedAccount" defaultOpen={false}>
+    <div style={{marginBottom: "1rem"}}>
+      Thrown when the account does not have a specific role.
+    </div>
+
+    <div>
+      <strong>Signature:</strong>
+      <ExpandableCode language="solidity" maxLines={5}>
+error AccessControlUnauthorizedAccount(address _account, bytes32 _role);
+      </ExpandableCode>
+    </div>
+  </Accordion>
+</AccordionGroup>
+
+<!-- Usage Example section commented out for now -->
+<!--
+## Usage Example
+
+<ExpandableCode language="solidity" maxLines={20} title="Example Implementation">
+{`pragma solidity >=0.8.30;
+
+import {AccessControlRevokeMod} from "@compose/access/AccessControl/Revoke/AccessControlRevokeMod";
+
+contract MyAccessFacet {
+    AccessControlRevokeMod internal accessControlRevokeMod;
+
+    constructor(address diamondStorageAddress) {
+        // Assuming AccessControlRevokeMod is initialized with the diamond's storage address
+        // In a real scenario, this would likely be done via an initializer function
+        // and the module instance would be managed within the diamond's storage.
+        // For this example, we simulate direct access for demonstration.
+    }
+
+    /**
+     * @notice Revokes a role from a specific account.
+     * @dev This function delegates the role revocation logic to the AccessControlRevokeMod.
+     * @param _role The role to revoke.
+     * @param _account The account from which to revoke the role.
+     * @return bool True if the role was successfully revoked.
+     */
+    function revokeRole(bytes32 _role, address _account) external returns (bool) {
+        // In a real Compose diamond, you would call the module's function through the diamond proxy
+        // or have direct access if the module is part of the facet's internal logic.
+        // For this example, we simulate calling the module directly.
+        // Replace with actual diamond proxy call or module instance access.
+
+        // Placeholder for actual module interaction:
+        // accessControlRevokeMod.revokeRole(_role, _account);
+
+        // Simulating the return value for demonstration purposes
+        // In a real implementation, the module function's return value would be used.
+        return true;
+    }
+
+    /**
+     * @notice Retrieves the storage layout for access control.
+     * @dev Useful for auditing or understanding the storage structure.
+     */
+    function getStorageLayout() pure external returns (AccessControlStorage) {
+        // AccessControlRevokeMod internal accessControlRevokeMod;
+        // return accessControlRevokeMod.getStorage();
+
+        // Placeholder for actual module interaction:
+        // return AccessControlRevokeMod.getStorage(); // Assuming static access for layout retrieval
+
+        // Returning an empty struct as a placeholder for the actual storage layout.
+        // The actual \`getStorage()\` function would return the real storage struct.
+        return AccessControlStorage({});
+    }
+
+    // Define the storage struct to match the module's expected return type for getStorageLayout
+    struct AccessControlStorage {
+        // Fields would be defined here as per the module's actual storage layout
+    }
+}`}
+</ExpandableCode>
+-->
+
+## Best Practices
+
+<Callout type="tip" title="Best Practice">
+- Ensure the caller has the necessary administrative privileges before invoking `revokeRole`.
+- Verify that the diamond storage layout remains compatible when upgrading facets that interact with access control.
+- Handle the `AccessControlUnauthorizedAccount` error to gracefully manage unauthorized revocation attempts.
+</Callout>
+
+## Integration Notes
+
+<Callout type="success" title="Shared Storage">
+This module interacts with diamond storage at the position identified by `STORAGE_POSITION`, keyed by `keccak2535("compose.accesscontrol")`. The `revokeRole` function directly modifies the role assignments within this shared storage. Any facet that reads from or writes to this same storage location will immediately observe the changes made by this module, ensuring state consistency across the diamond.
+</Callout>
+
+<div style={{marginTop: "3rem", paddingTop: "2rem", borderTop: "1px solid var(--ifm-color-emphasis-200)"}}>
+  <RelatedDocs
+    items={[
+      {
+        title: "OwnerDataMod",
+        href: "/docs/library/access/Owner/Data/OwnerDataMod",
+        description: "Related module in access",
+        icon: "📦"
+      },
+      {
+        title: "OwnerRenounceMod",
+        href: "/docs/library/access/Owner/Renounce/OwnerRenounceMod",
+        description: "Related module in access",
+        icon: "📦"
+      },
+      {
+        title: "OwnerTransferMod",
+        href: "/docs/library/access/Owner/Transfer/OwnerTransferMod",
+        description: "Related module in access",
+        icon: "📦"
+      },
+      {
+        title: "OwnerTwoStepDataMod",
+        href: "/docs/library/access/Owner/TwoSteps/Data/OwnerTwoStepDataMod",
+        description: "Related module in access",
+        icon: "📦"
+      }
+    ]}
+  />
+</div>
+
+<div style={{marginTop: "3rem", paddingTop: "2rem", borderTop: "1px solid var(--ifm-color-emphasis-200)"}}>
+  <WasThisHelpful pageId="AccessControlRevokeMod" />
+</div>
+
+<LastUpdated date="2026-03-12T21:07:35.678Z" />

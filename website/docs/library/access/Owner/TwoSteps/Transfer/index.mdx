@@ -1,0 +1,29 @@
+---
+title: "Transfer"
+description: "Transfer components for Compose diamonds."
+---
+
+import DocCard, { DocCardGrid } from '@site/src/components/docs/DocCard';
+import DocSubtitle from '@site/src/components/docs/DocSubtitle';
+import Icon from '@site/src/components/ui/Icon';
+
+<DocSubtitle>
+  Transfer components for Compose diamonds.
+</DocSubtitle>
+
+<DocCardGrid columns={2}>
+  <DocCard
+    title="OwnerTwoStepTransferFacet"
+    description={"Manages ownership transfer for a diamond with two steps"}
+    href="/docs/library/access/Owner/TwoSteps/Transfer/OwnerTwoStepTransferFacet"
+    icon={<Icon name="book" size={28} />}
+    size="medium"
+  />
+  <DocCard
+    title="OwnerTwoStepTransferMod"
+    description={"Two-step ownership transfer logic for ERC-173"}
+    href="/docs/library/access/Owner/TwoSteps/Transfer/OwnerTwoStepTransferMod"
+    icon={<Icon name="book" size={28} />}
+    size="medium"
+  />
+</DocCardGrid>

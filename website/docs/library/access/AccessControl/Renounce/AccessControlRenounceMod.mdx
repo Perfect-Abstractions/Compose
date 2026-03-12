@@ -1,0 +1,270 @@
+---
+sidebar_position: 100
+title: "AccessControlRenounceMod"
+description: "Renounce roles for accounts within a diamond"
+gitSource: "https://github.com/Perfect-Abstractions/Compose/tree/main/src/access/AccessControl/Renounce/AccessControlRenounceMod.sol"
+---
+
+import DocSubtitle  from '@site/src/components/docs/DocSubtitle';
+import Badge from '@site/src/components/ui/Badge';
+import Callout from '@site/src/components/ui/Callout';
+import CalloutBox from '@site/src/components/ui/CalloutBox';
+import Accordion, { AccordionGroup } from '@site/src/components/ui/Accordion';
+import PropertyTable from '@site/src/components/api/PropertyTable';
+import ExpandableCode from '@site/src/components/code/ExpandableCode';
+import CodeShowcase from '@site/src/components/code/CodeShowcase';
+import RelatedDocs from '@site/src/components/docs/RelatedDocs';
+import WasThisHelpful from '@site/src/components/docs/WasThisHelpful';
+import LastUpdated from '@site/src/components/docs/LastUpdated';
+import ReadingTime from '@site/src/components/docs/ReadingTime';
+import GradientText from '@site/src/components/ui/GradientText';
+import GradientButton from '@site/src/components/ui/GradientButton';
+
+<DocSubtitle>
+Renounce roles for accounts within a diamond
+</DocSubtitle>
+
+<Callout type="info" title="Key Features">
+- Functions are `internal` and intended for use within facets.
+- Utilizes diamond storage (EIP-8042) for role management.
+- Emits `RoleRevoked` event upon successful role renouncement.
+- Enforces caller identity for role renouncement via `AccessControlUnauthorizedSender` error.
+</Callout>
+
+<Callout type="info" title="Module Usage">
+This module provides internal functions for use in your custom facets. Import it to access shared logic and storage.
+</Callout>
+
+## Overview
+
+This module provides internal functions for accounts to renounce their assigned roles. By calling `renounceRole`, an account can remove itself from a specific role, updating the shared diamond storage. This ensures that role assignments are mutable and accounts can voluntarily relinquish permissions.
+
+---
+
+## Storage
+
+### AccessControlStorage
+
+storage struct for the AccessControl. storage-location: erc8042:compose.accesscontrol
+
+<ExpandableCode language="solidity" maxLines={15} title="Definition">
+{`struct AccessControlStorage {
+    mapping(address account => mapping(bytes32 role => bool hasRole)) hasRole;
+    mapping(bytes32 role => bytes32 adminRole) adminRole;
+}`}
+</ExpandableCode>
+
+### State Variables
+
+<PropertyTable
+  properties={[
+    {
+      name: "STORAGE_POSITION",
+      type: "bytes32",
+      description: "Diamond storage slot position for this module (Value: `keccak256(\"compose.accesscontrol\")`)"
+    }
+  ]}
+  showRequired={false}
+/>
+
+## Functions
+
+### getStorage
+
+Returns the storage for the AccessControl.
+
+<ExpandableCode language="solidity" maxLines={8}>
+{`function getStorage() pure returns (AccessControlStorage storage _s);`}
+</ExpandableCode>
+
+**Returns:**
+
+<PropertyTable
+  properties={[
+    {
+      name: "_s",
+      type: "AccessControlStorage",
+      description: "The storage for the AccessControl."
+    }
+  ]}
+  showRequired={false}
+/>
+
+---
+### renounceRole
+
+function to renounce a role from the caller. Emits a &#123;RoleRevoked&#125; event. Reverts with AccessControlUnauthorizedSender If the caller is not the account to renounce the role from.
+
+<ExpandableCode language="solidity" maxLines={8}>
+{`function renounceRole(bytes32 _role, address _account) ;`}
+</ExpandableCode>
+
+**Parameters:**
+
+<PropertyTable
+  properties={[
+    {
+      name: "_role",
+      type: "bytes32",
+      description: "The role to renounce."
+    },
+    {
+      name: "_account",
+      type: "address",
+      description: "The account to renounce the role from."
+    }
+  ]}
+  showRequired={false}
+/>
+
+## Events
+
+<AccordionGroup>
+  <Accordion title="RoleRevoked" defaultOpen={false}>
+    <div style={{marginBottom: "1rem"}}>
+      Emitted when a role is revoked from an account.
+    </div>
+
+    <div style={{marginBottom: "1rem"}}>
+      <strong>Signature:</strong>
+      <ExpandableCode language="solidity" maxLines={5}>
+{`event RoleRevoked(bytes32 indexed _role, address indexed _account, address indexed _sender);`}
+      </ExpandableCode>
+    </div>
+
+    <div style={{marginBottom: "1rem"}}>
+      <strong>Parameters:</strong>
+      <PropertyTable
+        properties={[
+          {
+            name: "_role",
+            type: "bytes32",
+            description: "The role that was revoked."
+          },
+          {
+            name: "_account",
+            type: "address",
+            description: "The account from which the role was revoked."
+          },
+          {
+            name: "_sender",
+            type: "address",
+            description: "The account that revoked the role."
+          }
+        ]}
+        showRequired={false}
+      />
+    </div>
+  </Accordion>
+</AccordionGroup>
+
+## Errors
+
+<AccordionGroup>
+  <Accordion title="AccessControlUnauthorizedSender" defaultOpen={false}>
+    <div style={{marginBottom: "1rem"}}>
+      Thrown when the sender is not the account to renounce the role from.
+    </div>
+
+    <div>
+      <strong>Signature:</strong>
+      <ExpandableCode language="solidity" maxLines={5}>
+error AccessControlUnauthorizedSender(address _sender, address _account);
+      </ExpandableCode>
+    </div>
+  </Accordion>
+</AccordionGroup>
+
+<!-- Usage Example section commented out for now -->
+<!--
+## Usage Example
+
+<ExpandableCode language="solidity" maxLines={20} title="Example Implementation">
+{`pragma solidity >=0.8.30;
+
+import @compose/access/AccessControl/Renounce/AccessControlRenounceMod;
+
+contract AccessControlRenounceFacet {
+    AccessControlRenounceMod internal accessControlRenounceMod;
+
+    constructor(
+        address accessControlRenounceModAddress
+    ) {
+        accessControlRenounceMod = AccessControlRenounceMod(
+            accessControlRenounceModAddress
+        );
+    }
+
+    /**
+     * @notice Renounces a role for the caller.
+     * @dev This function delegates to the AccessControlRenounceMod module.
+     * @param _role The role to renounce.
+     */
+    function renounceRole(bytes32 _role) external {
+        // The account to renounce the role from is implicitly the caller.
+        accessControlRenounceMod.renounceRole(_role, msg.sender);
+    }
+
+    /**
+     * @notice Retrieves the AccessControl storage struct.
+     * @dev Useful for debugging or querying storage state.
+     * @return AccessControlStorage The current access control storage.
+     */
+    function getAccessControlStorage() external pure returns (AccessControlStorage) {
+        return accessControlRenounceMod.getStorage();
+    }
+}
+`}
+</ExpandableCode>
+-->
+
+## Best Practices
+
+<Callout type="tip" title="Best Practice">
+- Ensure the caller is the intended account when calling `renounceRole` to prevent unauthorized role revocation.
+- Verify that the role being renounced is still relevant to the account's function.
+- Handle the `AccessControlUnauthorizedSender` error, which occurs if the caller is not the account designated to renounce the role.
+</Callout>
+
+## Integration Notes
+
+<Callout type="success" title="Shared Storage">
+This module interacts with diamond storage at the `STORAGE_POSITION` defined by `keccak256("compose.accesscontrol")`. The `renounceRole` function reads and modifies role assignments within the shared `AccessControlStorage` struct. Changes made via this module are immediately visible to all facets that access the same storage position, maintaining consistency across the diamond.
+</Callout>
+
+<div style={{marginTop: "3rem", paddingTop: "2rem", borderTop: "1px solid var(--ifm-color-emphasis-200)"}}>
+  <RelatedDocs
+    items={[
+      {
+        title: "AccessControlRenounceFacet",
+        href: "/docs/library/access/AccessControl/Renounce/AccessControlRenounceFacet",
+        description: "Facet using AccessControlRenounceMod",
+        icon: "💎"
+      },
+      {
+        title: "OwnerDataMod",
+        href: "/docs/library/access/Owner/Data/OwnerDataMod",
+        description: "Related module in access",
+        icon: "📦"
+      },
+      {
+        title: "OwnerRenounceMod",
+        href: "/docs/library/access/Owner/Renounce/OwnerRenounceMod",
+        description: "Related module in access",
+        icon: "📦"
+      },
+      {
+        title: "OwnerTransferMod",
+        href: "/docs/library/access/Owner/Transfer/OwnerTransferMod",
+        description: "Related module in access",
+        icon: "📦"
+      }
+    ]}
+  />
+</div>
+
+<div style={{marginTop: "3rem", paddingTop: "2rem", borderTop: "1px solid var(--ifm-color-emphasis-200)"}}>
+  <WasThisHelpful pageId="AccessControlRenounceMod" />
+</div>
+
+<LastUpdated date="2026-03-12T21:07:30.423Z" />

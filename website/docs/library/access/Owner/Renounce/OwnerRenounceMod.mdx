@@ -1,0 +1,204 @@
+---
+sidebar_position: 100
+title: "OwnerRenounceMod"
+description: "Renounce contract ownership to address(0)"
+gitSource: "https://github.com/Perfect-Abstractions/Compose/tree/main/src/access/Owner/Renounce/OwnerRenounceMod.sol"
+---
+
+import DocSubtitle  from '@site/src/components/docs/DocSubtitle';
+import Badge from '@site/src/components/ui/Badge';
+import Callout from '@site/src/components/ui/Callout';
+import CalloutBox from '@site/src/components/ui/CalloutBox';
+import Accordion, { AccordionGroup } from '@site/src/components/ui/Accordion';
+import PropertyTable from '@site/src/components/api/PropertyTable';
+import ExpandableCode from '@site/src/components/code/ExpandableCode';
+import CodeShowcase from '@site/src/components/code/CodeShowcase';
+import RelatedDocs from '@site/src/components/docs/RelatedDocs';
+import WasThisHelpful from '@site/src/components/docs/WasThisHelpful';
+import LastUpdated from '@site/src/components/docs/LastUpdated';
+import ReadingTime from '@site/src/components/docs/ReadingTime';
+import GradientText from '@site/src/components/ui/GradientText';
+import GradientButton from '@site/src/components/ui/GradientButton';
+
+<DocSubtitle>
+Renounce contract ownership to address(0)
+</DocSubtitle>
+
+<Callout type="info" title="Key Features">
+- Internal functions for diamond composition.
+- Operates on shared diamond storage for ownership state.
+- Sets owner to address(0) upon renouncement.
+- Emits `OwnershipTransferred` event upon successful renouncement.
+</Callout>
+
+<Callout type="info" title="Module Usage">
+This module provides internal functions for use in your custom facets. Import it to access shared logic and storage.
+</Callout>
+
+## Overview
+
+This module provides logic for renouncing contract ownership, setting the owner to address(0) and disabling owner-restricted functions. It operates on shared diamond storage, making ownership changes immediately visible to all facets. This is crucial for establishing a decentralized or unowned state post-initialization.
+
+---
+
+## Storage
+
+### OwnerStorage
+
+storage-location: erc8042:erc173.owner
+
+<ExpandableCode language="solidity" maxLines={15} title="Definition">
+{`struct OwnerStorage {
+    address owner;
+}`}
+</ExpandableCode>
+
+### State Variables
+
+<PropertyTable
+  properties={[
+    {
+      name: "STORAGE_POSITION",
+      type: "bytes32",
+      description: "Diamond storage slot position for this module (Value: `keccak256(\"erc173.owner\")`)"
+    }
+  ]}
+  showRequired={false}
+/>
+
+## Functions
+
+### getStorage
+
+Returns a pointer to the ERC-173 storage struct. Uses inline assembly to access the storage slot defined by STORAGE_POSITION.
+
+<ExpandableCode language="solidity" maxLines={8}>
+{`function getStorage() pure returns (OwnerStorage storage s);`}
+</ExpandableCode>
+
+**Returns:**
+
+<PropertyTable
+  properties={[
+    {
+      name: "s",
+      type: "OwnerStorage",
+      description: "The OwnerStorage struct in storage."
+    }
+  ]}
+  showRequired={false}
+/>
+
+---
+### renounceOwnership
+
+Renounce ownership of the contract. Sets the owner to address(0), disabling all functions restricted to the owner.
+
+<ExpandableCode language="solidity" maxLines={8}>
+{`function renounceOwnership() ;`}
+</ExpandableCode>
+
+## Events
+
+<AccordionGroup>
+  <Accordion title="OwnershipTransferred" defaultOpen={false}>
+    <div style={{marginBottom: "1rem"}}>
+      This emits when ownership of a contract changes.
+    </div>
+
+    <div style={{marginBottom: "1rem"}}>
+      <strong>Signature:</strong>
+      <ExpandableCode language="solidity" maxLines={5}>
+{`event OwnershipTransferred(address indexed previousOwner, address indexed newOwner);`}
+      </ExpandableCode>
+    </div>
+
+  </Accordion>
+</AccordionGroup>
+
+## Errors
+
+<AccordionGroup>
+  <Accordion title="OwnerUnauthorizedAccount" defaultOpen={false}>
+
+    <div>
+      <strong>Signature:</strong>
+      <ExpandableCode language="solidity" maxLines={5}>
+error OwnerUnauthorizedAccount();
+      </ExpandableCode>
+    </div>
+  </Accordion>
+</AccordionGroup>
+
+<!-- Usage Example section commented out for now -->
+<!--
+## Usage Example
+
+<ExpandableCode language="solidity" maxLines={20} title="Example Implementation">
+{`pragma solidity >=0.8.30;
+
+import {OwnerRenounceMod, OwnerStorage} from "@compose/access/Owner/Renounce/OwnerRenounceMod";
+
+contract MyFacet {
+    OwnerRenounceMod private ownerRenounceMod;
+
+    constructor(address diamondAddress) {
+        // Assuming OwnerRenounceMod is deployed and accessible via diamondAddress
+        // In a real scenario, this would be initialized by the diamond proxy
+        ownerRenounceMod = OwnerRenounceMod(diamondAddress);
+    }
+
+    /**
+     * @notice Renounces ownership of the contract.
+     */
+    function renounceContractOwnership() external {
+        // This call will set the owner in shared diamond storage to address(0)
+        ownerRenounceMod.renounceOwnership();
+    }
+
+    /**
+     * @notice Retrieves the current ownership storage structure.
+     * @return OwnerStorage The storage structure containing ownership information.
+     */
+    function getOwnerStorage() external view returns (OwnerStorage memory) {
+        // This function is internal to the module, but conceptually demonstrates access
+        // In a facet, you'd typically interact with the functions that use this storage.
+        // For direct storage access demonstration:
+        return OwnerStorage(ownerRenounceMod.getStorage().owner);
+    }
+}`}
+</ExpandableCode>
+-->
+
+## Best Practices
+
+<Callout type="tip" title="Best Practice">
+- Call `renounceOwnership()` only when the contract is intended to be permanently unowned.
+- Verify that no critical functions remain accessible only to the owner after renouncement.
+- Ensure the `OwnerRenounceMod` facet is correctly integrated into the diamond's storage layout.
+</Callout>
+
+## Integration Notes
+
+<Callout type="success" title="Shared Storage">
+This module interacts with diamond storage at the position defined by `STORAGE_POSITION`, which is keyed by `keccak256("erc173.owner")`. It reads and writes to the `owner` field within the `OwnerStorage` struct. Any facet or module that accesses this storage position will immediately see the updated owner address after `renounceOwnership()` is called. The module's `getStorage()` function provides a pointer to this storage, enabling other facets to inspect the ownership state.
+</Callout>
+
+<div style={{marginTop: "3rem", paddingTop: "2rem", borderTop: "1px solid var(--ifm-color-emphasis-200)"}}>
+  <RelatedDocs
+    items={[
+      {
+        title: "OwnerDataMod",
+        href: "/docs/library/access/Owner/Data/OwnerDataMod",
+        description: "Related module in access",
+        icon: "📦"
+      }
+    ]}
+  />
+</div>
+
+<div style={{marginTop: "3rem", paddingTop: "2rem", borderTop: "1px solid var(--ifm-color-emphasis-200)"}}>
+  <WasThisHelpful pageId="OwnerRenounceMod" />
+</div>
+
+<LastUpdated date="2026-03-12T21:06:20.873Z" />

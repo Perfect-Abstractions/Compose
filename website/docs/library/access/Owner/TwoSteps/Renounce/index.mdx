@@ -1,0 +1,29 @@
+---
+title: "Renounce"
+description: "Renounce components for Compose diamonds."
+---
+
+import DocCard, { DocCardGrid } from '@site/src/components/docs/DocCard';
+import DocSubtitle from '@site/src/components/docs/DocSubtitle';
+import Icon from '@site/src/components/ui/Icon';
+
+<DocSubtitle>
+  Renounce components for Compose diamonds.
+</DocSubtitle>
+
+<DocCardGrid columns={2}>
+  <DocCard
+    title="OwnerTwoStepRenounceFacet"
+    description={"Manages two-step ownership renouncement for diamonds"}
+    href="/docs/library/access/Owner/TwoSteps/Renounce/OwnerTwoStepRenounceFacet"
+    icon={<Icon name="book" size={28} />}
+    size="medium"
+  />
+  <DocCard
+    title="OwnerTwoStepRenounceMod"
+    description={"Two-step ownership renunciation via diamond storage"}
+    href="/docs/library/access/Owner/TwoSteps/Renounce/OwnerTwoStepRenounceMod"
+    icon={<Icon name="book" size={28} />}
+    size="medium"
+  />
+</DocCardGrid>

@@ -1,0 +1,434 @@
+---
+sidebar_position: 200
+title: "ERC1155TransferMod"
+description: "Handles ERC-1155 token transfers and receiver validation"
+gitSource: "https://github.com/Perfect-Abstractions/Compose/tree/main/src/token/ERC1155/Transfer/ERC1155TransferMod.sol"
+---
+
+import DocSubtitle  from '@site/src/components/docs/DocSubtitle';
+import Badge from '@site/src/components/ui/Badge';
+import Callout from '@site/src/components/ui/Callout';
+import CalloutBox from '@site/src/components/ui/CalloutBox';
+import Accordion, { AccordionGroup } from '@site/src/components/ui/Accordion';
+import PropertyTable from '@site/src/components/api/PropertyTable';
+import ExpandableCode from '@site/src/components/code/ExpandableCode';
+import CodeShowcase from '@site/src/components/code/CodeShowcase';
+import RelatedDocs from '@site/src/components/docs/RelatedDocs';
+import WasThisHelpful from '@site/src/components/docs/WasThisHelpful';
+import LastUpdated from '@site/src/components/docs/LastUpdated';
+import ReadingTime from '@site/src/components/docs/ReadingTime';
+import GradientText from '@site/src/components/ui/GradientText';
+import GradientButton from '@site/src/components/ui/GradientButton';
+
+<DocSubtitle>
+Handles ERC-1155 token transfers and receiver validation
+</DocSubtitle>
+
+<Callout type="info" title="Key Features">
+- Implements EIP-1155 safe transfer logic for single and batch transfers.
+- Validates sender approval and receiver contract interface compliance.
+- Operates on shared diamond storage for token balances.
+- Provides access to the ERC1155Storage struct via `getStorage()`.
+</Callout>
+
+<Callout type="info" title="Module Usage">
+This module provides internal functions for use in your custom facets. Import it to access shared logic and storage.
+</Callout>
+
+## Overview
+
+This module provides core logic for safe ERC-1155 token transfers, including batch and single transfers. Facets import this module to manage token movements using shared diamond storage, ensuring consistent state updates visible across all facets. It enforces EIP-1155 compliance for token receivers, guaranteeing that contracts can correctly handle incoming tokens.
+
+---
+
+## Storage
+
+### ERC1155Storage
+
+ERC-8042 compliant storage struct for ERC-1155 token data. storage-location: erc8042:erc1155
+
+<ExpandableCode language="solidity" maxLines={15} title="Definition">
+{`struct ERC1155Storage {
+    mapping(uint256 id => mapping(address account => uint256 balance)) balanceOf;
+    mapping(address account => mapping(address operator => bool)) isApprovedForAll;
+}`}
+</ExpandableCode>
+
+### State Variables
+
+<PropertyTable
+  properties={[
+    {
+      name: "STORAGE_POSITION",
+      type: "bytes32",
+      description: "Diamond storage slot position for this module (Value: `keccak256(\"erc1155\")`)"
+    }
+  ]}
+  showRequired={false}
+/>
+
+## Functions
+
+### getStorage
+
+Returns the ERC-1155 storage struct from the predefined diamond storage slot. Uses inline assembly to set the storage slot reference.
+
+<ExpandableCode language="solidity" maxLines={8}>
+{`function getStorage() pure returns (ERC1155Storage storage s);`}
+</ExpandableCode>
+
+**Returns:**
+
+<PropertyTable
+  properties={[
+    {
+      name: "s",
+      type: "ERC1155Storage",
+      description: "The ERC-1155 storage struct reference."
+    }
+  ]}
+  showRequired={false}
+/>
+
+---
+### safeBatchTransferFrom
+
+Safely transfers multiple token types from one address to another in a single transaction. Validates ownership, approval, and receiver address before updating balances for each token type. Performs ERC1155Receiver validation if recipient is a contract (safe transfer). Complies with EIP-1155 safe transfer requirements.
+
+<ExpandableCode language="solidity" maxLines={8}>
+{`function safeBatchTransferFrom(
+address _from,
+address _to,
+uint256[] memory _ids,
+uint256[] memory _values,
+address _operator
+) ;`}
+</ExpandableCode>
+
+**Parameters:**
+
+<PropertyTable
+  properties={[
+    {
+      name: "_from",
+      type: "address",
+      description: "The address to transfer from."
+    },
+    {
+      name: "_to",
+      type: "address",
+      description: "The address to transfer to."
+    },
+    {
+      name: "_ids",
+      type: "uint256[]",
+      description: "The token types to transfer."
+    },
+    {
+      name: "_values",
+      type: "uint256[]",
+      description: "The amounts of tokens to transfer for each type."
+    },
+    {
+      name: "_operator",
+      type: "address",
+      description: "The address initiating the transfer (may be owner or approved operator)."
+    }
+  ]}
+  showRequired={false}
+/>
+
+---
+### safeTransferFrom
+
+Safely transfers a single token type from one address to another. Validates ownership, approval, and receiver address before updating balances. Performs ERC1155Receiver validation if recipient is a contract (safe transfer). Complies with EIP-1155 safe transfer requirements.
+
+<ExpandableCode language="solidity" maxLines={8}>
+{`function safeTransferFrom(address _from, address _to, uint256 _id, uint256 _value, address _operator) ;`}
+</ExpandableCode>
+
+**Parameters:**
+
+<PropertyTable
+  properties={[
+    {
+      name: "_from",
+      type: "address",
+      description: "The address to transfer from."
+    },
+    {
+      name: "_to",
+      type: "address",
+      description: "The address to transfer to."
+    },
+    {
+      name: "_id",
+      type: "uint256",
+      description: "The token type to transfer."
+    },
+    {
+      name: "_value",
+      type: "uint256",
+      description: "The amount of tokens to transfer."
+    },
+    {
+      name: "_operator",
+      type: "address",
+      description: "The address initiating the transfer (may be owner or approved operator)."
+    }
+  ]}
+  showRequired={false}
+/>
+
+## Events
+
+<AccordionGroup>
+  <Accordion title="TransferBatch" defaultOpen={false}>
+    <div style={{marginBottom: "1rem"}}>
+      Equivalent to multiple &#123;TransferSingle&#125; events, where `operator`, `from` and `to` are the same for all transfers.
+    </div>
+
+    <div style={{marginBottom: "1rem"}}>
+      <strong>Signature:</strong>
+      <ExpandableCode language="solidity" maxLines={5}>
+{`event TransferBatch(
+address indexed _operator, address indexed _from, address indexed _to, uint256[] _ids, uint256[] _values
+);`}
+      </ExpandableCode>
+    </div>
+
+    <div style={{marginBottom: "1rem"}}>
+      <strong>Parameters:</strong>
+      <PropertyTable
+        properties={[
+          {
+            name: "_operator",
+            type: "address",
+            description: "The address which initiated the batch transfer."
+          },
+          {
+            name: "_from",
+            type: "address",
+            description: "The address which previously owned the tokens."
+          },
+          {
+            name: "_to",
+            type: "address",
+            description: "The address which now owns the tokens."
+          },
+          {
+            name: "_ids",
+            type: "uint256[]",
+            description: "The token types being transferred."
+          },
+          {
+            name: "_values",
+            type: "uint256[]",
+            description: "The amounts of tokens transferred."
+          }
+        ]}
+        showRequired={false}
+      />
+    </div>
+  </Accordion>
+  <Accordion title="TransferSingle" defaultOpen={false}>
+    <div style={{marginBottom: "1rem"}}>
+      Emitted when `value` amount of tokens of type `id` are transferred from `from` to `to` by `operator`.
+    </div>
+
+    <div style={{marginBottom: "1rem"}}>
+      <strong>Signature:</strong>
+      <ExpandableCode language="solidity" maxLines={5}>
+{`event TransferSingle(
+address indexed _operator, address indexed _from, address indexed _to, uint256 _id, uint256 _value
+);`}
+      </ExpandableCode>
+    </div>
+
+    <div style={{marginBottom: "1rem"}}>
+      <strong>Parameters:</strong>
+      <PropertyTable
+        properties={[
+          {
+            name: "_operator",
+            type: "address",
+            description: "The address which initiated the transfer."
+          },
+          {
+            name: "_from",
+            type: "address",
+            description: "The address which previously owned the token."
+          },
+          {
+            name: "_to",
+            type: "address",
+            description: "The address which now owns the token."
+          },
+          {
+            name: "_id",
+            type: "uint256",
+            description: "The token type being transferred."
+          },
+          {
+            name: "_value",
+            type: "uint256",
+            description: "The amount of tokens transferred."
+          }
+        ]}
+        showRequired={false}
+      />
+    </div>
+  </Accordion>
+</AccordionGroup>
+
+## Errors
+
+<AccordionGroup>
+  <Accordion title="ERC1155InsufficientBalance" defaultOpen={false}>
+    <div style={{marginBottom: "1rem"}}>
+      **Title:** ERC-1155 Transfer Module Provides internal transfer functionality for ERC-1155 tokens. Error indicating insufficient balance for a transfer.
+    </div>
+
+    <div>
+      <strong>Signature:</strong>
+      <ExpandableCode language="solidity" maxLines={5}>
+error ERC1155InsufficientBalance(address _sender, uint256 _balance, uint256 _needed, uint256 _tokenId);
+      </ExpandableCode>
+    </div>
+  </Accordion>
+  <Accordion title="ERC1155InvalidArrayLength" defaultOpen={false}>
+    <div style={{marginBottom: "1rem"}}>
+      Error indicating array length mismatch in batch operations.
+    </div>
+
+    <div>
+      <strong>Signature:</strong>
+      <ExpandableCode language="solidity" maxLines={5}>
+error ERC1155InvalidArrayLength(uint256 _idsLength, uint256 _valuesLength);
+      </ExpandableCode>
+    </div>
+  </Accordion>
+  <Accordion title="ERC1155InvalidReceiver" defaultOpen={false}>
+    <div style={{marginBottom: "1rem"}}>
+      Error indicating the receiver address is invalid.
+    </div>
+
+    <div>
+      <strong>Signature:</strong>
+      <ExpandableCode language="solidity" maxLines={5}>
+error ERC1155InvalidReceiver(address _receiver);
+      </ExpandableCode>
+    </div>
+  </Accordion>
+  <Accordion title="ERC1155InvalidSender" defaultOpen={false}>
+    <div style={{marginBottom: "1rem"}}>
+      Error indicating the sender address is invalid.
+    </div>
+
+    <div>
+      <strong>Signature:</strong>
+      <ExpandableCode language="solidity" maxLines={5}>
+error ERC1155InvalidSender(address _sender);
+      </ExpandableCode>
+    </div>
+  </Accordion>
+  <Accordion title="ERC1155MissingApprovalForAll" defaultOpen={false}>
+    <div style={{marginBottom: "1rem"}}>
+      Error indicating missing approval for an operator.
+    </div>
+
+    <div>
+      <strong>Signature:</strong>
+      <ExpandableCode language="solidity" maxLines={5}>
+error ERC1155MissingApprovalForAll(address _operator, address _owner);
+      </ExpandableCode>
+    </div>
+  </Accordion>
+</AccordionGroup>
+
+<!-- Usage Example section commented out for now -->
+<!--
+## Usage Example
+
+<ExpandableCode language="solidity" maxLines={20} title="Example Implementation">
+{`pragma solidity >=0.8.30;
+
+import {ERC1155TransferMod} from "@compose/token/ERC1155/Transfer/ERC1155TransferMod";
+import {ERC1155Storage} from "@compose/token/ERC1155/Storage/ERC1155Storage";
+
+contract ERC1155TransferFacet {
+    // Assume ERC1155Storage is initialized and accessible via diamond storage
+
+    function transferSingleToken(
+        address _from,
+        address _to,
+        uint256 _id,
+        uint256 _value,
+        address _operator
+    ) external {
+        ERC1155TransferMod.safeTransferFrom(_from, _to, _id, _value, _operator);
+    }
+
+    function transferBatchTokens(
+        address _from,
+        address _to,
+        uint256[] memory _ids,
+        uint256[] memory _values,
+        address _operator
+    ) external {
+        ERC1155TransferMod.safeBatchTransferFrom(_from, _to, _ids, _values, _operator);
+    }
+}`}
+</ExpandableCode>
+-->
+
+## Best Practices
+
+<Callout type="tip" title="Best Practice">
+- Ensure `_operator` has been approved to transfer tokens from `_from` before calling transfer functions.
+- Verify the receiver address (`_to`) is not the zero address and implements the ERC1155TokenReceiver interface if it is a contract.
+- Handle the specific errors `ERC1155InsufficientBalance`, `ERC1155InvalidArrayLength`, `ERC1155InvalidReceiver`, `ERC1155InvalidSender`, and `ERC1155MissingApprovalForAll` that these functions can revert with.
+</Callout>
+
+## Integration Notes
+
+<Callout type="success" title="Shared Storage">
+This module interacts with diamond storage at the `STORAGE_POSITION` defined by `keccak256("erc1155")`. It reads and writes to the `ERC1155Storage` struct, which manages token balances. All state changes performed by `safeTransferFrom` and `safeBatchTransferFrom` are immediately reflected in this shared storage, making them visible to all other facets operating on the same diamond storage.
+</Callout>
+
+<div style={{marginTop: "3rem", paddingTop: "2rem", borderTop: "1px solid var(--ifm-color-emphasis-200)"}}>
+  <RelatedDocs
+    items={[
+      {
+        title: "ERC1155TransferFacet",
+        href: "/docs/library/token/ERC1155/Transfer/ERC1155TransferFacet",
+        description: "Facet using ERC1155TransferMod",
+        icon: "💎"
+      },
+      {
+        title: "ERC1155ApproveMod",
+        href: "/docs/library/token/ERC1155/Approve/ERC1155ApproveMod",
+        description: "Related module in token",
+        icon: "📦"
+      },
+      {
+        title: "ERC1155MetadataMod",
+        href: "/docs/library/token/ERC1155/Metadata/ERC1155MetadataMod",
+        description: "Related module in token",
+        icon: "📦"
+      },
+      {
+        title: "ERC1155MintMod",
+        href: "/docs/library/token/ERC1155/Mint/ERC1155MintMod",
+        description: "Related module in token",
+        icon: "📦"
+      }
+    ]}
+  />
+</div>
+
+<div style={{marginTop: "3rem", paddingTop: "2rem", borderTop: "1px solid var(--ifm-color-emphasis-200)"}}>
+  <WasThisHelpful pageId="ERC1155TransferMod" />
+</div>
+
+<LastUpdated date="2026-03-12T21:03:53.251Z" />
