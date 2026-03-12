@@ -1,0 +1,276 @@
+---
+sidebar_position: 200
+title: "ERC721MintMod"
+description: "Mint ERC-721 tokens within a diamond"
+gitSource: "https://github.com/Perfect-Abstractions/Compose/tree/main/src/token/ERC721/Mint/ERC721MintMod.sol"
+---
+
+import DocSubtitle  from '@site/src/components/docs/DocSubtitle';
+import Badge from '@site/src/components/ui/Badge';
+import Callout from '@site/src/components/ui/Callout';
+import CalloutBox from '@site/src/components/ui/CalloutBox';
+import Accordion, { AccordionGroup } from '@site/src/components/ui/Accordion';
+import PropertyTable from '@site/src/components/api/PropertyTable';
+import ExpandableCode from '@site/src/components/code/ExpandableCode';
+import CodeShowcase from '@site/src/components/code/CodeShowcase';
+import RelatedDocs from '@site/src/components/docs/RelatedDocs';
+import WasThisHelpful from '@site/src/components/docs/WasThisHelpful';
+import LastUpdated from '@site/src/components/docs/LastUpdated';
+import ReadingTime from '@site/src/components/docs/ReadingTime';
+import GradientText from '@site/src/components/ui/GradientText';
+import GradientButton from '@site/src/components/ui/GradientButton';
+
+<DocSubtitle>
+Mint ERC-721 tokens within a diamond
+</DocSubtitle>
+
+<Callout type="info" title="Key Features">
+- Exposes `internal` functions for minting ERC-721 tokens, suitable for integration within custom facets.
+- Utilizes the diamond storage pattern (EIP-8042) for state management.
+- Emits `Transfer` events upon successful minting, adhering to ERC-721 conventions.
+- Includes specific error handling for invalid receivers and senders via custom errors.
+</Callout>
+
+<Callout type="info" title="Module Usage">
+This module provides internal functions for use in your custom facets. Import it to access shared logic and storage.
+</Callout>
+
+## Overview
+
+This module provides internal functions for minting ERC-721 tokens. Facets import this module to manage token creation using shared diamond storage. Changes made through this module, such as token transfers, are immediately visible to all facets accessing the same storage.
+
+---
+
+## Storage
+
+### ERC721Storage
+
+<ExpandableCode language="solidity" maxLines={15} title="Definition">
+{`struct ERC721Storage {
+    mapping(uint256 tokenId => address owner) ownerOf;
+    mapping(address owner => uint256 balance) balanceOf;
+    mapping(address owner => mapping(address operator => bool approved)) isApprovedForAll;
+    mapping(uint256 tokenId => address approved) approved;
+}`}
+</ExpandableCode>
+
+### State Variables
+
+<PropertyTable
+  properties={[
+    {
+      name: "STORAGE_POSITION",
+      type: "bytes32",
+      description: "Diamond storage slot position for this module (Value: `keccak256(\"erc721\")`)"
+    }
+  ]}
+  showRequired={false}
+/>
+
+## Functions
+
+### getStorage
+
+Returns the ERC-721 storage struct from its predefined slot. Uses inline assembly to access diamond storage location.
+
+<ExpandableCode language="solidity" maxLines={8}>
+{`function getStorage() pure returns (ERC721Storage storage s);`}
+</ExpandableCode>
+
+**Returns:**
+
+<PropertyTable
+  properties={[
+    {
+      name: "s",
+      type: "ERC721Storage",
+      description: "The storage reference for ERC-721 state variables."
+    }
+  ]}
+  showRequired={false}
+/>
+
+---
+### mint
+
+Mints a new ERC-721 token to the specified address. Reverts if the receiver address is zero or if the token already exists.
+
+<ExpandableCode language="solidity" maxLines={8}>
+{`function mint(address _to, uint256 _tokenId) ;`}
+</ExpandableCode>
+
+**Parameters:**
+
+<PropertyTable
+  properties={[
+    {
+      name: "_to",
+      type: "address",
+      description: "The address that will own the newly minted token."
+    },
+    {
+      name: "_tokenId",
+      type: "uint256",
+      description: "The ID of the token to mint."
+    }
+  ]}
+  showRequired={false}
+/>
+
+## Events
+
+<AccordionGroup>
+  <Accordion title="Transfer" defaultOpen={false}>
+    <div style={{marginBottom: "1rem"}}>
+      Emitted when ownership of a token changes, including minting and burning.
+    </div>
+
+    <div style={{marginBottom: "1rem"}}>
+      <strong>Signature:</strong>
+      <ExpandableCode language="solidity" maxLines={5}>
+{`event Transfer(address indexed _from, address indexed _to, uint256 indexed _tokenId);`}
+      </ExpandableCode>
+    </div>
+
+    <div style={{marginBottom: "1rem"}}>
+      <strong>Parameters:</strong>
+      <PropertyTable
+        properties={[
+          {
+            name: "_from",
+            type: "address",
+            description: "The address transferring the token, or zero for minting."
+          },
+          {
+            name: "_to",
+            type: "address",
+            description: "The address receiving the token, or zero for burning."
+          },
+          {
+            name: "_tokenId",
+            type: "uint256",
+            description: "The ID of the token being transferred."
+          }
+        ]}
+        showRequired={false}
+      />
+    </div>
+  </Accordion>
+</AccordionGroup>
+
+## Errors
+
+<AccordionGroup>
+  <Accordion title="ERC721InvalidReceiver" defaultOpen={false}>
+    <div style={{marginBottom: "1rem"}}>
+      Thrown when the receiver address is invalid (e.g., zero address).
+    </div>
+
+    <div>
+      <strong>Signature:</strong>
+      <ExpandableCode language="solidity" maxLines={5}>
+error ERC721InvalidReceiver(address _receiver);
+      </ExpandableCode>
+    </div>
+  </Accordion>
+  <Accordion title="ERC721InvalidSender" defaultOpen={false}>
+    <div style={{marginBottom: "1rem"}}>
+      Thrown when the sender address is invalid (e.g., zero address).
+    </div>
+
+    <div>
+      <strong>Signature:</strong>
+      <ExpandableCode language="solidity" maxLines={5}>
+error ERC721InvalidSender(address _sender);
+      </ExpandableCode>
+    </div>
+  </Accordion>
+</AccordionGroup>
+
+<!-- Usage Example section commented out for now -->
+<!--
+## Usage Example
+
+<ExpandableCode language="solidity" maxLines={20} title="Example Implementation">
+{`pragma solidity >=0.8.30;
+
+import @compose/token/ERC721/Mint/ERC721MintMod;
+
+contract ERC721MintFacet {
+    ERC721MintMod internal mintModule;
+
+    constructor(address diamondStorageAddress) {
+        mintModule = ERC721MintMod(diamondStorageAddress);
+    }
+
+    /**
+     * @notice Mints a new ERC-721 token.
+     * @param _to The address to mint the token to.
+     * @param _tokenId The ID of the token to mint.
+     */
+    function mintToken(address _to, uint256 _tokenId) external {
+        // Call the internal mint function from the module
+        mintModule.mint(_to, _tokenId);
+    }
+
+    /**
+     * @notice Retrieves the current ERC721Storage struct.
+     * @return The ERC721Storage struct.
+     */
+    function getERC721Storage() external pure returns (ERC721Storage) {
+        return ERC721MintMod.getStorage();
+    }
+}`}
+</ExpandableCode>
+-->
+
+## Best Practices
+
+<Callout type="tip" title="Best Practice">
+- Ensure the caller has the necessary permissions to mint tokens before calling `mintToken`.
+- Verify that the `_to` address is not the zero address and that `_tokenId` does not already exist to prevent unexpected behavior.
+- Use `getERC721Storage()` to inspect the state of ERC-721 tokens, ensuring consistency across facets.
+</Callout>
+
+## Integration Notes
+
+<Callout type="success" title="Shared Storage">
+This module interacts with diamond storage at the slot identified by `keccak2535(\"erc721\")` (or `STORAGE_POSITION`). The `ERC721Storage` struct is accessed and modified directly within this slot. All functions, including `mint`, operate on this shared storage. Changes to token ownership and existence are therefore immediately reflected for any facet reading from this storage position.
+</Callout>
+
+<div style={{marginTop: "3rem", paddingTop: "2rem", borderTop: "1px solid var(--ifm-color-emphasis-200)"}}>
+  <RelatedDocs
+    items={[
+      {
+        title: "ERC1155ApproveMod",
+        href: "/docs/library/token/ERC1155/Approve/ERC1155ApproveMod",
+        description: "Related module in token",
+        icon: "📦"
+      },
+      {
+        title: "ERC1155MetadataMod",
+        href: "/docs/library/token/ERC1155/Metadata/ERC1155MetadataMod",
+        description: "Related module in token",
+        icon: "📦"
+      },
+      {
+        title: "ERC1155MintMod",
+        href: "/docs/library/token/ERC1155/Mint/ERC1155MintMod",
+        description: "Related module in token",
+        icon: "📦"
+      },
+      {
+        title: "ERC1155BurnMod",
+        href: "/docs/library/token/ERC1155/Burn/ERC1155BurnMod",
+        description: "Related module in token",
+        icon: "📦"
+      }
+    ]}
+  />
+</div>
+
+<div style={{marginTop: "3rem", paddingTop: "2rem", borderTop: "1px solid var(--ifm-color-emphasis-200)"}}>
+  <WasThisHelpful pageId="ERC721MintMod" />
+</div>
+
+<LastUpdated date="2026-03-12T21:04:16.810Z" />

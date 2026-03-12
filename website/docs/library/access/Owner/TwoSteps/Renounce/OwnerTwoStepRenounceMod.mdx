@@ -1,0 +1,267 @@
+---
+sidebar_position: 100
+title: "OwnerTwoStepRenounceMod"
+description: "Two-step ownership renunciation via diamond storage"
+gitSource: "https://github.com/Perfect-Abstractions/Compose/tree/main/src/access/Owner/TwoSteps/Renounce/OwnerTwoStepRenounceMod.sol"
+---
+
+import DocSubtitle  from '@site/src/components/docs/DocSubtitle';
+import Badge from '@site/src/components/ui/Badge';
+import Callout from '@site/src/components/ui/Callout';
+import CalloutBox from '@site/src/components/ui/CalloutBox';
+import Accordion, { AccordionGroup } from '@site/src/components/ui/Accordion';
+import PropertyTable from '@site/src/components/api/PropertyTable';
+import ExpandableCode from '@site/src/components/code/ExpandableCode';
+import CodeShowcase from '@site/src/components/code/CodeShowcase';
+import RelatedDocs from '@site/src/components/docs/RelatedDocs';
+import WasThisHelpful from '@site/src/components/docs/WasThisHelpful';
+import LastUpdated from '@site/src/components/docs/LastUpdated';
+import ReadingTime from '@site/src/components/docs/ReadingTime';
+import GradientText from '@site/src/components/ui/GradientText';
+import GradientButton from '@site/src/components/ui/GradientButton';
+
+<DocSubtitle>
+Two-step ownership renunciation via diamond storage
+</DocSubtitle>
+
+<Callout type="info" title="Key Features">
+- Implements a two-step ownership renouncement pattern.
+- Utilizes diamond storage (EIP-8042) for owner and pending owner state.
+- Exposes `internal` functions for integration within custom facets.
+- Emits `OwnershipTransferred` event upon successful renouncement.
+</Callout>
+
+<Callout type="info" title="Module Usage">
+This module provides internal functions for use in your custom facets. Import it to access shared logic and storage.
+</Callout>
+
+## Overview
+
+This module provides a two-step ownership renunciation mechanism, adhering to ERC-173 principles. It allows an owner to initiate renouncement, transitioning ownership to a pending state before finalization. This ensures that ownership changes are deliberate and visible across all facets using the shared diamond storage.
+
+---
+
+## Storage
+
+### OwnerStorage
+
+storage-location: erc8042:erc173.owner
+
+<ExpandableCode language="solidity" maxLines={15} title="Definition">
+{`struct OwnerStorage {
+    address owner;
+}`}
+</ExpandableCode>
+
+---
+### PendingOwnerStorage
+
+storage-location: erc8042:erc173.owner.pending
+
+<ExpandableCode language="solidity" maxLines={15} title="Definition">
+{`struct PendingOwnerStorage {
+    address pendingOwner;
+}`}
+</ExpandableCode>
+
+### State Variables
+
+<PropertyTable
+  properties={[
+    {
+      name: "OWNER_STORAGE_POSITION",
+      type: "bytes32",
+      description: "Diamond storage slot position for this module (Value: `keccak256(\"erc173.owner\")`)"
+    },
+    {
+      name: "PENDING_OWNER_STORAGE_POSITION",
+      type: "bytes32",
+      description: "Diamond storage slot position for this module (Value: `keccak256(\"erc173.owner.pending\")`)"
+    }
+  ]}
+  showRequired={false}
+/>
+
+## Functions
+
+### getOwnerStorage
+
+Returns a pointer to the ERC-173 storage struct. Uses inline assembly to access the storage slot defined by OWNER_STORAGE_POSITION.
+
+<ExpandableCode language="solidity" maxLines={8}>
+{`function getOwnerStorage() pure returns (OwnerStorage storage s);`}
+</ExpandableCode>
+
+**Returns:**
+
+<PropertyTable
+  properties={[
+    {
+      name: "s",
+      type: "OwnerStorage",
+      description: "The OwnerStorage struct in storage."
+    }
+  ]}
+  showRequired={false}
+/>
+
+---
+### getPendingOwnerStorage
+
+Returns a pointer to the PendingOwner storage struct. Uses inline assembly to access the storage slot defined by PENDING_OWNER_STORAGE_POSITION.
+
+<ExpandableCode language="solidity" maxLines={8}>
+{`function getPendingOwnerStorage() pure returns (PendingOwnerStorage storage s);`}
+</ExpandableCode>
+
+**Returns:**
+
+<PropertyTable
+  properties={[
+    {
+      name: "s",
+      type: "PendingOwnerStorage",
+      description: "The PendingOwnerStorage struct in storage."
+    }
+  ]}
+  showRequired={false}
+/>
+
+---
+### renounceOwnership
+
+Renounce ownership of the contract. Sets the owner to address(0) and clears any pending owner, disabling all functions restricted to the owner.
+
+<ExpandableCode language="solidity" maxLines={8}>
+{`function renounceOwnership() ;`}
+</ExpandableCode>
+
+## Events
+
+<AccordionGroup>
+  <Accordion title="OwnershipTransferred" defaultOpen={false}>
+    <div style={{marginBottom: "1rem"}}>
+      This emits when ownership of a contract changes.
+    </div>
+
+    <div style={{marginBottom: "1rem"}}>
+      <strong>Signature:</strong>
+      <ExpandableCode language="solidity" maxLines={5}>
+{`event OwnershipTransferred(address indexed previousOwner, address indexed newOwner);`}
+      </ExpandableCode>
+    </div>
+
+  </Accordion>
+</AccordionGroup>
+
+## Errors
+
+<AccordionGroup>
+  <Accordion title="OwnerUnauthorizedAccount" defaultOpen={false}>
+
+    <div>
+      <strong>Signature:</strong>
+      <ExpandableCode language="solidity" maxLines={5}>
+error OwnerUnauthorizedAccount();
+      </ExpandableCode>
+    </div>
+  </Accordion>
+</AccordionGroup>
+
+<!-- Usage Example section commented out for now -->
+<!--
+## Usage Example
+
+<ExpandableCode language="solidity" maxLines={20} title="Example Implementation">
+{`pragma solidity >=0.8.30;
+
+import {OwnerTwoStepRenounceMod} from "@compose/access/Owner/TwoSteps/Renounce/OwnerTwoStepRenounceMod";
+import {OwnerStorage, PendingOwnerStorage} from "@compose/access/Owner/OwnerDataMod"; // Assuming these structs are imported from a related module
+
+contract MyFacet {
+    OwnerTwoStepRenounceMod internal ownerRenounceModule;
+
+    constructor(address diamondAddress) {
+        // Initialize the module with the diamond's address to access its storage
+        ownerRenounceModule = OwnerTwoStepRenounceMod(diamondAddress);
+    }
+
+    /**
+     * @notice Initiates the ownership renouncement process.
+     */
+    function initiateOwnershipRenounce() external {
+        // Call the internal function to start the renouncement process.
+        // This function will likely check if the caller is the current owner.
+        ownerRenounceModule.renounceOwnership();
+    }
+
+    /**
+     * @notice Retrieves the current owner storage pointer.
+     * @return OwnerStorage A pointer to the owner storage struct.
+     */
+    function viewOwnerStorage() external view returns (OwnerStorage) {
+        return ownerRenounceModule.getOwnerStorage();
+    }
+
+    /**
+     * @notice Retrieves the pending owner storage pointer.
+     * @return PendingOwnerStorage A pointer to the pending owner storage struct.
+     */
+    function viewPendingOwnerStorage() external view returns (PendingOwnerStorage) {
+        return ownerRenounceModule.getPendingOwnerStorage();
+    }
+}
+`}
+</ExpandableCode>
+-->
+
+## Best Practices
+
+<Callout type="tip" title="Best Practice">
+- Ensure the caller is the current owner before initiating renouncement to prevent unauthorized actions.
+- Verify that the `OwnershipTransferred` event is emitted to confirm successful renouncement.
+- Be aware that after successful renouncement, the contract becomes effectively ownerless, and functions restricted to the owner will be disabled.
+</Callout>
+
+## Integration Notes
+
+<Callout type="success" title="Shared Storage">
+This module directly interacts with diamond storage using inline assembly to access specific storage slots for owner and pending owner data. The storage is managed via `OWNER_STORAGE_POSITION` and `PENDING_OWNER_STORAGE_POSITION`. Changes made to these storage slots by `renounceOwnership()` are immediately visible to all facets that read from these positions, ensuring consistent state across the diamond.
+</Callout>
+
+<div style={{marginTop: "3rem", paddingTop: "2rem", borderTop: "1px solid var(--ifm-color-emphasis-200)"}}>
+  <RelatedDocs
+    items={[
+      {
+        title: "OwnerDataMod",
+        href: "/docs/library/access/Owner/Data/OwnerDataMod",
+        description: "Related module in access",
+        icon: "📦"
+      },
+      {
+        title: "OwnerRenounceMod",
+        href: "/docs/library/access/Owner/Renounce/OwnerRenounceMod",
+        description: "Related module in access",
+        icon: "📦"
+      },
+      {
+        title: "OwnerTransferMod",
+        href: "/docs/library/access/Owner/Transfer/OwnerTransferMod",
+        description: "Related module in access",
+        icon: "📦"
+      },
+      {
+        title: "OwnerTwoStepDataMod",
+        href: "/docs/library/access/Owner/TwoSteps/Data/OwnerTwoStepDataMod",
+        description: "Related module in access",
+        icon: "📦"
+      }
+    ]}
+  />
+</div>
+
+<div style={{marginTop: "3rem", paddingTop: "2rem", borderTop: "1px solid var(--ifm-color-emphasis-200)"}}>
+  <WasThisHelpful pageId="OwnerTwoStepRenounceMod" />
+</div>
+
+<LastUpdated date="2026-03-12T21:06:46.222Z" />

@@ -1,0 +1,29 @@
+---
+title: "Data"
+description: "Data components for Compose diamonds."
+---
+
+import DocCard, { DocCardGrid } from '@site/src/components/docs/DocCard';
+import DocSubtitle from '@site/src/components/docs/DocSubtitle';
+import Icon from '@site/src/components/ui/Icon';
+
+<DocSubtitle>
+  Data components for Compose diamonds.
+</DocSubtitle>
+
+<DocCardGrid columns={2}>
+  <DocCard
+    title="AccessControlTemporalDataFacet"
+    description={"Checks role validity and expiry within a diamond"}
+    href="/docs/library/access/AccessControl/Temporal/Data/AccessControlTemporalDataFacet"
+    icon={<Icon name="book" size={28} />}
+    size="medium"
+  />
+  <DocCard
+    title="AccessControlTemporalDataMod"
+    description={"Manages role expiry and validation within diamond storage"}
+    href="/docs/library/access/AccessControl/Temporal/Data/AccessControlTemporalDataMod"
+    icon={<Icon name="book" size={28} />}
+    size="medium"
+  />
+</DocCardGrid>

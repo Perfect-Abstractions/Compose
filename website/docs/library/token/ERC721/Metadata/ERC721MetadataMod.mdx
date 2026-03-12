@@ -1,0 +1,243 @@
+---
+sidebar_position: 200
+title: "ERC721MetadataMod"
+description: "Manages ERC-721 token metadata within a diamond"
+gitSource: "https://github.com/Perfect-Abstractions/Compose/tree/main/src/token/ERC721/Metadata/ERC721MetadataMod.sol"
+---
+
+import DocSubtitle  from '@site/src/components/docs/DocSubtitle';
+import Badge from '@site/src/components/ui/Badge';
+import Callout from '@site/src/components/ui/Callout';
+import CalloutBox from '@site/src/components/ui/CalloutBox';
+import Accordion, { AccordionGroup } from '@site/src/components/ui/Accordion';
+import PropertyTable from '@site/src/components/api/PropertyTable';
+import ExpandableCode from '@site/src/components/code/ExpandableCode';
+import CodeShowcase from '@site/src/components/code/CodeShowcase';
+import RelatedDocs from '@site/src/components/docs/RelatedDocs';
+import WasThisHelpful from '@site/src/components/docs/WasThisHelpful';
+import LastUpdated from '@site/src/components/docs/LastUpdated';
+import ReadingTime from '@site/src/components/docs/ReadingTime';
+import GradientText from '@site/src/components/ui/GradientText';
+import GradientButton from '@site/src/components/ui/GradientButton';
+
+<DocSubtitle>
+Manages ERC-721 token metadata within a diamond
+</DocSubtitle>
+
+<Callout type="info" title="Key Features">
+- Functions are `internal` for use within custom facets.
+- Leverages diamond storage pattern (EIP-8042) for shared state.
+- No external dependencies or `using` directives.
+- Compatible with ERC-2535 diamonds.
+</Callout>
+
+<Callout type="info" title="Module Usage">
+This module provides internal functions for use in your custom facets. Import it to access shared logic and storage.
+</Callout>
+
+## Overview
+
+This module provides internal functions to manage ERC-721 token metadata, including name, symbol, and base URI. Facets can import this module to interact with shared diamond storage for metadata, ensuring consistency across all facets. Changes are immediately visible due to the shared storage pattern.
+
+---
+
+## Storage
+
+### ERC721MetadataStorage
+
+storage-location: erc8042:erc721.metadata
+
+<ExpandableCode language="solidity" maxLines={15} title="Definition">
+{`struct ERC721MetadataStorage {
+    string name;
+    string symbol;
+    string baseURI;
+}`}
+</ExpandableCode>
+
+### State Variables
+
+<PropertyTable
+  properties={[
+    {
+      name: "STORAGE_POSITION",
+      type: "bytes32",
+      description: "Diamond storage slot position for this module (Value: `keccak256(\"erc721.metadata\")`)"
+    }
+  ]}
+  showRequired={false}
+/>
+
+## Functions
+
+### getStorage
+
+Returns a pointer to the ERC-721 storage struct. Uses inline assembly to access the storage slot defined by STORAGE_POSITION.
+
+<ExpandableCode language="solidity" maxLines={8}>
+{`function getStorage() pure returns (ERC721MetadataStorage storage s);`}
+</ExpandableCode>
+
+**Returns:**
+
+<PropertyTable
+  properties={[
+    {
+      name: "s",
+      type: "ERC721MetadataStorage",
+      description: "The ERC721Storage struct in storage."
+    }
+  ]}
+  showRequired={false}
+/>
+
+---
+### setMetadata
+
+<ExpandableCode language="solidity" maxLines={8}>
+{`function setMetadata(string memory _name, string memory _symbol, string memory _baseURI) ;`}
+</ExpandableCode>
+
+**Parameters:**
+
+<PropertyTable
+  properties={[
+    {
+      name: "_name",
+      type: "string",
+      description: ""
+    },
+    {
+      name: "_symbol",
+      type: "string",
+      description: ""
+    },
+    {
+      name: "_baseURI",
+      type: "string",
+      description: ""
+    }
+  ]}
+  showRequired={false}
+/>
+
+## Errors
+
+<AccordionGroup>
+  <Accordion title="ERC721InvalidOwner" defaultOpen={false}>
+    <div style={{marginBottom: "1rem"}}>
+      Error indicating the queried owner address is invalid (zero address).
+    </div>
+
+    <div>
+      <strong>Signature:</strong>
+      <ExpandableCode language="solidity" maxLines={5}>
+error ERC721InvalidOwner(address _owner);
+      </ExpandableCode>
+    </div>
+  </Accordion>
+  <Accordion title="ERC721NonexistentToken" defaultOpen={false}>
+    <div style={{marginBottom: "1rem"}}>
+      Error indicating that the queried token does not exist.
+    </div>
+
+    <div>
+      <strong>Signature:</strong>
+      <ExpandableCode language="solidity" maxLines={5}>
+error ERC721NonexistentToken(uint256 _tokenId);
+      </ExpandableCode>
+    </div>
+  </Accordion>
+</AccordionGroup>
+
+<!-- Usage Example section commented out for now -->
+<!--
+## Usage Example
+
+<ExpandableCode language="solidity" maxLines={20} title="Example Implementation">
+{`pragma solidity >=0.8.30;
+
+import { ERC721MetadataMod } from "@compose/token/ERC721/Metadata/ERC721MetadataMod";
+
+contract MyERC721Facet {
+    ERC721MetadataMod private _metadataMod;
+
+    constructor(address diamondAddress) {
+        // In a real scenario, this would be initialized via diamond storage or an initializer function
+        _metadataMod = ERC721MetadataMod(diamondAddress);
+    }
+
+    /**
+     * @notice Sets the ERC-721 token metadata.
+     * @dev Requires appropriate access control, not shown here.
+     */
+    function setTokenMetadata(
+        string memory _name,
+        string memory _symbol,
+        string memory _baseURI
+    ) external {
+        // Call the internal function from the module
+        _metadataMod.setMetadata(_name, _symbol, _baseURI);
+    }
+
+    /**
+     * @notice Retrieves the ERC-721 storage structure.
+     * @return The ERC721MetadataStorage struct.
+     */
+    function getTokenMetadataStorage() public view returns (ERC721MetadataMod.ERC721MetadataStorage memory) {
+        return ERC721MetadataMod.getStorage();
+    }
+}`}
+</ExpandableCode>
+-->
+
+## Best Practices
+
+<Callout type="tip" title="Best Practice">
+- Ensure appropriate access control is enforced before calling `setMetadata`.
+- Verify storage layout compatibility with `STORAGE_POSITION` when upgrading diamond facets.
+- Use `getTokenMetadataStorage` to read metadata, ensuring consistency across facets.
+</Callout>
+
+## Integration Notes
+
+<Callout type="success" title="Shared Storage">
+This module interacts with diamond storage at the `STORAGE_POSITION` designated for ERC-721 metadata. It utilizes inline assembly to access this specific storage slot, defined by `keccak256(\"erc721.metadata\")`. Any changes made to the name, symbol, or baseURI via the `setMetadata` function are immediately reflected in the shared storage and are visible to all other facets that access this same storage slot.
+</Callout>
+
+<div style={{marginTop: "3rem", paddingTop: "2rem", borderTop: "1px solid var(--ifm-color-emphasis-200)"}}>
+  <RelatedDocs
+    items={[
+      {
+        title: "ERC721MetadataFacet",
+        href: "/docs/library/token/ERC721/Metadata/ERC721MetadataFacet",
+        description: "Facet using ERC721MetadataMod",
+        icon: "💎"
+      },
+      {
+        title: "ERC1155ApproveMod",
+        href: "/docs/library/token/ERC1155/Approve/ERC1155ApproveMod",
+        description: "Related module in token",
+        icon: "📦"
+      },
+      {
+        title: "ERC1155MetadataMod",
+        href: "/docs/library/token/ERC1155/Metadata/ERC1155MetadataMod",
+        description: "Related module in token",
+        icon: "📦"
+      },
+      {
+        title: "ERC1155MintMod",
+        href: "/docs/library/token/ERC1155/Mint/ERC1155MintMod",
+        description: "Related module in token",
+        icon: "📦"
+      }
+    ]}
+  />
+</div>
+
+<div style={{marginTop: "3rem", paddingTop: "2rem", borderTop: "1px solid var(--ifm-color-emphasis-200)"}}>
+  <WasThisHelpful pageId="ERC721MetadataMod" />
+</div>
+
+<LastUpdated date="2026-03-12T21:04:08.676Z" />

@@ -1,0 +1,10 @@
+{
+  "label": "ERC-721",
+  "position": 2,
+  "collapsible": true,
+  "collapsed": true,
+  "link": {
+    "type": "doc",
+    "id": "library/token/ERC721/index"
+  }
+}

@@ -1,0 +1,245 @@
+---
+sidebar_position: 200
+title: "ERC1155ApproveMod"
+description: "Manage ERC-1155 approvals within a diamond"
+gitSource: "https://github.com/Perfect-Abstractions/Compose/tree/main/src/token/ERC1155/Approve/ERC1155ApproveMod.sol"
+---
+
+import DocSubtitle  from '@site/src/components/docs/DocSubtitle';
+import Badge from '@site/src/components/ui/Badge';
+import Callout from '@site/src/components/ui/Callout';
+import CalloutBox from '@site/src/components/ui/CalloutBox';
+import Accordion, { AccordionGroup } from '@site/src/components/ui/Accordion';
+import PropertyTable from '@site/src/components/api/PropertyTable';
+import ExpandableCode from '@site/src/components/code/ExpandableCode';
+import CodeShowcase from '@site/src/components/code/CodeShowcase';
+import RelatedDocs from '@site/src/components/docs/RelatedDocs';
+import WasThisHelpful from '@site/src/components/docs/WasThisHelpful';
+import LastUpdated from '@site/src/components/docs/LastUpdated';
+import ReadingTime from '@site/src/components/docs/ReadingTime';
+import GradientText from '@site/src/components/ui/GradientText';
+import GradientButton from '@site/src/components/ui/GradientButton';
+
+<DocSubtitle>
+Manage ERC-1155 approvals within a diamond
+</DocSubtitle>
+
+<Callout type="info" title="Key Features">
+- Internal functions for direct facet integration.
+- Uses diamond storage pattern for shared state management.
+- Emits `ApprovalForAll` event upon successful approval changes.
+- No external dependencies or `using` directives.
+</Callout>
+
+<Callout type="info" title="Module Usage">
+This module provides internal functions for use in your custom facets. Import it to access shared logic and storage.
+</Callout>
+
+## Overview
+
+This module provides internal functions for managing ERC-1155 approvals, enabling facets to grant or revoke operator permissions for token transfers. It leverages the diamond storage pattern to ensure that approval state is consistently accessible across all facets sharing the same storage.
+
+---
+
+## Storage
+
+### ERC1155Storage
+
+ERC-8042 compliant storage struct for ERC-1155 token data. storage-location: erc8042:erc1155
+
+<ExpandableCode language="solidity" maxLines={15} title="Definition">
+{`struct ERC1155Storage {
+    mapping(uint256 id => mapping(address account => uint256 balance)) balanceOf;
+    mapping(address account => mapping(address operator => bool)) isApprovedForAll;
+}`}
+</ExpandableCode>
+
+### State Variables
+
+<PropertyTable
+  properties={[
+    {
+      name: "STORAGE_POSITION",
+      type: "bytes32",
+      description: "Diamond storage slot position for this module (Value: `keccak256(\"erc1155\")`)"
+    }
+  ]}
+  showRequired={false}
+/>
+
+## Functions
+
+### getStorage
+
+Returns the ERC-1155 storage struct from the predefined diamond storage slot. Uses inline assembly to set the storage slot reference.
+
+<ExpandableCode language="solidity" maxLines={8}>
+{`function getStorage() pure returns (ERC1155Storage storage s);`}
+</ExpandableCode>
+
+**Returns:**
+
+<PropertyTable
+  properties={[
+    {
+      name: "s",
+      type: "ERC1155Storage",
+      description: "The ERC-1155 storage struct reference."
+    }
+  ]}
+  showRequired={false}
+/>
+
+---
+### setApprovalForAll
+
+Grants or revokes permission to `operator` to transfer the user's tokens. Emits an &#123;ApprovalForAll&#125; event.
+
+<ExpandableCode language="solidity" maxLines={8}>
+{`function setApprovalForAll(address _user, address _operator, bool _approved) ;`}
+</ExpandableCode>
+
+**Parameters:**
+
+<PropertyTable
+  properties={[
+    {
+      name: "_user",
+      type: "address",
+      description: "The address of the token owner."
+    },
+    {
+      name: "_operator",
+      type: "address",
+      description: "The address to grant/revoke approval to."
+    },
+    {
+      name: "_approved",
+      type: "bool",
+      description: "True to approve, false to revoke."
+    }
+  ]}
+  showRequired={false}
+/>
+
+## Events
+
+<AccordionGroup>
+  <Accordion title="ApprovalForAll" defaultOpen={false}>
+    <div style={{marginBottom: "1rem"}}>
+      Emitted when `account` grants or revokes permission to `operator` to transfer their tokens.
+    </div>
+
+    <div style={{marginBottom: "1rem"}}>
+      <strong>Signature:</strong>
+      <ExpandableCode language="solidity" maxLines={5}>
+{`event ApprovalForAll(address indexed _account, address indexed _operator, bool _approved);`}
+      </ExpandableCode>
+    </div>
+
+    <div style={{marginBottom: "1rem"}}>
+      <strong>Parameters:</strong>
+      <PropertyTable
+        properties={[
+          {
+            name: "_account",
+            type: "address",
+            description: "The token owner granting/revoking approval."
+          },
+          {
+            name: "_operator",
+            type: "address",
+            description: "The address being approved/revoked."
+          },
+          {
+            name: "_approved",
+            type: "bool",
+            description: "True if approval is granted, false if revoked."
+          }
+        ]}
+        showRequired={false}
+      />
+    </div>
+  </Accordion>
+</AccordionGroup>
+
+## Errors
+
+<AccordionGroup>
+  <Accordion title="ERC1155InvalidOperator" defaultOpen={false}>
+    <div style={{marginBottom: "1rem"}}>
+      **Title:** ERC-1155 Approve Module Provides internal approval functionality for ERC-1155 tokens. Error indicating the operator address is invalid.
+    </div>
+
+    <div>
+      <strong>Signature:</strong>
+      <ExpandableCode language="solidity" maxLines={5}>
+error ERC1155InvalidOperator(address _operator);
+      </ExpandableCode>
+    </div>
+  </Accordion>
+</AccordionGroup>
+
+<!-- Usage Example section commented out for now -->
+<!--
+## Usage Example
+
+<ExpandableCode language="solidity" maxLines={20} title="Example Implementation">
+{`pragma solidity ^0.8.30;
+
+import {ERC1155ApproveMod} from "@compose/token/ERC1155/Approve/ERC1155ApproveMod";
+
+contract MyERC1155Facet {
+    ERC1155ApproveMod internal approveModule;
+
+    /**
+     * @notice Initializes the ERC1155ApproveMod.
+     * @param _approveMod The address of the ERC1155ApproveMod facet.
+     */
+    function initialize(address _approveMod) external {
+        approveModule = ERC1155ApproveMod(_approveMod);
+    }
+
+    /**
+     * @notice Grants or revokes an operator's permission to manage all of the caller's tokens.
+     * @param _operator The address of the operator to grant or revoke.
+     * @param _approved True to grant permission, false to revoke.
+     */
+    function grantOperator(address _operator, bool _approved) external {
+        // The caller of this function is implicitly the '_user' in setApprovalForAll
+        approveModule.setApprovalForAll(msg.sender, _operator, _approved);
+    }
+
+    /**
+     * @notice Retrieves the storage struct for ERC1155 approvals.
+     * @return ERC1155Storage The storage struct.
+     */
+    function getERC1155Storage() external pure returns (ERC1155Storage) {
+        return approveModule.getStorage();
+    }
+}
+
+struct ERC1155Storage {}
+`}
+</ExpandableCode>
+-->
+
+## Best Practices
+
+<Callout type="tip" title="Best Practice">
+- Ensure access control is enforced by the calling facet before invoking `setApprovalForAll`.
+- Verify that the `ERC1155ApproveMod` facet is correctly initialized and accessible.
+- Handle the `ERC1155InvalidOperator` error if necessary, though `setApprovalForAll` does not explicitly revert with it.
+</Callout>
+
+## Integration Notes
+
+<Callout type="success" title="Shared Storage">
+This module interacts with diamond storage at the slot identified by `keccak256("erc1155")`. The `getStorage` function provides access to the `ERC1155Storage` struct, which is currently empty but reserved for future use. Changes made via `setApprovalForAll` are immediately reflected in the shared diamond storage, making them visible to all facets that access this storage position.
+</Callout>
+
+<div style={{marginTop: "3rem", paddingTop: "2rem", borderTop: "1px solid var(--ifm-color-emphasis-200)"}}>
+  <WasThisHelpful pageId="ERC1155ApproveMod" />
+</div>
+
+<LastUpdated date="2026-03-12T21:03:17.163Z" />

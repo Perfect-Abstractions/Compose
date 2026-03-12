@@ -1,0 +1,29 @@
+---
+title: "Burn"
+description: "Burn extension for ERC-721 tokens."
+---
+
+import DocCard, { DocCardGrid } from '@site/src/components/docs/DocCard';
+import DocSubtitle from '@site/src/components/docs/DocSubtitle';
+import Icon from '@site/src/components/ui/Icon';
+
+<DocSubtitle>
+  Burn extension for ERC-721 tokens.
+</DocSubtitle>
+
+<DocCardGrid columns={2}>
+  <DocCard
+    title="ERC721BurnFacet"
+    description={"Burns ERC-721 tokens within a diamond"}
+    href="/docs/library/token/ERC721/Burn/ERC721BurnFacet"
+    icon={<Icon name="book" size={28} />}
+    size="medium"
+  />
+  <DocCard
+    title="ERC721BurnMod"
+    description={"Burn ERC-721 tokens using diamond storage"}
+    href="/docs/library/token/ERC721/Burn/ERC721BurnMod"
+    icon={<Icon name="book" size={28} />}
+    size="medium"
+  />
+</DocCardGrid>

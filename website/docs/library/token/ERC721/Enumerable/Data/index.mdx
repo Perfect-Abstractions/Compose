@@ -1,0 +1,22 @@
+---
+title: "Data"
+description: "Data components for Compose diamonds."
+---
+
+import DocCard, { DocCardGrid } from '@site/src/components/docs/DocCard';
+import DocSubtitle from '@site/src/components/docs/DocSubtitle';
+import Icon from '@site/src/components/ui/Icon';
+
+<DocSubtitle>
+  Data components for Compose diamonds.
+</DocSubtitle>
+
+<DocCardGrid columns={2}>
+  <DocCard
+    title="ERC721EnumerableDataFacet"
+    description={"Enumerate ERC-721 tokens by owner and globally"}
+    href="/docs/library/token/ERC721/Enumerable/Data/ERC721EnumerableDataFacet"
+    icon={<Icon name="book" size={28} />}
+    size="medium"
+  />
+</DocCardGrid>

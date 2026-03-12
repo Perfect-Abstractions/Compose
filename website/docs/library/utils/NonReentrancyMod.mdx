@@ -1,0 +1,144 @@
+---
+sidebar_position: 1
+title: "NonReentrancyMod"
+description: "Prevent reentrant calls within functions"
+gitSource: "https://github.com/Perfect-Abstractions/Compose/tree/main/src/libraries/NonReentrancyMod.sol"
+---
+
+import DocSubtitle  from '@site/src/components/docs/DocSubtitle';
+import Badge from '@site/src/components/ui/Badge';
+import Callout from '@site/src/components/ui/Callout';
+import CalloutBox from '@site/src/components/ui/CalloutBox';
+import Accordion, { AccordionGroup } from '@site/src/components/ui/Accordion';
+import PropertyTable from '@site/src/components/api/PropertyTable';
+import ExpandableCode from '@site/src/components/code/ExpandableCode';
+import CodeShowcase from '@site/src/components/code/CodeShowcase';
+import RelatedDocs from '@site/src/components/docs/RelatedDocs';
+import WasThisHelpful from '@site/src/components/docs/WasThisHelpful';
+import LastUpdated from '@site/src/components/docs/LastUpdated';
+import ReadingTime from '@site/src/components/docs/ReadingTime';
+import GradientText from '@site/src/components/ui/GradientText';
+import GradientButton from '@site/src/components/ui/GradientButton';
+
+<DocSubtitle>
+Prevent reentrant calls within functions
+</DocSubtitle>
+
+<Callout type="info" title="Key Features">
+- Internal functions `enter()` and `exit()` for programmatic control.
+- Emits a `Reentrancy()` error upon detecting a reentrant call.
+- Designed for integration within ERC-2535 diamonds, operating on shared storage.
+</Callout>
+
+<Callout type="info" title="Module Usage">
+This module provides internal functions for use in your custom facets. Import it to access shared logic and storage.
+</Callout>
+
+## Overview
+
+This module provides internal functions to prevent reentrant function calls. Facets import this module to enforce non-reentrancy, ensuring state changes are atomic and preventing reentrancy vulnerabilities. Changes made through this module are immediately visible to all facets using the same storage pattern.
+
+---
+
+## Storage
+
+### State Variables
+
+<PropertyTable
+  properties={[
+    {
+      name: "NON_REENTRANT_SLOT",
+      type: "bytes32",
+      description: "Reentrancy guard storage slot (Value: `keccak256(\"compose.nonreentrant\")`)"
+    }
+  ]}
+  showRequired={false}
+/>
+
+## Functions
+
+### enter
+
+How to use as a library in user facets How to use as a modifier in user facets This unlocks the entry into a function
+
+<ExpandableCode language="solidity" maxLines={8}>
+{`function enter() ;`}
+</ExpandableCode>
+
+---
+### exit
+
+This locks the entry into a function
+
+<ExpandableCode language="solidity" maxLines={8}>
+{`function exit() ;`}
+</ExpandableCode>
+
+## Errors
+
+<AccordionGroup>
+  <Accordion title="Reentrancy" defaultOpen={false}>
+    <div style={{marginBottom: "1rem"}}>
+      Function selector - 0x43a0d067
+    </div>
+
+    <div>
+      <strong>Signature:</strong>
+      <ExpandableCode language="solidity" maxLines={5}>
+error Reentrancy();
+      </ExpandableCode>
+    </div>
+  </Accordion>
+</AccordionGroup>
+
+<!-- Usage Example section commented out for now -->
+<!--
+## Usage Example
+
+<ExpandableCode language="solidity" maxLines={20} title="Example Implementation">
+{`pragma solidity >=0.8.30;
+import @compose/libraries/NonReentrancyMod;
+
+contract MyFacet {
+    using NonReentrancyMod for uint256;
+
+    uint256 internal _nonReentrancyGuard;
+
+    function processPayment() external {
+        _nonReentrancyGuard.enter();
+
+        // Perform state-changing operations here
+        // For example, transfer tokens, update balances, etc.
+
+        _nonReentrancyGuard.exit();
+    }
+
+    function anotherFunction() external {
+        // This function can also use the non-reentrancy guard
+        _nonReentrancyGuard.enter();
+        // ... logic ...
+        _nonReentrancyGuard.exit();
+    }
+}`}
+</ExpandableCode>
+-->
+
+## Best Practices
+
+<Callout type="tip" title="Best Practice">
+- Always call `enter()` at the beginning of a function and `exit()` at the end to ensure non-reentrancy.
+- Handle the `Reentrancy()` error by reverting or implementing alternative logic if a reentrant call is detected.
+- Ensure the `_nonReentrancyGuard` state variable is properly initialized and managed across facet upgrades.
+</Callout>
+
+## Integration Notes
+
+<Callout type="success" title="Shared Storage">
+This module operates on a local state variable, typically named `_nonReentrancyGuard`, which must be declared within the facet that imports it. While not directly interacting with diamond storage for its core logic, the facet's state changes that are protected by this module are managed through diamond storage. The non-reentrancy invariant is maintained per-function call within the facet, ensuring atomicity of operations that modify shared diamond state.
+</Callout>
+
+<div style={{marginTop: "3rem", paddingTop: "2rem", borderTop: "1px solid var(--ifm-color-emphasis-200)"}}>
+  <WasThisHelpful pageId="NonReentrancyMod" />
+</div>
+
+<LastUpdated date="2026-03-12T21:03:11.768Z" />
