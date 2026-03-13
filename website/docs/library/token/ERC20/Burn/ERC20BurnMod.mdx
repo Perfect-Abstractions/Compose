@@ -1,7 +1,8 @@
 ---
 sidebar_position: 200
 title: "ERC20BurnMod"
-description: "Internal functions for burning ERC-20 tokens"
+description: "Internal ERC-20 token burning functionality"
+sidebar_label: "Module"
 gitSource: "https://github.com/Perfect-Abstractions/Compose/tree/main/src/token/ERC20/Burn/ERC20BurnMod.sol"
 ---
 
@@ -21,14 +22,14 @@ import GradientText from '@site/src/components/ui/GradientText';
 import GradientButton from '@site/src/components/ui/GradientButton';
 
 <DocSubtitle>
-Internal functions for burning ERC-20 tokens
+Internal ERC-20 token burning functionality
 </DocSubtitle>
 
 <Callout type="info" title="Key Features">
-- Provides only `internal` functions for burning tokens.
-- Operates on shared diamond storage via EIP-8042.
-- Does not perform allowance checks; requires external validation.
-- Emits `Transfer` event upon successful burning.
+- Provides internal functions for direct token burning operations.
+- Utilizes diamond storage (EIP-8042) for shared state management.
+- Modifies total supply and account balances atomically.
+- Does not perform allowance checks; expects external validation.
 </Callout>
 
 <Callout type="info" title="Module Usage">
@@ -37,7 +38,7 @@ This module provides internal functions for use in your custom facets. Import it
 
 ## Overview
 
-This module provides internal functions for burning ERC-20 tokens, reducing both total supply and individual balances. Facets can import this module to implement token burning logic within a diamond, leveraging shared diamond storage for state management. Changes to token supply and balances are immediately reflected across all facets interacting with the same storage.
+This module provides internal functions for burning ERC-20 tokens within a diamond. It directly modifies the total supply and an account's balance using shared diamond storage. Facets can import this module to implement token burning logic, ensuring that balance and supply updates are consistent across the diamond.
 
 ---
 
@@ -198,30 +199,40 @@ import @compose/token/ERC20/Burn/ERC20BurnMod;
 contract ERC20BurnFacet {
     ERC20BurnMod private immutable _burnModule;
 
-    constructor(address burnModuleAddress) {
-        _burnModule = ERC20BurnMod(burnModuleAddress);
+    constructor(address _diamondAddress) {
+        // Assuming ERC20BurnMod is deployed and accessible via the diamond's facets
+        // In a real scenario, you'd fetch the module's address from the diamond's registry or similar mechanism.
+        // For this example, we'll assume it's directly available or passed.
+        // The actual initialization would depend on how modules are registered and accessed.
+        // This is a simplified representation.
+        _burnModule = ERC20BurnMod(_diamondAddress); // Placeholder: actual address fetching needed
     }
 
     /**
-     * @notice Burns a specified amount of tokens from the caller's balance.
+     * @notice Burns a specified amount of tokens from the caller's account.
      * @param _value The amount of tokens to burn.
      */
-    function burnTokens(uint256 _value) external {
-        // In a real scenario, you would check allowances or ownership here.
-        // This facet calls the internal module function directly.
+    function burn(uint256 _value) external {
+        // In a real ERC-20 implementation, you'd first check allowances and caller identity.
+        // This module focuses solely on the balance and supply reduction.
+
+        // Call the internal burn function from the module.
+        // The module handles the direct storage manipulation.
         _burnModule.burn(msg.sender, _value);
     }
 
     /**
-     * @notice Burns a specified amount of tokens from a specific account.
-     * @param _account The address of the account whose tokens will be burned.
-     * @param _value The amount of tokens to burn.
+     * @notice Retrieves the ERC20Storage struct pointer.
+     * @return The ERC20Storage struct.
      */
-    function burnFromAccount(address _account, uint256 _value) external {
-        // This function assumes appropriate authorization checks are performed
-        // by the caller or other facets before invoking this burn operation.
-        _burnModule.burn(_account, _value);
+    function getStorage() external pure returns (ERC20Storage) {
+        return ERC20BurnMod.getStorage();
     }
+}
+
+struct ERC20Storage {
+    uint256 totalSupply;
+    // Other ERC20 storage variables would be here
 }`}
 </ExpandableCode>
 -->
@@ -229,15 +240,15 @@ contract ERC20BurnFacet {
 ## Best Practices
 
 <Callout type="tip" title="Best Practice">
-- Ensure access control and authorization checks are performed by the calling facet before invoking `burn`.
-- Verify that the `ERC20BurnMod` is correctly initialized with the expected diamond storage address.
-- Handle `ERC20InsufficientBalance` and `ERC20InvalidSender` errors appropriately in calling facets.
+- Ensure the caller has sufficient balance and any necessary allowances before calling the `burn` function, as this module does not perform these checks.
+- Verify that the `ERC20BurnMod` is correctly initialized and accessible within the diamond's facet routing.
+- Handle the `ERC20InsufficientBalance` and `ERC20InvalidSender` errors returned by the module's `burn` function for robust error management.
 </Callout>
 
 ## Integration Notes
 
 <Callout type="success" title="Shared Storage">
-This module interacts with diamond storage at the `STORAGE_POSITION` slot, identified by `keccak256("erc20")`. The `burn` function directly modifies the `totalSupply` within the shared `ERC20Storage` struct. Any facet reading from this storage position will see the updated total supply immediately after a `burn` operation completes. The `getStorage` function provides a pure reference to this storage struct via inline assembly, ensuring it operates on the correct storage slot.
+This module interacts with diamond storage at the `STORAGE_POSITION` slot, identified by `keccak256("erc20")`. The `burn` function directly modifies the `totalSupply` within the `ERC20Storage` struct. Changes made by this module are immediately visible to any other facet that reads from the same storage position. The `getStorage` function provides a way to bind the storage slot to the `ERC20Storage` struct using inline assembly, ensuring correct storage access.
 </Callout>
 
 <div style={{marginTop: "3rem", paddingTop: "2rem", borderTop: "1px solid var(--ifm-color-emphasis-200)"}}>
@@ -275,4 +286,4 @@ This module interacts with diamond storage at the `STORAGE_POSITION` slot, ident
   <WasThisHelpful pageId="ERC20BurnMod" />
 </div>
 
-<LastUpdated date="2026-03-12T21:05:44.964Z" />
+<LastUpdated date="2026-03-13T00:37:40.280Z" />

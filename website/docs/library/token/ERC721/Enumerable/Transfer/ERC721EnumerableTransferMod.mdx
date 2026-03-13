@@ -2,6 +2,7 @@
 sidebar_position: 200
 title: "ERC721EnumerableTransferMod"
 description: "Internal ERC721 token transfer logic"
+sidebar_label: "Module"
 gitSource: "https://github.com/Perfect-Abstractions/Compose/tree/main/src/token/ERC721/Enumerable/Transfer/ERC721EnumerableTransferMod.sol"
 ---
 
@@ -25,10 +26,10 @@ Internal ERC721 token transfer logic
 </DocSubtitle>
 
 <Callout type="info" title="Key Features">
-- Internal functions for direct integration into custom facets.
-- Implements safe ERC721 transfers with receiver checks.
-- Utilizes diamond storage pattern for shared state management.
-- No external dependencies beyond core Solidity and Compose patterns.
+- Provides internal functions for ERC721 token transfers.
+- Enforces receiver contract compatibility for safe transfers.
+- Leverages diamond storage for state management.
+- Emits `Transfer` events upon successful token transfers.
 </Callout>
 
 <Callout type="info" title="Module Usage">
@@ -37,7 +38,7 @@ This module provides internal functions for use in your custom facets. Import it
 
 ## Overview
 
-This module provides internal functions for safely transferring ERC721 tokens. Facets can import and utilize these functions to manage token ownership within a diamond, ensuring receiver contract compatibility and proper state updates. Changes made through this module directly affect the shared diamond storage.
+This module provides internal functions for safe ERC721 token transfers, ensuring receiver compatibility. It interacts with shared diamond storage to manage token ownership and state. Facets importing this module can leverage these functions to implement token transfer functionality while adhering to ERC721 standards.
 
 ---
 
@@ -267,24 +268,34 @@ error ERC721NonexistentToken(uint256 _tokenId);
 
 <ExpandableCode language="solidity" maxLines={20} title="Example Implementation">
 {`pragma solidity >=0.8.30;
-
 import { ERC721EnumerableTransferMod } from "@compose/token/ERC721/Enumerable/Transfer/ERC721EnumerableTransferMod";
-import { ERC721Storage } from "@compose/token/ERC721/storage/ERC721Storage";
+import { ERC721Storage, ERC721EnumerableStorage } from "@compose/token/ERC721/Enumerable/Transfer/ERC721EnumerableTransferMod";
 
 contract MyERC721Facet {
-    using ERC721EnumerableTransferMod for ERC721Storage;
+    using ERC721EnumerableTransferMod for ERC721EnumerableStorage;
 
-    ERC721Storage private _storage;
+    ERC721EnumerableStorage private _storage = ERC721EnumerableStorage(ERC721EnumerableTransferMod.getStorage());
 
-    // Assume _storage is initialized and points to the correct diamond storage slot.
-
-    function _transferToken(address _from, address _to, uint256 _tokenId) internal {
-        // Use the internal transfer function provided by the module.
+    /**
+     * @notice Transfers a token from the current contract to a specified address.
+     * @param _from The current owner of the token.
+     * @param _to The recipient of the token.
+     * @param _tokenId The ID of the token to transfer.
+     */
+    function transferToken(address _from, address _to, uint256 _tokenId) external {
+        // Assuming this facet has the necessary permissions to call internal functions
+        // and that _from is the caller or an approved address.
         _storage.transferFrom(_from, _to, _tokenId);
     }
 
-    function _safeTransferToken(address _from, address _to, uint256 _tokenId) internal {
-        // Use the internal safe transfer function provided by the module.
+    /**
+     * @notice Safely transfers a token, checking receiver contract compatibility.
+     * @param _from The current owner of the token.
+     * @param _to The recipient of the token.
+     * @param _tokenId The ID of the token to transfer.
+     */
+    function safeTransferToken(address _from, address _to, uint256 _tokenId) external {
+        // Assuming this facet has the necessary permissions and context.
         _storage.safeTransferFrom(_from, _to, _tokenId);
     }
 }`}
@@ -294,15 +305,15 @@ contract MyERC721Facet {
 ## Best Practices
 
 <Callout type="tip" title="Best Practice">
-- Ensure caller has appropriate permissions before invoking transfer functions.
-- Verify receiver contract compatibility when using `safeTransferFrom`.
-- Handle custom errors like `ERC721IncorrectOwner` and `ERC721NonexistentToken`.
+- Ensure the caller has appropriate permissions before invoking `transferFrom` or `safeTransferFrom`.
+- Verify that the `_to` address is a valid receiver (EOA or compatible contract) when using `safeTransferFrom` to prevent `ERC721InvalidReceiver` errors.
+- Handle potential errors such as `ERC721IncorrectOwner` and `ERC721NonexistentToken` in calling facets.
 </Callout>
 
 ## Integration Notes
 
 <Callout type="success" title="Shared Storage">
-This module operates on diamond storage, specifically referencing `STORAGE_POSITION` with the value `keccak256(\"erc721.enumerable\")`. It interacts with the `ERC721EnumerableStorage` struct. Any modifications to token ownership or state made via this module's functions are immediately reflected and visible to all other facets accessing the same diamond storage.
+This module operates on diamond storage at the slot identified by `STORAGE_POSITION`, which is defined as `keccak256(\"erc721.enumerable\")`. It utilizes the `ERC721EnumerableStorage` struct to manage token states. Any modifications to token ownership or state via the `transferFrom` or `safeTransferFrom` functions are immediately reflected in the shared diamond storage, making them visible to all other facets interacting with the same storage.
 </Callout>
 
 <div style={{marginTop: "3rem", paddingTop: "2rem", borderTop: "1px solid var(--ifm-color-emphasis-200)"}}>
@@ -340,4 +351,4 @@ This module operates on diamond storage, specifically referencing `STORAGE_POSIT
   <WasThisHelpful pageId="ERC721EnumerableTransferMod" />
 </div>
 
-<LastUpdated date="2026-03-12T21:04:40.355Z" />
+<LastUpdated date="2026-03-13T00:36:35.899Z" />

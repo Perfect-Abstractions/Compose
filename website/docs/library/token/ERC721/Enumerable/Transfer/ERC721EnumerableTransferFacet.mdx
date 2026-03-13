@@ -1,7 +1,8 @@
 ---
 sidebar_position: 210
 title: "ERC721EnumerableTransferFacet"
-description: "Transfers ERC-721 tokens within a diamond"
+description: "ERC-721 token transfers within a diamond"
+sidebar_label: "Facet"
 gitSource: "https://github.com/Perfect-Abstractions/Compose/tree/main/src/token/ERC721/Enumerable/Transfer/ERC721EnumerableTransferFacet.sol"
 ---
 
@@ -21,19 +22,19 @@ import GradientText from '@site/src/components/ui/GradientText';
 import GradientButton from '@site/src/components/ui/GradientButton';
 
 <DocSubtitle>
-Transfers ERC-721 tokens within a diamond
+ERC-721 token transfers within a diamond
 </DocSubtitle>
 
 <Callout type="info" title="Key Features">
-- Exposes external functions for ERC-721 token transfers.
-- Utilizes diamond storage for shared state management.
-- No external dependencies, self-contained logic.
-- Supports safe transfers with receiver contract checks.
+- Exposes standard ERC-721 transfer functions (`transferFrom`, `safeTransferFrom`) via diamond proxy.
+- Accesses shared ERC-721 storage using internal helpers and `delegatecall` semantics.
+- Emits `Transfer` event upon successful token transfer.
+- Includes error handling for common ERC-721 transfer failures.
 </Callout>
 
 ## Overview
 
-This facet implements ERC-721 token transfer functions, routing calls through the diamond proxy. It accesses shared ERC-721 storage for token ownership management. Developers add this facet to enable token transfers while preserving diamond upgradeability.
+This facet implements ERC-721 token transfers as external functions callable through a diamond proxy. It accesses shared ERC-721 storage using internal helper functions and the diamond storage pattern. Developers add this facet to expose standard ERC-721 transfer functionality while maintaining diamond upgradeability.
 
 ---
 
@@ -267,38 +268,53 @@ error ERC721InsufficientApproval(address _operator, uint256 _tokenId);
 <ExpandableCode language="solidity" maxLines={20} title="Example Implementation">
 {`pragma solidity >=0.8.30;
 
-import {IDiamond} from "@compose/diamond/IDiamond";
 import {ERC721EnumerableTransferFacet} from "@compose/token/ERC721/Enumerable/Transfer/ERC721EnumerableTransferFacet";
+import {IDiamond} from "@compose/diamond/core/IDiamond";
 
-address constant DIAMOND_ADDRESS = address(0x12345);
+contract Deployer {
+    address immutable DIAMOND_ADDRESS;
 
-function exampleUsage() {
-    IDiamond diamond = IDiamond(DIAMOND_ADDRESS);
+    constructor(address diamondAddress) {
+        DIAMOND_ADDRESS = diamondAddress;
+    }
 
-    // Transfer a token using the facet's function via the diamond
-    diamond.transferFrom(msg.sender, address(0xabc), 1);
+    function transferToken() external {
+        IDiamond diamond = IDiamond(DIAMOND_ADDRESS);
+        address owner = msg.sender; // Example owner
+        address recipient = address(1); // Example recipient
+        uint256 tokenId = 1; // Example token ID
 
-    // Safely transfer a token, checking receiver compatibility
-    diamond.safeTransferFrom(msg.sender, address(0xdef), 2);
+        // Call transferFrom through the diamond proxy
+        diamond.transferFrom(owner, recipient, tokenId);
+    }
 
-    // Safely transfer a token with additional data
-    diamond.safeTransferFrom(msg.sender, address(0xghi), 3, "\x00");
-}`}
+    function safeTransferToken() external {
+        IDiamond diamond = IDiamond(DIAMOND_ADDRESS);
+        address owner = msg.sender; // Example owner
+        address recipient = address(1); // Example recipient
+        uint256 tokenId = 1; // Example token ID
+        bytes memory data = ""; // Example data
+
+        // Call safeTransferFrom through the diamond proxy
+        diamond.safeTransferFrom(owner, recipient, tokenId, data);
+    }
+}
+`}
 </ExpandableCode>
 -->
 
 ## Best Practices
 
 <Callout type="tip" title="Best Practice">
-- Initialize ERC721Storage and ERC721EnumerableStorage correctly during diamond setup.
-- Ensure access control is enforced by the diamond for state-changing functions.
-- Verify storage slot compatibility when upgrading or adding facets.
+- Ensure the `ERC721EnumerableTransferFacet` is initialized with correct storage pointers, particularly for the ERC-721 storage.
+- Verify that access control for token transfers is managed by other facets or the diamond itself, as this facet primarily handles the transfer logic.
+- Before upgrading or adding this facet, confirm storage slot compatibility to prevent data corruption or functional conflicts.
 </Callout>
 
 ## Security Considerations
 
 <Callout type="warning" title="Security">
-This facet relies on the diamond's access control for state-changing functions. The `transferFrom` and `safeTransferFrom` functions handle token ownership changes. Errors like `ERC721NonexistentToken`, `ERC721IncorrectOwner`, `ERC721InvalidReceiver`, and `ERC721InsufficientApproval` are used for input validation and state consistency. Developers must ensure proper initialization of the underlying storage structures.
+This facet exposes `transferFrom` and `safeTransferFrom` functions. While it handles token transfers, it relies on other facets or the diamond contract for access control and validation of `_from`, `_to`, and `_tokenId`. The `safeTransferFrom` variants include checks for receiver contract compatibility. Errors like `ERC721NonexistentToken`, `ERC721IncorrectOwner`, `ERC721InvalidReceiver`, and `ERC721InsufficientApproval` are emitted for invalid operations. Developers must ensure proper input validation and authorization are implemented at the diamond level.
 </Callout>
 
 <div style={{marginTop: "3rem", paddingTop: "2rem", borderTop: "1px solid var(--ifm-color-emphasis-200)"}}>
@@ -336,4 +352,4 @@ This facet relies on the diamond's access control for state-changing functions. 
   <WasThisHelpful pageId="ERC721EnumerableTransferFacet" />
 </div>
 
-<LastUpdated date="2026-03-12T21:04:36.447Z" />
+<LastUpdated date="2026-03-13T00:36:31.027Z" />

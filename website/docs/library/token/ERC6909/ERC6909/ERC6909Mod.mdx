@@ -1,7 +1,8 @@
 ---
 sidebar_position: 1
 title: "ERC6909Mod"
-description: "Internal functions for ERC-6909 multi-token logic"
+description: "Internal ERC-6909 multi-token logic with diamond storage"
+sidebar_label: "Module"
 gitSource: "https://github.com/Perfect-Abstractions/Compose/tree/main/src/token/ERC6909/ERC6909/ERC6909Mod.sol"
 ---
 
@@ -21,14 +22,14 @@ import GradientText from '@site/src/components/ui/GradientText';
 import GradientButton from '@site/src/components/ui/GradientButton';
 
 <DocSubtitle>
-Internal functions for ERC-6909 multi-token logic
+Internal ERC-6909 multi-token logic with diamond storage
 </DocSubtitle>
 
 <Callout type="info" title="Key Features">
-- All functions are `internal`, designed for composition within custom facets.
-- Utilizes the diamond storage pattern (EIP-8042) for shared state management.
-- Provides core ERC-6909 token operations: transfer, mint, burn, approve, setOperator.
-- No external dependencies or `using` directives for minimal on-chain footprint.
+- Provides internal functions for ERC-6909 compliant multi-token operations.
+- Utilizes diamond storage pattern for shared state management.
+- No external dependencies, ensuring minimal on-chain footprint.
+- Functions are explicitly `internal` for composition within custom facets.
 </Callout>
 
 <Callout type="info" title="Module Usage">
@@ -37,7 +38,7 @@ This module provides internal functions for use in your custom facets. Import it
 
 ## Overview
 
-This module provides internal functions for managing ERC-6909 compliant multi-tokens within a diamond. Facets can import and utilize these functions to handle token transfers, approvals, minting, and burning operations using shared diamond storage. Changes made through these functions are immediately visible to all facets interacting with the same storage.
+This module provides internal functions for managing ERC-6909 compliant multi-tokens within a diamond. It leverages diamond storage for shared state, making token operations visible across all facets. Use this module to implement minting, burning, transfers, and approvals for unique token IDs with associated amounts.
 
 ---
 
@@ -482,26 +483,57 @@ error ERC6909InvalidSpender(address _spender);
 
 import { ERC6909Mod } from "@compose/token/ERC6909/ERC6909/ERC6909Mod";
 
-contract TokenFacet {
-    using ERC6909Mod for ERC6909Mod;
+contract ERC6909Facet {
+    ERC6909Mod internal immutable _erc6909Mod;
 
-    // Assume ERC6909Mod is deployed and its address is known
-    // For internal use, typically the module is accessed directly or via a diamond contract's internal call mechanism.
-    // This example assumes direct access for demonstration.
+    constructor(address erc6909ModAddress) {
+        _erc6909Mod = ERC6909Mod(erc6909ModAddress);
+    }
 
+    /**
+     * @notice Mints a specified amount of a token ID to a recipient.
+     * @param _to The address to mint tokens to.
+     * @param _id The ID of the token to mint.
+     * @param _amount The amount of tokens to mint.
+     */
+    function mintTokens(address _to, uint256 _id, uint256 _amount) external {
+        // Assumes caller has minting permissions managed by another facet.
+        _erc6909Mod.mint(_to, _id, _amount);
+    }
+
+    /**
+     * @notice Transfers a specified amount of a token ID from sender to receiver.
+     * @param _from The address to transfer tokens from.
+     * @param _to The address to transfer tokens to.
+     * @param _id The ID of the token to transfer.
+     * @param _amount The amount of tokens to transfer.
+     */
     function transferTokens(address _from, address _to, uint256 _id, uint256 _amount) external {
-        // Call the internal transfer function provided by the module
-        ERC6909Mod.transfer(_from, _from, _to, _id, _amount);
+        // Assumes caller has necessary permissions (e.g., owner or operator).
+        _erc6909Mod.transfer(msg.sender, _from, _to, _id, _amount);
     }
 
-    function mintNewTokens(address _to, uint256 _id, uint256 _amount) external {
-        // Call the internal mint function
-        ERC6909Mod.mint(_to, _id, _amount);
+    /**
+     * @notice Approves a spender to manage a certain amount of a token ID on behalf of an owner.
+     * @param _owner The address that owns the tokens.
+     * @param _spender The address to approve.
+     * @param _id The ID of the token.
+     * @param _amount The amount to approve.
+     */
+    function approveToken(address _owner, address _spender, uint256 _id, uint256 _amount) external {
+        // Assumes caller is the owner or has permissions to approve.
+        _erc6909Mod.approve(_owner, _spender, _id, _amount);
     }
 
-    function burnExistingTokens(address _from, uint256 _id, uint256 _amount) external {
-        // Call the internal burn function
-        ERC6909Mod.burn(_from, _id, _amount);
+    /**
+     * @notice Burns a specified amount of a token ID from a sender.
+     * @param _from The address to burn tokens from.
+     * @param _id The ID of the token to burn.
+     * @param _amount The amount of tokens to burn.
+     */
+    function burnTokens(address _from, uint256 _id, uint256 _amount) external {
+        // Assumes caller has burn permissions.
+        _erc6909Mod.burn(_from, _id, _amount);
     }
 }`}
 </ExpandableCode>
@@ -510,15 +542,15 @@ contract TokenFacet {
 ## Best Practices
 
 <Callout type="tip" title="Best Practice">
-- Ensure that access control is enforced by the calling facet before invoking internal module functions.
-- Verify that the diamond's storage layout is compatible with `ERC6909Storage` when upgrading facets.
-- Handle potential errors such as `ERC6909InsufficientBalance` or `ERC6909InsufficientAllowance` returned by module functions.
+- Ensure that calls to `mint`, `burn`, `transfer`, `approve`, and `setOperator` are guarded by appropriate access control mechanisms implemented in other facets.
+- Verify that the `STORAGE_POSITION` used by this module is unique and does not conflict with other facets in the diamond.
+- Handle the custom errors (`ERC6909InsufficientAllowance`, `ERC6909InsufficientBalance`, etc.) returned by module functions to provide clear feedback to users.
 </Callout>
 
 ## Integration Notes
 
 <Callout type="success" title="Shared Storage">
-This module interacts with diamond storage at the `STORAGE_POSITION` defined by `keccak2535("erc6909")`. It reads and writes to the `ERC6909Storage` struct. All state changes made through the module's internal functions (`transfer`, `mint`, `burn`, `approve`, `setOperator`) are immediately persistent and visible to any other facet accessing the same diamond storage slot. The `getStorage` function can be used to retrieve a pointer to this struct via inline assembly.
+This module interacts with diamond storage at a specific, predefined `STORAGE_POSITION` using inline assembly. The `ERC6909Storage` struct is managed at this slot. All state changes made by functions like `mint`, `burn`, and `transfer` are written directly to this shared storage. Consequently, any facet that reads from or writes to this same storage position will immediately observe these changes, enabling seamless cross-facet visibility and composability.
 </Callout>
 
 <div style={{marginTop: "3rem", paddingTop: "2rem", borderTop: "1px solid var(--ifm-color-emphasis-200)"}}>
@@ -556,4 +588,4 @@ This module interacts with diamond storage at the `STORAGE_POSITION` defined by 
   <WasThisHelpful pageId="ERC6909Mod" />
 </div>
 
-<LastUpdated date="2026-03-12T21:06:05.253Z" />
+<LastUpdated date="2026-03-13T00:38:00.443Z" />

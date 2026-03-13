@@ -1,7 +1,8 @@
 ---
 sidebar_position: 100
 title: "AccessControlGrantBatchMod"
-description: "Grant roles to multiple accounts efficiently"
+description: "Grant roles to multiple accounts in one transaction"
+sidebar_label: "Module"
 gitSource: "https://github.com/Perfect-Abstractions/Compose/tree/main/src/access/AccessControl/Batch/Grant/AccessControlGrantBatchMod.sol"
 ---
 
@@ -21,14 +22,14 @@ import GradientText from '@site/src/components/ui/GradientText';
 import GradientButton from '@site/src/components/ui/GradientButton';
 
 <DocSubtitle>
-Grant roles to multiple accounts efficiently
+Grant roles to multiple accounts in one transaction
 </DocSubtitle>
 
 <Callout type="info" title="Key Features">
 - All functions are `internal` for use within custom facets.
 - Utilizes the diamond storage pattern (EIP-8042) for shared state management.
-- Grants roles to multiple accounts in a single transaction for efficiency.
-- Emits `RoleGranted` events for each account granted a role, enhancing off-chain observability.
+- Grants roles to multiple accounts in a single transaction, optimizing gas usage.
+- Emits `RoleGranted` events for each account that receives a role.
 </Callout>
 
 <Callout type="info" title="Module Usage">
@@ -37,7 +38,7 @@ This module provides internal functions for use in your custom facets. Import it
 
 ## Overview
 
-This module provides internal functions to grant a role to multiple accounts in a single transaction, reducing gas costs and complexity for diamond facets. By leveraging shared diamond storage, changes made through this module are immediately visible to all facets interacting with the same access control state.
+This module exposes internal functions for batch role granting using diamond storage. Facets import this module to efficiently grant roles to multiple accounts simultaneously, reducing gas costs and transaction complexity. Changes made through this module are immediately visible to all facets using the same storage pattern.
 
 ---
 
@@ -181,56 +182,41 @@ error AccessControlUnauthorizedAccount(address _account, bytes32 _role);
 
 <ExpandableCode language="solidity" maxLines={20} title="Example Implementation">
 {`pragma solidity >=0.8.30;
-
 import @compose/access/AccessControl/Batch/Grant/AccessControlGrantBatchMod;
 
-contract MyAccessFacet {
+contract MyAccessControlFacet {
     AccessControlGrantBatchMod internal accessControlGrantBatchMod;
 
-    constructor(address _diamondStorage) {
-        // Assuming AccessControlGrantBatchMod is initialized with diamond storage context
-        // In a real scenario, this would be handled by the diamond upgradeable pattern
-        // For demonstration, we simulate initialization;
-        // In practice, the module would be called via the diamond proxy.
+    // Assume AccessControlGrantBatchMod is initialized elsewhere and its address is available
+    constructor(address _accessControlGrantBatchModAddress) {
+        accessControlGrantBatchMod = AccessControlGrantBatchMod(_accessControlGrantBatchModAddress);
     }
 
     /**
-     * @notice Grants a specific role to a batch of accounts.
+     * @notice Grants a specific role to multiple accounts.
      * @param _role The role to grant.
      * @param _accounts An array of addresses to grant the role to.
      */
-    function grantBatchOfRoles(bytes32 _role, address[] memory _accounts) external {
-        // In a real diamond, this function would be implemented in a facet
-        // and delegatecall would route to the appropriate logic.
-        // For this example, we call the module's internal function directly.
-        // The actual caller would be the diamond proxy, enforcing access control.
+    function grantRoleToMultipleAccounts(bytes32 _role, address[] memory _accounts) external {
+        // Internal call to the module for batch role granting
         accessControlGrantBatchMod.grantRoleBatch(_role, _accounts);
     }
-
-    /**
-     * @notice Retrieves the AccessControl storage layout.
-     * @return AccessControlStorage The storage struct.
-     */
-    function getAccessControlStorage() external pure returns (AccessControlStorage) {
-        return AccessControlGrantBatchMod.getStorage();
-    }
-}
-`}
+}`}
 </ExpandableCode>
 -->
 
 ## Best Practices
 
 <Callout type="tip" title="Best Practice">
-- Ensure that the caller of `grantRoleBatch` is authorized for the specified role, as enforced by the access control logic.
-- Verify that the `AccessControlStorage` layout remains compatible across diamond upgrades to prevent storage collisions.
+- Ensure the caller is authorized to grant roles before invoking `grantRoleBatch`.
+- Verify that the `AccessControlStorage` struct layout remains compatible across diamond upgrades.
 - Handle the `AccessControlUnauthorizedAccount` error, which is reverted if the caller lacks the necessary permissions.
 </Callout>
 
 ## Integration Notes
 
 <Callout type="success" title="Shared Storage">
-This module interacts with diamond storage via a designated storage position identified by `keccak2535("compose.accesscontrol")`. The `AccessControlStorage` struct, though empty in definition, represents the conceptual storage layout for access control data. Functions within this module read from and write to this shared storage. Any changes made to role assignments via `grantRoleBatch` are immediately reflected in the diamond's storage and are visible to all facets that access the same storage slot.
+This module interacts with diamond storage at the position defined by `keccak2535("compose.accesscontrol")`. It reads and writes to the `AccessControlStorage` struct. Any modifications to role assignments made by `grantRoleBatch` are immediately reflected in the diamond's shared storage and are visible to all other facets operating on the same storage.
 </Callout>
 
 <div style={{marginTop: "3rem", paddingTop: "2rem", borderTop: "1px solid var(--ifm-color-emphasis-200)"}}>
@@ -268,4 +254,4 @@ This module interacts with diamond storage via a designated storage position ide
   <WasThisHelpful pageId="AccessControlGrantBatchMod" />
 </div>
 
-<LastUpdated date="2026-03-12T21:07:58.398Z" />
+<LastUpdated date="2026-03-13T00:39:56.322Z" />

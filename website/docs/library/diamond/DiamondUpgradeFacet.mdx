@@ -1,7 +1,7 @@
 ---
 sidebar_position: 510
 title: "DiamondUpgradeFacet"
-description: "Diamond upgrade facet for adding, replacing, and removing facets"
+description: "Upgrade diamond facets, manage replacements, and delegate calls"
 gitSource: "https://github.com/Perfect-Abstractions/Compose/tree/main/src/diamond/DiamondUpgradeFacet.sol"
 ---
 
@@ -21,19 +21,19 @@ import GradientText from '@site/src/components/ui/GradientText';
 import GradientButton from '@site/src/components/ui/GradientButton';
 
 <DocSubtitle>
-Diamond upgrade facet for adding, replacing, and removing facets
+Upgrade diamond facets, manage replacements, and delegate calls
 </DocSubtitle>
 
 <Callout type="info" title="Key Features">
-- Manages diamond facet lifecycle: add, replace, remove.
-- Supports delegate calls for initialization or state modification during upgrades.
-- Emits events for all facet changes and delegate calls for off-chain monitoring.
-- Provides selector discovery mechanism via `exportSelectors`.
+- Manages facet lifecycle: add, replace, and remove facets.
+- Supports `delegatecall` for post-upgrade initialization and state manipulation.
+- Emits `FacetAdded`, `FacetReplaced`, `FacetRemoved`, `DiamondDelegateCall`, and `DiamondMetadata` events for observability.
+- Provides a mechanism (`exportSelectors`) for selector discovery.
 </Callout>
 
 ## Overview
 
-This facet provides core diamond upgrade functionality, enabling the addition, replacement, and removal of facets. It routes upgrade operations through the diamond proxy, ensuring consistent state management and upgradeability. Developers integrate this facet to manage the diamond's functional composition and maintain its evolving logic.
+This facet provides core diamond upgrade functionality, enabling the addition, replacement, and removal of facets. It orchestrates these operations and allows for delegate calls to external addresses for state initialization or complex logic post-upgrade. This facet is crucial for managing the diamond's evolving functionality and is accessed via the diamond proxy.
 
 ---
 
@@ -452,54 +452,58 @@ error CannotReplaceFunctionFromNonReplacementFacet(bytes4 _selector);
 <ExpandableCode language="solidity" maxLines={20} title="Example Implementation">
 {`pragma solidity >=0.8.30;
 
-import {IDiamond} from "@compose/diamond/IDiamond";
-import {DiamondUpgradeFacet} from "@compose/diamond/DiamondUpgradeFacet";
-import {FacetReplacement} from "@compose/diamond/DiamondUpgradeFacet";
+import { IDiamond } from "@compose/diamond/IDiamond";
+import { DiamondUpgradeFacet } from "@compose/diamond/DiamondUpgradeFacet";
+import { FacetReplacement } from "@compose/diamond/DiamondUpgradeFacet";
 
-// Example: Upgrading a diamond contract
-address diamondAddress = address(0x123...);
-address facetToAdd = address(0x456...);
-address facetToReplace = address(0x789...);
-address newFacetForReplacement = address(0xabc...);
-address facetToRemove = address(0xdef...);
+contract ExampleDiamondUser {
+    address immutable DIAMOND_ADDRESS;
 
-IDiamond diamond = IDiamond(diamondAddress);
+    constructor(address diamondAddress) {
+        DIAMOND_ADDRESS = diamondAddress;
+    }
 
-// Construct the upgrade operations
-address[] memory facetsToAdd = new address[](1);
-facetsToAdd[0] = facetToAdd;
+    function upgradeDiamond() external {
+        address[] memory facetsToAdd = new address[](1);
+        facetsToAdd[0] = address(new DiamondUpgradeFacet()); // Example: Deploying a new facet
 
-FacetReplacement[] memory facetsToReplace = new FacetReplacement[](1);
-facetsToReplace[0] = FacetReplacement({
-    facet: facetToReplace,
-    newFacet: newFacetForReplacement
-});
+        FacetReplacement[] memory facetsToReplace = new FacetReplacement[](0);
 
-address[] memory facetsToRemove = new address[](1);
-facetsToRemove[0] = facetToRemove;
+        address[] memory facetsToRemove = new address[](0);
 
-// Execute the upgrade. Note: This typically requires owner/admin permissions.
-// The actual function call would be routed to the DiamondUpgradeFacet.
-diamond.upgradeDiamond(facetsToAdd, facetsToReplace, facetsToRemove, address(0), "", bytes32("0"), "");
+        // Call the upgrade function through the diamond proxy
+        IDiamond(DIAMOND_ADDRESS).upgradeDiamond(
+            facetsToAdd,
+            facetsToReplace,
+            facetsToRemove,
+            address(0), // No delegate call for this example
+            "", // No delegate calldata
+            bytes32(0), // No tag
+            ""
+        );
+    }
 
-// Export selectors for discovery
-bytes memory selectors = diamond.exportSelectors();`}
+    function exportSelectors() external view returns (bytes memory) {
+        // Call the exportSelectors function through the diamond proxy
+        return IDiamond(DIAMOND_ADDRESS).exportSelectors();
+    }
+}`}
 </ExpandableCode>
 -->
 
 ## Best Practices
 
 <Callout type="tip" title="Best Practice">
-- Call `upgradeDiamond` only after verifying all facet bytecode exists and selectors are correctly encoded.
-- Ensure owner or authorized roles are enforced for `upgradeDiamond` calls.
-- Verify storage compatibility before replacing facets to prevent state corruption.
-- Use `exportSelectors` to allow external discovery of the diamond's available functions.
+- Ensure all facets being added, replaced, or removed are correctly deployed and accessible.
+- Validate input parameters for `upgradeDiamond` to prevent unintended state changes or errors.
+- Carefully manage the `_delegate` and `_delegateCalldata` parameters for post-upgrade initialization or complex logic, ensuring the delegate target is trusted and the calldata is correct.
+- Use `exportSelectors` for discovering facet selectors when integrating with other diamond contracts.
 </Callout>
 
 ## Security Considerations
 
 <Callout type="warning" title="Security">
-The `upgradeDiamond` function is the primary point of interaction for modifying the diamond's functional composition. It is critical that access control is enforced externally to this facet to prevent unauthorized upgrades. The function performs a `delegatecall` if a delegate address is provided, which carries reentrancy risks if not handled carefully within the delegate contract. Input validation for facet addresses and selector encoding is crucial to prevent errors. The `OwnerUnauthorizedAccount` and `DelegateCallReverted` errors indicate potential issues with authorization or execution failures. Follow standard Solidity security practices for all external calls and state modifications.
+The `upgradeDiamond` function is a powerful administrative function. Access control must be enforced by the diamond's ownership or access control facet to prevent unauthorized upgrades. Incorrectly specifying `_delegate` or `_delegateCalldata` can lead to reentrancy or unintended state modifications. Input validation for facet addresses and selectors is critical. The facet uses custom errors like `OwnerUnauthorizedAccount`, `NoSelectorsForFacet`, and `DelegateCallReverted` to signal specific failure conditions.
 </Callout>
 
 <div style={{marginTop: "3rem", paddingTop: "2rem", borderTop: "1px solid var(--ifm-color-emphasis-200)"}}>
@@ -525,4 +529,4 @@ The `upgradeDiamond` function is the primary point of interaction for modifying 
   <WasThisHelpful pageId="DiamondUpgradeFacet" />
 </div>
 
-<LastUpdated date="2026-03-12T21:03:05.734Z" />
+<LastUpdated date="2026-03-13T00:34:59.832Z" />

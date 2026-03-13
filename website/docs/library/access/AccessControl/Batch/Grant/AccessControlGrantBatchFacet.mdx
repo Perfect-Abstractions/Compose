@@ -2,6 +2,7 @@
 sidebar_position: 110
 title: "AccessControlGrantBatchFacet"
 description: "Grants roles to multiple accounts efficiently"
+sidebar_label: "Facet"
 gitSource: "https://github.com/Perfect-Abstractions/Compose/tree/main/src/access/AccessControl/Batch/Grant/AccessControlGrantBatchFacet.sol"
 ---
 
@@ -26,14 +27,14 @@ Grants roles to multiple accounts efficiently
 
 <Callout type="info" title="Key Features">
 - Grants roles to multiple accounts in a single transaction.
-- Emits `RoleGranted` events for each successful role assignment.
-- Reverts with `AccessControlUnauthorizedAccount` if the caller lacks permission.
-- Provides `exportSelectors` for introspection.
+- Emits `RoleGranted` events for each role assignment.
+- Utilizes diamond storage for role management.
+- Exposes `exportSelectors` for diamond registration.
 </Callout>
 
 ## Overview
 
-This facet provides an external function to grant a specific role to multiple accounts in a single transaction. It routes calls through the diamond proxy, accessing shared diamond storage. This enables efficient batch role management within a Compose diamond.
+This facet provides an efficient mechanism for granting roles to multiple accounts within a Compose diamond. It exposes the `grantRoleBatch` function, allowing for bulk role assignments in a single transaction. This facet interacts with shared diamond storage to manage role assignments, ensuring consistency across other facets.
 
 ---
 
@@ -179,29 +180,24 @@ error AccessControlUnauthorizedAccount(address _account, bytes32 _role);
 import { IDiamond } from "@compose/diamond/IDiamond";
 import { AccessControlGrantBatchFacet } from "@compose/access/AccessControl/Batch/Grant/AccessControlGrantBatchFacet";
 
-contract DiamondDeployer {
-    address immutable diamondAddress;
+contract DiamondUser {
+    address constant DIAMOND_ADDRESS = address(0x1234567890abcdef);
 
-    constructor(address _diamondAddress) {
-        diamondAddress = _diamondAddress;
-    }
-
-    function grantAdminRoles() external {
-        IDiamond diamond = IDiamond(diamondAddress);
+    function grantRoles() public {
+        IDiamond diamond = IDiamond(DIAMOND_ADDRESS);
         address[] memory accountsToGrant = new address[](2);
-        accountsToGrant[0] = 0x1234567890123456789012345678901234567890;
-        accountsToGrant[1] = 0xabcdefabcdefabcdefabcdefabcdefabcdefabcd;
+        accountsToGrant[0] = address(0xabc);
+        accountsToGrant[1] = address(0xdef);
 
-        // Grant the 'ADMIN_ROLE' to multiple accounts via the diamond
-        diamond.grantRoleBatch(AccessControlGrantBatchFacet.ADMIN_ROLE(), accountsToGrant);
+        // Call the grantRoleBatch function through the diamond proxy
+        // The diamond will route this call to the AccessControlGrantBatchFacet
+        diamond.grantRoleBatch(bytes32(keccak256("ADMIN_ROLE")), accountsToGrant);
     }
 
-    // Function to get the ADMIN_ROLE selector
-    function getAdminRoleSelector() internal pure returns (bytes32) {
-        // Assuming ADMIN_ROLE is a constant defined elsewhere or derived.
-        // For demonstration, we'll use a placeholder.
-        // In a real scenario, this would be a known constant or retrieved.
-        return keccak256(abi.encodePacked("ADMIN_ROLE"));
+    function getSelectors() public view returns (bytes memory) {
+        IDiamond diamond = IDiamond(DIAMOND_ADDRESS);
+        // Call exportSelectors to get the facet's selectors
+        return diamond.exportSelectors();
     }
 }`}
 </ExpandableCode>
@@ -210,15 +206,15 @@ contract DiamondDeployer {
 ## Best Practices
 
 <Callout type="tip" title="Best Practice">
-- Call `grantRoleBatch` through the diamond proxy to ensure proper routing and access control.
-- Ensure the caller has the necessary permissions to grant the specified role before invoking this function.
-- Verify that the `AccessControlGrantBatchFacet` has been correctly added to the diamond's facet registry.
+- Initialize roles and grant initial administrative access before deploying this facet.
+- Ensure the caller has the necessary permissions to grant roles, as enforced by the facet.
+- Verify that the `AccessControlGrantBatchFacet` is correctly registered with the diamond proxy.
 </Callout>
 
 ## Security Considerations
 
 <Callout type="warning" title="Security">
-State-changing functions must be called by authorized addresses. The `grantRoleBatch` function checks caller authorization against the specified role. Input validation on the `_accounts` array is crucial to prevent unintended assignments. Follow standard Solidity security practices for access control and input validation.
+The `grantRoleBatch` function is protected by an access control check, ensuring only authorized callers can grant roles. It emits a `RoleGranted` event for each account that receives a role. The facet does not perform reentrancy-sensitive operations. Input validation is handled by the underlying Access Control logic within the diamond storage.
 </Callout>
 
 <div style={{marginTop: "3rem", paddingTop: "2rem", borderTop: "1px solid var(--ifm-color-emphasis-200)"}}>
@@ -256,4 +252,4 @@ State-changing functions must be called by authorized addresses. The `grantRoleB
   <WasThisHelpful pageId="AccessControlGrantBatchFacet" />
 </div>
 
-<LastUpdated date="2026-03-12T21:08:02.576Z" />
+<LastUpdated date="2026-03-13T00:40:00.534Z" />

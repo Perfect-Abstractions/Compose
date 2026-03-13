@@ -1,7 +1,8 @@
 ---
 sidebar_position: 200
 title: "ERC721EnumerableMintMod"
-description: "Mint ERC-721 tokens and manage enumeration lists"
+description: "Mint ERC-721 tokens with enumeration tracking"
+sidebar_label: "Module"
 gitSource: "https://github.com/Perfect-Abstractions/Compose/tree/main/src/token/ERC721/Enumerable/Mint/ERC721EnumerableMintMod.sol"
 ---
 
@@ -21,14 +22,14 @@ import GradientText from '@site/src/components/ui/GradientText';
 import GradientButton from '@site/src/components/ui/GradientButton';
 
 <DocSubtitle>
-Mint ERC-721 tokens and manage enumeration lists
+Mint ERC-721 tokens with enumeration tracking
 </DocSubtitle>
 
 <Callout type="info" title="Key Features">
-- Exposes `internal` functions for facet integration.
-- Manages ERC-721 token minting and enumeration state.
-- Utilizes diamond storage pattern (EIP-8042) for shared state.
-- No external dependencies, ensuring composability.
+- All functions are `internal` for use within custom facets.
+- Utilizes the diamond storage pattern (EIP-8042) for shared state.
+- No external dependencies or `using` directives within the module itself.
+- Maintains enumeration lists for ERC-721 tokens.
 </Callout>
 
 <Callout type="info" title="Module Usage">
@@ -37,7 +38,7 @@ This module provides internal functions for use in your custom facets. Import it
 
 ## Overview
 
-This module provides internal functions to mint new ERC-721 tokens and maintain enumeration lists within a diamond. Facets can import this module to add token minting capabilities, ensuring that newly created tokens are correctly registered and discoverable. Changes to the token lists are managed via shared diamond storage, making them immediately visible to all interacting facets.
+This module provides internal functions for minting ERC-721 tokens while maintaining enumeration lists. Facets can import this module to add new tokens to the diamond's ERC-721 collection, ensuring that token IDs are tracked for iteration. Changes made through this module are immediately visible to all facets using the same diamond storage.
 
 ---
 
@@ -214,18 +215,13 @@ error ERC721InvalidSender(address _sender);
 <ExpandableCode language="solidity" maxLines={20} title="Example Implementation">
 {`pragma solidity >=0.8.30;
 
-import @compose/token/ERC721/Enumerable/Mint/ERC721EnumerableMintMod;
+import {ERC721EnumerableMintMod} from "@compose/token/ERC721/Enumerable/Mint/ERC721EnumerableMintMod";
+import {ERC721EnumerableStorage} from "@compose/token/ERC721/Enumerable/ERC721EnumerableStorage";
 
-contract ERC721Facet {
-    using ERC721EnumerableMintMod for ERC721EnumerableMintMod;
+contract MyERC721Facet {
+    using ERC721EnumerableMintMod for ERC721EnumerableStorage;
 
-    ERC721EnumerableMintMod private _erc721EnumerableMod;
-
-    constructor(address _diamondAddress) {
-        // Assume _diamondAddress is the address of the diamond proxy
-        // In a real scenario, this would be managed by the diamond deployment process
-        _erc721EnumerableMod = ERC721EnumerableMintMod(_diamondAddress);
-    }
+    ERC721EnumerableStorage internal _storage;
 
     /**
      * @notice Mints a new ERC-721 token.
@@ -233,8 +229,25 @@ contract ERC721Facet {
      * @param _tokenId The ID of the token to mint.
      */
     function mintToken(address _to, uint256 _tokenId) external {
-        // Accessing the module's mint function via the diamond address
-        _erc721EnumerableMod.mint(_to, _tokenId);
+        // Ensure _to is a valid receiver and _tokenId does not already exist
+        // (These checks are handled internally by the module's mint function)
+        _storage.mint(_to, _tokenId);
+    }
+
+    /**
+     * @notice Retrieves the ERC-721 storage structure.
+     * @return The ERC721Storage struct.
+     */
+    function getERC721Storage() external pure returns (ERC721Storage) {
+        return ERC721EnumerableMintMod.getERC721Storage();
+    }
+
+    /**
+     * @notice Retrieves the ERC721EnumerableStorage structure.
+     * @return The ERC721EnumerableStorage struct.
+     */
+    function getEnumerableStorage() external pure returns (ERC721EnumerableStorage) {
+        return ERC721EnumerableMintMod.getStorage();
     }
 }`}
 </ExpandableCode>
@@ -243,15 +256,15 @@ contract ERC721Facet {
 ## Best Practices
 
 <Callout type="tip" title="Best Practice">
-- Ensure the `_to` address is not the zero address before calling `mint`.
-- Verify that the `_tokenId` does not already exist to prevent re-minting.
-- Call this module's functions only from within facets that are part of an ERC-2535 diamond.
+- Ensure the `_to` address is valid and the `_tokenId` does not already exist before calling `mint`.
+- Verify that the diamond's storage layout is compatible when upgrading facets that interact with this module.
+- Handle potential reverts from `ERC721InvalidReceiver` or if the token ID already exists.
 </Callout>
 
 ## Integration Notes
 
 <Callout type="success" title="Shared Storage">
-This module interacts with diamond storage at the `STORAGE_POSITION` defined by `keccak256("erc721.enumerable")`. The `mint` function modifies the internal `ERC721EnumerableStorage` struct. Any facet that reads from or writes to this specific storage position will immediately see the changes made by the `mint` operation. The `getERC721Storage` and `getStorage` functions provide read-only access pointers to the relevant storage structures.
+This module interacts with diamond storage at the `STORAGE_POSITION` identified by `keccak256("erc721.enumerable")`. The `mint` function modifies the shared `ERC721EnumerableStorage` struct. Any facet that accesses this storage position will immediately see the changes, such as the addition of a new token ID to the enumeration lists.
 </Callout>
 
 <div style={{marginTop: "3rem", paddingTop: "2rem", borderTop: "1px solid var(--ifm-color-emphasis-200)"}}>
@@ -289,4 +302,4 @@ This module interacts with diamond storage at the `STORAGE_POSITION` defined by 
   <WasThisHelpful pageId="ERC721EnumerableMintMod" />
 </div>
 
-<LastUpdated date="2026-03-12T21:04:24.662Z" />
+<LastUpdated date="2026-03-13T00:36:19.554Z" />

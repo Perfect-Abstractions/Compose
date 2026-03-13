@@ -1,7 +1,8 @@
 ---
 sidebar_position: 200
 title: "ERC721MetadataMod"
-description: "Manages ERC-721 token metadata within a diamond"
+description: "Manages ERC-721 metadata within a diamond"
+sidebar_label: "Module"
 gitSource: "https://github.com/Perfect-Abstractions/Compose/tree/main/src/token/ERC721/Metadata/ERC721MetadataMod.sol"
 ---
 
@@ -21,14 +22,14 @@ import GradientText from '@site/src/components/ui/GradientText';
 import GradientButton from '@site/src/components/ui/GradientButton';
 
 <DocSubtitle>
-Manages ERC-721 token metadata within a diamond
+Manages ERC-721 metadata within a diamond
 </DocSubtitle>
 
 <Callout type="info" title="Key Features">
-- Functions are `internal` for use within custom facets.
-- Leverages diamond storage pattern (EIP-8042) for shared state.
-- No external dependencies or `using` directives.
-- Compatible with ERC-2535 diamonds.
+- Provides internal functions for managing ERC-721 name, symbol, and base URI.
+- Utilizes the diamond storage pattern (EIP-8042) for shared state management.
+- No external dependencies, promoting composability within the diamond.
+- Functions are designed for internal use by other facets within the same diamond.
 </Callout>
 
 <Callout type="info" title="Module Usage">
@@ -37,7 +38,7 @@ This module provides internal functions for use in your custom facets. Import it
 
 ## Overview
 
-This module provides internal functions to manage ERC-721 token metadata, including name, symbol, and base URI. Facets can import this module to interact with shared diamond storage for metadata, ensuring consistency across all facets. Changes are immediately visible due to the shared storage pattern.
+This module provides internal functions to manage ERC-721 metadata, including name, symbol, and base URI. Facets can import and use this module to interact with shared diamond storage for metadata, ensuring consistency across the diamond. Changes to metadata are immediately visible to all facets accessing the same storage slot.
 
 ---
 
@@ -156,53 +157,71 @@ error ERC721NonexistentToken(uint256 _tokenId);
 
 <ExpandableCode language="solidity" maxLines={20} title="Example Implementation">
 {`pragma solidity >=0.8.30;
+import @compose/token/ERC721/Metadata/ERC721MetadataMod;
 
-import { ERC721MetadataMod } from "@compose/token/ERC721/Metadata/ERC721MetadataMod";
+contract ERC721MetadataFacet {
+    ERC721MetadataMod internal metadataModule;
 
-contract MyERC721Facet {
-    ERC721MetadataMod private _metadataMod;
-
-    constructor(address diamondAddress) {
-        // In a real scenario, this would be initialized via diamond storage or an initializer function
-        _metadataMod = ERC721MetadataMod(diamondAddress);
-    }
+    // Assume storage is initialized elsewhere, e.g., in an initializer function
+    // function initialize(address _diamondAddress) external {
+    //     metadataModule = ERC721MetadataMod(_diamondAddress);
+    // }
 
     /**
-     * @notice Sets the ERC-721 token metadata.
-     * @dev Requires appropriate access control, not shown here.
+     * @notice Sets the ERC-721 name, symbol, and base URI.
+     * @dev This function demonstrates calling the internal setMetadata function.
      */
-    function setTokenMetadata(
+    function setErc721Metadata(
         string memory _name,
         string memory _symbol,
         string memory _baseURI
     ) external {
-        // Call the internal function from the module
-        _metadataMod.setMetadata(_name, _symbol, _baseURI);
+        // In a real facet, you would call internal functions through the diamond storage pointer.
+        // For demonstration, we assume a direct call to the module's functions which would
+        // internally use the diamond storage pointer.
+        // The actual implementation in a facet would involve accessing the module via diamond storage.
+
+        // Placeholder for actual call using diamond storage pointer:
+        // metadataModule.setMetadata(_name, _symbol, _baseURI);
+
+        // For this example, simulating the effect:
+        // The actual module would handle the storage updates.
+        // This is a conceptual representation of how a facet would interact.
+
+        // Example call to get storage pointer (if needed for other operations)
+        // ERC721MetadataStorage storage metadata = metadataModule.getStorage();
+        // metadata.name = _name;
+        // metadata.symbol = _symbol;
+        // metadata.baseURI = _baseURI;
     }
 
     /**
-     * @notice Retrieves the ERC-721 storage structure.
-     * @return The ERC721MetadataStorage struct.
+     * @notice Retrieves the ERC-721 metadata storage struct.
+     * @dev This function demonstrates calling the internal getStorage function.
      */
-    function getTokenMetadataStorage() public view returns (ERC721MetadataMod.ERC721MetadataStorage memory) {
+    function getErc721Storage() external pure returns (ERC721MetadataStorage memory) {
+        // In a real facet, you would call internal functions through the diamond storage pointer.
+        // For demonstration, we assume a direct call to the module's functions which would
+        // internally use the diamond storage pointer.
         return ERC721MetadataMod.getStorage();
     }
-}`}
+}
+`}
 </ExpandableCode>
 -->
 
 ## Best Practices
 
 <Callout type="tip" title="Best Practice">
-- Ensure appropriate access control is enforced before calling `setMetadata`.
-- Verify storage layout compatibility with `STORAGE_POSITION` when upgrading diamond facets.
-- Use `getTokenMetadataStorage` to read metadata, ensuring consistency across facets.
+- Ensure that the diamond storage slot for ERC721MetadataStorage is correctly initialized before any metadata operations.
+- Verify that any facet calling metadata-related functions enforces appropriate access control, as this module itself does not.
+- When upgrading facets, ensure compatibility with the existing `ERC721MetadataStorage` struct layout.
 </Callout>
 
 ## Integration Notes
 
 <Callout type="success" title="Shared Storage">
-This module interacts with diamond storage at the `STORAGE_POSITION` designated for ERC-721 metadata. It utilizes inline assembly to access this specific storage slot, defined by `keccak256(\"erc721.metadata\")`. Any changes made to the name, symbol, or baseURI via the `setMetadata` function are immediately reflected in the shared storage and are visible to all other facets that access this same storage slot.
+This module interacts with diamond storage via a dedicated slot identified by `STORAGE_POSITION`, which is mapped to `keccak256(\"erc721.metadata\")`. It accesses and modifies the `ERC721MetadataStorage` struct, which contains fields for `name`, `symbol`, and `baseURI`. All state changes made through this module are directly reflected in the diamond's shared storage and are immediately visible to any other facet that reads from the same storage position.
 </Callout>
 
 <div style={{marginTop: "3rem", paddingTop: "2rem", borderTop: "1px solid var(--ifm-color-emphasis-200)"}}>
@@ -240,4 +259,4 @@ This module interacts with diamond storage at the `STORAGE_POSITION` designated 
   <WasThisHelpful pageId="ERC721MetadataMod" />
 </div>
 
-<LastUpdated date="2026-03-12T21:04:08.676Z" />
+<LastUpdated date="2026-03-13T00:36:04.331Z" />

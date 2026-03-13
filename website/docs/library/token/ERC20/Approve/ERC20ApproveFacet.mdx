@@ -1,7 +1,8 @@
 ---
 sidebar_position: 210
 title: "ERC20ApproveFacet"
-description: "Approves token spending on behalf of an owner"
+description: "Approve token spending on behalf of an account"
+sidebar_label: "Facet"
 gitSource: "https://github.com/Perfect-Abstractions/Compose/tree/main/src/token/ERC20/Approve/ERC20ApproveFacet.sol"
 ---
 
@@ -21,19 +22,19 @@ import GradientText from '@site/src/components/ui/GradientText';
 import GradientButton from '@site/src/components/ui/GradientButton';
 
 <DocSubtitle>
-Approves token spending on behalf of an owner
+Approve token spending on behalf of an account
 </DocSubtitle>
 
 <Callout type="info" title="Key Features">
-- Exposes external `approve` function for token allowance management.
-- Utilizes diamond storage for allowance data.
-- Emits `Approval` event upon successful allowance grants.
-- Compatible with ERC-2535 diamond standard.
+- Exposes external `approve` function for token spending approvals.
+- Utilizes diamond storage for persistent state management.
+- Emits `Approval` event upon successful approval.
+- Provides `exportSelectors` for diamond upgradeability and discovery.
 </Callout>
 
 ## Overview
 
-This facet exposes external functions to approve token spending within a diamond. It routes calls through the diamond proxy and accesses shared ERC20 storage. Developers add this facet to enable token allowance management.
+This facet enables ERC-20-like token approval functionality within a diamond. It provides external functions to grant spending allowances and accesses shared diamond storage for token state. Developers integrate this facet to manage token approvals while leveraging the diamond's upgradeability and composability.
 
 ---
 
@@ -189,44 +190,57 @@ error ERC20InvalidSpender(address _spender);
 
 <ExpandableCode language="solidity" maxLines={20} title="Example Implementation">
 {`pragma solidity >=0.8.30;
+
 import {IDiamond} from "@compose/diamond/IDiamond";
 import {ERC20ApproveFacet} from "@compose/token/ERC20/Approve/ERC20ApproveFacet";
 
-contract DiamondDeployer {
-    address immutable DIAMOND_ADDRESS;
+contract DiamondUser {
+    address immutable diamondAddress;
 
-    constructor(address diamondAddress) {
-        DIAMOND_ADDRESS = diamondAddress;
+    constructor(address _diamondAddress) {
+        diamondAddress = _diamondAddress;
     }
 
-    function grantAllowance(address spender, uint256 amount) external {
+    /**
+     * @notice Approves a spender to withdraw tokens from the caller's account.
+     * @param _spender The address to approve.
+     * @param _value The maximum amount the spender can withdraw.
+     */
+    function approveSpending(address _spender, uint256 _value) external {
         // Call the approve function through the diamond proxy
-        IDiamond(DIAMOND_ADDRESS).approve(spender, amount);
+        IDiamond(diamondAddress).approve(_spender, _value);
     }
 
-    function getAllowance(address owner, address spender) external view returns (uint256) {
-        // Assuming a complementary facet or direct storage access exposes this
-        // This example focuses on the approve function call itself.
-        // For a full ERC20 implementation, a balance/allowance facet is needed.
-        // For demonstration, let's assume a placeholder return.
-        return 0; // Placeholder, actual allowance retrieval requires other facets.
+    /**
+     * @notice Gets the current approval for a spender on behalf of the caller.
+     * @dev This example assumes a corresponding ERC20DataFacet or similar is used to read allowances.
+     *      The ERC20ApproveFacet itself does not expose a public \`allowance\` function.
+     *      This is illustrative of how an allowance might be checked.
+     */
+    function checkAllowance(address _owner, address _spender) external view returns (uint256) {
+        // To check allowance, you would typically call a different facet that exposes
+        // an \`allowance\` function, reading from the shared ERC20Storage.
+        // Example: IDiamond(diamondAddress).allowance(_owner, _spender);
+        // As ERC20ApproveFacet only exposes approve, this is a conceptual placeholder.
+        revert("Allowance check requires a dedicated facet");
     }
-}`}
+}
+`}
 </ExpandableCode>
 -->
 
 ## Best Practices
 
 <Callout type="tip" title="Best Practice">
-- Call the `approve` function through the diamond proxy to manage token allowances.
-- Ensure the diamond is initialized with the `ERC20ApproveFacet` before attempting to grant allowances.
-- Verify that any related ERC20 facets (e.g., for transfers) are also deployed and accessible through the diamond.
+- Integrate this facet into your diamond during initialization.
+- Ensure that the `ERC20Storage` struct is correctly laid out and initialized within the diamond's storage.
+- Be aware that while this facet handles approvals, checking allowances typically requires a separate facet that reads from the shared `ERC20Storage`.
 </Callout>
 
 ## Security Considerations
 
 <Callout type="warning" title="Security">
-The `approve` function is protected by the diamond's access control mechanisms. Input validation for `_spender` is performed, reverting with `ERC20InvalidSpender` if the spender address is zero. Follow standard Solidity security practices for external calls and state modifications.
+The `approve` function is protected by ERC-2535 diamond proxy routing. It performs checks before state changes (checks-effects-interactions pattern). Input validation for `_spender` is handled by the `ERC20InvalidSpender` custom error. Reentrancy is not a direct concern for the `approve` function itself, as it does not perform external calls. Ensure that any facet reading allowances correctly accesses the shared `ERC20Storage`.
 </Callout>
 
 <div style={{marginTop: "3rem", paddingTop: "2rem", borderTop: "1px solid var(--ifm-color-emphasis-200)"}}>
@@ -264,4 +278,4 @@ The `approve` function is protected by the diamond's access control mechanisms. 
   <WasThisHelpful pageId="ERC20ApproveFacet" />
 </div>
 
-<LastUpdated date="2026-03-12T21:05:03.931Z" />
+<LastUpdated date="2026-03-13T00:37:00.133Z" />

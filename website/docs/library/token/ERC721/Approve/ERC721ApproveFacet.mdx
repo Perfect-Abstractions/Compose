@@ -1,7 +1,8 @@
 ---
 sidebar_position: 210
 title: "ERC721ApproveFacet"
-description: "Approvals for ERC-721 tokens within a diamond"
+description: "Approves token transfers and operator permissions"
+sidebar_label: "Facet"
 gitSource: "https://github.com/Perfect-Abstractions/Compose/tree/main/src/token/ERC721/Approve/ERC721ApproveFacet.sol"
 ---
 
@@ -21,19 +22,19 @@ import GradientText from '@site/src/components/ui/GradientText';
 import GradientButton from '@site/src/components/ui/GradientButton';
 
 <DocSubtitle>
-Approvals for ERC-721 tokens within a diamond
+Approves token transfers and operator permissions
 </DocSubtitle>
 
 <Callout type="info" title="Key Features">
-- Implements ERC-721 `approve` and `setApprovalForAll` functions.
-- Interacts with shared diamond storage via a defined `STORAGE_POSITION`.
-- Includes internal helper `getStorage` for accessing facet-specific storage.
-- Provides `exportSelectors` for diamond facet discovery.
+- Exposes external functions for diamond routing.
+- Manages ERC-721 approvals and operator permissions.
+- Uses shared diamond storage for state persistence.
+- Compatible with ERC-2535 diamond standard.
 </Callout>
 
 ## Overview
 
-This facet enables ERC-721 token approvals within a diamond proxy architecture. It exposes functions to manage individual token approvals and operator permissions, interacting with shared diamond storage. Developers integrate this facet to provide ERC-721 compliant approval mechanisms while leveraging the diamond's upgradeability.
+This facet provides external functions for managing ERC-721 token approvals within a diamond. It routes calls through the diamond proxy and accesses shared storage for approval data. Developers add this facet to enable token ownership management and operator delegation.
 
 ---
 
@@ -204,8 +205,7 @@ error ERC721InvalidOperator(address _operator);
 <ExpandableCode language="solidity" maxLines={20} title="Example Implementation">
 {`pragma solidity >=0.8.30;
 
-import {IDiamond} from "@compose/diamond/IDiamond.sol";
-import {ERC721ApproveFacet} from "@compose/token/ERC721/Approve/ERC721ApproveFacet.sol";
+import {IERC721ApproveFacet} from "@compose/token/ERC721/Approve/ERC721ApproveFacet";
 
 contract DiamondUser {
     address immutable diamondAddress;
@@ -214,36 +214,17 @@ contract DiamondUser {
         diamondAddress = _diamondAddress;
     }
 
-    /**
-     * @notice Approves a specific address to transfer a token.
-     * @param _to The address to approve.
-     * @param _tokenId The ID of the token to approve.
-     */
     function approveToken(address _to, uint256 _tokenId) external {
-        IDiamond(diamondAddress).approve(_to, _tokenId);
+        IERC721ApproveFacet(diamondAddress).approve(_to, _tokenId);
     }
 
-    /**
-     * @notice Approves an operator to manage all caller's tokens.
-     * @param _operator The address to approve as an operator.
-     * @param _approved Whether to approve or revoke approval.
-     */
     function setOperatorApproval(address _operator, bool _approved) external {
-        IDiamond(diamondAddress).setApprovalForAll(_operator, _approved);
+        IERC721ApproveFacet(diamondAddress).setApprovalForAll(_operator, _approved);
     }
 
-    /**
-     * @notice Retrieves the ERC721 storage struct.
-     * @return The ERC721 storage struct.
-     */
-    function getERC721Storage() internal pure returns (ERC721Storage) {
-        return ERC721ApproveFacet.getStorage();
+    function getSelectors() external view returns (bytes memory) {
+        return IERC721ApproveFacet(diamondAddress).exportSelectors();
     }
-}
-
-struct ERC721Storage {
-  // Definition is internal to the facet and not directly exposed here.
-  // Assume it contains necessary state for ERC721 approvals.
 }`}
 </ExpandableCode>
 -->
@@ -251,15 +232,15 @@ struct ERC721Storage {
 ## Best Practices
 
 <Callout type="tip" title="Best Practice">
-- Initialize the diamond with this facet to enable ERC-721 approval functionality.
-- Ensure that the `ERC721ApproveMod` module is correctly configured within the diamond's storage if it exists.
-- Verify that the `STORAGE_POSITION` for ERC721 data is unique and does not conflict with other facets.
+- Initialize diamond storage for ERC721 data before adding this facet.
+- Ensure `_to` and `_operator` addresses are valid before calling approval functions.
+- Verify that the caller has ownership of the token or is an approved operator before calling `approve`.
 </Callout>
 
 ## Security Considerations
 
 <Callout type="warning" title="Security">
-The `approve` function reverts with `ERC721InvalidApprover` if the caller is not the owner of the token or an approved operator. The `setApprovalForAll` function reverts with `ERC721InvalidOperator` if the caller attempts to approve themselves as an operator. Input validation for token IDs and addresses is crucial. Follow standard Solidity security practices for external calls within the diamond.
+All state-changing functions (`approve`, `setApprovalForAll`) are external and intended to be called through the diamond proxy. The facet relies on the caller's address for authorization. Input validation for token IDs and operator addresses is crucial. Reentrancy is not explicitly mitigated by a guard, follow checks-effects-interactions pattern.
 </Callout>
 
 <div style={{marginTop: "3rem", paddingTop: "2rem", borderTop: "1px solid var(--ifm-color-emphasis-200)"}}>
@@ -297,4 +278,4 @@ The `approve` function reverts with `ERC721InvalidApprover` if the caller is not
   <WasThisHelpful pageId="ERC721ApproveFacet" />
 </div>
 
-<LastUpdated date="2026-03-12T21:04:01.179Z" />
+<LastUpdated date="2026-03-13T00:35:54.792Z" />

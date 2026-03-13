@@ -1,7 +1,8 @@
 ---
 sidebar_position: 200
 title: "ERC721EnumerableBurnMod"
-description: "Burns ERC-721 tokens and updates enumeration tracking"
+description: "Destroys ERC-721 tokens and removes them from enumeration tracking."
+sidebar_label: "Module"
 gitSource: "https://github.com/Perfect-Abstractions/Compose/tree/main/src/token/ERC721/Enumerable/Burn/ERC721EnumerableBurnMod.sol"
 ---
 
@@ -21,14 +22,14 @@ import GradientText from '@site/src/components/ui/GradientText';
 import GradientButton from '@site/src/components/ui/GradientButton';
 
 <DocSubtitle>
-Burns ERC-721 tokens and updates enumeration tracking
+Destroys ERC-721 tokens and removes them from enumeration tracking.
 </DocSubtitle>
 
 <Callout type="info" title="Key Features">
-- Exposes `internal` functions for burning tokens.
-- Manages enumeration tracking when tokens are burned.
-- Uses the diamond storage pattern via `STORAGE_POSITION`.
-- Includes custom error `ERC721NonexistentToken`.
+- Functions are `internal`, intended for use within other facets.
+- Manages token destruction and enumeration state within diamond storage.
+- Utilizes inline assembly to access shared storage via `STORAGE_POSITION`.
+- Does not perform approval checks; relies on calling facets for this logic.
 </Callout>
 
 <Callout type="info" title="Module Usage">
@@ -37,7 +38,7 @@ This module provides internal functions for use in your custom facets. Import it
 
 ## Overview
 
-This module provides internal functions to burn ERC-721 tokens and maintain enumeration tracking. Facets can import this module to remove tokens from circulation and ensure the internal tracking structures remain consistent. Changes made through this module affect shared diamond storage.
+This module provides internal functionality to burn ERC-721 tokens, ensuring they are also removed from enumeration tracking. By calling `burn`, facets can manage token lifecycle within the diamond's shared storage. Changes to token existence and enumeration are immediately visible to all facets interacting with the ERC721Storage.
 
 ---
 
@@ -196,18 +197,31 @@ error ERC721NonexistentToken(uint256 _tokenId);
 
 <ExpandableCode language="solidity" maxLines={20} title="Example Implementation">
 {`pragma solidity >=0.8.30;
-import @compose/token/ERC721/Enumerable/Burn/ERC721EnumerableBurnMod;
 
-contract ERC721Facet {
-    using ERC721EnumerableBurnMod for ERC721EnumerableBurnMod;
+import { ERC721EnumerableBurnMod } from "@compose/token/ERC721/Enumerable/Burn/ERC721EnumerableBurnMod";
 
-    function burnToken(uint256 _tokenId) external {
-        // This facet would enforce owner/approval checks before calling the module
-        ERC721EnumerableBurnMod.burn(_tokenId);
+contract ERC721BurnFacet {
+    ERC721EnumerableBurnMod private immutable _burnModule;
+
+    constructor(address _diamondAddress) {
+        _burnModule = ERC721EnumerableBurnMod(_diamondAddress);
     }
 
-    function getStorage() external view returns (ERC721EnumerableStorage storage) {
-        return ERC721EnumerableBurnMod.getStorage();
+    /**
+     * @notice Burns a token by its ID.
+     * @param _tokenId The ID of the token to burn.
+     */
+    function burnToken(uint256 _tokenId) external {
+        // Note: Approval checks are handled by the calling facet.
+        _burnModule.burn(_tokenId);
+    }
+
+    /**
+     * @notice Gets the ERC721 storage struct.
+     * @return ERC721Storage The storage struct.
+     */
+    function getERC721Storage() external view returns (ERC721Storage) {
+        return _burnModule.getERC721Storage();
     }
 }`}
 </ExpandableCode>
@@ -216,15 +230,15 @@ contract ERC721Facet {
 ## Best Practices
 
 <Callout type="tip" title="Best Practice">
-- Enforce ownership or approval checks within your facet before calling the `burn` function.
-- Ensure the `STORAGE_POSITION` used by this module is correctly defined and managed within your diamond's storage layout.
-- Handle the `ERC721NonexistentToken` error if a token ID does not exist.
+- Ensure approval checks are performed by the calling facet before invoking `burn`.
+- Handle the `ERC721NonexistentToken` error, which may be emitted if the token does not exist.
+- Verify the diamond storage layout for `STORAGE_POSITION` is correctly set and compatible when upgrading facets.
 </Callout>
 
 ## Integration Notes
 
 <Callout type="success" title="Shared Storage">
-This module interacts with diamond storage using the `STORAGE_POSITION` key, which points to the `keccak256(\"erc721.enumerable\")` slot. It reads and writes to the `ERC721EnumerableStorage` struct. Any changes to the token enumeration state made by this module are immediately visible to all other facets accessing the same storage slot through the diamond.
+This module interacts with diamond storage at the slot identified by `keccak256("erc721.enumerable")`. The `burn` function modifies the state of the `ERC721EnumerableStorage` struct, directly impacting token existence and enumeration order. These changes are immediately visible to any facet that reads from the same storage slot.
 </Callout>
 
 <div style={{marginTop: "3rem", paddingTop: "2rem", borderTop: "1px solid var(--ifm-color-emphasis-200)"}}>
@@ -262,4 +276,4 @@ This module interacts with diamond storage using the `STORAGE_POSITION` key, whi
   <WasThisHelpful pageId="ERC721EnumerableBurnMod" />
 </div>
 
-<LastUpdated date="2026-03-12T21:04:28.127Z" />
+<LastUpdated date="2026-03-13T00:36:23.135Z" />

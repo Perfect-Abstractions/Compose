@@ -1,7 +1,8 @@
 ---
 sidebar_position: 210
 title: "ERC1155BurnFacet"
-description: "Burns ERC-1155 tokens within a diamond"
+description: "Burn ERC-1155 tokens within a diamond"
+sidebar_label: "Facet"
 gitSource: "https://github.com/Perfect-Abstractions/Compose/tree/main/src/token/ERC1155/Burn/ERC1155BurnFacet.sol"
 ---
 
@@ -21,19 +22,19 @@ import GradientText from '@site/src/components/ui/GradientText';
 import GradientButton from '@site/src/components/ui/GradientButton';
 
 <DocSubtitle>
-Burns ERC-1155 tokens within a diamond
+Burn ERC-1155 tokens within a diamond
 </DocSubtitle>
 
 <Callout type="info" title="Key Features">
-- Enables burning of ERC-1155 tokens via external functions.
-- Integrates seamlessly with the Compose diamond standard (ERC-2535).
-- Accesses shared diamond storage for token data.
-- Exports its own selectors for diamond registration.
+- Exposes external functions for burning single and batch ERC-1155 tokens.
+- Leverages diamond storage for state management.
+- Emits `TransferSingle` and `TransferBatch` events upon successful burns.
+- Provides `exportSelectors` for diamond discovery.
 </Callout>
 
 ## Overview
 
-This facet implements burning functionality for ERC-1155 tokens within a Compose diamond. It provides external functions to burn single or batch token types, routing calls through the diamond proxy and accessing shared storage. Developers add this facet to enable token destruction while maintaining upgradeability and composability.
+This facet enables burning of ERC-1155 tokens directly within a diamond proxy. It provides external functions for single and batch token destruction, accessing shared diamond storage. Developers integrate this facet to manage token supply reductions while leveraging the diamond's upgradeability and composability.
 
 ---
 
@@ -312,7 +313,7 @@ error ERC1155MissingApprovalForAll(address _operator, address _owner);
 import {IDiamond} from "@compose/diamond/IDiamond";
 import {ERC1155BurnFacet} from "@compose/token/ERC1155/Burn/ERC1155BurnFacet";
 
-contract Deployer {
+contract DiamondUser {
     address immutable diamondAddress;
 
     constructor(address _diamondAddress) {
@@ -320,13 +321,11 @@ contract Deployer {
     }
 
     function burnSingleToken(address _from, uint256 _id, uint256 _value) external {
-        // Call the burn function through the diamond proxy
-        IDiamond(diamondAddress).burn(_from, _id, _value);
+        ERC1155BurnFacet(diamondAddress).burn(_from, _id, _value);
     }
 
-    function burnBatchTokens(address _from, uint256[] calldata _ids, uint256[] calldata _values) external {
-        // Call the burnBatch function through the diamond proxy
-        IDiamond(diamondAddress).burnBatch(_from, _ids, _values);
+    function burnMultipleTokens(address _from, uint256[] memory _ids, uint256[] memory _values) external {
+        ERC1155BurnFacet(diamondAddress).burnBatch(_from, _ids, _values);
     }
 }`}
 </ExpandableCode>
@@ -335,15 +334,15 @@ contract Deployer {
 ## Best Practices
 
 <Callout type="tip" title="Best Practice">
-- Call `burn` or `burnBatch` through the diamond proxy address.
-- Ensure the caller has the necessary permissions (owner or approved operator) before invoking burn functions.
-- Verify that the `ERC1155BurnFacet` is correctly registered with the diamond's facet registry.
+- Ensure the caller has the necessary permissions (owner or approved operator) before burning tokens.
+- Verify that the `_ids` and `_values` arrays have matching lengths when calling `burnBatch`.
+- Integrate this facet early in diamond deployment to manage token supply mechanics.
 </Callout>
 
 ## Security Considerations
 
 <Callout type="warning" title="Security">
-The `burn` and `burnBatch` functions require the caller to be the owner of the tokens or an approved operator, enforced via `msg.sender`. The facet emits `TransferSingle` or `TransferBatch` events upon successful burning. Input validation is performed for array lengths in `burnBatch`. Follow standard Solidity security practices.
+The `burn` and `burnBatch` functions require the caller to be the owner of the tokens or an approved operator. Input validation for array lengths in `burnBatch` is crucial to prevent `ERC1155InvalidArrayLength` errors. Ensure that token balances are correctly managed to avoid `ERC1155InsufficientBalance` errors. Standard Solidity security practices for external calls and state modifications apply.
 </Callout>
 
 <div style={{marginTop: "3rem", paddingTop: "2rem", borderTop: "1px solid var(--ifm-color-emphasis-200)"}}>
@@ -381,4 +380,4 @@ The `burn` and `burnBatch` functions require the caller to be the owner of the t
   <WasThisHelpful pageId="ERC1155BurnFacet" />
 </div>
 
-<LastUpdated date="2026-03-12T21:03:44.296Z" />
+<LastUpdated date="2026-03-13T00:35:38.980Z" />

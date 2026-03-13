@@ -2,6 +2,7 @@
 sidebar_position: 110
 title: "AccessControlRevokeBatchFacet"
 description: "Batch revoke roles from multiple accounts"
+sidebar_label: "Facet"
 gitSource: "https://github.com/Perfect-Abstractions/Compose/tree/main/src/access/AccessControl/Batch/Revoke/AccessControlRevokeBatchFacet.sol"
 ---
 
@@ -25,15 +26,15 @@ Batch revoke roles from multiple accounts
 </DocSubtitle>
 
 <Callout type="info" title="Key Features">
-- Enables batch revocation of roles for multiple accounts.
-- Interacts with shared diamond storage for role management.
-- Exposes `exportSelectors` for introspection.
-- Emits `RoleRevoked` event upon successful revocation.
+- Revokes roles from multiple accounts in a single transaction.
+- Emits `RoleRevoked` event for each revoked role.
+- Accesses shared diamond storage for role management.
+- Provides `exportSelectors` for ABI introspection.
 </Callout>
 
 ## Overview
 
-This facet provides an external function to revoke a role from multiple accounts simultaneously. It interacts with diamond storage to manage role assignments, emitting RoleRevoked events for each successful revocation. This enables efficient batch management of access control within a diamond.
+This facet provides functionality to revoke a specific role from multiple accounts simultaneously within a Compose diamond. It accesses shared diamond storage to manage role assignments, allowing for efficient batch operations. Developers integrate this facet to streamline administrative tasks related to access control.
 
 ---
 
@@ -176,27 +177,33 @@ error AccessControlUnauthorizedAccount(address _account, bytes32 _role);
 <ExpandableCode language="solidity" maxLines={20} title="Example Implementation">
 {`pragma solidity >=0.8.30;
 
-import { IDiamond } from "@compose/diamond/IDiamond";
+import { IDiamond } from "@compose/core/IDiamond";
 import { AccessControlRevokeBatchFacet } from "@compose/access/AccessControl/Batch/Revoke/AccessControlRevokeBatchFacet";
 
 contract DiamondUser {
-    address immutable DIAMOND_ADDRESS;
+    address immutable diamondAddress;
 
-    constructor(address diamondAddress) {
-        DIAMOND_ADDRESS = diamondAddress;
+    constructor(address _diamondAddress) {
+        diamondAddress = _diamondAddress;
     }
 
-    function revokeManyRoles(bytes32 _role, address[] memory _accounts) external {
-        IDiamond diamond = IDiamond(DIAMOND_ADDRESS);
-        // Calls the revokeRoleBatch function exposed through the diamond proxy
-        diamond.revokeRoleBatch(_role, _accounts);
+    /**
+     * @notice Revoke a role from a list of accounts.
+     * @dev Calls the facet through the diamond proxy.
+     */
+    function revokeAccess(bytes32 _role, address[] memory _accounts) external {
+        // The diamond contract routes this call to the AccessControlRevokeBatchFacet
+        IDiamond(diamondAddress).revokeRoleBatch(_role, _accounts);
     }
 
-    // Example of how the facet exports its selectors
-    function getFacetSelectors() external view returns (bytes memory) {
-        IDiamond diamond = IDiamond(DIAMOND_ADDRESS);
-        // Calls the exportSelectors function exposed through the diamond proxy
-        return diamond.exportSelectors();
+    /**
+     * @notice Example of exporting selectors.
+     */
+    function getFacetSelectors() external view returns (bytes memory selectors) {
+        // The diamond contract routes this call to the AccessControlRevokeBatchFacet
+        (bool success, bytes memory returnData) = diamondAddress.call(abi.encodeWithSignature("exportSelectors()@compose/access/AccessControl/Batch/Revoke/AccessControlRevokeBatchFacet"));
+        require(success, "Failed to export selectors");
+        selectors = returnData;
     }
 }`}
 </ExpandableCode>
@@ -205,15 +212,15 @@ contract DiamondUser {
 ## Best Practices
 
 <Callout type="tip" title="Best Practice">
-- Call `revokeRoleBatch` through the diamond proxy interface.
-- Ensure the caller has the necessary administrative privileges for the specified role before invoking.
-- Process `RoleRevoked` events to update off-chain state.
+- Ensure the caller has the necessary administrative permissions before invoking `revokeRoleBatch`.
+- Verify that the `AccessControlRevokeBatchFacet` is correctly initialized and registered within the diamond.
+- Use the `exportSelectors` function to confirm the facet's available functions before integration.
 </Callout>
 
 ## Security Considerations
 
 <Callout type="warning" title="Security">
-The `revokeRoleBatch` function is protected by access control, reverting with `AccessControlUnauthorizedAccount` if the caller does not possess the required role. Input validation for the array of accounts is handled internally. Follow standard Solidity security practices regarding array handling and reentrancy.
+The `revokeRoleBatch` function enforces access control, reverting with `AccessControlUnauthorizedAccount` if the caller is not the administrator of the specified role. Input validation for the `_accounts` array should be performed by the caller. The facet utilizes diamond storage, ensuring state changes are managed consistently across other facets. No reentrancy guards are explicitly present; follow standard Solidity security practices.
 </Callout>
 
 <div style={{marginTop: "3rem", paddingTop: "2rem", borderTop: "1px solid var(--ifm-color-emphasis-200)"}}>
@@ -251,4 +258,4 @@ The `revokeRoleBatch` function is protected by access control, reverting with `A
   <WasThisHelpful pageId="AccessControlRevokeBatchFacet" />
 </div>
 
-<LastUpdated date="2026-03-12T21:07:50.038Z" />
+<LastUpdated date="2026-03-13T00:39:49.067Z" />

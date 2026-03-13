@@ -1,7 +1,8 @@
 ---
 sidebar_position: 210
 title: "ERC1155DataFacet"
-description: "Access and manage ERC-1155 token data within a diamond"
+description: "Manages ERC-1155 token data within a diamond"
+sidebar_label: "Facet"
 gitSource: "https://github.com/Perfect-Abstractions/Compose/tree/main/src/token/ERC1155/Data/ERC1155DataFacet.sol"
 ---
 
@@ -21,19 +22,19 @@ import GradientText from '@site/src/components/ui/GradientText';
 import GradientButton from '@site/src/components/ui/GradientButton';
 
 <DocSubtitle>
-Access and manage ERC-1155 token data within a diamond
+Manages ERC-1155 token data within a diamond
 </DocSubtitle>
 
 <Callout type="info" title="Key Features">
-- Exposes ERC-1155 data query functions via diamond proxy.
-- Reads token data directly from shared diamond storage.
-- Includes `exportSelectors` for diamond registration automation.
-- No state-changing logic; functions are `view` or `pure`.
+- Provides external view functions for ERC-1155 balance and approval checks.
+- Accesses shared diamond storage for ERC-1155 state.
+- Includes `exportSelectors` for diamond selector discovery.
+- No external dependencies, self-contained logic.
 </Callout>
 
 ## Overview
 
-This facet provides external read-only access to ERC-1155 token balances and approval status. It routes calls through the diamond proxy, leveraging shared diamond storage. Developers add this facet to a diamond to expose ERC-1155 token data in a composable and upgradeable manner.
+This facet exposes core ERC-1155 data retrieval functions via the diamond proxy. It accesses shared diamond storage to provide token balances and approval status. Developers integrate this facet to enable off-chain querying and on-chain logic that relies on ERC-1155 state.
 
 ---
 
@@ -231,38 +232,44 @@ error ERC1155InvalidArrayLength(uint256 _idsLength, uint256 _valuesLength);
 <ExpandableCode language="solidity" maxLines={20} title="Example Implementation">
 {`pragma solidity >=0.8.30;
 
-import { IDiamond } from "@compose/diamond/IDiamond";
-import { ERC1155DataFacet } from "@compose/token/ERC1155/Data/ERC1155DataFacet";
+import {IDiamond} from "@compose/diamond/IDiamond";
+import {ERC1155DataFacet} from "@compose/token/ERC1155/Data/ERC1155DataFacet";
 
-contract MyDiamondConsumer {
-    address immutable diamondAddress;
+contract DiamondUser {
+    address public diamondAddress;
 
     constructor(address _diamondAddress) {
         diamondAddress = _diamondAddress;
     }
 
     /**
-     * @notice Get balance of a specific token for an account.
+     * @notice Get the balance of a specific ERC-1155 token for an account.
+     * @param _account The address of the account.
+     * @param _id The ID of the token.
+     * @return The balance of the token.
      */
-    function getERC1155Balance(address _account, uint256 _id) external view returns (uint256) {
-        // Call the facet function through the diamond proxy
+    function getUserTokenBalance(address _account, uint256 _id) external view returns (uint256) {
+        // Call through the diamond proxy to the ERC1155DataFacet
         return IDiamond(diamondAddress).balanceOf(_account, _id);
     }
 
     /**
-     * @notice Check if an operator is approved to manage an account's tokens.
+     * @notice Check if an operator is approved to manage an account's ERC-1155 tokens.
+     * @param _account The address of the account.
+     * @param _operator The address of the operator.
+     * @return True if approved, false otherwise.
      */
     function isOperatorApproved(address _account, address _operator) external view returns (bool) {
-        // Call the facet function through the diamond proxy
+        // Call through the diamond proxy to the ERC1155DataFacet
         return IDiamond(diamondAddress).isApprovedForAll(_account, _operator);
     }
 
     /**
-     * @notice Get batch balances for multiple accounts and token IDs.
+     * @notice Get the selectors exported by this facet.
+     * @return A bytes array of function selectors.
      */
-    function getERC1155BatchBalance(address[] memory _accounts, uint256[] memory _ids) external view returns (uint256[]) {
-        // Call the facet function through the diamond proxy
-        return IDiamond(diamondAddress).balanceOfBatch(_accounts, _ids);
+    function getFacetSelectors() external pure returns (bytes) {
+        return ERC1155DataFacet.exportSelectors();
     }
 }`}
 </ExpandableCode>
@@ -271,15 +278,15 @@ contract MyDiamondConsumer {
 ## Best Practices
 
 <Callout type="tip" title="Best Practice">
-- Ensure the `ERC1155DataFacet` selectors are correctly registered within the diamond's facet registry.
-- Call facet functions through the diamond proxy address to ensure proper routing and access control.
-- Verify that other facets do not interfere with the storage layout used by `ERC1155Storage`.
+- Ensure the `ERC1155DataFacet` is properly registered with the diamond proxy.
+- Access token balances and approval status by calling functions through the diamond address.
+- Do not directly call `getStorage` as it is an internal function intended for facet use within the diamond.
 </Callout>
 
 ## Security Considerations
 
 <Callout type="warning" title="Security">
-This facet contains only view and pure functions, posing no direct reentrancy risk. Input validation for array lengths in `balanceOfBatch` is handled by the `ERC1155InvalidArrayLength` error. Ensure proper access control is enforced by the diamond proxy for any functions that might interact with or depend on the data provided by this facet.
+The `balanceOf` and `balanceOfBatch` functions are view functions and do not modify state. The `isApprovedForAll` function is also a view function. The `balanceOfBatch` function reverts with `ERC1155InvalidArrayLength` if the input arrays `_accounts` and `_ids` have different lengths. All functions are exposed through the diamond proxy, inheriting its access control and security context. Follow standard Solidity security practices for any external interactions.
 </Callout>
 
 <div style={{marginTop: "3rem", paddingTop: "2rem", borderTop: "1px solid var(--ifm-color-emphasis-200)"}}>
@@ -305,4 +312,4 @@ This facet contains only view and pure functions, posing no direct reentrancy ri
   <WasThisHelpful pageId="ERC1155DataFacet" />
 </div>
 
-<LastUpdated date="2026-03-12T21:03:33.033Z" />
+<LastUpdated date="2026-03-13T00:35:27.617Z" />

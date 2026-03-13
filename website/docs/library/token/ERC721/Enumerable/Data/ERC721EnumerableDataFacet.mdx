@@ -1,7 +1,8 @@
 ---
 sidebar_position: 210
 title: "ERC721EnumerableDataFacet"
-description: "Enumerate ERC-721 tokens by owner and globally"
+description: "Enumerate ERC-721 tokens by owner and index"
+sidebar_label: "Facet"
 gitSource: "https://github.com/Perfect-Abstractions/Compose/tree/main/src/token/ERC721/Enumerable/Data/ERC721EnumerableDataFacet.sol"
 ---
 
@@ -21,19 +22,19 @@ import GradientText from '@site/src/components/ui/GradientText';
 import GradientButton from '@site/src/components/ui/GradientButton';
 
 <DocSubtitle>
-Enumerate ERC-721 tokens by owner and globally
+Enumerate ERC-721 tokens by owner and index
 </DocSubtitle>
 
 <Callout type="info" title="Key Features">
 - Exposes external view functions for token enumeration.
-- Leverages diamond storage pattern for shared state access.
-- Provides functions to query total supply, tokens by owner index, and global token index.
-- Includes `exportSelectors` for diamond registry discovery.
+- Accesses shared diamond storage for token data.
+- Provides functions to query total supply and tokens by index.
+- Compliant with ERC-2535 diamond standard for facet discovery.
 </Callout>
 
 ## Overview
 
-This facet provides external functions for enumerating ERC-721 tokens within a diamond. It accesses shared diamond storage to retrieve token ownership and global token indexes. Developers integrate this facet to enable querying token collections without direct storage access.
+This facet provides external functions to query ERC-721 token ownership and enumeration details within a diamond. It routes calls through the diamond proxy and accesses shared storage. Developers add this facet to enable on-chain inspection of token ownership and total supply.
 
 ---
 
@@ -222,32 +223,23 @@ import {IDiamond} from "@compose/diamond/IDiamond";
 import {ERC721EnumerableDataFacet} from "@compose/token/ERC721/Enumerable/Data/ERC721EnumerableDataFacet";
 
 contract Deployer {
-    address immutable diamondAddress;
+    address constant DIAMOND_ADDRESS = address(0x123);
 
-    constructor(address _diamondAddress) {
-        diamondAddress = _diamondAddress;
-    }
+    function exampleUsage() public view {
+        IDiamond diamond = IDiamond(DIAMOND_ADDRESS);
 
-    function getTokenCount() external view returns (uint256) {
-        // Call through the diamond proxy
-        return IDiamond(diamondAddress).totalSupply();
-    }
+        // Get total supply
+        uint256 supply = diamond.totalSupply();
 
-    function getTokenByIndex(uint256 _index) external view returns (uint256) {
-        // Call through the diamond proxy
-        // Reverts with ERC721OutOfBoundsIndex if _index >= totalSupply()
-        return IDiamond(diamondAddress).tokenByIndex(_index);
-    }
+        // Get a specific token by index
+        uint256 tokenIdByIndex = diamond.tokenByIndex(0);
 
-    function getTokenOfOwnerByIndex(address _owner, uint256 _index) external view returns (uint256) {
-        // Call through the diamond proxy
-        // Reverts with ERC721OutOfBoundsIndex if _index is out of bounds for the owner's tokens
-        return IDiamond(diamondAddress).tokenOfOwnerByIndex(_owner, _index);
-    }
+        // Get a token owned by an address at a specific index
+        address owner = address(0xabc);
+        uint256 tokenIdOfOwner = diamond.tokenOfOwnerByIndex(owner, 0);
 
-    function getSelectors() external pure returns (bytes) {
-        // Call the facet's own exportSelectors function
-        return ERC721EnumerableDataFacet.exportSelectors();
+        // Export selectors for diamond registration
+        bytes selectors = diamond.exportSelectors();
     }
 }`}
 </ExpandableCode>
@@ -256,15 +248,15 @@ contract Deployer {
 ## Best Practices
 
 <Callout type="tip" title="Best Practice">
-- Ensure this facet is added to the diamond with its correct selectors.
-- Verify that the `totalSupply`, `tokenOfOwnerByIndex`, and `tokenByIndex` functions are called through the diamond proxy interface.
-- Handle the `ERC721OutOfBoundsIndex` error when querying token indexes.
+- Ensure the `ERC721EnumerableDataFacet` is registered with the diamond's `DiamondCutFacet`.
+- Call `tokenByIndex` and `tokenOfOwnerByIndex` functions only after verifying `totalSupply` to prevent `ERC721OutOfBoundsIndex` errors.
+- Use `exportSelectors` during diamond deployment or upgrades to register the facet's functions.
 </Callout>
 
 ## Security Considerations
 
 <Callout type="warning" title="Security">
-The `tokenByIndex` and `tokenOfOwnerByIndex` functions revert with `ERC721OutOfBoundsIndex` if the provided index is out of bounds relative to the total supply or the owner's token count, respectively. Ensure input validation for `_index` parameters when integrating off-chain.
+The `tokenByIndex` function reverts with `ERC721OutOfBoundsIndex` if the provided index is out of bounds relative to the total supply. All functions are `view` and do not modify state, thus posing no reentrancy risk. Input validation for indices is handled internally.
 </Callout>
 
 <div style={{marginTop: "3rem", paddingTop: "2rem", borderTop: "1px solid var(--ifm-color-emphasis-200)"}}>
@@ -302,4 +294,4 @@ The `tokenByIndex` and `tokenOfOwnerByIndex` functions revert with `ERC721OutOfB
   <WasThisHelpful pageId="ERC721EnumerableDataFacet" />
 </div>
 
-<LastUpdated date="2026-03-12T21:04:20.799Z" />
+<LastUpdated date="2026-03-13T00:36:14.883Z" />

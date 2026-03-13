@@ -1,7 +1,8 @@
 ---
 sidebar_position: 200
 title: "ERC721MintMod"
-description: "Mint ERC-721 tokens within a diamond"
+description: "Mints ERC-721 tokens using diamond storage"
+sidebar_label: "Module"
 gitSource: "https://github.com/Perfect-Abstractions/Compose/tree/main/src/token/ERC721/Mint/ERC721MintMod.sol"
 ---
 
@@ -21,14 +22,14 @@ import GradientText from '@site/src/components/ui/GradientText';
 import GradientButton from '@site/src/components/ui/GradientButton';
 
 <DocSubtitle>
-Mint ERC-721 tokens within a diamond
+Mints ERC-721 tokens using diamond storage
 </DocSubtitle>
 
 <Callout type="info" title="Key Features">
-- Exposes `internal` functions for minting ERC-721 tokens, suitable for integration within custom facets.
+- Provides an `internal` function for minting ERC-721 tokens.
 - Utilizes the diamond storage pattern (EIP-8042) for state management.
-- Emits `Transfer` events upon successful minting, adhering to ERC-721 conventions.
-- Includes specific error handling for invalid receivers and senders via custom errors.
+- Emits a `Transfer` event upon successful token minting.
+- Reverts with `ERC721InvalidReceiver` or if the token already exists.
 </Callout>
 
 <Callout type="info" title="Module Usage">
@@ -37,7 +38,7 @@ This module provides internal functions for use in your custom facets. Import it
 
 ## Overview
 
-This module provides internal functions for minting ERC-721 tokens. Facets import this module to manage token creation using shared diamond storage. Changes made through this module, such as token transfers, are immediately visible to all facets accessing the same storage.
+This module provides functions to mint ERC-721 tokens within a diamond. Facets import this module to create new tokens, leveraging shared diamond storage. Minting operations are atomic and immediately visible to all facets accessing the same storage.
 
 ---
 
@@ -196,11 +197,14 @@ error ERC721InvalidSender(address _sender);
 
 import @compose/token/ERC721/Mint/ERC721MintMod;
 
-contract ERC721MintFacet {
+contract MyERC721Facet {
     ERC721MintMod internal mintModule;
 
-    constructor(address diamondStorageAddress) {
-        mintModule = ERC721MintMod(diamondStorageAddress);
+    function initialize(address _diamondStorageAddress) external {
+        // Assuming ERC721MintMod is deployed and its address is known.
+        // In a real scenario, this would likely be set via a diamond upgrade.
+        // For this example, we'll assume its address is passed in.
+        // The actual storage is managed by the diamond, not this facet directly.
     }
 
     /**
@@ -209,15 +213,14 @@ contract ERC721MintFacet {
      * @param _tokenId The ID of the token to mint.
      */
     function mintToken(address _to, uint256 _tokenId) external {
-        // Call the internal mint function from the module
+        // Accessing shared storage via the module's internal functions.
+        // The diamond itself manages the storage slot.
         mintModule.mint(_to, _tokenId);
     }
 
-    /**
-     * @notice Retrieves the current ERC721Storage struct.
-     * @return The ERC721Storage struct.
-     */
-    function getERC721Storage() external pure returns (ERC721Storage) {
+    // Example of how to get the storage struct (for inspection, not direct modification by facets)
+    function getERC721Storage() external pure returns (ERC721Storage memory) {
+        // This calls the internal getStorage function which uses assembly to access diamond storage.
         return ERC721MintMod.getStorage();
     }
 }`}
@@ -227,15 +230,15 @@ contract ERC721MintFacet {
 ## Best Practices
 
 <Callout type="tip" title="Best Practice">
-- Ensure the caller has the necessary permissions to mint tokens before calling `mintToken`.
-- Verify that the `_to` address is not the zero address and that `_tokenId` does not already exist to prevent unexpected behavior.
-- Use `getERC721Storage()` to inspect the state of ERC-721 tokens, ensuring consistency across facets.
+- Ensure the receiver address is not the zero address before calling `mint`.
+- Verify that the `_tokenId` does not already exist to prevent re-minting.
+- Call `mint` only within facets that have the necessary permissions.
 </Callout>
 
 ## Integration Notes
 
 <Callout type="success" title="Shared Storage">
-This module interacts with diamond storage at the slot identified by `keccak2535(\"erc721\")` (or `STORAGE_POSITION`). The `ERC721Storage` struct is accessed and modified directly within this slot. All functions, including `mint`, operate on this shared storage. Changes to token ownership and existence are therefore immediately reflected for any facet reading from this storage position.
+This module interacts with diamond storage at `STORAGE_POSITION`, identified by `keccak256("erc721")`. The `mint` function directly modifies the ERC721 storage struct within the diamond. Changes to token ownership and existence are immediately reflected for all other facets sharing this storage. The `getStorage` function uses inline assembly to access this predefined storage slot.
 </Callout>
 
 <div style={{marginTop: "3rem", paddingTop: "2rem", borderTop: "1px solid var(--ifm-color-emphasis-200)"}}>
@@ -273,4 +276,4 @@ This module interacts with diamond storage at the slot identified by `keccak2535
   <WasThisHelpful pageId="ERC721MintMod" />
 </div>
 
-<LastUpdated date="2026-03-12T21:04:16.810Z" />
+<LastUpdated date="2026-03-13T00:36:11.454Z" />
