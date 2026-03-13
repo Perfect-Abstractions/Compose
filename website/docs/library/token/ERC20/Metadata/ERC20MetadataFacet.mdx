@@ -1,6 +1,6 @@
 ---
 sidebar_position: 200
-title: "ERC20MetadataFacet"
+title: "ERC-20 Metadata Facet"
 description: "ERC-20 token name, symbol, and decimals"
 sidebar_label: "Facet"
 gitSource: "https://github.com/Perfect-Abstractions/Compose/tree/main/src/token/ERC20/Metadata/ERC20MetadataFacet.sol"
@@ -26,17 +26,15 @@ ERC-20 token name, symbol, and decimals
 </DocSubtitle>
 
 <Callout type="info" title="Key Features">
-- Exposes ERC-20 standard metadata functions (`name`, `symbol`, `decimals`).
-- Reads metadata directly from shared diamond storage via internal assembly.
-- Facilitates selector discovery with `exportSelectors()`.
-- Operates as a self-contained facet within the ERC-2535 diamond standard.
+- Exposes `name()`, `symbol()`, and `decimals()` functions conforming to ERC-20 metadata standards.
+- Reads token metadata directly from shared diamond storage.
+- Provides a `exportSelectors()` function for easy integration into diamond cut operations.
+- Self-contained, requiring no external dependencies beyond diamond storage access.
 </Callout>
 
 ## Overview
 
-This facet provides essential ERC-20 metadata for tokens within a Compose diamond. It exposes `name`, `symbol`, and `decimals` functions, accessing this information from the diamond's shared storage. Developers integrate this facet to make token metadata readily available via the diamond proxy.
-
----
+This facet exposes the name, symbol, and decimal precision for an ERC-20 token managed within a diamond. It accesses this metadata from shared diamond storage. Developers integrate this facet to provide standard ERC-20 metadata query capabilities through the diamond proxy, ensuring consistency and upgradeability.
 
 ## Storage
 
@@ -159,27 +157,41 @@ Exports the function selectors of the ERC20Metadata facet This function is use a
 <ExpandableCode language="solidity" maxLines={20} title="Example Implementation">
 {`pragma solidity >=0.8.30;
 
-import {IDiamond} from "@compose/diamond/IDiamond.sol";
-import {ERC20MetadataFacet} from "@compose/token/ERC20/Metadata/ERC20MetadataFacet.sol";
+import { IDiamond } from "@compose/diamond/IDiamond";
+import { ERC20MetadataFacet } from "@compose/token/ERC20/Metadata/ERC20MetadataFacet";
 
-contract Deployer {
-    address constant DIAMOND_ADDRESS = address(0x123);
+contract DiamondUser {
+    address immutable diamondAddress;
 
-    function getTokenMetadata() external view {
-        IDiamond diamond = IDiamond(DIAMOND_ADDRESS);
-
-        // Call metadata functions through the diamond proxy
-        string memory tokenName = diamond.name();
-        string memory tokenSymbol = diamond.symbol();
-        uint8 tokenDecimals = diamond.decimals();
-
-        // Use tokenName, tokenSymbol, tokenDecimals
+    constructor(address _diamondAddress) {
+        diamondAddress = _diamondAddress;
     }
 
-    function getFacetSelectors() external pure returns (bytes[] memory) {
-        // This function is part of the ERC20MetadataFacet, but called externally
-        // to discover its selectors. The diamond itself would typically manage this.
-        return ERC20MetadataFacet.exportSelectors();
+    function getTokenName() external view returns (string memory) {
+        // Call through the diamond proxy to the ERC20MetadataFacet
+        return IDiamond(diamondAddress).name();
+    }
+
+    function getTokenSymbol() external view returns (string memory) {
+        // Call through the diamond proxy to the ERC20MetadataFacet
+        return IDiamond(diamondAddress).symbol();
+    }
+
+    function getTokenDecimals() external view returns (uint8) {
+        // Call through the diamond proxy to the ERC20MetadataFacet
+        return IDiamond(diamondAddress).decimals();
+    }
+
+    /**
+     * @dev Example of how to deploy and add the facet to a diamond.
+     * This is typically done during diamond initialization.
+     */
+    function addMetadataFacet(address _diamondProxy, address _facetAddress) external {
+        // Assume _diamondProxy is the diamond contract address
+        // Assume _facetAddress is the deployed ERC20MetadataFacet contract address
+        bytes memory selectors = ERC20MetadataFacet.exportSelectors();
+        // Call the diamondLoupeFacet or a similar facet to add the facet and its selectors
+        // IDiamondCut(diamondProxy).diamondCut(... selectors ..., _facetAddress, ...);
     }
 }`}
 </ExpandableCode>
@@ -188,50 +200,19 @@ contract Deployer {
 ## Best Practices
 
 <Callout type="tip" title="Best Practice">
-- Ensure the `ERC20MetadataStorage` struct is correctly initialized in diamond storage before deploying this facet.
-- Access token metadata by calling `name()`, `symbol()`, and `decimals()` through the diamond proxy address.
-- Use `exportSelectors()` for dynamic discovery of the facet's function signatures within the diamond.
+- Ensure the `ERC20MetadataStorage` struct is correctly initialized with token name, symbol, and decimals during diamond setup.
+- Call `name()`, `symbol()`, and `decimals()` functions through the diamond proxy address.
+- Do not add or remove this facet after initialization if the token metadata is expected to remain constant.
 </Callout>
 
 ## Security Considerations
 
 <Callout type="warning" title="Security">
-This facet contains only view functions and does not perform external calls or state modifications, thus posing no reentrancy risk. Input validation is not applicable as functions are read-only. Follow standard Solidity security practices for diamond deployment and facet integration.
+All functions in this facet are view functions and do not modify state. Access control is managed by the diamond proxy. Input validation is not applicable as functions do not accept parameters. Ensure correct initialization of token metadata in storage to prevent misleading information.
 </Callout>
 
 <div style={{marginTop: "3rem", paddingTop: "2rem", borderTop: "1px solid var(--ifm-color-emphasis-200)"}}>
-  <RelatedDocs
-    items={[
-      {
-        title: "ERC1155ApproveFacet",
-        href: "/docs/library/token/ERC1155/Approve/ERC1155ApproveFacet",
-        description: "Related facet in token",
-        icon: "💎"
-      },
-      {
-        title: "ERC1155MetadataFacet",
-        href: "/docs/library/token/ERC1155/Metadata/ERC1155MetadataFacet",
-        description: "Related facet in token",
-        icon: "💎"
-      },
-      {
-        title: "ERC1155DataFacet",
-        href: "/docs/library/token/ERC1155/Data/ERC1155DataFacet",
-        description: "Related facet in token",
-        icon: "💎"
-      },
-      {
-        title: "ERC1155BurnFacet",
-        href: "/docs/library/token/ERC1155/Burn/ERC1155BurnFacet",
-        description: "Related facet in token",
-        icon: "💎"
-      }
-    ]}
-  />
+  <WasThisHelpful pageId="ERC-20 Metadata Facet" />
 </div>
 
-<div style={{marginTop: "3rem", paddingTop: "2rem", borderTop: "1px solid var(--ifm-color-emphasis-200)"}}>
-  <WasThisHelpful pageId="ERC20MetadataFacet" />
-</div>
-
-<LastUpdated date="2026-03-13T00:37:03.418Z" />
+<LastUpdated date="2026-03-13T01:18:58.772Z" />

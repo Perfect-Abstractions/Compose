@@ -1,7 +1,7 @@
 ---
 sidebar_position: 200
-title: "ERC721DataFacet"
-description: "ERC-721 token data retrieval functions"
+title: "ERC-721 Data Facet"
+description: "ERC-721 token ownership and approval data"
 sidebar_label: "Facet"
 gitSource: "https://github.com/Perfect-Abstractions/Compose/tree/main/src/token/ERC721/Data/ERC721DataFacet.sol"
 ---
@@ -22,21 +22,19 @@ import GradientText from '@site/src/components/ui/GradientText';
 import GradientButton from '@site/src/components/ui/GradientButton';
 
 <DocSubtitle>
-ERC-721 token data retrieval functions
+ERC-721 token ownership and approval data
 </DocSubtitle>
 
 <Callout type="info" title="Key Features">
-- Exposes external view functions for querying ERC-721 state.
-- Accesses shared diamond storage for token data.
-- No external dependencies beyond diamond patterns.
-- Provides selector discovery via `exportSelectors`.
+- Exposes external view functions for ERC-721 data retrieval.
+- Utilizes diamond storage pattern for shared state access.
+- Exports its own selectors for easy discovery by the diamond.
+- Operates without external dependencies, promoting composability.
 </Callout>
 
 ## Overview
 
-This facet provides external access to ERC-721 token data within a diamond. It routes calls to internal storage and exposes functions for querying token ownership and approvals. Developers add this facet to a diamond to enable ERC-721 functionality while retaining upgradeability.
-
----
+This facet provides external access to ERC-721 token ownership and approval data stored within the diamond. It routes calls through the diamond proxy, enabling other facets or external users to query token states without direct storage access. This facet is essential for any diamond implementing ERC-721 functionality.
 
 ## Storage
 
@@ -262,35 +260,29 @@ error ERC721NonexistentToken(uint256 _tokenId);
 <ExpandableCode language="solidity" maxLines={20} title="Example Implementation">
 {`pragma solidity >=0.8.30;
 
+import {ERC721DataFacet} from "@compose/token/ERC721/Data/ERC721DataFacet";
 import {IDiamond} from "@compose/diamond/IDiamond";
-import {IERC721DataFacet} from "@compose/token/ERC721/Data/IERC721DataFacet";
 
-contract ExampleConsumer {
+contract ERC721Consumer {
     address immutable diamondAddress;
 
     constructor(address _diamondAddress) {
         diamondAddress = _diamondAddress;
     }
 
-    function getTokenOwner(uint256 tokenId) public view returns (address) {
-        // Calls are routed through the diamond to the ERC721DataFacet
-        IERC721DataFacet facet = IERC721DataFacet(diamondAddress);
-        return facet.ownerOf(tokenId);
+    function getTokenOwner(uint256 tokenId) external view returns (address) {
+        // Call through the diamond proxy to the ERC721DataFacet
+        return IDiamond(diamondAddress).ownerOf(tokenId);
     }
 
-    function getTokensOwnedBy(address owner) public view returns (uint256) {
-        IERC721DataFacet facet = IERC721DataFacet(diamondAddress);
-        return facet.balanceOf(owner);
+    function getTokenApproval(uint256 tokenId) external view returns (address) {
+        // Call through the diamond proxy to the ERC721DataFacet
+        return IDiamond(diamondAddress).getApproved(tokenId);
     }
 
-    function isOperatorApproved(address owner, address operator) public view returns (bool) {
-        IERC721DataFacet facet = IERC721DataFacet(diamondAddress);
-        return facet.isApprovedForAll(owner, operator);
-    }
-
-    function getApprovalForToken(uint256 tokenId) public view returns (address) {
-        IERC721DataFacet facet = IERC721DataFacet(diamondAddress);
-        return facet.getApproved(tokenId);
+    function getBalance(address owner) external view returns (uint256) {
+        // Call through the diamond proxy to the ERC721DataFacet
+        return IDiamond(diamondAddress).balanceOf(owner);
     }
 }
 `}
@@ -300,50 +292,19 @@ contract ExampleConsumer {
 ## Best Practices
 
 <Callout type="tip" title="Best Practice">
-- Call `ownerOf`, `balanceOf`, `getApproved`, and `isApprovedForAll` through the diamond proxy address.
-- Ensure the diamond has the correct selectors for these functions.
-- Verify that the `ERC721Storage` struct is correctly initialized in diamond storage.
+- Ensure the `ERC721DataFacet` is correctly registered with the diamond proxy.
+- Access token data by calling functions through the diamond address.
+- Verify that the `STORAGE_POSITION` for ERC721 storage is unique and not colliding with other facets.
 </Callout>
 
 ## Security Considerations
 
 <Callout type="warning" title="Security">
-This facet only reads from storage and does not perform external calls or state-changing operations, thus mitigating reentrancy risks. Input validation for `_tokenId` is handled by underlying storage access, which reverts with `ERC721NonexistentToken` if the token ID is invalid. Ownership checks are implicitly handled by the storage logic for `ownerOf` and related functions.
+This facet primarily exposes view functions and does not perform state-changing operations. The main security consideration is ensuring the integrity of the underlying diamond storage. Input validation for `_tokenId` and `_owner` is handled by the facet, reverting with `ERC721NonexistentToken` or `ERC721InvalidOwner` respectively. Follow standard Solidity security practices for all interactions.
 </Callout>
 
 <div style={{marginTop: "3rem", paddingTop: "2rem", borderTop: "1px solid var(--ifm-color-emphasis-200)"}}>
-  <RelatedDocs
-    items={[
-      {
-        title: "ERC1155ApproveFacet",
-        href: "/docs/library/token/ERC1155/Approve/ERC1155ApproveFacet",
-        description: "Related facet in token",
-        icon: "💎"
-      },
-      {
-        title: "ERC1155MetadataFacet",
-        href: "/docs/library/token/ERC1155/Metadata/ERC1155MetadataFacet",
-        description: "Related facet in token",
-        icon: "💎"
-      },
-      {
-        title: "ERC1155DataFacet",
-        href: "/docs/library/token/ERC1155/Data/ERC1155DataFacet",
-        description: "Related facet in token",
-        icon: "💎"
-      },
-      {
-        title: "ERC1155BurnFacet",
-        href: "/docs/library/token/ERC1155/Burn/ERC1155BurnFacet",
-        description: "Related facet in token",
-        icon: "💎"
-      }
-    ]}
-  />
+  <WasThisHelpful pageId="ERC-721 Data Facet" />
 </div>
 
-<div style={{marginTop: "3rem", paddingTop: "2rem", borderTop: "1px solid var(--ifm-color-emphasis-200)"}}>
-  <WasThisHelpful pageId="ERC721DataFacet" />
-</div>
-
-<LastUpdated date="2026-03-13T00:36:07.441Z" />
+<LastUpdated date="2026-03-13T01:18:01.378Z" />

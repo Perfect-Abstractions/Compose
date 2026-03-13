@@ -1,6 +1,6 @@
 ---
 sidebar_position: 110
-title: "AccessControlRevokeBatchMod"
+title: "Access Control Revoke Batch Module"
 description: "Revoke roles from multiple accounts efficiently"
 sidebar_label: "Module"
 gitSource: "https://github.com/Perfect-Abstractions/Compose/tree/main/src/access/AccessControl/Batch/Revoke/AccessControlRevokeBatchMod.sol"
@@ -26,10 +26,10 @@ Revoke roles from multiple accounts efficiently
 </DocSubtitle>
 
 <Callout type="info" title="Key Features">
-- Internal function `revokeRoleBatch` for batch role revocation.
-- Emits `RoleRevoked` event for each revoked role.
-- Reverts with `AccessControlUnauthorizedAccount` for unauthorized callers.
-- Operates on shared diamond storage without external dependencies.
+- Provides an `internal` function `revokeRoleBatch` for batch role revocation.
+- Emits `RoleRevoked` events for each account that has its role revoked.
+- Utilizes diamond storage for persistent role management.
+- No external dependencies, designed for composability within a diamond.
 </Callout>
 
 <Callout type="info" title="Module Usage">
@@ -38,9 +38,7 @@ This module provides internal functions for use in your custom facets. Import it
 
 ## Overview
 
-This module provides an internal function to revoke a specified role from multiple accounts in a single transaction. It leverages shared diamond storage for role management, ensuring consistency across facets. Changes made via this module are immediately reflected for all other facets accessing the same storage.
-
----
+This module provides an internal function to revoke a role from multiple accounts in a single transaction, reducing gas costs and improving efficiency. Facets can import this module to manage role revocations using shared diamond storage, ensuring consistency across the diamond.
 
 ## Storage
 
@@ -185,77 +183,47 @@ error AccessControlUnauthorizedAccount(address _account, bytes32 _role);
 
 import {AccessControlRevokeBatchMod} from "@compose/access/AccessControl/Batch/Revoke/AccessControlRevokeBatchMod";
 
-contract MyAccessFacet {
+contract AccessControlFacet {
     AccessControlRevokeBatchMod internal accessControlRevokeBatchMod;
 
-    constructor(AccessControlStorage storage _) {
-        // In a real deployment, this would likely be set via an initializer
-        // or passed in a way that correctly references the diamond storage slot.
-        // For example purposes, we simulate direct access to the module.
+    constructor(address _diamondAddress) {
+        // Assuming AccessControlRevokeBatchMod is initialized elsewhere and accessible
+        // This is a placeholder for how a facet might reference the module
+        // In a real scenario, the diamond initializer would set this up.
     }
 
-    function grantAndRevokeRoles(bytes32 _role, address[] memory _accountsToRevoke) external {
-        // Assume roles are granted elsewhere and this facet is authorized to revoke.
-        // For example purposes, we assume the caller has the necessary permissions.
-
-        accessControlRevokeBatchMod.revokeRoleBatch(_role, _accountsToRevoke);
+    /**
+     * @notice Revokes a role from a list of accounts.
+     * @dev This function assumes access control checks are performed by the caller facet.
+     * @param _role The role to revoke.
+     * @param _accounts The list of accounts to revoke the role from.
+     */
+    function revokeMultipleAccountsRole(bytes32 _role, address[] memory _accounts) external {
+        // Assuming accessControlRevokeBatchMod has been properly initialized
+        // and the caller has the necessary permissions to call this function.
+        accessControlRevokeBatchMod.revokeRoleBatch(_role, _accounts);
     }
-
-    // Example of how to access the storage struct if needed:
-    function getAccessControlStorage() external pure returns (AccessControlStorage memory) {
-        return AccessControlRevokeBatchMod.getStorage();
-    }
-}`}
+}
+`}
 </ExpandableCode>
 -->
 
 ## Best Practices
 
 <Callout type="tip" title="Best Practice">
-- Ensure the caller possesses the necessary administrative role before invoking `revokeRoleBatch`.
-- Verify that the `AccessControlStorage` struct layout remains compatible across diamond upgrades.
-- Handle the `AccessControlUnauthorizedAccount` error when the caller lacks permission to revoke the specified role.
+- Ensure the caller facet enforces appropriate access control before invoking `revokeRoleBatch`.
+- Handle the `AccessControlUnauthorizedAccount` error if the caller is not the designated administrator for the role.
+- Batch revocations to minimize gas costs for revoking roles from multiple accounts.
 </Callout>
 
 ## Integration Notes
 
 <Callout type="success" title="Shared Storage">
-This module interacts with diamond storage at the `STORAGE_POSITION` defined by `keccak256(\"compose.accesscontrol\")`. It reads and modifies the `AccessControlStorage` struct. All functions are internal and operate directly on this shared storage, making any role revocations immediately visible to all facets that access the same storage.
+This module interacts with diamond storage at the `STORAGE_POSITION` defined by `keccak25356("compose.accesscontrol")`. The `revokeRoleBatch` function reads and modifies the role assignments within the shared `AccessControlStorage` struct. Changes made by this module are immediately visible to all other facets and modules accessing the same storage slot.
 </Callout>
 
 <div style={{marginTop: "3rem", paddingTop: "2rem", borderTop: "1px solid var(--ifm-color-emphasis-200)"}}>
-  <RelatedDocs
-    items={[
-      {
-        title: "AccessControlRevokeBatchFacet",
-        href: "/docs/library/access/AccessControl/Batch/Revoke/AccessControlRevokeBatchFacet",
-        description: "Facet using AccessControlRevokeBatchMod",
-        icon: "💎"
-      },
-      {
-        title: "OwnerDataMod",
-        href: "/docs/library/access/Owner/Data/OwnerDataMod",
-        description: "Related module in access",
-        icon: "📦"
-      },
-      {
-        title: "OwnerRenounceMod",
-        href: "/docs/library/access/Owner/Renounce/OwnerRenounceMod",
-        description: "Related module in access",
-        icon: "📦"
-      },
-      {
-        title: "OwnerTransferMod",
-        href: "/docs/library/access/Owner/Transfer/OwnerTransferMod",
-        description: "Related module in access",
-        icon: "📦"
-      }
-    ]}
-  />
+  <WasThisHelpful pageId="Access Control Revoke Batch Module" />
 </div>
 
-<div style={{marginTop: "3rem", paddingTop: "2rem", borderTop: "1px solid var(--ifm-color-emphasis-200)"}}>
-  <WasThisHelpful pageId="AccessControlRevokeBatchMod" />
-</div>
-
-<LastUpdated date="2026-03-13T00:39:52.928Z" />
+<LastUpdated date="2026-03-13T01:21:48.564Z" />

@@ -1,6 +1,6 @@
 ---
 sidebar_position: 100
-title: "OwnerTwoStepTransferFacet"
+title: "Owner Two Step Transfer Facet"
 description: "Manages ownership transfer with a two-step process"
 sidebar_label: "Facet"
 gitSource: "https://github.com/Perfect-Abstractions/Compose/tree/main/src/access/Owner/TwoSteps/Transfer/OwnerTwoStepTransferFacet.sol"
@@ -26,17 +26,15 @@ Manages ownership transfer with a two-step process
 </DocSubtitle>
 
 <Callout type="info" title="Key Features">
-- Implements a two-step ownership transfer process.
-- Manages ownership state within diamond storage using dedicated storage slots.
-- Exposes external functions for ownership initiation and acceptance.
-- Includes `exportSelectors` for diamond integration.
+- Implements a secure two-step ownership transfer process.
+- Utilizes diamond storage for owner and pending owner states.
+- Exposes external functions for ownership management via the diamond proxy.
+- Provides `exportSelectors` for diamond upgrade compatibility.
 </Callout>
 
 ## Overview
 
-This facet implements a two-step ownership transfer mechanism for a diamond. It provides external functions to initiate and accept ownership changes, interacting with shared diamond storage. This pattern ensures that ownership changes are deliberate and auditable, fitting within the ERC-2535 diamond standard.
-
----
+This facet implements a two-step ownership transfer mechanism for a diamond. It allows the current owner to initiate a transfer and the new owner to accept it, enhancing security. Calls are routed through the diamond proxy, accessing shared storage for owner and pending owner states.
 
 ## Storage
 
@@ -174,74 +172,56 @@ error OwnerUnauthorizedAccount();
 {`pragma solidity >=0.8.30;
 
 import {OwnerTwoStepTransferFacet} from "@compose/access/Owner/TwoSteps/Transfer/OwnerTwoStepTransferFacet";
-import {IDiamond} from "@compose/core/interfaces/IDiamond";
 
 contract DiamondUser {
-    address immutable diamondAddress;
+    address public diamondAddress;
 
     constructor(address _diamondAddress) {
         diamondAddress = _diamondAddress;
     }
 
-    function initiateOwnershipTransfer(address _newOwner) external {
-        IDiamond(diamondAddress).transferOwnership(_newOwner);
+    /**
+     * @notice Initiates an ownership transfer.
+     * @param _newOwner The address of the new owner.
+     */
+    function initiateTransfer(address _newOwner) external {
+        IDiamond diamond = IDiamond(diamondAddress);
+        diamond.transferOwnership(_newOwner);
     }
 
+    /**
+     * @notice Accepts an ownership transfer.
+     */
     function acceptNewOwnership() external {
-        IDiamond(diamondAddress).acceptOwnership();
+        IDiamond diamond = IDiamond(diamondAddress);
+        diamond.acceptOwnership();
     }
-}
-`}
+
+    // Interface for calling facet functions through the diamond
+    interface IDiamond {
+        function transferOwnership(address _newOwner) external;
+        function acceptOwnership() external;
+    }
+}`}
 </ExpandableCode>
 -->
 
 ## Best Practices
 
 <Callout type="tip" title="Best Practice">
-- Initialize ownership transfer using `transferOwnership` before calling `acceptOwnership`.
-- Ensure the caller of `acceptOwnership` matches the pending owner address stored in diamond storage.
-- Use `exportSelectors` to dynamically discover the facet's selectors for diamond registration.
+- Call `transferOwnership` to initiate a transfer, then the new owner must call `acceptOwnership`.
+- Ensure the `OwnerDataFacet` or equivalent is integrated to manage the owner state correctly.
+- Export selectors using `exportSelectors` to facilitate diamond upgrade discovery.
 </Callout>
 
 ## Security Considerations
 
 <Callout type="warning" title="Security">
-The `transferOwnership` function is protected by access control, ensuring only the current owner can initiate a transfer. The `acceptOwnership` function does not have explicit access control, relying on the internal logic to only allow the pending owner to accept. Reentrancy is not a concern as state changes precede external interactions. Follow standard Solidity security practices for input validation and gas limits.
+The `transferOwnership` function is protected by access control, only callable by the current owner. The `OwnerUnauthorizedAccount` error is reverted if the caller is not the current owner. Standard Solidity security practices apply for input validation and state management.
 </Callout>
 
 <div style={{marginTop: "3rem", paddingTop: "2rem", borderTop: "1px solid var(--ifm-color-emphasis-200)"}}>
-  <RelatedDocs
-    items={[
-      {
-        title: "OwnerDataFacet",
-        href: "/docs/library/access/Owner/Data/OwnerDataFacet",
-        description: "Related facet in access",
-        icon: "💎"
-      },
-      {
-        title: "OwnerRenounceFacet",
-        href: "/docs/library/access/Owner/Renounce/OwnerRenounceFacet",
-        description: "Related facet in access",
-        icon: "💎"
-      },
-      {
-        title: "OwnerTransferFacet",
-        href: "/docs/library/access/Owner/Transfer/OwnerTransferFacet",
-        description: "Related facet in access",
-        icon: "💎"
-      },
-      {
-        title: "OwnerTwoStepDataFacet",
-        href: "/docs/library/access/Owner/TwoSteps/Data/OwnerTwoStepDataFacet",
-        description: "Related facet in access",
-        icon: "💎"
-      }
-    ]}
-  />
+  <WasThisHelpful pageId="Owner Two Step Transfer Facet" />
 </div>
 
-<div style={{marginTop: "3rem", paddingTop: "2rem", borderTop: "1px solid var(--ifm-color-emphasis-200)"}}>
-  <WasThisHelpful pageId="OwnerTwoStepTransferFacet" />
-</div>
-
-<LastUpdated date="2026-03-13T00:38:48.050Z" />
+<LastUpdated date="2026-03-13T01:20:42.938Z" />

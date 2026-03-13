@@ -1,7 +1,7 @@
 ---
 sidebar_position: 2
-title: "RoyaltyMod"
-description: "Manages ERC-2981 royalty information within a diamond"
+title: "Royalty Module"
+description: "Manage ERC-2981 royalties for tokens"
 sidebar_label: "Module"
 gitSource: "https://github.com/Perfect-Abstractions/Compose/tree/main/src/token/Royalty/RoyaltyMod.sol"
 ---
@@ -22,14 +22,14 @@ import GradientText from '@site/src/components/ui/GradientText';
 import GradientButton from '@site/src/components/ui/GradientButton';
 
 <DocSubtitle>
-Manages ERC-2981 royalty information within a diamond
+Manage ERC-2981 royalties for tokens
 </DocSubtitle>
 
 <Callout type="info" title="Key Features">
-- Implements ERC-2981 royalty logic internally.
-- Manages both default and token-specific royalty configurations.
-- Uses diamond storage at `keccak256("erc2981")` for shared state.
-- All functions are `internal` for composition within facets.
+- Internal functions for integration into custom facets.
+- Implements ERC-2981 royalty logic including fallback to default royalties.
+- Utilizes diamond storage at `keccak256("erc2981")` for shared state.
+- No external dependencies, promoting composability.
 </Callout>
 
 <Callout type="info" title="Module Usage">
@@ -38,9 +38,7 @@ This module provides internal functions for use in your custom facets. Import it
 
 ## Overview
 
-This module provides internal functions for managing ERC-2981 royalty details, including default and token-specific royalties. Facets can import this module to query royalty information or set/reset royalty configurations using shared diamond storage. Changes are immediately visible to all facets accessing the same storage slot.
-
----
+This module provides internal functions to manage ERC-2981 royalty information for tokens within a diamond. It allows setting default royalties, token-specific royalties, and querying royalty details, all utilizing shared diamond storage. Changes are immediately visible across facets that access the same storage slot.
 
 ## Storage
 
@@ -302,25 +300,21 @@ error ERC2981InvalidTokenRoyaltyReceiver(uint256 _tokenId, address _receiver);
 
 <ExpandableCode language="solidity" maxLines={20} title="Example Implementation">
 {`pragma solidity >=0.8.30;
-
-import { RoyaltyMod } from "@compose/token/Royalty/RoyaltyMod";
+import @compose/token/Royalty/RoyaltyMod;
 
 contract RoyaltyFacet {
     using RoyaltyMod for RoyaltyMod;
 
-    function exampleSetTokenRoyalty(uint256 tokenId, address receiver, uint96 feeNumerator) external {
-        // Ensure caller has permissions if needed, not enforced by module
-        RoyaltyMod.setTokenRoyalty(tokenId, receiver, feeNumerator);
+    function setMyTokenRoyalty(uint256 _tokenId, address _receiver, uint96 _feeNumerator) external {
+        RoyaltyMod.setTokenRoyalty(_tokenId, _receiver, _feeNumerator);
     }
 
-    function exampleRoyaltyInfo(uint256 tokenId, uint256 salePrice) external view returns (address, uint256) {
-        // Query royalty info, falls back to default if token-specific not found
-        return RoyaltyMod.royaltyInfo(tokenId, salePrice);
+    function getMyTokenRoyaltyInfo(uint256 _tokenId, uint256 _salePrice) external view returns (address, uint256) {
+        return RoyaltyMod.royaltyInfo(_tokenId, _salePrice);
     }
 
-    function exampleDeleteDefaultRoyalty() external {
-        // Remove default royalty settings
-        RoyaltyMod.deleteDefaultRoyalty();
+    function resetMyTokenRoyalty(uint256 _tokenId) external {
+        RoyaltyMod.resetTokenRoyalty(_tokenId);
     }
 }`}
 </ExpandableCode>
@@ -329,50 +323,19 @@ contract RoyaltyFacet {
 ## Best Practices
 
 <Callout type="tip" title="Best Practice">
-- Ensure access control is enforced by the calling facet before invoking state-changing functions like `setTokenRoyalty` or `setDefaultRoyalty`.
-- Handle custom errors such as `ERC2981InvalidDefaultRoyaltyReceiver` and `ERC2981InvalidTokenRoyaltyReceiver` to manage invalid royalty configurations.
-- Utilize `resetTokenRoyalty` to revert a token's royalty to the default setting, ensuring predictable behavior.
+- Ensure receiver addresses are valid and fee numerators are within acceptable ranges before calling `setDefaultRoyalty` or `setTokenRoyalty`.
+- Call `resetTokenRoyalty` to revert a token to default royalty settings, ensuring the default royalty is correctly configured.
+- Handle custom errors like `ERC2981InvalidDefaultRoyaltyReceiver` and `ERC2981InvalidTokenRoyaltyReceiver` to manage invalid inputs gracefully.
 </Callout>
 
 ## Integration Notes
 
 <Callout type="success" title="Shared Storage">
-This module utilizes the diamond storage pattern, accessing royalty information from a dedicated storage slot identified by `keccak256("erc2981")`. The `RoyaltyStorage` struct, containing `defaultRoyaltyInfo`, is read and written through this slot. Functions like `setDefaultRoyalty`, `setTokenRoyalty`, `resetTokenRoyalty`, and `deleteDefaultRoyalty` directly modify this shared storage. The `royaltyInfo` function queries this storage to provide the appropriate royalty details for a given token, falling back to the default if no token-specific entry exists. Any facet with access to the diamond's storage can read these values immediately after they are updated.
+This module reads and writes to diamond storage at the slot identified by `keccak256("erc2981")`. The `RoyaltyStorage` struct, containing `defaultRoyaltyInfo`, resides here. Functions like `setDefaultRoyalty` and `setTokenRoyalty` modify this shared storage. The `royaltyInfo` function queries this storage, first checking for token-specific overrides and then falling back to the default royalty information. Changes to this storage are immediately visible to any facet accessing the same slot.
 </Callout>
 
 <div style={{marginTop: "3rem", paddingTop: "2rem", borderTop: "1px solid var(--ifm-color-emphasis-200)"}}>
-  <RelatedDocs
-    items={[
-      {
-        title: "RoyaltyFacet",
-        href: "/docs/library/token/Royalty/RoyaltyFacet",
-        description: "Facet using RoyaltyMod",
-        icon: "💎"
-      },
-      {
-        title: "ERC1155ApproveMod",
-        href: "/docs/library/token/ERC1155/Approve/ERC1155ApproveMod",
-        description: "Related module in token",
-        icon: "📦"
-      },
-      {
-        title: "ERC1155MetadataMod",
-        href: "/docs/library/token/ERC1155/Metadata/ERC1155MetadataMod",
-        description: "Related module in token",
-        icon: "📦"
-      },
-      {
-        title: "ERC1155MintMod",
-        href: "/docs/library/token/ERC1155/Mint/ERC1155MintMod",
-        description: "Related module in token",
-        icon: "📦"
-      }
-    ]}
-  />
+  <WasThisHelpful pageId="Royalty Module" />
 </div>
 
-<div style={{marginTop: "3rem", paddingTop: "2rem", borderTop: "1px solid var(--ifm-color-emphasis-200)"}}>
-  <WasThisHelpful pageId="RoyaltyMod" />
-</div>
-
-<LastUpdated date="2026-03-13T00:37:54.960Z" />
+<LastUpdated date="2026-03-13T01:19:50.949Z" />

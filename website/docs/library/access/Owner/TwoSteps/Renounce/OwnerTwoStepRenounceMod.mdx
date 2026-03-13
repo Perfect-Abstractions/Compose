@@ -1,7 +1,7 @@
 ---
 sidebar_position: 110
-title: "OwnerTwoStepRenounceMod"
-description: "Two-step ownership renouncement logic"
+title: "Owner Two Step Renounce Module"
+description: "Two-step ownership renouncement for ERC-173"
 sidebar_label: "Module"
 gitSource: "https://github.com/Perfect-Abstractions/Compose/tree/main/src/access/Owner/TwoSteps/Renounce/OwnerTwoStepRenounceMod.sol"
 ---
@@ -22,13 +22,13 @@ import GradientText from '@site/src/components/ui/GradientText';
 import GradientButton from '@site/src/components/ui/GradientButton';
 
 <DocSubtitle>
-Two-step ownership renouncement logic
+Two-step ownership renouncement for ERC-173
 </DocSubtitle>
 
 <Callout type="info" title="Key Features">
-- Implements a two-step ownership renouncement pattern for enhanced security.
-- Provides internal functions for accessing and modifying owner and pending owner storage.
-- Uses explicit inline assembly to access diamond storage slots, adhering to EIP-8042.
+- Implements a two-step ownership renouncement pattern.
+- Uses internal functions, suitable for inclusion in custom facets.
+- Directly interacts with diamond storage for ownership state.
 - Emits `OwnershipTransferred` event upon successful renouncement.
 </Callout>
 
@@ -38,9 +38,7 @@ This module provides internal functions for use in your custom facets. Import it
 
 ## Overview
 
-This module provides the core logic for a two-step ownership renouncement process. It exposes internal functions to manage the owner and pending owner storage, enabling a secure transition where ownership is first transferred to a pending state before being fully renounced to address(0). This pattern safeguards against accidental ownership loss by introducing a delay.
-
----
+This module implements a two-step ownership renouncement process, aligning with ERC-173 standards. It provides internal functions to manage ownership and pending ownership states within the diamond's shared storage. By requiring a two-step process, it mitigates accidental ownership loss and ensures a controlled transition.
 
 ## Storage
 
@@ -176,45 +174,50 @@ error OwnerUnauthorizedAccount();
 <ExpandableCode language="solidity" maxLines={20} title="Example Implementation">
 {`pragma solidity >=0.8.30;
 
-import @compose/access/Owner/TwoSteps/Renounce/OwnerTwoStepRenounceMod;
+import {OwnerTwoStepRenounceMod} from "@compose/access/Owner/TwoSteps/Renounce/OwnerTwoStepRenounceMod";
+import {OwnerUnauthorizedAccount} from "@compose/access/Owner/TwoSteps/Renounce/OwnerTwoStepRenounceMod";
 
-contract MyOwnerFacet {
-    OwnerTwoStepRenounceMod internal ownerTwoStepRenounceMod;
+contract ExampleFacet {
+    OwnerTwoStepRenounceMod internal ownerRenounceModule;
 
-    // Assume ownerTwoStepRenounceMod is initialized elsewhere, likely via an initializer facet
+    // Assume OwnerTwoStepRenounceMod is initialized and its storage slots are set
+    // during diamond deployment or initialization.
 
     /**
-     * @notice Renounces ownership of the contract via a two-step process.
+     * @notice Example function to initiate ownership renouncement.
+     * @dev Requires the caller to be the current owner.
      */
-    function renounceContractOwnership() external {
-        // This call will set the owner to address(0) and clear pending owner.
-        // It is expected that access control checks for the current owner occur before this function is called.
-        ownerTwoStepRenounceMod.renounceOwnership();
+    function initiateRenounce() external {
+        // This function would typically be called by the owner.
+        // Access control to ensure caller is owner would be handled by another facet or modifier.
+
+        // Call the internal function to start the renouncement process.
+        // If the caller is not the owner, this will revert.
+        ownerRenounceModule.renounceOwnership();
     }
 
     /**
-     * @notice Retrieves the current owner address from storage.
-     * @return owner The current owner address.
+     * @notice Example function to check current owner.
+     * @dev Reads owner from shared diamond storage.
      */
-    function getCurrentOwner() external view returns (address owner) {
-        // Accessing owner storage directly for demonstration; in a real facet, you might use a dedicated getter from OwnerDataMod.
-        // The OwnerTwoStepRenounceMod exposes getOwnerStorage for direct access to the underlying struct.
-        OwnerStorage storage ownerStorage = ownerTwoStepRenounceMod.getOwnerStorage();
-        return ownerStorage.owner;
+    function getCurrentOwner() external view returns (address) {
+        // Access owner storage directly or via a getter function provided by another facet/module.
+        // For demonstration, imagine a direct storage read or a compatible getter:
+        // return OwnerStorage(OWNER_STORAGE_POSITION).owner;
+        // Or if a getter exists:
+        // return ownerGetterModule.getOwner();
+        return address(0); // Placeholder
     }
 
     /**
-     * @notice Retrieves the pending owner address from storage.
-     * @return pendingOwner The pending owner address.
+     * @notice Example function to check pending owner.
+     * @dev Reads pending owner from shared diamond storage.
      */
-    function getPendingContractOwner() external view returns (address pendingOwner) {
-        // Accessing pending owner storage directly.
-        PendingOwnerStorage storage pendingOwnerStorage = ownerTwoStepRenounceMod.getPendingOwnerStorage();
-        // Note: The actual pending owner field name is not provided, assuming 'pendingOwner' for example.
-        // In a real scenario, consult the OwnerTwoStepDataMod or storage definition.
-        // For this example, we assume a placeholder field or that the storage struct is empty and this function is conceptual.
-        // If PendingOwnerStorage is empty, this function would effectively return the default value for address (address(0)).
-        return address(0); // Placeholder if PendingOwnerStorage has no fields.
+    function getPendingOwner() external view returns (address) {
+        // Access pending owner storage directly or via a getter function.
+        // For demonstration:
+        // return PendingOwnerStorage(PENDING_OWNER_STORAGE_POSITION).pendingOwner;
+        return address(0); // Placeholder
     }
 }`}
 </ExpandableCode>
@@ -223,50 +226,19 @@ contract MyOwnerFacet {
 ## Best Practices
 
 <Callout type="tip" title="Best Practice">
-- Ensure the current owner role is verified before calling `renounceOwnership()` to prevent unauthorized renouncements.
-- Understand that `renounceOwnership()` irrevocably sets the owner to `address(0)` and clears any pending owner. This action cannot be reverted.
-- Integrate this module with facets that manage access control and ownership transfers to ensure a coherent ownership lifecycle.
+- Ensure the caller is verified as the current owner before calling `renounceOwnership()`.
+- Implement separate facets for ownership management and the core logic to maintain separation of concerns.
+- Handle the `OwnerUnauthorizedAccount` error if the caller is not authorized to perform the renouncement.
 </Callout>
 
 ## Integration Notes
 
 <Callout type="success" title="Shared Storage">
-This module interacts with diamond storage at `OWNER_STORAGE_POSITION` and `PENDING_OWNER_STORAGE_POSITION`, identified by `keccak256("erc173.owner")`. The `OwnerStorage` struct, containing the `owner` field, and `PendingOwnerStorage` struct are accessed via inline assembly. Functions within this module directly read from and write to these shared storage slots. Changes to the `owner` address made by `renounceOwnership()` are immediately visible to all facets accessing the `OWNER_STORAGE_POSITION` in the diamond storage.
+This module interacts with diamond storage at `OWNER_STORAGE_POSITION` for the owner and `PENDING_OWNER_STORAGE_POSITION` for the pending owner. The `renounceOwnership` function directly modifies these storage slots. Changes to the owner and pending owner states are immediately visible to all facets that access these shared storage positions via the diamond storage pattern. The module defines `OwnerStorage` and `PendingOwnerStorage` structs, which must be compatible with the structs defined and laid out in the diamond's storage. The `getOwnerStorage` and `getPendingOwnerStorage` functions use inline assembly to provide direct access pointers to these storage locations.
 </Callout>
 
 <div style={{marginTop: "3rem", paddingTop: "2rem", borderTop: "1px solid var(--ifm-color-emphasis-200)"}}>
-  <RelatedDocs
-    items={[
-      {
-        title: "OwnerDataMod",
-        href: "/docs/library/access/Owner/Data/OwnerDataMod",
-        description: "Related module in access",
-        icon: "📦"
-      },
-      {
-        title: "OwnerRenounceMod",
-        href: "/docs/library/access/Owner/Renounce/OwnerRenounceMod",
-        description: "Related module in access",
-        icon: "📦"
-      },
-      {
-        title: "OwnerTransferMod",
-        href: "/docs/library/access/Owner/Transfer/OwnerTransferMod",
-        description: "Related module in access",
-        icon: "📦"
-      },
-      {
-        title: "OwnerTwoStepDataMod",
-        href: "/docs/library/access/Owner/TwoSteps/Data/OwnerTwoStepDataMod",
-        description: "Related module in access",
-        icon: "📦"
-      }
-    ]}
-  />
+  <WasThisHelpful pageId="Owner Two Step Renounce Module" />
 </div>
 
-<div style={{marginTop: "3rem", paddingTop: "2rem", borderTop: "1px solid var(--ifm-color-emphasis-200)"}}>
-  <WasThisHelpful pageId="OwnerTwoStepRenounceMod" />
-</div>
-
-<LastUpdated date="2026-03-13T00:38:42.319Z" />
+<LastUpdated date="2026-03-13T01:20:36.670Z" />

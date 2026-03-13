@@ -1,7 +1,7 @@
 ---
 sidebar_position: 210
-title: "ERC1155TransferMod"
-description: "Handles ERC-1155 token transfers within a diamond"
+title: "ERC-1155 Transfer Module"
+description: "Handles ERC-1155 safe transfers and batch transfers"
 sidebar_label: "Module"
 gitSource: "https://github.com/Perfect-Abstractions/Compose/tree/main/src/token/ERC1155/Transfer/ERC1155TransferMod.sol"
 ---
@@ -22,14 +22,14 @@ import GradientText from '@site/src/components/ui/GradientText';
 import GradientButton from '@site/src/components/ui/GradientButton';
 
 <DocSubtitle>
-Handles ERC-1155 token transfers within a diamond
+Handles ERC-1155 safe transfers and batch transfers
 </DocSubtitle>
 
 <Callout type="info" title="Key Features">
-- Implements ERC-1155 safe transfer requirements for single and batch transfers.
-- Uses diamond storage pattern for shared state management.
-- Exposes `internal` functions for facet composition.
-- Emits `TransferSingle` and `TransferBatch` events upon successful transfers.
+- Implements ERC-1155 `safeTransferFrom` and `safeBatchTransferFrom` logic.
+- All functions are `internal`, designed for use by other facets.
+- Leverages diamond storage for persistent state management.
+- Includes necessary validation for ERC-1155 transfers.
 </Callout>
 
 <Callout type="info" title="Module Usage">
@@ -38,9 +38,7 @@ This module provides internal functions for use in your custom facets. Import it
 
 ## Overview
 
-This module implements core ERC-1155 transfer logic, ensuring safe and compliant token movements. Facets import this module to manage token transfers using shared diamond storage. Changes to token balances are immediately visible to all facets interacting with the same diamond storage.
-
----
+This module provides internal functions for executing ERC-1155 safe transfers and batch transfers. Facets can import this module to manage token movements, interacting with shared diamond storage to update balances. It enforces ERC-1155 compliance, including validation for approvals and receiver contracts.
 
 ## Storage
 
@@ -355,40 +353,31 @@ error ERC1155MissingApprovalForAll(address _operator, address _owner);
 {`pragma solidity >=0.8.30;
 
 import {ERC1155TransferMod} from "@compose/token/ERC1155/Transfer/ERC1155TransferMod";
-import {ERC1155Storage} from "@compose/token/ERC1155/Transfer/ERC1155TransferMod";
 
 contract ERC1155TransferFacet {
-    ERC1155TransferMod private transferModule;
+    ERC1155TransferMod internal transferModule;
 
-    function initialize(ERC1155Storage storage _storage) external {
-        transferModule = ERC1155TransferMod(_storage);
-    }
+    // Assume transferModule is initialized with diamond storage
 
-    /**
-     * @notice Example of performing a single ERC-1155 token transfer.
-     * @dev Assumes caller has necessary approvals and ownership.
-     */
-    function exampleSafeTransferFrom(
+    function transferSingleToken(
         address _from,
         address _to,
         uint256 _id,
         uint256 _value,
         address _operator
     ) external {
+        // Call the internal module function to perform the transfer
         transferModule.safeTransferFrom(_from, _to, _id, _value, _operator);
     }
 
-    /**
-     * @notice Example of performing a batch ERC-1155 token transfer.
-     * @dev Assumes caller has necessary approvals and ownership.
-     */
-    function exampleSafeBatchTransferFrom(
+    function transferBatchTokens(
         address _from,
         address _to,
         uint256[] memory _ids,
         uint256[] memory _values,
         address _operator
     ) external {
+        // Call the internal module function to perform the batch transfer
         transferModule.safeBatchTransferFrom(_from, _to, _ids, _values, _operator);
     }
 }`}
@@ -398,50 +387,19 @@ contract ERC1155TransferFacet {
 ## Best Practices
 
 <Callout type="tip" title="Best Practice">
-- Ensure required approvals are set via `ERC1155ApproveMod` before calling transfer functions.
-- Verify the `_to` address is not a contract without ERC1155Receiver interface compliance when performing safe transfers.
+- Ensure caller has necessary approvals before invoking transfer functions.
+- Verify receiver contract implements ERC1155TokenReceiver if it is a contract address.
 - Handle potential errors such as `ERC1155InsufficientBalance` or `ERC1155InvalidArrayLength`.
 </Callout>
 
 ## Integration Notes
 
 <Callout type="success" title="Shared Storage">
-This module interacts with diamond storage at the `keccak256("erc1155")` slot. The `ERC1155Storage` struct is accessed via inline assembly. All state modifications (token balances) are performed directly on this shared storage, making them immediately visible to other facets that access the same storage position.
+This module interacts with diamond storage at the `keccak256("erc1155")` slot, managed by the `ERC1155Storage` struct. Functions within this module read from and write to this shared storage. Any updates to token balances made via `safeTransferFrom` or `safeBatchTransferFrom` are immediately reflected for all facets accessing the same diamond storage.
 </Callout>
 
 <div style={{marginTop: "3rem", paddingTop: "2rem", borderTop: "1px solid var(--ifm-color-emphasis-200)"}}>
-  <RelatedDocs
-    items={[
-      {
-        title: "ERC1155TransferFacet",
-        href: "/docs/library/token/ERC1155/Transfer/ERC1155TransferFacet",
-        description: "Facet using ERC1155TransferMod",
-        icon: "💎"
-      },
-      {
-        title: "ERC1155ApproveMod",
-        href: "/docs/library/token/ERC1155/Approve/ERC1155ApproveMod",
-        description: "Related module in token",
-        icon: "📦"
-      },
-      {
-        title: "ERC1155MetadataMod",
-        href: "/docs/library/token/ERC1155/Metadata/ERC1155MetadataMod",
-        description: "Related module in token",
-        icon: "📦"
-      },
-      {
-        title: "ERC1155MintMod",
-        href: "/docs/library/token/ERC1155/Mint/ERC1155MintMod",
-        description: "Related module in token",
-        icon: "📦"
-      }
-    ]}
-  />
+  <WasThisHelpful pageId="ERC-1155 Transfer Module" />
 </div>
 
-<div style={{marginTop: "3rem", paddingTop: "2rem", borderTop: "1px solid var(--ifm-color-emphasis-200)"}}>
-  <WasThisHelpful pageId="ERC1155TransferMod" />
-</div>
-
-<LastUpdated date="2026-03-13T00:35:47.300Z" />
+<LastUpdated date="2026-03-13T01:17:41.336Z" />

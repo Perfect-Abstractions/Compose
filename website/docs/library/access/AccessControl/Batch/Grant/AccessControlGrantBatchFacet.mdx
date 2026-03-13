@@ -1,6 +1,6 @@
 ---
 sidebar_position: 100
-title: "AccessControlGrantBatchFacet"
+title: "Access Control Grant Batch Facet"
 description: "Grants roles to multiple accounts efficiently"
 sidebar_label: "Facet"
 gitSource: "https://github.com/Perfect-Abstractions/Compose/tree/main/src/access/AccessControl/Batch/Grant/AccessControlGrantBatchFacet.sol"
@@ -27,16 +27,14 @@ Grants roles to multiple accounts efficiently
 
 <Callout type="info" title="Key Features">
 - Grants roles to multiple accounts in a single transaction.
-- Emits `RoleGranted` events for each role assignment.
-- Utilizes diamond storage for role management.
-- Exposes `exportSelectors` for diamond registration.
+- Emits `RoleGranted` events for each granted role.
+- Reverts with `AccessControlUnauthorizedAccount` if the caller lacks permission.
+- Exports its selectors for diamond registration.
 </Callout>
 
 ## Overview
 
-This facet provides an efficient mechanism for granting roles to multiple accounts within a Compose diamond. It exposes the `grantRoleBatch` function, allowing for bulk role assignments in a single transaction. This facet interacts with shared diamond storage to manage role assignments, ensuring consistency across other facets.
-
----
+This facet provides an efficient way to grant a specific role to multiple accounts within a diamond. It integrates with diamond storage and leverages internal modules for role management. This facet exposes external functions for direct invocation through the diamond proxy, enabling batch role assignments in a single transaction.
 
 ## Storage
 
@@ -177,27 +175,26 @@ error AccessControlUnauthorizedAccount(address _account, bytes32 _role);
 <ExpandableCode language="solidity" maxLines={20} title="Example Implementation">
 {`pragma solidity >=0.8.30;
 
-import { IDiamond } from "@compose/diamond/IDiamond";
-import { AccessControlGrantBatchFacet } from "@compose/access/AccessControl/Batch/Grant/AccessControlGrantBatchFacet";
+import {IDiamond} from "@compose/diamond/IDiamond";
+import {AccessControlGrantBatchFacet} from "@compose/access/AccessControl/Batch/Grant/AccessControlGrantBatchFacet";
 
-contract DiamondUser {
-    address constant DIAMOND_ADDRESS = address(0x1234567890abcdef);
+contract Deployer {
+    address immutable diamondAddress;
 
-    function grantRoles() public {
-        IDiamond diamond = IDiamond(DIAMOND_ADDRESS);
-        address[] memory accountsToGrant = new address[](2);
-        accountsToGrant[0] = address(0xabc);
-        accountsToGrant[1] = address(0xdef);
-
-        // Call the grantRoleBatch function through the diamond proxy
-        // The diamond will route this call to the AccessControlGrantBatchFacet
-        diamond.grantRoleBatch(bytes32(keccak256("ADMIN_ROLE")), accountsToGrant);
+    constructor(address _diamondAddress) {
+        diamondAddress = _diamondAddress;
     }
 
-    function getSelectors() public view returns (bytes memory) {
-        IDiamond diamond = IDiamond(DIAMOND_ADDRESS);
-        // Call exportSelectors to get the facet's selectors
-        return diamond.exportSelectors();
+    function grantAdminRoleToMultipleUsers(address[] memory _users) external {
+        bytes32 adminRole = keccak256("ROLE_ADMIN"); // Example role
+
+        // Call grantRoleBatch through the diamond proxy
+        IDiamond(diamondAddress).grantRoleBatch(adminRole, _users);
+    }
+
+    // Example of exporting selectors (typically done during facet registration)
+    function exportFacetSelectors() external pure returns (bytes memory) {
+        return AccessControlGrantBatchFacet.exportSelectors();
     }
 }`}
 </ExpandableCode>
@@ -206,50 +203,19 @@ contract DiamondUser {
 ## Best Practices
 
 <Callout type="tip" title="Best Practice">
-- Initialize roles and grant initial administrative access before deploying this facet.
-- Ensure the caller has the necessary permissions to grant roles, as enforced by the facet.
-- Verify that the `AccessControlGrantBatchFacet` is correctly registered with the diamond proxy.
+- Grant roles only to trusted accounts.
+- Ensure the caller has the necessary permissions to grant roles.
+- Consider using this facet during diamond initialization or upgrade processes.
 </Callout>
 
 ## Security Considerations
 
 <Callout type="warning" title="Security">
-The `grantRoleBatch` function is protected by an access control check, ensuring only authorized callers can grant roles. It emits a `RoleGranted` event for each account that receives a role. The facet does not perform reentrancy-sensitive operations. Input validation is handled by the underlying Access Control logic within the diamond storage.
+The `grantRoleBatch` function is protected by access control, ensuring only authorized callers can grant roles. It is critical that the caller's permissions are validated by the diamond's access control logic before this facet's function is executed. Input validation for `_accounts` is handled internally to prevent unexpected behavior. Follow standard Solidity security practices for all interactions.
 </Callout>
 
 <div style={{marginTop: "3rem", paddingTop: "2rem", borderTop: "1px solid var(--ifm-color-emphasis-200)"}}>
-  <RelatedDocs
-    items={[
-      {
-        title: "AccessControlGrantBatchMod",
-        href: "/docs/library/access/AccessControl/Batch/Grant/AccessControlGrantBatchMod",
-        description: "Module used by AccessControlGrantBatchFacet",
-        icon: "📦"
-      },
-      {
-        title: "OwnerDataFacet",
-        href: "/docs/library/access/Owner/Data/OwnerDataFacet",
-        description: "Related facet in access",
-        icon: "💎"
-      },
-      {
-        title: "OwnerRenounceFacet",
-        href: "/docs/library/access/Owner/Renounce/OwnerRenounceFacet",
-        description: "Related facet in access",
-        icon: "💎"
-      },
-      {
-        title: "OwnerTransferFacet",
-        href: "/docs/library/access/Owner/Transfer/OwnerTransferFacet",
-        description: "Related facet in access",
-        icon: "💎"
-      }
-    ]}
-  />
+  <WasThisHelpful pageId="Access Control Grant Batch Facet" />
 </div>
 
-<div style={{marginTop: "3rem", paddingTop: "2rem", borderTop: "1px solid var(--ifm-color-emphasis-200)"}}>
-  <WasThisHelpful pageId="AccessControlGrantBatchFacet" />
-</div>
-
-<LastUpdated date="2026-03-13T00:40:00.534Z" />
+<LastUpdated date="2026-03-13T01:21:55.968Z" />

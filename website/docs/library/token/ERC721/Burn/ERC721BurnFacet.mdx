@@ -1,6 +1,6 @@
 ---
-sidebar_position: 200
-title: "ERC721BurnFacet"
+sidebar_position: 3
+title: "ERC-721 Burn Facet"
 description: "Burns ERC-721 tokens within a diamond"
 sidebar_label: "Facet"
 gitSource: "https://github.com/Perfect-Abstractions/Compose/tree/main/src/token/ERC721/Burn/ERC721BurnFacet.sol"
@@ -26,17 +26,15 @@ Burns ERC-721 tokens within a diamond
 </DocSubtitle>
 
 <Callout type="info" title="Key Features">
-- External functions for burning ERC-721 tokens.
-- Integrates with ERC-2535 diamond proxy pattern.
-- Utilizes shared diamond storage for token data.
-- Supports burning single tokens and batches.
+- Provides external functions for burning single and batch ERC-721 tokens.
+- Utilizes diamond storage for managing token state, ensuring composability.
+- Exposes `exportSelectors` for easy integration into diamond proxy discovery mechanisms.
+- Internal `getStorage` function ensures consistent access to shared storage.
 </Callout>
 
 ## Overview
 
-This facet provides external functions to burn ERC-721 tokens, removing them from tracking. It integrates with a diamond proxy, enabling upgradeable token management. Developers add this facet to expose token burning functionality while leveraging shared diamond storage and access control.
-
----
+This facet provides functionality to burn ERC-721 tokens directly within a diamond proxy. It accesses shared diamond storage to manage token states and ensures that burned tokens are removed from enumeration. Developers integrate this facet to enable token destruction operations as part of a larger ERC-721 implementation.
 
 ## Storage
 
@@ -175,86 +173,59 @@ error ERC721InsufficientApproval(address _operator, uint256 _tokenId);
 
 <ExpandableCode language="solidity" maxLines={20} title="Example Implementation">
 {`pragma solidity >=0.8.30;
-import {ERC721BurnFacet} from "@compose/token/ERC721/Burn/ERC721BurnFacet";
 
-interface IDiamond {
-    function burn(uint256 _tokenId) external;
-    function burnBatch(uint256[] calldata _tokenIds) external;
-}
+import {IDiamond} from "@compose/core/IDiamond.sol";
+import {ERC721BurnFacet} from "@compose/token/ERC721/Burn/ERC721BurnFacet.sol";
 
-contract ExampleUsage {
-    IDiamond immutable diamond;
+contract Deployer {
+    address immutable DIAMOND_ADDRESS;
 
-    constructor(address _diamondAddress) {
-        diamond = IDiamond(_diamondAddress);
+    constructor(address diamondAddress) {
+        DIAMOND_ADDRESS = diamondAddress;
     }
 
     /**
-     * @notice Burns a single token via the diamond proxy.
+     * @notice Burns a single ERC-721 token.
      * @param _tokenId The ID of the token to burn.
      */
-    function burnToken(uint256 _tokenId) public {
-        diamond.burn(_tokenId);
+    function burnSingleToken(uint256 _tokenId) external {
+        IDiamond(DIAMOND_ADDRESS).callFacetFunction(
+            ERC721BurnFacet.exportSelectors(),
+            abi.encodeWithSignature("burn(uint256)", _tokenId)
+        );
     }
 
     /**
-     * @notice Burns multiple tokens via the diamond proxy.
+     * @notice Burns multiple ERC-721 tokens.
      * @param _tokenIds An array of token IDs to burn.
      */
-    function burnTokensBatch(uint256[] memory _tokenIds) public {
-        diamond.burnBatch(_tokenIds);
+    function burnMultipleTokens(uint256[] calldata _tokenIds) external {
+        IDiamond(DIAMOND_ADDRESS).callFacetFunction(
+            ERC721BurnFacet.exportSelectors(),
+            abi.encodeWithSignature("burnBatch(uint256[])", _tokenIds)
+        );
     }
-}`}
+}
+`}
 </ExpandableCode>
 -->
 
 ## Best Practices
 
 <Callout type="tip" title="Best Practice">
-- Ensure the ERC721BurnFacet is correctly initialized with access control in place.
-- Verify that the token IDs passed to `burn` and `burnBatch` exist before calling.
-- Manage access control for the `burn` and `burnBatch` functions to prevent unauthorized token destruction.
+- Ensure the `ERC721Storage` struct is correctly initialized in diamond storage before deploying this facet.
+- Access token state via the `getStorage` internal function to ensure consistency across facets.
+- Verify that the token IDs provided to `burn` and `burnBatch` exist before calling these functions to prevent `ERC721NonexistentToken` errors.
 </Callout>
 
 ## Security Considerations
 
 <Callout type="warning" title="Security">
-The `burn` and `burnBatch` functions modify state by removing tokens. Ensure that appropriate access controls are implemented at the diamond level to restrict who can call these functions. The facet relies on underlying token ownership checks, which must be robust. Reentrancy is not a direct concern as the functions do not perform external calls after state changes. Follow standard Solidity security practices for input validation and access control.
+The `burn` and `burnBatch` functions modify shared diamond storage. Input validation is crucial to prevent errors; ensure token IDs exist and that the caller has the necessary permissions to burn the tokens. Reentrancy is not a direct concern as the functions do not perform external calls before state changes. The `ERC721NonexistentToken` and `ERC721InsufficientApproval` errors are emitted to signal specific failure conditions.
 </Callout>
 
 <div style={{marginTop: "3rem", paddingTop: "2rem", borderTop: "1px solid var(--ifm-color-emphasis-200)"}}>
-  <RelatedDocs
-    items={[
-      {
-        title: "ERC721BurnMod",
-        href: "/docs/library/token/ERC721/Burn/ERC721BurnMod",
-        description: "Module used by ERC721BurnFacet",
-        icon: "📦"
-      },
-      {
-        title: "ERC1155ApproveFacet",
-        href: "/docs/library/token/ERC1155/Approve/ERC1155ApproveFacet",
-        description: "Related facet in token",
-        icon: "💎"
-      },
-      {
-        title: "ERC1155MetadataFacet",
-        href: "/docs/library/token/ERC1155/Metadata/ERC1155MetadataFacet",
-        description: "Related facet in token",
-        icon: "💎"
-      },
-      {
-        title: "ERC1155DataFacet",
-        href: "/docs/library/token/ERC1155/Data/ERC1155DataFacet",
-        description: "Related facet in token",
-        icon: "💎"
-      }
-    ]}
-  />
+  <WasThisHelpful pageId="ERC-721 Burn Facet" />
 </div>
 
-<div style={{marginTop: "3rem", paddingTop: "2rem", borderTop: "1px solid var(--ifm-color-emphasis-200)"}}>
-  <WasThisHelpful pageId="ERC721BurnFacet" />
-</div>
-
-<LastUpdated date="2026-03-13T00:36:43.167Z" />
+<LastUpdated date="2026-03-13T01:18:37.243Z" />

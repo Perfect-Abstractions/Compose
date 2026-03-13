@@ -1,7 +1,7 @@
 ---
 sidebar_position: 200
-title: "ERC721EnumerableDataFacet"
-description: "Enumerate ERC-721 tokens by owner and index"
+title: "ERC-721 Enumerable Data Facet"
+description: "Enumerate ERC-721 tokens and owner balances"
 sidebar_label: "Facet"
 gitSource: "https://github.com/Perfect-Abstractions/Compose/tree/main/src/token/ERC721/Enumerable/Data/ERC721EnumerableDataFacet.sol"
 ---
@@ -22,21 +22,19 @@ import GradientText from '@site/src/components/ui/GradientText';
 import GradientButton from '@site/src/components/ui/GradientButton';
 
 <DocSubtitle>
-Enumerate ERC-721 tokens by owner and index
+Enumerate ERC-721 tokens and owner balances
 </DocSubtitle>
 
 <Callout type="info" title="Key Features">
 - Exposes external view functions for token enumeration.
-- Accesses shared diamond storage for token data.
-- Provides functions to query total supply and tokens by index.
-- Compliant with ERC-2535 diamond standard for facet discovery.
+- Reads from shared diamond storage via internal helper functions.
+- Supports ERC-721 token querying by index.
+- Provides `exportSelectors` for diamond facet discovery.
 </Callout>
 
 ## Overview
 
-This facet provides external functions to query ERC-721 token ownership and enumeration details within a diamond. It routes calls through the diamond proxy and accesses shared storage. Developers add this facet to enable on-chain inspection of token ownership and total supply.
-
----
+This facet provides external functions for enumerating ERC-721 tokens within a diamond. It accesses shared diamond storage to retrieve total supply and token details by index. Developers integrate this facet to enable off-chain querying of token ownership and enumeration without direct storage access.
 
 ## Storage
 
@@ -222,24 +220,31 @@ error ERC721OutOfBoundsIndex(address _owner, uint256 _index);
 import {IDiamond} from "@compose/diamond/IDiamond";
 import {ERC721EnumerableDataFacet} from "@compose/token/ERC721/Enumerable/Data/ERC721EnumerableDataFacet";
 
-contract Deployer {
-    address constant DIAMOND_ADDRESS = address(0x123);
+contract DiamondUser {
+    address public diamondAddress;
 
-    function exampleUsage() public view {
-        IDiamond diamond = IDiamond(DIAMOND_ADDRESS);
+    constructor(address _diamondAddress) {
+        diamondAddress = _diamondAddress;
+    }
 
-        // Get total supply
-        uint256 supply = diamond.totalSupply();
+    function getTotalSupply() external view returns (uint256) {
+        // Call through the diamond proxy
+        return IDiamond(diamondAddress).totalSupply();
+    }
 
-        // Get a specific token by index
-        uint256 tokenIdByIndex = diamond.tokenByIndex(0);
+    function getTokenByIndex(uint256 _index) external view returns (uint256) {
+        // Call through the diamond proxy
+        return IDiamond(diamondAddress).tokenByIndex(_index);
+    }
 
-        // Get a token owned by an address at a specific index
-        address owner = address(0xabc);
-        uint256 tokenIdOfOwner = diamond.tokenOfOwnerByIndex(owner, 0);
+    function getTokenOfOwnerByIndex(address _owner, uint256 _index) external view returns (uint256) {
+        // Call through the diamond proxy
+        return IDiamond(diamondAddress).tokenOfOwnerByIndex(_owner, _index);
+    }
 
-        // Export selectors for diamond registration
-        bytes selectors = diamond.exportSelectors();
+    function getSelectors() external pure returns (bytes) {
+        // Call through the diamond proxy to discover facet selectors
+        return IDiamond(diamondAddress).exportSelectors();
     }
 }`}
 </ExpandableCode>
@@ -248,50 +253,19 @@ contract Deployer {
 ## Best Practices
 
 <Callout type="tip" title="Best Practice">
-- Ensure the `ERC721EnumerableDataFacet` is registered with the diamond's `DiamondCutFacet`.
-- Call `tokenByIndex` and `tokenOfOwnerByIndex` functions only after verifying `totalSupply` to prevent `ERC721OutOfBoundsIndex` errors.
-- Use `exportSelectors` during diamond deployment or upgrades to register the facet's functions.
+- Ensure the ERC721EnumerableStorage and ERC721Storage structs are correctly initialized in diamond storage.
+- Call `totalSupply`, `tokenOfOwnerByIndex`, and `tokenByIndex` only through the diamond proxy address.
+- Verify that `_index` parameters are within bounds to prevent `ERC721OutOfBoundsIndex` errors.
 </Callout>
 
 ## Security Considerations
 
 <Callout type="warning" title="Security">
-The `tokenByIndex` function reverts with `ERC721OutOfBoundsIndex` if the provided index is out of bounds relative to the total supply. All functions are `view` and do not modify state, thus posing no reentrancy risk. Input validation for indices is handled internally.
+The `tokenByIndex` function reverts with `ERC721OutOfBoundsIndex` if the provided `_index` is out of bounds relative to `totalSupply()`. All functions are external and intended to be called via a diamond proxy, thus inheriting its access control mechanisms. No reentrancy concerns are present as all functions are `view`.
 </Callout>
 
 <div style={{marginTop: "3rem", paddingTop: "2rem", borderTop: "1px solid var(--ifm-color-emphasis-200)"}}>
-  <RelatedDocs
-    items={[
-      {
-        title: "ERC1155ApproveFacet",
-        href: "/docs/library/token/ERC1155/Approve/ERC1155ApproveFacet",
-        description: "Related facet in token",
-        icon: "💎"
-      },
-      {
-        title: "ERC1155MetadataFacet",
-        href: "/docs/library/token/ERC1155/Metadata/ERC1155MetadataFacet",
-        description: "Related facet in token",
-        icon: "💎"
-      },
-      {
-        title: "ERC1155DataFacet",
-        href: "/docs/library/token/ERC1155/Data/ERC1155DataFacet",
-        description: "Related facet in token",
-        icon: "💎"
-      },
-      {
-        title: "ERC1155BurnFacet",
-        href: "/docs/library/token/ERC1155/Burn/ERC1155BurnFacet",
-        description: "Related facet in token",
-        icon: "💎"
-      }
-    ]}
-  />
+  <WasThisHelpful pageId="ERC-721 Enumerable Data Facet" />
 </div>
 
-<div style={{marginTop: "3rem", paddingTop: "2rem", borderTop: "1px solid var(--ifm-color-emphasis-200)"}}>
-  <WasThisHelpful pageId="ERC721EnumerableDataFacet" />
-</div>
-
-<LastUpdated date="2026-03-13T00:36:14.883Z" />
+<LastUpdated date="2026-03-13T01:18:09.465Z" />

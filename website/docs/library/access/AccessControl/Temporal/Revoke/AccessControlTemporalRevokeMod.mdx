@@ -1,6 +1,6 @@
 ---
 sidebar_position: 110
-title: "AccessControlTemporalRevokeMod"
+title: "Access Control Temporal Revoke Module"
 description: "Revoke temporal roles from accounts"
 sidebar_label: "Module"
 gitSource: "https://github.com/Perfect-Abstractions/Compose/tree/main/src/access/AccessControl/Temporal/Revoke/AccessControlTemporalRevokeMod.sol"
@@ -26,10 +26,10 @@ Revoke temporal roles from accounts
 </DocSubtitle>
 
 <Callout type="info" title="Key Features">
-- Provides `internal` functions for role revocation.
-- Utilizes the diamond storage pattern for shared state management.
+- All functions are `internal` for use within custom facets.
+- Leverages the diamond storage pattern for shared state.
 - Emits a `TemporalRoleRevoked` event upon successful revocation.
-- No external dependencies, ensuring composability.
+- No external dependencies or `using` directives.
 </Callout>
 
 <Callout type="info" title="Module Usage">
@@ -38,9 +38,7 @@ This module provides internal functions for use in your custom facets. Import it
 
 ## Overview
 
-This module provides functionality to revoke temporal roles from accounts within a diamond. By leveraging shared diamond storage, revoke operations are immediately visible to all facets. This ensures consistent access control state across the entire diamond.
-
----
+This module provides internal functions to revoke temporal roles from accounts. Facets can import and use these functions to manage role expirations within the diamond's shared storage. Changes made through this module are immediately visible to all facets interacting with the `AccessControlStorage`.
 
 ## Storage
 
@@ -221,88 +219,44 @@ error AccessControlUnauthorizedAccount(address _account, bytes32 _role);
 <ExpandableCode language="solidity" maxLines={20} title="Example Implementation">
 {`pragma solidity >=0.8.30;
 
-import { AccessControlTemporalRevokeMod } from "@compose/access/AccessControl/Temporal/Revoke/AccessControlTemporalRevokeMod";
+import {AccessControlTemporalRevokeMod} from "@compose/access/AccessControl/Temporal/Revoke/AccessControlTemporalRevokeMod";
 
-contract MyFacet {
-    AccessControlTemporalRevokeMod internal accessControlTemporalRevokeMod;
+contract MyAccessFacet {
+    AccessControlTemporalRevokeMod internal _revokeMod;
 
-    constructor(address _diamondAddress) {
-        // Assuming AccessControlTemporalRevokeMod is registered at a specific selector
-        // For example purposes, we directly reference the module. In a real diamond, this would be routed.
-        accessControlTemporalRevokeMod = AccessControlTemporalRevokeMod(_diamondAddress);
+    constructor(address diamondAddress) {
+        _revokeMod = AccessControlTemporalRevokeMod(diamondAddress);
     }
 
     /**
      * @notice Revokes a temporal role from a specific account.
-     * @dev Requires the caller to be the admin of the role.
+     * @dev Caller must be the admin of the role.
      * @param _role The role to revoke.
      * @param _account The account to revoke the role from.
      */
-    function revokeRoleExample(bytes32 _role, address _account) external {
-        // In a real diamond, this call would be routed through the diamond proxy.
-        // The actual implementation of revokeTemporalRole would handle storage access.
-        accessControlTemporalRevokeMod.revokeTemporalRole(_role, _account);
+    function revokeRole(bytes32 _role, address _account) external {
+        _revokeMod.revokeTemporalRole(_role, _account);
     }
-
-    /**
-     * @notice Retrieves the temporal access control storage.
-     * @return The temporal access control storage struct.
-     */
-    function getTemporalStorageExample() external pure returns (AccessControlTemporalStorage) {
-        return AccessControlTemporalRevokeMod.getStorage();
-    }
-}
-`}
+}`}
 </ExpandableCode>
 -->
 
 ## Best Practices
 
 <Callout type="tip" title="Best Practice">
-- Ensure the caller is authorized to revoke the specified role before calling `revokeTemporalRole`.
-- Verify storage layout compatibility when upgrading facets to prevent data corruption.
-- Handle the `AccessControlUnauthorizedAccount` error if the caller is not the designated role admin.
+- Ensure the caller has the necessary administrative privileges before calling `revokeTemporalRole`.
+- Verify that the `AccessControlStorage` struct is correctly initialized before attempting to revoke roles.
+- Handle the `AccessControlUnauthorizedAccount` error, which indicates the caller lacks the required role administration.
 </Callout>
 
 ## Integration Notes
 
 <Callout type="success" title="Shared Storage">
-This module interacts with the diamond's shared storage at the `ACCESS_CONTROL_STORAGE_POSITION`, identified by `keccak256("compose.accesscontrol")`. The `AccessControlTemporalStorage` struct, accessed via `getStorage()`, is managed within this slot. Changes made by `revokeTemporalRole` to this storage are immediately reflected for all facets accessing the same storage slot. The `OwnerDataMod`, `OwnerRenounceMod`, `OwnerTransferMod`, and `OwnerTwoStepDataMod` modules are related for broader access control management within the diamond.
+This module interacts with the diamond's shared storage at the `ACCESS_CONTROL_STORAGE_POSITION`, which is identified by `keccak2535("compose.accesscontrol")`. It reads from and writes to the `AccessControlStorage` and `AccessControlTemporalStorage` structs. Any modifications made to temporal role revocations via this module are immediately reflected in the shared storage, making them visible to all facets that access this storage.
 </Callout>
 
 <div style={{marginTop: "3rem", paddingTop: "2rem", borderTop: "1px solid var(--ifm-color-emphasis-200)"}}>
-  <RelatedDocs
-    items={[
-      {
-        title: "OwnerDataMod",
-        href: "/docs/library/access/Owner/Data/OwnerDataMod",
-        description: "Related module in access",
-        icon: "📦"
-      },
-      {
-        title: "OwnerRenounceMod",
-        href: "/docs/library/access/Owner/Renounce/OwnerRenounceMod",
-        description: "Related module in access",
-        icon: "📦"
-      },
-      {
-        title: "OwnerTransferMod",
-        href: "/docs/library/access/Owner/Transfer/OwnerTransferMod",
-        description: "Related module in access",
-        icon: "📦"
-      },
-      {
-        title: "OwnerTwoStepDataMod",
-        href: "/docs/library/access/Owner/TwoSteps/Data/OwnerTwoStepDataMod",
-        description: "Related module in access",
-        icon: "📦"
-      }
-    ]}
-  />
+  <WasThisHelpful pageId="Access Control Temporal Revoke Module" />
 </div>
 
-<div style={{marginTop: "3rem", paddingTop: "2rem", borderTop: "1px solid var(--ifm-color-emphasis-200)"}}>
-  <WasThisHelpful pageId="AccessControlTemporalRevokeMod" />
-</div>
-
-<LastUpdated date="2026-03-13T00:40:13.010Z" />
+<LastUpdated date="2026-03-13T01:22:08.205Z" />

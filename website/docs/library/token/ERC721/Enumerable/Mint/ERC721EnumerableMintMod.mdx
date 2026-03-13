@@ -1,7 +1,7 @@
 ---
 sidebar_position: 210
-title: "ERC721EnumerableMintMod"
-description: "Mint ERC-721 tokens with enumeration tracking"
+title: "ERC-721 Enumerable Mint Module"
+description: "Mint ERC-721 tokens and manage enumeration"
 sidebar_label: "Module"
 gitSource: "https://github.com/Perfect-Abstractions/Compose/tree/main/src/token/ERC721/Enumerable/Mint/ERC721EnumerableMintMod.sol"
 ---
@@ -22,14 +22,14 @@ import GradientText from '@site/src/components/ui/GradientText';
 import GradientButton from '@site/src/components/ui/GradientButton';
 
 <DocSubtitle>
-Mint ERC-721 tokens with enumeration tracking
+Mint ERC-721 tokens and manage enumeration
 </DocSubtitle>
 
 <Callout type="info" title="Key Features">
-- All functions are `internal` for use within custom facets.
+- Provides internal functions for minting and enumeration management.
 - Utilizes the diamond storage pattern (EIP-8042) for shared state.
-- No external dependencies or `using` directives within the module itself.
-- Maintains enumeration lists for ERC-721 tokens.
+- No external dependencies, promoting composability.
+- Emits `Transfer` events upon successful minting.
 </Callout>
 
 <Callout type="info" title="Module Usage">
@@ -38,9 +38,7 @@ This module provides internal functions for use in your custom facets. Import it
 
 ## Overview
 
-This module provides internal functions for minting ERC-721 tokens while maintaining enumeration lists. Facets can import this module to add new tokens to the diamond's ERC-721 collection, ensuring that token IDs are tracked for iteration. Changes made through this module are immediately visible to all facets using the same diamond storage.
-
----
+This module provides internal functions for minting ERC-721 tokens and maintaining their enumeration order within a diamond. Facets import this module to manage token creation and ensure consistency across all facets interacting with the ERC-721 storage. Changes to token ownership and enumeration are managed through shared diamond storage, ensuring visibility to all components.
 
 ## Storage
 
@@ -215,27 +213,29 @@ error ERC721InvalidSender(address _sender);
 <ExpandableCode language="solidity" maxLines={20} title="Example Implementation">
 {`pragma solidity >=0.8.30;
 
-import {ERC721EnumerableMintMod} from "@compose/token/ERC721/Enumerable/Mint/ERC721EnumerableMintMod";
-import {ERC721EnumerableStorage} from "@compose/token/ERC721/Enumerable/ERC721EnumerableStorage";
+import { ERC721EnumerableMintMod } from "@compose/token/ERC721/Enumerable/Mint/ERC721EnumerableMintMod";
+import { ERC721Storage } from "@compose/token/ERC721/Storage/ERC721Storage";
 
 contract MyERC721Facet {
-    using ERC721EnumerableMintMod for ERC721EnumerableStorage;
+    ERC721EnumerableMintMod private immutable _mintModule;
 
-    ERC721EnumerableStorage internal _storage;
+    constructor(address _diamondAddress) {
+        // Assuming ERC721EnumerableMintMod is deployed at _diamondAddress or accessible via it
+        _mintModule = ERC721EnumerableMintMod(_diamondAddress);
+    }
 
     /**
      * @notice Mints a new ERC-721 token.
      * @param _to The address to mint the token to.
-     * @param _tokenId The ID of the token to mint.
+     * @param _tokenId The unique identifier for the token.
      */
     function mintToken(address _to, uint256 _tokenId) external {
-        // Ensure _to is a valid receiver and _tokenId does not already exist
-        // (These checks are handled internally by the module's mint function)
-        _storage.mint(_to, _tokenId);
+        // The mint function is internal and expects access control to be handled by the calling facet.
+        _mintModule.mint(_to, _tokenId);
     }
 
     /**
-     * @notice Retrieves the ERC-721 storage structure.
+     * @notice Retrieves the ERC-721 storage struct.
      * @return The ERC721Storage struct.
      */
     function getERC721Storage() external pure returns (ERC721Storage) {
@@ -243,7 +243,7 @@ contract MyERC721Facet {
     }
 
     /**
-     * @notice Retrieves the ERC721EnumerableStorage structure.
+     * @notice Retrieves the ERC-721 Enumerable storage struct.
      * @return The ERC721EnumerableStorage struct.
      */
     function getEnumerableStorage() external pure returns (ERC721EnumerableStorage) {
@@ -256,50 +256,19 @@ contract MyERC721Facet {
 ## Best Practices
 
 <Callout type="tip" title="Best Practice">
-- Ensure the `_to` address is valid and the `_tokenId` does not already exist before calling `mint`.
-- Verify that the diamond's storage layout is compatible when upgrading facets that interact with this module.
-- Handle potential reverts from `ERC721InvalidReceiver` or if the token ID already exists.
+- Ensure access control is enforced by the calling facet before invoking the `mint` function.
+- Verify that the `_to` address is valid and not the zero address before calling `mint`.
+- Handle potential reverts from `mint` indicating an invalid receiver or an already existing token ID.
 </Callout>
 
 ## Integration Notes
 
 <Callout type="success" title="Shared Storage">
-This module interacts with diamond storage at the `STORAGE_POSITION` identified by `keccak256("erc721.enumerable")`. The `mint` function modifies the shared `ERC721EnumerableStorage` struct. Any facet that accesses this storage position will immediately see the changes, such as the addition of a new token ID to the enumeration lists.
+This module interacts with diamond storage at the `STORAGE_POSITION` defined by `keccak256("erc721.enumerable")`. The `mint` function modifies the shared `ERC721EnumerableStorage` struct, which is accessible by any facet that reads from this storage position. Changes made via `mint` are immediately visible to other facets operating on the same diamond storage.
 </Callout>
 
 <div style={{marginTop: "3rem", paddingTop: "2rem", borderTop: "1px solid var(--ifm-color-emphasis-200)"}}>
-  <RelatedDocs
-    items={[
-      {
-        title: "ERC1155ApproveMod",
-        href: "/docs/library/token/ERC1155/Approve/ERC1155ApproveMod",
-        description: "Related module in token",
-        icon: "📦"
-      },
-      {
-        title: "ERC1155MetadataMod",
-        href: "/docs/library/token/ERC1155/Metadata/ERC1155MetadataMod",
-        description: "Related module in token",
-        icon: "📦"
-      },
-      {
-        title: "ERC1155MintMod",
-        href: "/docs/library/token/ERC1155/Mint/ERC1155MintMod",
-        description: "Related module in token",
-        icon: "📦"
-      },
-      {
-        title: "ERC1155BurnMod",
-        href: "/docs/library/token/ERC1155/Burn/ERC1155BurnMod",
-        description: "Related module in token",
-        icon: "📦"
-      }
-    ]}
-  />
+  <WasThisHelpful pageId="ERC-721 Enumerable Mint Module" />
 </div>
 
-<div style={{marginTop: "3rem", paddingTop: "2rem", borderTop: "1px solid var(--ifm-color-emphasis-200)"}}>
-  <WasThisHelpful pageId="ERC721EnumerableMintMod" />
-</div>
-
-<LastUpdated date="2026-03-13T00:36:19.554Z" />
+<LastUpdated date="2026-03-13T01:18:12.819Z" />

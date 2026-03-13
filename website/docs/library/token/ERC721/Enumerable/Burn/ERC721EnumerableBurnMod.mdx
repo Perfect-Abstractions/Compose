@@ -1,7 +1,7 @@
 ---
 sidebar_position: 210
-title: "ERC721EnumerableBurnMod"
-description: "Destroys ERC-721 tokens and removes them from enumeration tracking."
+title: "ERC-721 Enumerable Burn Module"
+description: "Destroys ERC-721 tokens and removes them from enumeration"
 sidebar_label: "Module"
 gitSource: "https://github.com/Perfect-Abstractions/Compose/tree/main/src/token/ERC721/Enumerable/Burn/ERC721EnumerableBurnMod.sol"
 ---
@@ -22,14 +22,14 @@ import GradientText from '@site/src/components/ui/GradientText';
 import GradientButton from '@site/src/components/ui/GradientButton';
 
 <DocSubtitle>
-Destroys ERC-721 tokens and removes them from enumeration tracking.
+Destroys ERC-721 tokens and removes them from enumeration
 </DocSubtitle>
 
 <Callout type="info" title="Key Features">
-- Functions are `internal`, intended for use within other facets.
-- Manages token destruction and enumeration state within diamond storage.
-- Utilizes inline assembly to access shared storage via `STORAGE_POSITION`.
-- Does not perform approval checks; relies on calling facets for this logic.
+- Exposes an `internal` `burn` function for integration into custom facets.
+- Manages token destruction and enumeration removal within the diamond storage pattern.
+- Uses a fixed storage position (`keccak256(\"erc721.enumerable\")`) for ERC-721 enumerable state.
+- No external dependencies, promoting composability.
 </Callout>
 
 <Callout type="info" title="Module Usage">
@@ -38,9 +38,7 @@ This module provides internal functions for use in your custom facets. Import it
 
 ## Overview
 
-This module provides internal functionality to burn ERC-721 tokens, ensuring they are also removed from enumeration tracking. By calling `burn`, facets can manage token lifecycle within the diamond's shared storage. Changes to token existence and enumeration are immediately visible to all facets interacting with the ERC721Storage.
-
----
+This module provides an internal function to burn ERC-721 tokens, ensuring they are removed from enumeration tracking. Facets using this module can integrate token destruction logic directly into their own functionality. Changes made through this module directly affect the shared diamond storage, making token status immediately visible to all facets.
 
 ## Storage
 
@@ -197,31 +195,25 @@ error ERC721NonexistentToken(uint256 _tokenId);
 
 <ExpandableCode language="solidity" maxLines={20} title="Example Implementation">
 {`pragma solidity >=0.8.30;
+import @compose/token/ERC721/Enumerable/Burn/ERC721EnumerableBurnMod;
 
-import { ERC721EnumerableBurnMod } from "@compose/token/ERC721/Enumerable/Burn/ERC721EnumerableBurnMod";
+contract MyERC721Facet {
+    ERC721EnumerableBurnMod internal erc721EnumerableBurn;
 
-contract ERC721BurnFacet {
-    ERC721EnumerableBurnMod private immutable _burnModule;
-
-    constructor(address _diamondAddress) {
-        _burnModule = ERC721EnumerableBurnMod(_diamondAddress);
+    constructor(
+        address _diamondAddress
+    ) {
+        erc721EnumerableBurn = ERC721EnumerableBurnMod(_diamondAddress);
     }
 
     /**
      * @notice Burns a token by its ID.
+     * @dev This function does not perform approval checks; use the facet for approval-checked burns.
      * @param _tokenId The ID of the token to burn.
      */
     function burnToken(uint256 _tokenId) external {
-        // Note: Approval checks are handled by the calling facet.
-        _burnModule.burn(_tokenId);
-    }
-
-    /**
-     * @notice Gets the ERC721 storage struct.
-     * @return ERC721Storage The storage struct.
-     */
-    function getERC721Storage() external view returns (ERC721Storage) {
-        return _burnModule.getERC721Storage();
+        // Call the internal burn function from the module
+        erc721EnumerableBurn.burn(_tokenId);
     }
 }`}
 </ExpandableCode>
@@ -230,50 +222,19 @@ contract ERC721BurnFacet {
 ## Best Practices
 
 <Callout type="tip" title="Best Practice">
-- Ensure approval checks are performed by the calling facet before invoking `burn`.
-- Handle the `ERC721NonexistentToken` error, which may be emitted if the token does not exist.
-- Verify the diamond storage layout for `STORAGE_POSITION` is correctly set and compatible when upgrading facets.
+- Ensure the calling facet enforces necessary approval checks before invoking `burnToken`.
+- Verify that the `STORAGE_POSITION` for `erc721.enumerable` is correctly set in the diamond for this module to function.
+- Handle the `ERC721NonexistentToken` error if the token ID does not exist.
 </Callout>
 
 ## Integration Notes
 
 <Callout type="success" title="Shared Storage">
-This module interacts with diamond storage at the slot identified by `keccak256("erc721.enumerable")`. The `burn` function modifies the state of the `ERC721EnumerableStorage` struct, directly impacting token existence and enumeration order. These changes are immediately visible to any facet that reads from the same storage slot.
+This module interacts with diamond storage at the position identified by `keccak256(\"erc721.enumerable\")`. The `burn` function modifies the `ERC721EnumerableStorage` struct stored at this position. Any facet that reads from or writes to this same storage slot will observe these changes immediately. The module itself does not perform approval checks; these must be handled by the facet that calls the `burn` function.
 </Callout>
 
 <div style={{marginTop: "3rem", paddingTop: "2rem", borderTop: "1px solid var(--ifm-color-emphasis-200)"}}>
-  <RelatedDocs
-    items={[
-      {
-        title: "ERC1155ApproveMod",
-        href: "/docs/library/token/ERC1155/Approve/ERC1155ApproveMod",
-        description: "Related module in token",
-        icon: "📦"
-      },
-      {
-        title: "ERC1155MetadataMod",
-        href: "/docs/library/token/ERC1155/Metadata/ERC1155MetadataMod",
-        description: "Related module in token",
-        icon: "📦"
-      },
-      {
-        title: "ERC1155MintMod",
-        href: "/docs/library/token/ERC1155/Mint/ERC1155MintMod",
-        description: "Related module in token",
-        icon: "📦"
-      },
-      {
-        title: "ERC1155BurnMod",
-        href: "/docs/library/token/ERC1155/Burn/ERC1155BurnMod",
-        description: "Related module in token",
-        icon: "📦"
-      }
-    ]}
-  />
+  <WasThisHelpful pageId="ERC-721 Enumerable Burn Module" />
 </div>
 
-<div style={{marginTop: "3rem", paddingTop: "2rem", borderTop: "1px solid var(--ifm-color-emphasis-200)"}}>
-  <WasThisHelpful pageId="ERC721EnumerableBurnMod" />
-</div>
-
-<LastUpdated date="2026-03-13T00:36:23.135Z" />
+<LastUpdated date="2026-03-13T01:18:17.746Z" />

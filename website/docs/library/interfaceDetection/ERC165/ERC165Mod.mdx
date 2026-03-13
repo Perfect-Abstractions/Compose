@@ -1,7 +1,7 @@
 ---
 sidebar_position: 2
-title: "ERC165Mod"
-description: "Detects supported ERC-165 interfaces using diamond storage"
+title: "ERC-165 Module"
+description: "ERC-165 interface detection for diamonds"
 sidebar_label: "Module"
 gitSource: "https://github.com/Perfect-Abstractions/Compose/tree/main/src/interfaceDetection/ERC165/ERC165Mod.sol"
 ---
@@ -22,14 +22,14 @@ import GradientText from '@site/src/components/ui/GradientText';
 import GradientButton from '@site/src/components/ui/GradientButton';
 
 <DocSubtitle>
-Detects supported ERC-165 interfaces using diamond storage
+ERC-165 interface detection for diamonds
 </DocSubtitle>
 
 <Callout type="info" title="Key Features">
-- Exposes `internal` functions for registering ERC-165 interfaces.
-- Utilizes diamond storage at a fixed position (`keccak256("erc165")`) for interface support data.
+- Provides internal functions for ERC-165 interface detection.
+- Uses the diamond storage pattern to manage supported interfaces.
 - No external dependencies, ensuring minimal on-chain footprint.
-- Facilitates consistent ERC-165 detection across all facets in a diamond.
+- Functions are designed for integration within diamond facets.
 </Callout>
 
 <Callout type="info" title="Module Usage">
@@ -38,9 +38,7 @@ This module provides internal functions for use in your custom facets. Import it
 
 ## Overview
 
-This module provides internal functions and storage for ERC-165 interface detection within a diamond. Facets can register supported interfaces during initialization, making this information accessible to all other facets sharing the same diamond storage. This ensures a consistent and unified interface detection mechanism across the diamond.
-
----
+This module provides internal functions and storage for ERC-165 interface detection within a diamond. Facets can import this module to register supported interfaces during initialization, ensuring all facets collectively adhere to the ERC-165 standard. Changes to supported interfaces are managed via diamond storage and are immediately visible to all facets.
 
 ## Storage
 
@@ -120,32 +118,18 @@ Register that a contract supports an interface Call this function during initial
 <ExpandableCode language="solidity" maxLines={20} title="Example Implementation">
 {`pragma solidity >=0.8.30;
 
-import { ERC165Mod, ERC165Storage } from "@compose/interfaceDetection/ERC165/ERC165Mod";
+import { ERC165Mod } from "@compose/interfaceDetection/ERC165/ERC165Mod";
 
-contract ERC165Facet {
-    // Assume ERC165Mod is imported and its storage is managed by the diamond
+contract MyERC721Facet {
+    // Assume ERC165Mod is already initialized and its storage pointer is accessible
+    // For demonstration, we'll call registerInterface directly, implying it's called via the diamond's initializer.
 
-    /**
-     * @notice Registers supported interfaces upon facet initialization.
-     */
     function initialize() external {
-        // Example: Registering ERC721 and ERC165 interfaces
+        // Example: Registering support for IERC721 interface
         ERC165Mod.registerInterface(type(IERC721).interfaceId);
-        ERC165Mod.registerInterface(type(IERC165).interfaceId);
     }
 
-    /**
-     * @notice Checks if a specific interface is supported.
-     * @param _interfaceId The interface ID to check.
-     * @return bool True if the interface is supported, false otherwise.
-     */
-    function supportsInterface(bytes4 _interfaceId) external view returns (bool) {
-        // Logic to check registered interfaces would typically reside here or in a dedicated facet,
-        // leveraging the ERC165Mod storage indirectly.
-        // For demonstration, this example implies how initialization would set up the data.
-        // A real implementation would read from the ERC165Mod storage.
-        return false; // Placeholder for actual check
-    }
+    // Other ERC721 functions...
 }`}
 </ExpandableCode>
 -->
@@ -153,32 +137,19 @@ contract ERC165Facet {
 ## Best Practices
 
 <Callout type="tip" title="Best Practice">
-- Call `registerInterface` during facet initialization to declare supported ERC-165 interfaces.
-- Ensure diamond storage is properly initialized before deploying facets that rely on ERC165Mod.
-- Avoid registering duplicate interface IDs, though the module's internal logic should handle this gracefully.
+- Call `registerInterface` during diamond initialization to declare supported ERC-165 interfaces.
+- Ensure the `ERC165Mod` storage is correctly initialized and accessible to all facets.
+- Verify that `getStorage()` returns the expected storage pointer to maintain interface detection integrity.
 </Callout>
 
 ## Integration Notes
 
 <Callout type="success" title="Shared Storage">
-This module uses diamond storage to maintain a registry of supported interface IDs. The `ERC165Storage` struct is bound to a specific storage slot using inline assembly, identified by `keccak256("erc165")`. All facets that import and utilize `ERC165Mod` will read and write to this shared storage position. Changes made by one facet are immediately visible to all other facets accessing the same storage slot, enabling a unified interface detection mechanism.
+This module utilizes diamond storage at the `STORAGE_POSITION` slot, keyed by `keccak256("erc165")`. The `ERC165Storage` struct, which is empty in this implementation, resides at this position. The `getStorage()` function, using inline assembly, returns a pointer to this shared storage. The `registerInterface()` function modifies the state managed at this storage position, making interface support immediately observable by any facet interacting with the diamond's ERC-165 implementation.
 </Callout>
 
 <div style={{marginTop: "3rem", paddingTop: "2rem", borderTop: "1px solid var(--ifm-color-emphasis-200)"}}>
-  <RelatedDocs
-    items={[
-      {
-        title: "ERC165Facet",
-        href: "/docs/library/interfaceDetection/ERC165/ERC165Facet",
-        description: "Facet using ERC165Mod",
-        icon: "💎"
-      }
-    ]}
-  />
+  <WasThisHelpful pageId="ERC-165 Module" />
 </div>
 
-<div style={{marginTop: "3rem", paddingTop: "2rem", borderTop: "1px solid var(--ifm-color-emphasis-200)"}}>
-  <WasThisHelpful pageId="ERC165Mod" />
-</div>
-
-<LastUpdated date="2026-03-13T00:34:42.933Z" />
+<LastUpdated date="2026-03-13T01:16:36.960Z" />

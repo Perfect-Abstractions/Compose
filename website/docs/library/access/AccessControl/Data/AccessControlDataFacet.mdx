@@ -1,7 +1,7 @@
 ---
 sidebar_position: 100
-title: "AccessControlDataFacet"
-description: "Manages access control roles and permissions"
+title: "Access Control Data Facet"
+description: "Manage roles and permissions within a diamond"
 sidebar_label: "Facet"
 gitSource: "https://github.com/Perfect-Abstractions/Compose/tree/main/src/access/AccessControl/Data/AccessControlDataFacet.sol"
 ---
@@ -22,21 +22,19 @@ import GradientText from '@site/src/components/ui/GradientText';
 import GradientButton from '@site/src/components/ui/GradientButton';
 
 <DocSubtitle>
-Manages access control roles and permissions
+Manage roles and permissions within a diamond
 </DocSubtitle>
 
 <Callout type="info" title="Key Features">
-- Exposes external view functions for role checking.
-- Interacts with diamond's shared storage for role data.
-- Provides a function to export facet selectors for introspection.
-- Uses custom error `AccessControlUnauthorizedAccount` for reverts.
+- Provides external view functions to query role assignments.
+- Utilizes diamond storage for role management, ensuring shared state.
+- Exposes `exportSelectors` for metadata and discovery.
+- No external dependencies beyond diamond storage access.
 </Callout>
 
 ## Overview
 
-This facet exposes external functions for querying access control roles and permissions within a diamond. It interacts with shared diamond storage to retrieve role information. Developers integrate this facet to enable role-based access control logic in their diamond.
-
----
+This facet exposes functions for role-based access control within a diamond. It allows checking if accounts possess specific roles and retrieving role administration details. The facet leverages diamond storage for its state, ensuring consistency across all facets.
 
 ## Storage
 
@@ -211,29 +209,48 @@ error AccessControlUnauthorizedAccount(address _account, bytes32 _role);
 <ExpandableCode language="solidity" maxLines={20} title="Example Implementation">
 {`pragma solidity >=0.8.30;
 
-import { IDiamond } from "@compose/diamond/Diamond.sol";
+import { IDiamond } from "@compose/diamond/src/IDiamond.sol";
 import { AccessControlDataFacet } from "@compose/access/AccessControl/Data/AccessControlDataFacet.sol";
 
-contract DiamondUser {
-    IDiamond immutable diamond;
+contract DiamondConsumer {
+    address immutable diamondAddress;
 
     constructor(address _diamondAddress) {
-        diamond = IDiamond(_diamondAddress);
+        diamondAddress = _diamondAddress;
     }
 
-    function checkRole(address _account, bytes32 _role) public view returns (bool) {
-        // Call through the diamond proxy to the AccessControlDataFacet
-        return diamond.hasRole(_role, _account);
+    /**
+     * @notice Checks if an account has a specific role.
+     * @param _role The role to check.
+     * @param _account The account to check.
+     * @return bool True if the account has the role, false otherwise.
+     */
+    function checkRole(bytes32 _role, address _account) external view returns (bool) {
+        IDiamond diamond = IDiamond(diamondAddress);
+        // AccessControlDataFacet.hasRole is called through the diamond proxy
+        return AccessControlDataFacet(diamond).hasRole(_role, _account);
     }
 
-    function enforceRole(address _account, bytes32 _role) public view {
-        // Call through the diamond proxy to the AccessControlDataFacet
-        diamond.requireRole(_role, _account);
+    /**
+     * @notice Requires an account to have a specific role.
+     * @param _role The role required.
+     * @param _account The account to check.
+     */
+    function enforceRole(bytes32 _role, address _account) external view {
+        IDiamond diamond = IDiamond(diamondAddress);
+        // AccessControlDataFacet.requireRole is called through the diamond proxy
+        AccessControlDataFacet(diamond).requireRole(_role, _account);
     }
 
-    function getAdmin(bytes32 _role) public view returns (bytes32) {
-        // Call through the diamond proxy to the AccessControlDataFacet
-        return diamond.getRoleAdmin(_role);
+    /**
+     * @notice Gets the admin role for a given role.
+     * @param _role The role to query.
+     * @return bytes32 The admin role.
+     */
+    function getAdminRole(bytes32 _role) external view returns (bytes32) {
+        IDiamond diamond = IDiamond(diamondAddress);
+        // AccessControlDataFacet.getRoleAdmin is called through the diamond proxy
+        return AccessControlDataFacet(diamond).getRoleAdmin(_role);
     }
 }
 `}
@@ -243,50 +260,19 @@ contract DiamondUser {
 ## Best Practices
 
 <Callout type="tip" title="Best Practice">
-- Ensure the AccessControlStorage struct is correctly initialized in diamond storage.
-- When implementing custom roles, define them as bytes32 constants.
-- Verify that `hasRole` and `requireRole` checks are consistently applied to sensitive functions by other facets.
+- Ensure the AccessControlStorage struct is correctly initialized in diamond storage before using role-based functions.
+- Enforce role checks on state-changing functions through other facets that interact with this facet's data.
+- Verify that the `AccessControlDataFacet` selectors are correctly registered with the diamond loupe.
 </Callout>
 
 ## Security Considerations
 
 <Callout type="warning" title="Security">
-All external functions are view functions and do not modify state. Input validation is implicitly handled by the EVM for address and bytes32 types. The `requireRole` function reverts with `AccessControlUnauthorizedAccount` if the specified account does not possess the required role. Follow standard Solidity security practices for managing roles and permissions.
+All state-querying functions are view functions and do not pose reentrancy risks. Input validation for `_role` and `_account` is expected to be handled by the caller or other facets. The `requireRole` function reverts with `AccessControlUnauthorizedAccount` if the specified account does not hold the required role. Follow standard Solidity security practices for handling addresses and role identifiers.
 </Callout>
 
 <div style={{marginTop: "3rem", paddingTop: "2rem", borderTop: "1px solid var(--ifm-color-emphasis-200)"}}>
-  <RelatedDocs
-    items={[
-      {
-        title: "OwnerDataFacet",
-        href: "/docs/library/access/Owner/Data/OwnerDataFacet",
-        description: "Related facet in access",
-        icon: "💎"
-      },
-      {
-        title: "OwnerRenounceFacet",
-        href: "/docs/library/access/Owner/Renounce/OwnerRenounceFacet",
-        description: "Related facet in access",
-        icon: "💎"
-      },
-      {
-        title: "OwnerTransferFacet",
-        href: "/docs/library/access/Owner/Transfer/OwnerTransferFacet",
-        description: "Related facet in access",
-        icon: "💎"
-      },
-      {
-        title: "OwnerTwoStepDataFacet",
-        href: "/docs/library/access/Owner/TwoSteps/Data/OwnerTwoStepDataFacet",
-        description: "Related facet in access",
-        icon: "💎"
-      }
-    ]}
-  />
+  <WasThisHelpful pageId="Access Control Data Facet" />
 </div>
 
-<div style={{marginTop: "3rem", paddingTop: "2rem", borderTop: "1px solid var(--ifm-color-emphasis-200)"}}>
-  <WasThisHelpful pageId="AccessControlDataFacet" />
-</div>
-
-<LastUpdated date="2026-03-13T00:39:12.892Z" />
+<LastUpdated date="2026-03-13T01:21:08.648Z" />

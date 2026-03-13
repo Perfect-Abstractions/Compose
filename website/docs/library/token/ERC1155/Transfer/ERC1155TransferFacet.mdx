@@ -1,6 +1,6 @@
 ---
 sidebar_position: 200
-title: "ERC1155TransferFacet"
+title: "ERC-1155 Transfer Facet"
 description: "ERC-1155 token transfers within a diamond"
 sidebar_label: "Facet"
 gitSource: "https://github.com/Perfect-Abstractions/Compose/tree/main/src/token/ERC1155/Transfer/ERC1155TransferFacet.sol"
@@ -26,17 +26,15 @@ ERC-1155 token transfers within a diamond
 </DocSubtitle>
 
 <Callout type="info" title="Key Features">
-- Implements `safeTransferFrom` and `safeBatchTransferFrom` for ERC-1155 transfers.
-- Emits `TransferSingle` and `TransferBatch` events upon successful transfers.
-- Accesses token balances via diamond's shared storage.
-- Provides `exportSelectors` for diamond integration.
+- Exposes external functions for diamond routing (safeTransferFrom, safeBatchTransferFrom).
+- Accesses shared ERC-1155 state via diamond storage.
+- Emits TransferSingle and TransferBatch events for off-chain monitoring.
+- Provides selector discovery via the `exportSelectors` function.
 </Callout>
 
 ## Overview
 
-This facet implements ERC-1155 token transfers, including single and batch operations, as external functions within a diamond. It accesses shared diamond storage to manage token balances and emits events for off-chain monitoring. Developers integrate this facet to provide ERC-1155 token functionality while leveraging the diamond's upgradeability.
-
----
+This facet implements ERC-1155 token transfers as external functions within a diamond. It routes calls through the diamond proxy and accesses shared storage. Developers add this facet to expose ERC-1155 token functionality while maintaining upgradeability.
 
 ## Storage
 
@@ -349,77 +347,56 @@ error ERC1155InvalidArrayLength(uint256 _idsLength, uint256 _valuesLength);
 {`pragma solidity >=0.8.30;
 
 import {ERC1155TransferFacet} from "@compose/token/ERC1155/Transfer/ERC1155TransferFacet";
+import {IDiamond} from "@compose/diamond/core/IDiamond";
 
-interface IDiamond {
-    function safeTransferFrom(address _from, address _to, uint256 _id, uint256 _value, bytes _data) external;
-    function safeBatchTransferFrom(address _from, address _to, uint256[] memory _ids, uint256[] memory _values, bytes memory _data) external;
-}
+// Example: Using the facet in a diamond
+// The facet functions are called through the diamond proxy.
+// Assume diamondAddress is the address of the Compose diamond.
 
-contract ExampleUsage {
-    address immutable DIAMOND_ADDRESS;
+address diamondAddress = 0xYourDiamondAddress;
+IDiamond diamond = IDiamond(diamondAddress);
 
-    constructor(address diamondAddress) {
-        DIAMOND_ADDRESS = diamondAddress;
-    }
+// Example: Transferring a single token
+address fromAddress = msg.sender;
+address toAddress = 0xRecipientAddress;
+uint256 tokenId = 1;
+uint256 value = 10;
+bytes data = "";
 
-    function transferSingleToken(address from, address to, uint256 id, uint256 value, bytes memory data) external {
-        IDiamond(DIAMOND_ADDRESS).safeTransferFrom(from, to, id, value, data);
-    }
+diamond.safeTransferFrom(fromAddress, toAddress, tokenId, value, data);
 
-    function transferBatchTokens(address from, address to, uint256[] memory ids, uint256[] memory values, bytes memory data) external {
-        IDiamond(DIAMOND_ADDRESS).safeBatchTransferFrom(from, to, ids, values, data);
-    }
-}`}
+// Example: Transferring multiple tokens in a batch
+address[] memory fromAddresses = new address[](1);
+address[] memory toAddresses = new address[](1);
+uint256[] memory tokenIds = new uint256[](1);
+uint256[] memory values = new uint256[](1);
+bytes memory batchData = "";
+
+fromAddresses[0] = msg.sender;
+toAddresses[0] = 0xBatchRecipientAddress;
+tokenIds[0] = 2;
+values[0] = 5;
+
+diamond.safeBatchTransferFrom(fromAddresses, toAddresses, tokenIds, values, batchData);`}
 </ExpandableCode>
 -->
 
 ## Best Practices
 
 <Callout type="tip" title="Best Practice">
-- Ensure the ERC1155Storage is correctly initialized in diamond storage before deploying this facet.
-- Verify that the caller has the necessary approvals or ownership for transfers.
-- Use the `exportSelectors` function during diamond setup to discover and register the facet's selectors.
+- Ensure the ERC1155Storage struct is correctly initialized in diamond storage before calling transfer functions.
+- Verify that the caller has appropriate approvals or ownership before executing transfers.
+- Use the `exportSelectors` function during diamond deployment to register the facet's capabilities.
 </Callout>
 
 ## Security Considerations
 
 <Callout type="warning" title="Security">
-The `safeTransferFrom` and `safeBatchTransferFrom` functions perform checks before state changes (checks-effects-interactions pattern). Reentrancy is mitigated by the diamond proxy pattern. Input validation is performed to prevent invalid array lengths and sender/receiver addresses. Ensure appropriate approvals are in place before calling transfer functions. Users must handle `ERC1155InsufficientBalance` and `ERC1155MissingApprovalForAll` errors.
+The `safeTransferFrom` and `safeBatchTransferFrom` functions perform checks before state changes. Reentrancy is mitigated as these functions do not make external calls that could re-enter the facet. Input validation for addresses, token IDs, and values is crucial. Ensure that the `_from` address has sufficient balance and necessary approvals. Errors like `ERC1155InsufficientBalance`, `ERC1155InvalidSender`, `ERC1155InvalidReceiver`, `ERC1155MissingApprovalForAll`, and `ERC1155InvalidArrayLength` are used to revert invalid operations.
 </Callout>
 
 <div style={{marginTop: "3rem", paddingTop: "2rem", borderTop: "1px solid var(--ifm-color-emphasis-200)"}}>
-  <RelatedDocs
-    items={[
-      {
-        title: "ERC1155ApproveFacet",
-        href: "/docs/library/token/ERC1155/Approve/ERC1155ApproveFacet",
-        description: "Related facet in token",
-        icon: "💎"
-      },
-      {
-        title: "ERC1155MetadataFacet",
-        href: "/docs/library/token/ERC1155/Metadata/ERC1155MetadataFacet",
-        description: "Related facet in token",
-        icon: "💎"
-      },
-      {
-        title: "ERC1155DataFacet",
-        href: "/docs/library/token/ERC1155/Data/ERC1155DataFacet",
-        description: "Related facet in token",
-        icon: "💎"
-      },
-      {
-        title: "ERC1155BurnFacet",
-        href: "/docs/library/token/ERC1155/Burn/ERC1155BurnFacet",
-        description: "Related facet in token",
-        icon: "💎"
-      }
-    ]}
-  />
+  <WasThisHelpful pageId="ERC-1155 Transfer Facet" />
 </div>
 
-<div style={{marginTop: "3rem", paddingTop: "2rem", borderTop: "1px solid var(--ifm-color-emphasis-200)"}}>
-  <WasThisHelpful pageId="ERC1155TransferFacet" />
-</div>
-
-<LastUpdated date="2026-03-13T00:35:43.186Z" />
+<LastUpdated date="2026-03-13T01:17:37.734Z" />

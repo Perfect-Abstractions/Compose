@@ -1,6 +1,6 @@
 ---
 sidebar_position: 210
-title: "ERC20TransferMod"
+title: "ERC-20 Transfer Module"
 description: "Internal ERC-20 token transfer logic"
 sidebar_label: "Module"
 gitSource: "https://github.com/Perfect-Abstractions/Compose/tree/main/src/token/ERC20/Transfer/ERC20TransferMod.sol"
@@ -26,10 +26,10 @@ Internal ERC-20 token transfer logic
 </DocSubtitle>
 
 <Callout type="info" title="Key Features">
-- All functions are `internal` for use within custom facets.
-- Operates on shared diamond storage for token balances and supply.
-- No external dependencies, ensuring minimal gas overhead and predictable behavior.
-- Follows standard ERC-20 transfer logic without complex features like approvals.
+- All functions are `internal` and intended for use within diamond facets.
+- Manages ERC-20 token balances and allowances using diamond storage.
+- Emits `Transfer` events upon successful token movements.
+- No external dependencies or `using` directives for enhanced composability.
 </Callout>
 
 <Callout type="info" title="Module Usage">
@@ -38,9 +38,7 @@ This module provides internal functions for use in your custom facets. Import it
 
 ## Overview
 
-This module provides internal functions for executing ERC-20 token transfers and transfers from an allowance. Facets can import this module to manage token balances and ensure correct state updates within the diamond's shared storage. Changes made through this module are immediately visible to all facets using the same storage.
-
----
+This module provides internal functions for executing ERC-20 token transfers and transfers from an allowance. Facets can import this module to manage token balances and allowances directly within the diamond's shared storage, ensuring atomic updates across all facets.
 
 ## Storage
 
@@ -324,45 +322,21 @@ error ERC20InvalidSpender(address _spender);
 <ExpandableCode language="solidity" maxLines={20} title="Example Implementation">
 {`pragma solidity >=0.8.30;
 
-import {ERC20TransferMod} from "@compose/token/ERC20/Transfer/ERC20TransferMod";
+import { ERC20TransferMod } from "@compose/token/ERC20/Transfer/ERC20TransferMod";
 
 contract MyTokenFacet {
-    ERC20TransferMod internal transferModule;
+    using ERC20TransferMod for ERC20TransferMod;
 
-    // Assuming transferModule is initialized elsewhere, e.g., in an initializer facet
-    constructor(address _diamondAddress) {
-        transferModule = ERC20TransferMod(_diamondAddress);
+    function executeTransfer(address _to, uint256 _value) external {
+        // Ensure caller has sufficient balance before calling internal transfer
+        (bool success, ) = address(this).call(abi.encodeWithSelector(ERC20TransferMod.transfer.selector, _to, _value));
+        require(success, "Transfer failed");
     }
 
-    /**
-     * @notice Transfers tokens from the caller to a recipient.
-     * @param _to The address to transfer tokens to.
-     * @param _value The amount of tokens to transfer.
-     * @return True if the transfer was successful.
-     */
-    function safeTransfer(address _to, uint256 _value) external returns (bool) {
-        // Basic validation before calling internal transfer
-        if (_to == address(0)) {
-            revert ERC20InvalidReceiver(_to);
-        }
-        // Internal transfer function handles balance checks and updates
-        return transferModule.transfer(_to, _value);
-    }
-
-    /**
-     * @notice Transfers tokens from one address to another, using an allowance.
-     * @param _from The address to transfer tokens from.
-     * @param _to The address to transfer tokens to.
-     * @param _value The amount of tokens to transfer.
-     * @return True if the transfer was successful.
-     */
-    function safeTransferFrom(address _from, address _to, uint256 _value) external returns (bool) {
-        // Basic validation before calling internal transferFrom
-        if (_to == address(0)) {
-            revert ERC20InvalidReceiver(_to);
-        }
-        // Internal transferFrom handles allowance and balance checks and updates
-        return transferModule.transferFrom(_from, _to, _value);
+    function executeTransferFrom(address _from, address _to, uint256 _value) external {
+        // Ensure caller has sufficient allowance before calling internal transferFrom
+        (bool success, ) = address(this).call(abi.encodeWithSelector(ERC20TransferMod.transferFrom.selector, _from, _to, _value));
+        require(success, "TransferFrom failed");
     }
 }`}
 </ExpandableCode>
@@ -371,50 +345,19 @@ contract MyTokenFacet {
 ## Best Practices
 
 <Callout type="tip" title="Best Practice">
-- Ensure caller has sufficient balance and spender has sufficient allowance before calling `transferFrom`.
-- Validate receiver address is not the zero address before calling transfer functions.
-- Handle errors such as `ERC20InsufficientBalance`, `ERC20InsufficientAllowance`, `ERC20InvalidReceiver`.
+- Verify caller permissions and token balances/allowances before invoking internal transfer functions.
+- Handle potential revert errors such as ERC20InsufficientBalance, ERC20InsufficientAllowance, ERC20InvalidReceiver, ERC20InvalidSender, and ERC20InvalidSpender.
+- Ensure the diamond storage slot for ERC20Storage is correctly initialized and remains accessible.
 </Callout>
 
 ## Integration Notes
 
 <Callout type="success" title="Shared Storage">
-This module utilizes the diamond storage pattern, with its state stored at a specific `STORAGE_POSITION` identified by `keccak256("erc20")`. The `getStorage()` function provides a pointer to the `ERC20Storage` struct, which contains fields like `totalSupply`. Functions `transfer` and `transferFrom` directly read from and write to this shared storage, updating balances and potentially `totalSupply`. These changes are immediately visible to any other facet that accesses the same storage slot.
+This module interacts with diamond storage at the `STORAGE_POSITION` defined by `keccak256("erc20")`. It directly modifies the `ERC20Storage` struct, which includes `totalSupply`. Changes to balances and allowances made through `transfer` and `transferFrom` are immediately visible to all facets accessing the same storage slot. The `getStorage` function provides a direct reference to this shared state.
 </Callout>
 
 <div style={{marginTop: "3rem", paddingTop: "2rem", borderTop: "1px solid var(--ifm-color-emphasis-200)"}}>
-  <RelatedDocs
-    items={[
-      {
-        title: "ERC1155ApproveMod",
-        href: "/docs/library/token/ERC1155/Approve/ERC1155ApproveMod",
-        description: "Related module in token",
-        icon: "📦"
-      },
-      {
-        title: "ERC1155MetadataMod",
-        href: "/docs/library/token/ERC1155/Metadata/ERC1155MetadataMod",
-        description: "Related module in token",
-        icon: "📦"
-      },
-      {
-        title: "ERC1155MintMod",
-        href: "/docs/library/token/ERC1155/Mint/ERC1155MintMod",
-        description: "Related module in token",
-        icon: "📦"
-      },
-      {
-        title: "ERC1155BurnMod",
-        href: "/docs/library/token/ERC1155/Burn/ERC1155BurnMod",
-        description: "Related module in token",
-        icon: "📦"
-      }
-    ]}
-  />
+  <WasThisHelpful pageId="ERC-20 Transfer Module" />
 </div>
 
-<div style={{marginTop: "3rem", paddingTop: "2rem", borderTop: "1px solid var(--ifm-color-emphasis-200)"}}>
-  <WasThisHelpful pageId="ERC20TransferMod" />
-</div>
-
-<LastUpdated date="2026-03-13T00:37:44.179Z" />
+<LastUpdated date="2026-03-13T01:19:39.229Z" />

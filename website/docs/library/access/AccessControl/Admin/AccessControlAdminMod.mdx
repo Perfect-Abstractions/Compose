@@ -1,7 +1,7 @@
 ---
 sidebar_position: 110
-title: "AccessControlAdminMod"
-description: "Manage role administration for access control"
+title: "Access Control Admin Module"
+description: "Manage role administrators within diamond storage"
 sidebar_label: "Module"
 gitSource: "https://github.com/Perfect-Abstractions/Compose/tree/main/src/access/AccessControl/Admin/AccessControlAdminMod.sol"
 ---
@@ -22,14 +22,14 @@ import GradientText from '@site/src/components/ui/GradientText';
 import GradientButton from '@site/src/components/ui/GradientButton';
 
 <DocSubtitle>
-Manage role administration for access control
+Manage role administrators within diamond storage
 </DocSubtitle>
 
 <Callout type="info" title="Key Features">
-- Provides `internal` functions for role administration.
-- Leverages the diamond storage pattern for shared state management.
-- Emits `RoleAdminChanged` event upon successful role administrator updates.
-- Enforces access control for setting role administrators.
+- All functions are `internal`, designed for use within custom facets.
+- Leverages the diamond storage pattern (EIP-8042) for shared state management.
+- No external dependencies, promoting a self-contained design.
+- Emits `RoleAdminChanged` event upon successful modification of role administrators.
 </Callout>
 
 <Callout type="info" title="Module Usage">
@@ -38,9 +38,7 @@ This module provides internal functions for use in your custom facets. Import it
 
 ## Overview
 
-This module exposes internal functions to manage role administration within a diamond. Facets can import this module to set and query administrative roles, ensuring that role modifications are performed by authorized entities. Changes to role administration are immediately visible to all facets accessing the shared diamond storage.
-
----
+This module provides internal functions for managing role administrators, crucial for access control within a diamond. Facets can import and utilize these functions to modify role administration rules using the shared diamond storage. Changes to role admin mappings are immediately visible to all facets interacting with the same storage.
 
 ## Storage
 
@@ -182,80 +180,46 @@ error AccessControlUnauthorizedAccount(address _account, bytes32 _role);
 
 <ExpandableCode language="solidity" maxLines={20} title="Example Implementation">
 {`pragma solidity >=0.8.30;
+
 import {AccessControlAdminMod} from "@compose/access/AccessControl/Admin/AccessControlAdminMod";
+import {AccessControlStorage} from "@compose/access/AccessControl/Admin/AccessControlStorage";
 
 contract MyAccessFacet {
     AccessControlAdminMod internal accessControlAdminMod;
 
-    // Assume AccessControlAdminMod is initialized and its storage is accessible
-    // For example, via a diamond storage layout and an initializer function
+    function initializeAccessControlAdmin(AccessControlStorage storage accessControlStorage) internal {
+        accessControlAdminMod = AccessControlAdminMod(address(this)); // Placeholder, actual diamond initialization required
+    }
 
-    function setAdminRole(bytes32 _role, bytes32 _adminRole) external {
-        // Access control check would typically happen before this, e.g., using OwnerMod
-        // This function directly calls the module's functionality
+    function grantAdminRole(bytes32 _role, bytes32 _adminRole) external {
+        // Assuming caller is authorized to perform this action, or additional checks are in place
         accessControlAdminMod.setRoleAdmin(_role, _adminRole);
     }
 
-    // Function to demonstrate calling getStorage (for informational purposes, not typical facet usage)
-    function getAccessControlStorage() external pure returns (AccessControlStorage memory) {
-        // In a real scenario, this would access diamond storage directly or via a shared interface
-        // This example shows how the module's getStorage function could be called if exposed
-        // Note: In Compose, facets usually interact with storage directly or via internal module functions.
-        // Accessing the raw storage struct via getStorage() is more for inspection or specific internal logic.
-        return AccessControlAdminMod.getStorage();
+    // Example of how a facet might access storage (implementation detail)
+    function getAccessControlStorage() internal view returns (AccessControlStorage storage) {
+        return accessControlAdminMod.getStorage();
     }
-}
-`}
+}`}
 </ExpandableCode>
 -->
 
 ## Best Practices
 
 <Callout type="tip" title="Best Practice">
-- Ensure the caller has the necessary permissions to set a role's administrator before calling `setRoleAdmin`.
-- Verify that the `AccessControlAdminMod` module's storage slot is correctly configured in the diamond's storage layout.
-- Handle the `AccessControlUnauthorizedAccount` error when calling `setRoleAdmin` to gracefully manage unauthorized attempts.
+- Ensure the caller has the necessary permissions to set admin roles before calling `setRoleAdmin`.
+- Verify the storage layout compatibility when upgrading facets to prevent unexpected behavior.
+- Handle the `AccessControlUnauthorizedAccount` error to gracefully manage unauthorized attempts to change role administrators.
 </Callout>
 
 ## Integration Notes
 
 <Callout type="success" title="Shared Storage">
-This module interacts with diamond storage at the `STORAGE_POSITION` identified by `keccak256("compose.accesscontrol")`. The `setRoleAdmin` function modifies the administrative role mapping within the shared `AccessControlStorage` struct. These modifications are immediately visible to any other facet that reads from the same storage position, ensuring consistent state across the diamond.
+This module interacts with diamond storage at a specific `STORAGE_POSITION` identified by `keccak2535(\"compose.accesscontrol\")`. The `AccessControlStorage` struct is used to manage role administration. Functions like `setRoleAdmin` directly modify this shared storage. Any facet that accesses the same `AccessControlStorage` via the diamond storage pattern will immediately observe these changes, ensuring consistent state across the diamond.
 </Callout>
 
 <div style={{marginTop: "3rem", paddingTop: "2rem", borderTop: "1px solid var(--ifm-color-emphasis-200)"}}>
-  <RelatedDocs
-    items={[
-      {
-        title: "OwnerDataMod",
-        href: "/docs/library/access/Owner/Data/OwnerDataMod",
-        description: "Related module in access",
-        icon: "📦"
-      },
-      {
-        title: "OwnerRenounceMod",
-        href: "/docs/library/access/Owner/Renounce/OwnerRenounceMod",
-        description: "Related module in access",
-        icon: "📦"
-      },
-      {
-        title: "OwnerTransferMod",
-        href: "/docs/library/access/Owner/Transfer/OwnerTransferMod",
-        description: "Related module in access",
-        icon: "📦"
-      },
-      {
-        title: "OwnerTwoStepDataMod",
-        href: "/docs/library/access/Owner/TwoSteps/Data/OwnerTwoStepDataMod",
-        description: "Related module in access",
-        icon: "📦"
-      }
-    ]}
-  />
+  <WasThisHelpful pageId="Access Control Admin Module" />
 </div>
 
-<div style={{marginTop: "3rem", paddingTop: "2rem", borderTop: "1px solid var(--ifm-color-emphasis-200)"}}>
-  <WasThisHelpful pageId="AccessControlAdminMod" />
-</div>
-
-<LastUpdated date="2026-03-13T00:39:05.617Z" />
+<LastUpdated date="2026-03-13T01:21:01.229Z" />

@@ -1,6 +1,6 @@
 ---
 sidebar_position: 210
-title: "ERC20MetadataMod"
+title: "ERC-20 Metadata Module"
 description: "Manage ERC-20 token metadata within a diamond"
 sidebar_label: "Module"
 gitSource: "https://github.com/Perfect-Abstractions/Compose/tree/main/src/token/ERC20/Metadata/ERC20MetadataMod.sol"
@@ -26,10 +26,10 @@ Manage ERC-20 token metadata within a diamond
 </DocSubtitle>
 
 <Callout type="info" title="Key Features">
-- Provides internal functions for setting and retrieving ERC-20 metadata.
-- Utilizes the diamond storage pattern for shared state management.
-- No external dependencies, ensuring minimal on-chain footprint.
-- Compatible with ERC-2535 diamonds.
+- Internal functions for managing token name, symbol, and decimals.
+- Leverages diamond storage (EIP-8042) for shared state.
+- No external dependencies, promoting composability.
+- Functions are designed for direct use within facets via the diamond proxy.
 </Callout>
 
 <Callout type="info" title="Module Usage">
@@ -38,9 +38,7 @@ This module provides internal functions for use in your custom facets. Import it
 
 ## Overview
 
-This module provides internal functions to manage ERC-20 token metadata like name, symbol, and decimals. Facets can import this module to interact with shared diamond storage, ensuring metadata consistency across the diamond. Changes made through this module are immediately visible to all facets accessing the same storage slot.
-
----
+This module provides internal functions to manage ERC-20 token metadata, including name, symbol, and decimals. Facets can import this module to interact with shared diamond storage, ensuring metadata consistency across all facets. Changes made through this module are immediately visible to any other facet accessing the same diamond storage slot.
 
 ## Storage
 
@@ -131,76 +129,81 @@ Sets the metadata for the ERC20 token.
 <ExpandableCode language="solidity" maxLines={20} title="Example Implementation">
 {`pragma solidity >=0.8.30;
 
-import {ERC20MetadataMod} from "@compose/token/ERC20/Metadata/ERC20MetadataMod";
+import { ERC20MetadataMod } from "@compose/token/ERC20/Metadata/ERC20MetadataMod";
 
 contract MyERC20Facet {
-    // Assuming ERC20MetadataMod is initialized and accessible
-    ERC20MetadataMod private _metadataMod;
+    ERC20MetadataMod internal metadataMod;
 
-    // In a real scenario, _metadataMod would be initialized or passed in.
-    // For this example, we'll assume its functions are directly callable.
-
-    function setTokenMetadata(string memory name, string memory symbol, uint8 decimals) external {
-        // Call the internal function from the module to set metadata
-        ERC20MetadataMod.setMetadata(name, symbol, decimals);
+    constructor(address diamondAddresses) {
+        // Assume diamondAddresses is the address of the diamond proxy
+        // and ERC20MetadataMod is a known module address or selector.
+        // For simplicity, we are directly referencing the module here.
+        // In a real diamond, you'd typically get module addresses via a registry.
     }
 
-    function getTokenMetadata() external view returns (string memory name, string memory symbol, uint8 decimals) {
-        // Retrieve the storage struct containing metadata
-        ERC20MetadataMod.ERC20MetadataStorage storage metadataStorage = ERC20MetadataMod.getStorage();
-        return (metadataStorage.name, metadataStorage.symbol, metadataStorage.decimals);
+    /**
+     * @notice Sets the ERC20 token's metadata.
+     * @param _name The name of the token.
+     * @param _symbol The symbol of the token.
+     * @param _decimals The number of decimals for the token.
+     */
+    function setTokenMetadata(string memory _name, string memory _symbol, uint8 _decimals) external {
+        // In a real diamond, you would call the module via the diamond proxy
+        // This example directly calls the module for clarity on its usage.
+        // metadataMod.setMetadata(_name, _symbol, _decimals);
+
+        // Placeholder for actual diamond call:
+        // diamond.call(
+        //     selectorFor(ERC20MetadataMod.setMetadata),
+        //     abi.encodeCall(ERC20MetadataMod.setMetadata, (_name, _symbol, _decimals))
+        // );
     }
-}`}
+
+    /**
+     * @notice Retrieves the ERC20 token's metadata storage.
+     * @return ERC20MetadataStorage The storage struct containing token metadata.
+     */
+    function getTokenMetadataStorage() internal view returns (ERC20MetadataStorage memory) {
+        // In a real diamond, you would call the module via the diamond proxy
+        // This example directly calls the module for clarity on its usage.
+        // return metadataMod.getStorage();
+
+        // Placeholder for actual diamond call:
+        // (bool success, bytes memory data) = diamond.call(
+        //     selectorFor(ERC20MetadataMod.getStorage)
+        // );
+        // require(success, "ERC20MetadataMod: getStorage failed");
+        // return abi.decode(data, (ERC20MetadataStorage));
+        return ERC20MetadataStorage({}); // Dummy return for compilation
+    }
+}
+
+// Dummy structs for compilation purposes
+struct ERC20MetadataStorage {
+    string name;
+    string symbol;
+    uint8 decimals;
+}
+`}
 </ExpandableCode>
 -->
 
 ## Best Practices
 
 <Callout type="tip" title="Best Practice">
-- Ensure access control is enforced by calling facets before invoking `setMetadata`.
-- Verify storage layout compatibility when upgrading facets that interact with ERC20 metadata.
-- Handle potential reverts if the diamond storage slot for metadata is not properly initialized.
+- Call `setMetadata` only during diamond initialization or when upgrading token metadata.
+- Ensure that the diamond storage slot for metadata is correctly initialized before calling any functions in this module.
+- Access metadata using `getStorage` from any facet requiring token information to maintain consistency.
 </Callout>
 
 ## Integration Notes
 
 <Callout type="success" title="Shared Storage">
-This module interacts with diamond storage at the `STORAGE_POSITION` slot, identified by `keccak256("erc20.metadata")`. It reads from and writes to the `ERC20MetadataStorage` struct. Changes to `name`, `symbol`, and `decimals` made via `setMetadata` are persistent and immediately observable by any facet that reads from the same storage slot.
+This module interacts with diamond storage at a predefined position, identified by `keccak256(\"erc20.metadata\")`. The `ERC20MetadataStorage` struct, containing `name`, `symbol`, and `decimals`, is stored at this location. All facets that import this module will access and modify this shared storage. Changes made via `setMetadata` are immediately reflected for any facet calling `getStorage` or directly reading from the same storage slot.
 </Callout>
 
 <div style={{marginTop: "3rem", paddingTop: "2rem", borderTop: "1px solid var(--ifm-color-emphasis-200)"}}>
-  <RelatedDocs
-    items={[
-      {
-        title: "ERC20MetadataFacet",
-        href: "/docs/library/token/ERC20/Metadata/ERC20MetadataFacet",
-        description: "Facet using ERC20MetadataMod",
-        icon: "💎"
-      },
-      {
-        title: "ERC1155ApproveMod",
-        href: "/docs/library/token/ERC1155/Approve/ERC1155ApproveMod",
-        description: "Related module in token",
-        icon: "📦"
-      },
-      {
-        title: "ERC1155MetadataMod",
-        href: "/docs/library/token/ERC1155/Metadata/ERC1155MetadataMod",
-        description: "Related module in token",
-        icon: "📦"
-      },
-      {
-        title: "ERC1155MintMod",
-        href: "/docs/library/token/ERC1155/Mint/ERC1155MintMod",
-        description: "Related module in token",
-        icon: "📦"
-      }
-    ]}
-  />
+  <WasThisHelpful pageId="ERC-20 Metadata Module" />
 </div>
 
-<div style={{marginTop: "3rem", paddingTop: "2rem", borderTop: "1px solid var(--ifm-color-emphasis-200)"}}>
-  <WasThisHelpful pageId="ERC20MetadataMod" />
-</div>
-
-<LastUpdated date="2026-03-13T00:37:07.069Z" />
+<LastUpdated date="2026-03-13T01:19:02.952Z" />

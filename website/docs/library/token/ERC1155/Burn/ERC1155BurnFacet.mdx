@@ -1,6 +1,6 @@
 ---
 sidebar_position: 200
-title: "ERC1155BurnFacet"
+title: "ERC-1155 Burn Facet"
 description: "Burn ERC-1155 tokens within a diamond"
 sidebar_label: "Facet"
 gitSource: "https://github.com/Perfect-Abstractions/Compose/tree/main/src/token/ERC1155/Burn/ERC1155BurnFacet.sol"
@@ -26,17 +26,15 @@ Burn ERC-1155 tokens within a diamond
 </DocSubtitle>
 
 <Callout type="info" title="Key Features">
-- Exposes external functions for burning single and batch ERC-1155 tokens.
-- Leverages diamond storage for state management.
+- Implements `burn` and `burnBatch` functions for ERC-1155 token destruction.
 - Emits `TransferSingle` and `TransferBatch` events upon successful burns.
-- Provides `exportSelectors` for diamond discovery.
+- Utilizes diamond storage for token state management.
+- Provides `exportSelectors` for diamond integration and upgradeability.
 </Callout>
 
 ## Overview
 
-This facet enables burning of ERC-1155 tokens directly within a diamond proxy. It provides external functions for single and batch token destruction, accessing shared diamond storage. Developers integrate this facet to manage token supply reductions while leveraging the diamond's upgradeability and composability.
-
----
+This facet implements ERC-1155 token burning functionality as external functions within a diamond. It interacts with shared diamond storage to manage token states and emits standard ERC-1155 events for burn operations. Developers integrate this facet to enable token destruction while benefiting from the diamond's upgradeability and modularity.
 
 ## Storage
 
@@ -313,19 +311,42 @@ error ERC1155MissingApprovalForAll(address _operator, address _owner);
 import {IDiamond} from "@compose/diamond/IDiamond";
 import {ERC1155BurnFacet} from "@compose/token/ERC1155/Burn/ERC1155BurnFacet";
 
-contract DiamondUser {
+contract DiamondConsumer {
     address immutable diamondAddress;
 
     constructor(address _diamondAddress) {
         diamondAddress = _diamondAddress;
     }
 
+    /**
+     * @notice Burn a single ERC-1155 token type.
+     * @param _from The address from which to burn.
+     * @param _id The token ID to burn.
+     * @param _value The amount of tokens to burn.
+     */
     function burnSingleToken(address _from, uint256 _id, uint256 _value) external {
-        ERC1155BurnFacet(diamondAddress).burn(_from, _id, _value);
+        // Call the burn function through the diamond proxy
+        IDiamond(diamondAddress).burn(_from, _id, _value);
     }
 
-    function burnMultipleTokens(address _from, uint256[] memory _ids, uint256[] memory _values) external {
-        ERC1155BurnFacet(diamondAddress).burnBatch(_from, _ids, _values);
+    /**
+     * @notice Burn multiple ERC-1155 token types in a batch.
+     * @param _from The address from which to burn.
+     * @param _ids An array of token IDs to burn.
+     * @param _values An array of amounts to burn for each token ID.
+     */
+    function burnBatchTokens(address _from, uint256[] calldata _ids, uint256[] calldata _values) external {
+        // Call the burnBatch function through the diamond proxy
+        IDiamond(diamondAddress).burnBatch(_from, _ids, _values);
+    }
+
+    /**
+     * @notice Export selectors for this facet.
+     * @return bytes The encoded function selectors.
+     */
+    function exportFacetSelectors() external pure returns (bytes memory) {
+        // Export selectors to allow the diamond to register them
+        return ERC1155BurnFacet.exportSelectors();
     }
 }`}
 </ExpandableCode>
@@ -334,50 +355,19 @@ contract DiamondUser {
 ## Best Practices
 
 <Callout type="tip" title="Best Practice">
-- Ensure the caller has the necessary permissions (owner or approved operator) before burning tokens.
+- Initialize the diamond with this facet to enable token burning capabilities.
+- Ensure the caller has the necessary permissions (owner or approved operator) before attempting to burn tokens.
 - Verify that the `_ids` and `_values` arrays have matching lengths when calling `burnBatch`.
-- Integrate this facet early in diamond deployment to manage token supply mechanics.
 </Callout>
 
 ## Security Considerations
 
 <Callout type="warning" title="Security">
-The `burn` and `burnBatch` functions require the caller to be the owner of the tokens or an approved operator. Input validation for array lengths in `burnBatch` is crucial to prevent `ERC1155InvalidArrayLength` errors. Ensure that token balances are correctly managed to avoid `ERC1155InsufficientBalance` errors. Standard Solidity security practices for external calls and state modifications apply.
+The `burn` and `burnBatch` functions require the caller to be the owner of the tokens or an approved operator. The facet reverts with `ERC1155InsufficientBalance` if the sender does not have enough tokens. Input validation for array lengths is performed in `burnBatch` to prevent `ERC1155InvalidArrayLength`. Ensure proper access control is implemented at the diamond level or by related facets for functions that grant operator status.
 </Callout>
 
 <div style={{marginTop: "3rem", paddingTop: "2rem", borderTop: "1px solid var(--ifm-color-emphasis-200)"}}>
-  <RelatedDocs
-    items={[
-      {
-        title: "ERC1155BurnMod",
-        href: "/docs/library/token/ERC1155/Burn/ERC1155BurnMod",
-        description: "Module used by ERC1155BurnFacet",
-        icon: "📦"
-      },
-      {
-        title: "ERC1155ApproveFacet",
-        href: "/docs/library/token/ERC1155/Approve/ERC1155ApproveFacet",
-        description: "Related facet in token",
-        icon: "💎"
-      },
-      {
-        title: "ERC1155MetadataFacet",
-        href: "/docs/library/token/ERC1155/Metadata/ERC1155MetadataFacet",
-        description: "Related facet in token",
-        icon: "💎"
-      },
-      {
-        title: "ERC1155DataFacet",
-        href: "/docs/library/token/ERC1155/Data/ERC1155DataFacet",
-        description: "Related facet in token",
-        icon: "💎"
-      }
-    ]}
-  />
+  <WasThisHelpful pageId="ERC-1155 Burn Facet" />
 </div>
 
-<div style={{marginTop: "3rem", paddingTop: "2rem", borderTop: "1px solid var(--ifm-color-emphasis-200)"}}>
-  <WasThisHelpful pageId="ERC1155BurnFacet" />
-</div>
-
-<LastUpdated date="2026-03-13T00:35:38.980Z" />
+<LastUpdated date="2026-03-13T01:17:34.018Z" />

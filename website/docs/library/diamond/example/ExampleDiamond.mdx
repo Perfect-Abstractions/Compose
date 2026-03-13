@@ -1,7 +1,8 @@
 ---
-sidebar_position: 510
-title: "ExampleDiamond"
-description: "Example diamond initialization and proxy functionality"
+sidebar_position: 500
+title: "Example Diamond"
+description: "Initializes a diamond with facets and owner"
+sidebar_label: "Facet"
 gitSource: "https://github.com/Perfect-Abstractions/Compose/tree/main/src/diamond/example/ExampleDiamond.sol"
 ---
 
@@ -21,21 +22,18 @@ import GradientText from '@site/src/components/ui/GradientText';
 import GradientButton from '@site/src/components/ui/GradientButton';
 
 <DocSubtitle>
-Example diamond initialization and proxy functionality
+Initializes a diamond with facets and owner
 </DocSubtitle>
 
 <Callout type="info" title="Key Features">
-- Initializes the diamond with provided facets and owner.
-- Registers function selectors to enable delegatecall routing.
-- Handles fallback and receive calls for general ether reception.
-- Serves as a foundational template for diamond proxy patterns.
+- Initializes diamond with provided facets and owner.
+- Registers function selectors to enable diamond routing.
+- Designed for initial diamond deployment.
 </Callout>
 
 ## Overview
 
-This example diamond library demonstrates diamond initialization and serves as a proxy. It registers facets upon deployment and handles fallback and receive calls. Developers use this as a template for setting up their diamonds with initial facets.
-
----
+This contract provides initialization logic for a diamond proxy. It registers facets and sets the diamond owner during deployment. This ensures the diamond is correctly configured with its initial set of functionalities and ownership.
 
 ## Storage
 
@@ -93,60 +91,35 @@ import @compose/diamond/example/ExampleDiamond;
 contract DeployExampleDiamond {
     address public diamondAddress;
 
-    function deploy() public {
-        // Example facets to be added to the diamond
-        address[] memory facets = new address[](0);
-        address owner = msg.sender;
-
-        // Deploy the ExampleDiamond, which initializes and registers facets
-        ExampleDiamond diamond = new ExampleDiamond(facets, owner);
-        diamondAddress = address(diamond);
+    constructor(address[] memory _facets, address _diamondOwner) {
+        ExampleDiamond deployer = new ExampleDiamond();
+        diamondAddress = deployer.deploy(_facets, _diamondOwner);
     }
 
-    // Example of interacting with the diamond through its proxy capabilities
-    function interactWithDiamond() public {
-        if (diamondAddress == address(0)) {
-            revert("Diamond not deployed");
-        }
-        // Assuming ExampleDiamond also acts as a fallback/receive handler
-        // For actual facet function calls, you would need to interact via an IDiamond interface
-        // and the diamond would route calls to registered facets.
-        // Example: IDiamond(diamondAddress).someFacetFunction();
-    }
-}
-`}
+    // Example of calling a function through the initialized diamond (assuming a facet with 'someFunction' is added)
+    // function callSomeFunction(address _someAddress) external {
+    //     ExampleDiamond(diamondAddress).someFunction(_someAddress);
+    // }
+}`}
 </ExpandableCode>
 -->
 
 ## Best Practices
 
 <Callout type="tip" title="Best Practice">
-- Initialize the diamond with an owner and initial facets during deployment.
-- Ensure all facets intended for use are registered during the constructor phase.
-- Understand that `fallback` and `receive` are executed when no other function matches.
+- Call the constructor with an array of facet addresses and the intended diamond owner.
+- Ensure the `_facets` array contains valid facet contracts.
+- Verify the `_diamondOwner` address is correct before deployment.
 </Callout>
 
 ## Security Considerations
 
 <Callout type="warning" title="Security">
-The constructor logic for registering facets is critical and should be carefully audited. The `fallback` and `receive` functions allow the diamond to accept Ether; ensure this behavior aligns with the diamond's intended purpose. Follow standard Solidity security practices for contract deployment and interaction.
+This contract is an initializer and should be used in a secure deployment script. Ensure the `_facets` and `_diamondOwner` parameters are validated by the deployment script before execution. Follow standard Solidity security practices for contract deployment.
 </Callout>
 
 <div style={{marginTop: "3rem", paddingTop: "2rem", borderTop: "1px solid var(--ifm-color-emphasis-200)"}}>
-  <RelatedDocs
-    items={[
-      {
-        title: "ExampleDiamond",
-        href: "/docs/library/diamond/example/ExampleDiamond",
-        description: "Module used by ExampleDiamond",
-        icon: "📦"
-      }
-    ]}
-  />
+  <WasThisHelpful pageId="Example Diamond" />
 </div>
 
-<div style={{marginTop: "3rem", paddingTop: "2rem", borderTop: "1px solid var(--ifm-color-emphasis-200)"}}>
-  <WasThisHelpful pageId="ExampleDiamond" />
-</div>
-
-<LastUpdated date="2026-03-13T00:34:46.970Z" />
+<LastUpdated date="2026-03-13T01:16:40.658Z" />

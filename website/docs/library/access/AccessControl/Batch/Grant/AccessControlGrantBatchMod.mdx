@@ -1,7 +1,7 @@
 ---
 sidebar_position: 110
-title: "AccessControlGrantBatchMod"
-description: "Grant roles to multiple accounts in one transaction"
+title: "Access Control Grant Batch Module"
+description: "Grant roles to multiple accounts atomically"
 sidebar_label: "Module"
 gitSource: "https://github.com/Perfect-Abstractions/Compose/tree/main/src/access/AccessControl/Batch/Grant/AccessControlGrantBatchMod.sol"
 ---
@@ -22,14 +22,14 @@ import GradientText from '@site/src/components/ui/GradientText';
 import GradientButton from '@site/src/components/ui/GradientButton';
 
 <DocSubtitle>
-Grant roles to multiple accounts in one transaction
+Grant roles to multiple accounts atomically
 </DocSubtitle>
 
 <Callout type="info" title="Key Features">
-- All functions are `internal` for use within custom facets.
-- Utilizes the diamond storage pattern (EIP-8042) for shared state management.
-- Grants roles to multiple accounts in a single transaction, optimizing gas usage.
-- Emits `RoleGranted` events for each account that receives a role.
+- Grants roles to multiple accounts in a single transaction.
+- Functions are `internal` for use within custom facets.
+- Utilizes diamond storage for role management.
+- Emits `RoleGranted` events for each account granted a role.
 </Callout>
 
 <Callout type="info" title="Module Usage">
@@ -38,9 +38,7 @@ This module provides internal functions for use in your custom facets. Import it
 
 ## Overview
 
-This module exposes internal functions for batch role granting using diamond storage. Facets import this module to efficiently grant roles to multiple accounts simultaneously, reducing gas costs and transaction complexity. Changes made through this module are immediately visible to all facets using the same storage pattern.
-
----
+This module provides atomic role granting to multiple accounts, reducing gas costs and transaction complexity. Facets import this module to manage roles using shared diamond storage. Changes made through this module are immediately visible to all facets using the same storage pattern.
 
 ## Storage
 
@@ -182,76 +180,45 @@ error AccessControlUnauthorizedAccount(address _account, bytes32 _role);
 
 <ExpandableCode language="solidity" maxLines={20} title="Example Implementation">
 {`pragma solidity >=0.8.30;
-import @compose/access/AccessControl/Batch/Grant/AccessControlGrantBatchMod;
 
-contract MyAccessControlFacet {
-    AccessControlGrantBatchMod internal accessControlGrantBatchMod;
+import {AccessControlGrantBatchMod} from "@compose/access/AccessControl/Batch/Grant/AccessControlGrantBatchMod";
 
-    // Assume AccessControlGrantBatchMod is initialized elsewhere and its address is available
-    constructor(address _accessControlGrantBatchModAddress) {
-        accessControlGrantBatchMod = AccessControlGrantBatchMod(_accessControlGrantBatchModAddress);
+contract AccessControlFacet {
+    AccessControlGrantBatchMod private accessControlGrantBatchMod;
+
+    constructor(address _diamondAddress) {
+        accessControlGrantBatchMod = AccessControlGrantBatchMod(_diamondAddress);
     }
 
     /**
      * @notice Grants a specific role to multiple accounts.
-     * @param _role The role to grant.
-     * @param _accounts An array of addresses to grant the role to.
+     * @dev Uses the AccessControlGrantBatchMod module for atomic granting.
      */
-    function grantRoleToMultipleAccounts(bytes32 _role, address[] memory _accounts) external {
-        // Internal call to the module for batch role granting
-        accessControlGrantBatchMod.grantRoleBatch(_role, _accounts);
+    function grantAdminRoleToUsers(address[] memory _users) external {
+        bytes32 adminRole = keccak256("COMPOSE_ADMIN_ROLE"); // Example role
+        accessControlGrantBatchMod.grantRoleBatch(adminRole, _users);
     }
-}`}
+}
+`}
 </ExpandableCode>
 -->
 
 ## Best Practices
 
 <Callout type="tip" title="Best Practice">
-- Ensure the caller is authorized to grant roles before invoking `grantRoleBatch`.
-- Verify that the `AccessControlStorage` struct layout remains compatible across diamond upgrades.
-- Handle the `AccessControlUnauthorizedAccount` error, which is reverted if the caller lacks the necessary permissions.
+- Ensure the caller has the necessary permissions to grant roles before invoking `grantRoleBatch`.
+- Verify that the `AccessControlStorage` slot is correctly initialized before using this module.
+- Handle the `AccessControlUnauthorizedAccount` error, which is reverted if the caller lacks the required role.
 </Callout>
 
 ## Integration Notes
 
 <Callout type="success" title="Shared Storage">
-This module interacts with diamond storage at the position defined by `keccak2535("compose.accesscontrol")`. It reads and writes to the `AccessControlStorage` struct. Any modifications to role assignments made by `grantRoleBatch` are immediately reflected in the diamond's shared storage and are visible to all other facets operating on the same storage.
+This module interacts with diamond storage at the `STORAGE_POSITION` defined by `keccak256("compose.accesscontrol")`. It reads from and writes to the shared `AccessControlStorage` struct. All changes to roles made via `grantRoleBatch` are immediately reflected in the diamond's shared storage and are visible to all facets accessing that storage.
 </Callout>
 
 <div style={{marginTop: "3rem", paddingTop: "2rem", borderTop: "1px solid var(--ifm-color-emphasis-200)"}}>
-  <RelatedDocs
-    items={[
-      {
-        title: "OwnerDataMod",
-        href: "/docs/library/access/Owner/Data/OwnerDataMod",
-        description: "Related module in access",
-        icon: "📦"
-      },
-      {
-        title: "OwnerRenounceMod",
-        href: "/docs/library/access/Owner/Renounce/OwnerRenounceMod",
-        description: "Related module in access",
-        icon: "📦"
-      },
-      {
-        title: "OwnerTransferMod",
-        href: "/docs/library/access/Owner/Transfer/OwnerTransferMod",
-        description: "Related module in access",
-        icon: "📦"
-      },
-      {
-        title: "OwnerTwoStepDataMod",
-        href: "/docs/library/access/Owner/TwoSteps/Data/OwnerTwoStepDataMod",
-        description: "Related module in access",
-        icon: "📦"
-      }
-    ]}
-  />
+  <WasThisHelpful pageId="Access Control Grant Batch Module" />
 </div>
 
-<div style={{marginTop: "3rem", paddingTop: "2rem", borderTop: "1px solid var(--ifm-color-emphasis-200)"}}>
-  <WasThisHelpful pageId="AccessControlGrantBatchMod" />
-</div>
-
-<LastUpdated date="2026-03-13T00:39:56.322Z" />
+<LastUpdated date="2026-03-13T01:21:52.054Z" />

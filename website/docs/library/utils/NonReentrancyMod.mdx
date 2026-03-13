@@ -1,7 +1,7 @@
 ---
 sidebar_position: 1
-title: "NonReentrancyMod"
-description: "Prevents reentrant calls within a diamond facet"
+title: "Non Reentrancy Module"
+description: "Prevent reentrant calls using internal state"
 gitSource: "https://github.com/Perfect-Abstractions/Compose/tree/main/src/libraries/NonReentrancyMod.sol"
 ---
 
@@ -21,13 +21,14 @@ import GradientText from '@site/src/components/ui/GradientText';
 import GradientButton from '@site/src/components/ui/GradientButton';
 
 <DocSubtitle>
-Prevents reentrant calls within a diamond facet
+Prevent reentrant calls using internal state
 </DocSubtitle>
 
 <Callout type="info" title="Key Features">
-- Internal functions `enter` and `exit` prevent reentrant calls.
-- Emits a `Reentrancy` custom error when a reentrant call is detected.
-- Designed for use within diamond facets, leveraging Solidity's `using for` directive.
+- Internal functions `enter()` and `exit()` for programmatic control.
+- Emits `Reentrancy()` error on detected reentrant calls.
+- No external dependencies, ensuring minimal footprint.
+- Designed for use within individual facets to manage their own reentrancy.
 </Callout>
 
 <Callout type="info" title="Module Usage">
@@ -36,9 +37,7 @@ This module provides internal functions for use in your custom facets. Import it
 
 ## Overview
 
-This module provides internal functions to prevent reentrant function calls within a diamond facet. By using `enter` and `exit` before and after sensitive operations, facets can ensure that a function is not called again before it has completed, mitigating reentrancy risks.
-
----
+This module provides internal functions to prevent reentrant calls within a facet. By calling `enter` before an operation and `exit` after, facets can ensure that a function is not called again before its initial execution completes. This is crucial for maintaining state integrity in complex diamond interactions.
 
 ## Storage
 
@@ -97,30 +96,34 @@ error Reentrancy();
 
 <ExpandableCode language="solidity" maxLines={20} title="Example Implementation">
 {`pragma solidity >=0.8.30;
-
 import @compose/libraries/NonReentrancyMod;
 
 contract MyFacet {
-    using NonReentrancyMod for address;
+    using NonReentrancyMod for uint256;
+
+    uint256 internal _state;
 
     /**
-     * @notice Example function demonstrating non-reentrant behavior.
+     * @notice Example function demonstrating non-reentrancy.
      */
-    function sensitiveOperation() external {
-        address(this).enter();
-        // Perform sensitive operations that should not be reentered
-        // ...
-        address(this).exit();
+    function processState() external {
+        // Lock the function against reentrant calls
+        _state.enter();
+
+        // Perform sensitive operations here...
+        // For example, an external call that might trigger a callback.
+        // _callExternalContract(_msgSender());
+
+        // Ensure the lock is released after operations are complete
+        _state.exit();
     }
 
     /**
-     * @notice Example function demonstrating reentrancy error.
+     * @notice Example of a callback that should not reenter processState.
      */
-    function triggerReentrancy() external {
-        address(this).enter();
-        // Simulate a reentrant call (e.g., calling another external function that calls back here)
-        // This would revert with the Reentrancy error if not protected.
-        address(this).exit();
+    function callback() external {
+        // If called while processState is active, this would revert due to \`_state.enter()\`
+        // or potentially proceed if not protected by the caller.
     }
 }`}
 </ExpandableCode>
@@ -129,19 +132,19 @@ contract MyFacet {
 ## Best Practices
 
 <Callout type="tip" title="Best Practice">
-- Call `NonReentrancyMod.enter()` at the beginning of any function that performs external calls or state changes susceptible to reentrancy.
-- Call `NonReentrancyMod.exit()` immediately before returning from such functions.
-- Ensure that the `Reentrancy` custom error is handled by calling facets or off-chain consumers.
+- Call `enter()` at the beginning of any state-changing function that might interact with external contracts or callbacks.
+- Always call `exit()` after the sensitive operations within a function are complete to release the reentrancy lock.
+- Handle the `Reentrancy()` error explicitly to manage scenarios where reentrant calls are detected.
 </Callout>
 
 ## Integration Notes
 
 <Callout type="success" title="Shared Storage">
-This module operates by managing an internal state that is implicitly associated with the `address(this)` of the calling facet when used with `using NonReentrancyMod for address;`. It does not directly interact with diamond storage. The state managed by `enter` and `exit` is local to the execution context of the facet using it. Changes are not persistent across function calls or visible to other facets via shared storage.
+This module does not interact with diamond storage directly. Instead, it provides internal functions that facets can use to manage their own execution context. The `enter` and `exit` functions operate on internal state within the calling facet, effectively creating a local reentrancy guard. Changes to this internal state are not visible to other facets.
 </Callout>
 
 <div style={{marginTop: "3rem", paddingTop: "2rem", borderTop: "1px solid var(--ifm-color-emphasis-200)"}}>
-  <WasThisHelpful pageId="NonReentrancyMod" />
+  <WasThisHelpful pageId="Non Reentrancy Module" />
 </div>
 
-<LastUpdated date="2026-03-13T00:35:07.237Z" />
+<LastUpdated date="2026-03-13T01:17:01.602Z" />

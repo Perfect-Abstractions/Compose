@@ -1,7 +1,7 @@
 ---
 sidebar_position: 210
-title: "ERC721TransferMod"
-description: "Transfers ERC-721 tokens using diamond storage"
+title: "ERC-721 Transfer Module"
+description: "Manage ERC-721 token transfers within a diamond"
 sidebar_label: "Module"
 gitSource: "https://github.com/Perfect-Abstractions/Compose/tree/main/src/token/ERC721/Transfer/ERC721TransferMod.sol"
 ---
@@ -22,14 +22,14 @@ import GradientText from '@site/src/components/ui/GradientText';
 import GradientButton from '@site/src/components/ui/GradientButton';
 
 <DocSubtitle>
-Transfers ERC-721 tokens using diamond storage
+Manage ERC-721 token transfers within a diamond
 </DocSubtitle>
 
 <Callout type="info" title="Key Features">
-- Internal functions for seamless integration within custom facets.
-- Utilizes the diamond storage pattern (EIP-8042) for shared state management.
-- No external dependencies, promoting composability.
+- Internal functions (`transferFrom`) for facet composition.
+- Utilizes the diamond storage pattern for shared state management.
 - Emits `Transfer` event upon successful token transfer.
+- Includes custom errors for specific transfer validation failures.
 </Callout>
 
 <Callout type="info" title="Module Usage">
@@ -38,9 +38,7 @@ This module provides internal functions for use in your custom facets. Import it
 
 ## Overview
 
-This module facilitates ERC-721 token transfers by providing internal functions that interact with shared diamond storage. Facets can import this module to manage token ownership changes, ensuring consistency across the diamond. State modifications are immediately visible to all facets accessing the same storage.
-
----
+This module provides internal functions for managing ERC-721 token transfers, including ownership changes and validation checks. Facets can import this module to implement ERC-721 compliant transfer logic, leveraging shared diamond storage. Updates to token ownership are immediately visible to all facets interacting with the same storage.
 
 ## Storage
 
@@ -213,40 +211,33 @@ error ERC721NonexistentToken(uint256 _tokenId);
 
 <ExpandableCode language="solidity" maxLines={20} title="Example Implementation">
 {`pragma solidity >=0.8.30;
-
 import @compose/token/ERC721/Transfer/ERC721TransferMod;
 
-contract ERC721Facet {
-    // Placeholder for storage slot definition if needed in a real facet
-    // uint256 constant STORAGE_POSITION = keccak256("erc721");
+contract ERC721TransferFacet {
+    ERC721TransferMod private transferModule;
 
-    ERC721TransferMod private _transferModule;
-
-    constructor(address diamondAddress) {
-        // In a real diamond, the module would be accessed via the diamond proxy.
-        // This example simulates direct access for demonstration.
-        _transferModule = ERC721TransferMod(diamondAddress);
+    constructor(address _diamondAddress) {
+        transferModule = ERC721TransferMod(_diamondAddress);
     }
 
     /**
      * @notice Transfers a token from one address to another.
-     * @dev Assumes caller has appropriate permissions and token is approved.
+     * @dev This function internally calls the ERC721TransferMod.
      * @param _from The address to transfer from.
      * @param _to The address to transfer to.
      * @param _tokenId The ID of the token to transfer.
      */
-    function safeTransferFrom(address _from, address _to, uint256 _tokenId) external {
-        // In a real scenario, access control and approval checks would precede this call.
-        // The module's transferFrom function handles internal validation.
-        _transferModule.transferFrom(_from, _to, _tokenId);
+    function transferToken(address _from, address _to, uint256 _tokenId) external {
+        // Internal call to the ERC721TransferMod for actual transfer logic
+        transferModule.transferFrom(_from, _to, _tokenId);
     }
 
     /**
-     * @notice Retrieves the ERC721Storage struct.
-     * @return The ERC721Storage struct.
+     * @notice Retrieves the ERC721 storage struct.
+     * @return The ERC721 storage struct.
      */
-    function getERC721Storage() public view returns (ERC721Storage) {
-        return _transferModule.getStorage();
+    function getErc721Storage() external pure returns (ERC721Storage) {
+        return ERC721TransferMod.getStorage();
     }
 }`}
 </ExpandableCode>
@@ -255,50 +246,19 @@ contract ERC721Facet {
 ## Best Practices
 
 <Callout type="tip" title="Best Practice">
-- Ensure access control and token approval checks are performed by the calling facet before invoking `transferFrom`.
-- Verify that the `_to` address is valid and not the zero address before calling `transferFrom`.
-- Handle the `ERC721IncorrectOwner`, `ERC721InvalidReceiver`, and `ERC721NonexistentToken` errors returned by `transferFrom`.
+- Ensure caller has appropriate permissions and ownership before calling `transferFrom`.
+- Handle `ERC721IncorrectOwner`, `ERC721InvalidReceiver`, and `ERC721NonexistentToken` errors to manage transfer failures gracefully.
+- Verify that the diamond's storage layout remains compatible with `ERC721TransferMod` upon upgrades to prevent storage collisions.
 </Callout>
 
 ## Integration Notes
 
 <Callout type="success" title="Shared Storage">
-This module interacts with diamond storage at a predefined `STORAGE_POSITION` keyed by `keccak256("erc721")`. The `ERC721Storage` struct, which holds token ownership and related data, is accessed via inline assembly. Any modifications made to this storage by the `transferFrom` function are immediately reflected and visible to all other facets within the same diamond that access this storage position.
+This module interacts with diamond storage at the slot identified by `keccak2535(\"erc721\")`. The `getStorage()` function uses inline assembly to access this predefined storage location. The `transferFrom()` function reads and writes to the `ERC721Storage` struct within this slot, updating token ownership. Changes made via `transferFrom` are immediately observable by any facet that reads from the same storage position.
 </Callout>
 
 <div style={{marginTop: "3rem", paddingTop: "2rem", borderTop: "1px solid var(--ifm-color-emphasis-200)"}}>
-  <RelatedDocs
-    items={[
-      {
-        title: "ERC1155ApproveMod",
-        href: "/docs/library/token/ERC1155/Approve/ERC1155ApproveMod",
-        description: "Related module in token",
-        icon: "📦"
-      },
-      {
-        title: "ERC1155MetadataMod",
-        href: "/docs/library/token/ERC1155/Metadata/ERC1155MetadataMod",
-        description: "Related module in token",
-        icon: "📦"
-      },
-      {
-        title: "ERC1155MintMod",
-        href: "/docs/library/token/ERC1155/Mint/ERC1155MintMod",
-        description: "Related module in token",
-        icon: "📦"
-      },
-      {
-        title: "ERC1155BurnMod",
-        href: "/docs/library/token/ERC1155/Burn/ERC1155BurnMod",
-        description: "Related module in token",
-        icon: "📦"
-      }
-    ]}
-  />
+  <WasThisHelpful pageId="ERC-721 Transfer Module" />
 </div>
 
-<div style={{marginTop: "3rem", paddingTop: "2rem", borderTop: "1px solid var(--ifm-color-emphasis-200)"}}>
-  <WasThisHelpful pageId="ERC721TransferMod" />
-</div>
-
-<LastUpdated date="2026-03-13T00:36:48.510Z" />
+<LastUpdated date="2026-03-13T01:18:41.350Z" />

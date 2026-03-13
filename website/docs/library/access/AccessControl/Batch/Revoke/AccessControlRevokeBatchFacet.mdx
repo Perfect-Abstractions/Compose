@@ -1,7 +1,7 @@
 ---
 sidebar_position: 100
-title: "AccessControlRevokeBatchFacet"
-description: "Batch revoke roles from multiple accounts"
+title: "Access Control Revoke Batch Facet"
+description: "Revokes roles from multiple accounts in a single transaction"
 sidebar_label: "Facet"
 gitSource: "https://github.com/Perfect-Abstractions/Compose/tree/main/src/access/AccessControl/Batch/Revoke/AccessControlRevokeBatchFacet.sol"
 ---
@@ -22,21 +22,19 @@ import GradientText from '@site/src/components/ui/GradientText';
 import GradientButton from '@site/src/components/ui/GradientButton';
 
 <DocSubtitle>
-Batch revoke roles from multiple accounts
+Revokes roles from multiple accounts in a single transaction
 </DocSubtitle>
 
 <Callout type="info" title="Key Features">
-- Revokes roles from multiple accounts in a single transaction.
-- Emits `RoleRevoked` event for each revoked role.
-- Accesses shared diamond storage for role management.
-- Provides `exportSelectors` for ABI introspection.
+- Efficiently revokes roles from multiple accounts in one transaction.
+- Integrates seamlessly with the diamond storage pattern via `getStorage`.
+- Emits `RoleRevoked` event for each successful revocation.
+- Follows Compose's explicit error handling with `AccessControlUnauthorizedAccount`.
 </Callout>
 
 ## Overview
 
-This facet provides functionality to revoke a specific role from multiple accounts simultaneously within a Compose diamond. It accesses shared diamond storage to manage role assignments, allowing for efficient batch operations. Developers integrate this facet to streamline administrative tasks related to access control.
-
----
+This facet provides an efficient method to revoke a specific role from multiple accounts simultaneously within a diamond. It routes calls through the diamond proxy, accessing shared access control state. Developers integrate this facet to streamline administrative tasks related to role management.
 
 ## Storage
 
@@ -177,10 +175,10 @@ error AccessControlUnauthorizedAccount(address _account, bytes32 _role);
 <ExpandableCode language="solidity" maxLines={20} title="Example Implementation">
 {`pragma solidity >=0.8.30;
 
-import { IDiamond } from "@compose/core/IDiamond";
-import { AccessControlRevokeBatchFacet } from "@compose/access/AccessControl/Batch/Revoke/AccessControlRevokeBatchFacet";
+import {IDiamond} from "@compose/diamond/IDiamond";
+import {AccessControlRevokeBatchFacet} from "@compose/access/AccessControl/Batch/Revoke/AccessControlRevokeBatchFacet";
 
-contract DiamondUser {
+contract ExampleUsage {
     address immutable diamondAddress;
 
     constructor(address _diamondAddress) {
@@ -188,74 +186,35 @@ contract DiamondUser {
     }
 
     /**
-     * @notice Revoke a role from a list of accounts.
-     * @dev Calls the facet through the diamond proxy.
+     * @notice Revokes a role from a list of accounts.
+     * @param _role The role to revoke.
+     * @param _accounts The addresses from which to revoke the role.
      */
-    function revokeAccess(bytes32 _role, address[] memory _accounts) external {
-        // The diamond contract routes this call to the AccessControlRevokeBatchFacet
-        IDiamond(diamondAddress).revokeRoleBatch(_role, _accounts);
+    function revokeMultipleRoles(bytes32 _role, address[] memory _accounts) external {
+        IDiamond diamond = IDiamond(diamondAddress);
+        AccessControlRevokeBatchFacet(diamond.getFacetAddress(AccessControlRevokeBatchFacet.exportSelectors())).revokeRoleBatch(_role, _accounts);
     }
-
-    /**
-     * @notice Example of exporting selectors.
-     */
-    function getFacetSelectors() external view returns (bytes memory selectors) {
-        // The diamond contract routes this call to the AccessControlRevokeBatchFacet
-        (bool success, bytes memory returnData) = diamondAddress.call(abi.encodeWithSignature("exportSelectors()@compose/access/AccessControl/Batch/Revoke/AccessControlRevokeBatchFacet"));
-        require(success, "Failed to export selectors");
-        selectors = returnData;
-    }
-}`}
+}
+`}
 </ExpandableCode>
 -->
 
 ## Best Practices
 
 <Callout type="tip" title="Best Practice">
-- Ensure the caller has the necessary administrative permissions before invoking `revokeRoleBatch`.
-- Verify that the `AccessControlRevokeBatchFacet` is correctly initialized and registered within the diamond.
-- Use the `exportSelectors` function to confirm the facet's available functions before integration.
+- Enforce caller authorization for the `revokeRoleBatch` function to prevent unauthorized role revocations.
+- Ensure the `AccessControlStorage` struct is correctly initialized and accessible via the diamond storage pattern.
+- Verify that the `_accounts` array does not contain duplicate addresses to avoid redundant operations.
 </Callout>
 
 ## Security Considerations
 
 <Callout type="warning" title="Security">
-The `revokeRoleBatch` function enforces access control, reverting with `AccessControlUnauthorizedAccount` if the caller is not the administrator of the specified role. Input validation for the `_accounts` array should be performed by the caller. The facet utilizes diamond storage, ensuring state changes are managed consistently across other facets. No reentrancy guards are explicitly present; follow standard Solidity security practices.
+The `revokeRoleBatch` function must be protected by appropriate access control mechanisms to ensure only authorized entities can revoke roles. Input validation on `_accounts` is crucial. Reentrancy is not a concern as there are no external calls before state changes. The facet relies on the diamond's access control for caller verification.
 </Callout>
 
 <div style={{marginTop: "3rem", paddingTop: "2rem", borderTop: "1px solid var(--ifm-color-emphasis-200)"}}>
-  <RelatedDocs
-    items={[
-      {
-        title: "OwnerDataFacet",
-        href: "/docs/library/access/Owner/Data/OwnerDataFacet",
-        description: "Related facet in access",
-        icon: "💎"
-      },
-      {
-        title: "OwnerRenounceFacet",
-        href: "/docs/library/access/Owner/Renounce/OwnerRenounceFacet",
-        description: "Related facet in access",
-        icon: "💎"
-      },
-      {
-        title: "OwnerTransferFacet",
-        href: "/docs/library/access/Owner/Transfer/OwnerTransferFacet",
-        description: "Related facet in access",
-        icon: "💎"
-      },
-      {
-        title: "OwnerTwoStepDataFacet",
-        href: "/docs/library/access/Owner/TwoSteps/Data/OwnerTwoStepDataFacet",
-        description: "Related facet in access",
-        icon: "💎"
-      }
-    ]}
-  />
+  <WasThisHelpful pageId="Access Control Revoke Batch Facet" />
 </div>
 
-<div style={{marginTop: "3rem", paddingTop: "2rem", borderTop: "1px solid var(--ifm-color-emphasis-200)"}}>
-  <WasThisHelpful pageId="AccessControlRevokeBatchFacet" />
-</div>
-
-<LastUpdated date="2026-03-13T00:39:49.067Z" />
+<LastUpdated date="2026-03-13T01:21:44.746Z" />

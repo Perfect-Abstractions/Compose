@@ -1,6 +1,6 @@
 ---
 sidebar_position: 100
-title: "AccessControlRenounceFacet"
+title: "Access Control Renounce Facet"
 description: "Renounces roles for accounts within a diamond"
 sidebar_label: "Facet"
 gitSource: "https://github.com/Perfect-Abstractions/Compose/tree/main/src/access/AccessControl/Renounce/AccessControlRenounceFacet.sol"
@@ -26,17 +26,15 @@ Renounces roles for accounts within a diamond
 </DocSubtitle>
 
 <Callout type="info" title="Key Features">
-- Renounces roles for caller-specified accounts.
+- Renounces roles for accounts via external function calls.
 - Emits `RoleRevoked` event upon successful role renouncement.
-- Utilizes diamond storage for role management.
-- Reverts with `AccessControlUnauthorizedSender` if caller is not the account renouncing the role.
+- Reverts with `AccessControlUnauthorizedSender` if the caller is not the account attempting to renounce.
+- Exposes `exportSelectors` for diamond facet discovery.
 </Callout>
 
 ## Overview
 
-This facet provides functionality to renounce roles for specific accounts within a Compose diamond. It interacts with shared access control storage to manage role assignments. Developers add this facet to enable users to relinquish their assigned roles.
-
----
+This facet provides functionality to renounce roles for accounts in a diamond. It interacts with shared access control storage and emits events to signal role revocation. Developers integrate this facet to allow users to relinquish their assigned permissions.
 
 ## Storage
 
@@ -180,23 +178,22 @@ error AccessControlUnauthorizedSender(address _sender, address _account);
 import {IDiamond} from "@compose/diamond/IDiamond";
 import {AccessControlRenounceFacet} from "@compose/access/AccessControl/Renounce/AccessControlRenounceFacet";
 
-contract DeployDiamond {
+contract DiamondUser {
     address immutable diamondAddress;
 
     constructor(address _diamondAddress) {
         diamondAddress = _diamondAddress;
     }
 
-    function renounceMyRole(bytes32 _role, address _account) external {
-        // Calls are routed through the diamond proxy to the AccessControlRenounceFacet
-        IDiamond(diamondAddress).renounceRole(_role, _account);
+    function revokeMyRole(bytes32 _role) external {
+        // Call the facet function through the diamond proxy
+        IDiamond(diamondAddress).renounceRole(_role, address(this));
     }
 
-    function grantAndRenounceRole(bytes32 _role, address _grantee, address _renouncer) external {
-        // Assume a facet exists to grant roles, e.g., IDiamond(diamondAddress).grantRole(_role, _grantee);
-
-        // Renounce role through the diamond proxy
-        IDiamond(diamondAddress).renounceRole(_role, _renouncer);
+    // Example of how the facet itself might be called internally by another facet
+    // (This is illustrative; actual calls depend on diamond routing)
+    function internalRenounce(bytes32 _role, address _account) internal {
+        AccessControlRenounceFacet(diamondAddress).renounceRole(_role, _account);
     }
 }`}
 </ExpandableCode>
@@ -205,50 +202,19 @@ contract DeployDiamond {
 ## Best Practices
 
 <Callout type="tip" title="Best Practice">
-- Call `renounceRole` through the diamond proxy address.
-- Ensure the caller is authorized to renounce the role for the specified account.
-- Use the `RoleRevoked` event to track role revocations off-chain.
+- Ensure the `AccessControlRenounceFacet` is properly registered with the diamond proxy.
+- Call `renounceRole` only when the caller is the intended account to avoid `AccessControlUnauthorizedSender` errors.
+- Monitor `RoleRevoked` events to track permission changes off-chain.
 </Callout>
 
 ## Security Considerations
 
 <Callout type="warning" title="Security">
-The `renounceRole` function requires the caller to be the `_account` from which the role is being renounced, enforcing authorization. Input validation for `_role` and `_account` is handled by the underlying access control logic. No reentrancy risks are apparent as there are no external calls after state changes.
+The `renounceRole` function enforces that the caller must be the account from which the role is being renounced, preventing unauthorized role revocations. Input validation on `_role` and `_account` is crucial. Follow standard Solidity security practices for all interactions.
 </Callout>
 
 <div style={{marginTop: "3rem", paddingTop: "2rem", borderTop: "1px solid var(--ifm-color-emphasis-200)"}}>
-  <RelatedDocs
-    items={[
-      {
-        title: "OwnerDataFacet",
-        href: "/docs/library/access/Owner/Data/OwnerDataFacet",
-        description: "Related facet in access",
-        icon: "💎"
-      },
-      {
-        title: "OwnerRenounceFacet",
-        href: "/docs/library/access/Owner/Renounce/OwnerRenounceFacet",
-        description: "Related facet in access",
-        icon: "💎"
-      },
-      {
-        title: "OwnerTransferFacet",
-        href: "/docs/library/access/Owner/Transfer/OwnerTransferFacet",
-        description: "Related facet in access",
-        icon: "💎"
-      },
-      {
-        title: "OwnerTwoStepDataFacet",
-        href: "/docs/library/access/Owner/TwoSteps/Data/OwnerTwoStepDataFacet",
-        description: "Related facet in access",
-        icon: "💎"
-      }
-    ]}
-  />
+  <WasThisHelpful pageId="Access Control Renounce Facet" />
 </div>
 
-<div style={{marginTop: "3rem", paddingTop: "2rem", borderTop: "1px solid var(--ifm-color-emphasis-200)"}}>
-  <WasThisHelpful pageId="AccessControlRenounceFacet" />
-</div>
-
-<LastUpdated date="2026-03-13T00:39:21.023Z" />
+<LastUpdated date="2026-03-13T01:21:16.344Z" />

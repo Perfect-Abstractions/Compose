@@ -1,6 +1,6 @@
 ---
 sidebar_position: 100
-title: "OwnerRenounceFacet"
+title: "Owner Renounce Facet"
 description: "Renounce ownership of a diamond"
 sidebar_label: "Facet"
 gitSource: "https://github.com/Perfect-Abstractions/Compose/tree/main/src/access/Owner/Renounce/OwnerRenounceFacet.sol"
@@ -26,17 +26,15 @@ Renounce ownership of a diamond
 </DocSubtitle>
 
 <Callout type="info" title="Key Features">
-- Allows the owner to permanently renounce ownership of the diamond.
-- Uses diamond storage for ownership state management.
-- Exposes `exportSelectors` for facet discovery.
-- Emits `OwnershipTransferred` event upon renouncement.
+- Allows irreversible renouncement of diamond ownership.
+- Integrates with diamond storage for owner management.
+- Exposes `exportSelectors` for discovery mechanisms.
+- Follows ERC-173 ownership patterns.
 </Callout>
 
 ## Overview
 
-This facet provides the functionality to renounce ownership of a diamond contract. It allows the current owner to relinquish their ownership rights, making the contract ownership unassignable. Calls are routed through the diamond proxy, accessing shared storage to manage ownership state.
-
----
+This facet provides the mechanism to renounce ownership of a diamond. It allows the current owner to permanently relinquish their ownership rights. Calls are routed through the diamond proxy, accessing shared storage to manage the owner state.
 
 ## Storage
 
@@ -127,72 +125,36 @@ error OwnerUnauthorizedAccount();
 <ExpandableCode language="solidity" maxLines={20} title="Example Implementation">
 {`pragma solidity >=0.8.30;
 
-import {IDiamond} from "@compose/diamond/IDiamond.sol";
-import {OwnerRenounceFacet} from "@compose/access/Owner/Renounce/OwnerRenounceFacet.sol";
+import {IOwnerRenounceFacet} from "@compose/access/Owner/Renounce/OwnerRenounceFacet";
 
-contract DiamondUser {
-    address immutable DIAMOND_ADDRESS;
+// Example: Renouncing ownership from within a diamond
+// Assumes the diamond is deployed at \`diamondAddress\` and \`IOwnerRenounceFacet\` is implemented.
+// The current owner must call this function.
 
-    constructor(address diamondAddress) {
-        DIAMOND_ADDRESS = diamondAddress;
-    }
+address diamondAddress = 0xYourDiamondAddress;
+IOwnerRenounceFacet ownerRenounceFacet = IOwnerRenounceFacet(diamondAddress);
 
-    /**
-     * @notice Renounce ownership of the diamond.
-     * Requires the caller to be the current owner.
-     */
-    function renounceDiamondOwnership() external {
-        // Call the renounceOwnership function through the diamond proxy
-        IDiamond(DIAMOND_ADDRESS).execute(OwnerRenounceFacet.FunctionSelectors.renounceOwnership, "");
-    }
-
-    /**
-     * @notice Exports the selectors for the OwnerRenounceFacet.
-     * Useful for diamond initialization or upgrades.
-     */
-    function exportOwnerRenounceSelectors() external pure returns (bytes memory) {
-        return IDiamond(DIAMOND_ADDRESS).execute(OwnerRenounceFacet.FunctionSelectors.exportSelectors, "");
-    }
-}
-`}
+// The current owner calls this function to renounce ownership
+ownerRenounceFacet.renounceOwnership();`}
 </ExpandableCode>
 -->
 
 ## Best Practices
 
 <Callout type="tip" title="Best Practice">
-- Ensure the `OwnerRenounceFacet` is correctly added to the diamond's facet registry.
-- Only the current owner should call `renounceOwnership` to relinquish control.
-- Verify that the `OwnershipTransferred` event is emitted after successful renouncement.
+- Call `renounceOwnership` only when absolutely certain the diamond no longer requires an owner.
+- Ensure the caller is the current owner before invoking `renounceOwnership`.
+- Understand that renouncing ownership is irreversible.
 </Callout>
 
 ## Security Considerations
 
 <Callout type="warning" title="Security">
-The `renounceOwnership` function is protected by access control, ensuring only the current owner can call it. The function uses the checks-effects-interactions pattern. After renouncement, ownership is permanently relinquished and cannot be reassigned. Input validation is handled internally by the diamond's dispatcher and the facet's logic. Follow standard Solidity security practices.
+The `renounceOwnership` function permanently removes the owner. Ensure the caller is authorized as the current owner. The function does not include reentrancy guards, but is a state-changing operation that transfers control, so careful usage is recommended. Input validation is minimal as the function relies on the caller's identity.
 </Callout>
 
 <div style={{marginTop: "3rem", paddingTop: "2rem", borderTop: "1px solid var(--ifm-color-emphasis-200)"}}>
-  <RelatedDocs
-    items={[
-      {
-        title: "OwnerRenounceMod",
-        href: "/docs/library/access/Owner/Renounce/OwnerRenounceMod",
-        description: "Module used by OwnerRenounceFacet",
-        icon: "📦"
-      },
-      {
-        title: "OwnerDataFacet",
-        href: "/docs/library/access/Owner/Data/OwnerDataFacet",
-        description: "Related facet in access",
-        icon: "💎"
-      }
-    ]}
-  />
+  <WasThisHelpful pageId="Owner Renounce Facet" />
 </div>
 
-<div style={{marginTop: "3rem", paddingTop: "2rem", borderTop: "1px solid var(--ifm-color-emphasis-200)"}}>
-  <WasThisHelpful pageId="OwnerRenounceFacet" />
-</div>
-
-<LastUpdated date="2026-03-13T00:38:19.673Z" />
+<LastUpdated date="2026-03-13T01:20:14.539Z" />

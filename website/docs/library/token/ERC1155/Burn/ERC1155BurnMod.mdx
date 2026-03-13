@@ -1,6 +1,6 @@
 ---
 sidebar_position: 210
-title: "ERC1155BurnMod"
+title: "ERC-1155 Burn Module"
 description: "Internal ERC-1155 token burning functionality"
 sidebar_label: "Module"
 gitSource: "https://github.com/Perfect-Abstractions/Compose/tree/main/src/token/ERC1155/Burn/ERC1155BurnMod.sol"
@@ -26,10 +26,10 @@ Internal ERC-1155 token burning functionality
 </DocSubtitle>
 
 <Callout type="info" title="Key Features">
-- Provides `internal` functions for burning single and batch ERC-1155 token types.
-- Uses diamond storage pattern (EIP-8042) for shared state management.
+- Exposes `internal` functions for ERC-1155 token burning.
+- Uses diamond storage pattern for shared state management.
 - Emits `TransferSingle` and `TransferBatch` events upon successful burns.
-- Does not perform approval checks; relies on the calling facet for authorization.
+- Does not perform approval checks; responsibility lies with calling facets.
 </Callout>
 
 <Callout type="info" title="Module Usage">
@@ -38,9 +38,7 @@ This module provides internal functions for use in your custom facets. Import it
 
 ## Overview
 
-This module provides internal functions for burning ERC-1155 tokens. Facets can import this module to decrease token balances and emit transfer events using shared diamond storage. Changes made through this module are immediately visible to all facets operating on the same diamond storage.
-
----
+This module provides internal functions for burning ERC-1155 tokens. Facets can import and use these functions to decrease token balances and emit transfer events using shared diamond storage. Changes to token balances are immediately visible to all facets interacting with the same storage slot.
 
 ## Storage
 
@@ -305,68 +303,56 @@ error ERC1155InvalidSender(address _sender);
 {`pragma solidity >=0.8.30;
 
 import { ERC1155BurnMod } from "@compose/token/ERC1155/Burn/ERC1155BurnMod";
+import { ERC1155Storage } from "@compose/token/ERC1155/ERC1155Storage";
 
-contract MyERC1155Facet {
-    using ERC1155BurnMod for address;
+contract ERC1155BurnFacet {
+    using ERC1155BurnMod for ERC1155Storage;
 
-    function burnTokens(address _from, uint256 _id, uint256 _value) external {
-        // Ensure caller has necessary permissions before calling burn
-        // For example, check ownership or approvals.
+    ERC1155Storage public erc1155Storage = ERC1155Storage(ERC1155BurnMod.getStorage());
 
-        ERC1155BurnMod.burn(_from, _id, _value);
+    /**
+     * @notice Burns a specific ERC-1155 token from the caller.
+     * @dev Requires caller to have sufficient balance and ownership.
+     * @param _id The ID of the token to burn.
+     * @param _value The amount of tokens to burn.
+     */
+    function burnToken(uint256 _id, uint256 _value) external {
+        // Ensure caller has sufficient balance and ownership before calling burn.
+        // This facet is responsible for access control and approval checks.
+        erc1155Storage.burn(msg.sender, _id, _value);
     }
 
-    function burnBatchTokens(address _from, uint256[] memory _ids, uint256[] memory _values) external {
-        // Ensure caller has necessary permissions before calling burnBatch
-        // For example, check ownership or approvals.
-
-        ERC1155BurnMod.burnBatch(_from, _ids, _values);
+    /**
+     * @notice Burns multiple ERC-1155 tokens from the caller.
+     * @dev Requires caller to have sufficient balances and ownership for all tokens.
+     * @param _ids An array of token IDs to burn.
+     * @param _values An array of amounts for each token ID to burn.
+     */
+    function burnTokenBatch(uint256[] calldata _ids, uint256[] calldata _values) external {
+        // Ensure caller has sufficient balance and ownership for all tokens before calling burnBatch.
+        erc1155Storage.burnBatch(msg.sender, _ids, _values);
     }
-}`}
+}
+`}
 </ExpandableCode>
 -->
 
 ## Best Practices
 
 <Callout type="tip" title="Best Practice">
-- Ensure necessary access control (e.g., ownership, approvals) is validated by the calling facet before invoking `burn` or `burnBatch`.
-- Verify that the `_ids` and `_values` arrays passed to `burnBatch` have matching lengths to prevent `ERC1155InvalidArrayLength` errors.
-- Handle potential `ERC1155InsufficientBalance` errors by checking balances before attempting to burn tokens.
+- Ensure caller has sufficient balance and ownership before calling `burn` or `burnBatch`.
+- Validate array lengths for `burnBatch` to prevent `ERC1155InvalidArrayLength` errors.
+- Handle `ERC1155InsufficientBalance` and `ERC1155InvalidSender` errors gracefully.
 </Callout>
 
 ## Integration Notes
 
 <Callout type="success" title="Shared Storage">
-This module reads and writes to the ERC-1155 storage slot, identified by `keccak256(\"erc1155\")` within the diamond's storage. The `getStorage()` function provides access to the `ERC1155Storage` struct. Any modifications to token balances made by `burn` or `burnBatch` are immediately reflected in this shared storage, making them visible to all other facets interacting with the same storage position.
+This module interacts with diamond storage at the slot identified by `keccak2535(\"erc1155\")`. The `ERC1155Storage` struct, defined by the diamond storage pattern, holds the token balances. Functions `burn` and `burnBatch` directly modify these balances. Any facet that accesses the `ERC1155Storage` struct will see these changes immediately due to the shared storage mechanism.
 </Callout>
 
 <div style={{marginTop: "3rem", paddingTop: "2rem", borderTop: "1px solid var(--ifm-color-emphasis-200)"}}>
-  <RelatedDocs
-    items={[
-      {
-        title: "ERC1155ApproveMod",
-        href: "/docs/library/token/ERC1155/Approve/ERC1155ApproveMod",
-        description: "Related module in token",
-        icon: "📦"
-      },
-      {
-        title: "ERC1155MetadataMod",
-        href: "/docs/library/token/ERC1155/Metadata/ERC1155MetadataMod",
-        description: "Related module in token",
-        icon: "📦"
-      },
-      {
-        title: "ERC1155MintMod",
-        href: "/docs/library/token/ERC1155/Mint/ERC1155MintMod",
-        description: "Related module in token",
-        icon: "📦"
-      }
-    ]}
-  />
+  <WasThisHelpful pageId="ERC-1155 Burn Module" />
 </div>
 
-<div style={{marginTop: "3rem", paddingTop: "2rem", borderTop: "1px solid var(--ifm-color-emphasis-200)"}}>
-  <WasThisHelpful pageId="ERC1155BurnMod" />
-</div>
-
-<LastUpdated date="2026-03-13T00:35:35.256Z" />
+<LastUpdated date="2026-03-13T01:17:30.741Z" />
