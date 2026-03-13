@@ -38,8 +38,8 @@ function getSidebarPosition(contractName, contractType = null, category = null, 
   
   let basePosition = categoryOffsets[category] || 500;
   
-  // 2. Contract type offset (modules before facets)
-  const typeOffset = contractType === 'module' ? 0 : 10;
+  // 2. Contract type offset (facets before modules in sidebar)
+  const typeOffset = contractType === 'facet' ? 0 : 10;
   basePosition += typeOffset;
   
   // 3. Position within category based on dependencies

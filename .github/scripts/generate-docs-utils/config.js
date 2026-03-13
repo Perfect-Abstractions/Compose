@@ -38,75 +38,90 @@ module.exports = {
    * Maps contract name to position number (lower = higher in sidebar)
    *
    * Convention:
-   * - Modules come before their corresponding facets
+   * - Facets come before their corresponding modules
    * - Core/base contracts come before extensions
    * - Burn facets come after main facets
    */
   contractPositions: {
-    // Diamond core
+    // Diamond core – order: DiamondMod, DiamondInspectFacet, DiamondUpgradeFacet, DiamondUpgradeMod, then Examples
     DiamondMod: 1,
-    DiamondCutMod: 2,
-    DiamondCutFacet: 3,
+    DiamondInspectFacet: 2,
+    DiamondUpgradeFacet: 3,
+    DiamondUpgradeMod: 4,
+    DiamondCutMod: 3,
+    DiamondCutFacet: 1,
     DiamondLoupeFacet: 4,
 
     // Access - Owner pattern
-    OwnerMod: 1,
-    OwnerFacet: 2,
+    OwnerMod: 2,
+    OwnerFacet: 1,
 
     // Access - Two-step owner
-    OwnerTwoStepsMod: 1,
-    OwnerTwoStepsFacet: 2,
+    OwnerTwoStepsMod: 2,
+    OwnerTwoStepsFacet: 1,
 
     // Access - AccessControl pattern
-    AccessControlMod: 1,
-    AccessControlFacet: 2,
+    AccessControlMod: 2,
+    AccessControlFacet: 1,
 
     // Access - AccessControlPausable
-    AccessControlPausableMod: 1,
-    AccessControlPausableFacet: 2,
+    AccessControlPausableMod: 2,
+    AccessControlPausableFacet: 1,
 
     // Access - AccessControlTemporal
-    AccessControlTemporalMod: 1,
-    AccessControlTemporalFacet: 2,
+    AccessControlTemporalMod: 2,
+    AccessControlTemporalFacet: 1,
 
     // ERC-20 base
-    ERC20Mod: 1,
-    ERC20Facet: 2,
+    ERC20Mod: 2,
+    ERC20Facet: 1,
     ERC20BurnFacet: 3,
 
     // ERC-20 Bridgeable
-    ERC20BridgeableMod: 1,
-    ERC20BridgeableFacet: 2,
+    ERC20BridgeableMod: 2,
+    ERC20BridgeableFacet: 1,
 
     // ERC-20 Permit
-    ERC20PermitMod: 1,
-    ERC20PermitFacet: 2,
+    ERC20PermitMod: 2,
+    ERC20PermitFacet: 1,
 
     // ERC-721 base
-    ERC721Mod: 1,
-    ERC721Facet: 2,
+    ERC721Mod: 2,
+    ERC721Facet: 1,
     ERC721BurnFacet: 3,
 
     // ERC-721 Enumerable
-    ERC721EnumerableMod: 1,
-    ERC721EnumerableFacet: 2,
+    ERC721EnumerableMod: 2,
+    ERC721EnumerableFacet: 1,
     ERC721EnumerableBurnFacet: 3,
 
     // ERC-1155
-    ERC1155Mod: 1,
-    ERC1155Facet: 2,
+    ERC1155Mod: 2,
+    ERC1155Facet: 1,
 
     // ERC-6909
-    ERC6909Mod: 1,
-    ERC6909Facet: 2,
+    ERC6909Mod: 2,
+    ERC6909Facet: 1,
 
     // Royalty
-    RoyaltyMod: 1,
-    RoyaltyFacet: 2,
+    RoyaltyMod: 2,
+    RoyaltyFacet: 1,
 
     // Libraries
     NonReentrancyMod: 1,
-    ERC165Mod: 1,
+    ERC165Mod: 2,
+    ERC165Facet: 1,
+  },
+
+  /**
+   * Diamond docs: sidebar labels for the sidebar nav (e.g. "Module", "Inspect Facet").
+   * File names stay as contract names (e.g. DiamondMod.mdx, DiamondInspectFacet.mdx).
+   */
+  diamondSidebarLabels: {
+    DiamondMod: 'Module',
+    DiamondInspectFacet: 'Inspect Facet',
+    DiamondUpgradeFacet: 'Upgrade Facet',
+    DiamondUpgradeMod: 'Upgrade Module',
   },
 
   // ============================================================================

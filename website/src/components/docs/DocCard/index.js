@@ -4,6 +4,21 @@ import clsx from 'clsx';
 import Icon from '../../ui/Icon';
 import styles from './styles.module.css';
 
+/** Inline arrow so it inherits color (Icon uses <img>, so currentColor doesn't work in dark mode) */
+function DocCardArrow() {
+  return (
+    <svg width={16} height={16} viewBox="0 0 16 16" fill="none" aria-hidden>
+      <path
+        d="M6 12L10 8L6 4"
+        stroke="currentColor"
+        strokeWidth={2}
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </svg>
+  );
+}
+
 /**
  * DocCard Component - MoneyKit-inspired documentation card
  * 
@@ -40,7 +55,7 @@ export default function DocCard({
         {children}
       </div>
       <div className={styles.docCardArrow}>
-        <Icon name="doc-card-arrow" size={16} />
+        <DocCardArrow />
       </div>
     </>
   );

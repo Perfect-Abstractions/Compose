@@ -7,7 +7,7 @@ const { loadAndRenderTemplate } = require('./template-engine-handlebars');
 const { sanitizeForMdx } = require('./helpers');
 const { readFileSafe } = require('../../workflow-utils');
 const { enrichWithRelationships } = require('../core/relationship-detector');
-const { getSidebarLabel } = require('../core/description-generator');
+const { getSidebarLabel, formatDisplayTitle } = require('../core/description-generator');
 
 /**
  * Extract function parameters directly from Solidity source file
@@ -550,12 +550,12 @@ function prepareBaseData(data, position = 99, options = {}) {
   const subtitle = data.subtitle || data.description || `Contract documentation for ${data.title}`;
   const overview = data.overview || data.description || `Documentation for ${data.title}.`;
 
-  // Optional sidebar label override (Facet / Module) for non-diamond, non-utils categories
-  const sidebarLabel = getSidebarLabel(contractType, category);
+  // Optional sidebar label override (Facet / Module, or diamond-specific e.g. "Inspect Facet")
+  const sidebarLabel = getSidebarLabel(contractType, category, data.title);
 
   return {
     position,
-    title: data.title,
+    title: formatDisplayTitle(data.title),
     sidebarLabel: sidebarLabel || null,
     description,
     subtitle,

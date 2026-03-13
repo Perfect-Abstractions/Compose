@@ -4,6 +4,8 @@
  * Generates fallback descriptions from contract names.
  */
 
+const CONFIG = require('../config');
+
 /**
  * Generate a fallback description from contract name
  *
@@ -45,21 +47,25 @@ function generateDescriptionFromName(contractName) {
 /**
  * Compute an optional sidebar label for a contract.
  *
- * Sidebar labels are intentionally minimal – just "Facet" or "Module" –
- * and are only applied for regular library categories. Diamond core and
- * utilities keep their existing behavior.
+ * For diamond category, uses config diamondSidebarLabels (e.g. "Module", "Inspect Facet").
+ * For other library categories, returns minimal "Facet" or "Module". Utilities keep null.
  *
  * @param {'facet' | 'module' | string} contractType
  * @param {string} category
- * @returns {string|null} "Facet" | "Module" | null when no override should be used
+ * @param {string} [contractName] - Contract name (e.g. DiamondMod), used for diamond-specific labels
+ * @returns {string|null} Sidebar label or null when no override should be used
  */
-function getSidebarLabel(contractType, category) {
+function getSidebarLabel(contractType, category, contractName) {
   if (!contractType) return null;
 
   const normalizedCategory = (category || '').toLowerCase();
 
-  // Do not override sidebar labels for diamond core or utilities
-  if (normalizedCategory === 'diamond' || normalizedCategory === 'utils') {
+  // Diamond: use short labels from config (e.g. "Module", "Inspect Facet", "Upgrade Module")
+  if (normalizedCategory === 'diamond' && contractName && CONFIG.diamondSidebarLabels && CONFIG.diamondSidebarLabels[contractName]) {
+    return CONFIG.diamondSidebarLabels[contractName];
+  }
+
+  if (normalizedCategory === 'utils') {
     return null;
   }
 
@@ -74,8 +80,30 @@ function getSidebarLabel(contractType, category) {
   return null;
 }
 
+/**
+ * Format contract name as display title for page headers and frontmatter.
+ * Adds spacing (splits camelCase) and expands "Mod" to "Module".
+ *
+ * @param {string} contractName - Raw contract name (e.g. OwnerDataMod, ERC20TransferFacet)
+ * @returns {string} Display title (e.g. "Owner Data Module", "ERC-20 Transfer Facet")
+ */
+function formatDisplayTitle(contractName) {
+  if (!contractName || typeof contractName !== 'string') return '';
+
+  const withSpaces = contractName
+    .replace(/^ERC(\d+)/, 'ERC-$1')
+    .replace(/([a-z])([A-Z])/g, '$1 $2')
+    .replace(/(\d)([A-Z])/g, '$1 $2')
+    .replace(/([A-Z]+)([A-Z][a-z])/g, '$1 $2')
+    .trim();
+
+  const withModule = withSpaces.replace(/\s+Mod$/, ' Module');
+  return withModule;
+}
+
 module.exports = {
   generateDescriptionFromName,
   getSidebarLabel,
+  formatDisplayTitle,
 };
 
