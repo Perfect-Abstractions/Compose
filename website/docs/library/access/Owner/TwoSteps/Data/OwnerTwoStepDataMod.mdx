@@ -1,7 +1,7 @@
 ---
 sidebar_position: 110
-title: "OwnerTwoStepDataMod"
-description: "Manages pending ownership data for ERC-173 two-step transfers"
+title: "Owner Two Step Data Module"
+description: "Manages pending owner data for two-step ownership transfers"
 sidebar_label: "Module"
 gitSource: "https://github.com/Perfect-Abstractions/Compose/tree/main/src/access/Owner/TwoSteps/Data/OwnerTwoStepDataMod.sol"
 ---
@@ -22,14 +22,14 @@ import GradientText from '@site/src/components/ui/GradientText';
 import GradientButton from '@site/src/components/ui/GradientButton';
 
 <DocSubtitle>
-Manages pending ownership data for ERC-173 two-step transfers
+Manages pending owner data for two-step ownership transfers
 </DocSubtitle>
 
 <Callout type="info" title="Key Features">
-- Provides storage layout for ERC-173 two-step ownership.
-- Exposes `pendingOwner()` for read-only access to the pending owner address.
-- Uses diamond storage pattern with a dedicated slot for pending owner data.
-- `getStorage()` returns a pointer to the storage struct, enabling internal access.
+- Provides data for ERC-173 two-step ownership transfers.
+- Exposes an `internal` function `pendingOwner()` to retrieve the pending owner's address.
+- Utilizes diamond storage for shared state management.
+- No external dependencies, ensuring a lean integration.
 </Callout>
 
 <Callout type="info" title="Module Usage">
@@ -38,9 +38,7 @@ This module provides internal functions for use in your custom facets. Import it
 
 ## Overview
 
-This module provides the storage structure and access functions for managing pending ownership during a two-step ownership transfer process, as defined by ERC-173. It ensures that ownership changes are handled safely by storing the pending owner's address. Facets interacting with ownership can leverage this module to read the pending owner without direct storage slot manipulation.
-
----
+This module manages the storage for ERC-173 two-step ownership transfers within a diamond. It provides access to the pending owner's address, which is crucial for the ownership change process. By utilizing diamond storage, any facet can safely read this data, ensuring consistency across the diamond's functionalities.
 
 ## Storage
 
@@ -119,28 +117,22 @@ Get the address of the pending owner
 <ExpandableCode language="solidity" maxLines={20} title="Example Implementation">
 {`pragma solidity >=0.8.30;
 
-import {OwnerTwoStepDataMod, PendingOwnerStorage} from "@compose/access/Owner/TwoSteps/Data/OwnerTwoStepDataMod";
+import {OwnerTwoStepDataMod} from "@compose/access/Owner/TwoSteps/Data/OwnerTwoStepDataMod";
 
-contract MyOwnerFacet {
-    OwnerTwoStepDataMod internal ownerData;
+contract OwnerFacet {
+    OwnerTwoStepDataMod internal ownerTwoStepDataMod;
 
-    constructor(address ownerDataAddress) {
-        ownerData = OwnerTwoStepDataMod(ownerDataAddress);
+    // Assuming OwnerTwoStepDataMod is initialized with the correct storage slot
+    // in the diamond's deployment or initialization process.
+
+    function getPendingOwner() external view returns (address) {
+        // Call the internal function to retrieve the pending owner's address.
+        return ownerTwoStepDataMod.pendingOwner();
     }
 
-    /**
-     * @notice Retrieves the address of the pending owner.
-     */
-    function getPendingOwnerAddress() external view returns (address) {
-        return ownerData.pendingOwner();
-    }
-
-    /**
-     * @notice Returns a pointer to the internal storage structure for pending ownership.
-     * @dev This is typically used by other internal modules or for debugging.
-     */
-    function getPendingOwnerStorage() external pure returns (PendingOwnerStorage memory) {
-        return OwnerTwoStepDataMod.getStorage();
+    // Example of how a related module might access the storage pointer
+    function getStoragePointer() external view returns (OwnerTwoStepDataMod.PendingOwnerStorage memory) {
+        return ownerTwoStepDataMod.getStorage();
     }
 }`}
 </ExpandableCode>
@@ -149,44 +141,19 @@ contract MyOwnerFacet {
 ## Best Practices
 
 <Callout type="tip" title="Best Practice">
-- Call `pendingOwner()` to retrieve the pending owner address, avoiding direct storage access.
-- Use `getStorage()` judiciously, primarily for internal module initialization or debugging.
-- Ensure this module is correctly initialized within the diamond's deployment process.
+- Ensure the `OwnerTwoStepDataMod` is correctly initialized with the appropriate storage slot during diamond deployment.
+- Call `pendingOwner()` only to read the pending owner address; state modifications should be handled by other facets.
+- Verify that the `STORAGE_POSITION` used by this module does not conflict with other facets in the diamond.
 </Callout>
 
 ## Integration Notes
 
 <Callout type="success" title="Shared Storage">
-This module manages state at a specific diamond storage slot, identified by `STORAGE_POSITION` which is defined as `keccak256("erc173.owner.pending")`. The `pendingOwner()` function reads directly from this slot. The `getStorage()` function returns a pointer to the `PendingOwnerStorage` struct, allowing other facets or modules to interact with this data. Any changes to this storage slot by other facets or modules will be immediately visible.
+This module interacts with diamond storage at a specific `STORAGE_POSITION` identified by `keccak256("erc173.owner.pending")`. The `getStorage()` function returns a pointer to the `PendingOwnerStorage` struct, which contains the `pendingOwner` field. Any facet within the same diamond that accesses this storage position will see the same pending owner data, ensuring consistency.
 </Callout>
 
 <div style={{marginTop: "3rem", paddingTop: "2rem", borderTop: "1px solid var(--ifm-color-emphasis-200)"}}>
-  <RelatedDocs
-    items={[
-      {
-        title: "OwnerDataMod",
-        href: "/docs/library/access/Owner/Data/OwnerDataMod",
-        description: "Related module in access",
-        icon: "📦"
-      },
-      {
-        title: "OwnerRenounceMod",
-        href: "/docs/library/access/Owner/Renounce/OwnerRenounceMod",
-        description: "Related module in access",
-        icon: "📦"
-      },
-      {
-        title: "OwnerTransferMod",
-        href: "/docs/library/access/Owner/Transfer/OwnerTransferMod",
-        description: "Related module in access",
-        icon: "📦"
-      }
-    ]}
-  />
+  <WasThisHelpful pageId="Owner Two Step Data Module" />
 </div>
 
-<div style={{marginTop: "3rem", paddingTop: "2rem", borderTop: "1px solid var(--ifm-color-emphasis-200)"}}>
-  <WasThisHelpful pageId="OwnerTwoStepDataMod" />
-</div>
-
-<LastUpdated date="2026-03-13T00:38:33.555Z" />
+<LastUpdated date="2026-03-13T01:20:27.273Z" />

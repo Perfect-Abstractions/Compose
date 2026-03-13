@@ -1,7 +1,7 @@
 ---
 sidebar_position: 200
-title: "ERC20DataFacet"
-description: "Exposes ERC-20 token data via diamond proxy"
+title: "ERC-20 Data Facet"
+description: "ERC-20 token data access within a diamond"
 sidebar_label: "Facet"
 gitSource: "https://github.com/Perfect-Abstractions/Compose/tree/main/src/token/ERC20/Data/ERC20DataFacet.sol"
 ---
@@ -22,21 +22,19 @@ import GradientText from '@site/src/components/ui/GradientText';
 import GradientButton from '@site/src/components/ui/GradientButton';
 
 <DocSubtitle>
-Exposes ERC-20 token data via diamond proxy
+ERC-20 token data access within a diamond
 </DocSubtitle>
 
 <Callout type="info" title="Key Features">
-- Exposes ERC-20 token data functions (`totalSupply`, `balanceOf`, `allowance`) externally.
-- Reads token state directly from shared diamond storage.
-- Includes `exportSelectors` for diamond selector management.
-- Self-contained facet with no external dependencies or inheritance.
+- Exposes external view functions for ERC-20 data retrieval.
+- Accesses shared diamond storage for token state.
+- Self-contained, adhering to Compose facet design principles.
+- Compatible with ERC-2535 diamond standard for upgradeability.
 </Callout>
 
 ## Overview
 
-This facet provides external view functions for ERC-20 token data, such as total supply and account balances, within a Compose diamond. It accesses shared diamond storage to retrieve this information, enabling other facets or external contracts to query token state without direct access to storage slots. This facet is designed for read-only operations and integrates seamlessly with the ERC-2535 diamond standard.
-
----
+This facet provides external view functions for ERC-20 token data. It routes calls through the diamond proxy and accesses shared diamond storage. Developers add this facet to expose total supply, balances, and allowances while maintaining diamond upgradeability.
 
 ## Storage
 
@@ -190,33 +188,33 @@ Exports the function selectors of the ERC20Data facet This function is use as a 
 <ExpandableCode language="solidity" maxLines={20} title="Example Implementation">
 {`pragma solidity >=0.8.30;
 
-import {IDiamond} from "@compose/diamond/IDiamond";
-import {ERC20DataFacet} from "@compose/token/ERC20/Data/ERC20DataFacet";
+import {IDiamond} from "@compose/diamond/IDiamond.sol";
+import {ERC20DataFacet} from "@compose/token/ERC20/Data/ERC20DataFacet.sol";
 
-contract ExampleUsage {
-    address diamondAddress;
+contract DiamondConsumer {
+    address immutable diamondAddress;
 
     constructor(address _diamondAddress) {
         diamondAddress = _diamondAddress;
     }
 
-    function getTokenTotalSupply() public view returns (uint256) {
+    function getTotalSupply() external view returns (uint256) {
         // Calls are routed through the diamond proxy to the ERC20DataFacet
         return IDiamond(diamondAddress).totalSupply();
     }
 
-    function getTokenBalance(address _account) public view returns (uint256) {
+    function getAccountBalance(address _account) external view returns (uint256) {
         // Calls are routed through the diamond proxy to the ERC20DataFacet
         return IDiamond(diamondAddress).balanceOf(_account);
     }
 
-    function getTokenAllowance(address _owner, address _spender) public view returns (uint256) {
+    function getAllowance(address _owner, address _spender) external view returns (uint256) {
         // Calls are routed through the diamond proxy to the ERC20DataFacet
         return IDiamond(diamondAddress).allowance(_owner, _spender);
     }
 
-    // Example of how a diamond might discover selectors
-    function discoverERC20Selectors() public pure returns (bytes) {
+    function getERC20Selectors() external pure returns (bytes) {
+        // Use the facet's selector export mechanism
         return ERC20DataFacet.exportSelectors();
     }
 }`}
@@ -226,50 +224,19 @@ contract ExampleUsage {
 ## Best Practices
 
 <Callout type="tip" title="Best Practice">
-- Ensure the `ERC20DataFacet` is properly registered with the diamond proxy.
-- Calls to `totalSupply`, `balanceOf`, and `allowance` are routed through the diamond address.
-- The `exportSelectors` function can be used during diamond deployment or upgrades to discover the facet's function signatures.
+- Ensure the `ERC20DataFacet` is added to the diamond with the correct selectors.
+- Access token data by calling functions through the diamond proxy address.
+- Use the `exportSelectors` function to discover the facet's supported functions for diamond registration.
 </Callout>
 
 ## Security Considerations
 
 <Callout type="warning" title="Security">
-This facet contains only view functions and does not modify state, thus carrying minimal reentrancy risk. Input validation for `_account`, `_owner`, and `_spender` in `balanceOf` and `allowance` is handled by the Solidity compiler's default checks. Ensure that the diamond proxy correctly routes calls to this facet and that the underlying storage is managed securely by other facets.
+All functions are view functions and do not modify state, thus reentrancy is not a concern. Input validation for addresses is handled by Solidity's default checks. Follow standard Solidity security practices for address handling.
 </Callout>
 
 <div style={{marginTop: "3rem", paddingTop: "2rem", borderTop: "1px solid var(--ifm-color-emphasis-200)"}}>
-  <RelatedDocs
-    items={[
-      {
-        title: "ERC1155ApproveFacet",
-        href: "/docs/library/token/ERC1155/Approve/ERC1155ApproveFacet",
-        description: "Related facet in token",
-        icon: "💎"
-      },
-      {
-        title: "ERC1155MetadataFacet",
-        href: "/docs/library/token/ERC1155/Metadata/ERC1155MetadataFacet",
-        description: "Related facet in token",
-        icon: "💎"
-      },
-      {
-        title: "ERC1155DataFacet",
-        href: "/docs/library/token/ERC1155/Data/ERC1155DataFacet",
-        description: "Related facet in token",
-        icon: "💎"
-      },
-      {
-        title: "ERC1155BurnFacet",
-        href: "/docs/library/token/ERC1155/Burn/ERC1155BurnFacet",
-        description: "Related facet in token",
-        icon: "💎"
-      }
-    ]}
-  />
+  <WasThisHelpful pageId="ERC-20 Data Facet" />
 </div>
 
-<div style={{marginTop: "3rem", paddingTop: "2rem", borderTop: "1px solid var(--ifm-color-emphasis-200)"}}>
-  <WasThisHelpful pageId="ERC20DataFacet" />
-</div>
-
-<LastUpdated date="2026-03-13T00:37:19.450Z" />
+<LastUpdated date="2026-03-13T01:19:13.219Z" />

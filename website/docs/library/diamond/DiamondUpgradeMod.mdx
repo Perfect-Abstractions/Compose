@@ -1,7 +1,7 @@
 ---
 sidebar_position: 4
-title: "DiamondUpgradeMod"
-description: "Upgrade diamond with facets via delegatecall"
+title: "Diamond Upgrade Module"
+description: "Diamond upgrade logic for adding, replacing, and removing facets"
 sidebar_label: "Upgrade Module"
 gitSource: "https://github.com/Perfect-Abstractions/Compose/tree/main/src/diamond/DiamondUpgradeMod.sol"
 ---
@@ -22,14 +22,14 @@ import GradientText from '@site/src/components/ui/GradientText';
 import GradientButton from '@site/src/components/ui/GradientButton';
 
 <DocSubtitle>
-Upgrade diamond with facets via delegatecall
+Diamond upgrade logic for adding, replacing, and removing facets
 </DocSubtitle>
 
 <Callout type="info" title="Key Features">
 - Supports adding, replacing, and removing facets from a diamond.
-- Facilitates diamond upgrades via `delegatecall` for initialization or state modification.
-- Emits events (`FacetAdded`, `FacetReplaced`, `FacetRemoved`, `DiamondDelegateCall`, `DiamondMetadata`) for upgrade traceability.
-- Operates on shared diamond storage at `DIAMOND_STORAGE_POSITION`.
+- Enables stateful upgrades via optional `delegatecall`.
+- Emits events (`FacetAdded`, `FacetReplaced`, `FacetRemoved`, `DiamondDelegateCall`, `DiamondMetadata`) for off-chain monitoring.
+- Utilizes diamond storage at `DIAMOND_STORAGE_POSITION` for facet management.
 </Callout>
 
 <Callout type="info" title="Module Usage">
@@ -38,9 +38,7 @@ This module provides internal functions for use in your custom facets. Import it
 
 ## Overview
 
-This module provides functions to manage facets within an ERC-2535 diamond, including adding, replacing, and removing them. It facilitates diamond upgrades by orchestrating facet changes and optionally executing a delegatecall for state initialization or modification. Changes to facets are immediately visible to all other facets interacting with the diamond's shared storage.
-
----
+This module provides core logic for upgrading diamond proxies by managing facets according to ERC-2535. It exposes functions to add, replace, and remove facets, facilitating stateful upgrades through delegate calls. Changes made via this module are directly reflected in the diamond's facet mapping, ensuring all facets interact with the updated logic.
 
 ## Storage
 
@@ -534,80 +532,65 @@ error NoSelectorsForFacet(address _facet);
 <ExpandableCode language="solidity" maxLines={20} title="Example Implementation">
 {`pragma solidity >=0.8.30;
 
-import {DiamondUpgradeMod, FacetReplacement} from "@compose/diamond/DiamondUpgradeMod";
+import {DiamondUpgradeMod} from "@compose/diamond/DiamondUpgradeMod";
+import {FacetReplacement} from "@compose/diamond/DiamondUpgradeMod";
 
-contract MyUpgradeFacet {
-    function upgradeMyDiamond(
-        address _newLogicFacetAddress,
-        address _oldLogicFacetAddress
+contract DiamondUpgradeFacet {
+    DiamondUpgradeMod internal diamondUpgradeMod;
+
+    function initialize(address diamondUpgradeModAddress) external {
+        diamondUpgradeMod = DiamondUpgradeMod(diamondUpgradeModAddress);
+    }
+
+    function performUpgrade(
+        address[] calldata _addFacets,
+        FacetReplacement[] calldata _replaceFacets,
+        address[] calldata _removeFacets,
+        address _delegate,
+        bytes calldata _delegateCalldata,
+        bytes32 _tag,
+        bytes calldata _metadata
     ) external {
-        address[] memory facetsToAdd = new address[](0);
-        FacetReplacement[] memory facetsToReplace = new FacetReplacement[](1);
-        facetsToReplace[0] = FacetReplacement({
-            facetAddress: _newLogicFacetAddress,
-            selectors: DiamondUpgradeMod.getSelectors(_newLogicFacetAddress)
-        });
-        address[] memory facetsToRemove = new address[](0);
-        address delegate = address(0);
-        bytes memory delegateCalldata = "";
-        bytes32 tag = "";
-        bytes memory metadata = "";
-
-        DiamondUpgradeMod.upgradeDiamond(
-            facetsToAdd,
-            facetsToReplace,
-            facetsToRemove,
-            delegate,
-            delegateCalldata,
-            tag,
-            metadata
+        // Example: Adding a new facet
+        // Example: Replacing an existing facet
+        // Example: Removing a facet
+        // Example: Performing a delegate call for initialization or state modification
+        diamondUpgradeMod.upgradeDiamond(
+            _addFacets,
+            _replaceFacets,
+            _removeFacets,
+            _delegate,
+            _delegateCalldata,
+            _tag,
+            _metadata
         );
     }
 
-    // Helper to get selectors if needed, though often handled by the diamond itself
-    // function getSelectors(address _facet) internal pure returns (bytes4[] memory) {
-    //     return DiamondUpgradeMod.getSelectors(_facet);
+    // Example of calling other internal functions if needed, though upgradeDiamond is the primary interface.
+    // function importMySelectors() external {
+    //     diamondUpgradeMod.importSelectors();
     // }
-}
-`}
+}`}
 </ExpandableCode>
 -->
 
 ## Best Practices
 
 <Callout type="tip" title="Best Practice">
-- Ensure all facet operations (add, replace, remove) are ordered correctly: add, then replace, then remove.
-- Verify that the `_delegate` address and `_delegateCalldata` are valid for state initialization or modification if used.
-- Handle potential reverts from `upgradeDiamond`, such as `CannotAddFunctionToDiamondThatAlreadyExists` or `FacetToReplaceDoesNotExist`.
+- Ensure all upgrade operations are thoroughly tested before deployment.
+- Verify access control mechanisms are in place to restrict who can call upgrade functions.
+- Handle potential `DelegateCallReverted` errors gracefully when performing delegate calls.
+- Monitor `FacetAdded`, `FacetReplaced`, and `FacetRemoved` events to track diamond state changes.
 </Callout>
 
 ## Integration Notes
 
 <Callout type="success" title="Shared Storage">
-This module directly interacts with the diamond's storage, specifically referencing `DIAMOND_STORAGE_POSITION` which holds the `DiamondStorage` struct. The `DiamondStorage` struct contains a `facetList` which is manipulated by the upgrade functions. Changes made through `addFacets`, `removeFacets`, and `replaceFacets` directly modify this `facetList`, making them immediately visible to all facets operating on the same diamond storage. The optional `delegatecall` allows for state manipulation in an external contract after facet changes.
+This module interacts with diamond storage at `DIAMOND_STORAGE_POSITION`, utilizing the `DiamondStorage` struct which contains a `facetList`. The `upgradeDiamond` function directly modifies this storage to reflect additions, replacements, or removals of facets. Changes are immediately visible to all facets operating on the same diamond storage. The `delegatecall` functionality allows for complex state transitions or initializations post-upgrade, signaled by the `DiamondDelegateCall` event.
 </Callout>
 
 <div style={{marginTop: "3rem", paddingTop: "2rem", borderTop: "1px solid var(--ifm-color-emphasis-200)"}}>
-  <RelatedDocs
-    items={[
-      {
-        title: "DiamondUpgradeFacet",
-        href: "/docs/library/diamond/DiamondUpgradeFacet",
-        description: "Facet using DiamondUpgradeMod",
-        icon: "💎"
-      },
-      {
-        title: "DiamondMod",
-        href: "/docs/library/diamond/DiamondMod",
-        description: "Related module in diamond",
-        icon: "📦"
-      }
-    ]}
-  />
+  <WasThisHelpful pageId="Diamond Upgrade Module" />
 </div>
 
-<div style={{marginTop: "3rem", paddingTop: "2rem", borderTop: "1px solid var(--ifm-color-emphasis-200)"}}>
-  <WasThisHelpful pageId="DiamondUpgradeMod" />
-</div>
-
-<LastUpdated date="2026-03-13T00:35:03.814Z" />
+<LastUpdated date="2026-03-13T01:16:58.500Z" />

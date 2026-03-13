@@ -1,7 +1,7 @@
 ---
 sidebar_position: 1
-title: "ERC20BridgeableFacet"
-description: "Cross-chain minting and burning for ERC-20 tokens"
+title: "ERC-20 Bridgeable Facet"
+description: "Cross-chain token minting and burning for diamonds"
 sidebar_label: "Facet"
 gitSource: "https://github.com/Perfect-Abstractions/Compose/tree/main/src/token/ERC20/Bridgeable/ERC20BridgeableFacet.sol"
 ---
@@ -22,21 +22,19 @@ import GradientText from '@site/src/components/ui/GradientText';
 import GradientButton from '@site/src/components/ui/GradientButton';
 
 <DocSubtitle>
-Cross-chain minting and burning for ERC-20 tokens
+Cross-chain token minting and burning for diamonds
 </DocSubtitle>
 
 <Callout type="info" title="Key Features">
-- Enables cross-chain minting and burning via `trusted-bridge` role.
-- Functions are routed through the diamond proxy pattern.
-- Utilizes shared diamond storage for token and access control state.
-- Exports selectors for diamond integration.
+- Exposes external functions for cross-chain minting and burning.
+- Enforces access control using the `trusted-bridge` role via `checkTokenBridge`.
+- Integrates with diamond storage for token state management.
+- Provides `exportSelectors` for diamond selector discovery.
 </Callout>
 
 ## Overview
 
-This facet implements cross-chain minting and burning functionalities for ERC-20 tokens within a diamond. It exposes external functions that are restricted to addresses holding the `trusted-bridge` role, ensuring secure inter-chain token operations. The facet leverages shared diamond storage for token state and access control.
-
----
+This facet enables cross-chain token minting and burning operations within a diamond. It exposes external functions that are restricted to addresses holding the 'trusted-bridge' role, ensuring secure cross-chain interactions. Calls are routed through the diamond proxy, leveraging shared diamond storage.
 
 ## Storage
 
@@ -369,79 +367,94 @@ error ERC20InsufficientBalance(address _from, uint256 _accountBalance, uint256 _
 <ExpandableCode language="solidity" maxLines={20} title="Example Implementation">
 {`pragma solidity >=0.8.30;
 
-import {ERC20BridgeableFacet} from "@compose/token/ERC20/Bridgeable/ERC20BridgeableFacet";
 import {IDiamond} from "@compose/diamond/IDiamond.sol";
+import {ERC20BridgeableFacet} from "@compose/token/ERC20/Bridgeable/ERC20BridgeableFacet.sol";
 
-address public diamondAddress = address(0x123);
+// Example: Performing cross-chain operations via the diamond
+contract DiamondUser {
+    address immutable DIAMOND_ADDRESS;
 
-// Example: Minting tokens via the trusted bridge
-function mintCrosschain(address _account, uint256 _value) external {
-    IDiamond(diamondAddress).crosschainMint(_account, _value);
-}
-
-// Example: Burning tokens via the trusted bridge
-function burnCrosschain(address _from, uint256 _value) external {
-    IDiamond(diamondAddress).crosschainBurn(_from, _value);
-}
-
-// Example: Checking bridge trust status
-function checkBridgeTrust(address _caller) external view returns (bool) {
-    try IDiamond(diamondAddress).checkTokenBridge(_caller) {
-        return true;
-    } catch {
-        return false;
+    constructor(address diamondAddress) {
+        DIAMOND_ADDRESS = diamondAddress;
     }
-}`}
+
+    function mintTokensCrosschain(address _account, uint256 _value) external {
+        // Calls crosschainMint through the diamond proxy
+        IDiamond(DIAMOND_ADDRESS).crosschainMint(_account, _value);
+    }
+
+    function burnTokensCrosschain(address _from, uint256 _value) external {
+        // Calls crosschainBurn through the diamond proxy
+        IDiamond(DIAMOND_ADDRESS).crosschainBurn(_from, _value);
+    }
+
+    function checkBridgeTrust(address _caller) external view returns (bool) {
+        // Calls checkTokenBridge through the diamond proxy
+        // Note: This function is for internal checks; external callers might need a wrapper
+        // or direct access if exposed differently.
+        // For demonstration, assuming a direct call or a wrapper that exposes this.
+        // In a real scenario, this would likely be called internally by other facets
+        // or through a specific interface if exposed externally.
+        // This example assumes a context where direct calls to selectors are possible
+        // or a wrapper facet handles this.
+
+        // Placeholder for demonstration; actual usage depends on diamond configuration.
+        // If checkTokenBridge is intended purely for internal facet use, it won't be directly callable.
+        // Assuming here it's exposed for external verification purposes.
+
+        // To call this, you would need the selector for checkTokenBridge.
+        // This example focuses on mint/burn as primary external actions.
+
+        // For demonstration purposes, let's assume a scenario where a caller
+        // wants to verify its own bridge status, which might be unusual.
+        // More commonly, this would be called by the diamond itself or another facet.
+
+        // If the selector is registered, you could call it like:
+        // bytes4 selector = bytes4(keccak256("checkTokenBridge(address)"));
+        // (bool success, bytes memory data) = DIAMOND_ADDRESS.call(abi.encodeWithSelector(selector, _caller));
+        // if (success) {
+        //     return abi.decode(data, (bool)); // Assuming it returns a bool indicating trust
+        // } else {
+        //     // Handle revert
+        //     return false;
+        // }
+
+        // Given the provided function signature, it reverts on failure, not returns bool.
+        // So an external call would either succeed or revert. A view function implies it doesn't change state.
+        // To demonstrate its effect, we'll just note its role.
+
+        // The function checkTokenBridge(address _caller) external view ensures the caller has the 'trusted-bridge' role.
+        // If the caller is the zero address or lacks the role, it reverts.
+        // Therefore, a successful call implies trust.
+
+        // To call it and check for success:
+        try IDiamond(DIAMOND_ADDRESS).checkTokenBridge(_caller) {
+            return true; // Call succeeded, caller is trusted
+        } catch {
+            return false; // Call reverted, caller is not trusted or is zero address
+        }
+    }
+}
+`}
 </ExpandableCode>
 -->
 
 ## Best Practices
 
 <Callout type="tip" title="Best Practice">
-- Ensure the `trusted-bridge` role is correctly assigned before calling `crosschainMint` or `crosschainBurn`.
-- Initialize the diamond with this facet and configure access control appropriately.
-- Use `checkTokenBridge` to verify caller permissions before initiating cross-chain operations.
+- Ensure the `trusted-bridge` role is correctly assigned to authorized cross-chain bridge addresses.
+- Call `crosschainMint` and `crosschainBurn` only through the diamond proxy address.
+- Verify that the `ERC20_STORAGE_POSITION` slot in diamond storage is correctly managed and does not conflict with other facets.
 </Callout>
 
 ## Security Considerations
 
 <Callout type="warning" title="Security">
-State-changing functions `crosschainMint` and `crosschainBurn` are protected by the `trusted-bridge` role, enforced by the `checkTokenBridge` internal function. `checkTokenBridge` reverts if the caller is the zero address or lacks the `trusted-bridge` role. Input validation for `_account` and `_from` to prevent zero addresses is handled by the underlying ERC20 logic (not shown in this facet's signature). Follow standard Solidity security practices for external calls and input validation.
+All state-changing functions (`crosschainMint`, `crosschainBurn`) are protected by access control, requiring the caller to possess the `trusted-bridge` role, as enforced by `checkTokenBridge`. Reentrancy is mitigated by the checks-effects-interactions pattern inherent in typical diamond facet implementations. Input validation for addresses and values is handled by custom errors like `ERC20InvalidReceiver`, `ERC20InvalidSender`, and `ERC20InvalidBridgeAccount`. Ensure correct initialization and management of diamond storage slots to prevent state corruption.
 </Callout>
 
 <div style={{marginTop: "3rem", paddingTop: "2rem", borderTop: "1px solid var(--ifm-color-emphasis-200)"}}>
-  <RelatedDocs
-    items={[
-      {
-        title: "ERC20BridgeableMod",
-        href: "/docs/library/token/ERC20/Bridgeable/ERC20BridgeableMod",
-        description: "Module used by ERC20BridgeableFacet",
-        icon: "📦"
-      },
-      {
-        title: "ERC1155ApproveFacet",
-        href: "/docs/library/token/ERC1155/Approve/ERC1155ApproveFacet",
-        description: "Related facet in token",
-        icon: "💎"
-      },
-      {
-        title: "ERC1155MetadataFacet",
-        href: "/docs/library/token/ERC1155/Metadata/ERC1155MetadataFacet",
-        description: "Related facet in token",
-        icon: "💎"
-      },
-      {
-        title: "ERC1155DataFacet",
-        href: "/docs/library/token/ERC1155/Data/ERC1155DataFacet",
-        description: "Related facet in token",
-        icon: "💎"
-      }
-    ]}
-  />
+  <WasThisHelpful pageId="ERC-20 Bridgeable Facet" />
 </div>
 
-<div style={{marginTop: "3rem", paddingTop: "2rem", borderTop: "1px solid var(--ifm-color-emphasis-200)"}}>
-  <WasThisHelpful pageId="ERC20BridgeableFacet" />
-</div>
-
-<LastUpdated date="2026-03-13T00:37:26.769Z" />
+<LastUpdated date="2026-03-13T01:19:24.532Z" />

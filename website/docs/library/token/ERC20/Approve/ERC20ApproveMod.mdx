@@ -1,7 +1,7 @@
 ---
 sidebar_position: 210
-title: "ERC20ApproveMod"
-description: "Approve token spending for ERC-20 tokens"
+title: "ERC-20 Approve Module"
+description: "Approve token spending for a spender"
 sidebar_label: "Module"
 gitSource: "https://github.com/Perfect-Abstractions/Compose/tree/main/src/token/ERC20/Approve/ERC20ApproveMod.sol"
 ---
@@ -22,14 +22,14 @@ import GradientText from '@site/src/components/ui/GradientText';
 import GradientButton from '@site/src/components/ui/GradientButton';
 
 <DocSubtitle>
-Approve token spending for ERC-20 tokens
+Approve token spending for a spender
 </DocSubtitle>
 
 <Callout type="info" title="Key Features">
-- All functions are `internal` for use within custom facets.
-- Leverages the diamond storage pattern for shared state management.
-- Emits an `Approval` event upon successful approval.
-- Includes a `getStorage` function for inspecting ERC20 storage.
+- Internal functions for use within custom facets.
+- Utilizes the diamond storage pattern (EIP-8042) for shared state.
+- Emits an `Approval` event upon successful allowance updates.
+- Includes a custom error `ERC20InvalidSpender` for invalid spender addresses.
 </Callout>
 
 <Callout type="info" title="Module Usage">
@@ -38,9 +38,7 @@ This module provides internal functions for use in your custom facets. Import it
 
 ## Overview
 
-This module exposes internal functions to manage token spending approvals. Facets import this module to set allowances using shared diamond storage. Changes made through this module are immediately visible to all facets using the same storage pattern, enabling composable ERC-20-like functionality.
-
----
+This module enables facets to manage token spending approvals. Facets can grant allowances to specific addresses (spenders) using shared diamond storage. The `Approval` event signals these changes, making them observable by off-chain applications. This ensures that token transfers can be authorized and tracked within the diamond's context.
 
 ## Storage
 
@@ -196,40 +194,37 @@ error ERC20InvalidSpender(address _spender);
 
 <ExpandableCode language="solidity" maxLines={20} title="Example Implementation">
 {`pragma solidity >=0.8.30;
+
 import @compose/token/ERC20/Approve/ERC20ApproveMod;
 
 contract MyTokenFacet {
     ERC20ApproveMod internal approveModule;
 
-    function initialize(address _approveModuleAddress) internal {
-        approveModule = ERC20ApproveMod(_approveModuleAddress);
+    function initialize(ERC20ApproveMod _approveModule) external {
+        approveModule = _approveModule;
     }
 
     /**
      * @notice Approves a spender to withdraw tokens on behalf of the caller.
      * @param _spender The address to approve.
-     * @param _value The amount of tokens to approve.
+     * @param _value The amount of tokens approved.
      * @return bool True if the approval was successful.
      */
-    function approveTokens(address _spender, uint256 _value) external returns (bool) {
+    function grantApproval(address _spender, uint256 _value) external returns (bool) {
+        // Ensure the spender is valid before calling the module
         if (_spender == address(0)) {
             revert ERC20InvalidSpender(_spender);
         }
-        // Internal call to the module to set the allowance
         return approveModule.approve(_spender, _value);
     }
 
     /**
      * @notice Retrieves the ERC20 storage structure.
-     * @return ERC20Storage The storage structure.
+     * @return ERC20Storage The ERC20 storage struct.
      */
-    function getErc20Storage() external pure returns (ERC20Storage) {
+    function getERC20Storage() external pure returns (ERC20Storage) {
         return approveModule.getStorage();
     }
-}
-
-struct ERC20Storage {
-  uint256 totalSupply;
 }`}
 </ExpandableCode>
 -->
@@ -237,50 +232,19 @@ struct ERC20Storage {
 ## Best Practices
 
 <Callout type="tip" title="Best Practice">
-- Ensure the `_spender` address is not the zero address before calling `approve`.
-- Verify that the diamond's storage layout is compatible if upgrading facets that interact with this module.
-- Handle the `ERC20InvalidSpender` error appropriately when calling `approveTokens`.
+- Ensure the `_spender` address is validated to be non-zero before calling `approve`.
+- Monitor the `Approval` event for off-chain tracking of token allowances.
+- Call `getStorage()` to inspect the current state of ERC20-related storage.
 </Callout>
 
 ## Integration Notes
 
 <Callout type="success" title="Shared Storage">
-This module operates on diamond storage at `STORAGE_POSITION`, identified by `keccak256("erc20")`. The `approve` function modifies the allowance mapping within this shared storage. Any facet with access to the same diamond storage slot will immediately observe changes to allowances. The `getStorage` function provides direct access to the `ERC20Storage` struct, allowing other facets to read total supply or other defined fields.
+This module interacts with diamond storage at `STORAGE_POSITION` using the `keccak256(\"erc20\")` identifier. The `approve` function modifies the allowance state within this shared storage. The `getStorage` function provides direct access to the `ERC20Storage` struct definition, allowing other facets to read the underlying data. Changes to allowances made through this module are immediately visible to any facet that reads from the same storage slot.
 </Callout>
 
 <div style={{marginTop: "3rem", paddingTop: "2rem", borderTop: "1px solid var(--ifm-color-emphasis-200)"}}>
-  <RelatedDocs
-    items={[
-      {
-        title: "ERC1155ApproveMod",
-        href: "/docs/library/token/ERC1155/Approve/ERC1155ApproveMod",
-        description: "Related module in token",
-        icon: "📦"
-      },
-      {
-        title: "ERC1155MetadataMod",
-        href: "/docs/library/token/ERC1155/Metadata/ERC1155MetadataMod",
-        description: "Related module in token",
-        icon: "📦"
-      },
-      {
-        title: "ERC1155MintMod",
-        href: "/docs/library/token/ERC1155/Mint/ERC1155MintMod",
-        description: "Related module in token",
-        icon: "📦"
-      },
-      {
-        title: "ERC1155BurnMod",
-        href: "/docs/library/token/ERC1155/Burn/ERC1155BurnMod",
-        description: "Related module in token",
-        icon: "📦"
-      }
-    ]}
-  />
+  <WasThisHelpful pageId="ERC-20 Approve Module" />
 </div>
 
-<div style={{marginTop: "3rem", paddingTop: "2rem", borderTop: "1px solid var(--ifm-color-emphasis-200)"}}>
-  <WasThisHelpful pageId="ERC20ApproveMod" />
-</div>
-
-<LastUpdated date="2026-03-13T00:36:55.423Z" />
+<LastUpdated date="2026-03-13T01:18:49.719Z" />

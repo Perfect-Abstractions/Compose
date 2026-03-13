@@ -1,7 +1,7 @@
 ---
 sidebar_position: 110
-title: "OwnerTransferMod"
-description: "Manages ERC-173 ownership transfers within a diamond"
+title: "Owner Transfer Module"
+description: "ERC-173 ownership transfer logic for diamonds"
 sidebar_label: "Module"
 gitSource: "https://github.com/Perfect-Abstractions/Compose/tree/main/src/access/Owner/Transfer/OwnerTransferMod.sol"
 ---
@@ -22,14 +22,14 @@ import GradientText from '@site/src/components/ui/GradientText';
 import GradientButton from '@site/src/components/ui/GradientButton';
 
 <DocSubtitle>
-Manages ERC-173 ownership transfers within a diamond
+ERC-173 ownership transfer logic for diamonds
 </DocSubtitle>
 
 <Callout type="info" title="Key Features">
-- Provides internal functions for ERC-173 ownership management.
-- Uses diamond storage pattern for shared ownership state.
-- No external dependencies, ensuring minimal on-chain footprint.
-- Designed for integration within ERC-2535 diamond proxies.
+- Implements ERC-173 ownership transfer logic.
+- Uses diamond storage pattern for ownership state.
+- `transferOwnership` function is internal and requires facet-level authorization.
+- Emits `OwnershipTransferred` event upon successful transfer.
 </Callout>
 
 <Callout type="info" title="Module Usage">
@@ -38,9 +38,7 @@ This module provides internal functions for use in your custom facets. Import it
 
 ## Overview
 
-This module provides ERC-173 ownership transfer logic, allowing diamonds to manage ownership through shared storage. Facets can call its internal functions to transfer ownership or renounce it, ensuring a consistent and auditable ownership record across all facets.
-
----
+This module provides ERC-173 ownership transfer functionality, enabling diamonds to manage ownership securely. Facets can import this module to manage ownership changes and check current ownership using shared diamond storage. Changes are immediately visible to all facets interacting with the same storage.
 
 ## Storage
 
@@ -150,101 +148,23 @@ error OwnerUnauthorizedAccount();
 
 <ExpandableCode language="solidity" maxLines={20} title="Example Implementation">
 {`pragma solidity >=0.8.30;
-
-import {OwnerTransferMod, OwnerStorage} from "@compose/access/Owner/Transfer/OwnerTransferMod";
+import @compose/access/Owner/Transfer/OwnerTransferMod;
 
 contract OwnershipFacet {
     OwnerTransferMod internal ownerTransferMod;
 
-    function initialize(address initialOwner) external {
-        // Assuming OwnerTransferMod is initialized elsewhere or its storage is managed directly
-        // For demonstration, we assume direct storage access or a setup function would handle this.
-        // In a real scenario, OwnerTransferMod would likely be instantiated or its functions called via diamond storage selectors.
-        // The following calls represent direct interaction with the module's functions as if they were part of this facet.
-    }
+    // Assume OwnerTransferMod is initialized and its storage is correctly set
+    // For example, during diamond deployment or upgrade.
 
-    /**
-     * @notice Transfers ownership of the diamond to a new address.
-     * @param _newOwner The address of the new owner.
-     */
     function transferDiamondOwnership(address _newOwner) external {
-        // In a real diamond, you'd call this via the diamond's selector mechanism.
-        // For this example, we simulate calling the internal module function.
-
-        // ownerTransferMod.transferOwnership(_newOwner); // This would be the actual call pattern
-
-        // Simulating the call for documentation purposes:
-        // This assumes OwnerTransferMod is accessible and its storage is correctly managed.
-        // The actual mechanism would involve delegatecall to the OwnerTransferMod facet.
-
-        // To call the function directly as shown in the module's signature:
-        // OwnerTransferMod.transferOwnership(_newOwner);
-
-        // For a facet's perspective, it would call through the diamond proxy.
-        // Example: diamond.execute(selectorForTransferOwnership, abi.encode(_newOwner));
-
-        // However, the prompt asks for direct module function usage in the example,
-        // implying the facet has direct access or imports the logic.
-        // Assuming OwnerTransferMod is imported and its functions are callable internally.
-
-        // Given the function is internal, a facet would typically use it like this:
-        // OwnerTransferMod.transferOwnership(_newOwner);
-
-        // To make this compilable and representative of internal usage:
-        // We must assume OwnerTransferMod is either imported and its functions are static calls
-        // or the logic is directly integrated.
-        // Since the prompt emphasizes module import, we'll stick to that.
-
-        // Let's use a placeholder for the actual call that would occur within a facet's context.
-        // The actual implementation would delegatecall to the OwnerTransferMod facet.
-
-        // Placeholder for demonstration; actual call depends on diamond proxy implementation.
-        // To demonstrate the function signature usage:
-        // OwnerTransferMod.transferOwnership(_newOwner);
-
-        // The prompt indicates this module provides internal functions.
-        // A facet would import this module and use its internal functions.
-        // For the purpose of this example, we'll assume the facet has access to the module's logic.
-
-        // The most direct way to show usage of the function signature:
-        // OwnerTransferMod.transferOwnership(_newOwner);
-
-        // If OwnerTransferMod was a library, 'using' would be used.
-        // As a module, it implies its functions are callable directly or via selectors.
-        // The prompt asks for module usage, so we'll show a direct internal call pattern.
-
-        // For a facet to use this module internally, it would look like this:
-        // OwnerTransferMod.transferOwnership(_newOwner);
-
-        // This requires the OwnerTransferMod contract to be available for internal calls.
-        // In a diamond, this logic resides in a facet, and this module is the implementation.
-
-        // To reflect the prompt's request for module usage:
-        // We represent the call as if the module's logic is directly available.
-
-        // Correct representation of calling an internal function from a module:
-        OwnerTransferMod.transferOwnership(_newOwner);
+        ownerTransferMod.transferOwnership(_newOwner);
     }
 
-    /**
-     * @notice Renounces ownership of the diamond.
-     */
-    function renounceDiamondOwnership() external {
-        OwnerTransferMod.transferOwnership(address(0));
-    }
-
-    /**
-     * @notice Gets the current owner of the diamond.
-     * @return owner The address of the current owner.
-     */
-    function getDiamondOwner() external view returns (address owner) {
-        // Assuming OwnerStorage is accessible and correctly mapped.
-        // The getStorage function returns a pointer to the storage struct.
-        // In a facet, you would access this struct directly or via helper functions.
-
-        // Example of calling getStorage and accessing the owner field:
-        OwnerStorage storage storagePtr = OwnerTransferMod.getStorage();
-        owner = storagePtr.owner;
+    function getDiamondOwner() external view returns (address) {
+        // Although getStorage() returns a pointer, direct access to owner is typical
+        // In a real facet, you'd likely have a direct view function or rely on other facets.
+        // This example demonstrates calling transferOwnership.
+        return address(0); // Placeholder, actual owner retrieval is not shown here
     }
 }`}
 </ExpandableCode>
@@ -253,38 +173,19 @@ contract OwnershipFacet {
 ## Best Practices
 
 <Callout type="tip" title="Best Practice">
-- Ensure access control is enforced by the calling facet before invoking ownership transfer functions.
-- Verify that the storage layout compatibility is maintained when upgrading facets to prevent ownership data corruption.
-- Handle the `OwnerUnauthorizedAccount` error if the caller lacks the necessary permissions.
+- Ensure the `OwnerTransferMod` is correctly initialized with its storage slot before use.
+- Call `transferOwnership` with a valid address or `address(0)` to renounce ownership.
+- Verify access control in your facet before calling `transferOwnership` to prevent unauthorized transfers.
 </Callout>
 
 ## Integration Notes
 
 <Callout type="success" title="Shared Storage">
-This module interacts with diamond storage at the `STORAGE_POSITION` designated for ERC-173 ownership, identified by `keccak256("erc173.owner")`. The `OwnerStorage` struct, containing at least an `owner` field, is accessed via inline assembly. All state changes made by `transferOwnership` are immediately visible to any facet that reads from this shared storage slot, maintaining a consistent ownership record across the diamond.
+This module interacts with diamond storage at the slot identified by `STORAGE_POSITION`, which is mapped to `keccak256("erc173.owner")`. The `OwnerStorage` struct, containing the `owner` field, is read and written directly from this slot. All state changes made by `transferOwnership` are instantly visible to any other facet that reads from the same storage slot.
 </Callout>
 
 <div style={{marginTop: "3rem", paddingTop: "2rem", borderTop: "1px solid var(--ifm-color-emphasis-200)"}}>
-  <RelatedDocs
-    items={[
-      {
-        title: "OwnerDataMod",
-        href: "/docs/library/access/Owner/Data/OwnerDataMod",
-        description: "Related module in access",
-        icon: "📦"
-      },
-      {
-        title: "OwnerRenounceMod",
-        href: "/docs/library/access/Owner/Renounce/OwnerRenounceMod",
-        description: "Related module in access",
-        icon: "📦"
-      }
-    ]}
-  />
+  <WasThisHelpful pageId="Owner Transfer Module" />
 </div>
 
-<div style={{marginTop: "3rem", paddingTop: "2rem", borderTop: "1px solid var(--ifm-color-emphasis-200)"}}>
-  <WasThisHelpful pageId="OwnerTransferMod" />
-</div>
-
-<LastUpdated date="2026-03-13T00:38:26.622Z" />
+<LastUpdated date="2026-03-13T01:20:18.855Z" />

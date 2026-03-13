@@ -1,6 +1,6 @@
 ---
 sidebar_position: 100
-title: "OwnerTwoStepDataFacet"
+title: "Owner Two Step Data Facet"
 description: "Manages pending owner state for two-step ownership transfers"
 sidebar_label: "Facet"
 gitSource: "https://github.com/Perfect-Abstractions/Compose/tree/main/src/access/Owner/TwoSteps/Data/OwnerTwoStepDataFacet.sol"
@@ -26,17 +26,15 @@ Manages pending owner state for two-step ownership transfers
 </DocSubtitle>
 
 <Callout type="info" title="Key Features">
-- Exposes `pendingOwner` to retrieve the pending owner address.
-- Uses inline assembly to access diamond storage via `STORAGE_POSITION`.
-- Provides `exportSelectors` for function selector discovery.
-- Self-contained with no external dependencies other than diamond storage access.
+- Exposes external view function `pendingOwner()` for querying.
+- Uses `exportSelectors()` for diamond registration.
+- Operates on shared diamond storage via `getStorage()`.
+- Designed for integration within the Compose diamond pattern.
 </Callout>
 
 ## Overview
 
-This facet exposes functions to manage and retrieve the pending owner address within a diamond. It interacts with shared diamond storage to maintain the state of the two-step ownership transfer process. Developers integrate this facet to enable controlled owner transitions.
-
----
+This facet exposes functions to manage the pending owner state within a Compose diamond. It interacts with shared diamond storage to track the address awaiting ownership confirmation. Developers integrate this facet to enable a secure two-step ownership transfer process, ensuring a clear separation between the initiation and finalization of owner changes.
 
 ## Storage
 
@@ -113,85 +111,47 @@ Exports the function selectors of the OwnerTwoStepDataFacet This function is use
 <ExpandableCode language="solidity" maxLines={20} title="Example Implementation">
 {`pragma solidity >=0.8.30;
 
-import @compose/access/Owner/TwoSteps/Data/OwnerTwoStepDataFacet;
-import { IDiamond } from "@compose/interfaces/IDiamond";
+import {IDiamond} from "@compose/diamond/interfaces/IDiamond";
+import {OwnerTwoStepDataFacet} from "@compose/access/Owner/TwoSteps/Data/OwnerTwoStepDataFacet";
 
-contract ExampleDiamondUser {
-    address immutable DIAMOND_ADDRESS;
+contract Deployer {
+    address immutable diamondAddress;
 
-    constructor(address diamondAddress) {
-        DIAMOND_ADDRESS = diamondAddress;
+    constructor(address _diamondAddress) {
+        diamondAddress = _diamondAddress;
     }
 
-    /**
-     * @notice Retrieves the pending owner address from the diamond.
-     * @return The address of the pending owner.
-     */
     function getPendingOwner() external view returns (address) {
-        // Calls the facet's function through the diamond proxy.
-        return IDiamond(DIAMOND_ADDRESS).pendingOwner();
+        // Call through the diamond proxy to access the facet's functionality
+        OwnerTwoStepDataFacet facet = OwnerTwoStepDataFacet(diamondAddress);
+        return facet.pendingOwner();
     }
 
-    /**
-     * @notice Exports the selectors for this facet.
-     * @return bytes The encoded function selectors.
-     */
-    function exportFacetSelectors() external pure returns (bytes) {
-        // Calls the facet's function through the diamond proxy.
-        return IDiamond(DIAMOND_ADDRESS).exportSelectors();
+    function exportSelectors() external pure returns (bytes memory) {
+        // Export selectors for diamond registration
+        OwnerTwoStepDataFacet facet = OwnerTwoStepDataFacet(address(this)); // Use placeholder address for selector export
+        return facet.exportSelectors();
     }
-}
-`}
+}`}
 </ExpandableCode>
 -->
 
 ## Best Practices
 
 <Callout type="tip" title="Best Practice">
-- Initialize the `OwnerTwoStepDataMod` module before interacting with this facet's state-changing functions.
-- Ensure the `STORAGE_POSITION` for `PendingOwnerStorage` does not conflict with other facets.
-- Use `exportSelectors` during diamond upgrade or initialization to discover facet functions.
+- Initialize the pending owner state during diamond setup.
+- Ensure proper role management if access control is layered on top of ownership.
+- Verify storage slot compatibility before upgrading to new facet versions.
 </Callout>
 
 ## Security Considerations
 
 <Callout type="warning" title="Security">
-The `pendingOwner` function is a view function and has no direct security implications. `exportSelectors` is a pure function. The primary security considerations relate to the correct initialization and management of the pending owner state, which is handled by related facets and modules.
+The `pendingOwner()` function is a view function and does not pose reentrancy risks. Input validation is handled by the underlying diamond proxy mechanism. Ensure that the `OwnerTwoStepDataMod` module correctly manages the state transitions related to ownership changes.
 </Callout>
 
 <div style={{marginTop: "3rem", paddingTop: "2rem", borderTop: "1px solid var(--ifm-color-emphasis-200)"}}>
-  <RelatedDocs
-    items={[
-      {
-        title: "OwnerTwoStepDataMod",
-        href: "/docs/library/access/Owner/TwoSteps/Data/OwnerTwoStepDataMod",
-        description: "Module used by OwnerTwoStepDataFacet",
-        icon: "📦"
-      },
-      {
-        title: "OwnerDataFacet",
-        href: "/docs/library/access/Owner/Data/OwnerDataFacet",
-        description: "Related facet in access",
-        icon: "💎"
-      },
-      {
-        title: "OwnerRenounceFacet",
-        href: "/docs/library/access/Owner/Renounce/OwnerRenounceFacet",
-        description: "Related facet in access",
-        icon: "💎"
-      },
-      {
-        title: "OwnerTransferFacet",
-        href: "/docs/library/access/Owner/Transfer/OwnerTransferFacet",
-        description: "Related facet in access",
-        icon: "💎"
-      }
-    ]}
-  />
+  <WasThisHelpful pageId="Owner Two Step Data Facet" />
 </div>
 
-<div style={{marginTop: "3rem", paddingTop: "2rem", borderTop: "1px solid var(--ifm-color-emphasis-200)"}}>
-  <WasThisHelpful pageId="OwnerTwoStepDataFacet" />
-</div>
-
-<LastUpdated date="2026-03-13T00:38:37.220Z" />
+<LastUpdated date="2026-03-13T01:20:31.073Z" />

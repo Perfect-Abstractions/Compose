@@ -1,7 +1,7 @@
 ---
 sidebar_position: 100
-title: "AccessControlTemporalDataFacet"
-description: "Manages role expiry and checks role validity within a diamond"
+title: "Access Control Temporal Data Facet"
+description: "Manages temporal role assignments and checks role validity"
 sidebar_label: "Facet"
 gitSource: "https://github.com/Perfect-Abstractions/Compose/tree/main/src/access/AccessControl/Temporal/Data/AccessControlTemporalDataFacet.sol"
 ---
@@ -22,21 +22,19 @@ import GradientText from '@site/src/components/ui/GradientText';
 import GradientButton from '@site/src/components/ui/GradientButton';
 
 <DocSubtitle>
-Manages role expiry and checks role validity within a diamond
+Manages temporal role assignments and checks role validity
 </DocSubtitle>
 
 <Callout type="info" title="Key Features">
-- Exposes external functions for diamond routing.
-- Manages temporal role assignments and checks their validity.
-- Reverts with specific errors (`AccessControlUnauthorizedAccount`, `AccessControlRoleExpired`) for clarity.
-- Self-contained with no external dependencies beyond diamond storage.
+- Manages time-bound role assignments via diamond storage.
+- Exposes functions to check role expiry and validate roles.
+- Emits `RoleGrantedWithExpiry` and `TemporalRoleRevoked` events for off-chain monitoring.
+- Utilizes custom errors `AccessControlUnauthorizedAccount` and `AccessControlRoleExpired`.
 </Callout>
 
 ## Overview
 
-This facet provides temporal role management for Compose diamonds. It exposes functions to check if a role has expired and to enforce role validity. Calls are routed through the diamond proxy, accessing shared storage. Developers add this facet to implement time-bound access control.
-
----
+This facet provides functions to manage and query temporal role assignments within a diamond. It accesses shared diamond storage to track role expiry. Developers integrate this facet to implement time-bound access control, ensuring roles automatically become invalid after a specified duration.
 
 ## Storage
 
@@ -326,29 +324,27 @@ error AccessControlRoleExpired(bytes32 _role, address _account);
 <ExpandableCode language="solidity" maxLines={20} title="Example Implementation">
 {`pragma solidity >=0.8.30;
 
-import {IDiamond} from "@compose/diamond/IDiamond";
-import {AccessControlTemporalDataFacet} from "@compose/access/AccessControl/Temporal/Data/AccessControlTemporalDataFacet";
+import { IDiamond } from "@compose/diamond/IDiamond";
+import { AccessControlTemporalDataFacet } from "@compose/access/AccessControl/Temporal/Data/AccessControlTemporalDataFacet";
 
-contract DiamondUser {
-    address constant DIAMOND_ADDRESS = address(0x123);
+contract Deployer {
+    address diamondAddress;
 
-    function checkRoleStatus(bytes32 _role, address _account) external view {
-        IDiamond diamond = IDiamond(DIAMOND_ADDRESS);
-
-        // Check if a role has expired
-        bool expired = diamond.isRoleExpired(_role, _account);
-
-        // Get the expiry timestamp for a role
-        uint256 expiry = diamond.getRoleExpiry(_role, _account);
-
-        // Revert if the role is not valid (expired or not assigned)
-        // This will revert with AccessControlUnauthorizedAccount or AccessControlRoleExpired
-        diamond.requireValidRole(_role, _account);
+    // Assume diamondAddress is set during deployment
+    function checkRoleExpiry(bytes32 _role, address _account) public view returns (bool) {
+        // Calls are routed through the diamond proxy to the facet
+        IDiamond diamond = IDiamond(diamondAddress);
+        return AccessControlTemporalDataFacet(diamond).isRoleExpired(_role, _account);
     }
 
-    // Example of exporting selectors (typically done during deployment)
-    function exportFacetSelectors() external pure returns (bytes) {
-        return AccessControlTemporalDataFacet.exportSelectors();
+    function getRoleExpiryTimestamp(bytes32 _role, address _account) public view returns (uint256) {
+        IDiamond diamond = IDiamond(diamondAddress);
+        return AccessControlTemporalDataFacet(diamond).getRoleExpiry(_role, _account);
+    }
+
+    function ensureValidRole(bytes32 _role, address _account) public view {
+        IDiamond diamond = IDiamond(diamondAddress);
+        AccessControlTemporalDataFacet(diamond).requireValidRole(_role, _account);
     }
 }`}
 </ExpandableCode>
@@ -357,50 +353,19 @@ contract DiamondUser {
 ## Best Practices
 
 <Callout type="tip" title="Best Practice">
-- Ensure the facet is initialized with correct temporal role data.
-- Use `requireValidRole` to enforce time-bound access control before executing sensitive operations.
-- Monitor `RoleGrantedWithExpiry` and `TemporalRoleRevoked` events for role lifecycle changes.
+- Initialize temporal role assignments with appropriate expiry timestamps.
+- Regularly check role expiry using `isRoleExpired` or `requireValidRole` before granting sensitive permissions.
+- Ensure consistency between role granting and revocation logic across facets.
 </Callout>
 
 ## Security Considerations
 
 <Callout type="warning" title="Security">
-All external view functions are protected by input validation. The `requireValidRole` function explicitly checks for role assignment and expiry, reverting with `AccessControlUnauthorizedAccount` if the account lacks the role, or `AccessControlRoleExpired` if the role has expired. Developers must ensure that roles are granted with appropriate expiry durations.
+Functions `getRoleExpiry`, `isRoleExpired`, and `requireValidRole` are view functions and do not modify state. `requireValidRole` reverts with `AccessControlUnauthorizedAccount` if the account does not possess the role, or `AccessControlRoleExpired` if the role has expired. Ensure that role granting functions correctly set the expiry timestamp to prevent unintended indefinite access. Follow standard Solidity security practices for input validation when setting expiry times.
 </Callout>
 
 <div style={{marginTop: "3rem", paddingTop: "2rem", borderTop: "1px solid var(--ifm-color-emphasis-200)"}}>
-  <RelatedDocs
-    items={[
-      {
-        title: "OwnerDataFacet",
-        href: "/docs/library/access/Owner/Data/OwnerDataFacet",
-        description: "Related facet in access",
-        icon: "💎"
-      },
-      {
-        title: "OwnerRenounceFacet",
-        href: "/docs/library/access/Owner/Renounce/OwnerRenounceFacet",
-        description: "Related facet in access",
-        icon: "💎"
-      },
-      {
-        title: "OwnerTransferFacet",
-        href: "/docs/library/access/Owner/Transfer/OwnerTransferFacet",
-        description: "Related facet in access",
-        icon: "💎"
-      },
-      {
-        title: "OwnerTwoStepDataFacet",
-        href: "/docs/library/access/Owner/TwoSteps/Data/OwnerTwoStepDataFacet",
-        description: "Related facet in access",
-        icon: "💎"
-      }
-    ]}
-  />
+  <WasThisHelpful pageId="Access Control Temporal Data Facet" />
 </div>
 
-<div style={{marginTop: "3rem", paddingTop: "2rem", borderTop: "1px solid var(--ifm-color-emphasis-200)"}}>
-  <WasThisHelpful pageId="AccessControlTemporalDataFacet" />
-</div>
-
-<LastUpdated date="2026-03-13T00:40:04.849Z" />
+<LastUpdated date="2026-03-13T01:22:00.385Z" />

@@ -1,6 +1,6 @@
 ---
 sidebar_position: 100
-title: "AccessControlGrantFacet"
+title: "Access Control Grant Facet"
 description: "Grants roles to accounts within a diamond"
 sidebar_label: "Facet"
 gitSource: "https://github.com/Perfect-Abstractions/Compose/tree/main/src/access/AccessControl/Grant/AccessControlGrantFacet.sol"
@@ -26,17 +26,15 @@ Grants roles to accounts within a diamond
 </DocSubtitle>
 
 <Callout type="info" title="Key Features">
-- Exposes an external `grantRole` function for programmatic role assignment.
-- Emits `RoleGranted` events for off-chain consumption.
-- Operates on shared diamond storage, ensuring state consistency across facets.
-- Provides `exportSelectors` to facilitate diamond upgradeability.
+- Exposes `grantRole` function for programmatic role assignment.
+- Emits `RoleGranted` event for off-chain monitoring.
+- Operates on shared diamond storage, making it compatible with other facets.
+- Exports its own selectors via `exportSelectors`.
 </Callout>
 
 ## Overview
 
-This facet provides external functions for granting roles to accounts within a Compose diamond. It interfaces with shared diamond storage to manage role assignments and emits events for off-chain monitoring. Developers integrate this facet to programmatically manage permissions during diamond initialization or dynamically.
-
----
+This facet exposes functions for granting roles to accounts within a Compose diamond. It interacts with shared diamond storage to manage role assignments. Developers integrate this facet to programmatically manage access control for their diamond.
 
 ## Storage
 
@@ -177,29 +175,24 @@ error AccessControlUnauthorizedAccount(address _account, bytes32 _role);
 <ExpandableCode language="solidity" maxLines={20} title="Example Implementation">
 {`pragma solidity >=0.8.30;
 
-import {IDiamond} from "@compose/core/interfaces/IDiamond";
+import {IDiamond} from "@compose/diamond/IDiamond";
 import {AccessControlGrantFacet} from "@compose/access/AccessControl/Grant/AccessControlGrantFacet";
 
-contract DiamondDeploy {
+// Example: Granting a role using the facet through a diamond proxy
+contract DiamondUser {
     address immutable DIAMOND_ADDRESS;
-    bytes32 constant ADMIN_ROLE = keccak256("ADMIN_ROLE");
 
     constructor(address diamondAddress) {
         DIAMOND_ADDRESS = diamondAddress;
     }
 
-    function grantAdminRole(address adminAccount) external {
-        IDiamond(DIAMOND_ADDRESS).grantRole(ADMIN_ROLE, adminAccount);
+    function grantAdminRole(address _account) external {
+        // Call through the diamond proxy
+        IDiamond(DIAMOND_ADDRESS).grantRole("ADMIN", _account);
     }
 
-    function getRoleGrantedEventSelectors() external pure returns (bytes[] memory) {
-        // This is a simplified example; actual selector export would be more complex.
-        // The AccessControlGrantFacet provides an exportSelectors function.
-        // For demonstration, we assume the selector for RoleGranted event is known.
-        bytes[] memory selectors = new bytes[](1);
-        selectors[0] = bytes4(keccak256("RoleGranted(bytes32,address,address)"));
-        return selectors;
-    }
+    // Note: The 'ADMIN' role and the specific account address would be defined elsewhere.
+    // The grantRole function signature is exposed by the AccessControlGrantFacet.
 }`}
 </ExpandableCode>
 -->
@@ -207,50 +200,19 @@ contract DiamondDeploy {
 ## Best Practices
 
 <Callout type="tip" title="Best Practice">
-- Initialize roles and grant administrative permissions during diamond deployment.
-- Ensure the caller of `grantRole` has the necessary administrative privileges.
-- Verify that the `AccessControlGrantFacet` selectors are correctly registered with the diamond proxy.
+- Initialize roles and grant initial permissions during diamond deployment.
+- Ensure only authorized entities can call the `grantRole` function by properly configuring access control on the diamond.
+- Verify that the `AccessControlGrantFacet` is correctly registered with the diamond's facet registry.
 </Callout>
 
 ## Security Considerations
 
 <Callout type="warning" title="Security">
-The `grantRole` function is protected by access control, reverting with `AccessControlUnauthorizedAccount` if the caller does not possess the required role. Input validation for the `_account` parameter should be handled by the caller or other facets. No reentrancy concerns are present as there are no external calls within `grantRole`.
+The `grantRole` function is protected by access control, reverting with `AccessControlUnauthorizedAccount` if the caller does not possess the required role (typically an admin role). Input validation for `_role` and `_account` should be handled by the caller or other facets. This facet adheres to the checks-effects-interactions pattern by first verifying access, then performing the state change, and finally emitting an event.
 </Callout>
 
 <div style={{marginTop: "3rem", paddingTop: "2rem", borderTop: "1px solid var(--ifm-color-emphasis-200)"}}>
-  <RelatedDocs
-    items={[
-      {
-        title: "OwnerDataFacet",
-        href: "/docs/library/access/Owner/Data/OwnerDataFacet",
-        description: "Related facet in access",
-        icon: "💎"
-      },
-      {
-        title: "OwnerRenounceFacet",
-        href: "/docs/library/access/Owner/Renounce/OwnerRenounceFacet",
-        description: "Related facet in access",
-        icon: "💎"
-      },
-      {
-        title: "OwnerTransferFacet",
-        href: "/docs/library/access/Owner/Transfer/OwnerTransferFacet",
-        description: "Related facet in access",
-        icon: "💎"
-      },
-      {
-        title: "OwnerTwoStepDataFacet",
-        href: "/docs/library/access/Owner/TwoSteps/Data/OwnerTwoStepDataFacet",
-        description: "Related facet in access",
-        icon: "💎"
-      }
-    ]}
-  />
+  <WasThisHelpful pageId="Access Control Grant Facet" />
 </div>
 
-<div style={{marginTop: "3rem", paddingTop: "2rem", borderTop: "1px solid var(--ifm-color-emphasis-200)"}}>
-  <WasThisHelpful pageId="AccessControlGrantFacet" />
-</div>
-
-<LastUpdated date="2026-03-13T00:39:41.022Z" />
+<LastUpdated date="2026-03-13T01:21:32.273Z" />

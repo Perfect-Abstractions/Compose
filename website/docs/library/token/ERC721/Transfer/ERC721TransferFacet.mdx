@@ -1,6 +1,6 @@
 ---
 sidebar_position: 200
-title: "ERC721TransferFacet"
+title: "ERC-721 Transfer Facet"
 description: "ERC-721 token transfers within a diamond"
 sidebar_label: "Facet"
 gitSource: "https://github.com/Perfect-Abstractions/Compose/tree/main/src/token/ERC721/Transfer/ERC721TransferFacet.sol"
@@ -26,17 +26,15 @@ ERC-721 token transfers within a diamond
 </DocSubtitle>
 
 <Callout type="info" title="Key Features">
-- Exposes external functions (`transferFrom`, `safeTransferFrom`) for ERC-721 transfers.
-- Utilizes `internalTransferFrom` for core transfer logic, enabling composition with other facets.
-- Accesses shared diamond storage for token ownership and approvals.
-- Exports its selectors via `exportSelectors` for diamond registration.
+- Exposes external functions for ERC-721 token transfers, routed via the diamond proxy.
+- Utilizes internal functions and diamond storage for token management.
+- Supports both standard and safe ERC-721 transfers.
+- Compatible with ERC-2535 diamond standard.
 </Callout>
 
 ## Overview
 
-This facet implements ERC-721 token transfers as external functions within a diamond proxy. It routes calls through the diamond and accesses shared storage via internal functions. Developers add this facet to expose ERC-721 transfer functionality while maintaining diamond upgradeability.
-
----
+This facet implements ERC-721 token transfers as external functions within a diamond. It routes calls through the diamond proxy, accessing shared storage via internal functions. Developers add this facet to expose ERC-721 transfer functionality while maintaining the diamond's upgradeability.
 
 ## Storage
 
@@ -251,20 +249,21 @@ error ERC721InsufficientApproval(address _operator, uint256 _tokenId);
 <ExpandableCode language="solidity" maxLines={20} title="Example Implementation">
 {`pragma solidity >=0.8.30;
 
-import {ERC721TransferFacet} from "@compose/token/ERC721/Transfer/ERC721TransferFacet";
 import {IDiamond} from "@compose/diamond/IDiamond";
+import {ERC721TransferFacet} from "@compose/token/ERC721/Transfer/ERC721TransferFacet";
 
-// Example: Using the ERC721TransferFacet in a diamond
-// Functions are called through the diamond proxy address.
+contract DiamondUser {
+    address constant DIAMOND_ADDRESS = address(0x12345);
 
-address constant DIAMOND_ADDRESS = 0x1234567890abcdef1234567890abcdef1234567890;
+    function transferERC721Token(address _from, address _to, uint256 _tokenId) external {
+        // Call through the diamond proxy to the ERC721TransferFacet
+        IDiamond(DIAMOND_ADDRESS).transferFrom(_from, _to, _tokenId);
+    }
 
-function transferERC721Token(address _from, address _to, uint256 _tokenId) {
-    IDiamond(DIAMOND_ADDRESS).transferFrom(_from, _to, _tokenId);
-}
-
-function safeTransferERC721Token(address _from, address _to, uint256 _tokenId, bytes memory _data) {
-    IDiamond(DIAMOND_ADDRESS).safeTransferFrom(_from, _to, _tokenId, _data);
+    function safeTransferERC721Token(address _from, address _to, uint256 _tokenId, bytes memory _data) external {
+        // Call through the diamond proxy for safe transfer
+        IDiamond(DIAMOND_ADDRESS).safeTransferFrom(_from, _to, _tokenId, _data);
+    }
 }`}
 </ExpandableCode>
 -->
@@ -272,50 +271,19 @@ function safeTransferERC721Token(address _from, address _to, uint256 _tokenId, b
 ## Best Practices
 
 <Callout type="tip" title="Best Practice">
-- Ensure the `ERC721TransferFacet` is correctly registered with the diamond proxy.
-- Verify that the diamond has the necessary selectors for `transferFrom` and `safeTransferFrom` functions.
-- Use the `internalTransferFrom` function via the `ERC721TransferMod` for internal logic or when custom checks are required before transfer.
+- Ensure the ERC721TransferFacet is correctly initialized within the diamond's deployment process.
+- Enforce necessary ownership and approval checks before calling transfer functions.
+- Verify that the receiver address is capable of handling ERC-721 tokens for `safeTransferFrom` calls.
 </Callout>
 
 ## Security Considerations
 
 <Callout type="warning" title="Security">
-The `transferFrom` and `safeTransferFrom` functions are protected by internal checks that revert with `ERC721NonexistentToken`, `ERC721IncorrectOwner`, `ERC721InvalidReceiver`, and `ERC721InsufficientApproval` errors. Input validation is handled within `internalTransferFrom`. Follow standard Solidity security practices for all interactions with the diamond proxy and shared storage.
+The `transferFrom`, `safeTransferFrom`, and `safeTransferFrom` functions handle token transfers. These functions utilize internal checks for ownership (`ERC721IncorrectOwner`) and approvals (`ERC721InsufficientApproval`). `safeTransferFrom` also validates receiver capabilities (`ERC721InvalidReceiver`). Follow standard Solidity security practices for input validation and reentrancy protection, especially when integrating with other facets.
 </Callout>
 
 <div style={{marginTop: "3rem", paddingTop: "2rem", borderTop: "1px solid var(--ifm-color-emphasis-200)"}}>
-  <RelatedDocs
-    items={[
-      {
-        title: "ERC721TransferMod",
-        href: "/docs/library/token/ERC721/Transfer/ERC721TransferMod",
-        description: "Module used by ERC721TransferFacet",
-        icon: "📦"
-      },
-      {
-        title: "ERC1155ApproveFacet",
-        href: "/docs/library/token/ERC1155/Approve/ERC1155ApproveFacet",
-        description: "Related facet in token",
-        icon: "💎"
-      },
-      {
-        title: "ERC1155MetadataFacet",
-        href: "/docs/library/token/ERC1155/Metadata/ERC1155MetadataFacet",
-        description: "Related facet in token",
-        icon: "💎"
-      },
-      {
-        title: "ERC1155DataFacet",
-        href: "/docs/library/token/ERC1155/Data/ERC1155DataFacet",
-        description: "Related facet in token",
-        icon: "💎"
-      }
-    ]}
-  />
+  <WasThisHelpful pageId="ERC-721 Transfer Facet" />
 </div>
 
-<div style={{marginTop: "3rem", paddingTop: "2rem", borderTop: "1px solid var(--ifm-color-emphasis-200)"}}>
-  <WasThisHelpful pageId="ERC721TransferFacet" />
-</div>
-
-<LastUpdated date="2026-03-13T00:36:51.260Z" />
+<LastUpdated date="2026-03-13T01:18:44.879Z" />

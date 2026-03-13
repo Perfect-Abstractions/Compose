@@ -1,6 +1,6 @@
 ---
 sidebar_position: 1
-title: "AccessControlPausableFacet"
+title: "Access Control Pausable Facet"
 description: "Manages role pausing and unpausing within a diamond"
 sidebar_label: "Facet"
 gitSource: "https://github.com/Perfect-Abstractions/Compose/tree/main/src/access/AccessControl/Pausable/AccessControlPausableFacet.sol"
@@ -26,17 +26,15 @@ Manages role pausing and unpausing within a diamond
 </DocSubtitle>
 
 <Callout type="info" title="Key Features">
-- Allows temporary disabling of specific roles using `pauseRole` and `unpauseRole`.
-- Enforces role pausing via the `requireRoleNotPaused` check, reverting with `AccessControlRolePaused`.
-- Access control for pause/unpause functions is enforced based on role administration.
-- Integrates with diamond storage via `AccessControlPausableMod`.
+- Provides external functions to pause and unpause specific roles.
+- Emits `RolePaused` and `RoleUnpaused` events for off-chain monitoring.
+- Implements `requireRoleNotPaused` to enforce role availability checks.
+- Operates on shared diamond storage, ensuring consistency across facets.
 </Callout>
 
 ## Overview
 
-This facet provides granular control over role functionality by allowing specific roles to be temporarily paused. It integrates with diamond storage to manage role pause states, ensuring that only authorized administrators can control these states. Developers add this facet to enforce temporary restrictions on role usage without revoking roles entirely.
-
----
+This facet provides role-based pausing functionality for Compose diamonds. It allows administrators to temporarily disable specific roles, preventing any account from using them. Calls are routed through the diamond proxy, and state is managed within shared diamond storage.
 
 ## Storage
 
@@ -311,77 +309,50 @@ error AccessControlRolePaused(bytes32 _role);
 import { IDiamond } from "@compose/diamond/IDiamond";
 import { AccessControlPausableFacet } from "@compose/access/AccessControl/Pausable/AccessControlPausableFacet";
 
-// Example: Using the facet in a diamond
-address diamondAddress;
+// Example: Pausing and unpausing a role in a diamond
+address public diamondAddress;
+bytes32 public constant ADMIN_ROLE = keccak256("ADMIN_ROLE");
 
-// Assume diamondAddress is already deployed and configured
-IDiamond diamond = IDiamond(diamondAddress);
+function pauseAdminRole() public {
+    IDiamond diamond = IDiamond(diamondAddress);
+    // Assumes the caller has the necessary permissions to pause the role
+    diamond.pauseRole(ADMIN_ROLE);
+}
 
-// To pause a role (e.g., 'AdminRole')
-// Only the admin of 'AdminRole' can call this through the diamond
-bytes32 adminRole = keccak256("AdminRole");
-// diamond.pauseRole(adminRole); // Caller must be admin of adminRole
+function unpauseAdminRole() public {
+    IDiamond diamond = IDiamond(diamondAddress);
+    // Assumes the caller has the necessary permissions to unpause the role
+    diamond.unpauseRole(ADMIN_ROLE);
+}
 
-// To unpause a role
-// diamond.unpauseRole(adminRole); // Caller must be admin of adminRole
-
-// To check if a role is paused
-// bool isPaused = diamond.isRolePaused(adminRole);
-
-// To check if an account can use a role (verifies role existence and if it's not paused)
-// address someAccount;
-// diamond.requireRoleNotPaused(adminRole, someAccount);
-`}
+function checkAdminRoleStatus(address _account) public view returns (bool) {
+    IDiamond diamond = IDiamond(diamondAddress);
+    // This function checks if the role is paused and if the account has the role
+    try diamond.requireRoleNotPaused(ADMIN_ROLE, _account) {
+        return true;
+    } catch (bytes memory) {
+        return false;
+    }
+}`}
 </ExpandableCode>
 -->
 
 ## Best Practices
 
 <Callout type="tip" title="Best Practice">
-- Ensure the `AccessControlPausableMod` is correctly initialized with administrative roles before deploying this facet.
-- Grant pause/unpause permissions only to trusted administrative roles.
-- Verify that the `requireRoleNotPaused` function is called before executing sensitive operations tied to specific roles.
+- Ensure the caller has the necessary administrative privileges before calling `pauseRole` or `unpauseRole`.
+- Verify that roles are not paused before attempting to execute actions restricted by those roles using `requireRoleNotPaused`.
+- Manage role pausing and unpausing as part of diamond upgrade or maintenance procedures.
 </Callout>
 
 ## Security Considerations
 
 <Callout type="warning" title="Security">
-All state-changing functions (`pauseRole`, `unpauseRole`) are protected by access control, reverting with `AccessControlUnauthorizedAccount` if the caller is not the admin of the specified role. The `requireRoleNotPaused` function checks for both role existence and pause status, reverting with `AccessControlUnauthorizedAccount` or `AccessControlRolePaused` as appropriate. Follow standard Solidity security practices for input validation.
+All state-changing functions (`pauseRole`, `unpauseRole`) are protected by access control, reverting with `AccessControlUnauthorizedAccount` if the caller is not the admin of the role. The `requireRoleNotPaused` function reverts with `AccessControlRolePaused` if the specified role is paused, ensuring operations dependent on that role are not executed. Input validation for roles is handled by the underlying access control mechanisms.
 </Callout>
 
 <div style={{marginTop: "3rem", paddingTop: "2rem", borderTop: "1px solid var(--ifm-color-emphasis-200)"}}>
-  <RelatedDocs
-    items={[
-      {
-        title: "AccessControlPausableMod",
-        href: "/docs/library/access/AccessControl/Pausable/AccessControlPausableMod",
-        description: "Module used by AccessControlPausableFacet",
-        icon: "📦"
-      },
-      {
-        title: "OwnerDataFacet",
-        href: "/docs/library/access/Owner/Data/OwnerDataFacet",
-        description: "Related facet in access",
-        icon: "💎"
-      },
-      {
-        title: "OwnerRenounceFacet",
-        href: "/docs/library/access/Owner/Renounce/OwnerRenounceFacet",
-        description: "Related facet in access",
-        icon: "💎"
-      },
-      {
-        title: "OwnerTransferFacet",
-        href: "/docs/library/access/Owner/Transfer/OwnerTransferFacet",
-        description: "Related facet in access",
-        icon: "💎"
-      }
-    ]}
-  />
+  <WasThisHelpful pageId="Access Control Pausable Facet" />
 </div>
 
-<div style={{marginTop: "3rem", paddingTop: "2rem", borderTop: "1px solid var(--ifm-color-emphasis-200)"}}>
-  <WasThisHelpful pageId="AccessControlPausableFacet" />
-</div>
-
-<LastUpdated date="2026-03-13T00:39:00.518Z" />
+<LastUpdated date="2026-03-13T01:20:56.727Z" />

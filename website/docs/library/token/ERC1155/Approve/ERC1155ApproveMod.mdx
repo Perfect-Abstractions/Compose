@@ -1,7 +1,7 @@
 ---
 sidebar_position: 210
-title: "ERC1155ApproveMod"
-description: "Manages ERC-1155 operator approvals using diamond storage"
+title: "ERC-1155 Approve Module"
+description: "Manage ERC-1155 approvals within a diamond"
 sidebar_label: "Module"
 gitSource: "https://github.com/Perfect-Abstractions/Compose/tree/main/src/token/ERC1155/Approve/ERC1155ApproveMod.sol"
 ---
@@ -22,13 +22,13 @@ import GradientText from '@site/src/components/ui/GradientText';
 import GradientButton from '@site/src/components/ui/GradientButton';
 
 <DocSubtitle>
-Manages ERC-1155 operator approvals using diamond storage
+Manage ERC-1155 approvals within a diamond
 </DocSubtitle>
 
 <Callout type="info" title="Key Features">
-- Provides internal functions for ERC-1155 operator approvals.
-- Leverages diamond storage (EIP-8042) for shared state management.
-- Emits `ApprovalForAll` events upon granting or revoking operator status.
+- Provides `internal` functions for direct use by other facets.
+- Manages ERC-1155 approvals using the diamond storage pattern.
+- Emits an `ApprovalForAll` event upon granting or revoking permissions.
 - Includes a custom error `ERC1155InvalidOperator` for specific validation failures.
 </Callout>
 
@@ -38,9 +38,7 @@ This module provides internal functions for use in your custom facets. Import it
 
 ## Overview
 
-This module provides internal functions for managing ERC-1155 operator approvals within a diamond. Facets can use these functions to grant or revoke an operator's permission to manage a user's tokens, leveraging shared diamond storage for consistency across all facets. Changes are immediately visible to other facets interacting with the same storage.
-
----
+This module provides internal functions for managing ERC-1155 token approvals. Facets can import this module to grant or revoke operator permissions on behalf of users, leveraging shared diamond storage for consistency across all facets. Changes are immediately visible to any facet interacting with the same storage.
 
 ## Storage
 
@@ -188,37 +186,26 @@ error ERC1155InvalidOperator(address _operator);
 <ExpandableCode language="solidity" maxLines={20} title="Example Implementation">
 {`pragma solidity >=0.8.30;
 
-import {ERC1155ApproveMod} from "@compose/token/ERC1155/Approve/ERC1155ApproveMod";
+import { ERC1155ApproveMod } from "@compose/token/ERC1155/Approve/ERC1155ApproveMod";
 
 contract MyERC1155Facet {
-    ERC1155ApproveMod internal approveModule;
+    using ERC1155ApproveMod for ERC1155ApproveMod;
 
-    constructor(address diamondStorageAddress) {
-        // Assume diamondStorageAddress is the address of the diamond proxy
-        // and that the ERC1155ApproveMod facet is deployed and accessible.
-        // In a real scenario, this would likely be initialized via an initializer function.
-        approveModule = ERC1155ApproveMod(diamondStorageAddress);
+    address constant STORAGE_POSITION = keccak256("erc1155");
+
+    function grantApproval(address _user, address _operator) external {
+        // Grant permission for _operator to manage _user's tokens
+        ERC1155ApproveMod.setApprovalForAll(_user, _operator, true);
     }
 
-    /**
-     * @notice Grants or revokes an operator's permission to manage all of the caller's tokens.
-     * @dev This function internally calls the ERC1155ApproveMod.
-     * @param _operator The address of the operator to grant or revoke permissions for.
-     * @param _approved True to grant permission, false to revoke.
-     */
-    function grantOperator(address _operator, bool _approved) external {
-        // Call the internal module function to set approval for all
-        approveModule.setApprovalForAll(msg.sender, _operator, _approved);
+    function revokeApproval(address _user, address _operator) external {
+        // Revoke permission for _operator to manage _user's tokens
+        ERC1155ApproveMod.setApprovalForAll(_user, _operator, false);
     }
 
-    /**
-     * @notice Retrieves the ERC1155 storage struct.
-     * @dev Useful for inspecting storage or if other facets need direct access.
-     * @return ERC1155Storage The current ERC1155 storage state.
-     */
-    function getERC1155Storage() external pure returns (ERC1155Storage) {
-        // Call the module to get a reference to the storage struct
-        return approveModule.getStorage();
+    function getERC1155Storage() internal pure returns (ERC1155Storage memory) {
+        // Access the shared ERC1155 storage
+        return ERC1155ApproveMod.getStorage();
     }
 }`}
 </ExpandableCode>
@@ -227,19 +214,19 @@ contract MyERC1155Facet {
 ## Best Practices
 
 <Callout type="tip" title="Best Practice">
-- Ensure that the `_operator` address is validated before calling `setApprovalForAll` if additional checks beyond the module's internal validation are required.
-- Verify diamond storage slot compatibility when upgrading or adding new facets to prevent storage collisions.
-- Handle the `ERC1155InvalidOperator` error if the operator address is invalid, as defined by the module's internal logic.
+- Ensure access control is enforced by the calling facet before invoking `setApprovalForAll`.
+- Verify that the `STORAGE_POSITION` used by this module is correctly managed within the diamond's diamond storage layout.
+- Handle the `ERC1155InvalidOperator` error if the operator address is invalid.
 </Callout>
 
 ## Integration Notes
 
 <Callout type="success" title="Shared Storage">
-This module interacts with diamond storage via a predefined storage slot identified by `keccak2535(\"erc1155\")`. The `getStorage()` function provides a direct reference to the `ERC1155Storage` struct, allowing any facet to read or write to this shared state. Changes made through `setApprovalForAll` are immediately reflected in the diamond's storage and are visible to all facets accessing the same slot.
+This module utilizes diamond storage at the `STORAGE_POSITION` defined by `keccak256("erc1155")`. The `ERC1155Storage` struct, though empty in this definition, reserves this slot for ERC-1155 related approval data. Functions operate directly on this shared storage, making any approval changes immediately visible to all facets accessing the same storage slot.
 </Callout>
 
 <div style={{marginTop: "3rem", paddingTop: "2rem", borderTop: "1px solid var(--ifm-color-emphasis-200)"}}>
-  <WasThisHelpful pageId="ERC1155ApproveMod" />
+  <WasThisHelpful pageId="ERC-1155 Approve Module" />
 </div>
 
-<LastUpdated date="2026-03-13T00:35:12.119Z" />
+<LastUpdated date="2026-03-13T01:17:05.491Z" />

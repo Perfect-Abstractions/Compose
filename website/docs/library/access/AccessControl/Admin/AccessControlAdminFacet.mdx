@@ -1,6 +1,6 @@
 ---
 sidebar_position: 100
-title: "AccessControlAdminFacet"
+title: "Access Control Admin Facet"
 description: "Manages role administration for access control"
 sidebar_label: "Facet"
 gitSource: "https://github.com/Perfect-Abstractions/Compose/tree/main/src/access/AccessControl/Admin/AccessControlAdminFacet.sol"
@@ -26,17 +26,15 @@ Manages role administration for access control
 </DocSubtitle>
 
 <Callout type="info" title="Key Features">
-- Sets and queries role administrators via diamond proxy.
-- Emits `RoleAdminChanged` event upon successful administration changes.
-- Reverts with `AccessControlUnauthorizedAccount` if caller lacks permissions.
-- Exports its own selectors for diamond registration.
+- Manages role-to-admin role mappings.
+- Emits `RoleAdminChanged` event upon successful updates.
+- Reverts with `AccessControlUnauthorizedAccount` if caller lacks permission.
+- Provides `exportSelectors` for diamond registration.
 </Callout>
 
 ## Overview
 
-This facet provides administrative functions for managing role hierarchies within a diamond. It allows setting and querying the admin role for any given role, enabling granular control over permissions. Calls are routed through the diamond proxy, accessing shared storage.
-
----
+This facet exposes functions to manage role administration within a diamond. It allows setting the admin role for existing roles and exporting its selectors. Calls are routed through the diamond proxy, and it interacts with shared diamond storage via modules.
 
 ## Storage
 
@@ -177,96 +175,52 @@ error AccessControlUnauthorizedAccount(address _account, bytes32 _role);
 <ExpandableCode language="solidity" maxLines={20} title="Example Implementation">
 {`pragma solidity >=0.8.30;
 
-import {IDiamond} from "@compose/contracts/diamond/IDiamond.sol";
-import {AccessControlAdminFacet} from "@compose/access/AccessControl/Admin/AccessControlAdminFacet.sol";
+import { IDiamond } from "@compose/contracts/diamond/IDiamond.sol";
+import { AccessControlAdminFacet } from "@compose/access/AccessControl/Admin/AccessControlAdminFacet.sol";
 
-contract DiamondUser {
+contract DiamondDeploy {
     address immutable diamondAddress;
 
     constructor(address _diamondAddress) {
         diamondAddress = _diamondAddress;
     }
 
-    /**
-     * @notice Sets the admin role for a specific role.
-     * @param _role The role to set the admin for.
-     * @param _adminRole The new admin role for the specified role.
-     */
-    function setAdminRole(bytes32 _role, bytes32 _adminRole) external {
-        IDiamond(diamondAddress).setRoleAdmin(_role, _adminRole);
+    function setAdminRoleForDefaultAdmin() external {
+        IDiamond diamond = IDiamond(diamondAddress);
+        // Assuming 'DEFAULT_ADMIN_ROLE' and 'ROLE_ADMIN' are predefined bytes32 constants
+        // In a real scenario, these would be obtained or defined elsewhere.
+        bytes32 DEFAULT_ADMIN_ROLE = keccak256("DEFAULT_ADMIN_ROLE");
+        bytes32 ROLE_ADMIN = keccak256("ROLE_ADMIN");
+
+        // Call the facet function through the diamond proxy
+        diamond.setRoleAdmin(DEFAULT_ADMIN_ROLE, ROLE_ADMIN);
     }
 
-    /**
-     * @notice Exports the selectors exposed by this facet.
-     * @return selectors A bytes string of encoded selectors.
-     */
-    function exportFacetSelectors() external pure returns (bytes memory) {
-        return AccessControlAdminFacet.exportSelectors();
+    function exportAdminSelectors() external pure returns (bytes memory) {
+        // Instantiate the facet to call its pure function
+        AccessControlAdminFacet adminFacet = AccessControlAdminFacet(address(0)); // Address is irrelevant for pure functions
+        return adminFacet.exportSelectors();
     }
-
-    /**
-     * @notice Retrieves the facet's storage structure.
-     * @return AccessControlStorage The storage for access control.
-     */
-    function getAccessControlStorage() internal pure returns (AccessControlStorage storage) {
-        return AccessControlAdminFacet.getStorage();
-    }
-}
-
-struct AccessControlStorage {
-
-}
-`}
+}`}
 </ExpandableCode>
 -->
 
 ## Best Practices
 
 <Callout type="tip" title="Best Practice">
-- Initialize roles and their admin roles during diamond deployment.
-- Ensure the caller has the necessary permissions to set role administrators.
-- Verify storage compatibility when upgrading the AccessControlAdminFacet.
+- Initialize role admin relationships during diamond deployment.
+- Ensure the caller possesses the necessary role to call `setRoleAdmin`.
+- Verify the `exportSelectors` output for accurate facet registration.
 </Callout>
 
 ## Security Considerations
 
 <Callout type="warning" title="Security">
-All state-changing functions, including `setRoleAdmin`, must be protected by access control mechanisms. The `setRoleAdmin` function enforces that only the current admin of a role can change its administrator. Input validation for roles is crucial. Follow standard Solidity security practices for handling roles and permissions.
+The `setRoleAdmin` function is protected by an access control check, reverting with `AccessControlUnauthorizedAccount` if the caller is not the current admin of the role being modified. Input validation is handled by the underlying access control mechanisms. Follow standard Solidity security practices for diamond deployments and interactions.
 </Callout>
 
 <div style={{marginTop: "3rem", paddingTop: "2rem", borderTop: "1px solid var(--ifm-color-emphasis-200)"}}>
-  <RelatedDocs
-    items={[
-      {
-        title: "AccessControlAdminMod",
-        href: "/docs/library/access/AccessControl/Admin/AccessControlAdminMod",
-        description: "Module used by AccessControlAdminFacet",
-        icon: "📦"
-      },
-      {
-        title: "OwnerDataFacet",
-        href: "/docs/library/access/Owner/Data/OwnerDataFacet",
-        description: "Related facet in access",
-        icon: "💎"
-      },
-      {
-        title: "OwnerRenounceFacet",
-        href: "/docs/library/access/Owner/Renounce/OwnerRenounceFacet",
-        description: "Related facet in access",
-        icon: "💎"
-      },
-      {
-        title: "OwnerTransferFacet",
-        href: "/docs/library/access/Owner/Transfer/OwnerTransferFacet",
-        description: "Related facet in access",
-        icon: "💎"
-      }
-    ]}
-  />
+  <WasThisHelpful pageId="Access Control Admin Facet" />
 </div>
 
-<div style={{marginTop: "3rem", paddingTop: "2rem", borderTop: "1px solid var(--ifm-color-emphasis-200)"}}>
-  <WasThisHelpful pageId="AccessControlAdminFacet" />
-</div>
-
-<LastUpdated date="2026-03-13T00:39:09.040Z" />
+<LastUpdated date="2026-03-13T01:21:04.529Z" />

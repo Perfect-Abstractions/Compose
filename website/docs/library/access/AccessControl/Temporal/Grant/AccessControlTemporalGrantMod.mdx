@@ -1,7 +1,7 @@
 ---
 sidebar_position: 110
-title: "AccessControlTemporalGrantMod"
-description: "Grant roles with time-bound expiry"
+title: "Access Control Temporal Grant Module"
+description: "Grants roles with time-bound expiry"
 sidebar_label: "Module"
 gitSource: "https://github.com/Perfect-Abstractions/Compose/tree/main/src/access/AccessControl/Temporal/Grant/AccessControlTemporalGrantMod.sol"
 ---
@@ -22,14 +22,14 @@ import GradientText from '@site/src/components/ui/GradientText';
 import GradientButton from '@site/src/components/ui/GradientButton';
 
 <DocSubtitle>
-Grant roles with time-bound expiry
+Grants roles with time-bound expiry
 </DocSubtitle>
 
 <Callout type="info" title="Key Features">
-- Provides `internal` functions for role granting with expiry.
-- Utilizes the diamond storage pattern for shared state.
-- Emits `RoleGrantedWithExpiry` event upon successful role assignment.
-- Reverts with custom errors for unauthorized access or expired roles.
+- Internal functions designed for use within diamond facets.
+- Leverages the diamond storage pattern for shared state management.
+- Emits `RoleGrantedWithExpiry` event for off-chain monitoring.
+- Enforces access control using the diamond's administrative roles.
 </Callout>
 
 <Callout type="info" title="Module Usage">
@@ -38,9 +38,7 @@ This module provides internal functions for use in your custom facets. Import it
 
 ## Overview
 
-This module provides internal functions for granting roles with an expiry timestamp, leveraging shared diamond storage. Facets can import this module to manage temporal role assignments, ensuring changes are immediately visible across all facets interacting with the same storage.
-
----
+This module provides internal functions for granting roles with a specified expiry timestamp. Facets can import and utilize these functions to manage time-limited permissions within the diamond's shared storage. Changes are immediately visible to all facets interacting with the same diamond storage.
 
 ## Storage
 
@@ -244,34 +242,24 @@ error AccessControlUnauthorizedAccount(address _account, bytes32 _role);
 
 <ExpandableCode language="solidity" maxLines={20} title="Example Implementation">
 {`pragma solidity >=0.8.30;
-import @compose/access/AccessControl/Temporal/Grant/AccessControlTemporalGrantMod;
 
-contract MyTemporalGrantFacet {
-    AccessControlTemporalGrantMod internal temporalGrantMod;
+import {AccessControlTemporalGrantMod} from "@compose/access/AccessControl/Temporal/Grant/AccessControlTemporalGrantMod";
 
-    constructor(address diamondAddress) {
-        temporalGrantMod = AccessControlTemporalGrantMod(diamondAddress);
+contract TemporalGrantFacet {
+    AccessControlTemporalGrantMod internal _temporalGrantMod;
+
+    constructor(address diamondStorageAddress) {
+        // Assuming diamondStorageAddress is the address of the diamond proxy
+        _temporalGrantMod = AccessControlTemporalGrantMod(diamondStorageAddress);
     }
 
     /**
-     * @notice Grants a specific role to an account with a defined expiry.
-     * @dev Requires the caller to be the admin of the role being granted.
-     * @param _role The role to grant.
-     * @param _account The address to grant the role to.
-     * @param _expiresAt The Unix timestamp when the role expires.
+     * @notice Grants a role to an account with an expiry.
+     * @dev Requires the caller to be the admin of the role.
      */
-    function grantRoleWithExpiry(bytes32 _role, address _account, uint256 _expiresAt) external {
-        // This call assumes the facet itself is authorized to call this internal module function,
-        // or that the diamond's access control mechanism permits this call.
-        temporalGrantMod.grantRoleWithExpiry(_role, _account, _expiresAt);
-    }
-
-    /**
-     * @notice Retrieves the temporal access control storage structure.
-     * @return AccessControlTemporalStorage The current temporal access control storage.
-     */
-    function getCurrentTemporalStorage() external pure returns (AccessControlTemporalStorage memory) {
-        return temporalGrantMod.getStorage();
+    function grantRoleForAWhile(bytes32 _role, address _account, uint256 _expiresAt) external {
+        // Directly call the internal module function via the diamond storage address
+        _temporalGrantMod.grantRoleWithExpiry(_role, _account, _expiresAt);
     }
 }`}
 </ExpandableCode>
@@ -280,50 +268,19 @@ contract MyTemporalGrantFacet {
 ## Best Practices
 
 <Callout type="tip" title="Best Practice">
-- Ensure the caller is authorized as the role's admin before calling `grantRoleWithExpiry`.
-- Verify storage compatibility when upgrading facets to maintain temporal role data integrity.
-- Handle `AccessControlUnauthorizedAccount` and `AccessControlRoleExpired` errors appropriately in calling facets.
+- Ensure the caller has the necessary administrative privileges before calling `grantRoleWithExpiry`.
+- Verify that the `_expiresAt` timestamp is set appropriately to prevent indefinite role grants.
+- Handle the `AccessControlUnauthorizedAccount` error if the caller is not authorized to grant the specified role.
 </Callout>
 
 ## Integration Notes
 
 <Callout type="success" title="Shared Storage">
-This module interacts with diamond storage at the `ACCESS_CONTROL_STORAGE_POSITION`, identified by `keccak256(\"compose.accesscontrol\")`. It reads from and writes to the `AccessControlTemporalStorage` struct within the shared diamond storage. All changes made via `grantRoleWithExpiry` are immediately reflected for any facet accessing the same storage.
+This module interacts with diamond storage at the `ACCESS_CONTROL_STORAGE_POSITION` slot. It uses the `AccessControlStorage` and `AccessControlTemporalStorage` structs to manage role assignments and their expiry times. Functions within this module directly read from and write to this shared storage, making changes immediately visible to all other facets operating on the same diamond storage.
 </Callout>
 
 <div style={{marginTop: "3rem", paddingTop: "2rem", borderTop: "1px solid var(--ifm-color-emphasis-200)"}}>
-  <RelatedDocs
-    items={[
-      {
-        title: "AccessControlTemporalGrantFacet",
-        href: "/docs/library/access/AccessControl/Temporal/Grant/AccessControlTemporalGrantFacet",
-        description: "Facet using AccessControlTemporalGrantMod",
-        icon: "💎"
-      },
-      {
-        title: "OwnerDataMod",
-        href: "/docs/library/access/Owner/Data/OwnerDataMod",
-        description: "Related module in access",
-        icon: "📦"
-      },
-      {
-        title: "OwnerRenounceMod",
-        href: "/docs/library/access/Owner/Renounce/OwnerRenounceMod",
-        description: "Related module in access",
-        icon: "📦"
-      },
-      {
-        title: "OwnerTransferMod",
-        href: "/docs/library/access/Owner/Transfer/OwnerTransferMod",
-        description: "Related module in access",
-        icon: "📦"
-      }
-    ]}
-  />
+  <WasThisHelpful pageId="Access Control Temporal Grant Module" />
 </div>
 
-<div style={{marginTop: "3rem", paddingTop: "2rem", borderTop: "1px solid var(--ifm-color-emphasis-200)"}}>
-  <WasThisHelpful pageId="AccessControlTemporalGrantMod" />
-</div>
-
-<LastUpdated date="2026-03-13T00:40:24.878Z" />
+<LastUpdated date="2026-03-13T01:22:20.370Z" />

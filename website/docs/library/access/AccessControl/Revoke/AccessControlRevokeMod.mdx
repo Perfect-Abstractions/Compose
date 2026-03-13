@@ -1,6 +1,6 @@
 ---
 sidebar_position: 110
-title: "AccessControlRevokeMod"
+title: "Access Control Revoke Module"
 description: "Revoke roles from accounts within a diamond"
 sidebar_label: "Module"
 gitSource: "https://github.com/Perfect-Abstractions/Compose/tree/main/src/access/AccessControl/Revoke/AccessControlRevokeMod.sol"
@@ -26,10 +26,10 @@ Revoke roles from accounts within a diamond
 </DocSubtitle>
 
 <Callout type="info" title="Key Features">
-- Exposes `internal` functions for role revocation.
-- Utilizes the diamond storage pattern for shared state management.
-- Emits `RoleRevoked` event upon successful revocation.
-- No external dependencies, ensuring composability.
+- Exposes only `internal` functions for integration within custom facets.
+- Utilizes the diamond storage pattern (EIP-8042) for shared state management.
+- Emits the `RoleRevoked` event upon successful role revocation.
+- No external dependencies, ensuring minimal on-chain footprint.
 </Callout>
 
 <Callout type="info" title="Module Usage">
@@ -38,9 +38,7 @@ This module provides internal functions for use in your custom facets. Import it
 
 ## Overview
 
-This module provides internal functions to revoke roles from accounts, leveraging shared diamond storage. By importing this module, facets can manage role assignments and ensure that revoked accounts lose their associated permissions. Changes to role revocations are immediately visible across all facets interacting with the same diamond storage.
-
----
+This module provides internal functions to revoke roles from accounts, leveraging diamond storage for shared state. Facets can integrate this module to manage role assignments, ensuring that role revocations are immediately reflected across all interacting facets. This promotes consistent access control policies throughout the diamond.
 
 ## Storage
 
@@ -196,78 +194,49 @@ error AccessControlUnauthorizedAccount(address _account, bytes32 _role);
 <ExpandableCode language="solidity" maxLines={20} title="Example Implementation">
 {`pragma solidity >=0.8.30;
 
-import @compose/access/AccessControl/Revoke/AccessControlRevokeMod;
+import { AccessControlRevokeMod } from "@compose/access/AccessControl/Revoke/AccessControlRevokeMod";
+import { AccessControlStorage } from "@compose/access/AccessControl/AccessControlStorage";
 
-contract AccessControlFacet {
+contract MyAccessControlFacet {
     AccessControlRevokeMod internal accessControlRevokeMod;
 
-    constructor(address _diamondAddress) {
-        accessControlRevokeMod = AccessControlRevokeMod(_diamondAddress);
+    constructor(address diamondStorageAddress) {
+        // Assuming AccessControlStorage is accessible and its storage slot is known
+        // In a real diamond, this would likely be initialized via an initializer facet.
+        // For demonstration, we'll simulate access to the module.
+        // This example assumes the module is part of the diamond and its storage is accessible.
     }
 
-    /**
-     * @notice Revokes a role from a specific account.
-     * @dev Requires the caller to have the admin role for the specified role.
-     * @param _role The role to revoke.
-     * @param _account The account from which to revoke the role.
-     * @return True if the role was successfully revoked.
-     */
-    function revokeRoleFromAccount(bytes32 _role, address _account) external returns (bool) {
-        // Call the internal revokeRole function from the module
-        return accessControlRevokeMod.revokeRole(_role, _account);
+    function revokeRoleFromAccount(bytes32 _role, address _account) external {
+        // Directly call the internal function from the module.
+        // The module will handle reading/writing to the diamond's shared storage.
+        accessControlRevokeMod.revokeRole(_role, _account);
     }
-}
-`}
+
+    function getAccessControlStorage() internal view returns (AccessControlStorage memory) {
+        // Example of how a facet might retrieve storage if needed, though revokeRole handles it internally.
+        return accessControlRevokeMod.getStorage();
+    }
+}`}
 </ExpandableCode>
 -->
 
 ## Best Practices
 
 <Callout type="tip" title="Best Practice">
-- Ensure the caller possesses the necessary administrative privileges before invoking `revokeRole`.
-- Verify that the `AccessControlStorage` struct is compatible when upgrading facets or the diamond.
-- Handle the `AccessControlUnauthorizedAccount` error if the caller lacks the required permissions.
+- Ensure that the caller has the necessary administrative privileges for the role before invoking `revokeRole`.
+- Verify that the `AccessControlStorage` struct definition is compatible when upgrading the diamond or adding new facets.
+- Handle the `AccessControlUnauthorizedAccount` error to gracefully manage unauthorized revocation attempts.
 </Callout>
 
 ## Integration Notes
 
 <Callout type="success" title="Shared Storage">
-This module interacts with diamond storage at `STORAGE_POSITION` using the `AccessControlStorage` struct. The `revokeRole` function directly modifies this shared storage. Any facet that reads from `STORAGE_POSITION` will immediately reflect the changes made by `revokeRole`, ensuring consistent access control state across the diamond.
+This module interacts with diamond storage at the `STORAGE_POSITION` slot, identified by `keccak256("compose.accesscontrol")`. The `revokeRole` function directly reads from and writes to the `AccessControlStorage` struct within this shared storage. Changes made by `revokeRole` are immediately visible to all other facets that access the same storage slot. The `getStorage` function allows facets to retrieve the current state of the access control storage.
 </Callout>
 
 <div style={{marginTop: "3rem", paddingTop: "2rem", borderTop: "1px solid var(--ifm-color-emphasis-200)"}}>
-  <RelatedDocs
-    items={[
-      {
-        title: "OwnerDataMod",
-        href: "/docs/library/access/Owner/Data/OwnerDataMod",
-        description: "Related module in access",
-        icon: "📦"
-      },
-      {
-        title: "OwnerRenounceMod",
-        href: "/docs/library/access/Owner/Renounce/OwnerRenounceMod",
-        description: "Related module in access",
-        icon: "📦"
-      },
-      {
-        title: "OwnerTransferMod",
-        href: "/docs/library/access/Owner/Transfer/OwnerTransferMod",
-        description: "Related module in access",
-        icon: "📦"
-      },
-      {
-        title: "OwnerTwoStepDataMod",
-        href: "/docs/library/access/Owner/TwoSteps/Data/OwnerTwoStepDataMod",
-        description: "Related module in access",
-        icon: "📦"
-      }
-    ]}
-  />
+  <WasThisHelpful pageId="Access Control Revoke Module" />
 </div>
 
-<div style={{marginTop: "3rem", paddingTop: "2rem", borderTop: "1px solid var(--ifm-color-emphasis-200)"}}>
-  <WasThisHelpful pageId="AccessControlRevokeMod" />
-</div>
-
-<LastUpdated date="2026-03-13T00:39:32.752Z" />
+<LastUpdated date="2026-03-13T01:21:25.071Z" />
