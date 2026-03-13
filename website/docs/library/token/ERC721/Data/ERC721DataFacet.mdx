@@ -1,7 +1,7 @@
 ---
 sidebar_position: 200
 title: "ERC-721 Data Facet"
-description: "ERC-721 token ownership and approval data"
+description: "ERC-721 token data retrieval functions for diamonds"
 sidebar_label: "Facet"
 gitSource: "https://github.com/Perfect-Abstractions/Compose/tree/main/src/token/ERC721/Data/ERC721DataFacet.sol"
 ---
@@ -22,19 +22,19 @@ import GradientText from '@site/src/components/ui/GradientText';
 import GradientButton from '@site/src/components/ui/GradientButton';
 
 <DocSubtitle>
-ERC-721 token ownership and approval data
+ERC-721 token data retrieval functions for diamonds
 </DocSubtitle>
 
 <Callout type="info" title="Key Features">
-- Exposes external view functions for ERC-721 data retrieval.
-- Utilizes diamond storage pattern for shared state access.
-- Exports its own selectors for easy discovery by the diamond.
-- Operates without external dependencies, promoting composability.
+- Exposes external view functions for ERC-721 token data.
+- Accesses shared diamond storage via `getStorage` internal function.
+- Supports ERC-721 data querying patterns like `ownerOf`, `balanceOf`, `getApproved`, and `isApprovedForAll`.
+- Provides `exportSelectors` for diamond facet discovery.
 </Callout>
 
 ## Overview
 
-This facet provides external access to ERC-721 token ownership and approval data stored within the diamond. It routes calls through the diamond proxy, enabling other facets or external users to query token states without direct storage access. This facet is essential for any diamond implementing ERC-721 functionality.
+This facet provides external view functions for retrieving ERC-721 token ownership and approval data within a diamond. It accesses shared diamond storage to provide these details, enabling other facets or external contracts to query token information without direct storage access. Developers integrate this facet to expose standard ERC-721 data queries through the diamond proxy interface.
 
 ## Storage
 
@@ -260,51 +260,55 @@ error ERC721NonexistentToken(uint256 _tokenId);
 <ExpandableCode language="solidity" maxLines={20} title="Example Implementation">
 {`pragma solidity >=0.8.30;
 
-import {ERC721DataFacet} from "@compose/token/ERC721/Data/ERC721DataFacet";
-import {IDiamond} from "@compose/diamond/IDiamond";
+import { IDiamond } from "@compose/diamond/IDiamond";
+import { ERC721DataFacet } from "@compose/token/ERC721/Data/ERC721DataFacet";
 
-contract ERC721Consumer {
+contract DiamondUser {
     address immutable diamondAddress;
 
     constructor(address _diamondAddress) {
         diamondAddress = _diamondAddress;
     }
 
-    function getTokenOwner(uint256 tokenId) external view returns (address) {
-        // Call through the diamond proxy to the ERC721DataFacet
+    function getTokenOwner(uint256 tokenId) public view returns (address) {
+        // Call ownerOf through the diamond proxy
         return IDiamond(diamondAddress).ownerOf(tokenId);
     }
 
-    function getTokenApproval(uint256 tokenId) external view returns (address) {
-        // Call through the diamond proxy to the ERC721DataFacet
+    function getTokenBalance(address owner) public view returns (uint256) {
+        // Call balanceOf through the diamond proxy
+        return IDiamond(diamondAddress).balanceOf(owner);
+    }
+
+    function getApproval(uint256 tokenId) public view returns (address) {
+        // Call getApproved through the diamond proxy
         return IDiamond(diamondAddress).getApproved(tokenId);
     }
 
-    function getBalance(address owner) external view returns (uint256) {
-        // Call through the diamond proxy to the ERC721DataFacet
-        return IDiamond(diamondAddress).balanceOf(owner);
+    function isApproved(address owner, address operator) public view returns (bool) {
+        // Call isApprovedForAll through the diamond proxy
+        return IDiamond(diamondAddress).isApprovedForAll(owner, operator);
     }
-}
-`}
+}`}
 </ExpandableCode>
 -->
 
 ## Best Practices
 
 <Callout type="tip" title="Best Practice">
-- Ensure the `ERC721DataFacet` is correctly registered with the diamond proxy.
-- Access token data by calling functions through the diamond address.
-- Verify that the `STORAGE_POSITION` for ERC721 storage is unique and not colliding with other facets.
+- Ensure the ERC721DataFacet is correctly registered with the diamond's facet registry.
+- Always call functions like `ownerOf` and `balanceOf` through the diamond proxy address.
+- Verify that the `ERC721Storage` struct is correctly initialized and populated by other facets before querying.
 </Callout>
 
 ## Security Considerations
 
 <Callout type="warning" title="Security">
-This facet primarily exposes view functions and does not perform state-changing operations. The main security consideration is ensuring the integrity of the underlying diamond storage. Input validation for `_tokenId` and `_owner` is handled by the facet, reverting with `ERC721NonexistentToken` or `ERC721InvalidOwner` respectively. Follow standard Solidity security practices for all interactions.
+This facet primarily exposes view functions and does not perform state modifications. Ensure that the underlying ERC721Storage is managed securely by other facets. The `ownerOf` and `balanceOf` functions revert with `ERC721NonexistentToken` if the token ID does not exist, and `ownerOf` reverts with `ERC721InvalidOwner` if the owner address is zero. Input validation for token IDs and addresses is handled by the facet.
 </Callout>
 
 <div style={{marginTop: "3rem", paddingTop: "2rem", borderTop: "1px solid var(--ifm-color-emphasis-200)"}}>
   <WasThisHelpful pageId="ERC-721 Data Facet" />
 </div>
 
-<LastUpdated date="2026-03-13T01:18:01.378Z" />
+<LastUpdated date="2026-03-13T01:50:58.744Z" />

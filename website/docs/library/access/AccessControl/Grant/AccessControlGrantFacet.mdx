@@ -26,15 +26,15 @@ Grants roles to accounts within a diamond
 </DocSubtitle>
 
 <Callout type="info" title="Key Features">
-- Exposes `grantRole` function for programmatic role assignment.
-- Emits `RoleGranted` event for off-chain monitoring.
-- Operates on shared diamond storage, making it compatible with other facets.
-- Exports its own selectors via `exportSelectors`.
+- Exposes `grantRole` for programmatic role assignment.
+- Emits `RoleGranted` event for state changes.
+- Utilizes diamond storage for shared state management.
+- Reverts with `AccessControlUnauthorizedAccount` for unauthorized calls.
 </Callout>
 
 ## Overview
 
-This facet exposes functions for granting roles to accounts within a Compose diamond. It interacts with shared diamond storage to manage role assignments. Developers integrate this facet to programmatically manage access control for their diamond.
+This facet exposes functions to grant roles to specific accounts within a Compose diamond. It leverages shared diamond storage and emits events for off-chain monitoring. Developers integrate this facet to manage permissions programmatically.
 
 ## Storage
 
@@ -175,12 +175,12 @@ error AccessControlUnauthorizedAccount(address _account, bytes32 _role);
 <ExpandableCode language="solidity" maxLines={20} title="Example Implementation">
 {`pragma solidity >=0.8.30;
 
-import {IDiamond} from "@compose/diamond/IDiamond";
-import {AccessControlGrantFacet} from "@compose/access/AccessControl/Grant/AccessControlGrantFacet";
+import { IDiamond } from "@compose/core/diamond/IDiamond";
+import { AccessControlGrantFacet } from "@compose/access/AccessControl/Grant/AccessControlGrantFacet";
 
-// Example: Granting a role using the facet through a diamond proxy
+// Example: Granting a role to an account via a diamond
 contract DiamondUser {
-    address immutable DIAMOND_ADDRESS;
+    address public immutable DIAMOND_ADDRESS;
 
     constructor(address diamondAddress) {
         DIAMOND_ADDRESS = diamondAddress;
@@ -188,11 +188,13 @@ contract DiamondUser {
 
     function grantAdminRole(address _account) external {
         // Call through the diamond proxy
-        IDiamond(DIAMOND_ADDRESS).grantRole("ADMIN", _account);
+        IDiamond(DIAMOND_ADDRESS).grantRole("0x7712321847679923402075779190513208827147659211475951011776895620", _account); // Example role hash for ADMIN
     }
 
-    // Note: The 'ADMIN' role and the specific account address would be defined elsewhere.
-    // The grantRole function signature is exposed by the AccessControlGrantFacet.
+    // If the facet itself is directly callable for testing or specific scenarios:
+    // function grantRoleDirectly(bytes32 _role, address _account) external {
+    //     AccessControlGrantFacet(DIAMOND_ADDRESS).grantRole(_role, _account);
+    // }
 }`}
 </ExpandableCode>
 -->
@@ -200,19 +202,19 @@ contract DiamondUser {
 ## Best Practices
 
 <Callout type="tip" title="Best Practice">
-- Initialize roles and grant initial permissions during diamond deployment.
-- Ensure only authorized entities can call the `grantRole` function by properly configuring access control on the diamond.
-- Verify that the `AccessControlGrantFacet` is correctly registered with the diamond's facet registry.
+- Initialize roles and grant administrative permissions during diamond deployment.
+- Ensure the caller of `grantRole` has the necessary administrative privileges.
+- Monitor `RoleGranted` events for auditing and off-chain state tracking.
 </Callout>
 
 ## Security Considerations
 
 <Callout type="warning" title="Security">
-The `grantRole` function is protected by access control, reverting with `AccessControlUnauthorizedAccount` if the caller does not possess the required role (typically an admin role). Input validation for `_role` and `_account` should be handled by the caller or other facets. This facet adheres to the checks-effects-interactions pattern by first verifying access, then performing the state change, and finally emitting an event.
+The `grantRole` function is protected by access control, reverting if the caller is not the admin of the role. Input validation on `_role` and `_account` is implicitly handled by the diamond's call routing and the facet's internal logic. No reentrancy risks are apparent as the function performs a role grant before any external calls.
 </Callout>
 
 <div style={{marginTop: "3rem", paddingTop: "2rem", borderTop: "1px solid var(--ifm-color-emphasis-200)"}}>
   <WasThisHelpful pageId="Access Control Grant Facet" />
 </div>
 
-<LastUpdated date="2026-03-13T01:21:32.273Z" />
+<LastUpdated date="2026-03-13T01:54:27.990Z" />

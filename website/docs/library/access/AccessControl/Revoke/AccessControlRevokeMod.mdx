@@ -1,7 +1,7 @@
 ---
 sidebar_position: 110
 title: "Access Control Revoke Module"
-description: "Revoke roles from accounts within a diamond"
+description: "Revoke roles from accounts using diamond storage"
 sidebar_label: "Module"
 gitSource: "https://github.com/Perfect-Abstractions/Compose/tree/main/src/access/AccessControl/Revoke/AccessControlRevokeMod.sol"
 ---
@@ -22,14 +22,14 @@ import GradientText from '@site/src/components/ui/GradientText';
 import GradientButton from '@site/src/components/ui/GradientButton';
 
 <DocSubtitle>
-Revoke roles from accounts within a diamond
+Revoke roles from accounts using diamond storage
 </DocSubtitle>
 
 <Callout type="info" title="Key Features">
-- Exposes only `internal` functions for integration within custom facets.
-- Utilizes the diamond storage pattern (EIP-8042) for shared state management.
-- Emits the `RoleRevoked` event upon successful role revocation.
-- No external dependencies, ensuring minimal on-chain footprint.
+- Functions are `internal`, designed for use within other diamond facets.
+- Leverages the diamond storage pattern for shared state management.
+- Emits a `RoleRevoked` event upon successful role revocation.
+- No external dependencies, ensuring composability.
 </Callout>
 
 <Callout type="info" title="Module Usage">
@@ -38,7 +38,7 @@ This module provides internal functions for use in your custom facets. Import it
 
 ## Overview
 
-This module provides internal functions to revoke roles from accounts, leveraging diamond storage for shared state. Facets can integrate this module to manage role assignments, ensuring that role revocations are immediately reflected across all interacting facets. This promotes consistent access control policies throughout the diamond.
+This module provides internal functions to revoke roles from accounts within a diamond. By utilizing shared diamond storage, changes made through this module are immediately visible to all facets accessing the same storage. This ensures consistent access control across the diamond.
 
 ## Storage
 
@@ -194,28 +194,29 @@ error AccessControlUnauthorizedAccount(address _account, bytes32 _role);
 <ExpandableCode language="solidity" maxLines={20} title="Example Implementation">
 {`pragma solidity >=0.8.30;
 
-import { AccessControlRevokeMod } from "@compose/access/AccessControl/Revoke/AccessControlRevokeMod";
-import { AccessControlStorage } from "@compose/access/AccessControl/AccessControlStorage";
+import {AccessControlRevokeMod} from "@compose/access/AccessControl/Revoke/AccessControlRevokeMod";
 
-contract MyAccessControlFacet {
+contract MyAccessFacet {
     AccessControlRevokeMod internal accessControlRevokeMod;
 
-    constructor(address diamondStorageAddress) {
-        // Assuming AccessControlStorage is accessible and its storage slot is known
-        // In a real diamond, this would likely be initialized via an initializer facet.
-        // For demonstration, we'll simulate access to the module.
-        // This example assumes the module is part of the diamond and its storage is accessible.
+    constructor(address accessControlAddress) {
+        // Assuming AccessControlRevokeMod is deployed as a facet and its address is known
+        // In a real diamond, this would likely be initialized via an initializer function
+        accessControlRevokeMod = AccessControlRevokeMod(accessControlAddress);
     }
 
-    function revokeRoleFromAccount(bytes32 _role, address _account) external {
-        // Directly call the internal function from the module.
-        // The module will handle reading/writing to the diamond's shared storage.
-        accessControlRevokeMod.revokeRole(_role, _account);
-    }
+    /**
+     * @notice Revokes a role from a specific account.
+     * @dev This function calls the internal revokeRole function from the AccessControlRevokeMod.
+     * @param _role The role to revoke.
+     * @param _account The account to revoke the role from.
+     * @return bool True if the role was successfully revoked.
+     */
+    function revokeRoleFromAccount(bytes32 _role, address _account) external returns (bool) {
+        // Access control check for who can call this function would be here in a real facet
+        // For example, only the admin of the role could call revokeRole.
 
-    function getAccessControlStorage() internal view returns (AccessControlStorage memory) {
-        // Example of how a facet might retrieve storage if needed, though revokeRole handles it internally.
-        return accessControlRevokeMod.getStorage();
+        return accessControlRevokeMod.revokeRole(_role, _account);
     }
 }`}
 </ExpandableCode>
@@ -224,19 +225,19 @@ contract MyAccessControlFacet {
 ## Best Practices
 
 <Callout type="tip" title="Best Practice">
-- Ensure that the caller has the necessary administrative privileges for the role before invoking `revokeRole`.
-- Verify that the `AccessControlStorage` struct definition is compatible when upgrading the diamond or adding new facets.
-- Handle the `AccessControlUnauthorizedAccount` error to gracefully manage unauthorized revocation attempts.
+- Ensure that the caller has the necessary permissions to revoke the specified role before calling `revokeRole`.
+- Verify that the `AccessControlStorage` struct layout in `AccessControlRevokeMod` is compatible with other facets accessing the same storage slot during diamond upgrades.
+- Handle the `AccessControlUnauthorizedAccount` error, which is reverted if the caller is not authorized to revoke the role.
 </Callout>
 
 ## Integration Notes
 
 <Callout type="success" title="Shared Storage">
-This module interacts with diamond storage at the `STORAGE_POSITION` slot, identified by `keccak256("compose.accesscontrol")`. The `revokeRole` function directly reads from and writes to the `AccessControlStorage` struct within this shared storage. Changes made by `revokeRole` are immediately visible to all other facets that access the same storage slot. The `getStorage` function allows facets to retrieve the current state of the access control storage.
+This module interacts with diamond storage at the slot identified by `STORAGE_POSITION`, keyed as `keccak2535('compose.accesscontrol')`. The `AccessControlStorage` struct, though empty in this specific definition, is managed at this slot. Functions within this module directly read from and write to this shared storage. Any changes to role assignments made via `revokeRole` are immediately reflected for all facets that access the same storage slot, ensuring data consistency across the diamond.
 </Callout>
 
 <div style={{marginTop: "3rem", paddingTop: "2rem", borderTop: "1px solid var(--ifm-color-emphasis-200)"}}>
   <WasThisHelpful pageId="Access Control Revoke Module" />
 </div>
 
-<LastUpdated date="2026-03-13T01:21:25.071Z" />
+<LastUpdated date="2026-03-13T01:54:19.870Z" />

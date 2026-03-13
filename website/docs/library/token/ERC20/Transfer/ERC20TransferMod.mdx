@@ -1,7 +1,7 @@
 ---
 sidebar_position: 210
 title: "ERC-20 Transfer Module"
-description: "Internal ERC-20 token transfer logic"
+description: "Internal ERC-20 token transfer functions"
 sidebar_label: "Module"
 gitSource: "https://github.com/Perfect-Abstractions/Compose/tree/main/src/token/ERC20/Transfer/ERC20TransferMod.sol"
 ---
@@ -22,14 +22,14 @@ import GradientText from '@site/src/components/ui/GradientText';
 import GradientButton from '@site/src/components/ui/GradientButton';
 
 <DocSubtitle>
-Internal ERC-20 token transfer logic
+Internal ERC-20 token transfer functions
 </DocSubtitle>
 
 <Callout type="info" title="Key Features">
-- All functions are `internal` and intended for use within diamond facets.
-- Manages ERC-20 token balances and allowances using diamond storage.
-- Emits `Transfer` events upon successful token movements.
-- No external dependencies or `using` directives for enhanced composability.
+- Internal functions for token transfers, designed for use within custom facets.
+- Utilizes diamond storage (EIP-8042) for state management.
+- No external dependencies, promoting composability.
+- Emits `Transfer` events upon successful transfers.
 </Callout>
 
 <Callout type="info" title="Module Usage">
@@ -38,7 +38,7 @@ This module provides internal functions for use in your custom facets. Import it
 
 ## Overview
 
-This module provides internal functions for executing ERC-20 token transfers and transfers from an allowance. Facets can import this module to manage token balances and allowances directly within the diamond's shared storage, ensuring atomic updates across all facets.
+This module provides internal functions for executing ERC-20 token transfers and transfers from an allowance. Facets can import and utilize these functions to manage token balances and operations within the diamond storage pattern. Changes to balances are immediately reflected across all facets accessing the same storage.
 
 ## Storage
 
@@ -321,22 +321,38 @@ error ERC20InvalidSpender(address _spender);
 
 <ExpandableCode language="solidity" maxLines={20} title="Example Implementation">
 {`pragma solidity >=0.8.30;
-
-import { ERC20TransferMod } from "@compose/token/ERC20/Transfer/ERC20TransferMod";
+import {ERC20TransferMod} from "@compose/token/ERC20/Transfer/ERC20TransferMod";
 
 contract MyTokenFacet {
-    using ERC20TransferMod for ERC20TransferMod;
+    ERC20TransferMod private _transferModule;
 
-    function executeTransfer(address _to, uint256 _value) external {
-        // Ensure caller has sufficient balance before calling internal transfer
-        (bool success, ) = address(this).call(abi.encodeWithSelector(ERC20TransferMod.transfer.selector, _to, _value));
-        require(success, "Transfer failed");
+    constructor(address diamondAddress) {
+        // Assuming ERC20TransferMod is deployed and accessible via diamond proxy
+        // In a real scenario, this would likely be initialized via an initializer function
+        _transferModule = ERC20TransferMod(diamondAddress);
     }
 
-    function executeTransferFrom(address _from, address _to, uint256 _value) external {
-        // Ensure caller has sufficient allowance before calling internal transferFrom
-        (bool success, ) = address(this).call(abi.encodeWithSelector(ERC20TransferMod.transferFrom.selector, _from, _to, _value));
-        require(success, "TransferFrom failed");
+    /**
+     * @notice Transfers tokens from the caller's balance to a specified address.
+     * @param _to The address to transfer tokens to.
+     * @param _value The amount of tokens to transfer.
+     * @return bool True if the transfer was successful.
+     */
+    function performTransfer(address _to, uint256 _value) external returns (bool) {
+        // Call the internal transfer function via the diamond proxy
+        return _transferModule.transfer(_to, _value);
+    }
+
+    /**
+     * @notice Transfers tokens from a specified sender to a specified recipient, using an allowance.
+     * @param _from The address to transfer tokens from.
+     * @param _to The address to transfer tokens to.
+     * @param _value The amount of tokens to transfer.
+     * @return bool True if the transfer was successful.
+     */
+    function performTransferFrom(address _from, address _to, uint256 _value) external returns (bool) {
+        // Call the internal transferFrom function via the diamond proxy
+        return _transferModule.transferFrom(_from, _to, _value);
     }
 }`}
 </ExpandableCode>
@@ -345,19 +361,20 @@ contract MyTokenFacet {
 ## Best Practices
 
 <Callout type="tip" title="Best Practice">
-- Verify caller permissions and token balances/allowances before invoking internal transfer functions.
-- Handle potential revert errors such as ERC20InsufficientBalance, ERC20InsufficientAllowance, ERC20InvalidReceiver, ERC20InvalidSender, and ERC20InvalidSpender.
-- Ensure the diamond storage slot for ERC20Storage is correctly initialized and remains accessible.
+- Ensure the caller has sufficient balance before calling `transfer`.
+- Verify the spender has sufficient allowance before calling `transferFrom`.
+- Handle potential errors such as `ERC20InvalidReceiver` or `ERC20InsufficientBalance`.
+- Use the `getStorage()` function to access the storage pointer for direct inspection if necessary.
 </Callout>
 
 ## Integration Notes
 
 <Callout type="success" title="Shared Storage">
-This module interacts with diamond storage at the `STORAGE_POSITION` defined by `keccak256("erc20")`. It directly modifies the `ERC20Storage` struct, which includes `totalSupply`. Changes to balances and allowances made through `transfer` and `transferFrom` are immediately visible to all facets accessing the same storage slot. The `getStorage` function provides a direct reference to this shared state.
+This module reads and writes to diamond storage at the `STORAGE_POSITION`, identified by `keccak256("erc20")`. The `ERC20Storage` struct, containing fields like `totalSupply`, is managed here. All functions operate directly on this shared storage, ensuring that balance updates are immediately visible to any facet that accesses the same storage slot. The `getStorage()` function provides a direct pointer to this struct via inline assembly.
 </Callout>
 
 <div style={{marginTop: "3rem", paddingTop: "2rem", borderTop: "1px solid var(--ifm-color-emphasis-200)"}}>
   <WasThisHelpful pageId="ERC-20 Transfer Module" />
 </div>
 
-<LastUpdated date="2026-03-13T01:19:39.229Z" />
+<LastUpdated date="2026-03-13T01:52:34.903Z" />

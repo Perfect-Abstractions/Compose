@@ -26,15 +26,15 @@ Inspect diamond facets and selectors
 </DocSubtitle>
 
 <Callout type="info" title="Key Features">
-- Exposes functions for querying diamond facet and selector information.
+- Provides functions for querying facet addresses by selector.
+- Enables retrieval of all registered facet addresses and their selectors.
+- Includes `exportSelectors` for mechanism discovery.
 - Operates on shared diamond storage via `DIAMOND_STORAGE_POSITION`.
-- Self-contained, no external dependencies within the facet itself.
-- Provides utility for off-chain tools and on-chain contract interactions.
 </Callout>
 
 ## Overview
 
-This facet provides functions to inspect the registered facets and their associated function selectors within a diamond. It routes calls through the diamond proxy and accesses shared diamond storage. Developers add this facet to enable external querying of the diamond's on-chain configuration.
+This facet provides essential introspection capabilities for diamonds. It exposes functions to query facet addresses, their associated function selectors, and a comprehensive list of all registered facets. Developers integrate this facet to understand the diamond's internal structure and composition programmatically.
 
 ## Storage
 
@@ -237,33 +237,35 @@ Exports the function selectors of the DiamondInspectFacet This function is use a
 <ExpandableCode language="solidity" maxLines={20} title="Example Implementation">
 {`pragma solidity >=0.8.30;
 
-import {IDiamond} from "@compose/diamond/IDiamond";
-import {DiamondInspectFacet} from "@compose/diamond/DiamondInspectFacet";
+import { IDiamond } from "@compose/diamond/IDiamond.sol";
+import { DiamondInspectFacet } from "@compose/diamond/DiamondInspectFacet.sol";
 
-contract DiamondDeployer {
-    address immutable diamondAddress;
+contract DiamondInteraction {
+    address public immutable diamondAddress;
 
     constructor(address _diamondAddress) {
         diamondAddress = _diamondAddress;
     }
 
-    function inspectDiamond() external view {
+    function inspectDiamond() public view {
         IDiamond diamond = IDiamond(diamondAddress);
-        address[] memory facetAddresses = diamond.facetAddresses();
 
-        for (uint i = 0; i < facetAddresses.length; i++) {
-            address facetAddr = facetAddresses[i];
-            bytes4[] memory selectors = diamond.facetFunctionSelectors(facetAddr);
-            // Process facetAddr and selectors
-        }
+        // Get address for a specific function selector
+        address transferFacetAddress = diamond.facetAddress(bytes4(keccak256("transfer(address,uint256)")));
 
-        // Example of getting a specific facet's address for a selector
-        address transferFacetAddr = diamond.facetAddress(bytes4(keccak256("transfer(address,uint256)")));
+        // Get all facet addresses
+        address[] memory allFacetAddresses = diamond.facetAddresses();
+
+        // Get all facets with their selectors
+        (address[] memory facetAddresses, bytes4[][] memory facetSelectors) = diamond.facets();
+
+        // Get selectors for a specific facet
+        bytes4[] memory selectorsForFacet = diamond.facetFunctionSelectors(address(this)); // Example using current contract address
     }
 
-    // Example of unpacking selectors if they are packed
-    function unpack(bytes packedSelectors) public pure {
-        DiamondInspectFacet.unpackSelectors(packedSelectors);
+    // Example of how selectors are exported for discovery
+    function getInspectSelectors() public pure returns (bytes) {
+        return DiamondInspectFacet.exportSelectors();
     }
 }`}
 </ExpandableCode>
@@ -272,19 +274,19 @@ contract DiamondDeployer {
 ## Best Practices
 
 <Callout type="tip" title="Best Practice">
-- Ensure this facet is added to the diamond to enable inspection capabilities.
-- Use `facetAddresses` and `facetFunctionSelectors` to map selectors to facets.
-- Call `exportSelectors` when deploying a new diamond to discover the selectors of this facet.
+- Integrate this facet to enable external inspection of diamond facet mappings.
+- Use `facetAddress` to determine which facet handles a specific function selector.
+- Utilize `facets` and `facetFunctionSelectors` for comprehensive diamond structure analysis.
 </Callout>
 
 ## Security Considerations
 
 <Callout type="warning" title="Security">
-The `facetAddress` function returns `address(0)` if a facet is not found, preventing unintended calls. Input validation is handled by the diamond proxy for selector lookups. The `unpackSelectors` function is a pure utility function with no state-changing implications. Follow standard Solidity security practices for all interactions through the diamond proxy.
+All functions in this facet are view or pure, posing no direct reentrancy or state-changing risks. Input validation for `facetAddress` and `facetFunctionSelectors` is handled by the diamond proxy's dispatch mechanism. Follow standard Solidity security practices.
 </Callout>
 
 <div style={{marginTop: "3rem", paddingTop: "2rem", borderTop: "1px solid var(--ifm-color-emphasis-200)"}}>
   <WasThisHelpful pageId="Diamond Inspect Facet" />
 </div>
 
-<LastUpdated date="2026-03-13T01:16:49.198Z" />
+<LastUpdated date="2026-03-13T01:49:46.480Z" />

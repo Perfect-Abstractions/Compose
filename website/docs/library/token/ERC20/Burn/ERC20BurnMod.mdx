@@ -26,10 +26,10 @@ Internal ERC-20 token burning functionality
 </DocSubtitle>
 
 <Callout type="info" title="Key Features">
-- Provides `internal` functions for burning ERC-20 tokens.
-- Operates directly on shared diamond storage using a fixed storage slot.
-- Does not perform allowance checks, requiring explicit validation by calling facets.
-- Emits `Transfer` events upon successful token burning.
+- Exposes only `internal` functions, intended for use within custom facets.
+- Operates on shared diamond storage using EIP-8042 semantics.
+- Emits `Transfer` events upon successful burning, signaling changes in token ownership.
+- Reverts with custom errors `ERC20InsufficientBalance` and `ERC20InvalidSender` for explicit error handling.
 </Callout>
 
 <Callout type="info" title="Module Usage">
@@ -38,7 +38,7 @@ This module provides internal functions for use in your custom facets. Import it
 
 ## Overview
 
-This module provides internal functions for burning ERC-20 tokens, decreasing both total supply and an account's balance. It is designed for use within custom facets that manage ERC-20 functionality in a diamond. By operating on shared diamond storage, changes made by this module are immediately visible to all other facets accessing the same storage.
+This module provides internal functions for burning ERC-20 tokens, reducing the total supply and an account's balance. Facets can import this module to implement burning logic, operating on shared diamond storage. Changes to token supply and balances are immediately visible to all facets interacting with the same storage.
 
 ## Storage
 
@@ -193,17 +193,16 @@ error ERC20InvalidSender(address _sender);
 <ExpandableCode language="solidity" maxLines={20} title="Example Implementation">
 {`pragma solidity >=0.8.30;
 
-import {ERC20BurnMod} from "@compose/token/ERC20/Burn/ERC20BurnMod";
-import {ERC20Storage} from "@compose/token/ERC20/ERC20Storage";
+import { ERC20BurnMod } from "@compose/token/ERC20/Burn/ERC20BurnMod";
+import { ERC20Storage } from "@compose/token/ERC20/ERC20Storage";
 
 contract ERC20BurnFacet {
     using ERC20BurnMod for ERC20Storage;
 
-    ERC20Storage public _storage;
+    ERC20Storage public immutable _storage = ERC20Storage(address(0));
 
-    constructor() {
-        // Initialize storage pointer, typically done via diamond initializer
-        _storage = ERC20BurnMod.getStorage();
+    function initialize(address storageAddress) external {
+        _storage = ERC20Storage(storageAddress);
     }
 
     /**
@@ -211,8 +210,7 @@ contract ERC20BurnFacet {
      * @param _value The amount of tokens to burn.
      */
     function burn(uint256 _value) external {
-        // Assume caller authorization and allowance checks are handled externally
-        // before calling this internal module function.
+        // Assume caller authorization and allowance checks are performed here or by caller.
         _storage.burn(msg.sender, _value);
     }
 
@@ -222,17 +220,8 @@ contract ERC20BurnFacet {
      * @param _value The amount of tokens to burn.
      */
     function burnFrom(address _account, uint256 _value) external {
-        // Assume caller authorization and allowance checks are handled externally
-        // before calling this internal module function.
+        // Assume caller authorization and allowance checks are performed here or by caller.
         _storage.burn(_account, _value);
-    }
-
-    /**
-     * @notice Returns the current ERC20 storage struct.
-     * @return ERC20Storage The storage struct.
-     */
-    function getERC20Storage() external pure returns (ERC20Storage) {
-        return ERC20BurnMod.getStorage();
     }
 }`}
 </ExpandableCode>
@@ -241,19 +230,19 @@ contract ERC20BurnFacet {
 ## Best Practices
 
 <Callout type="tip" title="Best Practice">
-- Ensure all necessary authorization and allowance checks are performed by the calling facet before invoking `burn` functions.
-- Verify that the `ERC20Storage` struct and its `totalSupply` variable are correctly initialized and managed within the diamond's storage layout.
-- Handle potential `ERC20InsufficientBalance` and `ERC20InvalidSender` errors if the calling facet directly exposes these functionalities.
+- Ensure `_account` authorization and allowance checks are performed before calling `burn` functions to prevent unauthorized burning.
+- Handle `ERC20InsufficientBalance` and `ERC20InvalidSender` errors to gracefully manage invalid operations.
+- Verify that the storage pointer is correctly initialized and points to the shared diamond storage slot designated for ERC-20 data.
 </Callout>
 
 ## Integration Notes
 
 <Callout type="success" title="Shared Storage">
-This module interacts with diamond storage at the `STORAGE_POSITION` slot, identified by `keccak256("erc20")`. The `burn` function modifies the `totalSupply` within the shared `ERC20Storage` struct. Any facet that reads from or writes to this same storage slot will see these changes immediately, adhering to the diamond storage pattern (EIP-8042). The `getStorage` function provides a direct pointer to this shared storage.
+This module interacts with diamond storage at the `STORAGE_POSITION` slot, identified by `keccak256("erc20")`. The `getStorage` function returns a pointer to the `ERC20Storage` struct, which contains the `totalSupply` variable. The `burn` function directly modifies the `totalSupply` and the balance of the specified `_account` within this shared storage. Any facet that reads from or writes to this same storage slot will immediately observe these changes.
 </Callout>
 
 <div style={{marginTop: "3rem", paddingTop: "2rem", borderTop: "1px solid var(--ifm-color-emphasis-200)"}}>
   <WasThisHelpful pageId="ERC-20 Burn Module" />
 </div>
 
-<LastUpdated date="2026-03-13T01:19:35.840Z" />
+<LastUpdated date="2026-03-13T01:52:30.920Z" />

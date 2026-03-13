@@ -1,7 +1,7 @@
 ---
 sidebar_position: 1
 title: "ERC-20 Permit Facet"
-description: "EIP-2612 permit functionality for ERC-20 tokens"
+description: "Implements EIP-2612 permit for ERC-20 within a diamond"
 sidebar_label: "Facet"
 gitSource: "https://github.com/Perfect-Abstractions/Compose/tree/main/src/token/ERC20/Permit/ERC20PermitFacet.sol"
 ---
@@ -22,19 +22,19 @@ import GradientText from '@site/src/components/ui/GradientText';
 import GradientButton from '@site/src/components/ui/GradientButton';
 
 <DocSubtitle>
-EIP-2612 permit functionality for ERC-20 tokens
+Implements EIP-2612 permit for ERC-20 within a diamond
 </DocSubtitle>
 
 <Callout type="info" title="Key Features">
-- Implements EIP-2612 `permit` function for gas-efficient approvals.
-- Manages owner nonces using diamond storage to prevent signature replay.
-- Provides `DOMAIN_SEPARATOR` for secure EIP-712 compliant signatures.
-- Exposes `exportSelectors` for diamond selector discovery.
+- Implements EIP-2612 permit for off-chain approvals.
+- Manages nonces within diamond storage for replay protection.
+- Exposes `DOMAIN_SEPARATOR` for signature encoding.
+- Includes `exportSelectors` for diamond facet discovery.
 </Callout>
 
 ## Overview
 
-This facet implements EIP-2612 permit functionality, enabling users to grant token allowances via signed messages. It integrates with the diamond's shared storage to manage nonces and domain separators, ensuring replay protection. Developers add this facet to a diamond to provide a gas-efficient alternative to traditional `approve` calls for token interactions.
+This facet implements EIP-2612 permit functionality, allowing users to grant allowances via signed messages. It integrates with diamond storage for nonce management and provides the necessary domain separator for signature validation. Developers add this facet to enable off-chain approval for token transfers.
 
 ## Storage
 
@@ -306,56 +306,51 @@ error ERC20InvalidSpender(address _spender);
 ## Usage Example
 
 <ExpandableCode language="solidity" maxLines={20} title="Example Implementation">
-{`pragma solidity ^0.8.30;
+{`pragma solidity >=0.8.30;
 
-import {IDiamond} from "@compose/diamond/IDiamond";
 import {ERC20PermitFacet} from "@compose/token/ERC20/Permit/ERC20PermitFacet";
 
-contract MyDiamond {
-    IDiamond immutable diamond;
+contract Diamond {
+    // ... other facets and diamond logic ...
 
-    constructor(address _diamondAddress) {
-        diamond = IDiamond(_diamondAddress);
+    // Example of calling permit through the diamond proxy
+    function permitTransfer(address owner, address spender, uint256 value, uint256 deadline, uint8 v, bytes32 r, bytes32 s) external {
+        // Assuming the diamond has a selector mapped to ERC20PermitFacet.permit
+        // The diamond contract routes this call to the ERC20PermitFacet
+        ERC20PermitFacet(address(this)).permit(owner, spender, value, deadline, v, r, s);
     }
 
-    function permitToken(address _owner, address _spender, uint256 _value, uint256 _deadline, uint8 _v, bytes32 _r, bytes32 _s) external {
-        // Calls the permit function on the ERC20PermitFacet via the diamond proxy
-        diamond.callFacet(ERC20PermitFacet.PERMIT_SELECTOR, abi.encode(
-            _owner,
-            _spender,
-            _value,
-            _deadline,
-            _v,
-            _r,
-            _s
-        ));
+    // Example of retrieving nonce
+    function getOwnerNonces(address owner) external view returns (uint256) {
+        // Assuming the diamond has a selector mapped to ERC20PermitFacet.nonces
+        return ERC20PermitFacet(address(this)).nonces(owner);
     }
 
-    function getTokenNonces(address _owner) external view returns (uint256) {
-        // Calls the nonces function on the ERC20PermitFacet via the diamond proxy
-        return diamond.callFacet(ERC20PermitFacet.NONCES_SELECTOR, abi.encode(_owner));
+    // Example of retrieving domain separator
+    function getDomainSeparator() external view returns (bytes32) {
+        // Assuming the diamond has a selector mapped to ERC20PermitFacet.DOMAIN_SEPARATOR
+        return ERC20PermitFacet(address(this)).DOMAIN_SEPARATOR();
     }
-}
-`}
+}`}
 </ExpandableCode>
 -->
 
 ## Best Practices
 
 <Callout type="tip" title="Best Practice">
-- Ensure the `ERC20PermitMod` module is correctly initialized in diamond storage before deploying this facet.
-- Verify that the diamond's `IDiamondLoupe` or equivalent facet is used to discover the `permit` selector.
-- When implementing `permit`, carefully validate signature parameters (`_v`, `_r`, `_s`) and the deadline to prevent replay attacks and unauthorized approvals.
+- Initialize the ERC20PermitMod module before calling functions from this facet.
+- Ensure the correct domain separator is used when generating signatures off-chain.
+- Verify that the nonce for the owner has been incremented after a successful permit operation.
 </Callout>
 
 ## Security Considerations
 
 <Callout type="warning" title="Security">
-The `permit` function accepts signed messages, which can be vulnerable to replay attacks if not properly managed. The facet relies on the `nonces` mapping and `DOMAIN_SEPARATOR` to mitigate this risk. Ensure the deadline parameter is set appropriately to prevent stale permits. Input validation on `_owner`, `_spender`, and `_value` is crucial. The `ERC2612InvalidSignature` error is emitted on invalid signatures. Reentrancy is not a concern as the function follows the checks-effects-interactions pattern and does not perform external calls before state changes.
+The `permit` function validates signatures using owner nonces and the domain separator to prevent replay attacks. Ensure off-chain signature generation uses the correct parameters. The `nonces` function increments the nonce after a successful `permit` call, which is critical for subsequent permit operations. Follow standard Solidity security practices for input validation and access control.
 </Callout>
 
 <div style={{marginTop: "3rem", paddingTop: "2rem", borderTop: "1px solid var(--ifm-color-emphasis-200)"}}>
   <WasThisHelpful pageId="ERC-20 Permit Facet" />
 </div>
 
-<LastUpdated date="2026-03-13T01:19:10.935Z" />
+<LastUpdated date="2026-03-13T01:52:06.921Z" />

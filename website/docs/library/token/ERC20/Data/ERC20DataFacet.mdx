@@ -1,7 +1,7 @@
 ---
 sidebar_position: 200
 title: "ERC-20 Data Facet"
-description: "ERC-20 token data access within a diamond"
+description: "ERC-20 token data retrieval within a diamond"
 sidebar_label: "Facet"
 gitSource: "https://github.com/Perfect-Abstractions/Compose/tree/main/src/token/ERC20/Data/ERC20DataFacet.sol"
 ---
@@ -22,19 +22,19 @@ import GradientText from '@site/src/components/ui/GradientText';
 import GradientButton from '@site/src/components/ui/GradientButton';
 
 <DocSubtitle>
-ERC-20 token data access within a diamond
+ERC-20 token data retrieval within a diamond
 </DocSubtitle>
 
 <Callout type="info" title="Key Features">
 - Exposes external view functions for ERC-20 data retrieval.
-- Accesses shared diamond storage for token state.
-- Self-contained, adhering to Compose facet design principles.
-- Compatible with ERC-2535 diamond standard for upgradeability.
+- Reads data directly from shared diamond storage.
+- No state-changing functions, ensuring read-only operations.
+- Compatible with ERC-2535 diamond standard for seamless integration.
 </Callout>
 
 ## Overview
 
-This facet provides external view functions for ERC-20 token data. It routes calls through the diamond proxy and accesses shared diamond storage. Developers add this facet to expose total supply, balances, and allowances while maintaining diamond upgradeability.
+This facet provides external view functions for retrieving ERC-20 token data, such as total supply, account balances, and allowances. It interacts with shared diamond storage to access this information, ensuring consistency across all facets. Developers integrate this facet to expose token metrics externally while maintaining the diamond's upgradeability.
 
 ## Storage
 
@@ -188,33 +188,47 @@ Exports the function selectors of the ERC20Data facet This function is use as a 
 <ExpandableCode language="solidity" maxLines={20} title="Example Implementation">
 {`pragma solidity >=0.8.30;
 
-import {IDiamond} from "@compose/diamond/IDiamond.sol";
-import {ERC20DataFacet} from "@compose/token/ERC20/Data/ERC20DataFacet.sol";
+import {IDiamond} from "@compose/diamond/IDiamond";
+import {ERC20DataFacet} from "@compose/token/ERC20/Data/ERC20DataFacet";
 
-contract DiamondConsumer {
+contract DiamondUser {
     address immutable diamondAddress;
 
     constructor(address _diamondAddress) {
         diamondAddress = _diamondAddress;
     }
 
-    function getTotalSupply() external view returns (uint256) {
+    /**
+     * @notice Get total token supply from the diamond.
+     */
+    function getTotalSupply() public view returns (uint256) {
         // Calls are routed through the diamond proxy to the ERC20DataFacet
         return IDiamond(diamondAddress).totalSupply();
     }
 
-    function getAccountBalance(address _account) external view returns (uint256) {
+    /**
+     * @notice Get balance of a specific account from the diamond.
+     * @param _account The address to check.
+     */
+    function getAccountBalance(address _account) public view returns (uint256) {
         // Calls are routed through the diamond proxy to the ERC20DataFacet
         return IDiamond(diamondAddress).balanceOf(_account);
     }
 
-    function getAllowance(address _owner, address _spender) external view returns (uint256) {
+    /**
+     * @notice Get allowance for a spender from a specific owner from the diamond.
+     * @param _owner The address that owns the tokens.
+     * @param _spender The address allowed to spend tokens.
+     */
+    function getAllowance(address _owner, address _spender) public view returns (uint256) {
         // Calls are routed through the diamond proxy to the ERC20DataFacet
         return IDiamond(diamondAddress).allowance(_owner, _spender);
     }
 
-    function getERC20Selectors() external pure returns (bytes) {
-        // Use the facet's selector export mechanism
+    /**
+     * @notice Export selectors for diamond registration.
+     */
+    function exportERC20Selectors() public pure returns (bytes memory) {
         return ERC20DataFacet.exportSelectors();
     }
 }`}
@@ -224,19 +238,19 @@ contract DiamondConsumer {
 ## Best Practices
 
 <Callout type="tip" title="Best Practice">
-- Ensure the `ERC20DataFacet` is added to the diamond with the correct selectors.
+- Ensure the `ERC20DataFacet` is added to the diamond and its selectors are registered.
 - Access token data by calling functions through the diamond proxy address.
-- Use the `exportSelectors` function to discover the facet's supported functions for diamond registration.
+- Use the `exportSelectors` function during diamond deployment or upgrade to discover facet selectors.
 </Callout>
 
 ## Security Considerations
 
 <Callout type="warning" title="Security">
-All functions are view functions and do not modify state, thus reentrancy is not a concern. Input validation for addresses is handled by Solidity's default checks. Follow standard Solidity security practices for address handling.
+This facet contains only view functions and does not modify state. Standard Solidity security practices should be followed when interacting with the diamond proxy. Input validation is handled by the underlying diamond proxy mechanism for external calls.
 </Callout>
 
 <div style={{marginTop: "3rem", paddingTop: "2rem", borderTop: "1px solid var(--ifm-color-emphasis-200)"}}>
   <WasThisHelpful pageId="ERC-20 Data Facet" />
 </div>
 
-<LastUpdated date="2026-03-13T01:19:13.219Z" />
+<LastUpdated date="2026-03-13T01:52:10.550Z" />

@@ -27,9 +27,9 @@ Revoke roles from multiple accounts efficiently
 
 <Callout type="info" title="Key Features">
 - Provides an `internal` function `revokeRoleBatch` for batch role revocation.
-- Emits `RoleRevoked` events for each account that has its role revoked.
-- Utilizes diamond storage for persistent role management.
-- No external dependencies, designed for composability within a diamond.
+- Operates on shared diamond storage, ensuring state consistency across facets.
+- Emits `RoleRevoked` events for each account processed.
+- Reverts with `AccessControlUnauthorizedAccount` if the caller lacks administrative rights for the role.
 </Callout>
 
 <Callout type="info" title="Module Usage">
@@ -38,7 +38,7 @@ This module provides internal functions for use in your custom facets. Import it
 
 ## Overview
 
-This module provides an internal function to revoke a role from multiple accounts in a single transaction, reducing gas costs and improving efficiency. Facets can import this module to manage role revocations using shared diamond storage, ensuring consistency across the diamond.
+This module provides an internal function to revoke a specified role from multiple accounts in a single transaction. By batching these operations, it reduces gas costs and simplifies the process for administrators managing access control within a diamond. Changes are immediately reflected across all facets interacting with the shared access control storage.
 
 ## Storage
 
@@ -186,44 +186,41 @@ import {AccessControlRevokeBatchMod} from "@compose/access/AccessControl/Batch/R
 contract AccessControlFacet {
     AccessControlRevokeBatchMod internal accessControlRevokeBatchMod;
 
-    constructor(address _diamondAddress) {
-        // Assuming AccessControlRevokeBatchMod is initialized elsewhere and accessible
-        // This is a placeholder for how a facet might reference the module
-        // In a real scenario, the diamond initializer would set this up.
+    constructor(address _accessControlRevokeBatchModAddress) {
+        accessControlRevokeBatchMod = AccessControlRevokeBatchMod(_accessControlRevokeBatchModAddress);
     }
 
     /**
      * @notice Revokes a role from a list of accounts.
-     * @dev This function assumes access control checks are performed by the caller facet.
+     * @dev Internal function to be called by an admin facet.
      * @param _role The role to revoke.
      * @param _accounts The list of accounts to revoke the role from.
      */
-    function revokeMultipleAccountsRole(bytes32 _role, address[] memory _accounts) external {
-        // Assuming accessControlRevokeBatchMod has been properly initialized
-        // and the caller has the necessary permissions to call this function.
+    function revokeRolesFromAccounts(bytes32 _role, address[] calldata _accounts) external {
+        // Assuming this facet has the authority to call this function.
+        // Access control for calling revokeRolesFromAccounts itself would be handled by other facets or the diamond.
         accessControlRevokeBatchMod.revokeRoleBatch(_role, _accounts);
     }
-}
-`}
+}`}
 </ExpandableCode>
 -->
 
 ## Best Practices
 
 <Callout type="tip" title="Best Practice">
-- Ensure the caller facet enforces appropriate access control before invoking `revokeRoleBatch`.
-- Handle the `AccessControlUnauthorizedAccount` error if the caller is not the designated administrator for the role.
-- Batch revocations to minimize gas costs for revoking roles from multiple accounts.
+- Ensure the caller of `revokeRolesFromAccounts` within your facet has the necessary permissions (e.g., admin role) to revoke the specified role, as enforced by the diamond's access control mechanism.
+- Verify that the `AccessControlRevokeBatchMod` module is correctly initialized and accessible via its address.
+- Handle the `AccessControlUnauthorizedAccount` error if the caller lacks the required administrative privileges for the role.
 </Callout>
 
 ## Integration Notes
 
 <Callout type="success" title="Shared Storage">
-This module interacts with diamond storage at the `STORAGE_POSITION` defined by `keccak25356("compose.accesscontrol")`. The `revokeRoleBatch` function reads and modifies the role assignments within the shared `AccessControlStorage` struct. Changes made by this module are immediately visible to all other facets and modules accessing the same storage slot.
+This module interacts with diamond storage at the `STORAGE_POSITION` slot, identified by `keccak256(\"compose.accesscontrol\")`. It reads and writes to the `AccessControlStorage` struct. The `revokeRoleBatch` function modifies role assignments within this shared storage. Any facet that subsequently reads from this storage will see the updated role assignments immediately, ensuring consistency across the diamond.
 </Callout>
 
 <div style={{marginTop: "3rem", paddingTop: "2rem", borderTop: "1px solid var(--ifm-color-emphasis-200)"}}>
   <WasThisHelpful pageId="Access Control Revoke Batch Module" />
 </div>
 
-<LastUpdated date="2026-03-13T01:21:48.564Z" />
+<LastUpdated date="2026-03-13T01:54:40.035Z" />

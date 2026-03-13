@@ -1,7 +1,7 @@
 ---
 sidebar_position: 110
 title: "Access Control Data Module"
-description: "Manage roles and check account permissions"
+description: "Manage access control roles and accounts"
 sidebar_label: "Module"
 gitSource: "https://github.com/Perfect-Abstractions/Compose/tree/main/src/access/AccessControl/Data/AccessControlDataMod.sol"
 ---
@@ -22,14 +22,14 @@ import GradientText from '@site/src/components/ui/GradientText';
 import GradientButton from '@site/src/components/ui/GradientButton';
 
 <DocSubtitle>
-Manage roles and check account permissions
+Manage access control roles and accounts
 </DocSubtitle>
 
 <Callout type="info" title="Key Features">
-- Provides `internal` functions for role checks, suitable for use within custom facets.
-- Leverages the diamond storage pattern (EIP-8042) for shared state management.
-- No external dependencies, ensuring minimal on-chain footprint.
-- Defines a custom error `AccessControlUnauthorizedAccount` for clear revert reasons.
+- Provides `internal` functions for role checking.
+- Leverages diamond storage pattern for shared state.
+- Utilizes custom error `AccessControlUnauthorizedAccount` for revert reasons.
+- No external dependencies, promoting composability.
 </Callout>
 
 <Callout type="info" title="Module Usage">
@@ -38,7 +38,7 @@ This module provides internal functions for use in your custom facets. Import it
 
 ## Overview
 
-This module provides internal functions for role-based access control. Facets import this module to check and verify account permissions using shared diamond storage. Changes to role assignments, if implemented by other related modules, are immediately visible to all facets utilizing the same storage pattern.
+This module provides internal functions for checking and enforcing access control roles within a diamond. Facets import this module to interact with shared diamond storage, enabling role-based permissions. Changes to role assignments are immediately visible to all facets accessing the same storage.
 
 ## Storage
 
@@ -184,17 +184,17 @@ error AccessControlUnauthorizedAccount(address _account, bytes32 _role);
 
 <ExpandableCode language="solidity" maxLines={20} title="Example Implementation">
 {`pragma solidity >=0.8.30;
-import @compose/access/AccessControl/Data/AccessControlDataMod;
 
-contract AccessControlDataFacet {
-    AccessControlDataMod internal accessControlDataMod;
+import {AccessControlDataMod} from "@compose/access/AccessControl/Data/AccessControlDataMod";
 
-    constructor(address _diamondAddress) {
-        // Assuming AccessControlDataMod is accessible via diamond storage
-        // In a real scenario, the implementation would likely be part of the diamond's initialization
-        // and facets would access it through the diamond proxy.
-        // For this example, we simulate direct access for demonstration.
-        accessControlDataMod = AccessControlDataMod(_diamondAddress);
+contract AccessControlFacet {
+    AccessControlDataMod private accessControlDataMod;
+
+    constructor(address diamondStorageAddress) {
+        // Assuming AccessControlDataMod is deployed at diamondStorageAddress or accessible via the diamond
+        // In a real diamond, this might be initialized differently, possibly through a facet initializer.
+        // For this example, we'll assume direct instantiation for clarity.
+        accessControlDataMod = AccessControlDataMod(diamondStorageAddress);
     }
 
     /**
@@ -203,12 +203,12 @@ contract AccessControlDataFacet {
      * @param _account The account to check.
      * @return bool True if the account has the role, false otherwise.
      */
-    function checkRole(bytes32 _role, address _account) external view returns (bool) {
+    function userHasRole(bytes32 _role, address _account) external view returns (bool) {
         return accessControlDataMod.hasRole(_role, _account);
     }
 
     /**
-     * @notice Requires an account to have a specific role.
+     * @notice Requires an account to have a specific role. Reverts if the account does not have the role.
      * @param _role The role to require.
      * @param _account The account to check.
      */
@@ -217,11 +217,11 @@ contract AccessControlDataFacet {
     }
 
     /**
-     * @notice Retrieves the internal storage structure.
-     * @return AccessControlStorage The current storage state.
+     * @notice Gets the diamond storage layout for access control.
+     * @return AccessControlStorage The storage struct.
      */
-    function getAccessControlStorage() external view returns (AccessControlStorage) {
-        return accessControlDataMod.getStorage();
+    function getAccessControlStorage() external pure returns (AccessControlDataMod.AccessControlStorage memory) {
+        return AccessControlDataMod.getStorage();
     }
 }`}
 </ExpandableCode>
@@ -230,19 +230,19 @@ contract AccessControlDataFacet {
 ## Best Practices
 
 <Callout type="tip" title="Best Practice">
-- Call `requireRole` before executing sensitive operations to enforce access control.
-- Verify that the `AccessControlStorage` struct in diamond storage is compatible when upgrading facets.
-- Handle the `AccessControlUnauthorizedAccount` error when `requireRole` reverts.
+- Call `requireRole` to enforce access control checks before executing sensitive operations.
+- Use `hasRole` for conditional logic that depends on an account's role.
+- Ensure the diamond storage address is correctly initialized for `AccessControlDataMod`.
 </Callout>
 
 ## Integration Notes
 
 <Callout type="success" title="Shared Storage">
-This module interacts with diamond storage at the position identified by `keccak256(\"compose.accesscontrol\")`. All functions read from this shared storage. Changes to role assignments, if managed by related modules like `OwnerTransferMod`, are immediately visible to any facet accessing this storage slot. The `AccessControlStorage` struct itself is empty, indicating that role data is managed externally or through other linked storage slots.
+This module interacts with diamond storage at the `STORAGE_POSITION` defined by `keccak256("compose.accesscontrol")`. All functions operate on the `AccessControlStorage` struct, which is shared across all facets within the diamond. Changes to roles made by other facets or modules are immediately reflected when calling `hasRole` or `requireRole`.
 </Callout>
 
 <div style={{marginTop: "3rem", paddingTop: "2rem", borderTop: "1px solid var(--ifm-color-emphasis-200)"}}>
   <WasThisHelpful pageId="Access Control Data Module" />
 </div>
 
-<LastUpdated date="2026-03-13T01:21:13.145Z" />
+<LastUpdated date="2026-03-13T01:54:08.429Z" />

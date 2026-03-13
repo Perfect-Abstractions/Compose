@@ -27,14 +27,14 @@ Grants roles with time-based expiry
 
 <Callout type="info" title="Key Features">
 - Grants roles with a specified expiry timestamp.
-- Emits a `RoleGrantedWithExpiry` event upon successful role granting.
+- Emits `RoleGrantedWithExpiry` event upon successful role granting.
 - Reverts with `AccessControlUnauthorizedAccount` if the caller lacks permission.
-- Exports its selectors for diamond facet registration.
+- Reverts with `AccessControlRoleExpired` if the role has expired.
 </Callout>
 
 ## Overview
 
-This facet exposes functions for granting roles with an expiry timestamp within a diamond. It interacts with shared diamond storage to manage temporal role assignments. Developers add this facet to implement time-limited access control, enhancing security and flexibility.
+This facet manages role assignments with time-based expiry within a Compose diamond. It provides an external function to grant roles, ensuring they automatically expire. This facet interacts with shared diamond storage to manage role assignments, making role management upgradeable and composable.
 
 ## Storage
 
@@ -213,54 +213,50 @@ error AccessControlRoleExpired(bytes32 _role, address _account);
 <ExpandableCode language="solidity" maxLines={20} title="Example Implementation">
 {`pragma solidity >=0.8.30;
 
-import { AccessControlTemporalGrantFacet } from "@compose/access/AccessControl/Temporal/Grant/AccessControlTemporalGrantFacet";
+import {IDiamond} from "@compose/diamond/IDiamond";
+import {AccessControlTemporalGrantFacet} from "@compose/access/AccessControl/Temporal/Grant/AccessControlTemporalGrantFacet";
 
-contract DiamondConsumer {
-    address public diamondAddress;
+contract DiamondDeployer {
+    address constant DIAMOND_ADDRESS = address(0x123);
 
-    constructor(address _diamondAddress) {
-        diamondAddress = _diamondAddress;
+    function grantTemporaryRole() public {
+        IDiamond diamond = IDiamond(DIAMOND_ADDRESS);
+        uint256 expiryTimestamp = block.timestamp + 3600; // Role expires in 1 hour
+        bytes32 role = keccak256("OPERATOR_ROLE");
+        address accountToGrant = address(0x456);
+
+        // Call the facet function through the diamond proxy
+        diamond.grantRoleWithExpiry(role, accountToGrant, expiryTimestamp);
     }
 
-    function grantAdminRoleTemporarily(address _account, uint256 _durationSeconds) external {
-        // Grant the 'ADMIN' role for a specific duration
-        // The expiry timestamp is calculated as current block timestamp + duration
-        uint256 expiryTimestamp = block.timestamp + _durationSeconds;
-
-        // Call through the diamond proxy to the facet
-        IDiamond(diamondAddress).grantRoleWithExpiry(
-            bytes32("ADMIN"), // Example role
-            _account,
-            expiryTimestamp
-        );
+    // Function to verify role status (example, might be in another facet)
+    function isRoleValid(bytes32 _role, address _account) public view returns (bool) {
+        IDiamond diamond = IDiamond(DIAMOND_ADDRESS);
+        // Assuming a function like 'hasRole' exists in another facet or is exposed by the diamond
+        // This is a conceptual example, actual implementation details may vary.
+        // return diamond.hasRole(_role, _account);
+        return true; // Placeholder
     }
-
-    // Interface for calling functions on the diamond
-    interface IDiamond {
-        function grantRoleWithExpiry(bytes32 _role, address _account, uint256 _expiresAt) external;
-        function exportSelectors() external pure returns (bytes);
-    }
-}
-`}
+}`}
 </ExpandableCode>
 -->
 
 ## Best Practices
 
 <Callout type="tip" title="Best Practice">
-- Initialize role administration correctly before using `grantRoleWithExpiry`.
-- Ensure the caller has the authority to grant the specified role.
-- Carefully manage expiry timestamps to prevent unintended access revocation or continuation.
+- Initialize the diamond with necessary roles and accounts before using this facet.
+- Ensure the caller has the administrative privilege for the role being granted.
+- Verify role expiry logic by testing with accounts that have expired roles.
 </Callout>
 
 ## Security Considerations
 
 <Callout type="warning" title="Security">
-State-changing functions are protected by access control, requiring the caller to be the admin of the role. Input validation for `_expiresAt` is crucial to prevent logic errors. The facet relies on the diamond's storage for role assignments, ensuring shared state consistency. Reentrancy is not a direct concern as state changes precede external interactions, though the diamond's overall reentrancy guard should be considered.
+State-changing functions, specifically `grantRoleWithExpiry`, are protected by access control, ensuring only authorized accounts can grant roles. The function adheres to the checks-effects-interactions pattern. Input validation for the expiry timestamp should be considered to prevent granting roles with past expiry dates, although the `AccessControlRoleExpired` error implicitly handles this for role checks. The facet relies on the diamond's internal storage mechanism for role management.
 </Callout>
 
 <div style={{marginTop: "3rem", paddingTop: "2rem", borderTop: "1px solid var(--ifm-color-emphasis-200)"}}>
   <WasThisHelpful pageId="Access Control Temporal Grant Facet" />
 </div>
 
-<LastUpdated date="2026-03-13T01:22:17.039Z" />
+<LastUpdated date="2026-03-13T01:55:07.584Z" />

@@ -1,7 +1,7 @@
 ---
 sidebar_position: 110
 title: "Owner Two Step Data Module"
-description: "Manages pending owner data for two-step ownership transfers"
+description: "Provides data for ERC-173 two-step ownership transfers"
 sidebar_label: "Module"
 gitSource: "https://github.com/Perfect-Abstractions/Compose/tree/main/src/access/Owner/TwoSteps/Data/OwnerTwoStepDataMod.sol"
 ---
@@ -22,14 +22,14 @@ import GradientText from '@site/src/components/ui/GradientText';
 import GradientButton from '@site/src/components/ui/GradientButton';
 
 <DocSubtitle>
-Manages pending owner data for two-step ownership transfers
+Provides data for ERC-173 two-step ownership transfers
 </DocSubtitle>
 
 <Callout type="info" title="Key Features">
-- Provides data for ERC-173 two-step ownership transfers.
-- Exposes an `internal` function `pendingOwner()` to retrieve the pending owner's address.
-- Utilizes diamond storage for shared state management.
-- No external dependencies, ensuring a lean integration.
+- Exposes `internal` functions for managing ownership data.
+- Utilizes diamond storage at a specific `STORAGE_POSITION` for shared state.
+- Provides access to the `PendingOwnerStorage` struct.
+- No external dependencies, allowing for straightforward integration into any diamond.
 </Callout>
 
 <Callout type="info" title="Module Usage">
@@ -38,7 +38,7 @@ This module provides internal functions for use in your custom facets. Import it
 
 ## Overview
 
-This module manages the storage for ERC-173 two-step ownership transfers within a diamond. It provides access to the pending owner's address, which is crucial for the ownership change process. By utilizing diamond storage, any facet can safely read this data, ensuring consistency across the diamond's functionalities.
+This module exposes internal functions to manage the data for ERC-173 two-step ownership transfers. Facets can import this module to access and modify pending ownership states using shared diamond storage. Changes made through this module are immediately visible to all facets using the same storage pattern, ensuring consistent ownership state across the diamond.
 
 ## Storage
 
@@ -117,22 +117,32 @@ Get the address of the pending owner
 <ExpandableCode language="solidity" maxLines={20} title="Example Implementation">
 {`pragma solidity >=0.8.30;
 
-import {OwnerTwoStepDataMod} from "@compose/access/Owner/TwoSteps/Data/OwnerTwoStepDataMod";
+import {OwnerTwoStepDataMod, PendingOwnerStorage} from "@compose/access/Owner/TwoSteps/Data/OwnerTwoStepDataMod";
 
-contract OwnerFacet {
-    OwnerTwoStepDataMod internal ownerTwoStepDataMod;
+contract MyFacet {
+    OwnerTwoStepDataMod internal ownerDataMod;
 
-    // Assuming OwnerTwoStepDataMod is initialized with the correct storage slot
-    // in the diamond's deployment or initialization process.
-
-    function getPendingOwner() external view returns (address) {
-        // Call the internal function to retrieve the pending owner's address.
-        return ownerTwoStepDataMod.pendingOwner();
+    constructor(address diamondAddress) {
+        // Assuming OwnerTwoStepDataMod is deployed and accessible
+        // In a real diamond, this would be initialized via a facet initializer
+        ownerDataMod = OwnerTwoStepDataMod(diamondAddress);
     }
 
-    // Example of how a related module might access the storage pointer
-    function getStoragePointer() external view returns (OwnerTwoStepDataMod.PendingOwnerStorage memory) {
-        return ownerTwoStepDataMod.getStorage();
+    /**
+     * @notice Gets the pending owner address.
+     */
+    function getPendingOwnerAddress() external view returns (address) {
+        return ownerDataMod.pendingOwner();
+    }
+
+    /**
+     * @notice Gets the storage pointer for pending owner.
+     */
+    function getPendingOwnerStorage() external pure returns (PendingOwnerStorage memory) {
+        // Note: getStorage returns a pointer, which in a facet context might be
+        // used to interact with the raw storage slot if needed, but typically
+        // other functions like pendingOwner() abstract this interaction.
+        return ownerDataMod.getStorage();
     }
 }`}
 </ExpandableCode>
@@ -141,19 +151,19 @@ contract OwnerFacet {
 ## Best Practices
 
 <Callout type="tip" title="Best Practice">
-- Ensure the `OwnerTwoStepDataMod` is correctly initialized with the appropriate storage slot during diamond deployment.
-- Call `pendingOwner()` only to read the pending owner address; state modifications should be handled by other facets.
-- Verify that the `STORAGE_POSITION` used by this module does not conflict with other facets in the diamond.
+- Ensure that ownership-related facets correctly initialize this module's storage slot.
+- Always call `pendingOwner()` to retrieve the current pending owner address for read operations.
+- When implementing ownership transfer logic, coordinate with `OwnerTransferMod` and `OwnerRenounceMod` to manage the complete two-step process.
 </Callout>
 
 ## Integration Notes
 
 <Callout type="success" title="Shared Storage">
-This module interacts with diamond storage at a specific `STORAGE_POSITION` identified by `keccak256("erc173.owner.pending")`. The `getStorage()` function returns a pointer to the `PendingOwnerStorage` struct, which contains the `pendingOwner` field. Any facet within the same diamond that accesses this storage position will see the same pending owner data, ensuring consistency.
+This module interacts with diamond storage at the slot identified by `STORAGE_POSITION`, which is deterministically set using `keccak256(\"erc173.owner.pending\")`. The `getStorage()` function returns a pointer to the `PendingOwnerStorage` struct, allowing other facets to read or write to this shared state. The `pendingOwner()` function directly accesses this storage to return the address of the pending owner. All state changes made via this module are immediately visible to any other facet that references the same storage position.
 </Callout>
 
 <div style={{marginTop: "3rem", paddingTop: "2rem", borderTop: "1px solid var(--ifm-color-emphasis-200)"}}>
   <WasThisHelpful pageId="Owner Two Step Data Module" />
 </div>
 
-<LastUpdated date="2026-03-13T01:20:27.273Z" />
+<LastUpdated date="2026-03-13T01:53:22.755Z" />

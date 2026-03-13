@@ -1,7 +1,7 @@
 ---
 sidebar_position: 110
 title: "Access Control Temporal Revoke Module"
-description: "Revoke temporal roles from accounts"
+description: "Revoke temporal roles with admin authorization"
 sidebar_label: "Module"
 gitSource: "https://github.com/Perfect-Abstractions/Compose/tree/main/src/access/AccessControl/Temporal/Revoke/AccessControlTemporalRevokeMod.sol"
 ---
@@ -22,14 +22,14 @@ import GradientText from '@site/src/components/ui/GradientText';
 import GradientButton from '@site/src/components/ui/GradientButton';
 
 <DocSubtitle>
-Revoke temporal roles from accounts
+Revoke temporal roles with admin authorization
 </DocSubtitle>
 
 <Callout type="info" title="Key Features">
-- All functions are `internal` for use within custom facets.
-- Leverages the diamond storage pattern for shared state.
+- Provides an `internal` function `revokeTemporalRole` for revoking temporal roles.
+- Enforces authorization, allowing only the role's admin to revoke.
 - Emits a `TemporalRoleRevoked` event upon successful revocation.
-- No external dependencies or `using` directives.
+- Operates using the diamond storage pattern for shared state management.
 </Callout>
 
 <Callout type="info" title="Module Usage">
@@ -38,7 +38,7 @@ This module provides internal functions for use in your custom facets. Import it
 
 ## Overview
 
-This module provides internal functions to revoke temporal roles from accounts. Facets can import and use these functions to manage role expirations within the diamond's shared storage. Changes made through this module are immediately visible to all facets interacting with the `AccessControlStorage`.
+This module provides functions to revoke temporal roles, ensuring that only authorized administrators can perform this action. It integrates with diamond storage to manage role revocation state, making changes immediately visible to all facets accessing the same storage. Use this module to implement time-limited access control within your diamond.
 
 ## Storage
 
@@ -221,21 +221,21 @@ error AccessControlUnauthorizedAccount(address _account, bytes32 _role);
 
 import {AccessControlTemporalRevokeMod} from "@compose/access/AccessControl/Temporal/Revoke/AccessControlTemporalRevokeMod";
 
-contract MyAccessFacet {
-    AccessControlTemporalRevokeMod internal _revokeMod;
+contract MyFacet {
+    AccessControlTemporalRevokeMod internal accessControlTemporalRevokeMod;
 
-    constructor(address diamondAddress) {
-        _revokeMod = AccessControlTemporalRevokeMod(diamondAddress);
+    function initialize(address accessControlTemporalRevokeModAddress) external {
+        accessControlTemporalRevokeMod = AccessControlTemporalRevokeMod(accessControlTemporalRevokeModAddress);
     }
 
     /**
      * @notice Revokes a temporal role from a specific account.
-     * @dev Caller must be the admin of the role.
+     * @dev Requires the caller to be the admin of the role.
      * @param _role The role to revoke.
-     * @param _account The account to revoke the role from.
+     * @param _account The account from which to revoke the role.
      */
     function revokeRole(bytes32 _role, address _account) external {
-        _revokeMod.revokeTemporalRole(_role, _account);
+        accessControlTemporalRevokeMod.revokeTemporalRole(_role, _account);
     }
 }`}
 </ExpandableCode>
@@ -244,19 +244,19 @@ contract MyAccessFacet {
 ## Best Practices
 
 <Callout type="tip" title="Best Practice">
-- Ensure the caller has the necessary administrative privileges before calling `revokeTemporalRole`.
-- Verify that the `AccessControlStorage` struct is correctly initialized before attempting to revoke roles.
-- Handle the `AccessControlUnauthorizedAccount` error, which indicates the caller lacks the required role administration.
+- Ensure the caller possesses the necessary administrative privileges for the role before invoking `revokeTemporalRole`.
+- Verify that the `AccessControlTemporalRevokeMod` has been correctly initialized with its diamond storage address.
+- Handle the `AccessControlUnauthorizedAccount` error to gracefully manage unauthorized revocation attempts.
 </Callout>
 
 ## Integration Notes
 
 <Callout type="success" title="Shared Storage">
-This module interacts with the diamond's shared storage at the `ACCESS_CONTROL_STORAGE_POSITION`, which is identified by `keccak2535("compose.accesscontrol")`. It reads from and writes to the `AccessControlStorage` and `AccessControlTemporalStorage` structs. Any modifications made to temporal role revocations via this module are immediately reflected in the shared storage, making them visible to all facets that access this storage.
+This module operates on shared diamond storage, specifically utilizing the `ACCESS_CONTROL_STORAGE_POSITION` (keccak256("compose.accesscontrol")) for its `AccessControlStorage` and `AccessControlTemporalStorage` structures. All modifications made via `revokeTemporalRole` are immediately reflected in the diamond's storage and are visible to any other facet that reads from these storage locations. The module's functions are `internal`, implying they are intended to be called by other facets within the same diamond.
 </Callout>
 
 <div style={{marginTop: "3rem", paddingTop: "2rem", borderTop: "1px solid var(--ifm-color-emphasis-200)"}}>
   <WasThisHelpful pageId="Access Control Temporal Revoke Module" />
 </div>
 
-<LastUpdated date="2026-03-13T01:22:08.205Z" />
+<LastUpdated date="2026-03-13T01:54:59.750Z" />

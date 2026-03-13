@@ -1,7 +1,7 @@
 ---
 sidebar_position: 2
 title: "ERC-165 Module"
-description: "ERC-165 interface detection for diamonds"
+description: "ERC-165 standard interface detection"
 sidebar_label: "Module"
 gitSource: "https://github.com/Perfect-Abstractions/Compose/tree/main/src/interfaceDetection/ERC165/ERC165Mod.sol"
 ---
@@ -22,14 +22,14 @@ import GradientText from '@site/src/components/ui/GradientText';
 import GradientButton from '@site/src/components/ui/GradientButton';
 
 <DocSubtitle>
-ERC-165 interface detection for diamonds
+ERC-165 standard interface detection
 </DocSubtitle>
 
 <Callout type="info" title="Key Features">
-- Provides internal functions for ERC-165 interface detection.
-- Uses the diamond storage pattern to manage supported interfaces.
-- No external dependencies, ensuring minimal on-chain footprint.
-- Functions are designed for integration within diamond facets.
+- Internal functions for registering ERC-165 supported interfaces.
+- Utilizes diamond storage pattern via a fixed `STORAGE_POSITION`.
+- No external dependencies, promoting composability.
+- Compatible with ERC-2535 diamond proxy standard.
 </Callout>
 
 <Callout type="info" title="Module Usage">
@@ -38,7 +38,7 @@ This module provides internal functions for use in your custom facets. Import it
 
 ## Overview
 
-This module provides internal functions and storage for ERC-165 interface detection within a diamond. Facets can import this module to register supported interfaces during initialization, ensuring all facets collectively adhere to the ERC-165 standard. Changes to supported interfaces are managed via diamond storage and are immediately visible to all facets.
+This module provides internal functions and storage for ERC-165 interface detection within a diamond. Facets import this module to register supported interfaces during initialization using shared diamond storage. This ensures consistent interface identification across all facets of the diamond.
 
 ## Storage
 
@@ -118,18 +118,22 @@ Register that a contract supports an interface Call this function during initial
 <ExpandableCode language="solidity" maxLines={20} title="Example Implementation">
 {`pragma solidity >=0.8.30;
 
-import { ERC165Mod } from "@compose/interfaceDetection/ERC165/ERC165Mod";
+import { ERC165Mod, ERC165Storage } from "@compose/interfaceDetection/ERC165/ERC165Mod";
 
-contract MyERC721Facet {
-    // Assume ERC165Mod is already initialized and its storage pointer is accessible
-    // For demonstration, we'll call registerInterface directly, implying it's called via the diamond's initializer.
+contract ERC165Facet {
 
-    function initialize() external {
-        // Example: Registering support for IERC721 interface
+    // Assume ERC165Mod is already initialized and registered in diamond storage.
+    // This function would typically be part of an initialization process.
+    function initializeERC165() external {
+        // Example: Registering support for an ERC721 interface.
+        // Replace type(IERC721).interfaceId with the actual interface ID needed.
         ERC165Mod.registerInterface(type(IERC721).interfaceId);
     }
 
-    // Other ERC721 functions...
+    // A function to demonstrate calling getStorage, though typically not called directly by facets.
+    function getERC165Storage() external pure returns (ERC165Storage memory) {
+        return ERC165Mod.getStorage();
+    }
 }`}
 </ExpandableCode>
 -->
@@ -137,19 +141,19 @@ contract MyERC721Facet {
 ## Best Practices
 
 <Callout type="tip" title="Best Practice">
-- Call `registerInterface` during diamond initialization to declare supported ERC-165 interfaces.
-- Ensure the `ERC165Mod` storage is correctly initialized and accessible to all facets.
-- Verify that `getStorage()` returns the expected storage pointer to maintain interface detection integrity.
+- Call `registerInterface` during facet initialization to declare supported interfaces.
+- Ensure the diamond's storage layout is compatible with ERC165Mod's storage requirements.
+- Verify that the `STORAGE_POSITION` for ERC-165 is unique and not colliding with other diamond storage.
 </Callout>
 
 ## Integration Notes
 
 <Callout type="success" title="Shared Storage">
-This module utilizes diamond storage at the `STORAGE_POSITION` slot, keyed by `keccak256("erc165")`. The `ERC165Storage` struct, which is empty in this implementation, resides at this position. The `getStorage()` function, using inline assembly, returns a pointer to this shared storage. The `registerInterface()` function modifies the state managed at this storage position, making interface support immediately observable by any facet interacting with the diamond's ERC-165 implementation.
+This module interacts with diamond storage at a specific, predefined slot identified by `STORAGE_POSITION` (keccak256("erc165")). The `ERC165Storage` struct is managed at this location. The `getStorage` function returns a pointer to this struct, allowing internal operations. Changes made via `registerInterface` directly update this shared storage, making them immediately visible to any other facet accessing the same storage position.
 </Callout>
 
 <div style={{marginTop: "3rem", paddingTop: "2rem", borderTop: "1px solid var(--ifm-color-emphasis-200)"}}>
   <WasThisHelpful pageId="ERC-165 Module" />
 </div>
 
-<LastUpdated date="2026-03-13T01:16:36.960Z" />
+<LastUpdated date="2026-03-13T01:49:34.195Z" />

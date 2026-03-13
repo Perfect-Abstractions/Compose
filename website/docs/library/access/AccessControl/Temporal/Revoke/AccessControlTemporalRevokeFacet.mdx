@@ -26,15 +26,15 @@ Revokes temporal roles from accounts within a diamond
 </DocSubtitle>
 
 <Callout type="info" title="Key Features">
-- Revokes temporal roles from specified accounts.
-- Enforces role administration for revocations.
+- Revokes temporal roles from accounts via external functions.
+- Utilizes diamond storage for state management.
 - Emits `TemporalRoleRevoked` event upon successful revocation.
-- Exports its own selectors via `exportSelectors`.
+- Protects state-changing functions with access control checks.
 </Callout>
 
 ## Overview
 
-This facet provides functionality to revoke temporal roles. It enables authorized callers to remove roles from accounts, ensuring temporal access control is maintained. Calls are routed through the diamond proxy, accessing shared diamond storage.
+This facet provides functionality to revoke temporal roles assigned to accounts within a Compose diamond. It exposes an external function that interacts with diamond storage to manage role revocations, ensuring that only authorized callers can perform these actions. This facet enables dynamic management of permissions in an upgradeable diamond architecture.
 
 ## Storage
 
@@ -189,45 +189,53 @@ error AccessControlUnauthorizedAccount(address _account, bytes32 _role);
 <ExpandableCode language="solidity" maxLines={20} title="Example Implementation">
 {`pragma solidity >=0.8.30;
 
-import { IDiamond } from "@compose/diamond/IDiamond";
 import { AccessControlTemporalRevokeFacet } from "@compose/access/AccessControl/Temporal/Revoke/AccessControlTemporalRevokeFacet";
+import { IDiamond } from "@compose/diamond/IDiamond";
 
-contract DiamondDeploy {
+contract DiamondUser {
     address public diamondAddress;
 
-    function deployDiamond() public {
-        // ... deployment logic for the diamond proxy ...
-        // diamondAddress = address of deployed diamond proxy
-
-        // Add the AccessControlTemporalRevokeFacet to the diamond
-        // ... facet registration logic ...
+    constructor(address _diamondAddress) {
+        diamondAddress = _diamondAddress;
     }
 
-    function revokeRoleExample(bytes32 _role, address _account) public {
-        IDiamond diamond = IDiamond(diamondAddress);
-        // Call the revokeTemporalRole function through the diamond
-        diamond.revokeTemporalRole(_role, _account);
+    /**
+     * @notice Revokes a temporal role from a specific account.
+     * @param _role The role to revoke.
+     * @param _account The account to revoke the role from.
+     */
+    function revokeRole(bytes32 _role, address _account) external {
+        IDiamond(diamondAddress).revokeTemporalRole(_role, _account);
     }
-}`}
+
+    /**
+     * @notice Exports the selectors exposed by the AccessControlTemporalRevokeFacet.
+     * @return The bytes representing the selectors.
+     */
+    function exportFacetSelectors() external pure returns (bytes memory) {
+        return IDiamond(diamondAddress).exportSelectors();
+    }
+}
+`}
 </ExpandableCode>
 -->
 
 ## Best Practices
 
 <Callout type="tip" title="Best Practice">
-- Ensure the caller possesses the necessary administrative privileges for the role before invoking `revokeTemporalRole`.
-- Verify that the `AccessControlTemporalRevokeFacet` is correctly registered with the diamond proxy to route calls properly.
-- Monitor the `TemporalRoleRevoked` event for off-chain applications to track role revocations.
+- Ensure the `AccessControlTemporalRevokeFacet` is correctly initialized within the diamond's deployment process.
+- Verify that only the designated admin for a temporal role can call `revokeTemporalRole`.
+- Use `exportSelectors` to understand the facet's ABI and integrate it with diamond facets management.
 </Callout>
 
 ## Security Considerations
 
 <Callout type="warning" title="Security">
-The `revokeTemporalRole` function is protected by access control, requiring the caller to be the admin of the specified role. Reverts with `AccessControlUnauthorizedAccount` if the caller lacks permission. Input validation for `_role` and `_account` is crucial. Follow standard Solidity security practices for function calls within a diamond.
+The `revokeTemporalRole` function is protected by access control, reverting with `AccessControlUnauthorizedAccount` if the caller is not the admin of the specified role. Input validation for `_role` and `_account` should be handled by the caller or within the diamond's overall access control strategy. No reentrancy guards are explicitly implemented; follow standard Solidity security practices for external interactions.
 </Callout>
 
 <div style={{marginTop: "3rem", paddingTop: "2rem", borderTop: "1px solid var(--ifm-color-emphasis-200)"}}>
   <WasThisHelpful pageId="Access Control Temporal Revoke Facet" />
 </div>
 
-<LastUpdated date="2026-03-13T01:22:12.269Z" />
+<LastUpdated date="2026-03-13T01:55:03.895Z" />

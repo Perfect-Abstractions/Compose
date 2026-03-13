@@ -1,7 +1,7 @@
 ---
 sidebar_position: 100
 title: "Access Control Temporal Data Facet"
-description: "Manages temporal role assignments and checks role validity"
+description: "Manages time-bound role assignments and checks for expired roles"
 sidebar_label: "Facet"
 gitSource: "https://github.com/Perfect-Abstractions/Compose/tree/main/src/access/AccessControl/Temporal/Data/AccessControlTemporalDataFacet.sol"
 ---
@@ -22,19 +22,19 @@ import GradientText from '@site/src/components/ui/GradientText';
 import GradientButton from '@site/src/components/ui/GradientButton';
 
 <DocSubtitle>
-Manages temporal role assignments and checks role validity
+Manages time-bound role assignments and checks for expired roles
 </DocSubtitle>
 
 <Callout type="info" title="Key Features">
-- Manages time-bound role assignments via diamond storage.
-- Exposes functions to check role expiry and validate roles.
-- Emits `RoleGrantedWithExpiry` and `TemporalRoleRevoked` events for off-chain monitoring.
-- Utilizes custom errors `AccessControlUnauthorizedAccount` and `AccessControlRoleExpired`.
+- Manages temporal role assignments and checks for expiry.
+- Exposes `getRoleExpiry`, `isRoleExpired`, and `requireValidRole` for role validation.
+- Operates on shared diamond storage via internal `getStorage` and `getAccessControlStorage` functions.
+- Exports its selectors for diamond registration.
 </Callout>
 
 ## Overview
 
-This facet provides functions to manage and query temporal role assignments within a diamond. It accesses shared diamond storage to track role expiry. Developers integrate this facet to implement time-bound access control, ensuring roles automatically become invalid after a specified duration.
+This facet provides functionality for managing time-bound access control roles within a Compose diamond. It exposes external view functions to check role expiry and internal functions to access its specific storage layout. This facet integrates with other access control facets by operating on shared diamond storage.
 
 ## Storage
 
@@ -324,27 +324,44 @@ error AccessControlRoleExpired(bytes32 _role, address _account);
 <ExpandableCode language="solidity" maxLines={20} title="Example Implementation">
 {`pragma solidity >=0.8.30;
 
-import { IDiamond } from "@compose/diamond/IDiamond";
-import { AccessControlTemporalDataFacet } from "@compose/access/AccessControl/Temporal/Data/AccessControlTemporalDataFacet";
+import {IDiamond} from "@compose/diamond/IDiamond";
+import {AccessControlTemporalDataFacet} from "@compose/access/AccessControl/Temporal/Data/AccessControlTemporalDataFacet";
 
-contract Deployer {
-    address diamondAddress;
+contract DiamondUser {
+    address immutable diamondAddress;
 
-    // Assume diamondAddress is set during deployment
-    function checkRoleExpiry(bytes32 _role, address _account) public view returns (bool) {
-        // Calls are routed through the diamond proxy to the facet
-        IDiamond diamond = IDiamond(diamondAddress);
-        return AccessControlTemporalDataFacet(diamond).isRoleExpired(_role, _account);
+    constructor(address _diamondAddress) {
+        diamondAddress = _diamondAddress;
     }
 
-    function getRoleExpiryTimestamp(bytes32 _role, address _account) public view returns (uint256) {
-        IDiamond diamond = IDiamond(diamondAddress);
-        return AccessControlTemporalDataFacet(diamond).getRoleExpiry(_role, _account);
+    /**
+     * @notice Checks if a role has expired for a specific account via the diamond.
+     * @param _role The role to check.
+     * @param _account The account to check.
+     * @return bool True if the role has expired, false otherwise.
+     */
+    function isRoleExpired(bytes32 _role, address _account) public view returns (bool) {
+        // Access control functions are routed through the diamond proxy
+        return IDiamond(diamondAddress).isRoleExpired(_role, _account);
     }
 
-    function ensureValidRole(bytes32 _role, address _account) public view {
-        IDiamond diamond = IDiamond(diamondAddress);
-        AccessControlTemporalDataFacet(diamond).requireValidRole(_role, _account);
+    /**
+     * @notice Requires that an account has a valid, non-expired role.
+     * @param _role The role to check.
+     * @param _account The account to check.
+     */
+    function requireValidRole(bytes32 _role, address _account) public view {
+        // This function will revert if the role is expired or the account does not have it.
+        IDiamond(diamondAddress).requireValidRole(_role, _account);
+    }
+
+    /**
+     * @notice Exports the selectors exposed by the AccessControlTemporalDataFacet.
+     * @return bytes The encoded selectors.
+     */
+    function exportSelectors() public pure returns (bytes) {
+        // This is a pure function, can be called directly or via diamond
+        return AccessControlTemporalDataFacet.exportSelectors();
     }
 }`}
 </ExpandableCode>
@@ -353,19 +370,19 @@ contract Deployer {
 ## Best Practices
 
 <Callout type="tip" title="Best Practice">
-- Initialize temporal role assignments with appropriate expiry timestamps.
-- Regularly check role expiry using `isRoleExpired` or `requireValidRole` before granting sensitive permissions.
-- Ensure consistency between role granting and revocation logic across facets.
+- Ensure the `AccessControlTemporalDataFacet` is correctly initialized with its storage slot.
+- When granting roles with expiry, ensure the `_expiresAt` timestamp is set appropriately.
+- Verify that `requireValidRole` is called before sensitive operations that depend on time-bound roles.
 </Callout>
 
 ## Security Considerations
 
 <Callout type="warning" title="Security">
-Functions `getRoleExpiry`, `isRoleExpired`, and `requireValidRole` are view functions and do not modify state. `requireValidRole` reverts with `AccessControlUnauthorizedAccount` if the account does not possess the role, or `AccessControlRoleExpired` if the role has expired. Ensure that role granting functions correctly set the expiry timestamp to prevent unintended indefinite access. Follow standard Solidity security practices for input validation when setting expiry times.
+This facet exposes `requireValidRole`, which reverts with `AccessControlUnauthorizedAccount` if the account lacks the role, or `AccessControlRoleExpired` if the role has expired. Input validation for role names and account addresses is handled by the underlying logic. No reentrancy concerns are present as all exposed functions are `view` or `pure`.
 </Callout>
 
 <div style={{marginTop: "3rem", paddingTop: "2rem", borderTop: "1px solid var(--ifm-color-emphasis-200)"}}>
   <WasThisHelpful pageId="Access Control Temporal Data Facet" />
 </div>
 
-<LastUpdated date="2026-03-13T01:22:00.385Z" />
+<LastUpdated date="2026-03-13T01:54:51.616Z" />

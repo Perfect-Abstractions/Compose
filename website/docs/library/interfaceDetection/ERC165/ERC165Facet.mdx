@@ -1,7 +1,7 @@
 ---
 sidebar_position: 1
 title: "ERC-165 Facet"
-description: "Standard ERC-165 interface detection for diamonds"
+description: "Interface detection for diamonds via ERC-165"
 sidebar_label: "Facet"
 gitSource: "https://github.com/Perfect-Abstractions/Compose/tree/main/src/interfaceDetection/ERC165/ERC165Facet.sol"
 ---
@@ -22,19 +22,18 @@ import GradientText from '@site/src/components/ui/GradientText';
 import GradientButton from '@site/src/components/ui/GradientButton';
 
 <DocSubtitle>
-Standard ERC-165 interface detection for diamonds
+Interface detection for diamonds via ERC-165
 </DocSubtitle>
 
 <Callout type="info" title="Key Features">
-- Implements ERC-165 interface detection for diamonds.
-- Exposes `supportsInterface` and `exportSelectors` via the diamond proxy.
-- Utilizes diamond storage for interface support data.
-- Self-contained facet with no external dependencies.
+- Implements ERC-165 interface detection via `supportsInterface`.
+- Exposes `exportSelectors` for facet selector discovery.
+- Operates using diamond storage and routing patterns.
 </Callout>
 
 ## Overview
 
-This facet implements ERC-165 interface detection for diamonds, enabling external contracts to query supported interfaces. It routes calls through the diamond proxy and accesses its shared storage. Developers add this facet to expose interface support while maintaining diamond upgradeability.
+This facet implements ERC-165 interface detection for diamonds. It exposes the `supportsInterface` function, allowing external contracts to query diamond capabilities. Calls are routed through the diamond proxy, leveraging shared storage for interface support information.
 
 ## Storage
 
@@ -127,38 +126,61 @@ Exports the function selectors of the ERC165Facet This function is use as a sele
 <ExpandableCode language="solidity" maxLines={20} title="Example Implementation">
 {`pragma solidity >=0.8.30;
 
+import @compose/interfaceDetection/ERC165/ERC165Facet;
 import { IDiamond } from "@compose/diamond/IDiamond.sol";
-import { ERC165Facet } from "@compose/interfaceDetection/ERC165/ERC165Facet.sol";
 
-// Assume diamondAddress is the address of your deployed diamond contract.
-address diamondAddress = address(0x123...);
+address constant DIAMOND_ADDRESS = address(0x1);
 
-// To check if the diamond supports a specific interface (e.g., ERC-721)
-IDiamond diamond = IDiamond(diamondAddress);
-bytes4 erc721InterfaceId = 0x80ac585d; // ERC-721 interface ID
-bool supportsErc721 = diamond.supportsInterface(erc721InterfaceId);
+function checkERC165Support(address _diamondAddress) public view returns (bool) {
+    IDiamond diamond = IDiamond(_diamondAddress);
+    // Example: Check if the diamond supports ERC-721 interface
+    bytes4 erc721InterfaceId = 0x80ac585d; // ERC-721 interface ID
+    return diamond.supportsInterface(erc721InterfaceId);
+}
 
-// To export facet selectors (useful for discovery)
-bytes selectors = diamond.exportSelectors();`}
+function exportFacetSelectors(address _diamondAddress) public pure returns (bytes) {
+    // To export selectors, you would typically call this directly from the facet's deployment script
+    // or a dedicated facet for metadata. For demonstration, we'll simulate calling it.
+    // In a real scenario, this would be called on the ERC165Facet itself or through a selector discovery mechanism.
+
+    // This example simulates calling the exportSelectors from the facet address, not the diamond proxy.
+    // In a diamond, you would typically add this facet and then use its selectors.
+    // For the purpose of showing usage, we'll assume a direct call if the facet were deployed standalone.
+    // However, within a diamond, the diamond proxy would route to the correct facet.
+
+    // To properly use exportSelectors within a diamond context, it's usually part of the diamond's deployment or upgrade process
+    // to discover and register facet selectors.
+
+    // The actual function is pure and returns selectors.
+    // To call it through a diamond, you'd need the selector for exportSelectors.
+
+    // Placeholder for actual invocation within a diamond context if needed for discovery
+    // For direct facet interaction (not recommended in production diamonds):
+    // return ERC165Facet(diamondAddress).exportSelectors();
+
+    // Returning a dummy value as direct invocation through diamond is not typical for \`pure\` functions like exportSelectors.
+    // Its primary use is during deployment/upgrade to list its own selectors.
+    return "";
+}`}
 </ExpandableCode>
 -->
 
 ## Best Practices
 
 <Callout type="tip" title="Best Practice">
-- Ensure the `ERC165Facet` is correctly initialized within the diamond's deployment process.
-- Verify that `supportsInterface` is called through the diamond proxy address.
-- Use `exportSelectors` to discover available facets and their supported interfaces.
+- Ensure the `ERC165Facet` is added to the diamond, and its selectors are correctly registered.
+- Call `supportsInterface` through the diamond proxy address to query the diamond's capabilities.
+- Use `exportSelectors` during facet deployment to list the selectors provided by this facet.
 </Callout>
 
 ## Security Considerations
 
 <Callout type="warning" title="Security">
-The `supportsInterface` function is `view` and does not modify state. The `exportSelectors` function is `pure` and does not access state. Input validation for `_interfaceId` in `supportsInterface` is handled by the EVM. Follow standard Solidity security practices for diamond deployment and facet management.
+The `supportsInterface` function is `view` and has no state-changing implications. The `exportSelectors` function is `pure`. No reentrancy risks are present in these functions.
 </Callout>
 
 <div style={{marginTop: "3rem", paddingTop: "2rem", borderTop: "1px solid var(--ifm-color-emphasis-200)"}}>
   <WasThisHelpful pageId="ERC-165 Facet" />
 </div>
 
-<LastUpdated date="2026-03-13T01:16:32.982Z" />
+<LastUpdated date="2026-03-13T01:49:31.392Z" />

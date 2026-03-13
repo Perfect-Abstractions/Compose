@@ -26,15 +26,15 @@ Burns ERC-721 tokens within a diamond
 </DocSubtitle>
 
 <Callout type="info" title="Key Features">
-- Provides external functions for burning single and batch ERC-721 tokens.
-- Utilizes diamond storage for managing token state, ensuring composability.
-- Exposes `exportSelectors` for easy integration into diamond proxy discovery mechanisms.
-- Internal `getStorage` function ensures consistent access to shared storage.
+- Exposes external functions for burning ERC-721 tokens through a diamond proxy.
+- Interacts with shared diamond storage for token management.
+- Supports burning single tokens and batches of tokens.
+- Includes `exportSelectors` for diamond selector discovery.
 </Callout>
 
 ## Overview
 
-This facet provides functionality to burn ERC-721 tokens directly within a diamond proxy. It accesses shared diamond storage to manage token states and ensures that burned tokens are removed from enumeration. Developers integrate this facet to enable token destruction operations as part of a larger ERC-721 implementation.
+This facet provides functionality to burn (destroy) ERC-721 tokens. It interacts with diamond storage to manage token destruction. Developers integrate this facet to enable token holders to permanently remove their tokens from circulation via the diamond proxy.
 
 ## Storage
 
@@ -174,36 +174,30 @@ error ERC721InsufficientApproval(address _operator, uint256 _tokenId);
 <ExpandableCode language="solidity" maxLines={20} title="Example Implementation">
 {`pragma solidity >=0.8.30;
 
-import {IDiamond} from "@compose/core/IDiamond.sol";
-import {ERC721BurnFacet} from "@compose/token/ERC721/Burn/ERC721BurnFacet.sol";
+import {IDiamond} from "@compose/core/diamond/IDiamond";
+import {IERC721BurnFacet} from "@compose/token/ERC721/Burn/IERC721BurnFacet";
 
-contract Deployer {
-    address immutable DIAMOND_ADDRESS;
+contract DiamondUser {
+    address immutable diamondAddress;
 
-    constructor(address diamondAddress) {
-        DIAMOND_ADDRESS = diamondAddress;
+    constructor(address _diamondAddress) {
+        diamondAddress = _diamondAddress;
     }
 
     /**
-     * @notice Burns a single ERC-721 token.
+     * @notice Burns a specific ERC-721 token.
      * @param _tokenId The ID of the token to burn.
      */
-    function burnSingleToken(uint256 _tokenId) external {
-        IDiamond(DIAMOND_ADDRESS).callFacetFunction(
-            ERC721BurnFacet.exportSelectors(),
-            abi.encodeWithSignature("burn(uint256)", _tokenId)
-        );
+    function burnToken(uint256 _tokenId) external {
+        IERC721BurnFacet(diamondAddress).burn(_tokenId);
     }
 
     /**
-     * @notice Burns multiple ERC-721 tokens.
+     * @notice Burns a batch of ERC-721 tokens.
      * @param _tokenIds An array of token IDs to burn.
      */
-    function burnMultipleTokens(uint256[] calldata _tokenIds) external {
-        IDiamond(DIAMOND_ADDRESS).callFacetFunction(
-            ERC721BurnFacet.exportSelectors(),
-            abi.encodeWithSignature("burnBatch(uint256[])", _tokenIds)
-        );
+    function burnTokenBatch(uint256[] memory _tokenIds) external {
+        IERC721BurnFacet(diamondAddress).burnBatch(_tokenIds);
     }
 }
 `}
@@ -213,19 +207,19 @@ contract Deployer {
 ## Best Practices
 
 <Callout type="tip" title="Best Practice">
-- Ensure the `ERC721Storage` struct is correctly initialized in diamond storage before deploying this facet.
-- Access token state via the `getStorage` internal function to ensure consistency across facets.
-- Verify that the token IDs provided to `burn` and `burnBatch` exist before calling these functions to prevent `ERC721NonexistentToken` errors.
+- Ensure the ERC721BurnFacet is properly initialized with access control if required by your diamond architecture.
+- Validate that the caller has the necessary permissions to burn tokens before calling the `burn` or `burnBatch` functions.
+- Verify storage slot compatibility with other facets before upgrading or adding this facet to a diamond.
 </Callout>
 
 ## Security Considerations
 
 <Callout type="warning" title="Security">
-The `burn` and `burnBatch` functions modify shared diamond storage. Input validation is crucial to prevent errors; ensure token IDs exist and that the caller has the necessary permissions to burn the tokens. Reentrancy is not a direct concern as the functions do not perform external calls before state changes. The `ERC721NonexistentToken` and `ERC721InsufficientApproval` errors are emitted to signal specific failure conditions.
+The `burn` and `burnBatch` functions modify state by destroying tokens. Ensure that appropriate access control mechanisms are in place within the diamond to restrict who can call these functions. The facet does not explicitly implement reentrancy guards; follow standard Solidity security practices for external calls if any are introduced by related facets. Input validation for `_tokenIds` is crucial to prevent unexpected behavior or denial of service.
 </Callout>
 
 <div style={{marginTop: "3rem", paddingTop: "2rem", borderTop: "1px solid var(--ifm-color-emphasis-200)"}}>
   <WasThisHelpful pageId="ERC-721 Burn Facet" />
 </div>
 
-<LastUpdated date="2026-03-13T01:18:37.243Z" />
+<LastUpdated date="2026-03-13T01:51:34.471Z" />

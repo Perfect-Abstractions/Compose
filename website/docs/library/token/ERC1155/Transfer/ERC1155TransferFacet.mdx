@@ -26,15 +26,15 @@ ERC-1155 token transfers within a diamond
 </DocSubtitle>
 
 <Callout type="info" title="Key Features">
-- Exposes external functions for diamond routing (safeTransferFrom, safeBatchTransferFrom).
-- Accesses shared ERC-1155 state via diamond storage.
-- Emits TransferSingle and TransferBatch events for off-chain monitoring.
-- Provides selector discovery via the `exportSelectors` function.
+- Implements `safeTransferFrom` and `safeBatchTransferFrom` for ERC-1155 token handling.
+- Accesses shared diamond storage via `getStorage()` for balance management.
+- Emits `TransferSingle` and `TransferBatch` events for off-chain tracking.
+- Exports its function selectors via `exportSelectors()` for diamond integration.
 </Callout>
 
 ## Overview
 
-This facet implements ERC-1155 token transfers as external functions within a diamond. It routes calls through the diamond proxy and accesses shared storage. Developers add this facet to expose ERC-1155 token functionality while maintaining upgradeability.
+This facet implements ERC-1155 token transfers as external functions callable through a diamond proxy. It accesses shared diamond storage to manage token balances and emits standard events for off-chain consumption. Developers integrate this facet to provide core ERC-1155 transfer capabilities while retaining diamond's upgradeability.
 
 ## Storage
 
@@ -346,57 +346,49 @@ error ERC1155InvalidArrayLength(uint256 _idsLength, uint256 _valuesLength);
 <ExpandableCode language="solidity" maxLines={20} title="Example Implementation">
 {`pragma solidity >=0.8.30;
 
+import {IDiamond} from "@compose/diamond/IDiamond";
 import {ERC1155TransferFacet} from "@compose/token/ERC1155/Transfer/ERC1155TransferFacet";
-import {IDiamond} from "@compose/diamond/core/IDiamond";
 
-// Example: Using the facet in a diamond
-// The facet functions are called through the diamond proxy.
-// Assume diamondAddress is the address of the Compose diamond.
+contract DiamondUser {
+    address constant DIAMOND_ADDRESS = address(0xYourDiamondAddress);
 
-address diamondAddress = 0xYourDiamondAddress;
-IDiamond diamond = IDiamond(diamondAddress);
+    function transferSingleToken(address _from, address _to, uint256 _id, uint256 _value, bytes _data) external {
+        IDiamond(DIAMOND_ADDRESS).safeTransferFrom(_from, _to, _id, _value, _data);
+    }
 
-// Example: Transferring a single token
-address fromAddress = msg.sender;
-address toAddress = 0xRecipientAddress;
-uint256 tokenId = 1;
-uint256 value = 10;
-bytes data = "";
+    function transferBatchTokens(address _from, address _to, uint256[] memory _ids, uint256[] memory _values, bytes _data) external {
+        IDiamond(DIAMOND_ADDRESS).safeBatchTransferFrom(_from, _to, _ids, _values, _data);
+    }
 
-diamond.safeTransferFrom(fromAddress, toAddress, tokenId, value, data);
-
-// Example: Transferring multiple tokens in a batch
-address[] memory fromAddresses = new address[](1);
-address[] memory toAddresses = new address[](1);
-uint256[] memory tokenIds = new uint256[](1);
-uint256[] memory values = new uint256[](1);
-bytes memory batchData = "";
-
-fromAddresses[0] = msg.sender;
-toAddresses[0] = 0xBatchRecipientAddress;
-tokenIds[0] = 2;
-values[0] = 5;
-
-diamond.safeBatchTransferFrom(fromAddresses, toAddresses, tokenIds, values, batchData);`}
+    /**
+     * @notice Retrieves the function selectors exported by this facet.
+     * @dev This can be used by diamond deployers to discover facet functions.
+     * @return selectors The encoded function selectors.
+     */
+    function discoverSelectors() external view returns (bytes memory selectors) {
+        (selectors) = IDiamond(DIAMOND_ADDRESS).exportSelectors();
+    }
+}
+`}
 </ExpandableCode>
 -->
 
 ## Best Practices
 
 <Callout type="tip" title="Best Practice">
-- Ensure the ERC1155Storage struct is correctly initialized in diamond storage before calling transfer functions.
-- Verify that the caller has appropriate approvals or ownership before executing transfers.
-- Use the `exportSelectors` function during diamond deployment to register the facet's capabilities.
+- Ensure the `ERC1155Storage` struct is correctly initialized in diamond storage before deploying this facet.
+- Verify that the `ERC1155ApproveFacet` is also deployed to manage approvals required for transfers.
+- Call `exportSelectors()` during diamond deployment to register the facet's functions.
 </Callout>
 
 ## Security Considerations
 
 <Callout type="warning" title="Security">
-The `safeTransferFrom` and `safeBatchTransferFrom` functions perform checks before state changes. Reentrancy is mitigated as these functions do not make external calls that could re-enter the facet. Input validation for addresses, token IDs, and values is crucial. Ensure that the `_from` address has sufficient balance and necessary approvals. Errors like `ERC1155InsufficientBalance`, `ERC1155InvalidSender`, `ERC1155InvalidReceiver`, `ERC1155MissingApprovalForAll`, and `ERC1155InvalidArrayLength` are used to revert invalid operations.
+The `safeTransferFrom` and `safeBatchTransferFrom` functions perform checks before state changes and external interactions, mitigating reentrancy risks. Input validation is performed for sender, receiver, and array lengths, reverting with custom errors like `ERC1155InvalidSender` and `ERC1155InvalidArrayLength`. Ensure that the caller has the necessary approvals via `ERC1155ApproveFacet` before invoking transfer functions.
 </Callout>
 
 <div style={{marginTop: "3rem", paddingTop: "2rem", borderTop: "1px solid var(--ifm-color-emphasis-200)"}}>
   <WasThisHelpful pageId="ERC-1155 Transfer Facet" />
 </div>
 
-<LastUpdated date="2026-03-13T01:17:37.734Z" />
+<LastUpdated date="2026-03-13T01:50:34.746Z" />

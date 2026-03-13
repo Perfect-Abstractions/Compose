@@ -1,7 +1,7 @@
 ---
 sidebar_position: 110
 title: "Access Control Admin Module"
-description: "Manage role administrators within diamond storage"
+description: "Manage role administrators using diamond storage"
 sidebar_label: "Module"
 gitSource: "https://github.com/Perfect-Abstractions/Compose/tree/main/src/access/AccessControl/Admin/AccessControlAdminMod.sol"
 ---
@@ -22,14 +22,14 @@ import GradientText from '@site/src/components/ui/GradientText';
 import GradientButton from '@site/src/components/ui/GradientButton';
 
 <DocSubtitle>
-Manage role administrators within diamond storage
+Manage role administrators using diamond storage
 </DocSubtitle>
 
 <Callout type="info" title="Key Features">
-- All functions are `internal`, designed for use within custom facets.
-- Leverages the diamond storage pattern (EIP-8042) for shared state management.
-- No external dependencies, promoting a self-contained design.
-- Emits `RoleAdminChanged` event upon successful modification of role administrators.
+- Internal functions for role administration.
+- Uses the diamond storage pattern for shared state.
+- Emits `RoleAdminChanged` event upon successful administration changes.
+- Reverts with `AccessControlUnauthorizedAccount` for unauthorized calls.
 </Callout>
 
 <Callout type="info" title="Module Usage">
@@ -38,7 +38,7 @@ This module provides internal functions for use in your custom facets. Import it
 
 ## Overview
 
-This module provides internal functions for managing role administrators, crucial for access control within a diamond. Facets can import and utilize these functions to modify role administration rules using the shared diamond storage. Changes to role admin mappings are immediately visible to all facets interacting with the same storage.
+This module provides internal functions for managing role administrators within a diamond. Facets can import this module to set and query role administration relationships, leveraging shared diamond storage. Changes are immediately visible to all facets accessing the same storage.
 
 ## Storage
 
@@ -182,44 +182,54 @@ error AccessControlUnauthorizedAccount(address _account, bytes32 _role);
 {`pragma solidity >=0.8.30;
 
 import {AccessControlAdminMod} from "@compose/access/AccessControl/Admin/AccessControlAdminMod";
-import {AccessControlStorage} from "@compose/access/AccessControl/Admin/AccessControlStorage";
 
 contract MyAccessFacet {
     AccessControlAdminMod internal accessControlAdminMod;
 
-    function initializeAccessControlAdmin(AccessControlStorage storage accessControlStorage) internal {
-        accessControlAdminMod = AccessControlAdminMod(address(this)); // Placeholder, actual diamond initialization required
+    // Assume diamond storage is initialized and passed to the facet.
+    // For demonstration, we instantiate it directly.
+    constructor(address diamondStorageAddress) {
+        // In a real diamond, this would be initialized via the diamond proxy.
+        // For this example, we simulate the module's interaction with storage.
+        // accessControlAdminMod = AccessControlAdminMod(diamondStorageAddress);
     }
 
+    /**
+     * @notice Sets a new admin role for a specific role.
+     * @param _role The role to set the admin for.
+     * @param _adminRole The new admin role.
+     */
     function grantAdminRole(bytes32 _role, bytes32 _adminRole) external {
-        // Assuming caller is authorized to perform this action, or additional checks are in place
-        accessControlAdminMod.setRoleAdmin(_role, _adminRole);
-    }
+        // In a real facet, you would call the module directly:
+        // accessControlAdminMod.setRoleAdmin(_role, _adminRole);
 
-    // Example of how a facet might access storage (implementation detail)
-    function getAccessControlStorage() internal view returns (AccessControlStorage storage) {
-        return accessControlAdminMod.getStorage();
+        // This example simulates the call and event emission.
+        // Actual call would revert if caller is not the current admin.
+        // For demonstration, we assume it succeeds.
+        emit RoleAdminChanged(_role, bytes32(0), _adminRole); // Assuming previous admin was 0
     }
-}`}
+}
+
+`}
 </ExpandableCode>
 -->
 
 ## Best Practices
 
 <Callout type="tip" title="Best Practice">
-- Ensure the caller has the necessary permissions to set admin roles before calling `setRoleAdmin`.
-- Verify the storage layout compatibility when upgrading facets to prevent unexpected behavior.
-- Handle the `AccessControlUnauthorizedAccount` error to gracefully manage unauthorized attempts to change role administrators.
+- Ensure the caller has the necessary permissions before calling `setRoleAdmin`.
+- Verify that the `AccessControlStorage` struct layout remains compatible across diamond upgrades.
+- Handle the `AccessControlUnauthorizedAccount` error when the caller lacks administrative privileges.
 </Callout>
 
 ## Integration Notes
 
 <Callout type="success" title="Shared Storage">
-This module interacts with diamond storage at a specific `STORAGE_POSITION` identified by `keccak2535(\"compose.accesscontrol\")`. The `AccessControlStorage` struct is used to manage role administration. Functions like `setRoleAdmin` directly modify this shared storage. Any facet that accesses the same `AccessControlStorage` via the diamond storage pattern will immediately observe these changes, ensuring consistent state across the diamond.
+This module interacts with the diamond's shared storage at the position identified by `keccak2535("compose.accesscontrol")`. The `AccessControlStorage` struct, though empty in definition, dictates the layout for access control data. Any changes made to role administrators via `setRoleAdmin` are immediately reflected in this shared storage and thus visible to all facets operating on the same diamond storage.
 </Callout>
 
 <div style={{marginTop: "3rem", paddingTop: "2rem", borderTop: "1px solid var(--ifm-color-emphasis-200)"}}>
   <WasThisHelpful pageId="Access Control Admin Module" />
 </div>
 
-<LastUpdated date="2026-03-13T01:21:01.229Z" />
+<LastUpdated date="2026-03-13T01:53:55.650Z" />

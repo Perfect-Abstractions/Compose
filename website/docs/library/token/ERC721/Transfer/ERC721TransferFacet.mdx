@@ -26,15 +26,15 @@ ERC-721 token transfers within a diamond
 </DocSubtitle>
 
 <Callout type="info" title="Key Features">
-- Exposes external functions for ERC-721 token transfers, routed via the diamond proxy.
-- Utilizes internal functions and diamond storage for token management.
-- Supports both standard and safe ERC-721 transfers.
-- Compatible with ERC-2535 diamond standard.
+- Exposes external ERC-721 transfer functions for diamond routing.
+- Internally uses `internalTransferFrom` for core transfer logic and validation.
+- Accesses shared diamond storage for ERC-721 state.
+- Supports `safeTransferFrom` with and without additional data.
 </Callout>
 
 ## Overview
 
-This facet implements ERC-721 token transfers as external functions within a diamond. It routes calls through the diamond proxy, accessing shared storage via internal functions. Developers add this facet to expose ERC-721 transfer functionality while maintaining the diamond's upgradeability.
+This facet provides external functions for ERC-721 token transfers, routed through the diamond proxy. It interacts with shared diamond storage via the `getStorage` internal function. Developers integrate this facet to enable token transfer functionality while preserving diamond's upgradeability.
 
 ## Storage
 
@@ -253,16 +253,34 @@ import {IDiamond} from "@compose/diamond/IDiamond";
 import {ERC721TransferFacet} from "@compose/token/ERC721/Transfer/ERC721TransferFacet";
 
 contract DiamondUser {
-    address constant DIAMOND_ADDRESS = address(0x12345);
+    address immutable diamondAddress;
 
-    function transferERC721Token(address _from, address _to, uint256 _tokenId) external {
-        // Call through the diamond proxy to the ERC721TransferFacet
-        IDiamond(DIAMOND_ADDRESS).transferFrom(_from, _to, _tokenId);
+    constructor(address _diamondAddress) {
+        diamondAddress = _diamondAddress;
     }
 
-    function safeTransferERC721Token(address _from, address _to, uint256 _tokenId, bytes memory _data) external {
-        // Call through the diamond proxy for safe transfer
-        IDiamond(DIAMOND_ADDRESS).safeTransferFrom(_from, _to, _tokenId, _data);
+    /**
+     * @notice Transfers an ERC-721 token from the caller to a recipient.
+     * @dev Assumes the caller has ownership or approval.
+     */
+    function executeTransfer(address _to, uint256 _tokenId) external {
+        IDiamond(diamondAddress).transferFrom(_msgSender(), _to, _tokenId);
+    }
+
+    /**
+     * @notice Safely transfers an ERC-721 token, performing checks on the recipient.
+     * @dev Uses the safeTransferFrom function with additional data.
+     */
+    function executeSafeTransferWithData(address _from, address _to, uint256 _tokenId, bytes memory _data) external {
+        IDiamond(diamondAddress).safeTransferFrom(_from, _to, _tokenId, _data);
+    }
+
+    /**
+     * @notice Gets the selectors exported by this facet.
+     * @dev Useful for diamond upgrade processes.
+     */
+    function getFacetSelectors() external pure returns (bytes memory) {
+        return ERC721TransferFacet.exportSelectors();
     }
 }`}
 </ExpandableCode>
@@ -271,19 +289,19 @@ contract DiamondUser {
 ## Best Practices
 
 <Callout type="tip" title="Best Practice">
-- Ensure the ERC721TransferFacet is correctly initialized within the diamond's deployment process.
-- Enforce necessary ownership and approval checks before calling transfer functions.
-- Verify that the receiver address is capable of handling ERC-721 tokens for `safeTransferFrom` calls.
+- Initialize ERC721 storage correctly before adding this facet.
+- Ensure the caller has the necessary ownership or approval before invoking transfer functions.
+- Verify that receiver contracts implement the ERC721TokenReceiver interface when using `safeTransferFrom`.
 </Callout>
 
 ## Security Considerations
 
 <Callout type="warning" title="Security">
-The `transferFrom`, `safeTransferFrom`, and `safeTransferFrom` functions handle token transfers. These functions utilize internal checks for ownership (`ERC721IncorrectOwner`) and approvals (`ERC721InsufficientApproval`). `safeTransferFrom` also validates receiver capabilities (`ERC721InvalidReceiver`). Follow standard Solidity security practices for input validation and reentrancy protection, especially when integrating with other facets.
+All state-changing functions (`transferFrom`, `safeTransferFrom`) perform checks before state modifications, adhering to the checks-effects-interactions pattern. Reentrancy is mitigated by the diamond's proxy nature and the internal checks. Input validation is performed to prevent transfers of non-existent tokens, incorrect ownership, or to invalid receivers. Errors `ERC721NonexistentToken`, `ERC721IncorrectOwner`, `ERC721InvalidReceiver`, and `ERC721InsufficientApproval` are used to signal failures.
 </Callout>
 
 <div style={{marginTop: "3rem", paddingTop: "2rem", borderTop: "1px solid var(--ifm-color-emphasis-200)"}}>
   <WasThisHelpful pageId="ERC-721 Transfer Facet" />
 </div>
 
-<LastUpdated date="2026-03-13T01:18:44.879Z" />
+<LastUpdated date="2026-03-13T01:51:43.461Z" />

@@ -1,7 +1,7 @@
 ---
 sidebar_position: 200
 title: "ERC-1155 Metadata Facet"
-description: "Manages ERC-1155 token metadata URIs"
+description: "ERC-1155 token metadata and URI management"
 sidebar_label: "Facet"
 gitSource: "https://github.com/Perfect-Abstractions/Compose/tree/main/src/token/ERC1155/Metadata/ERC1155MetadataFacet.sol"
 ---
@@ -22,19 +22,19 @@ import GradientText from '@site/src/components/ui/GradientText';
 import GradientButton from '@site/src/components/ui/GradientButton';
 
 <DocSubtitle>
-Manages ERC-1155 token metadata URIs
+ERC-1155 token metadata and URI management
 </DocSubtitle>
 
 <Callout type="info" title="Key Features">
-- Exposes external `uri(_id)` function for metadata retrieval.
-- Interacts with shared diamond storage for URI management.
-- Exports its selectors for diamond facet discovery.
-- No external dependencies beyond diamond storage.
+- Exposes external `uri` function for token metadata retrieval.
+- Reads from and writes to shared diamond storage for URI management.
+- Compatible with ERC-2535 diamond standard for upgradeability.
+- Exports its selectors for diamond discovery.
 </Callout>
 
 ## Overview
 
-This facet exposes external functions for managing and retrieving ERC-1155 token metadata URIs within a Compose diamond. It interacts with shared diamond storage to access and return base URIs and token-specific URIs, enabling clients to fetch metadata for any token ID. It is designed for integration into ERC-2535 compliant diamonds.
+This facet provides external functions for managing and retrieving ERC-1155 token metadata URIs within a diamond. It accesses shared diamond storage to store and retrieve base URIs and token-specific URIs. Developers integrate this facet to expose ERC-1155 metadata functionality while maintaining diamond upgradeability.
 
 ## Storage
 
@@ -163,31 +163,29 @@ Exports the function selectors of the ERC1155MetadataFacet This function is use 
 {`pragma solidity >=0.8.30;
 
 import {IDiamond} from "@compose/diamond/IDiamond.sol";
-import {ERC1155MetadataFacet} from "@compose/token/ERC1155/Metadata/ERC1155MetadataFacet.sol";
+import {ERC1155MetadataFacet} from "@compose/token/ERC1155/Metadata/ERC1155MetadataFacet";
 
+// Example: Using the ERC1155MetadataFacet within a diamond
 contract DiamondUser {
-    address immutable DIAMOND_ADDRESS;
+    address immutable diamondAddress;
 
-    constructor(address diamondAddress) {
-        DIAMOND_ADDRESS = diamondAddress;
+    constructor(address _diamondAddress) {
+        diamondAddress = _diamondAddress;
     }
 
-    /**
-     * @notice Retrieves the URI for a specific ERC-1155 token ID.
-     * @param _id The token ID for which to retrieve the URI.
-     * @return The metadata URI for the token ID.
-     */
-    function getTokenUri(uint256 _id) external view returns (string memory) {
-        // Call the facet's uri function through the diamond proxy
-        return IDiamond(DIAMOND_ADDRESS).uri(_id);
+    function getTokenUri(uint256 tokenId) public view returns (string memory) {
+        // Calls are routed through the diamond proxy
+        IDiamond diamond = IDiamond(diamondAddress);
+        // The diamond will delegate the call to the ERC1155MetadataFacet
+        return ERC1155MetadataFacet(diamond).uri(tokenId);
     }
 
-    /**
-     * @notice Exports the selectors for this facet.
-     * @return A bytes array of function selectors.
-     */
-    function getFacetSelectors() external pure returns (bytes memory) {
-        return IDiamond(DIAMOND_ADDRESS).exportSelectors();
+    // Note: Setting URIs would typically be handled by an admin facet,
+    // but the ERC1155MetadataFacet itself only exposes the retrieval function.
+    // Example of how selectors might be discovered:
+    function getMetadataSelectors() public pure returns (bytes[] memory) {
+        IDiamond diamond = IDiamond(diamondAddress);
+        return diamond.facetSelectors(address(new ERC1155MetadataFacet()));
     }
 }
 `}
@@ -197,19 +195,19 @@ contract DiamondUser {
 ## Best Practices
 
 <Callout type="tip" title="Best Practice">
-- Ensure the `ERC1155MetadataFacet` is correctly added to the diamond with its selectors.
-- Call `uri(_id)` through the diamond proxy to retrieve token metadata URIs.
-- If concatenation of base URI and token-specific URI is desired, ensure `baseURI` is set in diamond storage.
+- Ensure the `ERC1155MetadataFacet` is correctly added to the diamond during initialization.
+- Access URIs using the `uri(uint256 _id)` function through the diamond proxy.
+- If using the `baseURI` concatenation feature, ensure `baseURI` is set via an appropriate admin facet.
 </Callout>
 
 ## Security Considerations
 
 <Callout type="warning" title="Security">
-The `uri` function is a `view` function and does not modify state, thus posing no reentrancy risk. Input validation for `_id` is handled by the underlying storage access. Ensure that the `baseURI` and token-specific URIs are set appropriately to prevent unintended metadata exposure. Follow standard Solidity security practices.
+The `uri` function is a read-only operation and does not pose reentrancy risks. Input validation for `_id` is handled by the caller or other facets interacting with this facet. Ensure that any facet responsible for setting URIs enforces appropriate access control to prevent unauthorized modifications.
 </Callout>
 
 <div style={{marginTop: "3rem", paddingTop: "2rem", borderTop: "1px solid var(--ifm-color-emphasis-200)"}}>
   <WasThisHelpful pageId="ERC-1155 Metadata Facet" />
 </div>
 
-<LastUpdated date="2026-03-13T01:17:18.085Z" />
+<LastUpdated date="2026-03-13T01:50:15.075Z" />

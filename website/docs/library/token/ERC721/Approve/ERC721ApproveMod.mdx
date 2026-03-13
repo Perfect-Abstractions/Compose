@@ -1,7 +1,7 @@
 ---
 sidebar_position: 210
 title: "ERC-721 Approve Module"
-description: "Manage ERC-721 approvals and operator permissions"
+description: "Manages ERC-721 token approvals and operator status"
 sidebar_label: "Module"
 gitSource: "https://github.com/Perfect-Abstractions/Compose/tree/main/src/token/ERC721/Approve/ERC721ApproveMod.sol"
 ---
@@ -22,14 +22,14 @@ import GradientText from '@site/src/components/ui/GradientText';
 import GradientButton from '@site/src/components/ui/GradientButton';
 
 <DocSubtitle>
-Manage ERC-721 approvals and operator permissions
+Manages ERC-721 token approvals and operator status
 </DocSubtitle>
 
 <Callout type="info" title="Key Features">
-- Provides internal functions for ERC-721 token approval and operator management.
-- Leverages diamond storage (EIP-8042) for state persistence and cross-facet visibility.
-- Emits `Approval` and `ApprovalForAll` events upon state changes.
-- Includes custom errors `ERC721InvalidOperator` and `ERC721NonexistentToken` for specific failure conditions.
+- Provides internal functions for ERC-721 token approvals and operator management.
+- Utilizes the diamond storage pattern (EIP-8042) for shared state.
+- No external dependencies, promoting composability within a diamond.
+- Emits `Approval` and `ApprovalForAll` events upon successful state changes.
 </Callout>
 
 <Callout type="info" title="Module Usage">
@@ -38,7 +38,7 @@ This module provides internal functions for use in your custom facets. Import it
 
 ## Overview
 
-This module provides internal functions to manage ERC-721 token approvals and operator permissions using shared diamond storage. Facets can import this module to interact with the ERC-721 state, ensuring that all operations are consistent across the diamond. Changes made via this module are immediately visible to all facets accessing the same storage.
+This module provides internal functions for managing ERC-721 token approvals and operator status within a diamond. Facets can import this module to interact with shared ERC-721 storage, ensuring consistent state management across the diamond. Changes to approvals and operator statuses are immediately visible to all facets accessing the same diamond storage.
 
 ## Storage
 
@@ -212,48 +212,29 @@ error ERC721NonexistentToken(uint256 _tokenId);
 <ExpandableCode language="solidity" maxLines={20} title="Example Implementation">
 {`pragma solidity >=0.8.30;
 
-import {ERC721ApproveMod} from "@compose/token/ERC721/Approve/ERC721ApproveMod";
+import { ERC721ApproveMod } from "@compose/token/ERC721/Approve/ERC721ApproveMod";
 
-contract MyERC721Facet {
-    ERC721ApproveMod private approveModule;
+contract ERC721Facet {
+    using ERC721ApproveMod for ERC721ApproveMod;
 
-    constructor(address diamondAddress) {
-        // Assuming ERC721ApproveMod is deployed at diamondAddress or accessible via diamond proxy
-        // In a real scenario, you'd typically get the module address from the diamond's registry or facets.
-        approveModule = ERC721ApproveMod(diamondAddress);
+    function grantApproval(address to, uint256 tokenId) external {
+        // Call internal function to grant approval for a specific token
+        ERC721ApproveMod.approve(to, tokenId);
     }
 
-    /**
-     * @notice Approves a specific address to transfer a token.
-     * @param _to The address to approve.
-     * @param _tokenId The ID of the token to approve.
-     */
-    function grantTokenApproval(address _to, uint256 _tokenId) external {
-        // Accessing the internal function through the module
-        approveModule.approve(_to, _tokenId);
+    function grantOperator(address operator, bool approved) external {
+        // Call internal function to approve or revoke operator status for all tokens
+        ERC721ApproveMod.setApprovalForAll(operator, approved);
     }
 
-    /**
-     * @notice Approves an operator to manage all of the caller's tokens.
-     * @param _operator The address to approve as an operator.
-     * @param _approved True to approve, false to revoke.
-     */
-    function setAllTokensApproval(address _operator, bool _approved) external {
-        // Accessing the internal function through the module
-        approveModule.setApprovalForAll(_operator, _approved);
-    }
-
-    /**
-     * @notice Retrieves the ERC721Storage struct pointer.
-     * @return ERC721Storage A pointer to the storage struct.
-     */
-    function getERC721Storage() public pure returns (ERC721Storage) {
-        return approveModule.getStorage();
+    function getERC721Storage() external pure returns (ERC721Storage memory) {
+        // Retrieve a pointer to the shared ERC721 storage
+        return ERC721ApproveMod.getStorage();
     }
 }
 
 struct ERC721Storage {
-    // Storage layout as defined by the module
+
 }`}
 </ExpandableCode>
 -->
@@ -261,19 +242,19 @@ struct ERC721Storage {
 ## Best Practices
 
 <Callout type="tip" title="Best Practice">
-- Ensure appropriate access control is implemented in the calling facet before invoking approval functions.
-- Verify the token ID exists before calling `approve` to avoid `ERC721NonexistentToken` errors.
-- Handle the `ERC721InvalidOperator` error when revoking operator status for non-operators.
+- Call `approve` or `setApprovalForAll` only after verifying caller permissions if required by your facet's logic.
+- Ensure the `ERC721Storage` struct definition in your facet matches the one defined in this module to prevent storage collisions.
+- Handle potential errors like `ERC721NonexistentToken` or `ERC721InvalidOperator` when calling the module's functions.
 </Callout>
 
 ## Integration Notes
 
 <Callout type="success" title="Shared Storage">
-This module utilizes the diamond storage pattern, storing its state at `STORAGE_POSITION` which is identified by `keccak256(\"erc721\")`. The `getStorage()` function provides a pointer to the `ERC721Storage` struct, allowing other facets to read and write to the shared state. Any modifications made to approvals or operator status through this module are immediately reflected and visible to all other facets interacting with the same diamond storage.
+This module interacts with diamond storage at the slot identified by `STORAGE_POSITION`, which is defined as `keccak256(\"erc721\")`. It uses the `ERC721Storage` struct to manage approval data. All state modifications made through this module are written directly to this shared storage slot, making them immediately visible to any other facet within the same diamond that reads from or writes to this storage position.
 </Callout>
 
 <div style={{marginTop: "3rem", paddingTop: "2rem", borderTop: "1px solid var(--ifm-color-emphasis-200)"}}>
   <WasThisHelpful pageId="ERC-721 Approve Module" />
 </div>
 
-<LastUpdated date="2026-03-13T01:17:46.383Z" />
+<LastUpdated date="2026-03-13T01:50:42.682Z" />

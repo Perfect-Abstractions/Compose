@@ -26,10 +26,10 @@ Grant roles to accounts within a diamond
 </DocSubtitle>
 
 <Callout type="info" title="Key Features">
-- Exposes `grantRole` function for assigning roles to accounts.
-- Operates using diamond storage for shared state management.
+- Internal functions for role granting, suitable for custom facets.
+- Leverages the diamond storage pattern for shared state management.
 - Emits `RoleGranted` event upon successful role assignment.
-- Reverts with `AccessControlUnauthorizedAccount` if caller lacks permissions.
+- Reverts with `AccessControlUnauthorizedAccount` if caller lacks admin rights.
 </Callout>
 
 <Callout type="info" title="Module Usage">
@@ -38,7 +38,7 @@ This module provides internal functions for use in your custom facets. Import it
 
 ## Overview
 
-This module provides an internal function to grant roles to accounts, directly interacting with diamond storage. By using this module, facets can manage role assignments consistently across the diamond, ensuring that all facets see the updated role assignments immediately due to the shared storage pattern.
+This module provides internal functions for granting roles to specific accounts. Facets can import and utilize this module to manage role assignments using shared diamond storage. Changes to role assignments are immediately reflected across all facets that access the same storage.
 
 ## Storage
 
@@ -194,115 +194,54 @@ error AccessControlUnauthorizedAccount(address _account, bytes32 _role);
 <ExpandableCode language="solidity" maxLines={20} title="Example Implementation">
 {`pragma solidity >=0.8.30;
 
-import { AccessControlGrantMod } from "@compose/access/AccessControl/Grant/AccessControlGrantMod";
+import @compose/access/AccessControl/Grant/AccessControlGrantMod;
 
 contract AccessControlGrantFacet {
     AccessControlGrantMod internal accessControlGrantMod;
 
     constructor(address _diamondAddress) {
-        // Assuming AccessControlGrantMod is deployed as a facet and its selector is known
-        // In a real scenario, you'd likely get the module address via a registry or diamond ABI
-        // For this example, we'll assume it's directly instantiable for clarity.
-        // In practice, you would call a function like getFacetAddress(selector) on the diamond.
-        // accessControlGrantMod = AccessControlGrantMod(_diamondAddress); // Incorrect, this is a module, not a facet directly callable
-
-        // Correct approach involves calling a diamond function to get module implementation or address
-        // For demonstration, we'll simulate instantiation assuming the diamond provides access
-        // This is a placeholder to show usage, actual integration depends on diamond's access pattern
-        // accessControlGrantMod = AccessControlGrantMod(some_diamond_interface.getFacetAddress(AccessControlGrantMod.grantRole.selector));
-
-        // Simulating direct access to the module's functionality as if it were imported and used internally
-        // In a real diamond, the module's logic would be called via delegatecall through the diamond proxy.
-        // This example simplifies by showing direct function call syntax.
+        accessControlGrantMod = AccessControlGrantMod(_diamondAddress);
     }
 
     /**
      * @notice Grants a role to an account.
-     * @dev This function is intended to be called internally by other facets.
-     * It requires the caller to have the admin role for the target role.
+     * @dev This function calls the internal grantRole function from the AccessControlGrantMod module.
      * @param _role The role to grant.
      * @param _account The account to grant the role to.
-     * @return bool True if the role was granted successfully.
+     * @return True if the role was granted successfully.
      */
     function grantRoleToAccount(bytes32 _role, address _account) external returns (bool) {
-        // In a real diamond, this would be a delegatecall to the module's implementation
-        // We are simulating the call as if the module's functions were directly available.
-        // Ensure the diamond's access control logic (e.g., from OwnerDataMod) permits this operation.
-
-        // Placeholder for actual module call:
-        // AccessControlGrantMod module = AccessControlGrantMod(diamond.getFacet(AccessControlGrantMod.grantRole.selector));
-        // return module.grantRole(_role, _account);
-
-        // Simplified direct call simulation for documentation purposes:
-        // return AccessControlGrantMod.grantRole(_role, _account); // This line would not compile in a facet without a module instance
-
-        // For a true facet consuming a module: The module's functions are typically internal helpers.
-        // The facet would call these internal helpers, which then interact with diamond storage.
-        // The internal functions of the module would directly read/write diamond storage.
-
-        // Example of calling an internal helper function provided by the module (if it were structured that way):
-        // return _grantRoleInternal(_role, _account);
-
-        // Since AccessControlGrantMod functions are external/public in the provided signature,
-        // and are meant to be called through the diamond proxy, we simulate that call.
-        // Assume \`self.diamond.call(AccessControlGrantMod.grantRole.selector, _role, _account)\` or similar.
-
-        // Mocking the behavior for documentation:
-        // In a real scenario, the diamond proxy routes this call.
-        // The actual call would look like \`AccessControlGrantMod.grantRole(_role, _account)\` if the module was imported and its functions were internal to the facet.
-        // However, given the module pattern, the facet interacts with the diamond, which then dispatches to the module's logic.
-
-        // To demonstrate the *effect* of the module's function:
-        // If the caller has the admin role for _role, grant the role.
-        // This is a conceptual representation.
-
-        // Actual implementation within a facet calling the module via diamond proxy:
-        // (bytes4 selector = AccessControlGrantMod.grantRole.selector;)
-        // (bool success, bytes memory data) = address(diamond).call(abi.encodeWithSelector(selector, _role, _account));
-        // require(success, "Grant role failed");
-        // return abi.decode(data, (bool));
-
-        // For this example, we represent the core action the module enables:
-        // This simulation assumes the module's logic is accessible and executed.
-        bool granted = false;
-        // Simulate the outcome of grantRole
-        if (_role == keccak256("admin") && _account != address(0)) {
-            granted = true;
-        }
-        // Emit event if successful (event is emitted by the module itself)
-        // RoleGranted(_role, _account, msg.sender);
-        return granted;
+        // AccessControlUnauthorizedAccount error is handled by the caller in a real scenario
+        return accessControlGrantMod.grantRole(_role, _account);
     }
 
-    // Example of accessing storage (if needed by the facet)
-    function getAccessControlStorage() pure external returns (AccessControlStorage) {
-        // In a real scenario, this would fetch storage via the diamond proxy.
-        // return AccessControlGrantMod.getStorage();
-        return AccessControlStorage({});
+    /**
+     * @notice Retrieves the AccessControl storage layout.
+     * @return The AccessControlStorage struct.
+     */
+    function getAccessControlStorage() external pure returns (AccessControlGrantMod.AccessControlStorage memory) {
+        return accessControlGrantMod.getStorage();
     }
-}
-
-struct AccessControlStorage {}
-`}
+}`}
 </ExpandableCode>
 -->
 
 ## Best Practices
 
 <Callout type="tip" title="Best Practice">
-- Ensure the caller of `grantRole` possesses the necessary administrative privileges for the specified role before invoking this function.
-- Verify that the diamond's storage layout is compatible with `AccessControlStorage` before upgrading or adding new facets.
-- Handle the `AccessControlUnauthorizedAccount` error gracefully in off-chain applications or by implementing appropriate checks within calling facets.
+- Ensure the caller has the necessary administrative permissions before invoking `grantRole`.
+- Handle the `AccessControlUnauthorizedAccount` error appropriately in calling facets.
+- Verify that the `AccessControlGrantMod` module is initialized with the correct diamond storage position.
 </Callout>
 
 ## Integration Notes
 
 <Callout type="success" title="Shared Storage">
-This module interacts with diamond storage at a specific position, identified by `STORAGE_POSITION` and keyed by `keccak256("compose.accesscontrol")`. The `AccessControlStorage` struct defines the layout for this storage. Any facet that imports or uses this module, or any other facet that reads from or writes to the same storage position, will observe changes made by `grantRole` immediately. The `grantRole` function's access control logic relies on the presence of an administrator role, which is assumed to be managed by other related modules like `OwnerDataMod`.
+This module interacts with diamond storage at a predefined `STORAGE_POSITION` identified by `keccak2535("compose.accesscontrol")`. The `grantRole` function directly modifies the shared `AccessControlStorage` struct, making role assignments immediately visible to all facets accessing this storage. The `getStorage` function provides access to the current storage layout without modifying state.
 </Callout>
 
 <div style={{marginTop: "3rem", paddingTop: "2rem", borderTop: "1px solid var(--ifm-color-emphasis-200)"}}>
   <WasThisHelpful pageId="Access Control Grant Module" />
 </div>
 
-<LastUpdated date="2026-03-13T01:21:41.719Z" />
+<LastUpdated date="2026-03-13T01:54:31.467Z" />

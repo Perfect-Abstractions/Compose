@@ -1,7 +1,7 @@
 ---
 sidebar_position: 110
 title: "Owner Renounce Module"
-description: "Renounce contract ownership to address(0)"
+description: "Renounces contract ownership to address(0)"
 sidebar_label: "Module"
 gitSource: "https://github.com/Perfect-Abstractions/Compose/tree/main/src/access/Owner/Renounce/OwnerRenounceMod.sol"
 ---
@@ -22,14 +22,14 @@ import GradientText from '@site/src/components/ui/GradientText';
 import GradientButton from '@site/src/components/ui/GradientButton';
 
 <DocSubtitle>
-Renounce contract ownership to address(0)
+Renounces contract ownership to address(0)
 </DocSubtitle>
 
 <Callout type="info" title="Key Features">
-- All functions are `internal` for use within custom facets.
-- Uses diamond storage pattern (EIP-8042) for owner state.
-- No external dependencies or `using` directives.
-- Compatible with ERC-2535 diamonds.
+- Provides ERC-173 ownership renouncement functionality.
+- Sets owner to address(0) to disable owner-specific access.
+- Uses diamond storage pattern via `STORAGE_POSITION`.
+- Internal functions for facet integration.
 </Callout>
 
 <Callout type="info" title="Module Usage">
@@ -38,7 +38,7 @@ This module provides internal functions for use in your custom facets. Import it
 
 ## Overview
 
-This module provides logic to renounce ownership of a diamond, setting the owner to address(0). This action disables functions restricted to the owner. Changes are applied directly to the shared diamond storage, making them immediately visible to all facets.
+This module provides logic to renounce ownership of a contract, setting the owner to address(0). This action disables all functions restricted to the owner. Facets import this module to manage ownership transitions within the diamond's shared storage.
 
 ## Storage
 
@@ -136,31 +136,13 @@ error OwnerUnauthorizedAccount();
 <ExpandableCode language="solidity" maxLines={20} title="Example Implementation">
 {`pragma solidity >=0.8.30;
 
-import {OwnerRenounceMod, OwnerStorage} from "@compose/access/Owner/Renounce/OwnerRenounceMod";
+import @compose/access/Owner/Renounce/OwnerRenounceMod;
 
-contract MyOwnerFacet {
-    OwnerRenounceMod internal ownerRenounceModule;
+contract OwnerFacet {
+    using OwnerRenounceMod for OwnerRenounceMod;
 
-    constructor(address ownerRenounceModAddress) {
-        ownerRenounceModule = OwnerRenounceMod(ownerRenounceModAddress);
-    }
-
-    /**
-     * @notice Renounces ownership of the diamond.
-     */
-    function renounceDiamondOwnership() external {
-        // Call the internal function to renounce ownership
-        ownerRenounceModule.renounceOwnership();
-    }
-
-    /**
-     * @notice Retrieves the current owner address from storage.
-     * @return owner The current owner address.
-     */
-    function getCurrentOwner() external view returns (address owner) {
-        // Access storage directly via the module's getter
-        OwnerStorage storage ownerData = ownerRenounceModule.getStorage();
-        return ownerData.owner;
+    function renounceContractOwnership() external {
+        OwnerRenounceMod.renounceOwnership();
     }
 }`}
 </ExpandableCode>
@@ -169,19 +151,19 @@ contract MyOwnerFacet {
 ## Best Practices
 
 <Callout type="tip" title="Best Practice">
-- Call `renounceOwnership` only when the intention is to permanently relinquish ownership.
-- Ensure any calling facet has appropriate access control to prevent unauthorized renouncement.
-- Verify the owner address is `address(0)` after calling to confirm successful renouncement.
+- Call `renounceOwnership` only when a permanent transfer of control is intended.
+- Ensure all critical owner-only functions are migrated or disabled before renouncing.
+- Verify that the diamond's storage layout for ownership is compatible with ERC-173 semantics.
 </Callout>
 
 ## Integration Notes
 
 <Callout type="success" title="Shared Storage">
-This module interacts with the diamond's shared storage at `STORAGE_POSITION`, which is identified by `keccak256("erc173.owner")`. It directly reads and writes to the `owner` field within the `OwnerStorage` struct. Any facet that reads from this storage position will observe the change immediately after `renounceOwnership` is called. The module's `getStorage()` function provides a view of this shared state.
+This module interacts with diamond storage at the `STORAGE_POSITION` defined for ERC-173 ownership. It reads and writes the `owner` field within the `OwnerStorage` struct. When `renounceOwnership` is called, the `owner` state variable in this storage slot is updated to `address(0)`, making it immediately visible to all facets accessing the same storage slot. This action effectively revokes all owner privileges.
 </Callout>
 
 <div style={{marginTop: "3rem", paddingTop: "2rem", borderTop: "1px solid var(--ifm-color-emphasis-200)"}}>
   <WasThisHelpful pageId="Owner Renounce Module" />
 </div>
 
-<LastUpdated date="2026-03-13T01:20:11.107Z" />
+<LastUpdated date="2026-03-13T01:53:06.066Z" />

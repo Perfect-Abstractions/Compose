@@ -1,7 +1,7 @@
 ---
 sidebar_position: 110
 title: "Access Control Grant Batch Module"
-description: "Grant roles to multiple accounts atomically"
+description: "Grant roles to multiple accounts efficiently"
 sidebar_label: "Module"
 gitSource: "https://github.com/Perfect-Abstractions/Compose/tree/main/src/access/AccessControl/Batch/Grant/AccessControlGrantBatchMod.sol"
 ---
@@ -22,14 +22,14 @@ import GradientText from '@site/src/components/ui/GradientText';
 import GradientButton from '@site/src/components/ui/GradientButton';
 
 <DocSubtitle>
-Grant roles to multiple accounts atomically
+Grant roles to multiple accounts efficiently
 </DocSubtitle>
 
 <Callout type="info" title="Key Features">
-- Grants roles to multiple accounts in a single transaction.
-- Functions are `internal` for use within custom facets.
-- Utilizes diamond storage for role management.
-- Emits `RoleGranted` events for each account granted a role.
+- Internal functions for composability within facets.
+- Efficient batch granting of roles to multiple accounts.
+- Utilizes diamond storage for shared state management.
+- No external dependencies, promoting a self-contained design.
 </Callout>
 
 <Callout type="info" title="Module Usage">
@@ -38,7 +38,7 @@ This module provides internal functions for use in your custom facets. Import it
 
 ## Overview
 
-This module provides atomic role granting to multiple accounts, reducing gas costs and transaction complexity. Facets import this module to manage roles using shared diamond storage. Changes made through this module are immediately visible to all facets using the same storage pattern.
+This module provides an internal function for granting roles to multiple accounts in a single transaction, reducing gas costs and complexity. Facets can import this module to manage role assignments using shared diamond storage. Changes made through this module are immediately visible to all facets interacting with the same access control storage.
 
 ## Storage
 
@@ -181,22 +181,30 @@ error AccessControlUnauthorizedAccount(address _account, bytes32 _role);
 <ExpandableCode language="solidity" maxLines={20} title="Example Implementation">
 {`pragma solidity >=0.8.30;
 
-import {AccessControlGrantBatchMod} from "@compose/access/AccessControl/Batch/Grant/AccessControlGrantBatchMod";
+import @compose/access/AccessControl/Batch/Grant/AccessControlGrantBatchMod;
 
-contract AccessControlFacet {
-    AccessControlGrantBatchMod private accessControlGrantBatchMod;
+contract MyAccessFacet {
+    AccessControlGrantBatchMod internal accessControlGrantBatchMod;
 
-    constructor(address _diamondAddress) {
-        accessControlGrantBatchMod = AccessControlGrantBatchMod(_diamondAddress);
+    constructor(address accessControlGrantBatchModAddress) {
+        accessControlGrantBatchMod = AccessControlGrantBatchMod(accessControlGrantBatchModAddress);
     }
 
     /**
-     * @notice Grants a specific role to multiple accounts.
-     * @dev Uses the AccessControlGrantBatchMod module for atomic granting.
+     * @notice Grants a role to multiple accounts.
+     * @param _role The role to grant.
+     * @param _accounts An array of addresses to grant the role to.
      */
-    function grantAdminRoleToUsers(address[] memory _users) external {
-        bytes32 adminRole = keccak256("COMPOSE_ADMIN_ROLE"); // Example role
-        accessControlGrantBatchMod.grantRoleBatch(adminRole, _users);
+    function grantAdminRoles(bytes32 _role, address[] calldata _accounts) external {
+        accessControlGrantBatchMod.grantRoleBatch(_role, _accounts);
+    }
+
+    /**
+     * @notice Retrieves the AccessControl storage struct.
+     * @return AccessControlStorage The storage struct.
+     */
+    function getAccessControlStorage() external pure returns (AccessControlStorage) {
+        return accessControlGrantBatchMod.getStorage();
     }
 }
 `}
@@ -207,18 +215,18 @@ contract AccessControlFacet {
 
 <Callout type="tip" title="Best Practice">
 - Ensure the caller has the necessary permissions to grant roles before invoking `grantRoleBatch`.
-- Verify that the `AccessControlStorage` slot is correctly initialized before using this module.
+- Verify that the `AccessControlStorage` struct definition in your diamond is compatible with this module.
 - Handle the `AccessControlUnauthorizedAccount` error, which is reverted if the caller lacks the required role.
 </Callout>
 
 ## Integration Notes
 
 <Callout type="success" title="Shared Storage">
-This module interacts with diamond storage at the `STORAGE_POSITION` defined by `keccak256("compose.accesscontrol")`. It reads from and writes to the shared `AccessControlStorage` struct. All changes to roles made via `grantRoleBatch` are immediately reflected in the diamond's shared storage and are visible to all facets accessing that storage.
+This module interacts with diamond storage at the position identified by `keccak2535(\"compose.accesscontrol\")`. The `AccessControlStorage` struct is accessed and modified by the `grantRoleBatch` function. Any updates to role assignments are immediately reflected across all facets that read from this shared storage position. The `getStorage` function provides direct access to this storage for inspection or compatibility checks.
 </Callout>
 
 <div style={{marginTop: "3rem", paddingTop: "2rem", borderTop: "1px solid var(--ifm-color-emphasis-200)"}}>
   <WasThisHelpful pageId="Access Control Grant Batch Module" />
 </div>
 
-<LastUpdated date="2026-03-13T01:21:52.054Z" />
+<LastUpdated date="2026-03-13T01:54:43.664Z" />

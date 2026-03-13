@@ -1,7 +1,7 @@
 ---
 sidebar_position: 1
 title: "ERC-6909 Facet"
-description: "ERC-6909 token transfers and approvals within a diamond"
+description: "ERC-6909 token functionality within a diamond"
 sidebar_label: "Facet"
 gitSource: "https://github.com/Perfect-Abstractions/Compose/tree/main/src/token/ERC6909/ERC6909/ERC6909Facet.sol"
 ---
@@ -22,19 +22,19 @@ import GradientText from '@site/src/components/ui/GradientText';
 import GradientButton from '@site/src/components/ui/GradientButton';
 
 <DocSubtitle>
-ERC-6909 token transfers and approvals within a diamond
+ERC-6909 token functionality within a diamond
 </DocSubtitle>
 
 <Callout type="info" title="Key Features">
-- Exposes ERC-6909 compliant external functions for token management.
-- Utilizes diamond storage for shared state access.
-- Supports transfers, allowances, operator status, and approvals.
-- Integrates seamlessly into the ERC-2535 diamond standard.
+- Implements ERC-6909 token transfer and approval functions.
+- Utilizes diamond storage for shared state management.
+- Exposes external functions for direct diamond interaction.
+- No external dependencies beyond diamond proxy and storage.
 </Callout>
 
 ## Overview
 
-This facet implements ERC-6909 token functionality, exposing external functions for transfers, approvals, and operator management within a diamond. It accesses shared diamond storage, enabling composability and upgradeability. Developers integrate this facet to provide token capabilities through the diamond proxy.
+This facet implements ERC-6909 token functionality as external functions callable through a diamond proxy. It accesses shared diamond storage to manage token balances, allowances, and operator approvals. Developers integrate this facet to expose token operations while leveraging the diamond's upgradeability and composability.
 
 ## Storage
 
@@ -461,30 +461,30 @@ error ERC6909InvalidSpender(address _spender);
 <ExpandableCode language="solidity" maxLines={20} title="Example Implementation">
 {`pragma solidity >=0.8.30;
 
+import {IDiamond} from "@compose/diamond/IDiamond";
 import {ERC6909Facet} from "@compose/token/ERC6909/ERC6909/ERC6909Facet";
-import {IDiamond} from "@compose/diamond/core/IDiamond";
 
-// Example: Using the ERC6909Facet within a diamond
-contract DiamondUser {
-    address immutable DIAMOND_ADDRESS;
+contract ExampleDiamondUser {
+    address public diamondAddress;
 
-    constructor(address diamondAddress) {
-        DIAMOND_ADDRESS = diamondAddress;
+    constructor(address _diamondAddress) {
+        diamondAddress = _diamondAddress;
     }
 
-    function performTransfer(address _receiver, uint256 _id, uint256 _amount) external {
-        // Calls are routed through the diamond proxy to the ERC6909Facet
-        IDiamond(DIAMOND_ADDRESS).transfer(_receiver, _id, _amount);
+    function transferToken(address _receiver, uint256 _id, uint256 _amount) external {
+        IDiamond(diamondAddress).transfer(_receiver, _id, _amount);
     }
 
-    function setTokenOperator(address _spender, bool _approved) external {
-        // Calls are routed through the diamond proxy to the ERC6909Facet
-        IDiamond(DIAMOND_ADDRESS).setOperator(_spender, _approved);
+    function approveToken(address _spender, uint256 _id, uint256 _amount) external {
+        IDiamond(diamondAddress).approve(_spender, _id, _amount);
     }
 
-    function checkBalance(address _owner, uint256 _id) external view returns (uint256) {
-        // Calls are routed through the diamond proxy to the ERC6909Facet
-        return IDiamond(DIAMOND_ADDRESS).balanceOf(_owner, _id);
+    function getBalance(address _owner, uint256 _id) external view returns (uint256) {
+        return IDiamond(diamondAddress).balanceOf(_owner, _id);
+    }
+
+    function setOperatorStatus(address _spender, bool _approved) external {
+        IDiamond(diamondAddress).setOperator(_spender, _approved);
     }
 }`}
 </ExpandableCode>
@@ -493,19 +493,19 @@ contract DiamondUser {
 ## Best Practices
 
 <Callout type="tip" title="Best Practice">
-- Ensure the ERC6909Storage struct is correctly placed in diamond storage.
-- Grant necessary role permissions before calling state-changing functions like `transfer` or `approve`.
-- Verify compatibility with other token facets, such as `ERC1155ApproveFacet`, before upgrading.
+- Initialize ERC6909 storage correctly before calling any state-changing functions.
+- Ensure the caller has sufficient balance or allowance before attempting transfers.
+- Verify that operator approvals are managed securely and revoked when necessary.
 </Callout>
 
 ## Security Considerations
 
 <Callout type="warning" title="Security">
-Functions like `transfer` and `transferFrom` perform checks before state effects. Input parameters must be validated to prevent unexpected behavior. Use `approve` and `setOperator` cautiously to manage token access. Reentrancy is mitigated by the checks-effects-interactions pattern. Ensure proper access control is enforced by the diamond's ownership or role management.
+The `transfer` and `transferFrom` functions check for sufficient balance and allowance before executing state changes, adhering to a checks-effects-interactions pattern. Input validation is performed to prevent invalid receivers or senders. Reentrancy is mitigated by the checks-effects-interactions pattern. Operator approvals are managed via `setOperator` and checked in `transferFrom`. All state-changing functions are intended to be called through a diamond proxy, inheriting its access control mechanisms.
 </Callout>
 
 <div style={{marginTop: "3rem", paddingTop: "2rem", borderTop: "1px solid var(--ifm-color-emphasis-200)"}}>
   <WasThisHelpful pageId="ERC-6909 Facet" />
 </div>
 
-<LastUpdated date="2026-03-13T01:19:59.462Z" />
+<LastUpdated date="2026-03-13T01:52:54.834Z" />

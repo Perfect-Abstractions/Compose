@@ -1,7 +1,7 @@
 ---
 sidebar_position: 100
 title: "Access Control Admin Facet"
-description: "Manages role administration for access control"
+description: "Manages roles and their administrative roles"
 sidebar_label: "Facet"
 gitSource: "https://github.com/Perfect-Abstractions/Compose/tree/main/src/access/AccessControl/Admin/AccessControlAdminFacet.sol"
 ---
@@ -22,19 +22,19 @@ import GradientText from '@site/src/components/ui/GradientText';
 import GradientButton from '@site/src/components/ui/GradientButton';
 
 <DocSubtitle>
-Manages role administration for access control
+Manages roles and their administrative roles
 </DocSubtitle>
 
 <Callout type="info" title="Key Features">
-- Manages role-to-admin role mappings.
-- Emits `RoleAdminChanged` event upon successful updates.
-- Reverts with `AccessControlUnauthorizedAccount` if caller lacks permission.
-- Provides `exportSelectors` for diamond registration.
+- Manages role-to-admin-role mappings in diamond storage.
+- Exposes functions for role administration and selector export.
+- Reverts with `AccessControlUnauthorizedAccount` if caller lacks permissions.
+- Compatible with ERC-2535 diamond standard.
 </Callout>
 
 ## Overview
 
-This facet exposes functions to manage role administration within a diamond. It allows setting the admin role for existing roles and exporting its selectors. Calls are routed through the diamond proxy, and it interacts with shared diamond storage via modules.
+This facet provides administrative functions for managing roles within a diamond's access control system. It allows setting administrative roles for specific roles and exporting the facet's selectors. Calls are routed through the diamond proxy, accessing shared storage for role configurations.
 
 ## Storage
 
@@ -175,52 +175,57 @@ error AccessControlUnauthorizedAccount(address _account, bytes32 _role);
 <ExpandableCode language="solidity" maxLines={20} title="Example Implementation">
 {`pragma solidity >=0.8.30;
 
-import { IDiamond } from "@compose/contracts/diamond/IDiamond.sol";
-import { AccessControlAdminFacet } from "@compose/access/AccessControl/Admin/AccessControlAdminFacet.sol";
+import { IDiamond } from "@compose/diamond/IDiamond";
+import { AccessControlAdminFacet } from "@compose/access/AccessControl/Admin/AccessControlAdminFacet";
 
-contract DiamondDeploy {
-    address immutable diamondAddress;
+contract AccessControlAdminUser {
+    address public diamondAddress;
 
     constructor(address _diamondAddress) {
         diamondAddress = _diamondAddress;
     }
 
-    function setAdminRoleForDefaultAdmin() external {
-        IDiamond diamond = IDiamond(diamondAddress);
-        // Assuming 'DEFAULT_ADMIN_ROLE' and 'ROLE_ADMIN' are predefined bytes32 constants
-        // In a real scenario, these would be obtained or defined elsewhere.
-        bytes32 DEFAULT_ADMIN_ROLE = keccak256("DEFAULT_ADMIN_ROLE");
-        bytes32 ROLE_ADMIN = keccak256("ROLE_ADMIN");
-
-        // Call the facet function through the diamond proxy
-        diamond.setRoleAdmin(DEFAULT_ADMIN_ROLE, ROLE_ADMIN);
+    /**
+     * @notice Sets the admin role for a specific role.
+     * @param _role The role to set the admin for.
+     * @param _adminRole The new admin role for the specified role.
+     */
+    function setAdminRole(bytes32 _role, bytes32 _adminRole) external {
+        IDiamond(diamondAddress).setRoleAdmin(_role, _adminRole);
     }
 
-    function exportAdminSelectors() external pure returns (bytes memory) {
-        // Instantiate the facet to call its pure function
-        AccessControlAdminFacet adminFacet = AccessControlAdminFacet(address(0)); // Address is irrelevant for pure functions
-        return adminFacet.exportSelectors();
+    /**
+     * @notice Retrieves the selectors exposed by the AccessControlAdminFacet.
+     * @return selectors The encoded selectors.
+     */
+    function getAdminSelectors() external pure returns (bytes memory selectors) {
+        // Note: In a real diamond, this would be called via the diamond proxy.
+        // For demonstration, we call directly, assuming the facet is deployed independently.
+        // In a diamond, you would use: IDiamond(diamondAddress).exportSelectors();
+        // This example directly calls the facet's function to show its output.
+        selectors = AccessControlAdminFacet.exportSelectors();
     }
-}`}
+}
+`}
 </ExpandableCode>
 -->
 
 ## Best Practices
 
 <Callout type="tip" title="Best Practice">
-- Initialize role admin relationships during diamond deployment.
-- Ensure the caller possesses the necessary role to call `setRoleAdmin`.
-- Verify the `exportSelectors` output for accurate facet registration.
+- Initialize role admin configurations during diamond deployment.
+- Ensure the caller has the necessary permissions to set role administrators.
+- Verify storage compatibility before upgrading facets to prevent state corruption.
 </Callout>
 
 ## Security Considerations
 
 <Callout type="warning" title="Security">
-The `setRoleAdmin` function is protected by an access control check, reverting with `AccessControlUnauthorizedAccount` if the caller is not the current admin of the role being modified. Input validation is handled by the underlying access control mechanisms. Follow standard Solidity security practices for diamond deployments and interactions.
+All state-changing functions, such as `setRoleAdmin`, are protected by access control checks, reverting with `AccessControlUnauthorizedAccount` if the caller is not the current admin of the role. Input validation is performed by the underlying access control logic. Follow standard Solidity security practices for external calls and state management.
 </Callout>
 
 <div style={{marginTop: "3rem", paddingTop: "2rem", borderTop: "1px solid var(--ifm-color-emphasis-200)"}}>
   <WasThisHelpful pageId="Access Control Admin Facet" />
 </div>
 
-<LastUpdated date="2026-03-13T01:21:04.529Z" />
+<LastUpdated date="2026-03-13T01:54:00.085Z" />
