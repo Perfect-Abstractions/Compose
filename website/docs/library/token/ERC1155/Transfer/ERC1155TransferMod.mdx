@@ -1,7 +1,7 @@
 ---
 sidebar_position: 210
 title: "ERC-1155 Transfer Module"
-description: "Handles ERC-1155 safe transfers and batch transfers"
+description: "Manages ERC-1155 token transfers within a diamond"
 sidebar_label: "Module"
 gitSource: "https://github.com/Perfect-Abstractions/Compose/tree/main/src/token/ERC1155/Transfer/ERC1155TransferMod.sol"
 ---
@@ -22,14 +22,14 @@ import GradientText from '@site/src/components/ui/GradientText';
 import GradientButton from '@site/src/components/ui/GradientButton';
 
 <DocSubtitle>
-Handles ERC-1155 safe transfers and batch transfers
+Manages ERC-1155 token transfers within a diamond
 </DocSubtitle>
 
 <Callout type="info" title="Key Features">
-- Implements ERC-1155 `safeTransferFrom` and `safeBatchTransferFrom` logic.
-- All functions are `internal`, designed for use by other facets.
-- Leverages diamond storage for persistent state management.
-- Includes necessary validation for ERC-1155 transfers.
+- Implements `safeTransferFrom` and `safeBatchTransferFrom` adhering to EIP-1155.
+- Uses diamond storage for persistent token balance management.
+- Emits `TransferSingle` and `TransferBatch` events upon successful transfers.
+- Includes robust error checking for invalid inputs and state conditions.
 </Callout>
 
 <Callout type="info" title="Module Usage">
@@ -38,7 +38,7 @@ This module provides internal functions for use in your custom facets. Import it
 
 ## Overview
 
-This module provides internal functions for executing ERC-1155 safe transfers and batch transfers. Facets can import this module to manage token movements, interacting with shared diamond storage to update balances. It enforces ERC-1155 compliance, including validation for approvals and receiver contracts.
+This module implements core ERC-1155 transfer logic, enabling facets to move multiple token types between addresses. It leverages diamond storage for token balances, ensuring consistency across all facets. By adhering to EIP-1155 safe transfer requirements, it provides a secure foundation for complex token interactions within a diamond.
 
 ## Storage
 
@@ -353,11 +353,27 @@ error ERC1155MissingApprovalForAll(address _operator, address _owner);
 {`pragma solidity >=0.8.30;
 
 import {ERC1155TransferMod} from "@compose/token/ERC1155/Transfer/ERC1155TransferMod";
+import {ERC1155Storage} from "@compose/token/ERC1155/Storage/ERC1155Storage";
 
 contract ERC1155TransferFacet {
-    ERC1155TransferMod internal transferModule;
+    using ERC1155TransferMod for ERC1155Storage;
 
-    // Assume transferModule is initialized with diamond storage
+    function transferTokens(
+        address _from,
+        address _to,
+        uint256[] memory _ids,
+        uint256[] memory _values,
+        address _operator
+    ) external {
+        ERC1155Storage storage erc1155Storage = ERC1155TransferMod.getStorage();
+        erc1155Storage.safeBatchTransferFrom(
+            _from,
+            _to,
+            _ids,
+            _values,
+            _operator
+        );
+    }
 
     function transferSingleToken(
         address _from,
@@ -366,19 +382,14 @@ contract ERC1155TransferFacet {
         uint256 _value,
         address _operator
     ) external {
-        // Call the internal module function to perform the transfer
-        transferModule.safeTransferFrom(_from, _to, _id, _value, _operator);
-    }
-
-    function transferBatchTokens(
-        address _from,
-        address _to,
-        uint256[] memory _ids,
-        uint256[] memory _values,
-        address _operator
-    ) external {
-        // Call the internal module function to perform the batch transfer
-        transferModule.safeBatchTransferFrom(_from, _to, _ids, _values, _operator);
+        ERC1155Storage storage erc1155Storage = ERC1155TransferMod.getStorage();
+        erc1155Storage.safeTransferFrom(
+            _from,
+            _to,
+            _id,
+            _value,
+            _operator
+        );
     }
 }`}
 </ExpandableCode>
@@ -387,19 +398,19 @@ contract ERC1155TransferFacet {
 ## Best Practices
 
 <Callout type="tip" title="Best Practice">
-- Ensure caller has necessary approvals before invoking transfer functions.
-- Verify receiver contract implements ERC1155TokenReceiver if it is a contract address.
-- Handle potential errors such as `ERC1155InsufficientBalance` or `ERC1155InvalidArrayLength`.
+- Ensure necessary approvals are granted using `ERC1155ApproveMod` before calling transfer functions.
+- Verify that the `_to` address is a valid receiver, especially if it's a contract, to prevent unexpected behavior.
+- Handle the `ERC1155InsufficientBalance`, `ERC1155InvalidArrayLength`, `ERC1155InvalidReceiver`, `ERC1155InvalidSender`, and `ERC1155MissingApprovalForAll` errors appropriately.
 </Callout>
 
 ## Integration Notes
 
 <Callout type="success" title="Shared Storage">
-This module interacts with diamond storage at the `keccak256("erc1155")` slot, managed by the `ERC1155Storage` struct. Functions within this module read from and write to this shared storage. Any updates to token balances made via `safeTransferFrom` or `safeBatchTransferFrom` are immediately reflected for all facets accessing the same diamond storage.
+This module interacts with diamond storage at the slot identified by `keccak256(\"erc1155\")`. The `getStorage()` function provides direct access to the `ERC1155Storage` struct, which holds all token balance information. Any modifications to balances made by `safeTransferFrom` or `safeBatchTransferFrom` are immediately reflected in this shared storage, visible to all facets accessing the same storage slot.
 </Callout>
 
 <div style={{marginTop: "3rem", paddingTop: "2rem", borderTop: "1px solid var(--ifm-color-emphasis-200)"}}>
   <WasThisHelpful pageId="ERC-1155 Transfer Module" />
 </div>
 
-<LastUpdated date="2026-03-13T01:17:41.336Z" />
+<LastUpdated date="2026-03-13T01:50:38.950Z" />

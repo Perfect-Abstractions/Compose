@@ -1,7 +1,7 @@
 ---
 sidebar_position: 110
 title: "Owner Transfer Module"
-description: "ERC-173 ownership transfer logic for diamonds"
+description: "Manages ERC-173 ownership transfer and renouncement"
 sidebar_label: "Module"
 gitSource: "https://github.com/Perfect-Abstractions/Compose/tree/main/src/access/Owner/Transfer/OwnerTransferMod.sol"
 ---
@@ -22,14 +22,14 @@ import GradientText from '@site/src/components/ui/GradientText';
 import GradientButton from '@site/src/components/ui/GradientButton';
 
 <DocSubtitle>
-ERC-173 ownership transfer logic for diamonds
+Manages ERC-173 ownership transfer and renouncement
 </DocSubtitle>
 
 <Callout type="info" title="Key Features">
-- Implements ERC-173 ownership transfer logic.
-- Uses diamond storage pattern for ownership state.
-- `transferOwnership` function is internal and requires facet-level authorization.
-- Emits `OwnershipTransferred` event upon successful transfer.
+- Manages ERC-173 ownership transfers and renouncements.
+- Operates on shared diamond storage, ensuring cross-facet visibility.
+- Provides `internal` functions for integration within custom facets.
+- Reverts with `OwnerUnauthorizedAccount` if ownership rules are violated.
 </Callout>
 
 <Callout type="info" title="Module Usage">
@@ -38,7 +38,7 @@ This module provides internal functions for use in your custom facets. Import it
 
 ## Overview
 
-This module provides ERC-173 ownership transfer functionality, enabling diamonds to manage ownership securely. Facets can import this module to manage ownership changes and check current ownership using shared diamond storage. Changes are immediately visible to all facets interacting with the same storage.
+This module provides core ERC-173 ownership transfer logic, enabling diamonds to manage ownership securely. Facets can use its internal functions to transfer ownership or renounce it, ensuring clear accountability within the diamond. Changes to ownership are immediately reflected across all facets sharing the same diamond storage.
 
 ## Storage
 
@@ -148,23 +148,38 @@ error OwnerUnauthorizedAccount();
 
 <ExpandableCode language="solidity" maxLines={20} title="Example Implementation">
 {`pragma solidity >=0.8.30;
-import @compose/access/Owner/Transfer/OwnerTransferMod;
+
+import {OwnerTransferMod} from '@compose/access/Owner/Transfer/OwnerTransferMod';
+import {OwnerStorage} from '@compose/access/Owner/Transfer/OwnerStorage';
 
 contract OwnershipFacet {
-    OwnerTransferMod internal ownerTransferMod;
+    OwnerTransferMod private ownerTransferMod;
 
-    // Assume OwnerTransferMod is initialized and its storage is correctly set
-    // For example, during diamond deployment or upgrade.
+    function initialize(OwnerStorage storage _ownerStorage) external {
+        ownerTransferMod = OwnerTransferMod(_ownerStorage);
+    }
 
+    /**
+     * @notice Transfers ownership of the diamond.
+     * @param _newOwner The address of the new owner.
+     */
     function transferDiamondOwnership(address _newOwner) external {
         ownerTransferMod.transferOwnership(_newOwner);
     }
 
-    function getDiamondOwner() external view returns (address) {
-        // Although getStorage() returns a pointer, direct access to owner is typical
-        // In a real facet, you'd likely have a direct view function or rely on other facets.
-        // This example demonstrates calling transferOwnership.
-        return address(0); // Placeholder, actual owner retrieval is not shown here
+    /**
+     * @notice Renounces ownership of the diamond.
+     */
+    function renounceDiamondOwnership() external {
+        ownerTransferMod.transferOwnership(address(0));
+    }
+
+    /**
+     * @notice Retrieves the current owner storage.
+     * @return OwnerStorage A pointer to the owner storage struct.
+     */
+    function getOwnerStorage() external pure returns (OwnerStorage storage) {
+        return ownerTransferMod.getStorage();
     }
 }`}
 </ExpandableCode>
@@ -173,19 +188,19 @@ contract OwnershipFacet {
 ## Best Practices
 
 <Callout type="tip" title="Best Practice">
-- Ensure the `OwnerTransferMod` is correctly initialized with its storage slot before use.
-- Call `transferOwnership` with a valid address or `address(0)` to renounce ownership.
-- Verify access control in your facet before calling `transferOwnership` to prevent unauthorized transfers.
+- Ensure ownership is transferred or renounced only by the current owner.
+- Call `transferOwnership` with `address(0)` to safely renounce ownership.
+- Use `getStorage` to inspect ownership state, ensuring consistency across facets.
 </Callout>
 
 ## Integration Notes
 
 <Callout type="success" title="Shared Storage">
-This module interacts with diamond storage at the slot identified by `STORAGE_POSITION`, which is mapped to `keccak256("erc173.owner")`. The `OwnerStorage` struct, containing the `owner` field, is read and written directly from this slot. All state changes made by `transferOwnership` are instantly visible to any other facet that reads from the same storage slot.
+This module utilizes diamond storage at the `STORAGE_POSITION` slot, identified by `keccak256("erc173.owner")`, to manage the `OwnerStorage` struct. The `owner` field within this struct represents the diamond's owner. All functions operate internally and directly on this shared storage, making ownership changes immediately visible to any facet that reads from the same storage slot.
 </Callout>
 
 <div style={{marginTop: "3rem", paddingTop: "2rem", borderTop: "1px solid var(--ifm-color-emphasis-200)"}}>
   <WasThisHelpful pageId="Owner Transfer Module" />
 </div>
 
-<LastUpdated date="2026-03-13T01:20:18.855Z" />
+<LastUpdated date="2026-03-13T01:53:15.132Z" />

@@ -1,7 +1,7 @@
 ---
 sidebar_position: 110
 title: "Access Control Temporal Grant Module"
-description: "Grants roles with time-bound expiry"
+description: "Grant roles with expiry using diamond storage"
 sidebar_label: "Module"
 gitSource: "https://github.com/Perfect-Abstractions/Compose/tree/main/src/access/AccessControl/Temporal/Grant/AccessControlTemporalGrantMod.sol"
 ---
@@ -22,14 +22,14 @@ import GradientText from '@site/src/components/ui/GradientText';
 import GradientButton from '@site/src/components/ui/GradientButton';
 
 <DocSubtitle>
-Grants roles with time-bound expiry
+Grant roles with expiry using diamond storage
 </DocSubtitle>
 
 <Callout type="info" title="Key Features">
-- Internal functions designed for use within diamond facets.
-- Leverages the diamond storage pattern for shared state management.
-- Emits `RoleGrantedWithExpiry` event for off-chain monitoring.
-- Enforces access control using the diamond's administrative roles.
+- Internal functions designed for use within custom facets.
+- Manages role grants with expiry timestamps.
+- Utilizes the diamond storage pattern (EIP-8042) for shared state.
+- Emits `RoleGrantedWithExpiry` event upon successful role granting.
 </Callout>
 
 <Callout type="info" title="Module Usage">
@@ -38,7 +38,7 @@ This module provides internal functions for use in your custom facets. Import it
 
 ## Overview
 
-This module provides internal functions for granting roles with a specified expiry timestamp. Facets can import and utilize these functions to manage time-limited permissions within the diamond's shared storage. Changes are immediately visible to all facets interacting with the same diamond storage.
+This module provides functions to grant roles with an expiry timestamp, utilizing shared diamond storage for role management. Facets can integrate this module to enforce temporal access control, ensuring roles are automatically revoked after their expiry. Changes made via this module are immediately visible to all facets operating on the same diamond storage.
 
 ## Storage
 
@@ -242,24 +242,47 @@ error AccessControlUnauthorizedAccount(address _account, bytes32 _role);
 
 <ExpandableCode language="solidity" maxLines={20} title="Example Implementation">
 {`pragma solidity >=0.8.30;
+import @compose/access/AccessControl/Temporal/Grant/AccessControlTemporalGrantMod;
 
-import {AccessControlTemporalGrantMod} from "@compose/access/AccessControl/Temporal/Grant/AccessControlTemporalGrantMod";
+contract MyAccessFacet {
+    AccessControlTemporalGrantMod internal accessControlTemporalGrantMod;
 
-contract TemporalGrantFacet {
-    AccessControlTemporalGrantMod internal _temporalGrantMod;
-
-    constructor(address diamondStorageAddress) {
-        // Assuming diamondStorageAddress is the address of the diamond proxy
-        _temporalGrantMod = AccessControlTemporalGrantMod(diamondStorageAddress);
+    constructor(address diamondAddress) {
+        // Assuming AccessControlTemporalGrantMod is deployed as a facet on the diamond
+        // and its selector routes to this module's implementation.
+        // In a real scenario, you would likely obtain the module's address via the diamond proxy.
+        // For demonstration, we instantiate it directly, assuming it operates on shared storage.
+        // The actual interaction would be through a diamond proxy, calling the module's functions.
+        // This example simulates calling the module's internal functions.
     }
 
     /**
-     * @notice Grants a role to an account with an expiry.
-     * @dev Requires the caller to be the admin of the role.
+     * @notice Example of granting a role with an expiry.
+     * @dev This function demonstrates calling the internal grantRoleWithExpiry function.
+     *      In a real facet, access control would verify the caller's permissions.
+     * @param _role The role to grant.
+     * @param _account The account to grant the role to.
+     * @param _expiresAt The timestamp when the role expires.
      */
-    function grantRoleForAWhile(bytes32 _role, address _account, uint256 _expiresAt) external {
-        // Directly call the internal module function via the diamond storage address
-        _temporalGrantMod.grantRoleWithExpiry(_role, _account, _expiresAt);
+    function grantTemporaryRole(bytes32 _role, address _account, uint256 _expiresAt) external {
+        // In a real facet, you would check if the caller is authorized to grant this role.
+        // For example, by calling \`AccessControl.hasRole(ROLE_ADMIN, msg.sender)\`
+        // or a specific admin role for this temporal grant.
+
+        // Call the internal function from the module.
+        // The module will interact with shared diamond storage.
+        accessControlTemporalGrantMod.grantRoleWithExpiry(_role, _account, _expiresAt);
+    }
+
+    /**
+     * @notice Retrieves the temporal access control storage layout.
+     * @dev Useful for understanding the storage structure.
+     * @return AccessControlTemporalStorage The storage struct.
+     */
+    function getTemporalStorage() external pure returns (AccessControlTemporalStorage memory) {
+        // This call directly accesses the module's view function.
+        // In a diamond, this would likely be routed to the module's facet.
+        return AccessControlTemporalGrantMod.getStorage();
     }
 }`}
 </ExpandableCode>
@@ -268,19 +291,19 @@ contract TemporalGrantFacet {
 ## Best Practices
 
 <Callout type="tip" title="Best Practice">
-- Ensure the caller has the necessary administrative privileges before calling `grantRoleWithExpiry`.
-- Verify that the `_expiresAt` timestamp is set appropriately to prevent indefinite role grants.
-- Handle the `AccessControlUnauthorizedAccount` error if the caller is not authorized to grant the specified role.
+- Ensure the caller has the necessary administrative role before invoking `grantRoleWithExpiry`.
+- Verify the `_expiresAt` timestamp is in the future to prevent immediate expiration.
+- Integrate with role expiration checks in other facets to ensure timely revocation enforcement.
 </Callout>
 
 ## Integration Notes
 
 <Callout type="success" title="Shared Storage">
-This module interacts with diamond storage at the `ACCESS_CONTROL_STORAGE_POSITION` slot. It uses the `AccessControlStorage` and `AccessControlTemporalStorage` structs to manage role assignments and their expiry times. Functions within this module directly read from and write to this shared storage, making changes immediately visible to all other facets operating on the same diamond storage.
+This module interacts with diamond storage at the `ACCESS_CONTROL_STORAGE_POSITION`, which is identified by `keccak256("compose.accesscontrol")`. It reads from and writes to the `AccessControlTemporalStorage` struct within this shared storage. Changes to roles and their expiry times are immediately reflected and visible to all facets accessing the same diamond storage.
 </Callout>
 
 <div style={{marginTop: "3rem", paddingTop: "2rem", borderTop: "1px solid var(--ifm-color-emphasis-200)"}}>
   <WasThisHelpful pageId="Access Control Temporal Grant Module" />
 </div>
 
-<LastUpdated date="2026-03-13T01:22:20.370Z" />
+<LastUpdated date="2026-03-13T01:55:12.705Z" />

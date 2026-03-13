@@ -1,7 +1,7 @@
 ---
 sidebar_position: 110
 title: "Access Control Temporal Data Module"
-description: "Manage temporal role assignments and their expiry"
+description: "Manages temporal role assignments and their expiry"
 sidebar_label: "Module"
 gitSource: "https://github.com/Perfect-Abstractions/Compose/tree/main/src/access/AccessControl/Temporal/Data/AccessControlTemporalDataMod.sol"
 ---
@@ -22,14 +22,14 @@ import GradientText from '@site/src/components/ui/GradientText';
 import GradientButton from '@site/src/components/ui/GradientButton';
 
 <DocSubtitle>
-Manage temporal role assignments and their expiry
+Manages temporal role assignments and their expiry
 </DocSubtitle>
 
 <Callout type="info" title="Key Features">
 - Provides internal functions for temporal role management.
-- Leverages diamond storage for role expiry data.
-- Emits `RoleGrantedWithExpiry` and `TemporalRoleRevoked` events for off-chain tracking.
-- Uses custom errors `AccessControlRoleExpired` and `AccessControlUnauthorizedAccount` for clear revert reasons.
+- Leverages diamond storage for temporal role data.
+- Reverts with specific errors for expired roles or unauthorized accounts.
+- No external dependencies; designed for direct integration into facets.
 </Callout>
 
 <Callout type="info" title="Module Usage">
@@ -38,7 +38,7 @@ This module provides internal functions for use in your custom facets. Import it
 
 ## Overview
 
-This module provides internal functions to manage temporal role assignments within a diamond, specifically tracking when roles expire. Facets can import this module to check role validity, which includes verifying expiry against diamond storage. This ensures that role-based access control respects time-bound permissions.
+This module provides internal functions to manage temporal role assignments, including their expiry. Facets can import this module to check and enforce role validity using shared diamond storage. Changes to role expiry are immediately visible to all facets accessing the same storage.
 
 ## Storage
 
@@ -354,50 +354,39 @@ error AccessControlUnauthorizedAccount(address _account, bytes32 _role);
 <ExpandableCode language="solidity" maxLines={20} title="Example Implementation">
 {`pragma solidity >=0.8.30;
 
-import {AccessControlTemporalDataMod} from "@compose/access/AccessControl/Temporal/Data/AccessControlTemporalDataMod";
-import {AccessControlRoleExpired, AccessControlUnauthorizedAccount} from "@compose/access/AccessControl/Temporal/Data/AccessControlTemporalDataMod";
+import { AccessControlTemporalDataMod } from "@compose/access/AccessControl/Temporal/Data/AccessControlTemporalDataMod";
+import { AccessControlRoleExpired, AccessControlUnauthorizedAccount } from "@compose/access/AccessControl/Temporal/Data/AccessControlTemporalDataMod";
 
-contract MyAccessFacet {
+contract TemporalAccessFacet {
     AccessControlTemporalDataMod internal accessControlTemporalDataMod;
 
+    constructor(address accessControlTemporalDataModAddress) {
+        accessControlTemporalDataMod = AccessControlTemporalDataMod(accessControlTemporalDataModAddress);
+    }
+
     function grantRoleWithExpiry(bytes32 _role, address _account, uint256 _expiresAt) external {
-        // Assume _sender has authority to grant roles, handled by caller facet.
-        // This facet delegates the temporal logic.
-        // The actual grant event emission would happen here or in a related facet.
-        // For example purposes, we just show calling the internal mod.
-        // In a real scenario, the grant logic would likely be in a different facet.
-        // This example assumes the caller facet has already validated permissions.
-        // We're demonstrating how a facet *uses* the temporal module's checks.
+        // Assuming this facet also has a mechanism to grant roles initially
+        // This function would typically be called by an admin facet or initializer
+        // For demonstration, we only show the temporal aspect.
 
-        // The actual granting and event emission would typically be in a facet that manages roles.
-        // This module primarily provides the validation logic.
-        // For demonstration, we'll simulate a grant event being handled.
-
-        // Example of how a calling facet might use the module's storage access:
-        // AccessControlTemporalDataMod.AccessControlTemporalStorage storage temporalStorage = accessControlTemporalDataMod.getStorage();
-        // temporalStorage.roleAssignments[_role][_account] = _expiresAt;
-
-        // In a real implementation, the grant function would be in a different facet.
-        // This module is focused on retrieval and validation.
+        // In a real scenario, you would also call a function to grant the role itself
+        // and then potentially set its expiry using a separate mechanism or event.
+        // This example focuses on checking role validity.
     }
 
     function checkRoleValidity(bytes32 _role, address _account) external view {
         try accessControlTemporalDataMod.requireValidRole(_role, _account) {
             // Role is valid and not expired
-        } catch AccessControlRoleExpired(_role, _account) {
-            // Handle expired role scenario
+        } catch AccessControlRoleExpired {
+            // Role has expired
             revert("Role has expired");
-        } catch AccessControlUnauthorizedAccount(_account, _role) {
-            // Handle unauthorized account scenario (if role was never granted or explicitly revoked)
-            revert("Account is not authorized for this role");
+        } catch AccessControlUnauthorizedAccount {
+            // Account does not have the role at all
+            revert("Unauthorized account");
         }
     }
 
-    function isRoleExpired(bytes32 _role, address _account) external view returns (bool) {
-        return accessControlTemporalDataMod.isRoleExpired(_role, _account);
-    }
-
-    function getRoleExpiry(bytes32 _role, address _account) external view returns (uint256) {
+    function getRoleExpiryTimestamp(bytes32 _role, address _account) external view returns (uint256) {
         return accessControlTemporalDataMod.getRoleExpiry(_role, _account);
     }
 }`}
@@ -407,19 +396,19 @@ contract MyAccessFacet {
 ## Best Practices
 
 <Callout type="tip" title="Best Practice">
-- Ensure that calling facets properly validate permissions before invoking temporal role functions.
-- Handle the `AccessControlRoleExpired` and `AccessControlUnauthorizedAccount` custom errors returned by `requireValidRole`.
-- Verify that the `AccessControlTemporalStorage` struct in diamond storage is compatible with this module's expectations, especially when upgrading facets.
+- Ensure temporal role expiry checks are performed before critical operations.
+- Handle `AccessControlRoleExpired` and `AccessControlUnauthorizedAccount` errors explicitly when calling `requireValidRole`.
+- Verify that the `AccessControlTemporalDataMod` is initialized with correct storage slot and that related modules are compatible.
 </Callout>
 
 ## Integration Notes
 
 <Callout type="success" title="Shared Storage">
-This module interacts with diamond storage at the `ACCESS_CONTROL_STORAGE_POSITION`, which is identified by `keccak256("compose.accesscontrol")`. It accesses the `AccessControlTemporalStorage` struct. Functions like `isRoleExpired` and `requireValidRole` read from this shared storage. Changes to role assignments and their expiry times made via other facets that also interact with this storage position will be immediately reflected and visible to any facet using this module.
+This module interacts with diamond storage at the `ACCESS_CONTROL_STORAGE_POSITION`, identified by `keccak256("compose.accesscontrol")`, to store and retrieve temporal role assignment data. The `AccessControlTemporalStorage` struct is managed implicitly through this slot. Changes made via functions like `getRoleExpiry` or checks performed by `isRoleExpired` and `requireValidRole` directly access and reflect the state within the diamond's shared storage, making them immediately visible to any other facet that reads from the same storage position.
 </Callout>
 
 <div style={{marginTop: "3rem", paddingTop: "2rem", borderTop: "1px solid var(--ifm-color-emphasis-200)"}}>
   <WasThisHelpful pageId="Access Control Temporal Data Module" />
 </div>
 
-<LastUpdated date="2026-03-13T01:22:05.990Z" />
+<LastUpdated date="2026-03-13T01:54:55.952Z" />

@@ -26,15 +26,15 @@ Approves token spending on behalf of an owner
 </DocSubtitle>
 
 <Callout type="info" title="Key Features">
-- Exposes external `approve` function for token spending approvals.
-- Emits `Approval` event upon successful approval.
-- Uses diamond storage pattern for shared state management.
-- Includes `exportSelectors` for diamond discovery.
+- Exposes `approve` function for managing token allowances.
+- Emits `Approval` event for off-chain tracking.
+- Interacts with diamond's shared storage for approval state.
+- Functions are callable through the diamond proxy.
 </Callout>
 
 ## Overview
 
-This facet provides external functions for approving token spending within a diamond. It routes calls through the diamond proxy and accesses shared token storage. Developers add this facet to enable token allowance functionality while maintaining diamond upgradeability.
+This facet exposes external functions for approving token spending within a diamond. It interacts with shared diamond storage to manage approvals and emits events for off-chain consumption. Developers add this facet to enable token allowance functionality in a composable manner.
 
 ## Storage
 
@@ -189,7 +189,8 @@ error ERC20InvalidSpender(address _spender);
 <ExpandableCode language="solidity" maxLines={20} title="Example Implementation">
 {`pragma solidity >=0.8.30;
 
-import {ERC20ApproveFacet} from "@compose/token/ERC20/Approve/ERC20ApproveFacet";
+import { IDiamond } from "@compose/diamond/IDiamond";
+import { ERC20ApproveFacet } from "@compose/token/ERC20/Approve/ERC20ApproveFacet";
 
 contract DiamondUser {
     address immutable diamondAddress;
@@ -198,16 +199,14 @@ contract DiamondUser {
         diamondAddress = _diamondAddress;
     }
 
-    function approveTokenSpend(address spender, uint256 amount) external {
-        ERC20ApproveFacet(diamondAddress).approve(spender, amount);
+    function approveTokenSpending(address spender, uint256 amount) external {
+        // Call the approve function through the diamond proxy
+        IDiamond(diamondAddress).callFacet(ERC20ApproveFacet.exportSelectors(), abi.encodeWithSelector(ERC20ApproveFacet.approve.selector, spender, amount));
     }
 
-    function getApproval(address owner, address spender) external view returns (uint256) {
-        // Assuming a separate facet or module exposes a view function like this
-        // For demonstration, we call a hypothetical function.
-        // In a real scenario, you might need a dedicated ERC20ViewFacet.
-        // For example: return IERC20View(diamondAddress).allowance(owner, spender);
-        revert("getApproval not implemented in this example facet");
+    // Example of how an event might be listened to by another contract
+    function handleApproval(address owner, address spender, uint256 value) external {
+        // Logic to process Approval event
     }
 }`}
 </ExpandableCode>
@@ -216,19 +215,19 @@ contract DiamondUser {
 ## Best Practices
 
 <Callout type="tip" title="Best Practice">
-- Ensure the `ERC20ApproveFacet` is initialized with correct storage slot references if applicable.
-- Validate `_spender` address to prevent approving zero or contract addresses that cannot hold tokens if required by specific token logic.
-- Calls to `approve` should be made through the diamond proxy address.
+- Ensure the `ERC20ApproveFacet` is properly initialized within the diamond.
+- Verify that the caller has the necessary permissions to approve token spending.
+- Listen for `Approval` events to track token allowances off-chain.
 </Callout>
 
 ## Security Considerations
 
 <Callout type="warning" title="Security">
-The `approve` function modifies shared diamond storage. Ensure proper access control is enforced by the diamond proxy to restrict who can call this function. Input validation on `_spender` and `_value` is crucial to prevent unintended approvals or denial-of-service vectors. Follow standard Solidity security practices for ERC-20 token interactions.
+The `approve` function is protected by access control, ensuring only the token owner can set allowances. Input validation for the `_spender` address is performed, reverting with `ERC20InvalidSpender` if it is the zero address. The function follows the checks-effects-interactions pattern to mitigate reentrancy risks. Developers must ensure the diamond's access control mechanisms are correctly configured for this facet.
 </Callout>
 
 <div style={{marginTop: "3rem", paddingTop: "2rem", borderTop: "1px solid var(--ifm-color-emphasis-200)"}}>
   <WasThisHelpful pageId="ERC-20 Approve Facet" />
 </div>
 
-<LastUpdated date="2026-03-13T01:18:53.548Z" />
+<LastUpdated date="2026-03-13T01:51:49.798Z" />

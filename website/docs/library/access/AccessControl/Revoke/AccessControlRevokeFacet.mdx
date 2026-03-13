@@ -26,15 +26,15 @@ Revokes roles from accounts within a diamond
 </DocSubtitle>
 
 <Callout type="info" title="Key Features">
-- Revokes roles from specified accounts.
+- Revokes roles from accounts using diamond storage.
 - Emits `RoleRevoked` event upon successful revocation.
-- Enforces access control for the `revokeRole` function.
+- Reverts with `AccessControlUnauthorizedAccount` if the caller lacks administrative privileges for the role.
 - Exports facet selectors via `exportSelectors`.
 </Callout>
 
 ## Overview
 
-This facet provides functionality to revoke roles from accounts within a Compose diamond. It interacts with shared diamond storage to manage role assignments. Developers can add this facet to enable granular permission management and control access to specific functionalities.
+This facet provides functionality to revoke roles from specific accounts within a Compose diamond. It interacts with shared diamond storage to manage role assignments. Developers integrate this facet to enable dynamic permission management, ensuring only authorized entities can perform certain actions.
 
 ## Storage
 
@@ -175,25 +175,28 @@ error AccessControlUnauthorizedAccount(address _account, bytes32 _role);
 <ExpandableCode language="solidity" maxLines={20} title="Example Implementation">
 {`pragma solidity >=0.8.30;
 
-import { IDiamond } from "@compose/diamond/IDiamond";
+import { IDiamond } from "@compose/core/IDiamond";
 import { AccessControlRevokeFacet } from "@compose/access/AccessControl/Revoke/AccessControlRevokeFacet";
 
 contract DiamondDeployer {
-    address public diamondAddress;
+    address immutable DIAMOND_ADDRESS;
 
-    function deployDiamond() public {
-        // ... diamond deployment logic ...
-        diamondAddress = address(this); // Replace with actual diamond address
-
-        // Example of revoking a role
-        // Assume 'adminRole' and 'accountToRevoke' are defined
-        // AccessControlRevokeFacet is added to the diamond, and its functions are callable via the diamond proxy
-        IDiamond(diamondAddress).revokeRole(bytes32('adminRole'), address(0x123));
+    constructor(address diamondAddress) {
+        DIAMOND_ADDRESS = diamondAddress;
     }
 
-    // This is a simplified example. In a real scenario, the facet would be added to the diamond via its deployment mechanism.
-    // The revokeRole function is exposed by the diamond proxy.
-    // The caller of revokeRole through the diamond must have the 'adminRole' according to AccessControl logic.
+    function revokeUserRole(bytes32 _role, address _account) external {
+        // Access the facet functions through the diamond proxy
+        IDiamond(DIAMOND_ADDRESS).revokeRole(_role, _account);
+    }
+
+    /**
+     * @dev Example of exporting selectors. In a real deployment, this might be used
+     *      during diamond upgrade or introspection.
+     */
+    function getRevokeSelectors() external pure returns (bytes memory) {
+        return AccessControlRevokeFacet.exportSelectors();
+    }
 }`}
 </ExpandableCode>
 -->
@@ -201,19 +204,19 @@ contract DiamondDeployer {
 ## Best Practices
 
 <Callout type="tip" title="Best Practice">
-- Ensure the `AccessControlRevokeFacet` is added to the diamond and its selectors are registered.
-- Verify that the caller possesses the necessary role to revoke other roles before calling `revokeRole`.
-- Integrate `revokeRole` into upgrade or administrative workflows to manage permissions effectively.
+- Enforce access control on the `revokeRole` function to ensure only authorized callers can revoke roles.
+- Ensure the `AccessControlRevokeMod` is properly integrated and initialized to manage role revocation logic.
+- Verify that the `AccessControlStorage` struct in diamond storage is compatible before upgrading or adding this facet.
 </Callout>
 
 ## Security Considerations
 
 <Callout type="warning" title="Security">
-The `revokeRole` function is protected by access control; only callers with the appropriate administrative role can execute it, preventing unauthorized role revocations. Reentrancy is not a concern as the function does not perform external calls. Input validation for `_role` and `_account` should be handled by the caller or other facets interacting with this functionality.
+The `revokeRole` function is protected by an access control mechanism, reverting with `AccessControlUnauthorizedAccount` if the caller is not the administrator of the specified role. Follow standard Solidity security practices for input validation and state management. Ensure proper initialization of roles and accounts before attempting revocation.
 </Callout>
 
 <div style={{marginTop: "3rem", paddingTop: "2rem", borderTop: "1px solid var(--ifm-color-emphasis-200)"}}>
   <WasThisHelpful pageId="Access Control Revoke Facet" />
 </div>
 
-<LastUpdated date="2026-03-13T01:21:29.092Z" />
+<LastUpdated date="2026-03-13T01:54:23.647Z" />

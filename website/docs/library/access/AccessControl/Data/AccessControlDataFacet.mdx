@@ -1,7 +1,7 @@
 ---
 sidebar_position: 100
 title: "Access Control Data Facet"
-description: "Manage roles and permissions within a diamond"
+description: "Manages roles and permissions within a diamond"
 sidebar_label: "Facet"
 gitSource: "https://github.com/Perfect-Abstractions/Compose/tree/main/src/access/AccessControl/Data/AccessControlDataFacet.sol"
 ---
@@ -22,19 +22,19 @@ import GradientText from '@site/src/components/ui/GradientText';
 import GradientButton from '@site/src/components/ui/GradientButton';
 
 <DocSubtitle>
-Manage roles and permissions within a diamond
+Manages roles and permissions within a diamond
 </DocSubtitle>
 
 <Callout type="info" title="Key Features">
-- Provides external view functions to query role assignments.
-- Utilizes diamond storage for role management, ensuring shared state.
-- Exposes `exportSelectors` for metadata and discovery.
-- No external dependencies beyond diamond storage access.
+- Exposes external view functions for role checks.
+- Utilizes diamond storage for role data.
+- Includes a custom error `AccessControlUnauthorizedAccount` for failed role checks.
+- Provides `exportSelectors` to identify its exposed functions.
 </Callout>
 
 ## Overview
 
-This facet exposes functions for role-based access control within a diamond. It allows checking if accounts possess specific roles and retrieving role administration details. The facet leverages diamond storage for its state, ensuring consistency across all facets.
+This facet provides core access control data and validation functions for a diamond. It exposes external view functions to check role assignments and role hierarchies, enabling other facets or off-chain applications to query permissions. It accesses shared diamond storage to retrieve role information.
 
 ## Storage
 
@@ -209,70 +209,53 @@ error AccessControlUnauthorizedAccount(address _account, bytes32 _role);
 <ExpandableCode language="solidity" maxLines={20} title="Example Implementation">
 {`pragma solidity >=0.8.30;
 
-import { IDiamond } from "@compose/diamond/src/IDiamond.sol";
+import { IDiamond } from "@compose/diamond/Diamond.sol";
 import { AccessControlDataFacet } from "@compose/access/AccessControl/Data/AccessControlDataFacet.sol";
 
-contract DiamondConsumer {
-    address immutable diamondAddress;
+contract MyDiamondUser {
+    address immutable DIAMOND_ADDRESS;
 
-    constructor(address _diamondAddress) {
-        diamondAddress = _diamondAddress;
+    constructor(address diamondAddress) {
+        DIAMOND_ADDRESS = diamondAddress;
     }
 
-    /**
-     * @notice Checks if an account has a specific role.
-     * @param _role The role to check.
-     * @param _account The account to check.
-     * @return bool True if the account has the role, false otherwise.
-     */
-    function checkRole(bytes32 _role, address _account) external view returns (bool) {
-        IDiamond diamond = IDiamond(diamondAddress);
-        // AccessControlDataFacet.hasRole is called through the diamond proxy
-        return AccessControlDataFacet(diamond).hasRole(_role, _account);
+    function checkUserRole(address _user, bytes32 _role) public view returns (bool) {
+        IDiamond diamond = IDiamond(DIAMOND_ADDRESS);
+        // Call the hasRole function exposed by the AccessControlDataFacet via the diamond
+        return diamond.hasRole(_role, _user);
     }
 
-    /**
-     * @notice Requires an account to have a specific role.
-     * @param _role The role required.
-     * @param _account The account to check.
-     */
-    function enforceRole(bytes32 _role, address _account) external view {
-        IDiamond diamond = IDiamond(diamondAddress);
-        // AccessControlDataFacet.requireRole is called through the diamond proxy
-        AccessControlDataFacet(diamond).requireRole(_role, _account);
+    function enforceAdminRole(address _account, bytes32 _role) public view {
+        IDiamond diamond = IDiamond(DIAMOND_ADDRESS);
+        // Call requireRole to revert if the account does not have the specified role
+        diamond.requireRole(_role, _account);
     }
 
-    /**
-     * @notice Gets the admin role for a given role.
-     * @param _role The role to query.
-     * @return bytes32 The admin role.
-     */
-    function getAdminRole(bytes32 _role) external view returns (bytes32) {
-        IDiamond diamond = IDiamond(diamondAddress);
-        // AccessControlDataFacet.getRoleAdmin is called through the diamond proxy
-        return AccessControlDataFacet(diamond).getRoleAdmin(_role);
+    function getRoleHierarchy(bytes32 _role) public view returns (bytes32) {
+        IDiamond diamond = IDiamond(DIAMOND_ADDRESS);
+        // Get the admin role for a given role
+        return diamond.getRoleAdmin(_role);
     }
-}
-`}
+}`}
 </ExpandableCode>
 -->
 
 ## Best Practices
 
 <Callout type="tip" title="Best Practice">
-- Ensure the AccessControlStorage struct is correctly initialized in diamond storage before using role-based functions.
-- Enforce role checks on state-changing functions through other facets that interact with this facet's data.
-- Verify that the `AccessControlDataFacet` selectors are correctly registered with the diamond loupe.
+- Query role information using the external view functions exposed by the diamond.
+- Use `requireRole` to enforce access control within other facets before executing sensitive operations.
+- Understand the role hierarchy by calling `getRoleAdmin`.
 </Callout>
 
 ## Security Considerations
 
 <Callout type="warning" title="Security">
-All state-querying functions are view functions and do not pose reentrancy risks. Input validation for `_role` and `_account` is expected to be handled by the caller or other facets. The `requireRole` function reverts with `AccessControlUnauthorizedAccount` if the specified account does not hold the required role. Follow standard Solidity security practices for handling addresses and role identifiers.
+The `hasRole`, `requireRole`, and `getRoleAdmin` functions are view functions and do not pose reentrancy risks. `requireRole` reverts with `AccessControlUnauthorizedAccount` if the specified account does not possess the required role, providing input validation for access control checks. Developers should ensure correct role assignments in diamond initialization.
 </Callout>
 
 <div style={{marginTop: "3rem", paddingTop: "2rem", borderTop: "1px solid var(--ifm-color-emphasis-200)"}}>
   <WasThisHelpful pageId="Access Control Data Facet" />
 </div>
 
-<LastUpdated date="2026-03-13T01:21:08.648Z" />
+<LastUpdated date="2026-03-13T01:54:03.459Z" />

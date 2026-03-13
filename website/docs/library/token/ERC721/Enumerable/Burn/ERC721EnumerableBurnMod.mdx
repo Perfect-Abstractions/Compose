@@ -26,10 +26,10 @@ Destroys ERC-721 tokens and removes them from enumeration
 </DocSubtitle>
 
 <Callout type="info" title="Key Features">
-- Exposes an `internal` `burn` function for integration into custom facets.
-- Manages token destruction and enumeration removal within the diamond storage pattern.
-- Uses a fixed storage position (`keccak256(\"erc721.enumerable\")`) for ERC-721 enumerable state.
-- No external dependencies, promoting composability.
+- Exposes an `internal` function for burning tokens.
+- Integrates with diamond storage to remove tokens from enumeration.
+- Emits a `Transfer` event upon successful burning.
+- Does not perform approval checks; relies on the calling facet for this.
 </Callout>
 
 <Callout type="info" title="Module Usage">
@@ -38,7 +38,7 @@ This module provides internal functions for use in your custom facets. Import it
 
 ## Overview
 
-This module provides an internal function to burn ERC-721 tokens, ensuring they are removed from enumeration tracking. Facets using this module can integrate token destruction logic directly into their own functionality. Changes made through this module directly affect the shared diamond storage, making token status immediately visible to all facets.
+This module provides an internal function to burn ERC-721 tokens, removing them from enumeration tracking. Facets can integrate this module to handle token destruction directly within the diamond's shared storage. This ensures that token removal is consistent across all facets interacting with the ERC-721 state.
 
 ## Storage
 
@@ -197,23 +197,22 @@ error ERC721NonexistentToken(uint256 _tokenId);
 {`pragma solidity >=0.8.30;
 import @compose/token/ERC721/Enumerable/Burn/ERC721EnumerableBurnMod;
 
-contract MyERC721Facet {
-    ERC721EnumerableBurnMod internal erc721EnumerableBurn;
+contract ERC721BurnFacet {
+    ERC721EnumerableBurnMod public immutable erc721EnumerableBurnMod;
 
-    constructor(
-        address _diamondAddress
-    ) {
-        erc721EnumerableBurn = ERC721EnumerableBurnMod(_diamondAddress);
+    constructor(address _erc721EnumerableBurnModAddress) {
+        erc721EnumerableBurnMod = ERC721EnumerableBurnMod(_erc721EnumerableBurnModAddress);
     }
 
     /**
-     * @notice Burns a token by its ID.
-     * @dev This function does not perform approval checks; use the facet for approval-checked burns.
+     * @notice Burns a token, removing it from enumeration.
+     * @dev This function does not check for approvals; use the facet for approval-checked burns.
      * @param _tokenId The ID of the token to burn.
      */
     function burnToken(uint256 _tokenId) external {
-        // Call the internal burn function from the module
-        erc721EnumerableBurn.burn(_tokenId);
+        // Facet logic would typically go here to check ownership and approvals
+        // before calling the internal module function.
+        erc721EnumerableBurnMod.burn(_tokenId);
     }
 }`}
 </ExpandableCode>
@@ -222,19 +221,19 @@ contract MyERC721Facet {
 ## Best Practices
 
 <Callout type="tip" title="Best Practice">
-- Ensure the calling facet enforces necessary approval checks before invoking `burnToken`.
-- Verify that the `STORAGE_POSITION` for `erc721.enumerable` is correctly set in the diamond for this module to function.
-- Handle the `ERC721NonexistentToken` error if the token ID does not exist.
+- Call `burn` only after verifying token ownership and necessary approvals within the calling facet.
+- Ensure the calling facet correctly handles the `Transfer` event emitted by this module.
+- Verify that the diamond's storage layout is compatible when upgrading facets that interact with this module.
 </Callout>
 
 ## Integration Notes
 
 <Callout type="success" title="Shared Storage">
-This module interacts with diamond storage at the position identified by `keccak256(\"erc721.enumerable\")`. The `burn` function modifies the `ERC721EnumerableStorage` struct stored at this position. Any facet that reads from or writes to this same storage slot will observe these changes immediately. The module itself does not perform approval checks; these must be handled by the facet that calls the `burn` function.
+This module interacts with diamond storage at the `STORAGE_POSITION` defined by `keccak256("erc721.enumerable")`. The `burn` function modifies the `ERC721EnumerableStorage` struct, ensuring that burned tokens are no longer tracked in enumeration. Changes to this shared storage are immediately visible to all facets operating within the same diamond.
 </Callout>
 
 <div style={{marginTop: "3rem", paddingTop: "2rem", borderTop: "1px solid var(--ifm-color-emphasis-200)"}}>
   <WasThisHelpful pageId="ERC-721 Enumerable Burn Module" />
 </div>
 
-<LastUpdated date="2026-03-13T01:18:17.746Z" />
+<LastUpdated date="2026-03-13T01:51:14.314Z" />

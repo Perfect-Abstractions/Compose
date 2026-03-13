@@ -1,7 +1,7 @@
 ---
 sidebar_position: 210
 title: "ERC-721 Burn Module"
-description: "Destroys ERC-721 tokens using diamond storage"
+description: "Burns ERC-721 tokens using diamond storage"
 sidebar_label: "Module"
 gitSource: "https://github.com/Perfect-Abstractions/Compose/tree/main/src/token/ERC721/Burn/ERC721BurnMod.sol"
 ---
@@ -22,14 +22,14 @@ import GradientText from '@site/src/components/ui/GradientText';
 import GradientButton from '@site/src/components/ui/GradientButton';
 
 <DocSubtitle>
-Destroys ERC-721 tokens using diamond storage
+Burns ERC-721 tokens using diamond storage
 </DocSubtitle>
 
 <Callout type="info" title="Key Features">
-- Exposes only `internal` functions for use within custom facets.
-- Utilizes the diamond storage pattern (EIP-8042) for shared state management.
-- No external dependencies or `using` directives, promoting composability.
-- Emits a `Transfer` event upon successful token burning.
+- Provides `internal` functions for token burning.
+- Utilizes the diamond storage pattern for shared state.
+- No external dependencies, ensuring minimal on-chain footprint.
+- Emits `Transfer` event upon successful token burning.
 </Callout>
 
 <Callout type="info" title="Module Usage">
@@ -38,7 +38,7 @@ This module provides internal functions for use in your custom facets. Import it
 
 ## Overview
 
-This module provides internal functions to burn ERC-721 tokens, clearing their ownership and approval status within the diamond's shared storage. Facets can import this module to manage token destruction, ensuring consistency across the diamond. Changes are immediately reflected for all facets accessing the same storage.
+This module provides internal functions for burning ERC-721 tokens. Facets can import and use this module to remove tokens from circulation via shared diamond storage. Token state changes made through this module are immediately visible to all facets accessing the same storage.
 
 ## Storage
 
@@ -178,25 +178,40 @@ error ERC721NonexistentToken(uint256 _tokenId);
 <ExpandableCode language="solidity" maxLines={20} title="Example Implementation">
 {`pragma solidity >=0.8.30;
 
-import {ERC721BurnMod} from "@compose/token/ERC721/Burn/ERC721BurnMod";
+import @compose/token/ERC721/Burn/ERC721BurnMod;
 
-contract MyERC721Facet {
-    ERC721BurnMod private burnModule;
+contract ERC721Facet {
+    ERC721BurnMod internal burnModule;
 
     constructor(address diamondAddress) {
         burnModule = ERC721BurnMod(diamondAddress);
     }
 
     /**
-     * @notice Burns a token owned by the caller.
+     * @notice Burns a specific token.
      * @param _tokenId The ID of the token to burn.
      */
     function burnToken(uint256 _tokenId) external {
-        // In a real scenario, you would add checks here to ensure the caller owns the token
-        // or has been approved to burn it, as burnModule does not perform these checks.
-
+        // Ensure caller has permission to burn this token if necessary.
+        // This module only handles the token destruction itself.
         burnModule.burn(_tokenId);
     }
+
+    /**
+     * @notice Retrieves the ERC721 storage struct.
+     * @return ERC721Storage The current storage state.
+     */
+    function getERC721Storage() external pure returns (ERC721Storage) {
+        return burnModule.getStorage();
+    }
+}
+
+struct ERC721Storage {
+  address owner;
+  address approved;
+  mapping(uint256 => address) _tokenOwner;
+  mapping(address => mapping(address => bool)) _approvals;
+  mapping(uint256 => bool) _exists;
 }`}
 </ExpandableCode>
 -->
@@ -204,19 +219,19 @@ contract MyERC721Facet {
 ## Best Practices
 
 <Callout type="tip" title="Best Practice">
-- Ensure ownership or approval checks are performed before calling `burn()` to prevent unauthorized token destruction.
-- Handle the `ERC721NonexistentToken` error when calling `burn()` to gracefully manage attempts to burn tokens that do not exist.
-- Call `getStorage()` to retrieve the storage struct if direct access to token data is required by other functions within the facet.
+- Ensure appropriate ownership or approval checks are performed by the calling facet before invoking `burn`.
+- Verify that the `ERC721Storage` struct definition used by this module is compatible with your diamond's storage layout.
+- Handle the `ERC721NonexistentToken` error if the token ID provided to `burn` does not exist.
 </Callout>
 
 ## Integration Notes
 
 <Callout type="success" title="Shared Storage">
-This module interacts with diamond storage at the `STORAGE_POSITION` defined by `keccak256(\"erc721\")`. The `burn` function modifies the `ERC721Storage` struct by clearing ownership and approval information for the specified `_tokenId`. The `getStorage` function provides direct read access to this `ERC721Storage` struct via inline assembly. Changes made via `burn` are immediately visible to all facets that access this shared storage slot.
+This module interacts with diamond storage at the `STORAGE_POSITION` defined by `keccak256(\"erc721\")`. The `burn` function modifies internal state within the `ERC721Storage` struct, including clearing ownership and approvals for the specified token ID. The `getStorage` function provides direct access to this shared storage struct via inline assembly. Changes to this storage are immediately visible to all facets within the same diamond.
 </Callout>
 
 <div style={{marginTop: "3rem", paddingTop: "2rem", borderTop: "1px solid var(--ifm-color-emphasis-200)"}}>
   <WasThisHelpful pageId="ERC-721 Burn Module" />
 </div>
 
-<LastUpdated date="2026-03-13T01:18:33.361Z" />
+<LastUpdated date="2026-03-13T01:51:31.025Z" />

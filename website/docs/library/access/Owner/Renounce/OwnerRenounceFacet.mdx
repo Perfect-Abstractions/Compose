@@ -1,7 +1,7 @@
 ---
 sidebar_position: 100
 title: "Owner Renounce Facet"
-description: "Renounce ownership of a diamond"
+description: "Renounce diamond ownership"
 sidebar_label: "Facet"
 gitSource: "https://github.com/Perfect-Abstractions/Compose/tree/main/src/access/Owner/Renounce/OwnerRenounceFacet.sol"
 ---
@@ -22,19 +22,19 @@ import GradientText from '@site/src/components/ui/GradientText';
 import GradientButton from '@site/src/components/ui/GradientButton';
 
 <DocSubtitle>
-Renounce ownership of a diamond
+Renounce diamond ownership
 </DocSubtitle>
 
 <Callout type="info" title="Key Features">
-- Allows irreversible renouncement of diamond ownership.
-- Integrates with diamond storage for owner management.
-- Exposes `exportSelectors` for discovery mechanisms.
-- Follows ERC-173 ownership patterns.
+- Renounces diamond ownership via an external function.
+- Emits `OwnershipTransferred` event upon successful renouncement.
+- Interacts with shared diamond storage for owner management.
+- Exports selectors for facet discovery.
 </Callout>
 
 ## Overview
 
-This facet provides the mechanism to renounce ownership of a diamond. It allows the current owner to permanently relinquish their ownership rights. Calls are routed through the diamond proxy, accessing shared storage to manage the owner state.
+This facet provides functionality to renounce ownership of a diamond. It allows the current owner to permanently relinquish their ownership rights, making the diamond effectively unowned. This facet interacts with diamond storage to manage the owner state.
 
 ## Storage
 
@@ -125,36 +125,37 @@ error OwnerUnauthorizedAccount();
 <ExpandableCode language="solidity" maxLines={20} title="Example Implementation">
 {`pragma solidity >=0.8.30;
 
-import {IOwnerRenounceFacet} from "@compose/access/Owner/Renounce/OwnerRenounceFacet";
+import {IDiamond} from "@compose/diamond/IDiamond";
+import {OwnerRenounceFacet} from "@compose/access/Owner/Renounce/OwnerRenounceFacet";
 
-// Example: Renouncing ownership from within a diamond
-// Assumes the diamond is deployed at \`diamondAddress\` and \`IOwnerRenounceFacet\` is implemented.
-// The current owner must call this function.
-
+// Example: Renouncing ownership of a diamond
 address diamondAddress = 0xYourDiamondAddress;
-IOwnerRenounceFacet ownerRenounceFacet = IOwnerRenounceFacet(diamondAddress);
 
-// The current owner calls this function to renounce ownership
-ownerRenounceFacet.renounceOwnership();`}
+// The OwnerRenounceFacet functions are called through the diamond proxy.
+// Ensure you have the correct selectors registered for this facet.
+IDiamond(diamondAddress).renounceOwnership();
+
+// After renouncing, the owner address in storage will be zeroed out.
+// The OwnershipTransferred event will be emitted.`}
 </ExpandableCode>
 -->
 
 ## Best Practices
 
 <Callout type="tip" title="Best Practice">
-- Call `renounceOwnership` only when absolutely certain the diamond no longer requires an owner.
-- Ensure the caller is the current owner before invoking `renounceOwnership`.
-- Understand that renouncing ownership is irreversible.
+- Call `renounceOwnership` only when permanent relinquishment of ownership is intended.
+- Ensure the caller is the current owner before executing `renounceOwnership`.
+- Verify that the `OwnershipTransferred` event is emitted after successful execution.
 </Callout>
 
 ## Security Considerations
 
 <Callout type="warning" title="Security">
-The `renounceOwnership` function permanently removes the owner. Ensure the caller is authorized as the current owner. The function does not include reentrancy guards, but is a state-changing operation that transfers control, so careful usage is recommended. Input validation is minimal as the function relies on the caller's identity.
+The `renounceOwnership` function can only be called by the current owner. If called, ownership is permanently relinquished, and the owner address in storage becomes zero. There is no mechanism to reclaim ownership after this action. The `OwnerUnauthorizedAccount` error is reverted if the caller is not the owner. Follow standard Solidity security practices for input validation and access control.
 </Callout>
 
 <div style={{marginTop: "3rem", paddingTop: "2rem", borderTop: "1px solid var(--ifm-color-emphasis-200)"}}>
   <WasThisHelpful pageId="Owner Renounce Facet" />
 </div>
 
-<LastUpdated date="2026-03-13T01:20:14.539Z" />
+<LastUpdated date="2026-03-13T01:53:09.973Z" />

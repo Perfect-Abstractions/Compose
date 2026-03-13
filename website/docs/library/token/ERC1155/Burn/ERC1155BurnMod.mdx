@@ -26,10 +26,10 @@ Internal ERC-1155 token burning functionality
 </DocSubtitle>
 
 <Callout type="info" title="Key Features">
-- Exposes `internal` functions for ERC-1155 token burning.
-- Uses diamond storage pattern for shared state management.
+- All functions are `internal` for use within custom facets.
+- Utilizes the diamond storage pattern for shared state management.
 - Emits `TransferSingle` and `TransferBatch` events upon successful burns.
-- Does not perform approval checks; responsibility lies with calling facets.
+- Reverts with custom errors for insufficient balance or invalid array lengths.
 </Callout>
 
 <Callout type="info" title="Module Usage">
@@ -38,7 +38,7 @@ This module provides internal functions for use in your custom facets. Import it
 
 ## Overview
 
-This module provides internal functions for burning ERC-1155 tokens. Facets can import and use these functions to decrease token balances and emit transfer events using shared diamond storage. Changes to token balances are immediately visible to all facets interacting with the same storage slot.
+This module exposes internal functions for burning ERC-1155 tokens. Facets can import this module to decrease token balances using shared diamond storage. Changes made through this module are immediately visible to all facets using the same storage pattern.
 
 ## Storage
 
@@ -301,58 +301,47 @@ error ERC1155InvalidSender(address _sender);
 
 <ExpandableCode language="solidity" maxLines={20} title="Example Implementation">
 {`pragma solidity >=0.8.30;
+import @compose/token/ERC1155/Burn/ERC1155BurnMod;
 
-import { ERC1155BurnMod } from "@compose/token/ERC1155/Burn/ERC1155BurnMod";
-import { ERC1155Storage } from "@compose/token/ERC1155/ERC1155Storage";
+contract MyERC1155Facet {
+    ERC1155BurnMod internal burnModule;
 
-contract ERC1155BurnFacet {
-    using ERC1155BurnMod for ERC1155Storage;
-
-    ERC1155Storage public erc1155Storage = ERC1155Storage(ERC1155BurnMod.getStorage());
-
-    /**
-     * @notice Burns a specific ERC-1155 token from the caller.
-     * @dev Requires caller to have sufficient balance and ownership.
-     * @param _id The ID of the token to burn.
-     * @param _value The amount of tokens to burn.
-     */
-    function burnToken(uint256 _id, uint256 _value) external {
-        // Ensure caller has sufficient balance and ownership before calling burn.
-        // This facet is responsible for access control and approval checks.
-        erc1155Storage.burn(msg.sender, _id, _value);
+    constructor(address diamondAddress) {
+        // Assuming ERC1155BurnMod is deployed as a facet on the diamond
+        // and its address can be retrieved or known.
+        // For simplicity, we'll instantiate it directly here as if it were a library.
+        // In a real diamond, you'd interact via the diamond proxy.
     }
 
-    /**
-     * @notice Burns multiple ERC-1155 tokens from the caller.
-     * @dev Requires caller to have sufficient balances and ownership for all tokens.
-     * @param _ids An array of token IDs to burn.
-     * @param _values An array of amounts for each token ID to burn.
-     */
-    function burnTokenBatch(uint256[] calldata _ids, uint256[] calldata _values) external {
-        // Ensure caller has sufficient balance and ownership for all tokens before calling burnBatch.
-        erc1155Storage.burnBatch(msg.sender, _ids, _values);
+    function burnSingle(address _from, uint256 _id, uint256 _value) external {
+        // Ensure caller has permission or ownership before calling burn
+        burnModule.burn(_from, _id, _value);
     }
-}
-`}
+
+    function burnMultiple(address _from, uint256[] memory _ids, uint256[] memory _values) external {
+        // Ensure caller has permission or ownership before calling burnBatch
+        burnModule.burnBatch(_from, _ids, _values);
+    }
+}`}
 </ExpandableCode>
 -->
 
 ## Best Practices
 
 <Callout type="tip" title="Best Practice">
-- Ensure caller has sufficient balance and ownership before calling `burn` or `burnBatch`.
-- Validate array lengths for `burnBatch` to prevent `ERC1155InvalidArrayLength` errors.
-- Handle `ERC1155InsufficientBalance` and `ERC1155InvalidSender` errors gracefully.
+- Ensure caller has necessary permissions (e.g., ownership, operator approval) before calling burn functions.
+- Verify that `_ids` and `_values` arrays have matching lengths when calling `burnBatch`.
+- Handle the `ERC1155InsufficientBalance` error that may be returned if the sender does not possess enough tokens.
 </Callout>
 
 ## Integration Notes
 
 <Callout type="success" title="Shared Storage">
-This module interacts with diamond storage at the slot identified by `keccak2535(\"erc1155\")`. The `ERC1155Storage` struct, defined by the diamond storage pattern, holds the token balances. Functions `burn` and `burnBatch` directly modify these balances. Any facet that accesses the `ERC1155Storage` struct will see these changes immediately due to the shared storage mechanism.
+This module interacts with diamond storage at the position identified by `keccak256("erc1155")`. The `ERC1155Storage` struct, though empty in its definition, resides at this slot. All state modifications (balance reductions) are performed directly on this shared storage, making them immediately visible to any other facet accessing the same storage slot. The `getStorage` function can be used to retrieve a reference to this storage struct.
 </Callout>
 
 <div style={{marginTop: "3rem", paddingTop: "2rem", borderTop: "1px solid var(--ifm-color-emphasis-200)"}}>
   <WasThisHelpful pageId="ERC-1155 Burn Module" />
 </div>
 
-<LastUpdated date="2026-03-13T01:17:30.741Z" />
+<LastUpdated date="2026-03-13T01:50:26.398Z" />

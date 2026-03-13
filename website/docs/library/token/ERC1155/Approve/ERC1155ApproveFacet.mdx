@@ -1,7 +1,7 @@
 ---
 sidebar_position: 200
 title: "ERC-1155 Approve Facet"
-description: "Manages ERC-1155 token approvals within a diamond"
+description: "Manage ERC-1155 approvals within a diamond"
 sidebar_label: "Facet"
 gitSource: "https://github.com/Perfect-Abstractions/Compose/tree/main/src/token/ERC1155/Approve/ERC1155ApproveFacet.sol"
 ---
@@ -22,19 +22,19 @@ import GradientText from '@site/src/components/ui/GradientText';
 import GradientButton from '@site/src/components/ui/GradientButton';
 
 <DocSubtitle>
-Manages ERC-1155 token approvals within a diamond
+Manage ERC-1155 approvals within a diamond
 </DocSubtitle>
 
 <Callout type="info" title="Key Features">
-- Exposes `setApprovalForAll` for ERC-1155 token approvals.
-- Interacts with shared diamond storage for operator permissions.
-- Emits `ApprovalForAll` event upon successful approval/revocation.
-- Includes `exportSelectors` for diamond facet discovery.
+- Exposes external `setApprovalForAll` function for diamond routing.
+- Emits `ApprovalForAll` event upon approval changes.
+- Uses inline assembly to access diamond storage.
+- Provides `exportSelectors` for diamond facet discovery.
 </Callout>
 
 ## Overview
 
-This facet provides external functions for managing ERC-1155 token approvals within a diamond. It interacts with shared diamond storage to track operator permissions. Developers integrate this facet to enable token holders to grant or revoke operator access to their assets.
+This facet provides external functions for managing ERC-1155 token approvals within a diamond proxy. It integrates with diamond storage to track approval status. Developers add this facet to enable token holders to grant operators permission to transfer their ERC-1155 tokens.
 
 ## Storage
 
@@ -175,36 +175,21 @@ error ERC1155InvalidOperator(address _operator);
 <ExpandableCode language="solidity" maxLines={20} title="Example Implementation">
 {`pragma solidity >=0.8.30;
 
-import {IDiamond} from "@compose/diamond/IDiamond.sol";
-import {ERC1155ApproveFacet} from "@compose/token/ERC1155/Approve/ERC1155ApproveFacet.sol";
+import {IERC1155ApproveFacet} from "@compose/token/ERC1155/Approve/ERC1155ApproveFacet";
 
-contract DiamondUser {
-    address immutable diamondAddress;
+contract Diamond {
+    // Assume diamond contracts and setup are done here
+    address immutable _diamondAddress;
 
-    constructor(address _diamondAddress) {
-        diamondAddress = _diamondAddress;
+    constructor(address diamondAddress) {
+        _diamondAddress = diamondAddress;
     }
 
-    /**
-     * @notice Grants or revokes permission to an operator for a specific account.
-     * @param _operator The address to grant or revoke approval for.
-     * @param _approved True to grant approval, false to revoke.
-     */
-    function grantOperatorApproval(address _operator, bool _approved) external {
-        IDiamond(diamondAddress).setApprovalForAll(_operator, _approved);
+    function grantApproval(address operator, bool approved) external {
+        IERC1155ApproveFacet(_diamondAddress).setApprovalForAll(operator, approved);
     }
 
-    /**
-     * @notice Checks if an operator is approved for a given account.
-     * This function is typically implemented by a separate facet that reads from the same storage.
-     * For example, an ERC1155Facet might expose \`isApprovedForAll\`.
-     */
-    function isOperatorApproved(address _account, address _operator) external view returns (bool) {
-        // This function would be called on the main diamond proxy, which would route
-        // to a facet that has access to the ERC1155Storage and implements this check.
-        // Example: return IDiamond(diamondAddress).isApprovedForAll(_account, _operator);
-        revert("isOperatorApproved not implemented by this facet");
-    }
+    // Other diamond functions...
 }`}
 </ExpandableCode>
 -->
@@ -212,21 +197,19 @@ contract DiamondUser {
 ## Best Practices
 
 <Callout type="tip" title="Best Practice">
-- Ensure the `ERC1155ApproveFacet` is added to the diamond with the correct selector.
-- Grant or revoke approvals by calling `setApprovalForAll` through the diamond proxy.
-- Do not grant approvals to untrusted addresses.
+- Grant approvals only to trusted operators.
+- Ensure the ERC1155ApproveMod is correctly initialized before this facet is used.
+- Verify that the diamond storage layout is compatible before upgrading.
 </Callout>
 
 ## Security Considerations
 
 <Callout type="warning" title="Security">
-The `setApprovalForAll` function is protected by access control implicit in the diamond proxy routing. Users should exercise caution when granting approvals to external addresses. Reentrancy is mitigated by the checks-effects-interactions pattern. Input validation for the `_operator` address is handled by a custom error `ERC1155InvalidOperator` if the operator address is invalid (e.g., zero address).
-
-Follow standard Solidity security practices for all interactions.
+The `setApprovalForAll` function allows any caller to approve or revoke an operator for their tokens. Callers must ensure they are approving legitimate operators. The facet includes an `ERC1155InvalidOperator` error, which is currently not used by the exposed functions, but is available for internal use or future extensions.
 </Callout>
 
 <div style={{marginTop: "3rem", paddingTop: "2rem", borderTop: "1px solid var(--ifm-color-emphasis-200)"}}>
   <WasThisHelpful pageId="ERC-1155 Approve Facet" />
 </div>
 
-<LastUpdated date="2026-03-13T01:17:10.086Z" />
+<LastUpdated date="2026-03-13T01:50:05.215Z" />

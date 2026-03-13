@@ -26,10 +26,10 @@ Renounce roles for accounts within a diamond
 </DocSubtitle>
 
 <Callout type="info" title="Key Features">
-- Internal function `renounceRole` for facet use only.
-- Utilizes diamond storage for shared state.
-- Emits `RoleRevoked` event upon successful renouncement.
-- Enforces caller authorization via `AccessControlUnauthorizedSender` error.
+- Provides an `internal` function `renounceRole` for relinquishing roles.
+- Utilizes diamond storage (EIP-8042) for role management.
+- Emits a `RoleRevoked` event upon successful role renouncement.
+- Enforces sender authorization to prevent unauthorized role revokations.
 </Callout>
 
 <Callout type="info" title="Module Usage">
@@ -38,7 +38,7 @@ This module provides internal functions for use in your custom facets. Import it
 
 ## Overview
 
-This module provides an internal function to renounce roles for the calling account. By leveraging diamond storage, changes are immediately visible to all facets. This ensures consistent access control state across the diamond.
+This module provides the `renounceRole` function, allowing an account to relinquish its assigned role. It leverages diamond storage to manage role assignments, ensuring that changes are immediately visible to all facets interacting with the same storage. This enables decentralized management of roles within the diamond.
 
 ## Storage
 
@@ -180,30 +180,28 @@ error AccessControlUnauthorizedSender(address _sender, address _account);
 
 <ExpandableCode language="solidity" maxLines={20} title="Example Implementation">
 {`pragma solidity >=0.8.30;
-import @compose/access/AccessControl/Renounce/AccessControlRenounceMod;
 
-contract MyAccessControlFacet {
+import {AccessControlRenounceMod} from "@compose/access/AccessControl/Renounce/AccessControlRenounceMod";
+
+contract MyAccessFacet {
     AccessControlRenounceMod internal accessControlRenounceMod;
 
+    // Assume AccessControlRenounceMod is initialized with the diamond's storage position
     constructor(address diamondAddress) {
-        accessControlRenounceMod = AccessControlRenounceMod(diamondAddress);
+        // In a real diamond, this would likely be initialized via an initializer function
+        // and the storage position would be known.
+        // accessControlRenounceMod = AccessControlRenounceMod(diamondAddress);
     }
 
     /**
-     * @notice Renounce a specific role for the current caller.
+     * @notice Allows the caller to renounce a specific role.
+     * @dev This function delegates to the AccessControlRenounceMod module.
      * @param _role The role to renounce.
      */
     function renounceMyRole(bytes32 _role) external {
-        // Use the internal module function to renounce the role.
-        accessControlRenounceMod.renounceRole(_role, msg.sender);
-    }
-
-    /**
-     * @notice Example of retrieving the storage struct.
-     * This is typically done internally by facets.
-     */
-    function getAccessControlStorage() internal pure returns (AccessControlStorage memory) {
-        return AccessControlRenounceMod.getStorage();
+        // Assume the caller is the account that needs to renounce the role.
+        // The module enforces that the caller must be the account.
+        accessControlRenounceMod.renounceRole(_role, address(this));
     }
 }`}
 </ExpandableCode>
@@ -212,19 +210,19 @@ contract MyAccessControlFacet {
 ## Best Practices
 
 <Callout type="tip" title="Best Practice">
-- Call `renounceRole` only when the caller is intended to relinquish the specified role.
-- Ensure the `AccessControlRenounceMod` is correctly initialized with the diamond's address.
-- Handle the `AccessControlUnauthorizedSender` error if the caller attempts to renounce a role they do not hold or for another account.
+- Ensure that the caller is the intended account before calling `renounceRole` to prevent unauthorized role revocation.
+- Handle the `AccessControlUnauthorizedSender` error to gracefully manage cases where the caller is not the account from which the role is being renounced.
+- Verify that the `AccessControlStorage` struct and its associated `STORAGE_POSITION` are correctly configured within the diamond's storage layout.
 </Callout>
 
 ## Integration Notes
 
 <Callout type="success" title="Shared Storage">
-This module reads and writes to diamond storage at the position identified by `STORAGE_POSITION`, keyed by `keccak2535(\"compose.accesscontrol\")`. The `AccessControlStorage` struct, though empty in this definition, represents the shared state. Any facet interacting with this storage position will see changes made by `renounceRole` immediately. The module's `renounceRole` function operates on `msg.sender`'s roles.
+This module interacts with diamond storage at the `STORAGE_POSITION` defined by `keccak256(\"compose.accesscontrol\")`. The `renounceRole` function modifies the shared `AccessControlStorage` struct. Changes made via this module are immediately visible to any other facet that reads from the same storage position, ensuring consistent state across the diamond. The `getStorage` function can be used to retrieve the storage instance if needed.
 </Callout>
 
 <div style={{marginTop: "3rem", paddingTop: "2rem", borderTop: "1px solid var(--ifm-color-emphasis-200)"}}>
   <WasThisHelpful pageId="Access Control Renounce Module" />
 </div>
 
-<LastUpdated date="2026-03-13T01:21:20.669Z" />
+<LastUpdated date="2026-03-13T01:54:15.862Z" />

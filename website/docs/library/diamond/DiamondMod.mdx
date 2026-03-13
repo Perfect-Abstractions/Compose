@@ -1,7 +1,7 @@
 ---
 sidebar_position: 1
 title: "Diamond Module"
-description: "Manages diamond facets and delegates calls"
+description: "Internal functions and storage for diamond proxy functionality."
 sidebar_label: "Module"
 gitSource: "https://github.com/Perfect-Abstractions/Compose/tree/main/src/diamond/DiamondMod.sol"
 ---
@@ -22,14 +22,14 @@ import GradientText from '@site/src/components/ui/GradientText';
 import GradientButton from '@site/src/components/ui/GradientButton';
 
 <DocSubtitle>
-Manages diamond facets and delegates calls
+Internal functions and storage for diamond proxy functionality.
 </DocSubtitle>
 
 <Callout type="info" title="Key Features">
-- Internal functions for facet management (`addFacets`, `importSelectors`).
-- `diamondFallback` for routing external calls to appropriate facets.
-- Operates on shared diamond storage at `DIAMOND_STORAGE_POSITION`.
-- Emits events for facet lifecycle changes.
+- Exposes internal functions for diamond proxy operations.
+- Manages diamond storage using a dedicated storage slot (`DIAMOND_STORAGE_POSITION`).
+- Supports facet registration and retrieval through internal mechanisms.
+- No external dependencies, ensuring minimal on-chain footprint.
 </Callout>
 
 <Callout type="info" title="Module Usage">
@@ -38,7 +38,7 @@ This module provides internal functions for use in your custom facets. Import it
 
 ## Overview
 
-This module provides core functionality for managing facets within a diamond proxy and handling delegated calls. It exposes internal functions for facet manipulation and a fallback mechanism to route external calls to the appropriate facet logic, all operating on shared diamond storage.
+This module provides core internal functions and storage management for diamond proxies. It enables facets to interact with shared diamond storage and manage facet registrations. Changes made through this module are immediately visible to all facets utilizing the diamond storage pattern.
 
 ## Storage
 
@@ -399,13 +399,22 @@ contract MyFacet {
         diamondMod = DiamondMod(diamondAddress);
     }
 
-    function callAnotherFacet(bytes4 selector, bytes calldata data) external returns (bytes memory) {
-        // Example of calling another facet through the diamond's fallback
-        return diamondMod.diamondFallback(selector, data);
+    function registerFacet(address facetAddress) external {
+        // Assuming a role check or initialization context where this is allowed
+        // For demonstration, directly calling addFacets which expects specific encoding.
+        // In a real scenario, this would likely be managed by an upgrade facet.
+        // The actual mechanism for registering facets is more complex and involves selectors.
+        // This example shows a conceptual call to a related function.
+
+        // Example of calling a function that is part of DiamondMod, assuming it's exposed via diamond proxy
+        // This specific call to addFacets requires specific calldata encoding not shown here.
+        // A more direct example would be calling a function like getDiamondStorage:
+        DiamondStorage storage _diamondStorage = diamondMod.getDiamondStorage();
+        // Use _diamondStorage.facetList or other members if they were defined in DiamondStorage
     }
 
-    function getFacetList() external view returns (DiamondMod.FacetList memory) {
-        // Example of retrieving facet information
+    function getStorage() external view returns (address) {
+        // Example of calling a view function from DiamondMod
         return diamondMod.getDiamondStorage().facetList;
     }
 }`}
@@ -415,19 +424,19 @@ contract MyFacet {
 ## Best Practices
 
 <Callout type="tip" title="Best Practice">
-- Ensure all facet additions/removals are handled by authorized administrative functions.
-- Verify that `diamondFallback` is called with valid selectors and calldata to prevent unexpected behavior.
-- Leverage `getDiamondStorage` for introspection of the diamond's facet configuration.
+- Ensure that facet registration functions (like `addFacets` and `importSelectors`) are called only during diamond initialization or controlled upgrade processes.
+- Verify that the `DiamondStorage` struct is correctly defined and that any new fields are added at the end to maintain storage compatibility.
+- Handle custom errors such as `CannotAddFunctionToDiamondThatAlreadyExists` and `NoSelectorsForFacet` to ensure robust error management.
 </Callout>
 
 ## Integration Notes
 
 <Callout type="success" title="Shared Storage">
-This module interacts directly with diamond storage, specifically using the `DIAMOND_STORAGE_POSITION` which holds the `DiamondStorage` struct. The `facetList` within `DiamondStorage` is crucial for `diamondFallback` to locate and delegate calls to the correct facet. Changes to `facetList` made via functions like `addFacets` are immediately visible to all facets interacting with the diamond.
+This module interacts directly with the diamond's shared storage at the `DIAMOND_STORAGE_POSITION`, which is identified by `keccak256("erc8153.diamond")`. The `DiamondStorage` struct, which includes a `FacetList` field, resides here. All functions within this module read from and write to this shared storage. Changes to the `facetList` or other storage elements are immediately visible to any facet that accesses the same storage slot.
 </Callout>
 
 <div style={{marginTop: "3rem", paddingTop: "2rem", borderTop: "1px solid var(--ifm-color-emphasis-200)"}}>
   <WasThisHelpful pageId="Diamond Module" />
 </div>
 
-<LastUpdated date="2026-03-13T01:16:45.783Z" />
+<LastUpdated date="2026-03-13T01:49:43.377Z" />
