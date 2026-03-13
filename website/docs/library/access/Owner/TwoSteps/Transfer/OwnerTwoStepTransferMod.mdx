@@ -1,7 +1,8 @@
 ---
 sidebar_position: 100
 title: "OwnerTwoStepTransferMod"
-description: "Two-step ownership transfer logic for ERC-173"
+description: "Two-step ownership transfer logic for diamonds"
+sidebar_label: "Module"
 gitSource: "https://github.com/Perfect-Abstractions/Compose/tree/main/src/access/Owner/TwoSteps/Transfer/OwnerTwoStepTransferMod.sol"
 ---
 
@@ -21,14 +22,14 @@ import GradientText from '@site/src/components/ui/GradientText';
 import GradientButton from '@site/src/components/ui/GradientButton';
 
 <DocSubtitle>
-Two-step ownership transfer logic for ERC-173
+Two-step ownership transfer logic for diamonds
 </DocSubtitle>
 
 <Callout type="info" title="Key Features">
-- Implements a secure two-step ownership transfer mechanism.
-- Uses diamond storage for owner and pending owner state.
-- Functions are `internal`, designed for use within custom facets.
-- Emits `OwnershipTransferStarted` and `OwnershipTransferred` events.
+- Implements ERC-173 two-step ownership transfer pattern.
+- Uses internal functions for integration within custom facets.
+- Leverages diamond storage for persistent and shared ownership state.
+- Emits `OwnershipTransferStarted` and `OwnershipTransferred` events for off-chain monitoring.
 </Callout>
 
 <Callout type="info" title="Module Usage">
@@ -37,7 +38,7 @@ This module provides internal functions for use in your custom facets. Import it
 
 ## Overview
 
-This module manages ERC-173 ownership transfers through a secure two-step process, preventing accidental ownership loss. Facets can integrate this module to initiate and finalize ownership changes using shared diamond storage, ensuring all facets see the most current owner. Changes are immediately visible across the diamond.
+This module implements ERC-173 two-step ownership transfers, allowing for a secure transition of diamond ownership. Facets import this module to initiate and finalize ownership changes using shared diamond storage. By requiring a pending owner to explicitly accept ownership, it mitigates risks associated with accidental or unauthorized transfers.
 
 ---
 
@@ -213,41 +214,70 @@ error OwnerUnauthorizedAccount();
 import {OwnerTwoStepTransferMod} from "@compose/access/Owner/TwoSteps/Transfer/OwnerTwoStepTransferMod";
 
 contract OwnerFacet {
-    OwnerTwoStepTransferMod internal ownerTransferMod;
+    OwnerTwoStepTransferMod internal ownerTransferModule;
 
-    // Assuming OwnerTwoStepTransferMod is initialized elsewhere and its storage is accessible.
-    // For demonstration, we'll directly call its functions.
+    function initialize(address initialOwner) external {
+        // Assume ownerTransferModule is initialized elsewhere or passed in.
+        // For demonstration, we'll assume it's accessible.
+    }
 
+    /**
+     * @notice Initiates a transfer of ownership to a new address.
+     * @param _newOwner The address to transfer ownership to.
+     */
     function initiateOwnershipTransfer(address _newOwner) external {
-        // Call the internal function provided by the module
-        ownerTransferMod.transferOwnership(_newOwner);
+        // Assuming ownerTransferModule is a deployed instance or accessible library.
+        // In a real facet, you would likely interact with the diamond's storage for this module.
+        // For this example, we simulate direct interaction with the module's function.
+        ownerTransferModule.transferOwnership(_newOwner);
     }
 
-    function finalizeOwnershipTransfer() external {
-        // Call the internal function provided by the module
-        ownerTransferMod.acceptOwnership();
+    /**
+     * @notice Accepts ownership transfer, finalizing the process.
+     * This function must be called by the pending owner.
+     */
+    function acceptOwnershipTransfer() external {
+        // Similar to initiateOwnershipTransfer, this simulates direct interaction.
+        ownerTransferModule.acceptOwnership();
     }
 
-    function getCurrentOwner() external view returns (address) {
-        // Access storage directly via the module's helper function
-        return ownerTransferMod.getOwnerStorage().owner;
+    /**
+     * @notice Retrieves the current owner.
+     * @return owner The current owner address.
+     */
+    function getCurrentOwner() external view returns (address owner) {
+        // Assuming ownerTransferModule can provide access to owner storage.
+        // In a real scenario, this might read from diamond storage directly.
+        (OwnerTwoStepTransferMod.OwnerStorage memory ownerStorage) = ownerTransferModule.getOwnerStorage();
+        return ownerStorage.owner;
     }
-}`}
+
+    /**
+     * @notice Retrieves the pending owner.
+     * @return pendingOwner The pending owner address.
+     */
+    function getPendingOwner() external view returns (address pendingOwner) {
+        // Similar to getCurrentOwner, this simulates direct interaction.
+        (OwnerTwoStepTransferMod.PendingOwnerStorage memory pendingOwnerStorage) = ownerTransferModule.getPendingOwnerStorage();
+        return pendingOwnerStorage.pendingOwner;
+    }
+}
+`}
 </ExpandableCode>
 -->
 
 ## Best Practices
 
 <Callout type="tip" title="Best Practice">
-- Ensure `transferOwnership` is called only by the current owner.
-- Call `acceptOwnership` only when the pending owner is ready to assume control.
-- Handle the `OwnerUnauthorizedAccount` error for unauthorized calls.
+- Ensure the `acceptOwnership` function is called only by the designated pending owner to prevent unauthorized ownership changes.
+- Verify that the `transferOwnership` function is called with a valid, non-zero address to maintain a clear ownership hierarchy.
+- Handle the `OwnerUnauthorizedAccount` error appropriately in calling facets to manage permissioned actions.
 </Callout>
 
 ## Integration Notes
 
 <Callout type="success" title="Shared Storage">
-This module interacts with diamond storage by reading and writing to specific slots designated for owner and pending owner information. The `getOwnerStorage` and `getPendingOwnerStorage` functions provide access to these storage locations using inline assembly, ensuring that any changes made by `transferOwnership` or `acceptOwnership` are immediately reflected and visible to all facets sharing the same diamond storage. The `owner` state is managed within the `OwnerStorage` struct.
+This module utilizes diamond storage for owner and pending owner information. The `getOwnerStorage` and `getPendingOwnerStorage` functions provide direct access to these storage slots via inline assembly, referencing `OWNER_STORAGE_POSITION` and `PENDING_OWNER_STORAGE_POSITION` respectively. Changes to ownership initiated by `transferOwnership` or finalized by `acceptOwnership` are immediately reflected in the diamond's shared storage, visible to all facets accessing these positions.
 </Callout>
 
 <div style={{marginTop: "3rem", paddingTop: "2rem", borderTop: "1px solid var(--ifm-color-emphasis-200)"}}>
@@ -285,4 +315,4 @@ This module interacts with diamond storage by reading and writing to specific sl
   <WasThisHelpful pageId="OwnerTwoStepTransferMod" />
 </div>
 
-<LastUpdated date="2026-03-12T21:06:58.098Z" />
+<LastUpdated date="2026-03-13T00:38:54.561Z" />

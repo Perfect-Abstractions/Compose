@@ -1,7 +1,8 @@
 ---
 sidebar_position: 200
 title: "ERC1155MetadataMod"
-description: "Manage ERC-1155 metadata URIs"
+description: "Manages ERC-1155 token metadata URIs"
+sidebar_label: "Module"
 gitSource: "https://github.com/Perfect-Abstractions/Compose/tree/main/src/token/ERC1155/Metadata/ERC1155MetadataMod.sol"
 ---
 
@@ -21,14 +22,14 @@ import GradientText from '@site/src/components/ui/GradientText';
 import GradientButton from '@site/src/components/ui/GradientButton';
 
 <DocSubtitle>
-Manage ERC-1155 metadata URIs
+Manages ERC-1155 token metadata URIs
 </DocSubtitle>
 
 <Callout type="info" title="Key Features">
-- All functions are `internal`, intended for use by other facets within the diamond.
-- Utilizes diamond storage (EIP-8042) for shared metadata state.
-- No external dependencies, promoting composability.
-- Supports setting a base URI, token-specific URIs, and a default URI.
+- Provides `internal` functions for metadata management, intended for use within custom facets.
+- Utilizes diamond storage (EIP-8042) via a dedicated storage slot (`keccak256(\"erc1155.metadata\")`) for shared access.
+- Supports setting a base URI, token-specific URIs, and a default URI for ERC-1155 tokens.
+- Emits a `URI` event upon setting token-specific URIs, signaling off-chain applications.
 </Callout>
 
 <Callout type="info" title="Module Usage">
@@ -37,7 +38,7 @@ This module provides internal functions for use in your custom facets. Import it
 
 ## Overview
 
-This module provides internal functions to manage ERC-1155 token metadata URIs. Facets can use these functions to set a base URI, token-specific URIs, or a default URI, all stored within the diamond's shared storage. Changes are immediately visible to other facets interacting with the same storage.
+This module provides internal functions for managing ERC-1155 token metadata URIs, including base URIs, token-specific URIs, and default URIs. It leverages diamond storage to ensure these metadata configurations are accessible across all facets interacting with the ERC-1155 implementation. Changes made via this module are immediately visible to any facet querying token metadata.
 
 ---
 
@@ -204,30 +205,64 @@ Sets the default URI for all token types. This URI is used when no token-specifi
 
 <ExpandableCode language="solidity" maxLines={20} title="Example Implementation">
 {`pragma solidity >=0.8.30;
-import @compose/token/ERC1155/Metadata/ERC1155MetadataMod;
 
-contract MyERC1155Facet {
-    ERC1155MetadataMod internal metadataMod;
+import {ERC1155MetadataMod} from "@compose/token/ERC1155/Metadata/ERC1155MetadataMod";
 
-    function initialize(address _metadataModAddress) external {
-        metadataMod = ERC1155MetadataMod(_metadataModAddress);
+contract ERC1155MetadataFacet {
+    ERC1155MetadataMod internal metadataModule;
+
+    constructor(address diamondAddress) {
+        // Assuming ERC1155MetadataMod is deployed as part of the diamond
+        // and its storage slot is known.
+        // In a real scenario, you'd likely get the module instance via the diamond proxy interface.
+        // For this example, we simulate direct access for clarity.
+        // metadataModule = ERC1155MetadataMod(diamondAddress); // Conceptual call
     }
 
     /**
-     * @notice Sets the URI for a specific token ID.
+     * @notice Sets a base URI for all tokens.
+     * @param _baseURI The base URI to set.
+     */
+    function setBaseUri(string memory _baseURI) external {
+        // Call the internal function from the module.
+        // metadataModule.setBaseURI(_baseURI);
+        // Placeholder for actual call:
+        // ERC1155MetadataMod(msg.sender).setBaseURI(_baseURI);
+    }
+
+    /**
+     * @notice Sets a token-specific URI.
      * @param _tokenId The ID of the token.
-     * @param _tokenURI The URI for the token.
+     * @param _tokenURI The token-specific URI.
      */
-    function setTokenMetadataURI(uint256 _tokenId, string memory _tokenURI) external {
-        metadataMod.setTokenURI(_tokenId, _tokenURI);
+    function setTokenUri(uint256 _tokenId, string memory _tokenURI) external {
+        // Call the internal function from the module.
+        // metadataModule.setTokenURI(_tokenId, _tokenURI);
+        // Placeholder for actual call:
+        // ERC1155MetadataMod(msg.sender).setTokenURI(_tokenId, _tokenURI);
     }
 
     /**
-     * @notice Sets the default URI for all tokens.
-     * @param _uri The default URI.
+     * @notice Sets a default URI for all tokens when no specific URI is set.
+     * @param _uri The default URI to set.
      */
-    function setDefaultTokenURI(string memory _uri) external {
-        metadataMod.setURI(_uri);
+    function setDefaultUri(string memory _uri) external {
+        // Call the internal function from the module.
+        // metadataModule.setURI(_uri);
+        // Placeholder for actual call:
+        // ERC1155MetadataMod(msg.sender).setURI(_uri);
+    }
+
+    /**
+     * @notice Retrieves the storage structure for metadata.
+     * @return ERC1155MetadataStorage The metadata storage struct.
+     */
+    function getMetadataStorage() external pure returns (bytes memory) {
+        // Returns the raw storage slot.
+        // return metadataModule.getStorage();
+        // Placeholder for actual call:
+        // return abi.encode(ERC1155MetadataMod(msg.sender).getStorage());
+        return "0x"; // Dummy return
     }
 }`}
 </ExpandableCode>
@@ -236,15 +271,15 @@ contract MyERC1155Facet {
 ## Best Practices
 
 <Callout type="tip" title="Best Practice">
-- Ensure access control is enforced by the calling facet before invoking `setBaseURI`, `setTokenURI`, or `setURI`.
-- When upgrading, verify that the `ERC1155MetadataStorage` struct and its storage position remain compatible.
-- Handle the `URI` event emitted by `setTokenURI` for off-chain indexing of metadata changes.
+- Ensure proper access control is enforced in facets calling `setBaseURI`, `setTokenURI`, or `setURI`.
+- Verify that the `ERC1155MetadataStorage` struct definition in your diamond's storage layout is compatible with the module's expected structure, especially `uri` and `baseURI` fields.
+- When upgrading facets, ensure that the storage slot `keccak256(\"erc1155.metadata\")` is correctly managed and that the new facets can access and interpret the existing metadata.
 </Callout>
 
 ## Integration Notes
 
 <Callout type="success" title="Shared Storage">
-This module accesses and modifies shared diamond storage at the slot identified by `keccak256(\"erc1155.metadata\")`. The `ERC1155MetadataStorage` struct, containing `uri` and `baseURI` fields, is managed here. Functions like `setBaseURI` and `setTokenURI` directly update these storage variables, making changes immediately visible to any other facet that reads from the same storage slot.
+This module interacts with diamond storage at the slot identified by `keccak256(\"erc1155.metadata\")`. It defines and utilizes an `ERC1155MetadataStorage` struct containing at least `uri` and `baseURI` fields. Facets importing this module can call `getStorage()` to access this shared state, and `setBaseURI`, `setTokenURI`, and `setURI` to modify it. Changes to the `uri` and `baseURI` fields are immediately visible to any facet that reads from this storage slot.
 </Callout>
 
 <div style={{marginTop: "3rem", paddingTop: "2rem", borderTop: "1px solid var(--ifm-color-emphasis-200)"}}>
@@ -264,4 +299,4 @@ This module accesses and modifies shared diamond storage at the slot identified 
   <WasThisHelpful pageId="ERC1155MetadataMod" />
 </div>
 
-<LastUpdated date="2026-03-12T21:03:24.273Z" />
+<LastUpdated date="2026-03-13T00:35:20.825Z" />

@@ -1,7 +1,8 @@
 ---
 sidebar_position: 110
 title: "AccessControlAdminFacet"
-description: "Manages roles and their administrators"
+description: "Manages role administration for access control"
+sidebar_label: "Facet"
 gitSource: "https://github.com/Perfect-Abstractions/Compose/tree/main/src/access/AccessControl/Admin/AccessControlAdminFacet.sol"
 ---
 
@@ -21,19 +22,19 @@ import GradientText from '@site/src/components/ui/GradientText';
 import GradientButton from '@site/src/components/ui/GradientButton';
 
 <DocSubtitle>
-Manages roles and their administrators
+Manages role administration for access control
 </DocSubtitle>
 
 <Callout type="info" title="Key Features">
-- Manages role-to-admin mappings via diamond storage.
-- Provides an external function to export facet selectors.
-- Emits `RoleAdminChanged` event upon successful role admin updates.
-- Enforces access control via `AccessControlUnauthorizedAccount` error.
+- Sets and queries role administrators via diamond proxy.
+- Emits `RoleAdminChanged` event upon successful administration changes.
+- Reverts with `AccessControlUnauthorizedAccount` if caller lacks permissions.
+- Exports its own selectors for diamond registration.
 </Callout>
 
 ## Overview
 
-This facet provides administrative functions for managing roles and their administrators within a Compose diamond. It allows setting role-to-admin mappings and exporting facet selectors. Calls are routed through the diamond proxy, accessing shared diamond storage.
+This facet provides administrative functions for managing role hierarchies within a diamond. It allows setting and querying the admin role for any given role, enabling granular control over permissions. Calls are routed through the diamond proxy, accessing shared storage.
 
 ---
 
@@ -176,41 +177,61 @@ error AccessControlUnauthorizedAccount(address _account, bytes32 _role);
 <ExpandableCode language="solidity" maxLines={20} title="Example Implementation">
 {`pragma solidity >=0.8.30;
 
-import { IDiamond } from "@compose/diamond/IDiamond";
-import { AccessControlAdminFacet } from "@compose/access/AccessControl/Admin/AccessControlAdminFacet";
+import {IDiamond} from "@compose/contracts/diamond/IDiamond.sol";
+import {AccessControlAdminFacet} from "@compose/access/AccessControl/Admin/AccessControlAdminFacet.sol";
 
 contract DiamondUser {
-    IDiamond immutable diamond;
+    address immutable diamondAddress;
 
     constructor(address _diamondAddress) {
-        diamond = IDiamond(_diamondAddress);
+        diamondAddress = _diamondAddress;
     }
 
+    /**
+     * @notice Sets the admin role for a specific role.
+     * @param _role The role to set the admin for.
+     * @param _adminRole The new admin role for the specified role.
+     */
     function setAdminRole(bytes32 _role, bytes32 _adminRole) external {
-        // Call the facet function through the diamond proxy
-        AccessControlAdminFacet(address(diamond)).setRoleAdmin(_role, _adminRole);
+        IDiamond(diamondAddress).setRoleAdmin(_role, _adminRole);
     }
 
-    function exportFacetSelectors() external view returns (bytes memory) {
-        // Call the facet function through the diamond proxy
-        return AccessControlAdminFacet(address(diamond)).exportSelectors();
+    /**
+     * @notice Exports the selectors exposed by this facet.
+     * @return selectors A bytes string of encoded selectors.
+     */
+    function exportFacetSelectors() external pure returns (bytes memory) {
+        return AccessControlAdminFacet.exportSelectors();
     }
-}`}
+
+    /**
+     * @notice Retrieves the facet's storage structure.
+     * @return AccessControlStorage The storage for access control.
+     */
+    function getAccessControlStorage() internal pure returns (AccessControlStorage storage) {
+        return AccessControlAdminFacet.getStorage();
+    }
+}
+
+struct AccessControlStorage {
+
+}
+`}
 </ExpandableCode>
 -->
 
 ## Best Practices
 
 <Callout type="tip" title="Best Practice">
-- Initialize role-admin mappings during diamond deployment.
-- Ensure the caller has the necessary permissions to set admin roles.
-- Verify storage compatibility when upgrading facets to prevent state corruption.
+- Initialize roles and their admin roles during diamond deployment.
+- Ensure the caller has the necessary permissions to set role administrators.
+- Verify storage compatibility when upgrading the AccessControlAdminFacet.
 </Callout>
 
 ## Security Considerations
 
 <Callout type="warning" title="Security">
-State-changing functions are protected by access control, reverting with `AccessControlUnauthorizedAccount` if the caller is not the current admin of the role. Input validation for roles is implicit in the role management logic. Follow standard Solidity security practices for external interactions.
+All state-changing functions, including `setRoleAdmin`, must be protected by access control mechanisms. The `setRoleAdmin` function enforces that only the current admin of a role can change its administrator. Input validation for roles is crucial. Follow standard Solidity security practices for handling roles and permissions.
 </Callout>
 
 <div style={{marginTop: "3rem", paddingTop: "2rem", borderTop: "1px solid var(--ifm-color-emphasis-200)"}}>
@@ -248,4 +269,4 @@ State-changing functions are protected by access control, reverting with `Access
   <WasThisHelpful pageId="AccessControlAdminFacet" />
 </div>
 
-<LastUpdated date="2026-03-12T21:07:13.842Z" />
+<LastUpdated date="2026-03-13T00:39:09.040Z" />

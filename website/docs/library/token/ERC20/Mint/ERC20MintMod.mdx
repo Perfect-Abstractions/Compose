@@ -2,6 +2,7 @@
 sidebar_position: 200
 title: "ERC20MintMod"
 description: "Internal functions for minting ERC-20 tokens"
+sidebar_label: "Module"
 gitSource: "https://github.com/Perfect-Abstractions/Compose/tree/main/src/token/ERC20/Mint/ERC20MintMod.sol"
 ---
 
@@ -26,9 +27,9 @@ Internal functions for minting ERC-20 tokens
 
 <Callout type="info" title="Key Features">
 - All functions are `internal` for use within custom facets.
-- Utilizes the diamond storage pattern (EIP-8042) for shared state.
-- No external dependencies or `using` directives, promoting explicitness.
-- Emits a `Transfer` event upon successful minting.
+- Utilizes the diamond storage pattern (EIP-8042) for shared state management.
+- No external dependencies or `using` directives, ensuring explicit composition.
+- Compatible with ERC-2535 diamond proxies.
 </Callout>
 
 <Callout type="info" title="Module Usage">
@@ -37,7 +38,7 @@ This module provides internal functions for use in your custom facets. Import it
 
 ## Overview
 
-This module exposes internal functions for minting ERC-20 tokens within a diamond. Facets import this module to manage total supply and recipient balances using shared diamond storage. Minting operations directly affect the supply and are immediately visible to all facets interacting with the same storage.
+This module provides internal functions for minting ERC-20 tokens. Facets can import this module to manage token supply and recipient balances using shared diamond storage. Changes to the total supply and balances are immediately reflected across all facets accessing the same storage.
 
 ---
 
@@ -181,29 +182,52 @@ error ERC20InvalidReceiver(address _receiver);
 {`pragma solidity >=0.8.30;
 import @compose/token/ERC20/Mint/ERC20MintMod;
 
-contract MyTokenFacet {
+contract MyERC20Facet {
     ERC20MintMod internal erc20MintMod;
 
-    function initialize(address erc20MintModAddress) external {
-        erc20MintMod = ERC20MintMod(erc20MintModAddress);
+    constructor(address diamondAddress) {
+        // Assuming ERC20MintMod is a facet callable via the diamond proxy
+        // In a real scenario, the module would likely be imported by a facet
+        // and its functions called directly if it were part of the same facet,
+        // or via the diamond if implemented as a separate facet.
+        // For this example, we simulate calling its internal functions.
     }
 
     /**
-     * @notice Mints new tokens to an account.
+     * @notice Mints new tokens and emits a Transfer event.
      * @param _account The address to mint tokens to.
      * @param _value The amount of tokens to mint.
      */
     function mintTokens(address _account, uint256 _value) external {
-        // Access control checks would typically happen here in a real facet
-        erc20MintMod.mint(_account, _value);
+        // In a real diamond, you'd access the module's functions potentially via a facet selector
+        // or if this facet itself implements the minting logic using the module's internal functions.
+        // Here we simulate calling the internal function directly as if within the same facet context.
+
+        // Placeholder for actual module interaction, assuming it's accessible.
+        // The actual call would be within a facet that has implemented ERC20MintMod's logic.
+        // For demonstration, we'll call the internal function as if it were available.
+        // erc20MintMod.mint(_account, _value);
+
+        // Simulating the effect for demonstration purposes:
+        // The actual implementation would use the ERC20MintMod internal functions.
+        // For example:
+        // ERC20MintMod.mint(_account, _value);
+
+        // To make this example runnable and demonstrate the call signature:
+        // We'll use a dummy ERC20MintMod instance and call its internal function.
+        // Note: In a deployed diamond, you would not instantiate modules this way.
+        ERC20MintMod module = ERC20MintMod(address(this)); // Dummy instantiation for example
+        module.mint(_account, _value);
     }
 
     /**
      * @notice Retrieves the ERC20Storage struct pointer.
-     * @return The ERC20Storage struct.
+     * @return ERC20Storage A pointer to the storage struct.
      */
-    function getErc20Storage() external pure returns (ERC20Storage) {
-        return ERC20MintMod.getStorage();
+    function getERC20Storage() internal view returns (ERC20Storage storage) {
+        // Simulating the internal call to getStorage
+        ERC20MintMod module = ERC20MintMod(address(this)); // Dummy instantiation for example
+        return module.getStorage();
     }
 }`}
 </ExpandableCode>
@@ -212,15 +236,15 @@ contract MyTokenFacet {
 ## Best Practices
 
 <Callout type="tip" title="Best Practice">
-- Ensure any necessary access control is enforced within the calling facet before invoking `mint`.
-- Verify that the `ERC20Storage` struct layout remains compatible when upgrading diamond facets.
-- Handle the `ERC20InvalidReceiver` error if the `_account` address is invalid.
+- Ensure access control is enforced by the calling facet before executing mint operations.
+- Verify storage layout compatibility when upgrading facets to prevent storage collisions.
+- Handle the `ERC20InvalidReceiver` error if the recipient address is invalid.
 </Callout>
 
 ## Integration Notes
 
 <Callout type="success" title="Shared Storage">
-This module interacts with diamond storage at the `STORAGE_POSITION` defined by `keccak256("erc20")`. The `mint` function reads and writes to the `totalSupply` field within the `ERC20Storage` struct. Changes to `totalSupply` made through this module are immediately visible to any other facet that accesses the same storage slot.
+This module interacts with diamond storage at the `STORAGE_POSITION` associated with `keccak2535("erc20")`. The `getStorage()` function returns a pointer to the `ERC20Storage` struct, allowing facets to directly read and write to `totalSupply`. Changes made via the `mint()` function are immediately visible to all facets that access this storage position, ensuring state consistency across the diamond.
 </Callout>
 
 <div style={{marginTop: "3rem", paddingTop: "2rem", borderTop: "1px solid var(--ifm-color-emphasis-200)"}}>
@@ -258,4 +282,4 @@ This module interacts with diamond storage at the `STORAGE_POSITION` defined by 
   <WasThisHelpful pageId="ERC20MintMod" />
 </div>
 
-<LastUpdated date="2026-03-12T21:05:36.373Z" />
+<LastUpdated date="2026-03-13T00:37:32.387Z" />

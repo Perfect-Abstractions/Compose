@@ -1,7 +1,8 @@
 ---
 sidebar_position: 100
 title: "AccessControlGrantMod"
-description: "Grant roles to accounts within a diamond"
+description: "Access Control Grant module for Compose diamonds"
+sidebar_label: "Module"
 gitSource: "https://github.com/Perfect-Abstractions/Compose/tree/main/src/access/AccessControl/Grant/AccessControlGrantMod.sol"
 ---
 
@@ -21,14 +22,14 @@ import GradientText from '@site/src/components/ui/GradientText';
 import GradientButton from '@site/src/components/ui/GradientButton';
 
 <DocSubtitle>
-Grant roles to accounts within a diamond
+Access Control Grant module for Compose diamonds
 </DocSubtitle>
 
 <Callout type="info" title="Key Features">
-- Exposes an `internal` function for granting roles, suitable for use within custom facets.
-- Utilizes the diamond storage pattern (EIP-8042) for persistent role data.
-- No external dependencies, promoting composability and minimizing deployment complexity.
-- Events are emitted upon successful role granting, providing off-chain visibility.
+- All functions are `internal` for use in custom facets
+- Follows diamond storage pattern (EIP-8042)
+- Compatible with ERC-2535 diamonds
+- No external dependencies or `using` directives
 </Callout>
 
 <Callout type="info" title="Module Usage">
@@ -37,7 +38,7 @@ This module provides internal functions for use in your custom facets. Import it
 
 ## Overview
 
-This module provides an internal function to grant roles to specific accounts within a diamond's access control system. By leveraging shared diamond storage, changes made via this module are immediately visible to all facets. This ensures consistent role management across the diamond's functionality.
+Access Control Grant module for Compose diamonds
 
 ---
 
@@ -188,49 +189,10 @@ error AccessControlUnauthorizedAccount(address _account, bytes32 _role);
   </Accordion>
 </AccordionGroup>
 
-<!-- Usage Example section commented out for now -->
-<!--
-## Usage Example
-
-<ExpandableCode language="solidity" maxLines={20} title="Example Implementation">
-{`pragma solidity >=0.8.30;
-
-import { AccessControlGrantMod } from "@compose/access/AccessControl/Grant/AccessControlGrantMod";
-
-contract AccessControlGrantFacet {
-    AccessControlGrantMod internal accessControlGrantMod;
-
-    constructor(AccessControlGrantMod _accessControlGrantMod) {
-        accessControlGrantMod = _accessControlGrantMod;
-    }
-
-    /**
-     * @notice Grants a specific role to an account.
-     * @dev Requires caller to be admin of the role.
-     * @param _role The role to grant.
-     * @param _account The account to grant the role to.
-     * @return bool True if the role was granted successfully.
-     */
-    function grantRole(bytes32 _role, address _account) external returns (bool) {
-        // AccessControlUnauthorizedAccount is expected if caller is not admin
-        return accessControlGrantMod.grantRole(_role, _account);
-    }
-}`}
-</ExpandableCode>
--->
-
-## Best Practices
-
-<Callout type="tip" title="Best Practice">
-- Verify that the caller possesses the necessary administrative privileges before granting roles.
-- Ensure the `AccessControlStorage` struct is correctly initialized and accessible at the designated `STORAGE_POSITION`.
-- Handle the `AccessControlUnauthorizedAccount` error to gracefully manage unauthorized role granting attempts.
-</Callout>
-
 ## Integration Notes
 
 <Callout type="success" title="Shared Storage">
-This module interacts with diamond storage at the `STORAGE_POSITION` defined by `keccak256("compose.accesscontrol")`. The `grantRole` function modifies the shared `AccessControlStorage` struct, making role assignments immediately visible to all facets accessing this storage. The `grantRole` function enforces access control by reverting with `AccessControlUnauthorizedAccount` if the caller does not have the admin role for the specified role.
+This module accesses shared diamond storage, so changes made through this module are immediately visible to facets using the same storage pattern. All functions are internal as per Compose conventions.
 </Callout>
 
 <div style={{marginTop: "3rem", paddingTop: "2rem", borderTop: "1px solid var(--ifm-color-emphasis-200)"}}>
@@ -268,4 +230,4 @@ This module interacts with diamond storage at the `STORAGE_POSITION` defined by 
   <WasThisHelpful pageId="AccessControlGrantMod" />
 </div>
 
-<LastUpdated date="2026-03-12T21:07:46.233Z" />
+<LastUpdated date="2026-03-13T00:39:45.974Z" />

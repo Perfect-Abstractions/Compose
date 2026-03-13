@@ -1,7 +1,8 @@
 ---
 sidebar_position: 110
 title: "AccessControlTemporalRevokeFacet"
-description: "Revokes temporal roles from accounts within a diamond"
+description: "Revokes temporal roles from accounts within a diamond."
+sidebar_label: "Facet"
 gitSource: "https://github.com/Perfect-Abstractions/Compose/tree/main/src/access/AccessControl/Temporal/Revoke/AccessControlTemporalRevokeFacet.sol"
 ---
 
@@ -21,19 +22,19 @@ import GradientText from '@site/src/components/ui/GradientText';
 import GradientButton from '@site/src/components/ui/GradientButton';
 
 <DocSubtitle>
-Revokes temporal roles from accounts within a diamond
+Revokes temporal roles from accounts within a diamond.
 </DocSubtitle>
 
 <Callout type="info" title="Key Features">
-- Exposes external `revokeTemporalRole` function for role revocation.
-- Operates on shared diamond storage, respecting the diamond pattern.
-- Emits `TemporalRoleRevoked` event for off-chain monitoring.
-- Includes `exportSelectors` for introspection and management.
+- Revokes temporal roles using `revokeTemporalRole` function.
+- Emits `TemporalRoleRevoked` event upon successful revocation.
+- Protects against unauthorized revocations via `AccessControlUnauthorizedAccount` error.
+- Exports its selectors using `exportSelectors` for diamond interoperability.
 </Callout>
 
 ## Overview
 
-This facet provides functionality to revoke temporal roles from accounts within a Compose diamond. It exposes the `revokeTemporalRole` function, which operates on shared diamond storage. Developers integrate this facet to manage role lifecycles and enforce access control policies.
+This facet provides functionality to revoke temporal roles assigned to accounts. It interacts with diamond storage to manage role revocations and emits events for off-chain monitoring. Developers integrate this facet to manage dynamic role assignments within a Compose diamond.
 
 ---
 
@@ -190,24 +191,24 @@ error AccessControlUnauthorizedAccount(address _account, bytes32 _role);
 <ExpandableCode language="solidity" maxLines={20} title="Example Implementation">
 {`pragma solidity >=0.8.30;
 
-import { IDiamond } from "@compose/diamond/IDiamond.sol";
-import { AccessControlTemporalRevokeFacet } from "@compose/access/AccessControl/Temporal/Revoke/AccessControlTemporalRevokeFacet";
+import {IDiamond} from "@compose/diamond/IDiamond";
+import {AccessControlTemporalRevokeFacet} from "@compose/access/AccessControl/Temporal/Revoke/AccessControlTemporalRevokeFacet";
 
-contract DiamondUser {
-    address immutable diamondAddress;
+contract Deployer {
+    address immutable DIAMOND_ADDRESS;
 
-    constructor(address _diamondAddress) {
-        diamondAddress = _diamondAddress;
+    constructor(address diamondAddress) {
+        DIAMOND_ADDRESS = diamondAddress;
     }
 
-    function revokeRole(bytes32 _role, address _account) external {
+    function revokeRole(bytes32 role, address account) external {
         // Calls are routed through the diamond proxy to the facet
-        IDiamond(diamondAddress).revokeTemporalRole(_role, _account);
+        IDiamond(DIAMOND_ADDRESS).revokeTemporalRole(role, account);
     }
 
-    // Example of exporting selectors, typically done during deployment or introspection
-    function getSelectors() external view returns (bytes memory) {
-        return AccessControlTemporalRevokeFacet.exportSelectors();
+    // Example: Exporting selectors for upgradeability or discovery
+    function getFacetSelectors() public view returns (bytes memory) {
+        return IDiamond(DIAMOND_ADDRESS).exportSelectors();
     }
 }`}
 </ExpandableCode>
@@ -216,15 +217,15 @@ contract DiamondUser {
 ## Best Practices
 
 <Callout type="tip" title="Best Practice">
-- Enforce access control on the `revokeTemporalRole` function by ensuring the caller is the admin of the role.
-- Initialize roles and their admins before attempting to revoke them.
-- Verify that the facet is correctly added to the diamond with the appropriate selectors.
+- Ensure the caller has the necessary permissions to revoke the specified temporal role.
+- Initialize temporal roles and their admins before attempting revocations.
+- Monitor the `TemporalRoleRevoked` event for off-chain state updates.
 </Callout>
 
 ## Security Considerations
 
 <Callout type="warning" title="Security">
-The `revokeTemporalRole` function includes an access control check, reverting with `AccessControlUnauthorizedAccount` if the caller is not the admin of the specified role. Input validation for `_role` and `_account` is handled by the underlying access control logic. No reentrancy guards are explicitly present; follow standard Solidity security practices.
+The `revokeTemporalRole` function enforces access control, ensuring only the designated admin of a role can revoke it. Reverts with `AccessControlUnauthorizedAccount` if the caller is not the admin. Follow standard Solidity security practices for input validation.
 </Callout>
 
 <div style={{marginTop: "3rem", paddingTop: "2rem", borderTop: "1px solid var(--ifm-color-emphasis-200)"}}>
@@ -262,4 +263,4 @@ The `revokeTemporalRole` function includes an access control check, reverting wi
   <WasThisHelpful pageId="AccessControlTemporalRevokeFacet" />
 </div>
 
-<LastUpdated date="2026-03-12T21:08:17.525Z" />
+<LastUpdated date="2026-03-13T00:40:15.708Z" />

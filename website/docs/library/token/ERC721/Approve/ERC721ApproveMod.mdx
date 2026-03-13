@@ -1,7 +1,8 @@
 ---
 sidebar_position: 200
 title: "ERC721ApproveMod"
-description: "Manages ERC-721 token approvals and operator permissions"
+description: "Manages ERC-721 approvals and operator permissions"
+sidebar_label: "Module"
 gitSource: "https://github.com/Perfect-Abstractions/Compose/tree/main/src/token/ERC721/Approve/ERC721ApproveMod.sol"
 ---
 
@@ -21,14 +22,14 @@ import GradientText from '@site/src/components/ui/GradientText';
 import GradientButton from '@site/src/components/ui/GradientButton';
 
 <DocSubtitle>
-Manages ERC-721 token approvals and operator permissions
+Manages ERC-721 approvals and operator permissions
 </DocSubtitle>
 
 <Callout type="info" title="Key Features">
-- Provides `internal` functions for ERC-721 approval management.
-- Leverages diamond storage (EIP-8042) for shared state.
-- Emits `Approval` and `ApprovalForAll` events upon state changes.
-- Includes custom errors `ERC721InvalidOperator` and `ERC721NonexistentToken` for precise error handling.
+- Internal functions for ERC-721 approval management.
+- Utilizes the diamond storage pattern (EIP-8042) for shared state.
+- Emits `Approval` and `ApprovalForAll` events for off-chain monitoring.
+- Defines custom errors `ERC721InvalidOperator` and `ERC721NonexistentToken`.
 </Callout>
 
 <Callout type="info" title="Module Usage">
@@ -37,7 +38,7 @@ This module provides internal functions for use in your custom facets. Import it
 
 ## Overview
 
-This module provides internal functions for managing ERC-721 token approvals and operator permissions. Facets can import and utilize these functions to interact with shared ERC-721 storage within a diamond. Changes made through this module are immediately visible to all facets accessing the same diamond storage.
+This module provides internal functions for managing ERC-721 approvals and operator relationships, utilizing shared diamond storage. Facets can integrate this module to handle token ownership transfers and operator authorizations, ensuring changes are immediately visible across the diamond.
 
 ---
 
@@ -212,62 +213,49 @@ error ERC721NonexistentToken(uint256 _tokenId);
 
 <ExpandableCode language="solidity" maxLines={20} title="Example Implementation">
 {`pragma solidity >=0.8.30;
-
 import @compose/token/ERC721/Approve/ERC721ApproveMod;
 
-contract ERC721ApproveFacet {
+contract MyERC721Facet {
     ERC721ApproveMod private approveModule;
 
     constructor(address diamondAddress) {
-        // Assuming ERC721ApproveMod is deployed at diamondAddress or accessible via a facet
-        // In a real diamond, you would likely use an interface or get the module address differently.
-        // For this example, we instantiate it directly, assuming it's part of the diamond's logic.
         approveModule = ERC721ApproveMod(diamondAddress);
     }
 
     /**
      * @notice Approves a specific address to transfer a token.
-     * @param _to The address to approve.
-     * @param _tokenId The ID of the token to approve.
+     * @dev Requires caller to be the token owner or approved operator.
      */
     function approveToken(address _to, uint256 _tokenId) external {
-        // Call the internal function from the module
+        // Assuming ownership checks are handled by the calling facet
         approveModule.approve(_to, _tokenId);
     }
 
     /**
      * @notice Approves an operator to manage all of the caller's tokens.
-     * @param _operator The operator address.
-     * @param _approved Whether to approve or revoke approval.
+     * @dev Requires caller to be the token owner.
      */
-    function setAllOperatorApproval(address _operator, bool _approved) external {
-        // Call the internal function from the module
+    function setAllApprovals(address _operator, bool _approved) external {
+        // Assuming ownership checks are handled by the calling facet
         approveModule.setApprovalForAll(_operator, _approved);
     }
-
-    /**
-     * @notice Retrieves the ERC721Storage struct pointer.
-     * @return The ERC721Storage struct.
-     */
-    function getERC721Storage() external pure returns (ERC721Storage) {
-        return approveModule.getStorage();
-    }
-}`}
+}
+`}
 </ExpandableCode>
 -->
 
 ## Best Practices
 
 <Callout type="tip" title="Best Practice">
-- Ensure the caller has the necessary permissions (e.g., token ownership for `approve`, operator status for `setApprovalForAll`) before invoking module functions.
-- Handle potential errors like `ERC721NonexistentToken` or `ERC721InvalidOperator` when calling module functions.
-- Verify that the `ERC721Storage` struct's layout remains compatible across diamond upgrades.
+- Ensure the calling facet verifies ownership and caller permissions before invoking `approve` or `setApprovalForAll`.
+- Handle `ERC721InvalidOperator` and `ERC721NonexistentToken` errors returned by module functions.
+- Always use `getStorage()` to access the storage pointer for reliable storage interaction.
 </Callout>
 
 ## Integration Notes
 
 <Callout type="success" title="Shared Storage">
-This module interacts with diamond storage at the slot identified by `STORAGE_POSITION`, which is deterministically set using `keccak256(\"erc721\")`. The `getStorage()` function returns a pointer to the `ERC721Storage` struct located at this slot. Any modifications to approvals or operator statuses made through this module's functions (`approve`, `setApprovalForAll`) are immediately reflected in the shared diamond storage and are visible to all other facets operating on the same storage slot.
+This module interacts with diamond storage via the `STORAGE_POSITION` for the `ERC721Storage` struct, identified by `keccak256("erc721")`. All functions are internal and operate directly on this shared storage. Changes made to approvals or operator statuses are immediately reflected for all facets accessing the same storage slot.
 </Callout>
 
 <div style={{marginTop: "3rem", paddingTop: "2rem", borderTop: "1px solid var(--ifm-color-emphasis-200)"}}>
@@ -305,4 +293,4 @@ This module interacts with diamond storage at the slot identified by `STORAGE_PO
   <WasThisHelpful pageId="ERC721ApproveMod" />
 </div>
 
-<LastUpdated date="2026-03-12T21:03:56.620Z" />
+<LastUpdated date="2026-03-13T00:35:51.083Z" />

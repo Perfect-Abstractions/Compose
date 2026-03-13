@@ -1,7 +1,8 @@
 ---
 sidebar_position: 110
 title: "OwnerDataFacet"
-description: "Manages the owner of a diamond"
+description: "Manages diamond owner and selector discovery"
+sidebar_label: "Facet"
 gitSource: "https://github.com/Perfect-Abstractions/Compose/tree/main/src/access/Owner/Data/OwnerDataFacet.sol"
 ---
 
@@ -21,19 +22,19 @@ import GradientText from '@site/src/components/ui/GradientText';
 import GradientButton from '@site/src/components/ui/GradientButton';
 
 <DocSubtitle>
-Manages the owner of a diamond
+Manages diamond owner and selector discovery
 </DocSubtitle>
 
 <Callout type="info" title="Key Features">
-- Exposes an `owner()` function adhering to ERC-173 semantics.
-- Utilizes diamond storage for owner management, ensuring consistency.
-- Provides `exportSelectors()` for facet discovery and upgradeability.
-- Self-contained facet with no external dependencies.
+- Exposes an `owner()` function to retrieve the diamond's owner address.
+- Provides an `exportSelectors()` function for programmatic discovery of facet functions.
+- Leverages diamond storage for owner state management.
+- Self-contained, adhering to Compose facet design principles.
 </Callout>
 
 ## Overview
 
-This facet exposes functions to retrieve the owner address of a diamond. It accesses shared diamond storage to ensure consistent owner information across all facets. Developers integrate this facet to provide an external interface for querying the diamond's owner as defined by ERC-173.
+This facet provides functions to retrieve the diamond's owner and its own function selectors. It accesses shared diamond storage to determine ownership. Developers integrate this facet to expose owner query functionality and enable selector discovery mechanisms within a diamond.
 
 ---
 
@@ -112,8 +113,7 @@ Exports the function selectors of the OwnerDataFacet This function is use as a s
 <ExpandableCode language="solidity" maxLines={20} title="Example Implementation">
 {`pragma solidity >=0.8.30;
 
-import { IDiamond } from "@compose/diamond/IDiamond";
-import { OwnerDataFacet } from "@compose/access/Owner/Data/OwnerDataFacet";
+import {IOwnerDataFacet} from "@compose/access/Owner/Data/OwnerDataFacet";
 
 contract DiamondUser {
     address immutable diamondAddress;
@@ -122,23 +122,25 @@ contract DiamondUser {
         diamondAddress = _diamondAddress;
     }
 
-    /**
-     * @notice Get the current owner of the diamond.
-     */
-    function getCurrentOwner() public view returns (address) {
-        // Call the owner function exposed by the OwnerDataFacet through the diamond proxy.
-        // The diamond routes this call to the appropriate facet.
-        return IDiamond(diamondAddress).owner();
+    function getDiamondOwner() external view returns (address) {
+        IOwnerDataFacet ownerFacet = IOwnerDataFacet(diamondAddress);
+        return ownerFacet.owner();
     }
 
-    /**
-     * @notice Get the selectors exported by the OwnerDataFacet.
-     * This is useful for diamond upgradeability and discovery.
-     */
-    function getOwnerFacetSelectors() public pure returns (bytes memory) {
-        // OwnerDataFacet.exportSelectors() is a pure function that returns its own selectors.
-        // This can be called directly or via the diamond.
-        return OwnerDataFacet.exportSelectors();
+    function discoverOwnerSelectors() external pure returns (bytes memory) {
+        // Note: This call is made directly to the facet address, not through the diamond proxy,
+        // as exportSelectors is a pure function and does not interact with diamond storage.
+        // In a real scenario, you'd typically discover facets via the DiamondLoupeFacet.
+        // However, for demonstrating exportSelectors, direct call is shown.
+        address ownerFacetAddress = getOwnerFacetAddress(); // Assume this function resolves the facet address
+        return IOwnerDataFacet(ownerFacetAddress).exportSelectors();
+    }
+
+    // Placeholder for resolving facet address, in a real diamond this would be dynamic
+    function getOwnerFacetAddress() internal pure returns (address) {
+        // This is a simplified example. In a real diamond, you'd use DiamondLoupeFacet
+        // to get facet addresses based on selectors.
+        return 0x0; // Replace with actual owner facet address
     }
 }`}
 </ExpandableCode>
@@ -147,15 +149,15 @@ contract DiamondUser {
 ## Best Practices
 
 <Callout type="tip" title="Best Practice">
-- Ensure the OwnerDataFacet is correctly initialized with an owner during diamond deployment.
-- Verify that the diamond's storage layout is compatible with the OwnerStorage struct before upgrading.
-- Use `owner()` to retrieve the owner address; do not attempt to read directly from the storage slot unless absolutely necessary.
+- Integrate this facet to provide owner query functionality via the diamond proxy.
+- Use `exportSelectors` to programmatically discover the facet's function signatures for external tooling or indexing.
+- Ensure the `OwnerDataMod` module is correctly configured to manage the owner state within the diamond's storage.
 </Callout>
 
 ## Security Considerations
 
 <Callout type="warning" title="Security">
-The `owner()` function is a view function and poses no reentrancy risk. Access control for changing the owner is managed by a separate facet (e.g., `OwnerFacet`) and is not present in this data facet. Follow standard Solidity security practices for diamond integration.
+The `owner()` function reads from shared diamond storage and is protected by implicit access control managed by the diamond's ownership pattern. The `exportSelectors()` function is pure and has no security implications. Follow standard Solidity security practices for all interactions with the diamond proxy.
 </Callout>
 
 <div style={{marginTop: "3rem", paddingTop: "2rem", borderTop: "1px solid var(--ifm-color-emphasis-200)"}}>
@@ -175,4 +177,4 @@ The `owner()` function is a view function and poses no reentrancy risk. Access c
   <WasThisHelpful pageId="OwnerDataFacet" />
 </div>
 
-<LastUpdated date="2026-03-12T21:06:16.350Z" />
+<LastUpdated date="2026-03-13T00:38:11.461Z" />

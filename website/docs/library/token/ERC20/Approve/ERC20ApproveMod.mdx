@@ -1,7 +1,8 @@
 ---
 sidebar_position: 200
 title: "ERC20ApproveMod"
-description: "Manages ERC-20 token approvals between accounts"
+description: "Approve token spending for ERC-20 tokens"
+sidebar_label: "Module"
 gitSource: "https://github.com/Perfect-Abstractions/Compose/tree/main/src/token/ERC20/Approve/ERC20ApproveMod.sol"
 ---
 
@@ -21,14 +22,14 @@ import GradientText from '@site/src/components/ui/GradientText';
 import GradientButton from '@site/src/components/ui/GradientButton';
 
 <DocSubtitle>
-Manages ERC-20 token approvals between accounts
+Approve token spending for ERC-20 tokens
 </DocSubtitle>
 
 <Callout type="info" title="Key Features">
-- Provides an `internal` function for setting ERC-20 allowances.
-- Uses the diamond storage pattern for shared state management.
+- All functions are `internal` for use within custom facets.
+- Leverages the diamond storage pattern for shared state management.
 - Emits an `Approval` event upon successful approval.
-- Includes a `getStorage` function for direct access to ERC20 storage.
+- Includes a `getStorage` function for inspecting ERC20 storage.
 </Callout>
 
 <Callout type="info" title="Module Usage">
@@ -37,7 +38,7 @@ This module provides internal functions for use in your custom facets. Import it
 
 ## Overview
 
-This module exposes internal functions for managing ERC-20 token approvals. Facets can import this module to set or query allowances using shared diamond storage. Changes to allowances are immediately visible to all facets accessing the same storage.
+This module exposes internal functions to manage token spending approvals. Facets import this module to set allowances using shared diamond storage. Changes made through this module are immediately visible to all facets using the same storage pattern, enabling composable ERC-20-like functionality.
 
 ---
 
@@ -200,18 +201,35 @@ import @compose/token/ERC20/Approve/ERC20ApproveMod;
 contract MyTokenFacet {
     ERC20ApproveMod internal approveModule;
 
-    function setApproval(address _spender, uint256 _value) external {
-        // Ensure this facet has the correct selectors and access control if needed
-        bool success = approveModule.approve(_spender, _value);
-        if (!success) {
-            // Handle potential revert or specific logic based on module return value
-        }
+    function initialize(address _approveModuleAddress) internal {
+        approveModule = ERC20ApproveMod(_approveModuleAddress);
     }
 
-    // Example of accessing storage directly via the module
-    function getERC20Storage() external pure returns (ERC20Storage memory) {
+    /**
+     * @notice Approves a spender to withdraw tokens on behalf of the caller.
+     * @param _spender The address to approve.
+     * @param _value The amount of tokens to approve.
+     * @return bool True if the approval was successful.
+     */
+    function approveTokens(address _spender, uint256 _value) external returns (bool) {
+        if (_spender == address(0)) {
+            revert ERC20InvalidSpender(_spender);
+        }
+        // Internal call to the module to set the allowance
+        return approveModule.approve(_spender, _value);
+    }
+
+    /**
+     * @notice Retrieves the ERC20 storage structure.
+     * @return ERC20Storage The storage structure.
+     */
+    function getErc20Storage() external pure returns (ERC20Storage) {
         return approveModule.getStorage();
     }
+}
+
+struct ERC20Storage {
+  uint256 totalSupply;
 }`}
 </ExpandableCode>
 -->
@@ -219,15 +237,15 @@ contract MyTokenFacet {
 ## Best Practices
 
 <Callout type="tip" title="Best Practice">
-- Ensure the `_spender` address is validated to prevent unintended approvals.
-- Call `approve` only after verifying caller permissions if required by the diamond's access control.
-- Handle the `ERC20InvalidSpender` error when interacting with this module.
+- Ensure the `_spender` address is not the zero address before calling `approve`.
+- Verify that the diamond's storage layout is compatible if upgrading facets that interact with this module.
+- Handle the `ERC20InvalidSpender` error appropriately when calling `approveTokens`.
 </Callout>
 
 ## Integration Notes
 
 <Callout type="success" title="Shared Storage">
-This module interacts with diamond storage at the slot identified by `keccak256(\"erc20\")`. The `ERC20Storage` struct, containing fields like `totalSupply`, is accessed and modified via inline assembly. Any facet that delegates to this module or directly accesses the same storage slot will observe changes to allowances immediately. The `approve` function modifies the allowance mapping within the shared storage.
+This module operates on diamond storage at `STORAGE_POSITION`, identified by `keccak256("erc20")`. The `approve` function modifies the allowance mapping within this shared storage. Any facet with access to the same diamond storage slot will immediately observe changes to allowances. The `getStorage` function provides direct access to the `ERC20Storage` struct, allowing other facets to read total supply or other defined fields.
 </Callout>
 
 <div style={{marginTop: "3rem", paddingTop: "2rem", borderTop: "1px solid var(--ifm-color-emphasis-200)"}}>
@@ -265,4 +283,4 @@ This module interacts with diamond storage at the slot identified by `keccak256(
   <WasThisHelpful pageId="ERC20ApproveMod" />
 </div>
 
-<LastUpdated date="2026-03-12T21:05:00.957Z" />
+<LastUpdated date="2026-03-13T00:36:55.423Z" />

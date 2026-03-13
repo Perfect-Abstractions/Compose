@@ -1,7 +1,8 @@
 ---
 sidebar_position: 210
 title: "ERC721MetadataFacet"
-description: "ERC-721 token metadata management"
+description: "ERC-721 token metadata for diamonds"
+sidebar_label: "Facet"
 gitSource: "https://github.com/Perfect-Abstractions/Compose/tree/main/src/token/ERC721/Metadata/ERC721MetadataFacet.sol"
 ---
 
@@ -21,19 +22,19 @@ import GradientText from '@site/src/components/ui/GradientText';
 import GradientButton from '@site/src/components/ui/GradientButton';
 
 <DocSubtitle>
-ERC-721 token metadata management
+ERC-721 token metadata for diamonds
 </DocSubtitle>
 
 <Callout type="info" title="Key Features">
-- Exposes external view functions for token metadata retrieval.
+- Exposes external view functions for ERC-721 metadata retrieval.
 - Accesses shared diamond storage for name, symbol, and base URI.
-- Provides `exportSelectors` for easy diamond integration.
-- Self-contained facet adhering to Compose standards.
+- Minimal dependencies, designed for integration within an ERC-2535 diamond.
+- Provides `exportSelectors` for diamond facet discovery.
 </Callout>
 
 ## Overview
 
-This facet provides external functions for retrieving ERC-721 token metadata within a Compose diamond. It accesses shared diamond storage to return the token collection's name, symbol, and individual token URIs. Developers integrate this facet to expose standard ERC-721 metadata properties while leveraging the diamond's upgradeability.
+This facet provides external view functions for retrieving ERC-721 token metadata within a diamond. It accesses shared diamond storage to return the collection's name, symbol, and individual token URIs. Developers integrate this facet to expose metadata capabilities while maintaining diamond upgradeability.
 
 ---
 
@@ -211,35 +212,29 @@ error ERC721InvalidOwner(address _owner);
 <ExpandableCode language="solidity" maxLines={20} title="Example Implementation">
 {`pragma solidity >=0.8.30;
 
-import {ERC721MetadataFacet} from "@compose/token/ERC721/Metadata/ERC721MetadataFacet";
 import {IDiamond} from "@compose/diamond/IDiamond";
+import {ERC721MetadataFacet} from "@compose/token/ERC721/Metadata/ERC721MetadataFacet";
 
-contract ExampleUsage {
-    address immutable diamondAddress;
+contract DiamondUser {
+    IDiamond diamond;
 
     constructor(address _diamondAddress) {
-        diamondAddress = _diamondAddress;
+        diamond = IDiamond(_diamondAddress);
     }
 
     function getTokenName() external view returns (string memory) {
-        // Calls are routed through the diamond proxy to the ERC721MetadataFacet
-        IDiamond diamond = IDiamond(diamondAddress);
-        return diamond.name();
+        // Call the name function through the diamond proxy
+        return ERC721MetadataFacet(address(diamond)).name();
     }
 
     function getTokenSymbol() external view returns (string memory) {
-        IDiamond diamond = IDiamond(diamondAddress);
-        return diamond.symbol();
+        // Call the symbol function through the diamond proxy
+        return ERC721MetadataFacet(address(diamond)).symbol();
     }
 
     function getTokenUri(uint256 tokenId) external view returns (string memory) {
-        IDiamond diamond = IDiamond(diamondAddress);
-        return diamond.tokenURI(tokenId);
-    }
-
-    function getFacetSelectors() external pure returns (bytes memory) {
-        // Export selectors for diamond registration
-        return ERC721MetadataFacet.exportSelectors();
+        // Call the tokenURI function through the diamond proxy
+        return ERC721MetadataFacet(address(diamond)).tokenURI(tokenId);
     }
 }`}
 </ExpandableCode>
@@ -248,15 +243,15 @@ contract ExampleUsage {
 ## Best Practices
 
 <Callout type="tip" title="Best Practice">
-- Ensure the `ERC721MetadataFacet` is registered with the diamond's diamond cut mechanism.
-- Call metadata functions (`name`, `symbol`, `tokenURI`) through the diamond proxy address.
-- Verify that the `STORAGE_POSITION` for metadata is correctly initialized by the diamond.
+- Ensure the `ERC721MetadataFacet` is correctly initialized with name, symbol, and base URI during diamond deployment.
+- Calls to `name`, `symbol`, and `tokenURI` are read-only and can be made directly through the diamond proxy.
+- Verify storage slot compatibility before upgrading facets to prevent data corruption.
 </Callout>
 
 ## Security Considerations
 
 <Callout type="warning" title="Security">
-All functions are `view` and do not modify state, thus posing no reentrancy risk. Input validation for `tokenURI` is handled by underlying ERC-721 logic, which is assumed to revert on non-existent tokens or invalid owner states. Ensure proper access control is managed at the diamond level for functions that might be added in the future which interact with this storage.
+All functions in this facet are `view` functions and do not modify state, thus posing no reentrancy risk. Input validation for `tokenURI` is handled by the underlying ERC-721 implementation, which may revert with `ERC721NonexistentToken` or `ERC721InvalidOwner` if the token ID is invalid or the caller lacks permission (though this facet itself does not enforce ownership checks for metadata retrieval).
 </Callout>
 
 <div style={{marginTop: "3rem", paddingTop: "2rem", borderTop: "1px solid var(--ifm-color-emphasis-200)"}}>
@@ -294,4 +289,4 @@ All functions are `view` and do not modify state, thus posing no reentrancy risk
   <WasThisHelpful pageId="ERC721MetadataFacet" />
 </div>
 
-<LastUpdated date="2026-03-12T21:04:04.473Z" />
+<LastUpdated date="2026-03-13T00:35:59.136Z" />

@@ -2,6 +2,7 @@
 sidebar_position: 2
 title: "RoyaltyFacet"
 description: "ERC-2981 royalty information for tokens"
+sidebar_label: "Facet"
 gitSource: "https://github.com/Perfect-Abstractions/Compose/tree/main/src/token/Royalty/RoyaltyFacet.sol"
 ---
 
@@ -25,15 +26,15 @@ ERC-2981 royalty information for tokens
 </DocSubtitle>
 
 <Callout type="info" title="Key Features">
-- Implements ERC-2981 `royaltyInfo` function for query.
+- Implements ERC-2981 `royaltyInfo` standard.
 - Accesses shared diamond storage for royalty configuration.
-- Returns token-specific or default royalty information.
-- Functions are routed via the diamond proxy.
+- Minimal dependency, self-contained facet logic.
+- Routes calls through the diamond proxy.
 </Callout>
 
 ## Overview
 
-This facet provides ERC-2981 compliant royalty information for tokens within a Compose diamond. It exposes the `royaltyInfo` function to query royalty details for a given token ID and sale price, accessing shared diamond storage for configuration. Developers integrate this facet to enable royalty payments on secondary sales.
+This facet implements ERC-2981 royalty information retrieval for tokens within a Compose diamond. It provides an external `royaltyInfo` function, routing calls through the diamond proxy to access shared storage. Developers add this facet to enable royalty payments on secondary sales.
 
 ---
 
@@ -135,41 +136,35 @@ Returns royalty information for a given token and sale price. Returns token-spec
 import { IDiamond } from "@compose/diamond/IDiamond";
 import { RoyaltyFacet } from "@compose/token/Royalty/RoyaltyFacet";
 
-contract ExampleDiamondUser {
-    address public immutable diamondAddress;
+// Example usage within a diamond context
+contract MyDiamondConsumer {
+    address immutable DIAMOND_ADDRESS;
 
-    constructor(address _diamondAddress) {
-        diamondAddress = _diamondAddress;
+    constructor(address diamondAddress) {
+        DIAMOND_ADDRESS = diamondAddress;
     }
 
-    /**
-     * @notice Get royalty information for a token.
-     * @param _tokenId The ID of the token.
-     * @param _salePrice The price at which the token is being sold.
-     * @return receiver The address to receive the royalty payment.
-     * @return royaltyAmount The amount of royalty to be paid.
-     */
-    function getRoyaltyDetails(uint256 _tokenId, uint256 _salePrice) public view returns (address receiver, uint256 royaltyAmount) {
-        // Calls are routed through the diamond proxy to the RoyaltyFacet
-        (receiver, royaltyAmount) = IDiamond(diamondAddress).royaltyInfo(_tokenId, _salePrice);
+    function getTokenRoyaltyInfo(uint256 tokenId, uint256 salePrice) external view returns (address, uint256) {
+        IDiamond diamond = IDiamond(DIAMOND_ADDRESS);
+        // Calls the royaltyInfo function exposed by the RoyaltyFacet via the diamond proxy
+        return diamond.royaltyInfo(tokenId, salePrice);
     }
-}
-`}
+}`}
 </ExpandableCode>
 -->
 
 ## Best Practices
 
 <Callout type="tip" title="Best Practice">
-- Ensure the `RoyaltyFacet` is initialized with appropriate default royalty information if necessary.
-- Verify that the `royaltyInfo` function is correctly registered with the diamond's facet registry.
-- Integrate this facet into diamonds managing ERC-721 or ERC-1155 tokens that require royalty support.
+- Initialize the default royalty information using the diamond's initialization process.
+- Ensure the `RoyaltyFacet` is added to the diamond with the correct selector for `royaltyInfo`.
+- Verify that the `RoyaltyStorage` struct is correctly placed in diamond storage at the designated `STORAGE_POSITION`.
 </Callout>
 
 ## Security Considerations
 
 <Callout type="warning" title="Security">
-The `royaltyInfo` function is a `view` function and does not directly modify state. It relies on the diamond's shared storage, which should be managed securely by other facets. Input validation for `_tokenId` and `_salePrice` is handled internally by the facet's logic. No reentrancy risks are present as there are no external calls or state changes within this function.
+The `royaltyInfo` function is `view` and does not modify state. It relies on the correct initialization and storage of royalty data. Input validation for `_tokenId` and `_salePrice` is the responsibility of the caller or other facets. Reentrancy is not a concern as no external calls or state changes are performed.
 </Callout>
 
 <div style={{marginTop: "3rem", paddingTop: "2rem", borderTop: "1px solid var(--ifm-color-emphasis-200)"}}>
@@ -207,4 +202,4 @@ The `royaltyInfo` function is a `view` function and does not directly modify sta
   <WasThisHelpful pageId="RoyaltyFacet" />
 </div>
 
-<LastUpdated date="2026-03-12T21:05:56.641Z" />
+<LastUpdated date="2026-03-13T00:37:51.063Z" />

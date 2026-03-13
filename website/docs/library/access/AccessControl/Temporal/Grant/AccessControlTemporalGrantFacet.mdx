@@ -1,7 +1,8 @@
 ---
 sidebar_position: 110
 title: "AccessControlTemporalGrantFacet"
-description: "Grants roles with time-based expiry"
+description: "Manages role grants with time-based expiry"
+sidebar_label: "Facet"
 gitSource: "https://github.com/Perfect-Abstractions/Compose/tree/main/src/access/AccessControl/Temporal/Grant/AccessControlTemporalGrantFacet.sol"
 ---
 
@@ -21,19 +22,19 @@ import GradientText from '@site/src/components/ui/GradientText';
 import GradientButton from '@site/src/components/ui/GradientButton';
 
 <DocSubtitle>
-Grants roles with time-based expiry
+Manages role grants with time-based expiry
 </DocSubtitle>
 
 <Callout type="info" title="Key Features">
-- Exposes external function `grantRoleWithExpiry` for diamond routing.
-- Manages temporal role grants, including expiry timestamps.
-- Emits `RoleGrantedWithExpiry` event upon successful role granting.
-- Reverts with `AccessControlUnauthorizedAccount` if the caller lacks permission.
+- Grants roles with a specified expiry timestamp.
+- Emits `RoleGrantedWithExpiry` event upon successful role grant.
+- Reverts with `AccessControlUnauthorizedAccount` if caller lacks admin rights.
+- Reverts with `AccessControlRoleExpired` if a role has expired.
 </Callout>
 
 ## Overview
 
-This facet provides functionality to grant roles with a specific expiry timestamp within a Compose diamond. It integrates with the diamond's shared storage pattern, allowing for time-bound access control. Developers add this facet to manage temporary permissions for accounts.
+This facet provides functionality to grant roles with an expiry timestamp, enabling temporary access control within a diamond. It interacts with shared diamond storage to manage these temporal grants. Developers integrate this facet to implement time-limited permissions for accounts.
 
 ---
 
@@ -229,14 +230,12 @@ contract Deployer {
         IDiamond(DIAMOND_ADDRESS).grantRoleWithExpiry(role, account, expiry);
     }
 
-    function getRoleExpiry(bytes32 role, address account) public view returns (uint256) {
-        // Assuming a getter function exists in another facet or the diamond itself
-        // For demonstration, this might be directly querying storage if possible, or calling a getter facet.
-        // This specific facet does not expose a public getter for role expiry.
-        // A common pattern is to have a separate \`AccessControlViewFacet\` for read operations.
-        // For illustrative purposes, we show a conceptual call.
-        // return IDiamond(DIAMOND_ADDRESS).getRoleExpiry(role, account);
-        revert("Getter for role expiry not implemented in this example facet.");
+    /**
+     * @notice Example of exporting selectors for facet registration.
+     */
+    function exportMySelectors() public view returns (bytes memory) {
+        // Calls are routed through the diamond proxy
+        return IDiamond(DIAMOND_ADDRESS).exportSelectors();
     }
 }
 `}
@@ -246,15 +245,15 @@ contract Deployer {
 ## Best Practices
 
 <Callout type="tip" title="Best Practice">
-- Initialize roles and their administrators before calling `grantRoleWithExpiry`.
-- Ensure the caller has the necessary administrative privileges for the role being granted.
-- Use a separate facet for viewing role expiry status if needed, as this facet primarily focuses on granting.
+- Initialize temporal roles and their expiry logic during diamond setup.
+- Ensure the caller has the necessary administrative privileges to grant roles with expiry.
+- Carefully manage expiry timestamps to prevent unintended long-term access.
 </Callout>
 
 ## Security Considerations
 
 <Callout type="warning" title="Security">
-All state-changing functions are protected by access control. The `grantRoleWithExpiry` function requires the caller to be the admin of the specified role. Input validation for `_expiresAt` should be handled by the caller to ensure it represents a valid future timestamp. The facet relies on the diamond's storage pattern for state management. Reentrancy is not a direct concern as there are no external calls within `grantRoleWithExpiry`.
+The `grantRoleWithExpiry` function is protected by role-based access control, ensuring only authorized administrators can grant temporal roles. Input validation for `_expiresAt` should be performed by the caller to prevent setting invalid or future expiry dates. Access to shared diamond storage is managed implicitly via the diamond proxy. The facet utilizes the checks-effects-interactions pattern to mitigate reentrancy risks.
 </Callout>
 
 <div style={{marginTop: "3rem", paddingTop: "2rem", borderTop: "1px solid var(--ifm-color-emphasis-200)"}}>
@@ -292,4 +291,4 @@ All state-changing functions are protected by access control. The `grantRoleWith
   <WasThisHelpful pageId="AccessControlTemporalGrantFacet" />
 </div>
 
-<LastUpdated date="2026-03-12T21:08:22.040Z" />
+<LastUpdated date="2026-03-13T00:40:21.441Z" />

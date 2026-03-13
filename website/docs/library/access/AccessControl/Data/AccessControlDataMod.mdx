@@ -2,6 +2,7 @@
 sidebar_position: 100
 title: "AccessControlDataMod"
 description: "Manage roles and check account permissions"
+sidebar_label: "Module"
 gitSource: "https://github.com/Perfect-Abstractions/Compose/tree/main/src/access/AccessControl/Data/AccessControlDataMod.sol"
 ---
 
@@ -25,10 +26,10 @@ Manage roles and check account permissions
 </DocSubtitle>
 
 <Callout type="info" title="Key Features">
-- Provides internal functions for role checking (`hasRole`, `requireRole`).
-- Utilizes diamond storage pattern for shared state management.
-- Reverts with a custom error `AccessControlUnauthorizedAccount` for permission failures.
-- No external dependencies, promoting composability.
+- All functions are `internal` for direct use within custom facets.
+- Leverages the diamond storage pattern (EIP-8042) for shared state.
+- No external dependencies or `using` directives, promoting explicitness.
+- Compatible with ERC-2535 diamonds.
 </Callout>
 
 <Callout type="info" title="Module Usage">
@@ -37,7 +38,7 @@ This module provides internal functions for use in your custom facets. Import it
 
 ## Overview
 
-This module provides internal functions for role management and permission checks within a diamond. Facets can import and utilize these functions to interact with shared diamond storage, ensuring consistent access control logic across the diamond. Changes to roles and permissions are immediately visible to all facets sharing the same storage.
+This module provides internal functions for role-based access control. Facets can import this module to check and manage roles using shared diamond storage. Changes to roles are immediately visible to all facets accessing the same storage.
 
 ---
 
@@ -186,33 +187,37 @@ error AccessControlUnauthorizedAccount(address _account, bytes32 _role);
 <ExpandableCode language="solidity" maxLines={20} title="Example Implementation">
 {`pragma solidity >=0.8.30;
 
-import {AccessControlDataMod, AccessControlStorage} from "@compose/access/AccessControl/Data/AccessControlDataMod";
+import @compose/access/AccessControl/Data/AccessControlDataMod;
 
 contract AccessControlFacet {
-    AccessControlDataMod internal accessControl;
+    using AccessControlDataMod for AccessControlStorage;
 
-    constructor(address diamondStorageAddress) {
-        // In a real deployment, diamondStorageAddress would be the diamond's address
-        // and AccessControlDataMod would be initialized to point to the correct storage slot.
-        // For this example, we simulate direct access to the module's logic.
-        accessControl = AccessControlDataMod(diamondStorageAddress); // Placeholder for actual initialization
+    AccessControlStorage internal accessControlStorage;
+
+    /**
+     * @notice Checks if an account has a specific role.
+     * @param _role The role to check.
+     * @param _account The account to check.
+     * @return bool True if the account has the role, false otherwise.
+     */
+    function hasRole(bytes32 _role, address _account) external view returns (bool) {
+        return accessControlStorage.hasRole(_role, _account);
     }
 
-    function checkUserRole(address _user, bytes32 _role) external view returns (bool) {
-        return accessControl.hasRole(_role, _user);
+    /**
+     * @notice Reverts if the caller does not have the specified role.
+     * @param _role The role required.
+     * @param _account The account to check.
+     */
+    function requireRole(bytes32 _role, address _account) external view {
+        accessControlStorage.requireRole(_role, _account);
     }
 
-    function enforceAdminRole(address _account) external view {
-        bytes32 adminRole = keccak256("COMPOSE_ADMIN_ROLE"); // Example role
-        accessControl.requireRole(adminRole, _account);
-    }
-
-    // Example of how a facet might interact with the storage struct directly if needed
-    // Note: This is generally discouraged in favor of module functions for consistency
-    function getAccessControlStorage() external view returns (AccessControlStorage memory) {
-        // In a real scenario, this would involve reading from the diamond's storage
-        // at the specific slot defined by AccessControlDataMod.
-        // For demonstration, we call the module's pure function.
+    /**
+     * @notice Returns the internal storage struct.
+     * @return AccessControlStorage The current storage state.
+     */
+    function getStorage() external pure returns (AccessControlStorage) {
         return AccessControlDataMod.getStorage();
     }
 }`}
@@ -222,15 +227,15 @@ contract AccessControlFacet {
 ## Best Practices
 
 <Callout type="tip" title="Best Practice">
-- Ensure access control roles are properly initialized before calling `requireRole`.
-- Verify that the `AccessControlDataMod` module is correctly configured with the diamond's storage slot.
-- Handle the `AccessControlUnauthorizedAccount` error when `requireRole` reverts.
+- Ensure access control is enforced before calling state-changing functions in other facets.
+- Verify that the `AccessControlStorage` struct definition is compatible when upgrading or extending facets.
+- Handle the `AccessControlUnauthorizedAccount` error when calling `requireRole`.
 </Callout>
 
 ## Integration Notes
 
 <Callout type="success" title="Shared Storage">
-This module interacts with diamond storage at a specific position identified by `STORAGE_POSITION` (which resolves to `keccak256(\"compose.accesscontrol\")`). The `AccessControlStorage` struct is used to organize data within this slot. All functions operate directly on this shared storage, making any modifications immediately visible to other facets that access the same storage slot. The module itself is designed to be imported and used by other facets, not directly deployed as a standalone contract.
+This module reads from and writes to diamond storage at the `STORAGE_POSITION` defined by `keccak256(\"compose.accesscontrol\")`. All modifications made through functions in related modules like OwnerTransferMod are immediately visible to any facet that accesses this shared `AccessControlStorage` struct. The `AccessControlStorage` struct itself is empty, implying that all role data is managed externally by other modules or facets that interact with this data module.
 </Callout>
 
 <div style={{marginTop: "3rem", paddingTop: "2rem", borderTop: "1px solid var(--ifm-color-emphasis-200)"}}>
@@ -268,4 +273,4 @@ This module interacts with diamond storage at a specific position identified by 
   <WasThisHelpful pageId="AccessControlDataMod" />
 </div>
 
-<LastUpdated date="2026-03-12T21:07:23.495Z" />
+<LastUpdated date="2026-03-13T00:39:17.012Z" />

@@ -1,7 +1,8 @@
 ---
 sidebar_position: 2
 title: "ERC20BridgeableFacet"
-description: "Cross-chain token minting and burning for diamonds"
+description: "Cross-chain minting and burning for ERC-20 tokens"
+sidebar_label: "Facet"
 gitSource: "https://github.com/Perfect-Abstractions/Compose/tree/main/src/token/ERC20/Bridgeable/ERC20BridgeableFacet.sol"
 ---
 
@@ -21,19 +22,19 @@ import GradientText from '@site/src/components/ui/GradientText';
 import GradientButton from '@site/src/components/ui/GradientButton';
 
 <DocSubtitle>
-Cross-chain token minting and burning for diamonds
+Cross-chain minting and burning for ERC-20 tokens
 </DocSubtitle>
 
 <Callout type="info" title="Key Features">
-- Enables cross-chain minting and burning via trusted bridge roles.
-- Exposes `crosschainMint` and `crosschainBurn` functions for external invocation.
-- Includes a `checkTokenBridge` function for verifying trusted callers.
-- Exports its own selectors for diamond registration.
+- Enables cross-chain minting and burning via `trusted-bridge` role.
+- Functions are routed through the diamond proxy pattern.
+- Utilizes shared diamond storage for token and access control state.
+- Exports selectors for diamond integration.
 </Callout>
 
 ## Overview
 
-This facet enables cross-chain token minting and burning operations within a diamond. It exposes external functions for these operations, accessible only to addresses holding the `trusted-bridge` role. The facet routes calls through the diamond proxy and accesses shared diamond storage for role checks and event emissions.
+This facet implements cross-chain minting and burning functionalities for ERC-20 tokens within a diamond. It exposes external functions that are restricted to addresses holding the `trusted-bridge` role, ensuring secure inter-chain token operations. The facet leverages shared diamond storage for token state and access control.
 
 ---
 
@@ -368,42 +369,27 @@ error ERC20InsufficientBalance(address _from, uint256 _accountBalance, uint256 _
 <ExpandableCode language="solidity" maxLines={20} title="Example Implementation">
 {`pragma solidity >=0.8.30;
 
-import { IDiamond } from "@compose/diamond/IDiamond";
-import { ERC20BridgeableFacet } from "@compose/token/ERC20/Bridgeable/ERC20BridgeableFacet";
+import {ERC20BridgeableFacet} from "@compose/token/ERC20/Bridgeable/ERC20BridgeableFacet";
+import {IDiamond} from "@compose/diamond/IDiamond.sol";
 
-contract DiamondUser {
-    address public diamondAddress;
+address public diamondAddress = address(0x123);
 
-    constructor(address _diamondAddress) {
-        diamondAddress = _diamondAddress;
-    }
+// Example: Minting tokens via the trusted bridge
+function mintCrosschain(address _account, uint256 _value) external {
+    IDiamond(diamondAddress).crosschainMint(_account, _value);
+}
 
-    /**
-     * @notice Mints tokens on the receiving chain.
-     * @param _account The address to mint tokens to.
-     * @param _value The amount of tokens to mint.
-     */
-    function mintTokensCrosschain(address _account, uint256 _value) external {
-        IDiamond(diamondAddress).crosschainMint(_account, _value);
-    }
+// Example: Burning tokens via the trusted bridge
+function burnCrosschain(address _from, uint256 _value) external {
+    IDiamond(diamondAddress).crosschainBurn(_from, _value);
+}
 
-    /**
-     * @notice Burns tokens on the sending chain.
-     * @param _from The address to burn tokens from.
-     * @param _value The amount of tokens to burn.
-     */
-    function burnTokensCrosschain(address _from, uint256 _value) external {
-        IDiamond(diamondAddress).crosschainBurn(_from, _value);
-    }
-
-    /**
-     * @notice Checks if the caller is a trusted bridge.
-     * @return True if the caller is trusted, false otherwise.
-     */
-    function isTrustedBridge() external view returns (bool) {
-        // The actual check is performed within the crosschainMint/crosschainBurn functions.
-        // This function is for demonstration of a view function.
-        return true; // Placeholder for actual check invocation if needed externally
+// Example: Checking bridge trust status
+function checkBridgeTrust(address _caller) external view returns (bool) {
+    try IDiamond(diamondAddress).checkTokenBridge(_caller) {
+        return true;
+    } catch {
+        return false;
     }
 }`}
 </ExpandableCode>
@@ -412,15 +398,15 @@ contract DiamondUser {
 ## Best Practices
 
 <Callout type="tip" title="Best Practice">
-- Ensure the `trusted-bridge` role is correctly assigned during diamond initialization.
-- Call `crosschainMint` and `crosschainBurn` functions only through the diamond proxy address.
-- Verify the `checkTokenBridge` function's logic aligns with your cross-chain communication protocol before deployment.
+- Ensure the `trusted-bridge` role is correctly assigned before calling `crosschainMint` or `crosschainBurn`.
+- Initialize the diamond with this facet and configure access control appropriately.
+- Use `checkTokenBridge` to verify caller permissions before initiating cross-chain operations.
 </Callout>
 
 ## Security Considerations
 
 <Callout type="warning" title="Security">
-All state-changing functions (`crosschainMint`, `crosschainBurn`) are protected by role-based access control, requiring the caller to possess the `trusted-bridge` role. Reentrancy is mitigated by the checks-effects-interactions pattern inherent in Solidity function execution within a diamond. Input validation is performed via custom errors like `ERC20InvalidReceiver` and `ERC20InvalidSender`. The `checkTokenBridge` function explicitly reverts if the caller is the zero address or lacks the required role, preventing unauthorized cross-chain operations.
+State-changing functions `crosschainMint` and `crosschainBurn` are protected by the `trusted-bridge` role, enforced by the `checkTokenBridge` internal function. `checkTokenBridge` reverts if the caller is the zero address or lacks the `trusted-bridge` role. Input validation for `_account` and `_from` to prevent zero addresses is handled by the underlying ERC20 logic (not shown in this facet's signature). Follow standard Solidity security practices for external calls and input validation.
 </Callout>
 
 <div style={{marginTop: "3rem", paddingTop: "2rem", borderTop: "1px solid var(--ifm-color-emphasis-200)"}}>
@@ -458,4 +444,4 @@ All state-changing functions (`crosschainMint`, `crosschainBurn`) are protected 
   <WasThisHelpful pageId="ERC20BridgeableFacet" />
 </div>
 
-<LastUpdated date="2026-03-12T21:05:32.021Z" />
+<LastUpdated date="2026-03-13T00:37:26.769Z" />

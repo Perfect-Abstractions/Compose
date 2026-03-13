@@ -2,6 +2,7 @@
 sidebar_position: 200
 title: "ERC20TransferMod"
 description: "Internal ERC-20 token transfer logic"
+sidebar_label: "Module"
 gitSource: "https://github.com/Perfect-Abstractions/Compose/tree/main/src/token/ERC20/Transfer/ERC20TransferMod.sol"
 ---
 
@@ -25,10 +26,10 @@ Internal ERC-20 token transfer logic
 </DocSubtitle>
 
 <Callout type="info" title="Key Features">
-- Provides `internal` functions for direct balance manipulation.
-- Utilizes the diamond storage pattern for shared state management.
-- Implements core ERC-20 transfer logic without an allowance mechanism for the `transfer` function.
-- Supports `transferFrom` which relies on an allowance mechanism (though allowance management functions are not provided by this module).
+- All functions are `internal` for use within custom facets.
+- Operates on shared diamond storage for token balances and supply.
+- No external dependencies, ensuring minimal gas overhead and predictable behavior.
+- Follows standard ERC-20 transfer logic without complex features like approvals.
 </Callout>
 
 <Callout type="info" title="Module Usage">
@@ -37,7 +38,7 @@ This module provides internal functions for use in your custom facets. Import it
 
 ## Overview
 
-This module provides internal functions for performing ERC-20 token transfers and transfers from other accounts. Facets can import this module to manage token balances and enforce transfer rules using shared diamond storage. Changes to balances are immediately visible to all facets interacting with the same storage.
+This module provides internal functions for executing ERC-20 token transfers and transfers from an allowance. Facets can import this module to manage token balances and ensure correct state updates within the diamond's shared storage. Changes made through this module are immediately visible to all facets using the same storage.
 
 ---
 
@@ -321,66 +322,64 @@ error ERC20InvalidSpender(address _spender);
 ## Usage Example
 
 <ExpandableCode language="solidity" maxLines={20} title="Example Implementation">
-{`pragma solidity ^0.8.30;
-import { ERC20TransferMod } from "@compose/token/ERC20/Transfer/ERC20TransferMod";
+{`pragma solidity >=0.8.30;
+
+import {ERC20TransferMod} from "@compose/token/ERC20/Transfer/ERC20TransferMod";
 
 contract MyTokenFacet {
-    ERC20TransferMod internal tokenTransferModule;
+    ERC20TransferMod internal transferModule;
 
-    constructor(address diamondAddress) {
-        // Assuming ERC20TransferMod is deployed and accessible via diamond proxy
-        // In a real scenario, this would be initialized via an initializer function.
-        // For demonstration, we simulate access to the module's functions.
-        // The actual diamond storage is accessed via delegatecall through the diamond.
+    // Assuming transferModule is initialized elsewhere, e.g., in an initializer facet
+    constructor(address _diamondAddress) {
+        transferModule = ERC20TransferMod(_diamondAddress);
     }
 
     /**
-     * @notice Transfers tokens from the caller's balance to a recipient.
+     * @notice Transfers tokens from the caller to a recipient.
      * @param _to The address to transfer tokens to.
      * @param _value The amount of tokens to transfer.
      * @return True if the transfer was successful.
      */
-    function transferTokens(address _to, uint256 _value) external returns (bool) {
-        // Call the internal transfer function. Reverts on error.
-        return ERC20TransferMod.transfer(_to, _value);
+    function safeTransfer(address _to, uint256 _value) external returns (bool) {
+        // Basic validation before calling internal transfer
+        if (_to == address(0)) {
+            revert ERC20InvalidReceiver(_to);
+        }
+        // Internal transfer function handles balance checks and updates
+        return transferModule.transfer(_to, _value);
     }
 
     /**
-     * @notice Transfers tokens from a specified sender to a recipient, using allowance.
+     * @notice Transfers tokens from one address to another, using an allowance.
      * @param _from The address to transfer tokens from.
      * @param _to The address to transfer tokens to.
      * @param _value The amount of tokens to transfer.
      * @return True if the transfer was successful.
      */
-    function transferFromTokens(address _from, address _to, uint256 _value) external returns (bool) {
-        // Call the internal transferFrom function. Reverts on error.
-        return ERC20TransferMod.transferFrom(_from, _to, _value);
+    function safeTransferFrom(address _from, address _to, uint256 _value) external returns (bool) {
+        // Basic validation before calling internal transferFrom
+        if (_to == address(0)) {
+            revert ERC20InvalidReceiver(_to);
+        }
+        // Internal transferFrom handles allowance and balance checks and updates
+        return transferModule.transferFrom(_from, _to, _value);
     }
-
-    /**
-     * @notice Retrieves the ERC20Storage struct.
-     * @return The ERC20Storage struct.
-     */
-    function getErc20Storage() internal pure returns (ERC20TransferMod.ERC20Storage memory) {
-        return ERC20TransferMod.getStorage();
-    }
-}
-`}
+}`}
 </ExpandableCode>
 -->
 
 ## Best Practices
 
 <Callout type="tip" title="Best Practice">
-- Ensure the caller has sufficient balance before initiating a transfer.
-- Verify that the recipient address is not the zero address.
-- Handle potential errors such as insufficient balance or allowance by checking return values or catching reverts.
+- Ensure caller has sufficient balance and spender has sufficient allowance before calling `transferFrom`.
+- Validate receiver address is not the zero address before calling transfer functions.
+- Handle errors such as `ERC20InsufficientBalance`, `ERC20InsufficientAllowance`, `ERC20InvalidReceiver`.
 </Callout>
 
 ## Integration Notes
 
 <Callout type="success" title="Shared Storage">
-This module interacts with diamond storage at the `STORAGE_POSITION` key, identified by `keccak2535:keccak2535("erc20")`. It directly reads and writes to the `ERC20Storage` struct, which primarily contains `totalSupply`. The `transfer` and `transferFrom` functions modify the balances within this shared storage. Any facet that accesses `STORAGE_POSITION` will see these balance updates immediately.
+This module utilizes the diamond storage pattern, with its state stored at a specific `STORAGE_POSITION` identified by `keccak256("erc20")`. The `getStorage()` function provides a pointer to the `ERC20Storage` struct, which contains fields like `totalSupply`. Functions `transfer` and `transferFrom` directly read from and write to this shared storage, updating balances and potentially `totalSupply`. These changes are immediately visible to any other facet that accesses the same storage slot.
 </Callout>
 
 <div style={{marginTop: "3rem", paddingTop: "2rem", borderTop: "1px solid var(--ifm-color-emphasis-200)"}}>
@@ -418,4 +417,4 @@ This module interacts with diamond storage at the `STORAGE_POSITION` key, identi
   <WasThisHelpful pageId="ERC20TransferMod" />
 </div>
 
-<LastUpdated date="2026-03-12T21:05:49.621Z" />
+<LastUpdated date="2026-03-13T00:37:44.179Z" />

@@ -1,7 +1,8 @@
 ---
 sidebar_position: 210
 title: "ERC20TransferFacet"
-description: "ERC-20 token transfers and allowances within a diamond"
+description: "ERC-20 token transfers within a diamond"
+sidebar_label: "Facet"
 gitSource: "https://github.com/Perfect-Abstractions/Compose/tree/main/src/token/ERC20/Transfer/ERC20TransferFacet.sol"
 ---
 
@@ -21,19 +22,19 @@ import GradientText from '@site/src/components/ui/GradientText';
 import GradientButton from '@site/src/components/ui/GradientButton';
 
 <DocSubtitle>
-ERC-20 token transfers and allowances within a diamond
+ERC-20 token transfers within a diamond
 </DocSubtitle>
 
 <Callout type="info" title="Key Features">
-- Exposes external functions for ERC-20 token transfers via diamond routing.
-- Operates on shared `ERC20Storage` using the diamond storage pattern.
-- Emits `Transfer` events for off-chain monitoring.
-- Includes specific errors for insufficient balance, allowance, and invalid addresses.
+- Exposes external functions for diamond routing.
+- Reads and writes to shared diamond storage for ERC-20 state.
+- Emits standard ERC-20 Transfer events.
+- Self-contained with no external dependencies other than diamond storage access.
 </Callout>
 
 ## Overview
 
-This facet implements core ERC-20 transfer and transferFrom logic as external functions within a diamond. It routes calls through the diamond proxy and accesses shared ERC20Storage via diamond storage. Developers add this facet to expose token functionality while maintaining diamond upgradeability and composability.
+This facet implements ERC-20 token transfers as external functions callable through a diamond proxy. It accesses shared ERC20Storage via diamond storage conventions. Developers integrate this facet to provide standard token transfer functionality while retaining diamond upgradeability.
 
 ---
 
@@ -283,50 +284,42 @@ error ERC20InvalidSpender(address _spender);
 <ExpandableCode language="solidity" maxLines={20} title="Example Implementation">
 {`pragma solidity >=0.8.30;
 
-import {IERC20TransferFacet } from "@compose/token/ERC20/Transfer/ERC20TransferFacet.sol";
-import { IDiamond } from "@compose/diamond/IDiamond.sol";
+import {ERC20TransferFacet} from "@compose/token/ERC20/Transfer/ERC20TransferFacet";
+import {IDiamond} from "@compose/diamond/IDiamond.sol";
 
-contract ERC20User {
-    IDiamond immutable diamond;
+// Example of calling transfer through a diamond proxy
+address diamondAddress = address(0x123...);
+IDiamond diamond = IDiamond(diamondAddress);
+address recipient = address(0x456...);
+uint256 amount = 1000 ether;
 
-    constructor(address _diamondAddress) {
-        diamond = IDiamond(_diamondAddress);
-    }
+// Calls the transfer function implemented by ERC20TransferFacet
+bool success = diamond.transfer(recipient, amount);
 
-    function transferTokens(address _recipient, uint256 _amount) external {
-        // Call the transfer function exposed by the ERC20TransferFacet through the diamond
-        diamond.call(abi.encodeWithSelector(
-            IERC20TransferFacet.transfer.selector,
-            _recipient,
-            _amount
-        ));
-    }
+// Example of calling transferFrom through a diamond proxy
+address spender = address(0x789...);
 
-    function transferTokensFrom(address _sender, address _recipient, uint256 _amount) external {
-        // Call the transferFrom function exposed by the ERC20TransferFacet through the diamond
-        diamond.call(abi.encodeWithSelector(
-            IERC20TransferFacet.transferFrom.selector,
-            _sender,
-            _recipient,
-            _amount
-        ));
-    }
-}`}
+// Calls the transferFrom function implemented by ERC20TransferFacet
+bool successFrom = diamond.transferFrom(spender, recipient, amount);
+
+// Example of exporting selectors
+// This is typically done during diamond deployment or upgrade
+// bytes selectors = ERC20TransferFacet.exportSelectors();`}
 </ExpandableCode>
 -->
 
 ## Best Practices
 
 <Callout type="tip" title="Best Practice">
-- Initialize the `ERC20Storage` struct using the appropriate diamond initialization process before calling transfer functions.
-- Ensure that the caller has sufficient balance and allowance before invoking `transfer` or `transferFrom` respectively.
-- Verify that the `_to` address is not the zero address when calling `transfer` or `transferFrom`.
+- Initialize ERC20Storage during diamond deployment.
+- Enforce appropriate access controls on functions that modify allowances if applicable.
+- Ensure storage slot compatibility before upgrading to maintain state integrity.
 </Callout>
 
 ## Security Considerations
 
 <Callout type="warning" title="Security">
-The `transfer` and `transferFrom` functions are protected by specific error conditions such as `ERC20InsufficientBalance`, `ERC20InsufficientAllowance`, `ERC20InvalidReceiver`, and `ERC20InvalidSender`. These functions follow the checks-effects-interactions pattern to mitigate reentrancy risks. Input validation for addresses and values is critical. Ensure the caller has the necessary permissions and allowances before invoking state-changing functions.
+The `transfer` and `transferFrom` functions implement the checks-effects-interactions pattern to mitigate reentrancy risks. Input validation is performed to prevent transfers to invalid addresses. Ensure sufficient allowances are set before calling `transferFrom`. Access control for `transferFrom` to modify spender allowances should be handled by a related facet or module if required.
 </Callout>
 
 <div style={{marginTop: "3rem", paddingTop: "2rem", borderTop: "1px solid var(--ifm-color-emphasis-200)"}}>
@@ -364,4 +357,4 @@ The `transfer` and `transferFrom` functions are protected by specific error cond
   <WasThisHelpful pageId="ERC20TransferFacet" />
 </div>
 
-<LastUpdated date="2026-03-12T21:05:53.913Z" />
+<LastUpdated date="2026-03-13T00:37:47.156Z" />

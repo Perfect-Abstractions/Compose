@@ -1,7 +1,8 @@
 ---
 sidebar_position: 1
 title: "AccessControlPausableMod"
-description: "Control role pausing and unpausing within a diamond"
+description: "Control role pausing and role-based access"
+sidebar_label: "Module"
 gitSource: "https://github.com/Perfect-Abstractions/Compose/tree/main/src/access/AccessControl/Pausable/AccessControlPausableMod.sol"
 ---
 
@@ -21,14 +22,14 @@ import GradientText from '@site/src/components/ui/GradientText';
 import GradientButton from '@site/src/components/ui/GradientButton';
 
 <DocSubtitle>
-Control role pausing and unpausing within a diamond
+Control role pausing and role-based access
 </DocSubtitle>
 
 <Callout type="info" title="Key Features">
-- Internal functions for pausing and unpausing roles.
+- Internal functions for role pausing and access control checks.
+- Utilizes diamond storage pattern for shared state.
 - Emits `RolePaused` and `RoleUnpaused` events for off-chain monitoring.
-- Utilizes diamond storage for shared state management.
-- Reverts with specific custom errors for clearer error handling.
+- Reverts with custom errors `AccessControlRolePaused` and `AccessControlUnauthorizedAccount` for clear error handling.
 </Callout>
 
 <Callout type="info" title="Module Usage">
@@ -37,7 +38,7 @@ This module provides internal functions for use in your custom facets. Import it
 
 ## Overview
 
-This module provides internal functions to pause and unpause specific roles, preventing accounts with those roles from executing certain actions. It integrates with diamond storage, ensuring that role pausing states are shared and immediately visible to all facets.
+This module exposes internal functions to pause and unpause specific roles within a diamond, preventing unauthorized actions. It integrates with diamond storage, making role pausing immediately visible to all facets. This ensures a consistent and secure access control layer, especially when combined with other access control modules.
 
 ---
 
@@ -336,49 +337,28 @@ error AccessControlUnauthorizedAccount(address _account, bytes32 _role);
 
 <ExpandableCode language="solidity" maxLines={20} title="Example Implementation">
 {`pragma solidity >=0.8.30;
-
-import {AccessControlPausableMod} from "@compose/access/AccessControl/Pausable/AccessControlPausableMod";
+import @compose/access/AccessControl/Pausable/AccessControlPausableMod;
 
 contract MyAccessFacet {
-    AccessControlPausableMod private accessControlPausableMod;
+    AccessControlPausableMod internal accessControlPausableMod;
 
-    // Assume initialization sets the diamond storage contract address
-    constructor(address _diamondStorageAddress) {
-        accessControlPausableMod = AccessControlPausableMod(_diamondStorageAddress);
+    function initialize(address accessControlPausableModAddress) external {
+        accessControlPausableMod = AccessControlPausableMod(accessControlPausableModAddress);
     }
 
-    /**
-     * @notice Pauses a specific role.
-     * @param _role The role to pause.
-     */
     function pauseMyRole(bytes32 _role) external {
         accessControlPausableMod.pauseRole(_role);
     }
 
-    /**
-     * @notice Unpauses a specific role.
-     * @param _role The role to unpause.
-     */
     function unpauseMyRole(bytes32 _role) external {
         accessControlPausableMod.unpauseRole(_role);
     }
 
-    /**
-     * @notice Checks if a role is currently paused.
-     * @param _role The role to check.
-     * @return bool True if the role is paused, false otherwise.
-     */
-    function isMyRolePaused(bytes32 _role) external view returns (bool) {
+    function checkRoleStatus(bytes32 _role) view external returns (bool) {
         return accessControlPausableMod.isRolePaused(_role);
     }
 
-    /**
-     * @notice Requires that a role is not paused for a given account.
-     * @dev Reverts if the account does not have the role or if the role is paused.
-     * @param _role The role to check.
-     * @param _account The account to check.
-     */
-    function enforceRoleNotPaused(bytes32 _role, address _account) external view {
+    function enforceRolePermission(bytes32 _role, address _account) view external {
         accessControlPausableMod.requireRoleNotPaused(_role, _account);
     }
 }`}
@@ -388,15 +368,15 @@ contract MyAccessFacet {
 ## Best Practices
 
 <Callout type="tip" title="Best Practice">
-- Ensure role pausing is checked before executing sensitive operations within facets.
-- Call `pauseRole` and `unpauseRole` only when necessary to manage access control.
-- Handle `AccessControlRolePaused` and `AccessControlUnauthorizedAccount` errors when using `requireRoleNotPaused`.
+- Call `pauseRole` or `unpauseRole` only after verifying caller authorization.
+- Use `requireRoleNotPaused` to enforce role status checks before critical operations.
+- Ensure the `AccessControlPausableStorage` struct is correctly initialized within the diamond's storage.
 </Callout>
 
 ## Integration Notes
 
 <Callout type="success" title="Shared Storage">
-This module interacts with diamond storage at the `ACCESS_CONTROL_STORAGE_POSITION`, which is identified by `keccak256("compose.accesscontrol")`. The `AccessControlPausableStorage` struct resides here. Changes made to role pausing states via `pauseRole` and `unpauseRole` are immediately reflected in this shared storage, making them visible to all facets that access the same storage slot.
+This module manages role pausing state within the diamond's shared storage at `ACCESS_CONTROL_STORAGE_POSITION`. The `AccessControlPausableStorage` struct is used to store this state. Any facet that imports and calls functions from this module will interact with this shared storage, ensuring that pausing a role is immediately reflected across all relevant facets.
 </Callout>
 
 <div style={{marginTop: "3rem", paddingTop: "2rem", borderTop: "1px solid var(--ifm-color-emphasis-200)"}}>
@@ -434,4 +414,4 @@ This module interacts with diamond storage at the `ACCESS_CONTROL_STORAGE_POSITI
   <WasThisHelpful pageId="AccessControlPausableMod" />
 </div>
 
-<LastUpdated date="2026-03-12T21:07:02.680Z" />
+<LastUpdated date="2026-03-13T00:38:56.323Z" />

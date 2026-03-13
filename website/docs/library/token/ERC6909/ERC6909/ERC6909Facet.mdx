@@ -1,7 +1,8 @@
 ---
 sidebar_position: 2
 title: "ERC6909Facet"
-description: "ERC-6909 token transfers and approvals within a diamond"
+description: "ERC-6909 token functionality in a diamond"
+sidebar_label: "Facet"
 gitSource: "https://github.com/Perfect-Abstractions/Compose/tree/main/src/token/ERC6909/ERC6909/ERC6909Facet.sol"
 ---
 
@@ -21,19 +22,19 @@ import GradientText from '@site/src/components/ui/GradientText';
 import GradientButton from '@site/src/components/ui/GradientButton';
 
 <DocSubtitle>
-ERC-6909 token transfers and approvals within a diamond
+ERC-6909 token functionality in a diamond
 </DocSubtitle>
 
 <Callout type="info" title="Key Features">
 - Exposes external functions for ERC-6909 token operations.
-- Manages token balances and allowances using diamond storage.
-- Supports operator functionality for delegated transfers.
-- Integrates seamlessly with the ERC-2535 diamond standard.
+- Integrates with the diamond proxy pattern for upgradeability.
+- Accesses shared diamond storage via `getStorage`.
+- Supports token transfers, approvals, and operator management.
 </Callout>
 
 ## Overview
 
-This facet implements ERC-6909 token functionality for a diamond. It exposes external functions for transfers, allowances, and operator management, routing calls through the diamond proxy and accessing shared storage via the ERC6909Storage struct. Developers add this facet to enable token operations while retaining diamond upgradeability.
+This facet implements ERC-6909 token functionality within a Compose diamond. It exposes external functions for token transfers, approvals, and operator management, routing calls through the diamond proxy. Developers add this facet to integrate token capabilities while leveraging diamond upgradeability.
 
 ---
 
@@ -462,26 +463,31 @@ error ERC6909InvalidSpender(address _spender);
 <ExpandableCode language="solidity" maxLines={20} title="Example Implementation">
 {`pragma solidity >=0.8.30;
 
-import {IDiamond} from "@compose/diamond/IDiamond.sol";
+import {IDiamond} from "@compose/core/IDiamond";
 import {ERC6909Facet} from "@compose/token/ERC6909/ERC6909/ERC6909Facet";
 
-contract DiamondUser {
+contract DiamondConsumer {
     address immutable diamondAddress;
 
     constructor(address _diamondAddress) {
         diamondAddress = _diamondAddress;
     }
 
-    function performTransfer(address _receiver, uint256 _id, uint256 _amount) external {
-        IDiamond(diamondAddress).transfer(_receiver, _id, _amount);
-    }
+    function consumeTokenFunctions() external {
+        IDiamond diamond = IDiamond(diamondAddress);
 
-    function setTokenOperator(address _spender, bool _approved) external {
-        IDiamond(diamondAddress).setOperator(_spender, _approved);
-    }
+        // Example: Transfer tokens
+        address receiver = address(0x123);
+        uint256 tokenId = 1;
+        uint256 amount = 100;
+        diamond.call(abi.encodeWithSelector(ERC6909Facet.transfer.selector, receiver, tokenId, amount));
 
-    function getBalance(address _owner, uint256 _id) external view returns (uint256) {
-        return IDiamond(diamondAddress).balanceOf(_owner, _id);
+        // Example: Approve tokens
+        address spender = address(0x456);
+        diamond.call(abi.encodeWithSelector(ERC6909Facet.approve.selector, spender, tokenId, amount));
+
+        // Example: Check balance
+        uint256 balance = ERC6909Facet(diamondAddress).balanceOf(address(this), tokenId);
     }
 }`}
 </ExpandableCode>
@@ -490,15 +496,15 @@ contract DiamondUser {
 ## Best Practices
 
 <Callout type="tip" title="Best Practice">
-- Initialize token-specific storage and operator mappings before calling token-related functions.
-- Ensure that the caller has the necessary permissions to perform transfers or set operators.
-- Verify storage slot compatibility with existing facets before upgrading or adding this facet.
+- Initialize ERC6909Storage state variables during diamond deployment.
+- Ensure correct access control is enforced for state-changing functions like `transfer` and `approve`.
+- Verify storage slot compatibility (`keccak256("erc6909")`) before upgrading or adding facets to prevent collisions.
 </Callout>
 
 ## Security Considerations
 
 <Callout type="warning" title="Security">
-All state-changing functions (transfer, transferFrom, approve, setOperator) are exposed externally and must be protected by appropriate access control mechanisms within the diamond. Input validation is crucial for all parameters to prevent unintended state changes. The facet relies on the diamond to enforce reentrancy guards if necessary. Errors like ERC6909InsufficientBalance, ERC6909InsufficientAllowance, ERC6909InvalidReceiver, ERC6909InvalidSender, and ERC6909InvalidSpender are used for input validation.
+All external functions that modify state (`transfer`, `transferFrom`, `approve`, `setOperator`) are expected to be protected by access control mechanisms managed by the diamond. Input validation for `_amount`, `_receiver`, `_sender`, and `_spender` is critical. Reentrancy risks are mitigated by following the checks-effects-interactions pattern within the facet's implementation. Refer to `ERC6909Facet` for specific error conditions like `ERC6909InsufficientBalance` and `ERC6909InsufficientAllowance`.
 </Callout>
 
 <div style={{marginTop: "3rem", paddingTop: "2rem", borderTop: "1px solid var(--ifm-color-emphasis-200)"}}>
@@ -536,4 +542,4 @@ All state-changing functions (transfer, transferFrom, approve, setOperator) are 
   <WasThisHelpful pageId="ERC6909Facet" />
 </div>
 
-<LastUpdated date="2026-03-12T21:06:08.360Z" />
+<LastUpdated date="2026-03-13T00:38:03.397Z" />

@@ -1,7 +1,8 @@
 ---
 sidebar_position: 100
 title: "AccessControlTemporalDataMod"
-description: "Manages role expiry and validation within diamond storage"
+description: "Manages temporal role assignments and their expiry"
+sidebar_label: "Module"
 gitSource: "https://github.com/Perfect-Abstractions/Compose/tree/main/src/access/AccessControl/Temporal/Data/AccessControlTemporalDataMod.sol"
 ---
 
@@ -21,14 +22,14 @@ import GradientText from '@site/src/components/ui/GradientText';
 import GradientButton from '@site/src/components/ui/GradientButton';
 
 <DocSubtitle>
-Manages role expiry and validation within diamond storage
+Manages temporal role assignments and their expiry
 </DocSubtitle>
 
 <Callout type="info" title="Key Features">
-- Provides internal functions for role expiry management.
-- Utilizes diamond storage for shared state access.
-- Includes validation functions that revert on invalid or expired roles.
-- No external dependencies, promoting composability.
+- All functions are `internal` for use within facets.
+- Manages temporal role assignments and their expiry timestamps.
+- Utilizes the diamond storage pattern with a dedicated storage slot.
+- Emits `RoleGrantedWithExpiry` and `TemporalRoleRevoked` events for observability.
 </Callout>
 
 <Callout type="info" title="Module Usage">
@@ -37,7 +38,7 @@ This module provides internal functions for use in your custom facets. Import it
 
 ## Overview
 
-This module provides internal functions for managing role expiry and validating role assignments within a diamond's shared storage. Facets can import this module to enforce time-bound access control, ensuring roles are only valid for their designated duration. Changes made via this module are immediately visible to all facets accessing the same diamond storage.
+This module provides internal functions to manage temporal role assignments, including checking and verifying role expiry. Facets can import this module to enforce time-bound access control using shared diamond storage. Changes to role expiry are immediately visible to all facets accessing the same storage.
 
 ---
 
@@ -355,30 +356,31 @@ error AccessControlUnauthorizedAccount(address _account, bytes32 _role);
 <ExpandableCode language="solidity" maxLines={20} title="Example Implementation">
 {`pragma solidity >=0.8.30;
 
-import {AccessControlTemporalDataMod} from "@compose/access/AccessControl/Temporal/Data/AccessControlTemporalDataMod";
+import @compose/access/AccessControl/Temporal/Data/AccessControlTemporalDataMod;
 
-contract MyAccessFacet {
+contract AccessControlFacet {
     AccessControlTemporalDataMod internal accessControlTemporalDataMod;
 
-    constructor(address diamondAddress) {
-        // Assuming AccessControlTemporalDataMod is deployed at diamondAddress or accessible via diamond proxy
-        accessControlTemporalDataMod = AccessControlTemporalDataMod(diamondAddress);
+    // Assume AccessControlTemporalDataMod is initialized elsewhere
+    // e.g., in an initializer function targeting the diamond storage slot
+    // ACCESS_CONTROL_STORAGE_POSITION
+
+    function grantRoleWithExpiry(bytes32 _role, address _account, uint256 _expiresAt) external {
+        // Example call to grant a role with an expiry timestamp.
+        // This function would likely call an internal grant function within the facet,
+        // which in turn might use this module's storage functions.
+        // For demonstration, we show a direct call to a hypothetical internal function
+        // that would interact with the module.
+        // accessControlTemporalDataMod.grantRoleWithExpiry(_role, _account, _expiresAt);
     }
 
-    /**
-     * @notice Example of checking if a role is expired.
-     * @dev Calls the internal module function to check role expiry.
-     */
-    function checkIfRoleExpired(bytes32 _role, address _account) external view returns (bool) {
-        return accessControlTemporalDataMod.isRoleExpired(_role, _account);
-    }
-
-    /**
-     * @notice Example of requiring a valid, non-expired role.
-     * @dev Calls the internal module function which reverts if the role is invalid or expired.
-     */
-    function enforceValidRole(bytes32 _role, address _account) external view {
+    function verifyRole(bytes32 _role, address _account) view external {
+        // Use the module to check if a role is valid and not expired.
         accessControlTemporalDataMod.requireValidRole(_role, _account);
+    }
+
+    function getRoleExpiryTimestamp(bytes32 _role, address _account) view external returns (uint256) {
+        return accessControlTemporalDataMod.getRoleExpiry(_role, _account);
     }
 }`}
 </ExpandableCode>
@@ -387,16 +389,15 @@ contract MyAccessFacet {
 ## Best Practices
 
 <Callout type="tip" title="Best Practice">
-- Call `requireValidRole` to enforce role validity and expiry before critical operations.
-- Use `isRoleExpired` for read-only checks on role status.
-- Ensure the `AccessControlTemporalStorage` struct is correctly initialized and managed within diamond storage.
-- Handle `AccessControlRoleExpired` and `AccessControlUnauthorizedAccount` errors explicitly.
+- Call `requireValidRole` before executing sensitive operations to ensure temporal role validity.
+- Ensure the diamond storage slot `ACCESS_CONTROL_STORAGE_POSITION` is correctly initialized for temporal access control data.
+- Handle the `AccessControlRoleExpired` and `AccessControlUnauthorizedAccount` custom errors returned by `requireValidRole`.
 </Callout>
 
 ## Integration Notes
 
 <Callout type="success" title="Shared Storage">
-This module interacts with diamond storage at the `ACCESS_CONTROL_STORAGE_POSITION` using the `AccessControlTemporalStorage` struct. Functions like `isRoleExpired` and `requireValidRole` read from this shared storage. Any updates to role expiry timestamps or assignments made by other facets interacting with this storage position will be immediately reflected when these module functions are called.
+This module interacts with diamond storage via the `ACCESS_CONTROL_STORAGE_POSITION` slot, which holds the `AccessControlTemporalStorage` struct. Functions like `getRoleExpiry` and `isRoleExpired` read from this shared storage. Changes made to role expiry, typically managed by other facets or modules that interact with this storage, are immediately visible to any facet that reads from the same storage position. The `requireValidRole` function provides an internal check that reverts if a role has expired or if the account does not possess the role.
 </Callout>
 
 <div style={{marginTop: "3rem", paddingTop: "2rem", borderTop: "1px solid var(--ifm-color-emphasis-200)"}}>
@@ -434,4 +435,4 @@ This module interacts with diamond storage at the `ACCESS_CONTROL_STORAGE_POSITI
   <WasThisHelpful pageId="AccessControlTemporalDataMod" />
 </div>
 
-<LastUpdated date="2026-03-12T21:08:10.440Z" />
+<LastUpdated date="2026-03-13T00:40:09.148Z" />

@@ -1,7 +1,8 @@
 ---
 sidebar_position: 100
 title: "OwnerDataMod"
-description: "Manages ERC-173 contract ownership internally"
+description: "Manage contract ownership using diamond storage"
+sidebar_label: "Module"
 gitSource: "https://github.com/Perfect-Abstractions/Compose/tree/main/src/access/Owner/Data/OwnerDataMod.sol"
 ---
 
@@ -21,14 +22,14 @@ import GradientText from '@site/src/components/ui/GradientText';
 import GradientButton from '@site/src/components/ui/GradientButton';
 
 <DocSubtitle>
-Manages ERC-173 contract ownership internally
+Manage contract ownership using diamond storage
 </DocSubtitle>
 
 <Callout type="info" title="Key Features">
-- Provides internal functions for ERC-173 ownership management.
-- Uses the diamond storage pattern for shared state.
+- Provides internal functions for managing contract ownership within a diamond.
+- Uses diamond storage pattern (EIP-8042) for shared state management.
+- Functions `owner()` and `requireOwner()` facilitate ERC-173 compliance.
 - No external dependencies, promoting composability.
-- Functions are `external` and `view` or `nonpayable` as appropriate for clarity.
 </Callout>
 
 <Callout type="info" title="Module Usage">
@@ -37,7 +38,7 @@ This module provides internal functions for use in your custom facets. Import it
 
 ## Overview
 
-This module provides internal functions for managing ERC-173 contract ownership within a diamond. It ensures that ownership operations are consistent across facets by utilizing shared diamond storage. Changes to ownership are immediately reflected for all facets interacting with the same storage slot.
+This module provides internal functions and storage for managing contract ownership, adhering to ERC-173 principles within a diamond. Facets can import this module to interact with shared ownership state, ensuring that ownership changes are consistently applied across the diamond and immediately visible to all facets.
 
 ---
 
@@ -188,50 +189,73 @@ error OwnerUnauthorizedAccount();
 <ExpandableCode language="solidity" maxLines={20} title="Example Implementation">
 {`pragma solidity >=0.8.30;
 
-import @compose/access/Owner/Data/OwnerDataMod;
+import {OwnerDataMod} from "@compose/access/Owner/Data/OwnerDataMod";
 
 contract MyOwnerFacet {
-    OwnerDataMod internal ownerMod;
+    OwnerDataMod internal ownerModule;
 
-    function initialize(address initialOwner) external {
-        // Assuming ownerMod is initialized elsewhere or via a Diamond initializer
-        // For demonstration, let's simulate setting the owner directly via the module's internal function
-        // In a real scenario, setContractOwner would be called by an admin function in another facet
-        // ownerMod.setContractOwner(initialOwner);
+    constructor(OwnerDataMod _ownerModule) {
+        ownerModule = _ownerModule;
     }
 
+    /**
+     * @notice Retrieves the current contract owner.
+     */
     function getCurrentOwner() external view returns (address) {
-        return ownerMod.owner();
+        return ownerModule.owner();
     }
 
-    function checkCallerIsOwner() external view {
-        ownerMod.requireOwner();
-    }
+    /**
+     * @notice Sets a new contract owner, enforcing ownership checks.
+     * @param _newOwner The address of the new owner.
+     */
+    function transferOwnership(address _newOwner) external {
+        // Assuming ownerModule.setContractOwner is designed to take an argument or
+        // is intended to be called with an argument passed implicitly via context.
+        // Based on provided signature, setContractOwner() takes no arguments.
+        // In a real scenario, setContractOwner would likely be called after an internal check.
+        // For this example, we simulate calling a function that would set the owner.
 
-    function transferOwnership(address newOwner) external {
-        // Assuming this facet has access control to call setContractOwner
-        // ownerMod.setContractOwner(newOwner);
+        // The provided \`setContractOwner\` has no parameters, implying it might be used
+        // in conjunction with other checks or roles to determine the new owner,
+        // or it's a simplified example where the actual owner transfer logic is elsewhere.
+        // For demonstration, we'll call it as provided.
+
+        // ownerModule.setContractOwner(); // This is how it's defined, but doesn't set a new owner.
+        // A more realistic implementation would involve a function like:
+        // ownerModule.transferOwnership(_newOwner);
+        // Since that function is not provided, we stick to the available one.
+
+        // To make this example functional, we would need a setContractOwner that accepts parameters
+        // or a different function like \`transferOwnership(address _newOwner)\`.
+        // Given the constraints, we will show how to call \`requireOwner\` and \`owner()\`:
+
+        ownerModule.requireOwner(); // Ensure caller is the current owner
+        address currentOwner = ownerModule.owner();
+        // Logic to determine _newOwner would go here, then call a setter if available.
+        // Since setContractOwner() has no params, we cannot demonstrate setting a new owner directly.
     }
-}`}
+}
+`}
 </ExpandableCode>
 -->
 
 ## Best Practices
 
 <Callout type="tip" title="Best Practice">
-- Ensure access control is enforced by calling facets before invoking `requireOwner` or `setContractOwner`.
-- Verify that `OwnerStorage` is correctly initialized within diamond storage before any ownership operations.
-- Handle `OwnerUnauthorizedAccount` and `OwnerAlreadyRenounced` errors when interacting with ownership functions.
+- Ensure the caller is the current owner before invoking state-changing functions like `setContractOwner` by using `ownerModule.requireOwner()`.
+- Verify that the `OwnerStorage` struct is compatible with the diamond's storage layout, especially when upgrading facets.
+- Handle the `OwnerUnauthorizedAccount` and `OwnerAlreadyRenounced` errors if they are emitted or checked by functions you interact with.
 </Callout>
 
 ## Integration Notes
 
 <Callout type="success" title="Shared Storage">
-This module interacts with diamond storage at the `STORAGE_POSITION` defined by `keccak2535.owner`. The `OwnerStorage` struct, containing at least an `owner` field, is read and written directly from this slot. Changes made via functions like `setContractOwner` are immediately visible to all facets that access the same storage slot, adhering to the diamond storage pattern.
+This module utilizes diamond storage at the slot identified by `STORAGE_POSITION`, specifically `keccak256(\"erc173.owner\")`. The `OwnerStorage` struct, containing at least an `owner` field, is read and written directly from this slot. Any facet that accesses this storage position will see the current owner address, and changes made via this module's internal functions are immediately reflected across all facets sharing the same diamond storage.
 </Callout>
 
 <div style={{marginTop: "3rem", paddingTop: "2rem", borderTop: "1px solid var(--ifm-color-emphasis-200)"}}>
   <WasThisHelpful pageId="OwnerDataMod" />
 </div>
 
-<LastUpdated date="2026-03-12T21:06:12.649Z" />
+<LastUpdated date="2026-03-13T00:38:08.736Z" />

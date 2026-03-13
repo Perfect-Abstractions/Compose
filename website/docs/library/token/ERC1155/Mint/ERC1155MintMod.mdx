@@ -1,7 +1,8 @@
 ---
 sidebar_position: 200
 title: "ERC1155MintMod"
-description: "Mint and batch mint ERC-1155 tokens"
+description: "Mint ERC-1155 tokens and manage balances"
+sidebar_label: "Module"
 gitSource: "https://github.com/Perfect-Abstractions/Compose/tree/main/src/token/ERC1155/Mint/ERC1155MintMod.sol"
 ---
 
@@ -21,14 +22,14 @@ import GradientText from '@site/src/components/ui/GradientText';
 import GradientButton from '@site/src/components/ui/GradientButton';
 
 <DocSubtitle>
-Mint and batch mint ERC-1155 tokens
+Mint ERC-1155 tokens and manage balances
 </DocSubtitle>
 
 <Callout type="info" title="Key Features">
-- Provides `internal` functions for minting ERC-1155 tokens.
-- Supports minting single tokens (`mint`) and batch minting (`mintBatch`).
-- Emits `TransferSingle` and `TransferBatch` events upon successful minting.
-- Includes validation for ERC-1155 receivers.
+- Internal functions for minting single and batch ERC-1155 tokens.
+- Emits `TransferSingle` and `TransferBatch` events for off-chain tracking.
+- Includes receiver validation for contract addresses.
+- Utilizes diamond storage for state management.
 </Callout>
 
 <Callout type="info" title="Module Usage">
@@ -37,7 +38,7 @@ This module provides internal functions for use in your custom facets. Import it
 
 ## Overview
 
-This module provides internal functions for minting single or multiple ERC-1155 token types. Facets can import this module to manage token issuance, ensuring balances are updated and relevant events are emitted. Receiver validation is performed for contract addresses to prevent unexpected behavior.
+This module provides internal functions for minting ERC-1155 tokens and managing balances within a diamond. It ensures correct state updates and emits necessary events, making it a core component for any ERC-1155 functionality within a Compose diamond. Changes are immediately visible to all facets sharing the same diamond storage.
 
 ---
 
@@ -301,19 +302,25 @@ error ERC1155InvalidReceiver(address _receiver);
 <ExpandableCode language="solidity" maxLines={20} title="Example Implementation">
 {`pragma solidity >=0.8.30;
 
-import @compose/token/ERC1155/Mint/ERC1155MintMod;
+import {ERC1155MintMod} from "@compose/token/ERC1155/Mint/ERC1155MintMod";
 
 contract MyERC1155Facet {
-    using ERC1155MintMod for ERC1155Storage;
+    ERC1155MintMod internal mintModule;
 
-    function mintSingleToken(address _to, uint256 _id, uint256 _value, bytes _data) external {
-        ERC1155Storage storage storageMap = ERC1155MintMod.getStorage();
-        storageMap.mint(_to, _id, _value, _data);
+    // Assuming mintModule is initialized with the correct storage slot
+    // and diamond storage context elsewhere.
+
+    function mintSingleToken(address _to, uint256 _id, uint256 _value) external {
+        // Example: Mint a single token type
+        // The _data parameter is typically used for inter-contract calls or hooks.
+        // For a simple mint, an empty bytes array can be used.
+        mintModule.mint(_to, _id, _value, "");
     }
 
-    function mintBatchTokens(address _to, uint256[] memory _ids, uint256[] memory _values, bytes _data) external {
-        ERC1155Storage storage storageMap = ERC1155MintMod.getStorage();
-        storageMap.mintBatch(_to, _ids, _values, _data);
+    function mintMultipleTokens(address _to, uint256[] memory _ids, uint256[] memory _values) external {
+        // Example: Mint multiple token types in a single transaction
+        // Ensure _ids and _values have the same length.
+        mintModule.mintBatch(_to, _ids, _values, "");
     }
 }`}
 </ExpandableCode>
@@ -322,15 +329,15 @@ contract MyERC1155Facet {
 ## Best Practices
 
 <Callout type="tip" title="Best Practice">
-- Ensure that `_ids` and `_values` arrays have matching lengths before calling `mintBatch`.
-- Verify that the recipient address is validated appropriately, especially when it is a contract, to prevent unexpected behavior.
-- Handle the `ERC1155InvalidReceiver` and `ERC1155InvalidArrayLength` errors returned by minting functions.
+- Ensure that the `ERC1155MintMod` is correctly initialized with the diamond's storage context.
+- Validate that the `_ids` and `_values` arrays passed to `mintBatch` have matching lengths to prevent `ERC1155InvalidArrayLength` errors.
+- If the recipient address is a contract, verify its ERC-1155 compliance to avoid `ERC1155InvalidReceiver` errors.
 </Callout>
 
 ## Integration Notes
 
 <Callout type="success" title="Shared Storage">
-This module interacts with the diamond's shared storage at the slot identified by `keccak2535(\"erc1155\")`. The `getStorage()` function retrieves a reference to the `ERC1155Storage` struct, allowing internal functions to directly read and write token balances. Any modifications made via this module are immediately visible to all other facets accessing the same storage slot.
+This module interacts with diamond storage at the slot identified by `keccak256("erc1155")`. It reads and writes to the `ERC1155Storage` struct, which is assumed to be part of the shared diamond storage. All state changes made by `mint` and `mintBatch` functions, such as updating token balances, are immediately reflected across all facets that access the same `ERC1155Storage` via the diamond storage pattern. The `getStorage` function provides direct access to this shared storage.
 </Callout>
 
 <div style={{marginTop: "3rem", paddingTop: "2rem", borderTop: "1px solid var(--ifm-color-emphasis-200)"}}>
@@ -356,4 +363,4 @@ This module interacts with the diamond's shared storage at the slot identified b
   <WasThisHelpful pageId="ERC1155MintMod" />
 </div>
 
-<LastUpdated date="2026-03-12T21:03:36.391Z" />
+<LastUpdated date="2026-03-13T00:35:31.325Z" />
