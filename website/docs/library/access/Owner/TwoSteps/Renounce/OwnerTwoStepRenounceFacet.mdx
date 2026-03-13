@@ -1,0 +1,181 @@
+---
+sidebar_position: 100
+title: "Owner Two Step Renounce Facet"
+description: "Two-step ownership renouncement for diamonds"
+sidebar_label: "Facet"
+gitSource: "https://github.com/Perfect-Abstractions/Compose/tree/main/src/access/Owner/TwoSteps/Renounce/OwnerTwoStepRenounceFacet.sol"
+---
+
+import DocSubtitle  from '@site/src/components/docs/DocSubtitle';
+import Badge from '@site/src/components/ui/Badge';
+import Callout from '@site/src/components/ui/Callout';
+import CalloutBox from '@site/src/components/ui/CalloutBox';
+import Accordion, { AccordionGroup } from '@site/src/components/ui/Accordion';
+import PropertyTable from '@site/src/components/api/PropertyTable';
+import ExpandableCode from '@site/src/components/code/ExpandableCode';
+import CodeShowcase from '@site/src/components/code/CodeShowcase';
+import RelatedDocs from '@site/src/components/docs/RelatedDocs';
+import WasThisHelpful from '@site/src/components/docs/WasThisHelpful';
+import LastUpdated from '@site/src/components/docs/LastUpdated';
+import ReadingTime from '@site/src/components/docs/ReadingTime';
+import GradientText from '@site/src/components/ui/GradientText';
+import GradientButton from '@site/src/components/ui/GradientButton';
+
+<DocSubtitle>
+Two-step ownership renouncement for diamonds
+</DocSubtitle>
+
+<Callout type="info" title="Key Features">
+- Implements a two-step ownership renouncement process.
+- Manages owner and pending owner state via diamond storage.
+- Provides `exportSelectors` for diamond integration.
+- No external dependencies beyond diamond storage access.
+</Callout>
+
+## Overview
+
+This facet provides a two-step process for renouncing ownership of a diamond contract. It interacts with shared diamond storage to manage the owner and pending owner states. Developers integrate this facet to enable secure ownership transfer management within a diamond.
+
+## Storage
+
+### OwnerStorage
+
+<ExpandableCode language="solidity" maxLines={15} title="Definition">
+{`struct OwnerStorage {
+    address owner;
+}`}
+</ExpandableCode>
+
+---
+### PendingOwnerStorage
+
+<ExpandableCode language="solidity" maxLines={15} title="Definition">
+{`struct PendingOwnerStorage {
+    address pendingOwner;
+}`}
+</ExpandableCode>
+
+### State Variables
+
+<PropertyTable
+  properties={[
+    {
+      name: "OWNER_STORAGE_POSITION",
+      type: "bytes32",
+      description: "Diamond storage slot position for this module (Value: `keccak256(\"erc173.owner\")`)"
+    },
+    {
+      name: "PENDING_OWNER_STORAGE_POSITION",
+      type: "bytes32",
+      description: "Diamond storage slot position for this module (Value: `keccak256(\"erc173.owner.pending\")`)"
+    }
+  ]}
+  showRequired={false}
+/>
+
+## Functions
+
+### renounceOwnership
+
+<ExpandableCode language="solidity" maxLines={8}>
+{`function renounceOwnership() external;`}
+</ExpandableCode>
+
+---
+### exportSelectors
+
+Exports the function selectors of the OwnerTwoStepRenounceFacet This function is use as a selector discovery mechanism for diamonds
+
+<ExpandableCode language="solidity" maxLines={8}>
+{`function exportSelectors() external pure returns (bytes memory);`}
+</ExpandableCode>
+
+**Returns:**
+
+<PropertyTable
+  properties={[
+    {
+      name: "-",
+      type: "bytes",
+      description: "selectors The exported function selectors of the OwnerTwoStepRenounceFacet"
+    }
+  ]}
+  showRequired={false}
+/>
+
+## Events
+
+<AccordionGroup>
+  <Accordion title="OwnershipTransferred" defaultOpen={false}>
+
+    <div style={{marginBottom: "1rem"}}>
+      <strong>Signature:</strong>
+      <ExpandableCode language="solidity" maxLines={5}>
+{`event OwnershipTransferred(address indexed _previousOwner, address indexed _newOwner);`}
+      </ExpandableCode>
+    </div>
+
+  </Accordion>
+</AccordionGroup>
+
+## Errors
+
+<AccordionGroup>
+  <Accordion title="OwnerUnauthorizedAccount" defaultOpen={false}>
+
+    <div>
+      <strong>Signature:</strong>
+      <ExpandableCode language="solidity" maxLines={5}>
+error OwnerUnauthorizedAccount();
+      </ExpandableCode>
+    </div>
+  </Accordion>
+</AccordionGroup>
+
+<!-- Usage Example section commented out for now -->
+<!--
+## Usage Example
+
+<ExpandableCode language="solidity" maxLines={20} title="Example Implementation">
+{`pragma solidity >=0.8.30;
+
+import {OwnerTwoStepRenounceFacet} from "@compose/access/Owner/TwoSteps/Renounce/OwnerTwoStepRenounceFacet";
+import {IDiamond} from "@compose/interfaces/IDiamond";
+
+contract DiamondOwnerSetup {
+    address public diamondAddress;
+
+    function setupOwnerRenounce() public {
+        // Assume diamondAddress is set and OwnerTwoStepRenounceFacet is deployed and added.
+        // Calls to the facet functions are routed through the diamond proxy.
+        IDiamond(diamondAddress).renounceOwnership();
+    }
+
+    // Function to export selectors for discovery mechanisms
+    function exportOwnerSelectors() external pure returns (bytes memory) {
+        return OwnerTwoStepRenounceFacet.exportSelectors();
+    }
+}
+`}
+</ExpandableCode>
+-->
+
+## Best Practices
+
+<Callout type="tip" title="Best Practice">
+- Ensure the `OwnerTwoStepRenounceFacet` is correctly deployed and added to the diamond before calling its functions.
+- The `renounceOwnership` function should only be called by the current owner.
+- Use `exportSelectors` to programmatically discover the facet's supported functions.
+</Callout>
+
+## Security Considerations
+
+<Callout type="warning" title="Security">
+The `renounceOwnership` function is protected by an implicit access control mechanism tied to the diamond's owner. Calling `renounceOwnership` will transfer ownership to a zero address after a delay, making the contract effectively un-ownable. Ensure the current owner calls this function only when intended. Reentrancy is not a concern as there are no external calls. Input validation is minimal, relying on the EVM's address type. The function uses inline assembly to access specific storage slots for owner and pending owner data.
+</Callout>
+
+<div style={{marginTop: "3rem", paddingTop: "2rem", borderTop: "1px solid var(--ifm-color-emphasis-200)"}}>
+  <WasThisHelpful pageId="Owner Two Step Renounce Facet" />
+</div>
+
+<LastUpdated date="2026-03-13T01:53:34.830Z" />

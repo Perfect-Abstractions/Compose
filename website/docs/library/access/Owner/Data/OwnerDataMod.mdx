@@ -1,0 +1,240 @@
+---
+sidebar_position: 110
+title: "Owner Data Module"
+description: "Manages ERC-173 contract ownership using diamond storage"
+sidebar_label: "Module"
+gitSource: "https://github.com/Perfect-Abstractions/Compose/tree/main/src/access/Owner/Data/OwnerDataMod.sol"
+---
+
+import DocSubtitle  from '@site/src/components/docs/DocSubtitle';
+import Badge from '@site/src/components/ui/Badge';
+import Callout from '@site/src/components/ui/Callout';
+import CalloutBox from '@site/src/components/ui/CalloutBox';
+import Accordion, { AccordionGroup } from '@site/src/components/ui/Accordion';
+import PropertyTable from '@site/src/components/api/PropertyTable';
+import ExpandableCode from '@site/src/components/code/ExpandableCode';
+import CodeShowcase from '@site/src/components/code/CodeShowcase';
+import RelatedDocs from '@site/src/components/docs/RelatedDocs';
+import WasThisHelpful from '@site/src/components/docs/WasThisHelpful';
+import LastUpdated from '@site/src/components/docs/LastUpdated';
+import ReadingTime from '@site/src/components/docs/ReadingTime';
+import GradientText from '@site/src/components/ui/GradientText';
+import GradientButton from '@site/src/components/ui/GradientButton';
+
+<DocSubtitle>
+Manages ERC-173 contract ownership using diamond storage
+</DocSubtitle>
+
+<Callout type="info" title="Key Features">
+- Provides internal functions for ERC-173 ownership management.
+- Utilizes diamond storage pattern for shared state.
+- No external dependencies, promoting composability.
+- Functions are `internal` and designed for use within custom facets.
+</Callout>
+
+<Callout type="info" title="Module Usage">
+This module provides internal functions for use in your custom facets. Import it to access shared logic and storage.
+</Callout>
+
+## Overview
+
+This module provides internal functions for managing ERC-173 contract ownership. Facets can import this module to check and set the contract owner using shared diamond storage. Changes to ownership are immediately visible to all facets accessing the same storage slot.
+
+## Storage
+
+### OwnerStorage
+
+storage-location: erc8042:erc173.owner
+
+<ExpandableCode language="solidity" maxLines={15} title="Definition">
+{`struct OwnerStorage {
+    address owner;
+}`}
+</ExpandableCode>
+
+### State Variables
+
+<PropertyTable
+  properties={[
+    {
+      name: "STORAGE_POSITION",
+      type: "bytes32",
+      description: "Diamond storage slot position for this module (Value: `keccak256(\"erc173.owner\")`)"
+    }
+  ]}
+  showRequired={false}
+/>
+
+## Functions
+
+### getStorage
+
+Returns a pointer to the ERC-173 storage struct. Uses inline assembly to access the storage slot defined by STORAGE_POSITION.
+
+<ExpandableCode language="solidity" maxLines={8}>
+{`function getStorage() pure returns (OwnerStorage storage s);`}
+</ExpandableCode>
+
+**Returns:**
+
+<PropertyTable
+  properties={[
+    {
+      name: "s",
+      type: "OwnerStorage",
+      description: "The OwnerStorage struct in storage."
+    }
+  ]}
+  showRequired={false}
+/>
+
+---
+### owner
+
+Get the address of the owner
+
+<ExpandableCode language="solidity" maxLines={8}>
+{`function owner() view returns (address);`}
+</ExpandableCode>
+
+**Returns:**
+
+<PropertyTable
+  properties={[
+    {
+      name: "-",
+      type: "address",
+      description: "The address of the owner."
+    }
+  ]}
+  showRequired={false}
+/>
+
+---
+### requireOwner
+
+Reverts if the caller is not the owner.
+
+<ExpandableCode language="solidity" maxLines={8}>
+{`function requireOwner() view;`}
+</ExpandableCode>
+
+---
+### setContractOwner
+
+<ExpandableCode language="solidity" maxLines={8}>
+{`function setContractOwner(address _initialOwner) ;`}
+</ExpandableCode>
+
+**Parameters:**
+
+<PropertyTable
+  properties={[
+    {
+      name: "_initialOwner",
+      type: "address",
+      description: ""
+    }
+  ]}
+  showRequired={false}
+/>
+
+## Events
+
+<AccordionGroup>
+  <Accordion title="OwnershipTransferred" defaultOpen={false}>
+    <div style={{marginBottom: "1rem"}}>
+      This emits when ownership of a contract changes.
+    </div>
+
+    <div style={{marginBottom: "1rem"}}>
+      <strong>Signature:</strong>
+      <ExpandableCode language="solidity" maxLines={5}>
+{`event OwnershipTransferred(address indexed previousOwner, address indexed newOwner);`}
+      </ExpandableCode>
+    </div>
+
+  </Accordion>
+</AccordionGroup>
+
+## Errors
+
+<AccordionGroup>
+  <Accordion title="OwnerAlreadyRenounced" defaultOpen={false}>
+
+    <div>
+      <strong>Signature:</strong>
+      <ExpandableCode language="solidity" maxLines={5}>
+error OwnerAlreadyRenounced();
+      </ExpandableCode>
+    </div>
+  </Accordion>
+  <Accordion title="OwnerUnauthorizedAccount" defaultOpen={false}>
+
+    <div>
+      <strong>Signature:</strong>
+      <ExpandableCode language="solidity" maxLines={5}>
+error OwnerUnauthorizedAccount();
+      </ExpandableCode>
+    </div>
+  </Accordion>
+</AccordionGroup>
+
+<!-- Usage Example section commented out for now -->
+<!--
+## Usage Example
+
+<ExpandableCode language="solidity" maxLines={20} title="Example Implementation">
+{`pragma solidity >=0.8.30;
+import @compose/access/Owner/Data/OwnerDataMod;
+
+contract MyOwnerFacet {
+    // Assume OwnerDataMod is imported and its storage slot is correctly set up in the diamond
+    // For demonstration, we'll call the internal functions directly. In a real facet, you'd use the diamond's proxy mechanism.
+
+    function transferOwnership(address _newOwner) external {
+        // In a real diamond, this would be routed through the diamond proxy.
+        // For this example, we simulate calling the internal function.
+        // OwnerDataMod.setContractOwner(_newOwner);
+        // Note: The actual call flow in a diamond would involve the diamond proxy calling the facet, which then might call the module.
+        // This example directly shows the module function call for clarity on its usage.
+
+        // To actually call this from a facet in a diamond, you would delegatecall or have the diamond proxy call the facet that uses this module's logic.
+        // The function OwnerDataMod.setContractOwner() is internal and meant to be called by a facet.
+        // A facet would typically have a public/external function that performs access control and then calls the internal OwnerDataMod function.
+
+        // Example of how a facet might internally use the module's logic:
+        // OwnerDataMod.requireOwner(); // Ensure caller is owner before proceeding
+        // OwnerDataMod.setContractOwner(_newOwner);
+
+        // Placeholder for actual interaction demonstrating the function call:
+        // OwnerDataMod.setContractOwner(_newOwner); // This line is illustrative and would be called from a facet's external function.
+    }
+
+    function getCurrentOwner() external view returns (address) {
+        // return OwnerDataMod.owner();
+        return address(0); // Placeholder return
+    }
+}`}
+</ExpandableCode>
+-->
+
+## Best Practices
+
+<Callout type="tip" title="Best Practice">
+- Ensure access control is enforced by the calling facet before invoking `setContractOwner`.
+- Verify that the `OwnerStorage` struct and its storage position are correctly configured within the diamond's storage layout.
+- Handle `OwnerUnauthorizedAccount` and `OwnerAlreadyRenounced` errors if applicable to your facet's logic.
+</Callout>
+
+## Integration Notes
+
+<Callout type="success" title="Shared Storage">
+This module manages ownership state within the diamond's shared storage. It uses the `OwnerStorage` struct, located at the `STORAGE_POSITION` slot, identified by `keccak256("erc173.owner")`. The `owner` address is stored here. Any facet that accesses this storage position will see the current owner address. Functions like `owner()` and `requireOwner()` directly read from this slot, ensuring consistent ownership information across the diamond.
+</Callout>
+
+<div style={{marginTop: "3rem", paddingTop: "2rem", borderTop: "1px solid var(--ifm-color-emphasis-200)"}}>
+  <WasThisHelpful pageId="Owner Data Module" />
+</div>
+
+<LastUpdated date="2026-03-13T01:52:59.287Z" />

@@ -1,0 +1,262 @@
+---
+sidebar_position: 110
+title: "Access Control Temporal Revoke Module"
+description: "Revoke temporal roles with admin authorization"
+sidebar_label: "Module"
+gitSource: "https://github.com/Perfect-Abstractions/Compose/tree/main/src/access/AccessControl/Temporal/Revoke/AccessControlTemporalRevokeMod.sol"
+---
+
+import DocSubtitle  from '@site/src/components/docs/DocSubtitle';
+import Badge from '@site/src/components/ui/Badge';
+import Callout from '@site/src/components/ui/Callout';
+import CalloutBox from '@site/src/components/ui/CalloutBox';
+import Accordion, { AccordionGroup } from '@site/src/components/ui/Accordion';
+import PropertyTable from '@site/src/components/api/PropertyTable';
+import ExpandableCode from '@site/src/components/code/ExpandableCode';
+import CodeShowcase from '@site/src/components/code/CodeShowcase';
+import RelatedDocs from '@site/src/components/docs/RelatedDocs';
+import WasThisHelpful from '@site/src/components/docs/WasThisHelpful';
+import LastUpdated from '@site/src/components/docs/LastUpdated';
+import ReadingTime from '@site/src/components/docs/ReadingTime';
+import GradientText from '@site/src/components/ui/GradientText';
+import GradientButton from '@site/src/components/ui/GradientButton';
+
+<DocSubtitle>
+Revoke temporal roles with admin authorization
+</DocSubtitle>
+
+<Callout type="info" title="Key Features">
+- Provides an `internal` function `revokeTemporalRole` for revoking temporal roles.
+- Enforces authorization, allowing only the role's admin to revoke.
+- Emits a `TemporalRoleRevoked` event upon successful revocation.
+- Operates using the diamond storage pattern for shared state management.
+</Callout>
+
+<Callout type="info" title="Module Usage">
+This module provides internal functions for use in your custom facets. Import it to access shared logic and storage.
+</Callout>
+
+## Overview
+
+This module provides functions to revoke temporal roles, ensuring that only authorized administrators can perform this action. It integrates with diamond storage to manage role revocation state, making changes immediately visible to all facets accessing the same storage. Use this module to implement time-limited access control within your diamond.
+
+## Storage
+
+### AccessControlStorage
+
+Storage struct for AccessControl (reused struct definition). Must match the struct definition in AccessControlDataFacet. storage-location: erc8042:compose.accesscontrol
+
+<ExpandableCode language="solidity" maxLines={15} title="Definition">
+{`struct AccessControlStorage {
+    mapping(address account => mapping(bytes32 role => bool hasRole)) hasRole;
+    mapping(bytes32 role => bytes32 adminRole) adminRole;
+}`}
+</ExpandableCode>
+
+---
+### AccessControlTemporalStorage
+
+Storage struct for AccessControlTemporal. storage-location: erc8042:compose.accesscontrol.temporal
+
+<ExpandableCode language="solidity" maxLines={15} title="Definition">
+{`struct AccessControlTemporalStorage {
+    mapping(address account => mapping(bytes32 role => uint256 expiryTimestamp)) roleExpiry;
+}`}
+</ExpandableCode>
+
+### State Variables
+
+<PropertyTable
+  properties={[
+    {
+      name: "ACCESS_CONTROL_STORAGE_POSITION",
+      type: "bytes32",
+      description: "Diamond storage slot position for this module (Value: `keccak256(\"compose.accesscontrol\")`)"
+    },
+    {
+      name: "TEMPORAL_STORAGE_POSITION",
+      type: "bytes32",
+      description: "Diamond storage slot position for this module (Value: `keccak256(\"compose.accesscontrol.temporal\")`)"
+    }
+  ]}
+  showRequired={false}
+/>
+
+## Functions
+
+### getAccessControlStorage
+
+Returns the storage for AccessControl.
+
+<ExpandableCode language="solidity" maxLines={8}>
+{`function getAccessControlStorage() pure returns (AccessControlStorage storage s);`}
+</ExpandableCode>
+
+**Returns:**
+
+<PropertyTable
+  properties={[
+    {
+      name: "s",
+      type: "AccessControlStorage",
+      description: "The AccessControl storage struct."
+    }
+  ]}
+  showRequired={false}
+/>
+
+---
+### getStorage
+
+Returns the storage for AccessControlTemporal.
+
+<ExpandableCode language="solidity" maxLines={8}>
+{`function getStorage() pure returns (AccessControlTemporalStorage storage s);`}
+</ExpandableCode>
+
+**Returns:**
+
+<PropertyTable
+  properties={[
+    {
+      name: "s",
+      type: "AccessControlTemporalStorage",
+      description: "The AccessControlTemporal storage struct."
+    }
+  ]}
+  showRequired={false}
+/>
+
+---
+### revokeTemporalRole
+
+Revokes a temporal role from an account. Only the admin of the role can revoke it. Emits a &#123;TemporalRoleRevoked&#125; event. Reverts with AccessControlUnauthorizedAccount If the caller is not the admin of the role.
+
+<ExpandableCode language="solidity" maxLines={8}>
+{`function revokeTemporalRole(bytes32 _role, address _account) ;`}
+</ExpandableCode>
+
+**Parameters:**
+
+<PropertyTable
+  properties={[
+    {
+      name: "_role",
+      type: "bytes32",
+      description: "The role to revoke."
+    },
+    {
+      name: "_account",
+      type: "address",
+      description: "The account to revoke the role from."
+    }
+  ]}
+  showRequired={false}
+/>
+
+## Events
+
+<AccordionGroup>
+  <Accordion title="TemporalRoleRevoked" defaultOpen={false}>
+    <div style={{marginBottom: "1rem"}}>
+      Event emitted when a temporal role is revoked.
+    </div>
+
+    <div style={{marginBottom: "1rem"}}>
+      <strong>Signature:</strong>
+      <ExpandableCode language="solidity" maxLines={5}>
+{`event TemporalRoleRevoked(bytes32 indexed _role, address indexed _account, address indexed _sender);`}
+      </ExpandableCode>
+    </div>
+
+    <div style={{marginBottom: "1rem"}}>
+      <strong>Parameters:</strong>
+      <PropertyTable
+        properties={[
+          {
+            name: "_role",
+            type: "bytes32",
+            description: "The role that was revoked."
+          },
+          {
+            name: "_account",
+            type: "address",
+            description: "The account from which the role was revoked."
+          },
+          {
+            name: "_sender",
+            type: "address",
+            description: "The account that revoked the role."
+          }
+        ]}
+        showRequired={false}
+      />
+    </div>
+  </Accordion>
+</AccordionGroup>
+
+## Errors
+
+<AccordionGroup>
+  <Accordion title="AccessControlUnauthorizedAccount" defaultOpen={false}>
+    <div style={{marginBottom: "1rem"}}>
+      Thrown when the account does not have a specific role.
+    </div>
+
+    <div>
+      <strong>Signature:</strong>
+      <ExpandableCode language="solidity" maxLines={5}>
+error AccessControlUnauthorizedAccount(address _account, bytes32 _role);
+      </ExpandableCode>
+    </div>
+  </Accordion>
+</AccordionGroup>
+
+<!-- Usage Example section commented out for now -->
+<!--
+## Usage Example
+
+<ExpandableCode language="solidity" maxLines={20} title="Example Implementation">
+{`pragma solidity >=0.8.30;
+
+import {AccessControlTemporalRevokeMod} from "@compose/access/AccessControl/Temporal/Revoke/AccessControlTemporalRevokeMod";
+
+contract MyFacet {
+    AccessControlTemporalRevokeMod internal accessControlTemporalRevokeMod;
+
+    function initialize(address accessControlTemporalRevokeModAddress) external {
+        accessControlTemporalRevokeMod = AccessControlTemporalRevokeMod(accessControlTemporalRevokeModAddress);
+    }
+
+    /**
+     * @notice Revokes a temporal role from a specific account.
+     * @dev Requires the caller to be the admin of the role.
+     * @param _role The role to revoke.
+     * @param _account The account from which to revoke the role.
+     */
+    function revokeRole(bytes32 _role, address _account) external {
+        accessControlTemporalRevokeMod.revokeTemporalRole(_role, _account);
+    }
+}`}
+</ExpandableCode>
+-->
+
+## Best Practices
+
+<Callout type="tip" title="Best Practice">
+- Ensure the caller possesses the necessary administrative privileges for the role before invoking `revokeTemporalRole`.
+- Verify that the `AccessControlTemporalRevokeMod` has been correctly initialized with its diamond storage address.
+- Handle the `AccessControlUnauthorizedAccount` error to gracefully manage unauthorized revocation attempts.
+</Callout>
+
+## Integration Notes
+
+<Callout type="success" title="Shared Storage">
+This module operates on shared diamond storage, specifically utilizing the `ACCESS_CONTROL_STORAGE_POSITION` (keccak256("compose.accesscontrol")) for its `AccessControlStorage` and `AccessControlTemporalStorage` structures. All modifications made via `revokeTemporalRole` are immediately reflected in the diamond's storage and are visible to any other facet that reads from these storage locations. The module's functions are `internal`, implying they are intended to be called by other facets within the same diamond.
+</Callout>
+
+<div style={{marginTop: "3rem", paddingTop: "2rem", borderTop: "1px solid var(--ifm-color-emphasis-200)"}}>
+  <WasThisHelpful pageId="Access Control Temporal Revoke Module" />
+</div>
+
+<LastUpdated date="2026-03-13T01:54:59.750Z" />

@@ -1,0 +1,206 @@
+---
+sidebar_position: 200
+title: "ERC-20 Metadata Facet"
+description: "ERC-20 token metadata within a diamond"
+sidebar_label: "Facet"
+gitSource: "https://github.com/Perfect-Abstractions/Compose/tree/main/src/token/ERC20/Metadata/ERC20MetadataFacet.sol"
+---
+
+import DocSubtitle  from '@site/src/components/docs/DocSubtitle';
+import Badge from '@site/src/components/ui/Badge';
+import Callout from '@site/src/components/ui/Callout';
+import CalloutBox from '@site/src/components/ui/CalloutBox';
+import Accordion, { AccordionGroup } from '@site/src/components/ui/Accordion';
+import PropertyTable from '@site/src/components/api/PropertyTable';
+import ExpandableCode from '@site/src/components/code/ExpandableCode';
+import CodeShowcase from '@site/src/components/code/CodeShowcase';
+import RelatedDocs from '@site/src/components/docs/RelatedDocs';
+import WasThisHelpful from '@site/src/components/docs/WasThisHelpful';
+import LastUpdated from '@site/src/components/docs/LastUpdated';
+import ReadingTime from '@site/src/components/docs/ReadingTime';
+import GradientText from '@site/src/components/ui/GradientText';
+import GradientButton from '@site/src/components/ui/GradientButton';
+
+<DocSubtitle>
+ERC-20 token metadata within a diamond
+</DocSubtitle>
+
+<Callout type="info" title="Key Features">
+- Exposes external view functions for token name, symbol, and decimals.
+- Retrieves metadata from shared diamond storage.
+- Compatible with ERC-2535 diamond standard for routing.
+- Provides immutable selectors for discovery via `exportSelectors`.
+</Callout>
+
+## Overview
+
+This facet exposes ERC-20 token metadata functions, such as name, symbol, and decimals, through the diamond proxy. It accesses shared storage to retrieve these values, providing a consistent interface for token information within a Compose diamond. Developers add this facet to make token metadata accessible while maintaining diamond's upgradeability.
+
+## Storage
+
+### ERC20MetadataStorage
+
+<ExpandableCode language="solidity" maxLines={15} title="Definition">
+{`struct ERC20MetadataStorage {
+    string name;
+    string symbol;
+    uint8 decimals;
+}`}
+</ExpandableCode>
+
+### State Variables
+
+<PropertyTable
+  properties={[
+    {
+      name: "STORAGE_POSITION",
+      type: "bytes32",
+      description: "Diamond storage slot position for this module (Value: `keccak256(\"erc20.metadata\")`)"
+    }
+  ]}
+  showRequired={false}
+/>
+
+## Functions
+
+### name
+
+Returns the name of the token.
+
+<ExpandableCode language="solidity" maxLines={8}>
+{`function name() external view returns (string memory);`}
+</ExpandableCode>
+
+**Returns:**
+
+<PropertyTable
+  properties={[
+    {
+      name: "-",
+      type: "string",
+      description: "The token name."
+    }
+  ]}
+  showRequired={false}
+/>
+
+---
+### symbol
+
+Returns the symbol of the token.
+
+<ExpandableCode language="solidity" maxLines={8}>
+{`function symbol() external view returns (string memory);`}
+</ExpandableCode>
+
+**Returns:**
+
+<PropertyTable
+  properties={[
+    {
+      name: "-",
+      type: "string",
+      description: "The token symbol."
+    }
+  ]}
+  showRequired={false}
+/>
+
+---
+### decimals
+
+Returns the number of decimals used for token precision.
+
+<ExpandableCode language="solidity" maxLines={8}>
+{`function decimals() external view returns (uint8);`}
+</ExpandableCode>
+
+**Returns:**
+
+<PropertyTable
+  properties={[
+    {
+      name: "-",
+      type: "uint8",
+      description: "The number of decimals."
+    }
+  ]}
+  showRequired={false}
+/>
+
+---
+### exportSelectors
+
+Exports the function selectors of the ERC20Metadata facet This function is use as a selector discovery mechanism for diamonds
+
+<ExpandableCode language="solidity" maxLines={8}>
+{`function exportSelectors() external pure returns (bytes memory);`}
+</ExpandableCode>
+
+**Returns:**
+
+<PropertyTable
+  properties={[
+    {
+      name: "-",
+      type: "bytes",
+      description: "selectors The exported function selectors of the ERC20MetadataFacet"
+    }
+  ]}
+  showRequired={false}
+/>
+
+<!-- Usage Example section commented out for now -->
+<!--
+## Usage Example
+
+<ExpandableCode language="solidity" maxLines={20} title="Example Implementation">
+{`pragma solidity >=0.8.30;
+
+import {ERC20MetadataFacet} from "@compose/token/ERC20/Metadata/ERC20MetadataFacet";
+import {IDiamond} from "@compose/diamond/core/IDiamond";
+
+contract TokenUser {
+    address immutable diamondAddress;
+
+    constructor(address _diamondAddress) {
+        diamondAddress = _diamondAddress;
+    }
+
+    function getTokenName() external view returns (string memory) {
+        // Call through the diamond proxy to the ERC20MetadataFacet
+        return IDiamond(diamondAddress).name();
+    }
+
+    function getTokenSymbol() external view returns (string memory) {
+        // Call through the diamond proxy to the ERC20MetadataFacet
+        return IDiamond(diamondAddress).symbol();
+    }
+
+    function getTokenDecimals() external view returns (uint8) {
+        // Call through the diamond proxy to the ERC20MetadataFacet
+        return IDiamond(diamondAddress).decimals();
+    }
+}`}
+</ExpandableCode>
+-->
+
+## Best Practices
+
+<Callout type="tip" title="Best Practice">
+- Ensure the `ERC20MetadataFacet` is correctly registered with the diamond's facet registry.
+- Access token metadata via the diamond proxy address to leverage routing and upgradeability.
+- Do not directly call internal functions of this facet; use its external ABI exposed through the diamond.
+</Callout>
+
+## Security Considerations
+
+<Callout type="warning" title="Security">
+This facet contains only view functions and does not modify state. Input validation is not applicable. Follow standard Solidity security practices.
+</Callout>
+
+<div style={{marginTop: "3rem", paddingTop: "2rem", borderTop: "1px solid var(--ifm-color-emphasis-200)"}}>
+  <WasThisHelpful pageId="ERC-20 Metadata Facet" />
+</div>
+
+<LastUpdated date="2026-03-13T01:51:53.915Z" />

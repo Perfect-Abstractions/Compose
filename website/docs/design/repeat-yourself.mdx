@@ -4,6 +4,8 @@ title: Repeat Yourself
 description: Repeat yourself when it makes your code easier to read and understand.
 ---
 
+import Callout from '@site/src/components/ui/Callout';
+
 
 The DRY principle — *Don't Repeat Yourself* — is a well-known rule in software development. We **intentionally** break that rule.
 
@@ -15,4 +17,6 @@ Repetition can make smart contracts easier to read and reason about. Instead of 
 
 However, DRY still has its place. For example, when a large block of code performs a complete, self-contained action and is used identically in multiple locations, moving it into an internal function can improve readability. For example, Compose's ERC-721 implementation uses an `internalTransferFrom` function to eliminate duplication while keeping the code easy to read and understand.
 
-**Guideline:** Repeat yourself when it makes your code easier to read and understand. Use DRY sparingly and only to make code more readable.
+<Callout type="tip" title="Guideline">
+Repeat yourself when it makes your code easier to read and understand. Use DRY sparingly and only to make code more readable.
+</Callout>

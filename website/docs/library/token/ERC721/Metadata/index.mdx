@@ -1,0 +1,29 @@
+---
+title: "Metadata"
+description: "Metadata extension for ERC-721 tokens."
+---
+
+import DocCard, { DocCardGrid } from '@site/src/components/docs/DocCard';
+import DocSubtitle from '@site/src/components/docs/DocSubtitle';
+import Icon from '@site/src/components/ui/Icon';
+
+<DocSubtitle>
+  Metadata extension for ERC-721 tokens.
+</DocSubtitle>
+
+<DocCardGrid columns={2}>
+  <DocCard
+    title="ERC-721 Metadata Facet"
+    description={"ERC-721 token metadata retrieval for diamonds"}
+    href="/docs/library/token/ERC721/Metadata/ERC721MetadataFacet"
+    icon={<Icon name="showcase-facet" size={28} />}
+    size="medium"
+  />
+  <DocCard
+    title="ERC-721 Metadata Module"
+    description={"Manages ERC721 metadata within a diamond"}
+    href="/docs/library/token/ERC721/Metadata/ERC721MetadataMod"
+    icon={<Icon name="box-detailed" size={28} />}
+    size="medium"
+  />
+</DocCardGrid>

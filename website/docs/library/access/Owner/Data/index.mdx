@@ -1,0 +1,29 @@
+---
+title: "Data"
+description: "Data components for Compose diamonds."
+---
+
+import DocCard, { DocCardGrid } from '@site/src/components/docs/DocCard';
+import DocSubtitle from '@site/src/components/docs/DocSubtitle';
+import Icon from '@site/src/components/ui/Icon';
+
+<DocSubtitle>
+  Data components for Compose diamonds.
+</DocSubtitle>
+
+<DocCardGrid columns={2}>
+  <DocCard
+    title="Owner Data Facet"
+    description={"Manages owner address and facet selectors"}
+    href="/docs/library/access/Owner/Data/OwnerDataFacet"
+    icon={<Icon name="showcase-facet" size={28} />}
+    size="medium"
+  />
+  <DocCard
+    title="Owner Data Module"
+    description={"Manages ERC-173 contract ownership using diamond storage"}
+    href="/docs/library/access/Owner/Data/OwnerDataMod"
+    icon={<Icon name="box-detailed" size={28} />}
+    size="medium"
+  />
+</DocCardGrid>
