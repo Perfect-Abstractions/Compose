@@ -86,13 +86,42 @@ function getCategoryItems(outputDir, relativePath, generateLabel, generateDescri
     }
   }
 
-  // Sort items: categories first, then docs, both alphabetically
-  items.sort((a, b) => {
-    if (a.type !== b.type) {
-      return a.type === 'category' ? -1 : 1;
-    }
-    return a.label.localeCompare(b.label);
-  });
+  // Sort items
+  //
+  // Default: categories first, then docs, both alphabetically.
+  // Special case: Diamond Core (`library/diamond`) to match sidebar order:
+  //   Module, Inspect Facet, Upgrade Facet, Upgrade Module, Examples.
+  if (relativePath === 'diamond') {
+    const preferredOrder = [
+      'DiamondMod',
+      'DiamondInspectFacet',
+      'DiamondUpgradeFacet',
+      'DiamondUpgradeMod',
+      'example',
+    ];
+
+    const getIndex = (item) => {
+      const idx = preferredOrder.indexOf(item.name);
+      return idx === -1 ? Number.MAX_SAFE_INTEGER : idx;
+    };
+
+    items.sort((a, b) => {
+      const aIdx = getIndex(a);
+      const bIdx = getIndex(b);
+      if (aIdx !== bIdx) {
+        return aIdx - bIdx;
+      }
+      // Fallback deterministic ordering
+      return a.label.localeCompare(b.label);
+    });
+  } else {
+    items.sort((a, b) => {
+      if (a.type !== b.type) {
+        return a.type === 'category' ? -1 : 1;
+      }
+      return a.label.localeCompare(b.label);
+    });
+  }
 
   return items;
 }
@@ -135,7 +164,19 @@ import Icon from '@site/src/components/ui/Icon';
     mdxContent += `<DocCardGrid columns={2}>\n`;
     
     for (const item of items) {
-      const iconName = item.type === 'category' ? 'package' : 'book';
+      // Icon mapping:
+      // - Categories (higher-level groupings): package
+      // - Facets (contract names ending with "Facet"): showcase-facet
+      // - Modules (contract names ending with "Mod"): box-detailed
+      // - Everything else: package
+      let iconName = 'package';
+      if (item.type === 'category') {
+        iconName = 'package';
+      } else if (item.name.endsWith('Facet')) {
+        iconName = 'showcase-facet';
+      } else if (item.name.endsWith('Mod')) {
+        iconName = 'box-detailed';
+      }
       const itemDescription = item.description ? `"${item.description.replace(/"/g, '\\"')}"` : '""';
       
       mdxContent += `  <DocCard
