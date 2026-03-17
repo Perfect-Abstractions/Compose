@@ -1,0 +1,14 @@
+{
+  "id": "default",
+  "name": "Counter",
+  "description": "Simple diamond with a counter facet",
+  "variants": [
+    "default-foundry",
+    "default-hardhat-minimal",
+    "default-hardhat-mocha-ethers",
+    "default-hardhat-node-runner-viem"
+  ],
+  "compatibility": {
+    "frameworks": ["foundry", "hardhat"]
+  }
+}

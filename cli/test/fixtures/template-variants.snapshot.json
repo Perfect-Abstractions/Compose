@@ -1,0 +1,8 @@
+{
+  "default": [
+    "default-foundry",
+    "default-hardhat-minimal",
+    "default-hardhat-mocha-ethers",
+    "default-hardhat-node-runner-viem"
+  ]
+}
