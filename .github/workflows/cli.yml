@@ -130,9 +130,11 @@ jobs:
             --template default \
             --framework hardhat \
             --language typescript \
-            --install-deps=false \
+            --install-deps false \
             --yes
           cd ci-hardhat
+          # TODO: Remove once @perfect-abstractions/compose is published to npm
+          npm pkg delete dependencies.@perfect-abstractions/compose || true
           npm install
           npm test
 
