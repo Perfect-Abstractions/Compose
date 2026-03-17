@@ -130,6 +130,7 @@ jobs:
             --template default \
             --framework hardhat \
             --language typescript \
+            --install-deps=false \
             --yes
           cd ci-hardhat
           npm install
