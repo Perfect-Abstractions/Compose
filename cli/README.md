@@ -9,7 +9,7 @@ Supports both Foundry and Hardhat.
 npm install -g @perfect-abstractions/compose-cli
 ```
 
-Requires Node.js >= 18.
+Requires Node.js >= 20.
 
 ## Usage
 

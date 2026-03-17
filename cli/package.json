@@ -9,9 +9,9 @@
   "type": "commonjs",
   "scripts": {
     "lint": "eslint .",
-    "test": "node --test test",
-    "test:unit": "node --test test/unit",
-    "test:integration": "node --test test/integration",
+    "test": "node --test \"test/**/*.test.js\"",
+    "test:unit": "node --test \"test/unit/**/*.test.js\"",
+    "test:integration": "node --test \"test/integration/**/*.test.js\"",
     "check": "npm run lint && npm run test",
     "build:templates": "node scripts/generate-templates-config.js",
     "pack:check": "npm pack --dry-run",
