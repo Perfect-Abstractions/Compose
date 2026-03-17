@@ -6,10 +6,12 @@ on:
     paths-ignore:
       - '**.md'
       - 'website/**'
+      - 'cli/**'
   pull_request:
     paths-ignore:
       - '**.md'
       - 'website/**'
+      - 'cli/**'
   workflow_dispatch:
 
 env:
