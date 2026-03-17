@@ -1,0 +1,6 @@
+[submodule "src/templates/default/foundry/lib/forge-std"]
+	path = src/templates/default/foundry/lib/forge-std
+	url = https://github.com/foundry-rs/forge-std.git
+[submodule "src/templates/default/foundry/lib/Compose"]
+	path = src/templates/default/foundry/lib/Compose
+	url = https://github.com/Perfect-Abstractions/Compose.git

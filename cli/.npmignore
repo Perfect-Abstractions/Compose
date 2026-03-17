@@ -1,0 +1,7 @@
+node_modules/
+test/
+.github/
+.cursor/
+.tmp/
+lib/
+src/templates/**/foundry/lib/

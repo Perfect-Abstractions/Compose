@@ -1,0 +1,70 @@
+{
+  "name": "@perfect-abstractions/compose-cli",
+  "version": "0.1.0",
+  "description": "CLI to scaffold Compose facet-based diamond projects",
+  "main": "index.js",
+  "bin": {
+    "compose": "./index.js"
+  },
+  "type": "commonjs",
+  "scripts": {
+    "lint": "eslint .",
+    "test": "node --test test/**/*.test.js",
+    "test:unit": "node --test test/unit",
+    "test:integration": "node --test test/integration",
+    "check": "npm run lint && npm run test",
+    "build:templates": "node scripts/generate-templates-config.js",
+    "pack:check": "npm pack --dry-run",
+    "prepublishOnly": "npm run check && npm run pack:check",
+    "prepare:lib": "git submodule update --init --recursive"
+  },
+  "keywords": [
+    "solidity",
+    "ethereum",
+    "smart-contracts",
+    "diamonds",
+    "ERC-2535", 
+    "ERC-8153",
+    "facets",
+    "compose",
+    "cli"
+  ],
+  "author": "Perfect-Abstractions/Compose",
+  "license": "MIT",
+  "engines": {
+    "node": ">=18"
+  },
+  "files": [
+    "index.js",
+    "src/",
+    "!src/templates/**/lib/",
+    "docs/",
+    "README.md",
+    "LICENSE"
+  ],
+  "dependencies": {
+    "fs-extra": "^11.3.3",
+    "inquirer": "^13.3.0",
+    "minimist": "^1.2.8",
+    "picocolors": "^1.1.1"
+  },
+  "devDependencies": {
+    "@eslint/js": "^10.0.1",
+    "@nomicfoundation/hardhat-ethers": "^4.0.5",
+    "@nomicfoundation/hardhat-ignition": "^3.0.8",
+    "@nomicfoundation/hardhat-toolbox-mocha-ethers": "^3.0.3",
+    "@nomicfoundation/hardhat-toolbox-viem": "^5.0.2",
+    "@types/chai": "^5.2.3",
+    "@types/chai-as-promised": "^8.0.2",
+    "@types/mocha": "^10.0.10",
+    "@types/node": "^22.19.13",
+    "chai": "^6.2.2",
+    "eslint": "^10.0.2",
+    "ethers": "^6.16.0",
+    "forge-std": "github:foundry-rs/forge-std#v1.9.4",
+    "hardhat": "^3.1.10",
+    "mocha": "^11.7.5",
+    "typescript": "~5.8.0",
+    "viem": "^2.47.0"
+  }
+}
