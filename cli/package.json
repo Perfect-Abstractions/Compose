@@ -15,8 +15,7 @@
     "check": "npm run lint && npm run test",
     "build:templates": "node scripts/generate-templates-config.js",
     "pack:check": "npm pack --dry-run",
-    "prepublishOnly": "npm run check && npm run pack:check",
-    "prepare:lib": "git submodule update --init --recursive"
+    "prepublishOnly": "npm run check && npm run pack:check"
   },
   "keywords": [
     "solidity",

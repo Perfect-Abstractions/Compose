@@ -73,21 +73,6 @@ npm run build:templates
 npm run check
 ```
 
-To build or test the Foundry template (or any template that uses `lib/` submodules), init libs once:
-
-```bash
-npm run prepare:lib
-```
-
-Then from a template directory, for example `src/templates/default/foundry`:
-
-```bash
-forge build
-forge test
-```
-
-New templates that need `forge-std` or Compose can add the same submodules under their own `lib/`; `prepare:lib` inits all submodules repo-wide.
-
 ### Template registry generation
 
 The template registry at `src/config/templates.json` is generated from per-template manifests under `src/templates/**/template.json`.
@@ -98,4 +83,87 @@ The template registry at `src/config/templates.json` is generated from per-templ
 npm run build:templates
 ```
 
-The CLI loads the generated `templates.json` at runtime; editing `template.json` files alone is not enough unless you rebuild the registry.
+## Add a new template
+
+To make a new template:
+
+1. **Create the template folder**
+   - Add a new directory under `src/templates/<template-id>`.
+   - Example: `src/templates/erc721`.
+
+2. **Add a `template.json` manifest**
+   - Place it at `src/templates/<template-id>/template.json`.
+   - Required fields:
+     - `id`: the template id (must match `<template-id>`).
+     - `name`: human‑readable name shown in `compose templates`.
+     - `description`: short description.
+     - `variants`: list of variant ids (see below).
+     - `compatibility.frameworks`: array of supported frameworks, e.g. `["foundry"]` or `["foundry","hardhat"]`.
+   - Example:
+     ```json
+     {
+       "id": "erc721",
+       "name": "ERC‑721 Diamond",
+       "description": "Diamond project with an ERC‑721 facet",
+       "variants": [
+         "erc721-foundry",
+         "erc721-hardhat-minimal"
+       ],
+       "compatibility": {
+         "frameworks": ["foundry", "hardhat"]
+       }
+     }
+     ```
+
+3. **Add variant directories**
+   - Variant ids follow the pattern: `<template-id>-<framework>[-<project-type>]`.
+   - The generator maps variants to paths as follows:
+     - **Foundry**: `templates/<template-id>/foundry`
+       - Example variant id: `erc721-foundry` → `src/templates/erc721/foundry`
+     - **Hardhat (no project type)**: `templates/<template-id>/hardhat`
+       - Example variant id: `erc721-hardhat` → `src/templates/erc721/hardhat`
+     - **Hardhat with project type (TypeScript/JS layout)**:
+       - Path pattern: `templates/<template-id>/hardhat/ts/<project-type>`
+       - Example variant id: `erc721-hardhat-minimal` → `src/templates/erc721/hardhat/ts/minimal`
+   - Place the scaffolded project files (contracts, configs, tests, etc.) inside each variant directory.
+
+4. **Language detection**
+   - The CLI infers the language from the variant path:
+     - Paths containing `/ts/` → `language: "typescript"`.
+     - Paths containing `/js/` → `language: "javascript"`.
+   - For Foundry templates, language is not set on the variant; the framework alone is enough.
+
+5. **Regenerate the templates registry**
+   - From the `cli` directory run:
+     ```bash
+     npm run build:templates
+     ```
+   - This rebuilds `src/config/templates.json` from all `template.json` manifests and validates the result.
+
+6. **Verify your template is available**
+   - Run:
+     ```bash
+     node index.js templates
+     ```
+   - Confirm your new template and variants appear in the list.
+
+7. **Smoke‑test the template**
+   - Use your new template to scaffold a project:
+     ```bash
+     node index.js init --name my-test-project --template <template-id> --framework <framework> --yes
+     ```
+   - Then run the framework’s own test / build commands in the generated project.
+
+### Test the CLI locally
+
+```bash
+npm link
+```
+
+This will create a symlink to the CLI in your global `node_modules` directory.
+
+You can then test the CLI by running:
+
+```bash
+compose --help
+```
