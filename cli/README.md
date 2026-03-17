@@ -56,7 +56,7 @@ compose init --name my-hardhat-mocha-ethers \
 ```
 
 
-`compose templates` prints this information in a CLI-friendly format.
+`compose templates` prints this information in a friendly format.
 
 ## Notes on `@perfect-abstractions/compose`
 
