@@ -17,7 +17,6 @@ on:
 jobs:
   lint-and-unit:
     runs-on: ubuntu-latest
-    name: Lint and Test
     defaults:
       run:
         working-directory: cli

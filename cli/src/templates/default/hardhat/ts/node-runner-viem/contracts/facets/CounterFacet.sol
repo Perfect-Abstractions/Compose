@@ -4,7 +4,7 @@ pragma solidity ^0.8.30;
 contract CounterFacet {
     event Increment(uint256 by);
 
-    bytes32 private constant COUNTER_STORAGE_POSITION = keccak256("compose.counter.storage");
+    bytes32 private constant COUNTER_STORAGE_POSITION = keccak256("compose.counter");
 
     struct CounterStorage {
         uint256 counter;

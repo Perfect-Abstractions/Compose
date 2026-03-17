@@ -2,12 +2,12 @@
 pragma solidity ^0.8.30;
 
 import "@perfect-abstractions/compose/diamond/DiamondMod.sol" as DiamondMod;
-import "@perfect-abstractions/compose/access/Owner/OwnerMod.sol" as OwnerMod;
+import "@perfect-abstractions/compose/access/Owner/Data/OwnerDataMod.sol" as OwnerDataMod;
 
 contract Diamond {
     constructor(address[] memory facets, address diamondOwner) {
         DiamondMod.addFacets(facets);
-        OwnerMod.setContractOwner(diamondOwner);
+        OwnerDataMod.setContractOwner(diamondOwner);
     }
 
     fallback() external payable {

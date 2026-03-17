@@ -1,13 +1,13 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.30;
 
-import {DiamondMod} from "@perfect-abstractions/compose/modules/DiamondMod.sol";
-import {OwnerMod} from "@perfect-abstractions/compose/modules/OwnerMod.sol";
+import "@perfect-abstractions/compose/diamond/DiamondMod.sol" as DiamondMod;
+import "@perfect-abstractions/compose/access/Owner/Data/OwnerDataMod.sol" as OwnerDataMod;
 
 contract Diamond {
     constructor(address[] memory facets, address diamondOwner) {
         DiamondMod.addFacets(facets);
-        OwnerMod.setContractOwner(diamondOwner);
+        OwnerDataMod.setContractOwner(diamondOwner);
     }
 
     fallback() external payable {
