@@ -32,7 +32,7 @@
   "author": "Perfect-Abstractions/Compose",
   "license": "MIT",
   "engines": {
-    "node": ">=18"
+  "node": ">=20"
   },
   "files": [
     "index.js",
