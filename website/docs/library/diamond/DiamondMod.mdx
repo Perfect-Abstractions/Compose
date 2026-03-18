@@ -7,7 +7,6 @@ gitSource: "https://github.com/Perfect-Abstractions/Compose/tree/main/src/diamon
 ---
 
 import DocSubtitle  from '@site/src/components/docs/DocSubtitle';
-import Badge from '@site/src/components/ui/Badge';
 import Callout from '@site/src/components/ui/Callout';
 import CalloutBox from '@site/src/components/ui/CalloutBox';
 import Accordion, { AccordionGroup } from '@site/src/components/ui/Accordion';
@@ -18,8 +17,6 @@ import RelatedDocs from '@site/src/components/docs/RelatedDocs';
 import WasThisHelpful from '@site/src/components/docs/WasThisHelpful';
 import LastUpdated from '@site/src/components/docs/LastUpdated';
 import ReadingTime from '@site/src/components/docs/ReadingTime';
-import GradientText from '@site/src/components/ui/GradientText';
-import GradientButton from '@site/src/components/ui/GradientButton';
 
 <DocSubtitle>
 This module provides core internal functions and storage management for diamond proxies.
@@ -27,7 +24,7 @@ This module provides core internal functions and storage management for diamond 
 
 <Callout type="info" title="Key Features">
 - Provides functions for diamond proxy operations.
-- Manages diamond storage using a dedicated storage slot (`DIAMOND_STORAGE_POSITION`).
+- Manages diamond storage using a dedicated storage slot (`"erc8153.diamond"`).
 - Supports facet registration and retrieval through internal mechanisms.
 </Callout>
 
@@ -455,17 +452,15 @@ contract MyFacet {
 
 ## Best Practices
 
-<Callout type="tip" title="Best Practice">
 - Ensure that facet registration functions (like `addFacets` and `importSelectors`) are called only during diamond initialization or controlled upgrade processes.
 - Verify that the `DiamondStorage` struct is correctly defined and that any new fields are added at the end to maintain storage compatibility.
 - Handle custom errors such as `CannotAddFunctionToDiamondThatAlreadyExists` and `NoSelectorsForFacet` to ensure robust error management.
-</Callout>
 
 ## Integration Notes
 
-<Callout type="success" title="Shared Storage">
-This module interacts directly with the diamond's shared storage at the `DIAMOND_STORAGE_POSITION`, which is identified by `keccak256("erc8153.diamond")`. The `DiamondStorage` struct, which includes a `FacetList` field, resides here. All functions within this module read from and write to this shared storage. Changes to the `facetList` or other storage elements are immediately visible to any facet that accesses the same storage slot.
-</Callout>
+This module interacts directly with the diamond's shared storage at the `DIAMOND_STORAGE_POSITION`, which is identified by `keccak256("erc8153.diamond")`. 
+
+All functions within this module read from and write to this shared storage. Changes to the `facetList` or other storage elements are immediately visible to any facet that accesses the same storage slot.
 
 <div style={{marginTop: "3rem", paddingTop: "2rem", borderTop: "1px solid var(--ifm-color-emphasis-200)"}}>
   <WasThisHelpful pageId="Diamond Module" />
