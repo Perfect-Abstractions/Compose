@@ -2,7 +2,7 @@
 sidebar_position: 1
 title: "Diamond Module"
 description: "Internal functions and storage for diamond proxy functionality."
-sidebar_label: "Module"
+sidebar_label: "Diamond Module"
 gitSource: "https://github.com/Perfect-Abstractions/Compose/tree/main/src/diamond/DiamondMod.sol"
 ---
 
@@ -22,59 +22,17 @@ import GradientText from '@site/src/components/ui/GradientText';
 import GradientButton from '@site/src/components/ui/GradientButton';
 
 <DocSubtitle>
-Internal functions and storage for diamond proxy functionality.
+This module provides core internal functions and storage management for diamond proxies.
 </DocSubtitle>
 
 <Callout type="info" title="Key Features">
-- Exposes internal functions for diamond proxy operations.
+- Provides functions for diamond proxy operations.
 - Manages diamond storage using a dedicated storage slot (`DIAMOND_STORAGE_POSITION`).
 - Supports facet registration and retrieval through internal mechanisms.
-- No external dependencies, ensuring minimal on-chain footprint.
 </Callout>
 
-<Callout type="info" title="Module Usage">
-This module provides internal functions for use in your custom facets. Import it to access shared logic and storage.
-</Callout>
-
-## Overview
-
-This module provides core internal functions and storage management for diamond proxies. It enables facets to interact with shared diamond storage and manage facet registrations. Changes made through this module are immediately visible to all facets utilizing the diamond storage pattern.
 
 ## Storage
-
-### DiamondStorage
-
-storage-location: erc8042:erc8153.diamond
-
-<ExpandableCode language="solidity" maxLines={15} title="Definition">
-{`struct DiamondStorage {
-    mapping(bytes4 functionSelector => FacetNode) facetNodes;
-    FacetList facetList;
-}`}
-</ExpandableCode>
-
----
-### FacetList
-
-<ExpandableCode language="solidity" maxLines={15} title="Definition">
-{`struct FacetList {
-    bytes4 headFacetNodeId;
-    bytes4 tailFacetNodeId;
-    uint32 facetCount;
-    uint32 selectorCount;
-}`}
-</ExpandableCode>
-
----
-### FacetNode
-
-<ExpandableCode language="solidity" maxLines={15} title="Definition">
-{`struct FacetNode {
-    address facet;
-    bytes4 prevFacetNodeId;
-    bytes4 nextFacetNodeId;
-}`}
-</ExpandableCode>
 
 ### State Variables
 
@@ -83,15 +41,65 @@ storage-location: erc8042:erc8153.diamond
     {
       name: "DIAMOND_STORAGE_POSITION",
       type: "bytes32",
-      description: "Diamond storage slot position for this module (Value: `keccak256(\"erc8153.diamond\")`)"
+      description: `Storage slot position for the diamond.
+
+Value: \`keccak256("erc8153.diamond")\``
     }
   ]}
   showRequired={false}
 />
 
+### Diamond Storage Layout
+
+
+<ExpandableCode language="solidity" maxLines={15} title="Definition">
+{`/** storage-location: erc8042:erc8153.diamond */
+struct DiamondStorage {
+    mapping(bytes4 functionSelector => FacetNode) facetNodes;
+    FacetList facetList;
+}
+
+struct FacetList {
+    bytes4 headFacetNodeId;
+    bytes4 tailFacetNodeId;
+    uint32 facetCount;
+    uint32 selectorCount;
+}
+
+struct FacetNode {
+    address facet;
+    bytes4 prevFacetNodeId;
+    bytes4 nextFacetNodeId;
+}
+`}
+</ExpandableCode>
+
 ## Functions
 
+### getDiamondStorage
+
+<ExpandableCode language="solidity" maxLines={8}>
+{`function getDiamondStorage() pure returns (DiamondStorage storage s);`}
+</ExpandableCode>
+
+**Returns:**
+
+<PropertyTable
+  properties={[
+    {
+      name: "s",
+      type: "DiamondStorage",
+      description: "The DiamondStorage struct in storage."
+    }
+  ]}
+  showRequired={false}
+/>
+
+---
+
 ### addFacets
+
+Registers one or more facets to a diamond. For each facet, selectors are discovered by calling `exportSelectors()`; each selector is then mapped to that facet in diamond storage. Reverts if any selector is already registered on the diamond.
 
 <ExpandableCode language="solidity" maxLines={8}>
 {`function addFacets(address[] memory _facets) ;`}
@@ -104,55 +112,17 @@ storage-location: erc8042:erc8153.diamond
     {
       name: "_facets",
       type: "address[]",
-      description: ""
+      description: "The facet addresses to add. Each must implement IFacet and return selectors from exportSelectors()."
     }
   ]}
   showRequired={false}
 />
-
----
-### at
-
-<ExpandableCode language="solidity" maxLines={8}>
-{`function at(bytes memory selectors, uint256 index) pure returns (bytes4 selector);`}
-</ExpandableCode>
-
-**Parameters:**
-
-<PropertyTable
-  properties={[
-    {
-      name: "selectors",
-      type: "bytes",
-      description: ""
-    },
-    {
-      name: "index",
-      type: "uint256",
-      description: ""
-    }
-  ]}
-  showRequired={false}
-/>
-
----
-### diamondFallback
-
-Find facet for function that is called and execute the function if a facet is found and return any value.
-
-<ExpandableCode language="solidity" maxLines={8}>
-{`function diamondFallback() ;`}
-</ExpandableCode>
-
----
-### getDiamondStorage
-
-<ExpandableCode language="solidity" maxLines={8}>
-{`function getDiamondStorage() pure returns (DiamondStorage storage s);`}
-</ExpandableCode>
 
 ---
 ### importSelectors
+
+Retrieves the function selectors exposed by a facet by calling its `exportSelectors()`. Validates the returned ABI-encoded `bytes` (offset, length, and that the payload length is a multiple of 4) and returns the packed selectors without copying (zero-copy decode).
+Used internally by [`addFacets`](#addfacets).
 
 <ExpandableCode language="solidity" maxLines={8}>
 {`function importSelectors(address _facet) view returns (bytes memory selectors);`}
@@ -165,7 +135,60 @@ Find facet for function that is called and execute the function if a facet is fo
     {
       name: "_facet",
       type: "address",
-      description: ""
+      description: "Contract address implementing `exportSelectors()` that returns ABI-encoded bytes of 4-byte function selectors."
+    }
+  ]}
+  showRequired={false}
+/>
+
+**Returns:**
+
+<PropertyTable
+  properties={[
+    {
+      name: "selectors",
+      type: "bytes",
+      description: "Packed 4-byte function selectors (length is a multiple of 4). Same memory layout as returned by exportSelectors(); may point into the staticcall return buffer."
+    }
+  ]}
+  showRequired={false}
+/>
+
+---
+### at
+
+Returns the 4-byte function selector at the given index in a packed `bytes` array of selectors (e.g. from [`importSelectors`](#importselectors) or other selector packing).
+
+<ExpandableCode language="solidity" maxLines={8}>
+{`function at(bytes memory selectors, uint256 index) pure returns (bytes4 selector);`}
+</ExpandableCode>
+
+**Parameters:**
+
+<PropertyTable
+  properties={[
+    {
+      name: "selectors",
+      type: "bytes",
+      description: "Packed array of 4-byte function selectors (length must be a multiple of 4)."
+    },
+    {
+      name: "index",
+      type: "uint256",
+      description: "Zero-based index of the selector to read (0 = first selector, 1 = second, etc.)."
+    }
+  ]}
+  showRequired={false}
+/>
+
+**Returns:**
+
+<PropertyTable
+  properties={[
+    {
+      name: "selector",
+      type: "bytes4",
+      description: "The function selector at the given index."
     }
   ]}
   showRequired={false}
@@ -281,7 +304,7 @@ Find facet for function that is called and execute the function if a facet is fo
           {
             name: "_facet",
             type: "address",
-            description: "The address of the facet that previouly handled function calls to the diamond."
+            description: "The address of the facet that previously handled function calls to the diamond."
           }
         ]}
         showRequired={false}
@@ -325,7 +348,9 @@ Find facet for function that is called and execute the function if a facet is fo
 
 <AccordionGroup>
   <Accordion title="CannotAddFunctionToDiamondThatAlreadyExists" defaultOpen={false}>
-
+    <div style={{marginBottom: "1rem"}}>
+      Thrown by <code>addFacets</code> when a selector from one of the facets is already registered to another facet on the diamond.
+    </div>
     <div>
       <strong>Signature:</strong>
       <ExpandableCode language="solidity" maxLines={5}>
@@ -334,7 +359,9 @@ error CannotAddFunctionToDiamondThatAlreadyExists(bytes4 _selector);
     </div>
   </Accordion>
   <Accordion title="FunctionNotFound" defaultOpen={false}>
-
+    <div style={{marginBottom: "1rem"}}>
+      Thrown when a selector is looked up in the diamond but has no facet registered (e.g. during delegatecall dispatch).
+    </div>
     <div>
       <strong>Signature:</strong>
       <ExpandableCode language="solidity" maxLines={5}>
@@ -343,7 +370,9 @@ error FunctionNotFound(bytes4 _selector);
     </div>
   </Accordion>
   <Accordion title="FunctionSelectorsCallFailed" defaultOpen={false}>
-
+    <div style={{marginBottom: "1rem"}}>
+      Thrown by <code>importSelectors</code> when the staticcall to <code>_facet.exportSelectors()</code> fails.
+    </div>
     <div>
       <strong>Signature:</strong>
       <ExpandableCode language="solidity" maxLines={5}>
@@ -352,7 +381,9 @@ error FunctionSelectorsCallFailed(address _facet);
     </div>
   </Accordion>
   <Accordion title="IncorrectSelectorsEncoding" defaultOpen={false}>
-
+    <div style={{marginBottom: "1rem"}}>
+      Thrown by <code>importSelectors</code> when the facet returns data that is not valid ABI-encoded <code>bytes</code> (e.g. wrong offset, length not a multiple of 4, or length exceeds payload).
+    </div>
     <div>
       <strong>Signature:</strong>
       <ExpandableCode language="solidity" maxLines={5}>
@@ -361,7 +392,9 @@ error IncorrectSelectorsEncoding(address _facet);
     </div>
   </Accordion>
   <Accordion title="NoBytecodeAtAddress" defaultOpen={false}>
-
+    <div style={{marginBottom: "1rem"}}>
+      Thrown by <code>importSelectors</code> when <code>_facet</code> has no code (e.g. EOA or uninitialized contract).
+    </div>
     <div>
       <strong>Signature:</strong>
       <ExpandableCode language="solidity" maxLines={5}>
@@ -371,9 +404,8 @@ error NoBytecodeAtAddress(address _contractAddress);
   </Accordion>
   <Accordion title="NoSelectorsForFacet" defaultOpen={false}>
     <div style={{marginBottom: "1rem"}}>
-      The upgradeDiamond function below detects and reverts with the following errors.
+      Thrown by <code>importSelectors</code> when the facet returns fewer than 4 bytes of selectors (i.e. no valid selector).
     </div>
-
     <div>
       <strong>Signature:</strong>
       <ExpandableCode language="solidity" maxLines={5}>
