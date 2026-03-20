@@ -17,7 +17,7 @@ export default function HomepageHeader() {
     <>
       <div className={styles.badgeWrapper}>
         <span className={styles.badge}>
-          <Icon name="warning" size={20} /> Early Stage - Not Production Ready
+          <Icon name="warning" size={20} /> Not Production Ready
         </span>
       </div>
       <Heading as="h1" className={styles.heroTitle}>
@@ -31,7 +31,7 @@ export default function HomepageHeader() {
     <>
       <div className={styles.heroDescriptionWrapper}>
         <p className={styles.heroSubtitle}>
-          A smart contract library for diamond-based systems. Build with an onchain standard set of facets.
+          Compose provides the standard facet library for building modular, diamond-based smart contract systems
         </p>
       </div>
       <div className={styles.heroCta}>

@@ -152,7 +152,7 @@
 .heroSubtitle {
   font-size: clamp(1rem, 4vw, 1.3rem);
   color: #ffffff;
-  font-weight: 700;
+  font-weight: 600;
   line-height: 1.6;
   margin-bottom: 0.75rem;
 }
