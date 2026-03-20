@@ -3,7 +3,7 @@
 .statsSection { padding: 6rem 0; background: var(--compose-bg-900); position: relative; overflow: hidden; }
 .statsSection::before { content: ''; position: absolute; inset: 0; background: radial-gradient(ellipse 60% 50% at 50% 50%, rgba(59,130,246,0.1), transparent); pointer-events: none; }
 
-/* 2 col on mobile/tablet → 4 col on desktop; never 3+1 orphan */
+/* 2 col on mobile/tablet -> 4 col on desktop; never 3+1 orphan */
 .statsGrid { position: relative; display: grid; grid-template-columns: repeat(2, 1fr); gap: 2rem; max-width: 1200px; margin: 0 auto; }
 @media screen and (min-width: 960px) {
   .statsGrid { grid-template-columns: repeat(4, 1fr); }
@@ -28,5 +28,3 @@
   .statValue { font-size: 2rem; }
   .statLabel { font-size: 0.875rem; }
 }
-
-

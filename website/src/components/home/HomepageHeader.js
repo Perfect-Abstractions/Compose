@@ -2,11 +2,11 @@ import React from 'react';
 import clsx from 'clsx';
 import Link from '@docusaurus/Link';
 import Heading from '@theme/Heading';
-import Icon from '../../components/ui/Icon';
+import Icon from '../ui/Icon';
 import styles from './homepageHeader.module.css';
-import DiamondScene from '../../components/DiamondScene';
-import { useFacetBadges } from '../../components/DiamondScene/useFacetBadges';
-import { FacetBadge } from '../../components/DiamondScene/FacetBadge';
+import DiamondScene from '../DiamondScene';
+import { useFacetBadges } from '../DiamondScene/useFacetBadges';
+import { FacetBadge } from '../DiamondScene/FacetBadge';
 import { useIsMobile } from '../../hooks/useIsMobile';
 
 export default function HomepageHeader() {
