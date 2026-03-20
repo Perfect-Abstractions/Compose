@@ -1,7 +1,7 @@
 import clsx from 'clsx';
 import Link from '@docusaurus/Link';
 import Heading from '@theme/Heading';
-import Icon from '../../components/ui/Icon';
+import Icon from '../ui/Icon';
 import styles from './ctaSection.module.css';
 
 export default function CtaSection() {
@@ -31,4 +31,3 @@ export default function CtaSection() {
     </section>
   );
 }
-

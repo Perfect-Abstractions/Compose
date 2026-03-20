@@ -45,5 +45,3 @@
 [data-theme='dark'] .featureCard:hover { background: rgba(255,255,255,0.05); border-color: rgba(255,255,255,0.15); }
 [data-theme='dark'] .sectionTitle, [data-theme='dark'] .featureTitle { color: #ffffff; }
 [data-theme='dark'] .sectionSubtitle, [data-theme='dark'] .featureDescription { color: rgba(255,255,255,0.7); }
-
-

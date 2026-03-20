@@ -1,6 +1,6 @@
 import Link from '@docusaurus/Link';
 import Heading from '@theme/Heading';
-import Icon from '../../components/ui/Icon';
+import Icon from '../ui/Icon';
 import styles from './codeShowcase.module.css';
 
 export default function CodeShowcase() {
@@ -14,7 +14,7 @@ export default function CodeShowcase() {
               Facets and Modules Working Together
             </Heading>
             <p className={styles.showcaseDescription}>
-              Both facets and modules access the same storage in your diamond. 
+              Both facets and modules access the same storage in your diamond.
               Your custom facets can extend Compose functionality without inheritance.
             </p>
             <div className={styles.showcaseFeatures}>
@@ -82,6 +82,3 @@ contract GameNFTFacet {
     </section>
   );
 }
-
-
-

@@ -381,7 +381,7 @@
 }
 
 [data-theme='dark'] .admonition {
-  background: #0f0f0f;
+  background-color: #0f0f0f;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
 }
 
@@ -412,7 +412,13 @@
 [data-theme='dark'] .alert--info,
 [data-theme='dark'] .admonition-info {
   border-left-color: #60a5fa;
-  background: linear-gradient(to right, rgba(96, 165, 250, 0.1), rgba(15, 15, 15, 1));
+  background-image: linear-gradient(
+    90deg,
+    rgba(96, 165, 250, 0.16) 0%,
+    rgba(96, 165, 250, 0.1) 28%,
+    rgba(96, 165, 250, 0.04) 58%,
+    rgba(96, 165, 250, 0) 100%
+  );
 }
 
 .alert--warning,
@@ -424,7 +430,13 @@
 [data-theme='dark'] .alert--warning,
 [data-theme='dark'] .admonition-warning {
   border-left-color: #fbbf24;
-  background: linear-gradient(to right, rgba(251, 191, 36, 0.1), rgba(15, 15, 15, 1));
+  background-image: linear-gradient(
+    90deg,
+    rgba(251, 191, 36, 0.18) 0%,
+    rgba(251, 191, 36, 0.11) 28%,
+    rgba(251, 191, 36, 0.05) 58%,
+    rgba(251, 191, 36, 0) 100%
+  );
 }
 
 .alert--danger,
@@ -436,7 +448,13 @@
 [data-theme='dark'] .alert--danger,
 [data-theme='dark'] .admonition-danger {
   border-left-color: #f87171;
-  background: linear-gradient(to right, rgba(248, 113, 113, 0.1), rgba(15, 15, 15, 1));
+  background-image: linear-gradient(
+    90deg,
+    rgba(248, 113, 113, 0.17) 0%,
+    rgba(248, 113, 113, 0.1) 28%,
+    rgba(248, 113, 113, 0.04) 58%,
+    rgba(248, 113, 113, 0) 100%
+  );
 }
 
 .alert--success,
@@ -448,7 +466,13 @@
 [data-theme='dark'] .alert--success,
 [data-theme='dark'] .admonition-success {
   border-left-color: #34d399;
-  background: linear-gradient(to right, rgba(52, 211, 153, 0.1), rgba(15, 15, 15, 1));
+  background-image: linear-gradient(
+    90deg,
+    rgba(52, 211, 153, 0.17) 0%,
+    rgba(52, 211, 153, 0.1) 28%,
+    rgba(52, 211, 153, 0.04) 58%,
+    rgba(52, 211, 153, 0) 100%
+  );
 }
 
 .alert--tip,
@@ -460,7 +484,13 @@
 [data-theme='dark'] .alert--tip,
 [data-theme='dark'] .admonition-tip {
   border-left-color: #60a5fa;
-  background: linear-gradient(to right, rgba(59, 130, 246, 0.1), rgba(15, 15, 15, 1));
+  background-image: linear-gradient(
+    90deg,
+    rgba(59, 130, 246, 0.16) 0%,
+    rgba(59, 130, 246, 0.1) 28%,
+    rgba(59, 130, 246, 0.04) 58%,
+    rgba(59, 130, 246, 0) 100%
+  );
 }
 
 /* ============================================

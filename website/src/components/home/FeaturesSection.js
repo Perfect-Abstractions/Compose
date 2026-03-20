@@ -1,5 +1,5 @@
 import Heading from '@theme/Heading';
-import Icon from '../../components/ui/Icon';
+import Icon from '../ui/Icon';
 import styles from './featuresSection.module.css';
 
 export default function FeaturesSection() {
@@ -51,13 +51,13 @@ export default function FeaturesSection() {
             Rethinking Smart Contract Development
           </Heading>
           <p className={styles.sectionSubtitle}>
-            Forget traditional smart contract design patterns. Compose takes a radically 
+            Forget traditional smart contract design patterns. Compose takes a radically
             different approach with Smart Contract Oriented Programming.
           </p>
           <br />
           <p className={styles.sectionSubtitle}>
-          We focus on building small, independent, and easy-to-understand smart contracts called <b>facets</b>. 
-          Each facet is designed to be deployed once, then reused and composed seamlessly with others to form 
+          We focus on building small, independent, and easy-to-understand smart contracts called <b>facets</b>.
+          Each facet is designed to be deployed once, then reused and composed seamlessly with others to form
           complete smart contract systems.
           </p>
         </div>
@@ -82,6 +82,3 @@ export default function FeaturesSection() {
     </section>
   );
 }
-
-
-

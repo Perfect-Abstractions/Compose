@@ -1,10 +1,10 @@
 import useDocusaurusContext from '@docusaurus/useDocusaurusContext';
 import Layout from '@theme/Layout';
-import HomepageHeader from './home/HomepageHeader';
-import FeaturesSection from './home/FeaturesSection';
-import CodeShowcase from './home/CodeShowcase';
-import StatsSection from './home/StatsSection';
-import CtaSection from './home/CtaSection';
+import HomepageHeader from '../components/home/HomepageHeader';
+import FeaturesSection from '../components/home/FeaturesSection';
+import CodeShowcase from '../components/home/CodeShowcase';
+import StatsSection from '../components/home/StatsSection';
+import CtaSection from '../components/home/CtaSection';
 
 export default function Home() {
   const {siteConfig} = useDocusaurusContext();

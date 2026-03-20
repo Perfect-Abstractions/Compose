@@ -36,8 +36,8 @@
   background-size: 64px 64px;
 }
 
-.heroContainer { 
-  position: relative; 
+.heroContainer {
+  position: relative;
   z-index: 1;
   /* Removed grid to allow full overlay */
   width: 100%;
@@ -152,7 +152,7 @@
 .heroSubtitle {
   font-size: clamp(1rem, 4vw, 1.3rem);
   color: #ffffff;
-  font-weight: 700;
+  font-weight: 600;
   line-height: 1.6;
   margin-bottom: 0.75rem;
 }
@@ -167,14 +167,14 @@
   padding: 0;
 }
 
-.heroCta { 
-  display: flex; 
-  align-items: center; 
+.heroCta {
+  display: flex;
+  align-items: center;
   justify-content: flex-start;
-  gap: 1.25rem; 
-  flex-wrap: wrap; 
-  margin-bottom: 1.5rem; 
-  animation: fadeInUp var(--motion-duration-normal) var(--motion-ease-standard) 0.5s both; 
+  gap: 1.25rem;
+  flex-wrap: wrap;
+  margin-bottom: 1.5rem;
+  animation: fadeInUp var(--motion-duration-normal) var(--motion-ease-standard) 0.5s both;
 }
 
 .ctaButton {
@@ -213,13 +213,13 @@
   border-radius: 8px;
 }
 
-.heroLinks { 
-  display: flex; 
-  align-items: center; 
+.heroLinks {
+  display: flex;
+  align-items: center;
   justify-content: flex-start;
-  gap: 1rem; 
-  flex-wrap: wrap; 
-  animation: fadeInUp var(--motion-duration-normal) var(--motion-ease-standard) 0.6s both; 
+  gap: 1rem;
+  flex-wrap: wrap;
+  animation: fadeInUp var(--motion-duration-normal) var(--motion-ease-standard) 0.6s both;
 }
 
 .heroLink {
@@ -243,18 +243,18 @@
 .heroLink:hover { background: rgba(255, 255, 255, 0.08); border-color: rgba(255, 255, 255, 0.15); color: white; transform: translateY(-1px); }
 .heroLink svg { flex-shrink: 0; opacity: 0.9; }
 
-.heroWave { 
-  position: absolute; 
-  bottom: -1px; 
-  left: 0; 
-  width: 100%; 
-  color: #ffffff; 
-  z-index: 1; 
+.heroWave {
+  position: absolute;
+  bottom: -1px;
+  left: 0;
+  width: 100%;
+  color: #ffffff;
+  z-index: 1;
 }
-.heroWave svg { 
-  display: block; 
-  width: 100%; 
-  height: auto; 
+.heroWave svg {
+  display: block;
+  width: 100%;
+  height: auto;
   fill: currentColor;
 }
 
@@ -265,13 +265,13 @@
 /* Responsive */
 @media screen and (max-width: 1024px) {
   .heroBanner:not(.heroBannerMobile) { padding: 8rem 0 10rem; min-height: 80vh; }
-  
+
   .heroContent {
     text-align: center;
     margin: 0 auto;
     max-width: 100%;
   }
-  
+
   .heroDescriptionWrapper {
     margin: 0 auto 1.5rem;
     text-align: center;
@@ -282,7 +282,7 @@
     margin-right: auto;
     color: #ffffff;
   }
-  
+
   .heroDescription {
     background: none;
     backdrop-filter: none;
@@ -395,6 +395,6 @@
 }
 
 /* Theme-specific wave colors */
-[data-theme='dark'] .heroWave { 
-  color: var(--compose-bg-900); 
+[data-theme='dark'] .heroWave {
+  color: var(--compose-bg-900);
 }

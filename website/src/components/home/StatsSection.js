@@ -1,5 +1,5 @@
 import {useGithubContributorsCount} from '../../hooks/useGithubContributorsCount';
-import Icon from '../../components/ui/Icon';
+import Icon from '../ui/Icon';
 import styles from './statsSection.module.css';
 
 export default function StatsSection() {
