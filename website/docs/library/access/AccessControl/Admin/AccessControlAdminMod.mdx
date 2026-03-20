@@ -22,36 +22,22 @@ import GradientText from '@site/src/components/ui/GradientText';
 import GradientButton from '@site/src/components/ui/GradientButton';
 
 <DocSubtitle>
-Manage role administrators using diamond storage
+Provides internal functions for managing role administrators within a diamond.
 </DocSubtitle>
 
 <Callout type="info" title="Key Features">
 - Internal functions for role administration.
 - Uses the diamond storage pattern for shared state.
-- Emits `RoleAdminChanged` event upon successful administration changes.
-- Reverts with `AccessControlUnauthorizedAccount` for unauthorized calls.
+- Guards updates by checking caller has the role's **current** admin role.
+- Emits `RoleAdminChanged` on successful admin updates.
 </Callout>
 
-<Callout type="info" title="Module Usage">
-This module provides internal functions for use in your custom facets. Import it to access shared logic and storage.
+<Callout type="warning" title="Initialization Requirement">
+`setRoleAdmin` reads `adminRole[_role]` before writing the new value.  
+If no admin role has been configured yet, that value is `bytes32(0)`, so the caller must already hold role `bytes32(0)`.
 </Callout>
-
-## Overview
-
-This module provides internal functions for managing role administrators within a diamond. Facets can import this module to set and query role administration relationships, leveraging shared diamond storage. Changes are immediately visible to all facets accessing the same storage.
 
 ## Storage
-
-### AccessControlStorage
-
-Storage struct for the AccessControl. storage-location: erc8042:compose.accesscontrol
-
-<ExpandableCode language="solidity" maxLines={15} title="Definition">
-{`struct AccessControlStorage {
-    mapping(address account => mapping(bytes32 role => bool hasRole)) hasRole;
-    mapping(bytes32 role => bytes32 adminRole) adminRole;
-}`}
-</ExpandableCode>
 
 ### State Variables
 
@@ -65,6 +51,16 @@ Storage struct for the AccessControl. storage-location: erc8042:compose.accessco
   ]}
   showRequired={false}
 />
+
+### Access Control Storage
+
+<ExpandableCode language="solidity" maxLines={15} title="Definition">
+{`/** storage-location: erc8042:compose.accesscontrol */
+struct AccessControlStorage {
+    mapping(address account => mapping(bytes32 role => bool hasRole)) hasRole;
+    mapping(bytes32 role => bytes32 adminRole) adminRole;
+}`}
+</ExpandableCode>
 
 ## Functions
 
@@ -92,11 +88,17 @@ Returns the storage for the AccessControl.
 ---
 ### setRoleAdmin
 
-Sets the admin role for a role. Emits a &#123;RoleAdminChanged&#125; event. Reverts with AccessControlUnauthorizedAccount If the caller is not the current admin of the role.
+Updates the admin role for `_role`. Emits `RoleAdminChanged`.
 
 <ExpandableCode language="solidity" maxLines={8}>
 {`function setRoleAdmin(bytes32 _role, bytes32 _adminRole) ;`}
 </ExpandableCode>
+
+**Authorization flow:**
+
+1. Require caller has the previous admin role over the `_role`
+2. Update the admin role
+3. Emit `RoleAdminChanged(_role, previousAdminRole, _adminRole)`
 
 **Parameters:**
 
@@ -174,58 +176,15 @@ error AccessControlUnauthorizedAccount(address _account, bytes32 _role);
   </Accordion>
 </AccordionGroup>
 
-<!-- Usage Example section commented out for now -->
-<!--
-## Usage Example
-
-<ExpandableCode language="solidity" maxLines={20} title="Example Implementation">
-{`pragma solidity >=0.8.30;
-
-import {AccessControlAdminMod} from "@compose/access/AccessControl/Admin/AccessControlAdminMod";
-
-contract MyAccessFacet {
-    AccessControlAdminMod internal accessControlAdminMod;
-
-    // Assume diamond storage is initialized and passed to the facet.
-    // For demonstration, we instantiate it directly.
-    constructor(address diamondStorageAddress) {
-        // In a real diamond, this would be initialized via the diamond proxy.
-        // For this example, we simulate the module's interaction with storage.
-        // accessControlAdminMod = AccessControlAdminMod(diamondStorageAddress);
-    }
-
-    /**
-     * @notice Sets a new admin role for a specific role.
-     * @param _role The role to set the admin for.
-     * @param _adminRole The new admin role.
-     */
-    function grantAdminRole(bytes32 _role, bytes32 _adminRole) external {
-        // In a real facet, you would call the module directly:
-        // accessControlAdminMod.setRoleAdmin(_role, _adminRole);
-
-        // This example simulates the call and event emission.
-        // Actual call would revert if caller is not the current admin.
-        // For demonstration, we assume it succeeds.
-        emit RoleAdminChanged(_role, bytes32(0), _adminRole); // Assuming previous admin was 0
-    }
-}
-
-`}
-</ExpandableCode>
--->
-
 ## Best Practices
 
-<Callout type="tip" title="Best Practice">
-- Ensure the caller has the necessary permissions before calling `setRoleAdmin`.
-- Verify that the `AccessControlStorage` struct layout remains compatible across diamond upgrades.
-- Handle the `AccessControlUnauthorizedAccount` error when the caller lacks administrative privileges.
-</Callout>
+- Bootstrap initial role/admin assignments during initialization so authorized accounts can pass the first checks.
+- Treat `bytes32(0)` as a privileged role in your access model when relying on default admin mappings.
+- For admin rotation: grant new admin role first, then call `setRoleAdmin`, then revoke the old admin role.
+- Keep `AccessControlStorage` layout compatible across upgrades (`erc8042:compose.accesscontrol`).
 
-## Integration Notes
-
-<Callout type="success" title="Shared Storage">
-This module interacts with the diamond's shared storage at the position identified by `keccak2535("compose.accesscontrol")`. The `AccessControlStorage` struct, though empty in definition, dictates the layout for access control data. Any changes made to role administrators via `setRoleAdmin` are immediately reflected in this shared storage and thus visible to all facets operating on the same diamond storage.
+<Callout type="important" title="Module Usage">
+This module provides internal functions for use in your custom facets. Import it to access shared logic and storage.
 </Callout>
 
 <div style={{marginTop: "3rem", paddingTop: "2rem", borderTop: "1px solid var(--ifm-color-emphasis-200)"}}>

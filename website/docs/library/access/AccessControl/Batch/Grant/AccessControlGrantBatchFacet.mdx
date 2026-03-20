@@ -1,6 +1,6 @@
 ---
 sidebar_position: 100
-title: "Access Control Grant Batch Facet"
+title: "Access Control Batch Grant Facet"
 description: "Grants roles to multiple accounts in batch"
 sidebar_label: "Facet"
 gitSource: "https://github.com/Perfect-Abstractions/Compose/tree/main/src/access/AccessControl/Batch/Grant/AccessControlGrantBatchFacet.sol"
@@ -22,7 +22,7 @@ import GradientText from '@site/src/components/ui/GradientText';
 import GradientButton from '@site/src/components/ui/GradientButton';
 
 <DocSubtitle>
-Grants roles to multiple accounts in batch
+Exposes an external function to grant a specific role to multiple accounts efficiently within a single transaction.
 </DocSubtitle>
 
 <Callout type="info" title="Key Features">
@@ -32,20 +32,7 @@ Grants roles to multiple accounts in batch
 - Provides `exportSelectors` for easy integration into diamond upgrade processes.
 </Callout>
 
-## Overview
-
-This facet exposes an external function to grant a specific role to multiple accounts efficiently within a single transaction. It enhances the diamond's access control capabilities by reducing gas costs and complexity for bulk role assignments. Calls are routed through the diamond proxy, interacting with shared diamond storage.
-
 ## Storage
-
-### AccessControlStorage
-
-<ExpandableCode language="solidity" maxLines={15} title="Definition">
-{`struct AccessControlStorage {
-    mapping(address account => mapping(bytes32 role => bool hasRole)) hasRole;
-    mapping(bytes32 role => bytes32 adminRole) adminRole;
-}`}
-</ExpandableCode>
 
 ### State Variables
 
@@ -59,6 +46,17 @@ This facet exposes an external function to grant a specific role to multiple acc
   ]}
   showRequired={false}
 />
+
+### AccessControlStorage
+
+<ExpandableCode language="solidity" maxLines={15} title="Definition">
+{`/** storage-location: erc8042:compose.accesscontrol */
+struct AccessControlStorage {
+    mapping(address account => mapping(bytes32 role => bool hasRole)) hasRole;
+    mapping(bytes32 role => bytes32 adminRole) adminRole;
+}`}
+</ExpandableCode>
+
 
 ## Functions
 
@@ -83,28 +81,6 @@ Grants a role to multiple accounts in a single transaction. Emits a RoleGranted 
       name: "_accounts",
       type: "address[]",
       description: "The accounts to grant the role to."
-    }
-  ]}
-  showRequired={false}
-/>
-
----
-### exportSelectors
-
-Exports the selectors that are exposed by the facet.
-
-<ExpandableCode language="solidity" maxLines={8}>
-{`function exportSelectors() external pure returns (bytes memory);`}
-</ExpandableCode>
-
-**Returns:**
-
-<PropertyTable
-  properties={[
-    {
-      name: "-",
-      type: "bytes",
-      description: "Selectors that are exported by the facet."
     }
   ]}
   showRequired={false}
@@ -168,49 +144,10 @@ error AccessControlUnauthorizedAccount(address _account, bytes32 _role);
   </Accordion>
 </AccordionGroup>
 
-<!-- Usage Example section commented out for now -->
-<!--
-## Usage Example
-
-<ExpandableCode language="solidity" maxLines={20} title="Example Implementation">
-{`pragma solidity >=0.8.30;
-
-import {IDiamond} from "@compose/diamond/IDiamond";
-import {AccessControlGrantBatchFacet} from "@compose/access/AccessControl/Batch/Grant/AccessControlGrantBatchFacet";
-
-// Example: Using the facet in a diamond to grant roles
-address diamondAddress = 0xYourDiamondAddress;
-address[] memory accountsToGrant = new address[](2);
-accountsToGrant[0] = 0xAccount1Address;
-accountsToGrant[1] = 0xAccount2Address;
-bytes32 roleToGrant = keccak256("MY_CUSTOM_ROLE");
-
-// Call the grantRoleBatch function through the diamond proxy
-// Note: The actual diamond contract must have the AccessControlGrantBatchFacet added.
-// The caller must have the necessary permissions to grant the specified role.
-IDiamond(diamondAddress).grantRoleBatch(roleToGrant, accountsToGrant);
-
-// To export selectors (e.g., for diamond cut):
-bytes memory selectors = AccessControlGrantBatchFacet.exportSelectors();
-
-// Note: The getStorage function is internal and not directly callable via the diamond proxy.
-// AccessControlStorage storage accessControlStorage = AccessControlGrantBatchFacet.getStorage();`}
-</ExpandableCode>
--->
-
 ## Best Practices
 
-<Callout type="tip" title="Best Practice">
-- Ensure the caller has the necessary administrative privileges to grant the specified role before invoking `grantRoleBatch`.
-- Verify that the `AccessControlGrantBatchFacet` is correctly added to the diamond with the appropriate selectors.
+- Ensure the caller has the necessary admin privileges to grant the specified role.
 - Consider the gas implications for very large `_accounts` arrays; for extremely large lists, multiple calls might be more gas-efficient.
-</Callout>
-
-## Security Considerations
-
-<Callout type="warning" title="Security">
-The `grantRoleBatch` function is protected by access control, reverting with `AccessControlUnauthorizedAccount` if the caller does not possess the required administrative role for the target role. Input validation is performed by the underlying access control mechanism. Follow standard Solidity security practices for managing roles and account permissions.
-</Callout>
 
 <div style={{marginTop: "3rem", paddingTop: "2rem", borderTop: "1px solid var(--ifm-color-emphasis-200)"}}>
   <WasThisHelpful pageId="Access Control Grant Batch Facet" />

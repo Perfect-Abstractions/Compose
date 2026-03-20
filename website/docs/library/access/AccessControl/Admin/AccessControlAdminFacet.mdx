@@ -7,45 +7,29 @@ gitSource: "https://github.com/Perfect-Abstractions/Compose/tree/main/src/access
 ---
 
 import DocSubtitle  from '@site/src/components/docs/DocSubtitle';
-import Badge from '@site/src/components/ui/Badge';
 import Callout from '@site/src/components/ui/Callout';
-import CalloutBox from '@site/src/components/ui/CalloutBox';
 import Accordion, { AccordionGroup } from '@site/src/components/ui/Accordion';
 import PropertyTable from '@site/src/components/api/PropertyTable';
 import ExpandableCode from '@site/src/components/code/ExpandableCode';
-import CodeShowcase from '@site/src/components/code/CodeShowcase';
-import RelatedDocs from '@site/src/components/docs/RelatedDocs';
 import WasThisHelpful from '@site/src/components/docs/WasThisHelpful';
 import LastUpdated from '@site/src/components/docs/LastUpdated';
-import ReadingTime from '@site/src/components/docs/ReadingTime';
-import GradientText from '@site/src/components/ui/GradientText';
-import GradientButton from '@site/src/components/ui/GradientButton';
 
 <DocSubtitle>
-Manages roles and their administrative roles
+Allows setting administrative roles for specific roles within a diamond.
 </DocSubtitle>
 
 <Callout type="info" title="Key Features">
 - Manages role-to-admin-role mappings in diamond storage.
-- Exposes functions for role administration and selector export.
-- Reverts with `AccessControlUnauthorizedAccount` if caller lacks permissions.
-- Compatible with ERC-2535 diamond standard.
+- Guards admin updates by checking the caller has the role's **current** admin role.
+- Exposes selector export for diamond cuts.
 </Callout>
 
-## Overview
-
-This facet provides administrative functions for managing roles within a diamond's access control system. It allows setting administrative roles for specific roles and exporting the facet's selectors. Calls are routed through the diamond proxy, accessing shared storage for role configurations.
+<Callout type="warning" title="Initialization Requirement">
+`setRoleAdmin` checks the caller against `adminRole[_role]` **before** updating it.  
+If a role has never had an admin set, `adminRole[_role]` is `bytes32(0)`, so the caller must already hold role `bytes32(0)`.
+</Callout>
 
 ## Storage
-
-### AccessControlStorage
-
-<ExpandableCode language="solidity" maxLines={15} title="Definition">
-{`struct AccessControlStorage {
-    mapping(address account => mapping(bytes32 role => bool hasRole)) hasRole;
-    mapping(bytes32 role => bytes32 adminRole) adminRole;
-}`}
-</ExpandableCode>
 
 ### State Variables
 
@@ -60,15 +44,31 @@ This facet provides administrative functions for managing roles within a diamond
   showRequired={false}
 />
 
+### Access Control Storage
+
+<ExpandableCode language="solidity" maxLines={15} title="Definition">
+{`/** storage-location: erc8042:compose.accesscontrol */
+struct AccessControlStorage {
+    mapping(address account => mapping(bytes32 role => bool hasRole)) hasRole;
+    mapping(bytes32 role => bytes32 adminRole) adminRole;
+}`}
+</ExpandableCode>
+
 ## Functions
 
 ### setRoleAdmin
 
-Sets the admin role for a role. Emits a RoleAdminChanged event. Reverts with AccessControlUnauthorizedAccount If the caller is not the current admin of the role.
+Updates the admin role for `_role`.
 
 <ExpandableCode language="solidity" maxLines={8}>
 {`function setRoleAdmin(bytes32 _role, bytes32 _adminRole) external;`}
 </ExpandableCode>
+
+**Authorization flow:**
+
+1. Require caller has the previous admin role over the `_role`
+2. Update the admin role
+3. Emit `RoleAdminChanged(_role, previousAdminRole, _adminRole)`
 
 **Parameters:**
 
@@ -83,28 +83,6 @@ Sets the admin role for a role. Emits a RoleAdminChanged event. Reverts with Acc
       name: "_adminRole",
       type: "bytes32",
       description: "The new admin role to set."
-    }
-  ]}
-  showRequired={false}
-/>
-
----
-### exportSelectors
-
-Exports the selectors that are exposed by the facet.
-
-<ExpandableCode language="solidity" maxLines={8}>
-{`function exportSelectors() external pure returns (bytes memory);`}
-</ExpandableCode>
-
-**Returns:**
-
-<PropertyTable
-  properties={[
-    {
-      name: "-",
-      type: "bytes",
-      description: "Selectors that are exported by the facet."
     }
   ]}
   showRequired={false}
@@ -212,17 +190,10 @@ contract AccessControlAdminUser {
 
 ## Best Practices
 
-<Callout type="tip" title="Best Practice">
-- Initialize role admin configurations during diamond deployment.
-- Ensure the caller has the necessary permissions to set role administrators.
-- Verify storage compatibility before upgrading facets to prevent state corruption.
-</Callout>
-
-## Security Considerations
-
-<Callout type="warning" title="Security">
-All state-changing functions, such as `setRoleAdmin`, are protected by access control checks, reverting with `AccessControlUnauthorizedAccount` if the caller is not the current admin of the role. Input validation is performed by the underlying access control logic. Follow standard Solidity security practices for external calls and state management.
-</Callout>
+- Bootstrap role ownership/admins at initialization so trusted accounts can pass the first admin checks.
+- Treat `bytes32(0)` as a privileged role in your access model when relying on default admin mappings.
+- When rotating admin roles, grant the new admin role first, then switch `adminRole`, then revoke old permissions.
+- Keep facet storage layout compatible (`erc8042:compose.accesscontrol`) across upgrades.
 
 <div style={{marginTop: "3rem", paddingTop: "2rem", borderTop: "1px solid var(--ifm-color-emphasis-200)"}}>
   <WasThisHelpful pageId="Access Control Admin Facet" />
