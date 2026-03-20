@@ -15,7 +15,7 @@ import WasThisHelpful from '@site/src/components/docs/WasThisHelpful';
 import LastUpdated from '@site/src/components/docs/LastUpdated';
 
 <DocSubtitle>
-Internal module used by `DiamondUpgradeFacet` to upgrade a diamond by adding, replacing, or removing facets.
+Module providing the internal functions to extend the diamond's upgrade functionality by adding, replacing, or removing facets.
 </DocSubtitle>
 
 <Callout type="info" title="Key Features">
@@ -123,37 +123,37 @@ Then, if `_delegate != address(0)`, the diamond performs a `delegatecall` to `_d
     {
       name: "_addFacets",
       type: "address[]",
-      description: "Facets to add."
+      description: "Facet addresses to add"
     },
     {
       name: "_replaceFacets",
       type: "FacetReplacement[]",
-      description: "(oldFacet, newFacet) pairs, to replace old with new."
+      description: "`(oldFacet, newFacet)` pairs to replace"
     },
     {
       name: "_removeFacets",
       type: "address[]",
-      description: "Facets to remove."
+      description: "Facet addresses to remove"
     },
     {
       name: "_delegate",
       type: "address",
-      description: "Optional contract to delegatecall (zero address to skip)."
+      description: "Optional contract to delegatecall (`address(0)` to skip)"
     },
     {
       name: "_delegateCalldata",
       type: "bytes",
-      description: "Optional calldata to execute on `_delegate`."
+      description: "Optional calldata to execute on `_delegate`"
     },
     {
       name: "_tag",
       type: "bytes32",
-      description: "Optional arbitrary metadata, such as release version."
+      description: "Optional arbitrary metadata, such as release version"
     },
     {
       name: "_metadata",
       type: "bytes",
-      description: "Optional arbitrary data."
+      description: "Optional arbitrary metadata"
     }
   ]}
   showRequired={false}
@@ -562,18 +562,20 @@ contract DiamondUpgradeFacet {
 
 ## Best Practices
 
-- Ensure diamond upgrades are performed by an authorized account in the corresponding upgrade facet.
+- Diamonds upgrades should be considered as a critical operation and always ensure proper access control.
 - Verify facet logic contracts are immutable and trusted before adding or replacing.
 - Ensure each facet’s `exportSelectors()` returns a valid packed selector list in deterministic order.
-- Carefully audit any optional post-upgrade `delegatecall` (delegate contract + calldata).
+- Carefully audit any optional post-upgrade `delegatecall` (contract + calldata).
 
 ## Security Considerations
-The `upgradeDiamond` function is critical: it mutates the diamond’s selector routing and facet linked list.
+The `upgradeDiamond` function is critical: this function mutates the diamond’s selector routing and facet linked list.
 
-It optionally executes an unrestricted `delegatecall` after facet updates. Treat `_delegate` and `_delegateCalldata` as fully trusted: that code can modify diamond storage and may introduce complex control flow.
+It optionally executes an unrestricted `delegatecall` after facet updates. Make sure `_delegate` and `_delegateCalldata` are fully trusted before calling it.
 
 ## Shared Storage
-This module writes to the diamond’s shared storage at `DIAMOND_STORAGE_POSITION` (conceptually `keccak256(\"erc8153.diamond\")`). Changes made through `upgradeDiamond`, `addFacets`, `replaceFacets`, and `removeFacets` are immediately visible to all facets that read this shared storage.
+This module writes to the diamond’s shared storage at `DIAMOND_STORAGE_POSITION` (conceptually `keccak256("erc8153.diamond")`). 
+
+Changes made through `upgradeDiamond`, `addFacets`, `replaceFacets`, and `removeFacets` are immediately visible to the diamond and all facet that access the shared storage.
 
 <div style={{marginTop: "3rem", paddingTop: "2rem", borderTop: "1px solid var(--ifm-color-emphasis-200)"}}>
   <WasThisHelpful pageId="Diamond Upgrade Module" />

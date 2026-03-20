@@ -1,8 +1,8 @@
 ---
 sidebar_position: 500
-title: "Example Diamond"
+title: "Basic Example"
 description: "Initializes a diamond contract with facets and owner"
-sidebar_label: "Facet"
+sidebar_label: "Basic Example"
 gitSource: "https://github.com/Perfect-Abstractions/Compose/tree/main/src/diamond/example/ExampleDiamond.sol"
 ---
 
@@ -22,108 +22,105 @@ import GradientText from '@site/src/components/ui/GradientText';
 import GradientButton from '@site/src/components/ui/GradientButton';
 
 <DocSubtitle>
-Initializes a diamond contract with facets and owner
+Initializes a diamond proxy for an NFT system by wiring facets, owner data, metadata, and interface support.
 </DocSubtitle>
 
 <Callout type="info" title="Key Features">
-- Registers facet function selectors for diamond routing.
-- Sets the initial diamond owner.
-- Facilitates diamond initialization pattern.
-- Requires explicit facet addresses and owner during deployment.
+- Registers facet function selectors for proxy routing via `fallback`.
+- Initializes ERC-173 owner storage.
+- Initializes ERC-721 metadata values (`name`, `symbol`, `baseURI`).
+- Registers ERC-165 support for `IERC721` and `IERC721Metadata`.
+- Accepts transfers through `receive()`.
 </Callout>
 
 ## Overview
 
-This contract initializes a diamond with provided facets and an owner address. It registers function selectors from each facet to enable delegatecall routing through the diamond proxy. Use this during diamond deployment to set up its initial functional capabilities.
+`ExampleDiamond` is a minimal contract that initializes a diamond proxy for an NFT system by wiring facets, owner data, metadata, and interface support. It does not contain NFT business logic itself. Instead, it sets up routing and shared storage so NFT behavior implemented in facets can be reached through the diamond address.
+
+During construction, it:
+
+1. Adds all facet selectors to the diamond selector mapping.
+2. Sets the initial Owner. (See [OwnerDataFacet](/docs/library/access/Owner))
+3. Sets ERC-721 metadata values.
+4. Registers ERC-165 interface IDs for ERC-721 compatibility discovery.
+
+After deployment, calls are routed through the contract `fallback` using selector lookup and `delegatecall` into facets.
 
 ## Storage
 
-## Functions
+This contract initializes state in multiple module-defined storage namespaces:
 
-### constructor
+- **Diamond routing storage** via `DiamondMod` (`erc8153.diamond`)
+- **Owner storage** via `OwnerDataMod` (`erc173.owner`)
+- **ERC-721 metadata storage** via `ERC721MetadataMod` (`erc721.metadata`)
+- **ERC-165 support map** via `ERC165Mod` (`erc165`)
 
-Initializes the diamond contract with facets, owner and other data. Adds all provided facets to the diamond's function selector mapping and sets the contract owner. Each facet in the array will have its function selectors registered to enable delegatecall routing.
+Because modules use fixed storage locations, facets can safely share a single diamond storage context without slot collisions.
+See [Shared Storage](/docs/foundations/facets-and-modules#the-key-insight-shared-storage) for more details.
 
-<ExpandableCode language="solidity" maxLines={8}>
-{`constructor(address[] memory _facets, address _diamondOwner) ;`}
-</ExpandableCode>
 
-**Parameters:**
+## Example Implementation
 
-<PropertyTable
-  properties={[
-    {
-      name: "_facets",
-      type: "address[]",
-      description: "Array of facet addresses and their corresponding function selectors to add to the diamond."
-    },
-    {
-      name: "_diamondOwner",
-      type: "address",
-      description: "Address that will be set as the owner of the diamond contract."
-    }
-  ]}
-  showRequired={false}
-/>
+<ExpandableCode language="solidity" maxLines={40}>
+{`import "@perfect-abstractions/compose/diamond/DiamondMod.sol" as DiamondMod;
+import "@perfect-abstractions/compose/access/Owner/Data/OwnerDataMod.sol" as OwnerDataMod;
+import "@perfect-abstractions/compose/token/ERC721/Metadata/ERC721MetadataMod.sol" as ERC721MetadataMod;
+import "@perfect-abstractions/compose/interfaceDetection/ERC165/ERC165Mod.sol" as ERC165Mod;
+import {IERC721} from "@perfect-abstractions/compose/interfaces/IERC721.sol";
+import {IERC721Metadata} from "@perfect-abstractions/compose/interfaces/IERC721Metadata.sol";
 
----
-### fallback
+contract ExampleDiamond {
+    /**
+     * @notice Initializes the diamond contract with facets, owner and other data.
+     * @dev Adds all provided facets to the diamond's function selector mapping and sets the contract owner.
+     *      Each facet in the array will have its function selectors registered to enable delegatecall routing.
+     * @param _facets Array of facet addresses and their corresponding function selectors to add to the diamond.
+     * @param _diamondOwner Address that will be set as the owner of the diamond contract.
+     */
+    constructor(address[] memory _facets, address _diamondOwner) {
+        DiamondMod.addFacets(_facets);
 
-<ExpandableCode language="solidity" maxLines={8}>
-{`fallback() external payable;`}
-</ExpandableCode>
+        /*************************************
+         * Initialize storage variables
+         ************************************/
 
----
-### receive
-
-<ExpandableCode language="solidity" maxLines={8}>
-{`receive() external payable;`}
-</ExpandableCode>
-
-<!-- Usage Example section commented out for now -->
-<!--
-## Usage Example
-
-<ExpandableCode language="solidity" maxLines={20} title="Example Implementation">
-{`pragma solidity >=0.8.30;
-
-import @compose/diamond/example/ExampleDiamond;
-
-contract DeployExampleDiamond {
-    address diamondAddress;
-
-    function deploy() public {
-        // Example facets to be added to the diamond
-        address[] memory facets = new address[](1);
-        // Assume MyFacetAddress is the deployed address of a facet contract
-        facets[0] = address(0x1234567890123456789012345678901234567890); // Replace with actual facet address
-
-        address diamondOwner = msg.sender;
-
-        // Deploy the ExampleDiamond, passing facets and owner
-        // The constructor of ExampleDiamond will register the facets.
-        ExampleDiamond instance = new ExampleDiamond(facets, diamondOwner);
-        diamondAddress = address(instance);
+        /**
+         * Setting the contract owner
+         */
+        OwnerDataMod.setContractOwner(_diamondOwner);
+        /**
+         * Setting ERC721 token details
+         */
+        ERC721MetadataMod.setMetadata({
+            _name: "ExampleDiamondNFT", _symbol: "EDN", _baseURI: "https://example.com/metadata/"
+        });
+        /**
+         * Registering ERC165 interfaces
+         */
+        ERC165Mod.registerInterface(type(IERC721).interfaceId);
+        ERC165Mod.registerInterface(type(IERC721Metadata).interfaceId);
     }
 
-    // To interact with facets after deployment, call through the diamond address:
-    // IDiamond(diamondAddress).facetFunction();
-}`}
+    fallback() external payable {
+        DiamondMod.diamondFallback();
+    }
+
+    receive() external payable {}
+}
+`}
 </ExpandableCode>
--->
+
+This contract only initializes the diamond proxy. 
+
+Minting, transfers, approvals, and token ownership logic must come from their respective facets that you provide during deployment.
 
 ## Best Practices
 
 <Callout type="tip" title="Best Practice">
-- Call the `constructor` only once during diamond deployment.
-- Ensure the `_facets` array contains valid, deployed facet contract addresses.
-- The `_diamondOwner` should be a trusted address responsible for diamond management.
-</Callout>
-
-## Security Considerations
-
-<Callout type="warning" title="Security">
-This contract is an initializer and is typically deployed once. Ensure the `_facets` array is populated correctly to avoid missing functionality. The `_diamondOwner` address should be secured, as it controls diamond upgrades and management.
+- Deploy and test facets before passing them into the constructor.
+- Verify there are no selector collisions across facets.
+- Ensure facets expose the expected selectors format for registration.
+- Set `_diamondOwner` to a trusted account or governance contract.
 </Callout>
 
 <div style={{marginTop: "3rem", paddingTop: "2rem", borderTop: "1px solid var(--ifm-color-emphasis-200)"}}>

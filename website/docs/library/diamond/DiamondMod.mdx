@@ -96,7 +96,7 @@ struct FacetNode {
 
 ### addFacets
 
-Registers one or more facets to a diamond. For each facet, selectors are discovered by calling `exportSelectors()`; each selector is then mapped to that facet in diamond storage. Reverts if any selector is already registered on the diamond.
+Registers one or more facets to a diamond. For each facet, selectors are discovered by calling `exportSelectors()`. Each selector is then mapped to the facet in diamond storage. Reverts if any selector is already registered on the diamond.
 
 <ExpandableCode language="solidity" maxLines={8}>
 {`function addFacets(address[] memory _facets) ;`}

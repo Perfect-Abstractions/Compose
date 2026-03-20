@@ -96,14 +96,11 @@ struct OwnerStorage {
 
 Upgrade the diamond by adding, replacing, and/or removing facets.
 
-Execution order is always:
-1. `addFacets(_addFacets)`
-2. `replaceFacets(_replaceFacets)`
-3. `removeFacets(_removeFacets)`
+Execution order is always: `addFacets`, `replaceFacets`, `removeFacets`
 
-Then, if `_delegate != address(0)`, the diamond performs a `delegatecall` to `_delegate` with `_delegateCalldata` and emits `DiamondDelegateCall`.
+Then, if `_delegate != address(0)`, the diamond performs a `delegatecall` with `_delegateCalldata` and emits `DiamondDelegateCall`.
 
-<ExpandableCode language="solidity" maxLines={8}>
+<ExpandableCode language="solidity" maxLines={10}>
 {`function upgradeDiamond(
     address[] calldata _addFacets,
     FacetReplacement[] calldata _replaceFacets,
@@ -123,44 +120,45 @@ Then, if `_delegate != address(0)`, the diamond performs a `delegatecall` to `_d
     {
       name: "_addFacets",
       type: "address[]",
-      description: "Facets to add."
+      description: "Facet addresses to add"
     },
     {
       name: "_replaceFacets",
       type: "FacetReplacement[]",
-      description: "(oldFacet, newFacet) pairs, to replace old with new."
+      description: "`(oldFacet, newFacet)` pairs to replace"
     },
     {
       name: "_removeFacets",
       type: "address[]",
-      description: "Facets to remove."
+      description: "Facet addresses to remove"
     },
     {
       name: "_delegate",
       type: "address",
-      description: "Optional contract to delegatecall (zero address to skip)."
+      description: "Optional contract to delegatecall (`address(0)` to skip)"
     },
     {
       name: "_delegateCalldata",
       type: "bytes",
-      description: "Optional calldata to execute on `_delegate`."
+      description: "Optional calldata to execute on `_delegate`"
     },
     {
       name: "_tag",
       type: "bytes32",
-      description: "Optional arbitrary metadata, such as release version."
+      description: "Optional arbitrary metadata, such as release version"
     },
     {
       name: "_metadata",
       type: "bytes",
-      description: "Optional arbitrary data."
+      description: "Optional arbitrary metadata"
     }
   ]}
   showRequired={false}
 />
 
-<Callout type="important" title="Facet Interface Requirement">
-Facets must implement `exportSelectors()` so the upgrade logic can discover which selectors they handle.
+<Callout type="important" title="Facet Requirement">
+Facets must implement `exportSelectors()` in order to make their selectors discoverable by diamonds.
+Only the exported selectors will be added to the diamond.
 
 ```solidity
 interface IFacet {
@@ -168,7 +166,7 @@ interface IFacet {
 }
 ```
 
-Only the exported selector are discoverable to diamonds.
+See [Facet-Based Diamond `EIP-8153`](https://eips.ethereum.org/EIPS/eip-8153) for more details.
 </Callout>
 
 ## Events
