@@ -1,37 +1,239 @@
-/* CTA Section */
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@500;600;700&display=swap');
 
-.ctaSection { padding: 5rem 0; background: linear-gradient(180deg, #ffffff 0%, #f8fafc 100%); position: relative; }
+/* Fluid aurora banner — Compose blues (reference: centered pill CTAs + curved glow) */
 
-.ctaContent { max-width: 800px; margin: 0 auto; text-align: center; padding: 4rem 2rem; background: white; border: 1px solid #e2e8f0; border-radius: 2rem; box-shadow: 0 20px 40px rgba(0,0,0,0.08); }
-.ctaTitle { font-size: clamp(2rem, 4vw, 3rem); font-weight: 800; line-height: 1.2; letter-spacing: -0.03em; color: #0f172a; margin-bottom: 1.5rem; text-align: center; }
-.ctaDescription { font-size: 1.125rem; line-height: 1.7; color: #64748b; margin-bottom: 2.5rem; text-align: center; }
-.ctaButtons { display: flex; align-items: center; justify-content: center; gap: 1rem; flex-wrap: wrap; }
-
-.ctaButton { display: inline-flex; align-items: center; justify-content: center; gap: 0.625rem; padding: 1rem 2rem; font-size: 1rem; font-weight: 600; border-radius: 0.75rem; text-decoration: none; transition: all var(--motion-duration-normal) var(--motion-ease-standard); border: 2px solid transparent; white-space: nowrap; }
-.ctaPrimary { background: linear-gradient(135deg, var(--compose-primary-500) 0%, var(--compose-primary-600) 100%); color: white; box-shadow: 0 4px 14px rgba(59,130,246,0.4), 0 1px 3px rgba(0,0,0,0.12); }
-.ctaPrimary:hover { transform: translateY(-2px); box-shadow: 0 8px 24px rgba(59,130,246,0.5), 0 4px 8px rgba(0,0,0,0.12); color: white; }
-.ctaSecondaryLight { background: rgba(59,130,246,0.05); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); color: #1e40af; border: 2px solid rgba(59,130,246,0.3); }
-.ctaSecondaryLight:hover { background: rgba(59,130,246,0.1); border-color: rgba(59,130,246,0.5); transform: translateY(-2px); color: #1e40af; }
-
-.ctaButton:focus-visible { outline: 3px solid var(--focus-ring-color); outline-offset: 3px; border-radius: 8px; }
-
-/* Responsive */
-@media screen and (max-width: 768px) {
-  .ctaSection { padding: 5rem 0; }
-  .ctaContent { padding: 3rem 1.5rem; border-radius: 1.5rem; }
-  .ctaTitle { font-size: 1.875rem; margin-bottom: 1rem; }
-  .ctaDescription { font-size: 1rem; margin-bottom: 2rem; }
-  .ctaButtons { flex-direction: column; gap: 0.75rem; }
-  .ctaButtons .ctaButton { width: 100%; max-width: 320px; }
+.ctaSection {
+  position: relative;
+  /* No bottom padding — flows into stats on same --home-band-bg */
+  padding: 2.5rem 0 2.5rem;
+  background: var(--home-band-bg);
 }
+
+.ctaContainer {
+  max-width: 960px;
+  margin: 0 auto;
+}
+
+.ctaBanner {
+  position: relative;
+  overflow: hidden;
+  border-radius: 2rem;
+  padding: clamp(2.5rem, 6vw, 3.75rem) clamp(1.5rem, 4vw, 3rem);
+  text-align: center;
+  isolation: isolate;
+  box-shadow:
+    0 0 0 1px rgba(255, 255, 255, 0.1) inset,
+    0 12px 28px -12px rgba(15, 23, 42, 0.28),
+    0 4px 14px rgba(37, 99, 235, 0.12);
+  /* Deep navy field + cyan “valley” (U-shaped luminance like reference, blue theme) */
+  background:
+    radial-gradient(ellipse 95% 72% at 50% 58%, rgba(56, 189, 248, 0.55) 0%, rgba(59, 130, 246, 0.25) 42%, transparent 68%),
+    radial-gradient(ellipse 80% 50% at 50% 18%, rgba(15, 23, 42, 0.95) 0%, transparent 62%),
+    radial-gradient(ellipse 80% 50% at 50% 88%, rgba(15, 23, 42, 0.98) 0%, transparent 58%),
+    linear-gradient(165deg, #0f172a 0%, #1e3a8a 38%, #172554 62%, #0f172a 100%);
+}
+
+.ctaGlowTop {
+  position: absolute;
+  inset: -30% -10% auto -10%;
+  height: 70%;
+  background: radial-gradient(ellipse 70% 55% at 50% 0%, rgba(30, 64, 175, 0.5), transparent 72%);
+  pointer-events: none;
+}
+
+.ctaGlowBottom {
+  position: absolute;
+  inset: auto -15% -35% -15%;
+  height: 65%;
+  background: radial-gradient(ellipse 75% 60% at 50% 100%, rgba(30, 58, 138, 0.55), transparent 70%);
+  pointer-events: none;
+}
+
+/* Bright sweeping arc (sky band) */
+.ctaArc {
+  position: absolute;
+  left: 50%;
+  top: 42%;
+  width: 140%;
+  height: 85%;
+  transform: translate(-50%, -50%);
+  background: radial-gradient(
+    ellipse 50% 42% at 50% 50%,
+    rgba(125, 211, 252, 0.5) 0%,
+    rgba(96, 165, 250, 0.22) 45%,
+    transparent 72%
+  );
+  filter: blur(36px);
+  pointer-events: none;
+  opacity: 0.95;
+  animation: ctaArcDrift 18s ease-in-out infinite alternate;
+}
+
+@keyframes ctaArcDrift {
+  0% {
+    transform: translate(-50%, -48%) scale(1);
+    opacity: 0.9;
+  }
+  100% {
+    transform: translate(-50%, -52%) scale(1.04);
+    opacity: 1;
+  }
+}
+
+/* Thin luminous rim on the arc (reference highlight) */
+.ctaHighlight {
+  position: absolute;
+  left: 8%;
+  right: 8%;
+  top: 36%;
+  height: 38%;
+  border-radius: 50%;
+  background: radial-gradient(ellipse 100% 100% at 50% 0%, rgba(255, 255, 255, 0.22), transparent 55%);
+  opacity: 0.45;
+  pointer-events: none;
+  mix-blend-mode: screen;
+}
+
+.ctaNoise {
+  position: absolute;
+  inset: 0;
+  opacity: 0.2;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.45'/%3E%3C/svg%3E");
+  mix-blend-mode: overlay;
+  pointer-events: none;
+}
+
+.ctaInner {
+  position: relative;
+  z-index: 1;
+  max-width: 36rem;
+  margin: 0 auto;
+}
+
+.ctaTitle {
+  font-family: 'Outfit', var(--ifm-font-family-base);
+  font-size: clamp(1.65rem, 4.2vw, 2.35rem);
+  font-weight: 700;
+  line-height: 1.2;
+  letter-spacing: -0.03em;
+  color: #ffffff;
+  margin: 0 0 1rem;
+  text-wrap: balance;
+}
+
+.ctaDescription {
+  margin: 0 auto 1.75rem;
+  font-size: clamp(0.95rem, 2vw, 1.0625rem);
+  line-height: 1.65;
+  color: rgba(255, 255, 255, 0.88);
+  max-width: 32rem;
+}
+
+.ctaActions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem 1rem;
+}
+
+.ctaButton {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 0.85rem 1.5rem;
+  font-size: 0.9375rem;
+  font-weight: 600;
+  font-family: var(--ifm-font-family-base);
+  border-radius: 9999px;
+  text-decoration: none;
+  border: 2px solid transparent;
+  transition:
+    transform var(--motion-duration-normal) var(--motion-ease-standard),
+    box-shadow var(--motion-duration-normal) var(--motion-ease-standard),
+    background var(--motion-duration-normal) var(--motion-ease-standard),
+    border-color var(--motion-duration-normal) var(--motion-ease-standard),
+    color var(--motion-duration-normal) var(--motion-ease-standard);
+}
+
+/* Solid light pill (reference primary) — dark label on white */
+.ctaPrimaryLight {
+  color: #0f172a;
+  background: #ffffff;
+  border-color: rgba(255, 255, 255, 0.95);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+}
+
+.ctaPrimaryLight:hover {
+  color: #020617;
+  background: #f8fafc;
+  transform: translateY(-2px);
+  box-shadow: 0 8px 28px rgba(0, 0, 0, 0.2);
+}
+
+.ctaButtonIcon {
+  flex-shrink: 0;
+  display: block;
+  color: inherit;
+  transition: transform var(--motion-duration-normal) var(--motion-ease-standard);
+}
+
+.ctaPrimaryLight:hover .ctaButtonIcon {
+  transform: translateX(4px);
+}
+
+/* Outline / glass pill (reference secondary) */
+.ctaSecondaryOutline {
+  color: #ffffff;
+  background: rgba(255, 255, 255, 0.06);
+  border-color: rgba(255, 255, 255, 0.55);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+}
+
+.ctaSecondaryOutline:hover {
+  background: rgba(255, 255, 255, 0.12);
+  border-color: rgba(255, 255, 255, 0.85);
+  transform: translateY(-2px);
+}
+
+.ctaButton:focus-visible {
+  outline: 2px solid #ffffff;
+  outline-offset: 3px;
+}
+
 @media screen and (max-width: 480px) {
-  .ctaContent { padding: 2.5rem 1.25rem; }
+  .ctaActions {
+    flex-direction: column;
+    width: 100%;
+  }
+
+  .ctaButton {
+    width: 100%;
+    max-width: 280px;
+  }
 }
 
-/* Dark mode */
-[data-theme='dark'] .ctaSection { background: var(--compose-bg-900); }
-[data-theme='dark'] .ctaContent { background: rgba(255,255,255,0.03); border-color: rgba(255,255,255,0.08); }
-[data-theme='dark'] .ctaTitle { color: #ffffff; }
-[data-theme='dark'] .ctaDescription { color: rgba(255,255,255,0.7); }
-[data-theme='dark'] .ctaSecondaryLight { background: rgba(255,255,255,0.05); color: #ffffff; border: 2px solid rgba(255,255,255,0.15); }
-[data-theme='dark'] .ctaSecondaryLight:hover { background: rgba(255,255,255,0.1); border-color: rgba(255,255,255,0.3); color: #ffffff; }
+[data-theme='dark'] .ctaBanner {
+  box-shadow:
+    0 0 0 1px rgba(255, 255, 255, 0.08) inset,
+    0 14px 36px -20px rgba(0, 0, 0, 0.4),
+    0 0 24px -8px rgba(59, 130, 246, 0.2);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ctaBanner,
+  .ctaArc {
+    animation: none;
+  }
+
+  .ctaPrimaryLight:hover,
+  .ctaSecondaryOutline:hover {
+    transform: none;
+  }
+
+  .ctaPrimaryLight:hover .ctaButtonIcon {
+    transform: none;
+  }
+}

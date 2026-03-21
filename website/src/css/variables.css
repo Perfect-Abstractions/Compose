@@ -59,6 +59,10 @@
   --compose-primary-500: #3b82f6; /* ifm primary */
   --compose-primary-600: #2563eb;
 
+  /* Homepage CTA + stats — one continuous band (light) */
+  --home-band-bg: linear-gradient(180deg, #ffffff 0%, #f1f5f9 100%);
+  --home-band-reverse-bg: linear-gradient(180deg, #f1f5f9 0%, #ffffff 100%);
+
   /* Hero gradient - Blue focused (lighter for docs title readability on white) */
   --hero-gradient: linear-gradient(135deg, var(--compose-primary-500) 0%, #1e40af 100%);
   --hero-gradient-alt: linear-gradient(135deg, #93c5fd 0%, #60a5fa 50%, #3b82f6 100%);
@@ -137,6 +141,11 @@
   --compose-bg-800: #1e293b;
   --compose-primary-500: #60a5fa;
   --compose-primary-600: #3b82f6;
+
+  /* Homepage CTA + stats — reversed gradients meet at same hue (mirrors light band) */
+  --home-band-bg: linear-gradient(180deg, var(--compose-bg-900) 0%, #0c1323 100%);
+  /* CTA bottom (#0c1323) must equal stats top — same as light reverse-bg, not duplicate of --home-band-bg */
+  --home-band-reverse-bg: linear-gradient(180deg, #0c1323 0%, var(--compose-bg-900) 100%);
 
   /* Hero gradient - dark blue */
   --hero-gradient: linear-gradient(135deg, var(--compose-bg-900) 0%, var(--compose-bg-800) 100%);

@@ -34,6 +34,7 @@
   "devDependencies": {
     "@docusaurus/module-type-aliases": "3.9.2",
     "@docusaurus/types": "3.9.2",
+    "@fontsource/geist-sans": "^5.2.5",
     "@fontsource/inter": "^5.2.8"
   },
   "browserslist": {
