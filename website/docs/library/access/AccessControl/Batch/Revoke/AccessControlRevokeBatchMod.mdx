@@ -22,7 +22,7 @@ import GradientText from '@site/src/components/ui/GradientText';
 import GradientButton from '@site/src/components/ui/GradientButton';
 
 <DocSubtitle>
-Revoke roles from multiple accounts efficiently
+Provides an internal function to revoke a specified role from multiple accounts in a single transaction
 </DocSubtitle>
 
 <Callout type="info" title="Key Features">
@@ -32,13 +32,9 @@ Revoke roles from multiple accounts efficiently
 - Reverts with `AccessControlUnauthorizedAccount` if the caller lacks administrative rights for the role.
 </Callout>
 
-<Callout type="info" title="Module Usage">
+<Callout type="important" title="Module Usage">
 This module provides internal functions for use in your custom facets. Import it to access shared logic and storage.
 </Callout>
-
-## Overview
-
-This module provides an internal function to revoke a specified role from multiple accounts in a single transaction. By batching these operations, it reduces gas costs and simplifies the process for administrators managing access control within a diamond. Changes are immediately reflected across all facets interacting with the shared access control storage.
 
 ## Storage
 

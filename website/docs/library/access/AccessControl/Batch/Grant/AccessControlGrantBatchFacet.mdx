@@ -62,7 +62,7 @@ struct AccessControlStorage {
 
 ### grantRoleBatch
 
-Grants a role to multiple accounts in a single transaction. Emits a RoleGranted event for each newly granted account. Reverts with AccessControlUnauthorizedAccount If the caller is not the admin of the role.
+Grants a role to multiple accounts in a single transaction. Emits a `RoleGranted` event for each newly granted account. Reverts with `AccessControlUnauthorizedAccount` if the caller is not the admin of the role.
 
 <ExpandableCode language="solidity" maxLines={8}>
 {`function grantRoleBatch(bytes32 _role, address[] calldata _accounts) external;`}

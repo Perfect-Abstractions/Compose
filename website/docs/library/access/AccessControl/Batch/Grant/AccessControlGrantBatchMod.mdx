@@ -38,17 +38,6 @@ This module provides internal functions for use in your custom facets. Import it
 
 ## Storage
 
-### AccessControlStorage
-
-storage struct for the AccessControl. storage-location: erc8042:compose.accesscontrol
-
-<ExpandableCode language="solidity" maxLines={15} title="Definition">
-{`struct AccessControlStorage {
-    mapping(address account => mapping(bytes32 role => bool hasRole)) hasRole;
-    mapping(bytes32 role => bytes32 adminRole) adminRole;
-}`}
-</ExpandableCode>
-
 ### State Variables
 
 <PropertyTable
@@ -62,11 +51,21 @@ storage struct for the AccessControl. storage-location: erc8042:compose.accessco
   showRequired={false}
 />
 
+### Access Control Storage
+
+<ExpandableCode language="solidity" maxLines={15} title="Definition">
+{`/** storage-location: erc8042:compose.accesscontrol */
+struct AccessControlStorage {
+    mapping(address account => mapping(bytes32 role => bool hasRole)) hasRole;
+    mapping(bytes32 role => bytes32 adminRole) adminRole;
+}`}
+</ExpandableCode>
+
 ## Functions
 
 ### getStorage
 
-Returns the storage for the AccessControl.
+Returns the storage for the Access Control.
 
 <ExpandableCode language="solidity" maxLines={8}>
 {`function getStorage() pure returns (AccessControlStorage storage _s);`}
@@ -88,7 +87,7 @@ Returns the storage for the AccessControl.
 ---
 ### grantRoleBatch
 
-function to grant a role to multiple accounts in a single transaction. Emits a &#123;RoleGranted&#125; event for each newly granted account. Reverts with AccessControlUnauthorizedAccount If the caller is not the admin of the role.
+function to grant a role to multiple accounts in a single transaction. Emits a `RoleGranted` event for each newly granted account. Reverts with `AccessControlUnauthorizedAccount` if the caller is not the admin of the role.
 
 <ExpandableCode language="solidity" maxLines={8}>
 {`function grantRoleBatch(bytes32 _role, address[] calldata _accounts) ;`}
