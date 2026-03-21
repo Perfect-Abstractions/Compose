@@ -16,8 +16,8 @@ export default function Home() {
       <main>
         <FeaturesSection />
         <CodeShowcase />
-        <StatsSection />
         <CtaSection />
+        <StatsSection />
       </main>
     </Layout>
   );
