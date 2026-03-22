@@ -1,20 +1,34 @@
 # {{projectName}}
 
-Minimal diamond starter scaffolded by Compose CLI using Hardhat 3.
+Hardhat 3 diamond starter scaffolded by the [Compose CLI](https://github.com/Perfect-Abstractions/Compose). Project can use the `@perfect-abstractions/compose` library for diamond infrastructure facets.
 
-
-## What's included?
-
-The project includes native support for TypeScript, Hardhat scripts, tasks, support for Solidity compilation & tests.
-
-Compose is directly included as a dependency in the project (even before package publication).
-
-This starter includes:
+Includes:
 - `contracts/Diamond.sol` using Compose `DiamondMod` and `OwnerMod`
-- `contracts/CounterFacet.sol` with `increment`, `getCounter`, and `exportSelectors`
+- `contracts/facets/CounterFacet.sol` with `increment`, `getCounter`, and `exportSelectors`
 
-To deploy a working diamond, deploy `CounterFacet` first, then pass the facet address and owner into `Diamond` constructor.
+Deploy each facet contract first, then deploy `Diamond` by passing the facet addresses and the owner address to the constructor.
 
-## Next steps
-1. `npx hardhat compile`
-2. `npx hardhat test`
+### Links
+- [Docs](https://hardhat.org/docs/)
+- [GitHub](https://github.com/NomicFoundation/hardhat)
+
+## Hardhat Usage
+### Build
+```sh
+npx hardhat build
+```
+
+### Test
+```sh
+npx hardhat test
+```
+
+### Node
+```sh
+npx hardhat node
+```
+
+### Help
+```sh
+npx hardhat --help
+```
