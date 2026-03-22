@@ -3,7 +3,7 @@
 `@perfect-abstractions/compose-cli` scaffolds diamond-based projects using the Compose Library.
 Supports both Foundry and Hardhat.
 
-## Install
+## Install (Soon)
 
 ```bash
 npm install -g @perfect-abstractions/compose-cli
