@@ -83,19 +83,21 @@ function burnFrom(address _from, uint256 _id, uint256 _amount) external {
 
     uint256 currentAllowance = s.allowance[_from][msg.sender][_id];
 
-    if (currentAllowance < type(uint256).max) {
+    if (msg.sender != _from && currentAllowance < type(uint256).max) {
         if (currentAllowance < _amount) {
             revert ERC6909InsufficientAllowance(msg.sender, currentAllowance, _amount, _id);
         }
         unchecked {
             s.allowance[_from][msg.sender][_id] = currentAllowance - _amount;
         }
-
-        uint256 fromBalance = s.balanceOf[_from][_id];
-
-        unchecked {
-            s.balanceOf[_from][_id] = fromBalance - _amount;
-        }
     }
+    uint256 fromBalance = s.balanceOf[_from][_id];
+    if (fromBalance < _amount) {
+        revert ERC6909InsufficientBalance(_from, fromBalance, _amount, _id);
+    }
+    unchecked {
+        s.balanceOf[_from][_id] = fromBalance - _amount;
+    }
+
     emit Transfer(msg.sender, _from, address(0), _id, _amount);
 }
