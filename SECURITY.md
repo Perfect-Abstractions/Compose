@@ -1,11 +1,10 @@
 # Security Policy
 
-If you believe you have found a security vulnerability, report it privatly.
+If you discover a security vulnerability, report it PRIVATELY with the maintainers
 
 ## Supported Versions
 
-Compose is currently under active development.
-We actively support these versions:
+Compose is currently under active development.</br>We actively support these versions:
 
 | Version | Supported          |
 | ------- | ------------------ |
@@ -13,17 +12,15 @@ We actively support these versions:
 
 ## Reporting a Vulnerability
 
-If you discover a security vulnerability, report it PRIVATELY with the maintainers
-
 Email: <a href="mailto:nick@perfectabstractions.com">nick@perfectabstractions.com</a>
 
 Include the following information:
-Description of the issue
-Affected contracts or modules
-Steps to reproduce (preferably with a minimal proof of concept)
-Expected vs actual behavior
-Impact assessment (e.g. funds at risk, privilege escalation, denial of service)
-Suggested mitigation, if available
+- Description of the issue
+- Affected contracts or modules
+- Steps to reproduce (preferably with a minimal proof of concept)
+- Expected vs actual behavior
+- Impact assessment (e.g. funds at risk, privilege escalation, denial of service)
+- Suggested mitigation, if available
 
 ## Security Model
 
@@ -47,4 +44,5 @@ Where appropriate, we may reference public audit reports that include Compose or
 ## Disclaimer
 
 Compose is provided "as is" without warranties of any kind. 
+
 Users/Projects are responsible for performing their own security reviews and audits before deploying systems that rely on this library.
