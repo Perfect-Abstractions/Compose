@@ -7,6 +7,7 @@ gitSource: "https://github.com/Perfect-Abstractions/Compose/tree/main/src/access
 ---
 
 import DocSubtitle  from '@site/src/components/docs/DocSubtitle';
+
 import Badge from '@site/src/components/ui/Badge';
 import Callout from '@site/src/components/ui/Callout';
 import CalloutBox from '@site/src/components/ui/CalloutBox';
@@ -30,10 +31,6 @@ Provides an internal function to revoke a specified role from multiple accounts 
 - Operates on shared diamond storage, ensuring state consistency across facets.
 - Emits `RoleRevoked` events for each account processed.
 - Reverts with `AccessControlUnauthorizedAccount` if the caller lacks administrative rights for the role.
-</Callout>
-
-<Callout type="important" title="Module Usage">
-This module provides internal functions for use in your custom facets. Import it to access shared logic and storage.
 </Callout>
 
 ## Storage

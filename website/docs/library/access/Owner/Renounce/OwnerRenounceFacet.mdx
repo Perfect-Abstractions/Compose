@@ -1,7 +1,7 @@
 ---
 sidebar_position: 100
 title: "Owner Renounce Facet"
-description: "Renounce diamond ownership"
+description: "ERC-173 renounce ownership for Compose diamonds"
 sidebar_label: "Facet"
 gitSource: "https://github.com/Perfect-Abstractions/Compose/tree/main/src/access/Owner/Renounce/OwnerRenounceFacet.sol"
 ---
@@ -22,29 +22,15 @@ import GradientText from '@site/src/components/ui/GradientText';
 import GradientButton from '@site/src/components/ui/GradientButton';
 
 <DocSubtitle>
-Renounce diamond ownership
+Renounce ERC-173 ownership for diamonds
 </DocSubtitle>
 
 <Callout type="info" title="Key Features">
-- Renounces diamond ownership via an external function.
-- Emits `OwnershipTransferred` event upon successful renouncement.
-- Interacts with shared diamond storage for owner management.
-- Exports selectors for facet discovery.
+- External `renounceOwnership()` sets `OwnerStorage.owner` to `address(0)` (same slot as `owner()` on `OwnerDataFacet`).
+- Reverts `OwnerUnauthorizedAccount` for non-owners; emits `OwnershipTransferred(previousOwner, address(0))` on success.
 </Callout>
 
-## Overview
-
-This facet provides functionality to renounce ownership of a diamond. It allows the current owner to permanently relinquish their ownership rights, making the diamond effectively unowned. This facet interacts with diamond storage to manage the owner state.
-
 ## Storage
-
-### OwnerStorage
-
-<ExpandableCode language="solidity" maxLines={15} title="Definition">
-{`struct OwnerStorage {
-    address owner;
-}`}
-</ExpandableCode>
 
 ### State Variables
 
@@ -53,46 +39,41 @@ This facet provides functionality to renounce ownership of a diamond. It allows 
     {
       name: "STORAGE_POSITION",
       type: "bytes32",
-      description: "Diamond storage slot position for this module (Value: `keccak256(\"erc173.owner\")`)"
+      description: "Owner storage position within the diamond (Value: `keccak256(\"erc173.owner\")`)"
     }
   ]}
   showRequired={false}
 />
+
+### OwnerStorage
+
+<ExpandableCode language="solidity" maxLines={15} title="Definition">
+{`/** storage-location erc8042:erc173.owner */
+struct OwnerStorage {
+    address owner;
+}`}
+</ExpandableCode>
 
 ## Functions
 
 ### renounceOwnership
 
+Sets `OwnerStorage.owner` to `address(0)` if `msg.sender` is the current owner; otherwise reverts `OwnerUnauthorizedAccount`. Emits `OwnershipTransferred(previousOwner, address(0))`. After this call succeeds, owner-only operations that rely on the stored owner should no longer authorize anyone.
+
 <ExpandableCode language="solidity" maxLines={8}>
 {`function renounceOwnership() external;`}
 </ExpandableCode>
 
----
-### exportSelectors
 
-Exports the function selectors of the OwnerRenounceFacet This function is use as a selector discovery mechanism for diamonds
-
-<ExpandableCode language="solidity" maxLines={8}>
-{`function exportSelectors() external pure returns (bytes memory);`}
-</ExpandableCode>
-
-**Returns:**
-
-<PropertyTable
-  properties={[
-    {
-      name: "-",
-      type: "bytes",
-      description: "selectors The exported function selectors of the OwnerRenounceFacet"
-    }
-  ]}
-  showRequired={false}
-/>
 
 ## Events
 
 <AccordionGroup>
   <Accordion title="OwnershipTransferred" defaultOpen={false}>
+
+    <div style={{marginBottom: "1rem"}}>
+      Emitted after a successful renounce with `newOwner == address(0)`.
+    </div>
 
     <div style={{marginBottom: "1rem"}}>
       <strong>Signature:</strong>
@@ -112,7 +93,7 @@ Exports the function selectors of the OwnerRenounceFacet This function is use as
     <div>
       <strong>Signature:</strong>
       <ExpandableCode language="solidity" maxLines={5}>
-error OwnerUnauthorizedAccount();
+{`error OwnerUnauthorizedAccount();`}
       </ExpandableCode>
     </div>
   </Accordion>
@@ -140,22 +121,15 @@ IDiamond(diamondAddress).renounceOwnership();
 </ExpandableCode>
 -->
 
-## Best Practices
-
-<Callout type="tip" title="Best Practice">
-- Call `renounceOwnership` only when permanent relinquishment of ownership is intended.
-- Ensure the caller is the current owner before executing `renounceOwnership`.
-- Verify that the `OwnershipTransferred` event is emitted after successful execution.
-</Callout>
 
 ## Security Considerations
 
-<Callout type="warning" title="Security">
-The `renounceOwnership` function can only be called by the current owner. If called, ownership is permanently relinquished, and the owner address in storage becomes zero. There is no mechanism to reclaim ownership after this action. The `OwnerUnauthorizedAccount` error is reverted if the caller is not the owner. Follow standard Solidity security practices for input validation and access control.
-</Callout>
+Renouncement is irreversible at the storage layer: once `owner` is zeroed, there is no way to rollback this action.
+
+If you need extra security, you can use the [`TwoSteps` Ownership](../TwoSteps) module, which requires the owner to set a pending owner address before renouncing.
 
 <div style={{marginTop: "3rem", paddingTop: "2rem", borderTop: "1px solid var(--ifm-color-emphasis-200)"}}>
   <WasThisHelpful pageId="Owner Renounce Facet" />
 </div>
 
-<LastUpdated date="2026-03-13T01:53:09.973Z" />
+<LastUpdated date="2026-03-24T12:00:00.000Z" />

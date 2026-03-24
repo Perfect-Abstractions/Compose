@@ -7,6 +7,7 @@ gitSource: "https://github.com/Perfect-Abstractions/Compose/tree/main/src/access
 ---
 
 import DocSubtitle  from '@site/src/components/docs/DocSubtitle';
+
 import Badge from '@site/src/components/ui/Badge';
 import Callout from '@site/src/components/ui/Callout';
 import CalloutBox from '@site/src/components/ui/CalloutBox';
@@ -182,10 +183,6 @@ error AccessControlUnauthorizedAccount(address _account, bytes32 _role);
 - Treat `bytes32(0)` as a privileged role in your access model when relying on default admin mappings.
 - For admin rotation: grant new admin role first, then call `setRoleAdmin`, then revoke the old admin role.
 - Keep `AccessControlStorage` layout compatible across upgrades (`erc8042:compose.accesscontrol`).
-
-<Callout type="important" title="Module Usage">
-This module provides internal functions for use in your custom facets. Import it to access shared logic and storage.
-</Callout>
 
 <div style={{marginTop: "3rem", paddingTop: "2rem", borderTop: "1px solid var(--ifm-color-emphasis-200)"}}>
   <WasThisHelpful pageId="Access Control Admin Module" />

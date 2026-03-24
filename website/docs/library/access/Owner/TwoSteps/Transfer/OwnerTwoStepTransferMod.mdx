@@ -7,61 +7,32 @@ gitSource: "https://github.com/Perfect-Abstractions/Compose/tree/main/src/access
 ---
 
 import DocSubtitle  from '@site/src/components/docs/DocSubtitle';
-import Badge from '@site/src/components/ui/Badge';
 import Callout from '@site/src/components/ui/Callout';
-import CalloutBox from '@site/src/components/ui/CalloutBox';
 import Accordion, { AccordionGroup } from '@site/src/components/ui/Accordion';
 import PropertyTable from '@site/src/components/api/PropertyTable';
 import ExpandableCode from '@site/src/components/code/ExpandableCode';
-import CodeShowcase from '@site/src/components/code/CodeShowcase';
-import RelatedDocs from '@site/src/components/docs/RelatedDocs';
 import WasThisHelpful from '@site/src/components/docs/WasThisHelpful';
 import LastUpdated from '@site/src/components/docs/LastUpdated';
-import ReadingTime from '@site/src/components/docs/ReadingTime';
-import GradientText from '@site/src/components/ui/GradientText';
-import GradientButton from '@site/src/components/ui/GradientButton';
 
 <DocSubtitle>
 Two-step ERC-173 ownership transfer logic
 </DocSubtitle>
 
 <Callout type="info" title="Key Features">
-- Implements ERC-173 two-step ownership transfer logic.
-- All functions are `internal`, intended for use by other facets within a diamond.
-- Utilizes diamond storage pattern for ownership state management.
-- Emits `OwnershipTransferStarted` and `OwnershipTransferred` events for off-chain monitoring.
+- Two-step handoff: current owner calls `transferOwnership`; the nominated address calls `acceptOwnership` to finalize (unlike single-step [`OwnerTransferMod`](/docs/library/access/Owner/Transfer/OwnerTransferMod)).
+- Uses `erc8042:erc173.owner` and `erc8042:erc173.owner.pending`; same layout as [Owner Two Step Transfer Facet](/docs/library/access/Owner/TwoSteps/Transfer/OwnerTwoStepTransferFacet).
+- File-level `getOwnerStorage`, `getPendingOwnerStorage`, `transferOwnership`, and `acceptOwnership`; emits `OwnershipTransferStarted` then `OwnershipTransferred` when acceptance completes.
 </Callout>
 
-<Callout type="info" title="Module Usage">
-This module provides internal functions for use in your custom facets. Import it to access shared logic and storage.
+<Callout type="important" title="Module Usage">
+Import this module into facets or shared setup code. Its helpers are file-level (effectively internal to your compilation unit). Call them from your facet’s external entrypoints.
+
+Storage follows the diamond slot layout in this file; any code using the same `OWNER_STORAGE_POSITION` or `PENDING_OWNER_STORAGE_POSITION` shares state.
+
+See <a href="/docs/foundations/facets-and-modules">Facets &amp; Modules</a> for more information.
 </Callout>
-
-## Overview
-
-This module provides internal functions for initiating and accepting ERC-173 ownership transfers. Facets can integrate this module to manage ownership changes within the diamond. Ownership changes are finalized through a two-step process, ensuring that the new owner explicitly accepts the transfer.
 
 ## Storage
-
-### OwnerStorage
-
-storage-location: erc8042:erc173.owner
-
-<ExpandableCode language="solidity" maxLines={15} title="Definition">
-{`struct OwnerStorage {
-    address owner;
-}`}
-</ExpandableCode>
-
----
-### PendingOwnerStorage
-
-storage-location: erc8042:erc173.owner.pending
-
-<ExpandableCode language="solidity" maxLines={15} title="Definition">
-{`struct PendingOwnerStorage {
-    address pendingOwner;
-}`}
-</ExpandableCode>
 
 ### State Variables
 
@@ -70,31 +41,40 @@ storage-location: erc8042:erc173.owner.pending
     {
       name: "OWNER_STORAGE_POSITION",
       type: "bytes32",
-      description: "Diamond storage slot position for this module (Value: `keccak256(\"erc173.owner\")`)"
+      description: "Owner storage position within the diamond (Value: `keccak256(\"erc173.owner\")`)"
     },
     {
       name: "PENDING_OWNER_STORAGE_POSITION",
       type: "bytes32",
-      description: "Diamond storage slot position for this module (Value: `keccak256(\"erc173.owner.pending\")`)"
+      description: "Pending owner storage position within the diamond (Value: `keccak256(\"erc173.owner.pending\")`)"
     }
   ]}
   showRequired={false}
 />
 
-## Functions
+### OwnerStorage
 
-### acceptOwnership
-
-Finalizes ownership transfer. Only the pending owner can call this function.
-
-<ExpandableCode language="solidity" maxLines={8}>
-{`function acceptOwnership() ;`}
+<ExpandableCode language="solidity" maxLines={15} title="Definition">
+{`/** @custom:storage-location erc8042:erc173.owner */
+struct OwnerStorage {
+    address owner;
+}`}
 </ExpandableCode>
 
----
+### PendingOwnerStorage
+
+<ExpandableCode language="solidity" maxLines={15} title="Definition">
+{`/** @custom:storage-location erc8042:erc173.owner.pending */
+struct PendingOwnerStorage {
+    address pendingOwner;
+}`}
+</ExpandableCode>
+
+## Functions
+
 ### getOwnerStorage
 
-Returns a pointer to the Owner storage struct. Uses inline assembly to access the storage slot defined by OWNER_STORAGE_POSITION.
+Returns a storage pointer to `OwnerStorage` at `OWNER_STORAGE_POSITION` using inline assembly.
 
 <ExpandableCode language="solidity" maxLines={8}>
 {`function getOwnerStorage() pure returns (OwnerStorage storage s);`}
@@ -106,17 +86,18 @@ Returns a pointer to the Owner storage struct. Uses inline assembly to access th
   properties={[
     {
       name: "s",
-      type: "OwnerStorage",
-      description: "The OwnerStorage struct in storage."
+      type: "OwnerStorage storage",
+      description: "The owner struct in diamond storage."
     }
   ]}
   showRequired={false}
 />
 
 ---
+
 ### getPendingOwnerStorage
 
-Returns a pointer to the PendingOwner storage struct. Uses inline assembly to access the storage slot defined by PENDING_OWNER_STORAGE_POSITION.
+Returns a storage pointer to `PendingOwnerStorage` at `PENDING_OWNER_STORAGE_POSITION` using inline assembly.
 
 <ExpandableCode language="solidity" maxLines={8}>
 {`function getPendingOwnerStorage() pure returns (PendingOwnerStorage storage s);`}
@@ -128,20 +109,21 @@ Returns a pointer to the PendingOwner storage struct. Uses inline assembly to ac
   properties={[
     {
       name: "s",
-      type: "PendingOwnerStorage",
-      description: "The PendingOwnerStorage struct in storage."
+      type: "PendingOwnerStorage storage",
+      description: "The pending-owner struct in diamond storage."
     }
   ]}
   showRequired={false}
 />
 
 ---
+
 ### transferOwnership
 
-Initiates a two-step ownership transfer.
+Requires `msg.sender == owner`; otherwise reverts `OwnerUnauthorizedAccount`. Sets `pendingOwner` to `_newOwner` and emits `OwnershipTransferStarted(owner, _newOwner)`. Does not change `owner` until `acceptOwnership`.
 
 <ExpandableCode language="solidity" maxLines={8}>
-{`function transferOwnership(address _newOwner) ;`}
+{`function transferOwnership(address _newOwner);`}
 </ExpandableCode>
 
 **Parameters:**
@@ -151,18 +133,28 @@ Initiates a two-step ownership transfer.
     {
       name: "_newOwner",
       type: "address",
-      description: "The address of the new owner of the contract."
+      description: "Address that must call `acceptOwnership` to become owner."
     }
   ]}
   showRequired={false}
 />
+
+---
+
+### acceptOwnership
+
+Requires `msg.sender == pendingOwner`; otherwise reverts `OwnerUnauthorizedAccount`. Assigns `owner` to the pending address, clears `pendingOwner`, and emits `OwnershipTransferred(previousOwner, newOwner)`.
+
+<ExpandableCode language="solidity" maxLines={8}>
+{`function acceptOwnership();`}
+</ExpandableCode>
 
 ## Events
 
 <AccordionGroup>
   <Accordion title="OwnershipTransferStarted" defaultOpen={false}>
     <div style={{marginBottom: "1rem"}}>
-      Emitted when ownership transfer is initiated (pending owner set).
+      Emitted when the current owner calls `transferOwnership` (pending owner set).
     </div>
 
     <div style={{marginBottom: "1rem"}}>
@@ -175,7 +167,7 @@ Initiates a two-step ownership transfer.
   </Accordion>
   <Accordion title="OwnershipTransferred" defaultOpen={false}>
     <div style={{marginBottom: "1rem"}}>
-      Emitted when ownership transfer is finalized.
+      Emitted when the pending owner calls `acceptOwnership` and ownership is updated.
     </div>
 
     <div style={{marginBottom: "1rem"}}>
@@ -192,11 +184,13 @@ Initiates a two-step ownership transfer.
 
 <AccordionGroup>
   <Accordion title="OwnerUnauthorizedAccount" defaultOpen={false}>
-
+    <div style={{marginBottom: "1rem"}}>
+      Thrown when `transferOwnership` is called by anyone other than the current owner, or when `acceptOwnership` is called by anyone other than the pending owner.
+    </div>
     <div>
       <strong>Signature:</strong>
       <ExpandableCode language="solidity" maxLines={5}>
-error OwnerUnauthorizedAccount();
+{`error OwnerUnauthorizedAccount();`}
       </ExpandableCode>
     </div>
   </Accordion>
@@ -290,20 +284,12 @@ contract MyOwnerFacet {
 
 ## Best Practices
 
-<Callout type="tip" title="Best Practice">
-- Ensure the `transferOwnership` function is called only by the current owner to prevent unauthorized transfer initiation.
-- Verify that `acceptOwnership` is called by the correct pending owner before finalizing the transfer.
-- Handle the `OwnerUnauthorizedAccount` error, which is emitted when unauthorized accounts attempt to perform ownership-related actions.
-</Callout>
-
-## Integration Notes
-
-<Callout type="success" title="Shared Storage">
-This module interacts with two primary storage slots within the diamond's shared storage: `OWNER_STORAGE_POSITION` for the current owner and `PENDING_OWNER_STORAGE_POSITION` for the pending owner. The `getOwnerStorage` and `getPendingOwnerStorage` functions provide direct access pointers to these storage locations using inline assembly. Changes made via `transferOwnership` and `acceptOwnership` modify these shared storage slots, making them immediately visible to any other facet that accesses the same storage positions.
-</Callout>
+- Expose `transferOwnership` and `acceptOwnership` only through vetted `external` facet entrypoints; confirm `_newOwner` before initiating.
+- Keep the same `OwnerStorage` / `PendingOwnerStorage` layout as [Owner Two Step Transfer Facet](/docs/library/access/Owner/TwoSteps/Transfer/OwnerTwoStepTransferFacet) and [Owner Two Step Data Module](/docs/library/access/Owner/TwoSteps/Data/OwnerTwoStepDataMod)
+- `owner` is shared with [`OwnerDataMod`](/docs/library/access/Owner/Data/OwnerDataMod) and single-step owner code at `keccak256("erc173.owner")`.
 
 <div style={{marginTop: "3rem", paddingTop: "2rem", borderTop: "1px solid var(--ifm-color-emphasis-200)"}}>
   <WasThisHelpful pageId="Owner Two Step Transfer Module" />
 </div>
 
-<LastUpdated date="2026-03-13T01:53:45.052Z" />
+<LastUpdated date="2026-03-24T12:00:00.000Z" />

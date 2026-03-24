@@ -26,42 +26,21 @@ Two-step ownership renouncement with ERC-173 logic
 </DocSubtitle>
 
 <Callout type="info" title="Key Features">
-- Implements a two-step ownership renouncement pattern.
-- Uses internal functions for direct interaction with diamond storage.
-- Emits an `OwnershipTransferred` event upon successful renouncement.
-- Compatible with ERC-2535 diamonds and the shared storage pattern.
+- Helper functions for renouncing ownership and clearing pending-owner state.
+- `renounceOwnership` guards by requiring `msg.sender` is the stored owner.
+- Emits `OwnershipTransferred` with `newOwner == address(0)`.
 </Callout>
 
-<Callout type="info" title="Module Usage">
-This module provides internal functions for use in your custom facets. Import it to access shared logic and storage.
+<Callout type="important" title="Module Usage">
+Import this module into facets or shared setup code. 
+Its functions are internal (including Solidity file-level helpers). Use them through your facet’s external entrypoints. 
+
+Storage follows the diamond slot layout in this file; any code using the same `STORAGE_POSITION` or related positions reads and writes shared state.
+
+See <a href="/docs/foundations/facets-and-modules">Facets &amp; Modules</a> for more information.
 </Callout>
-
-## Overview
-
-This module implements a two-step ownership renouncement process, adhering to ERC-173 semantics. It provides internal functions to manage ownership transitions, ensuring that functions restricted to the owner are disabled only after a confirmed two-step process. This approach enhances security by preventing accidental or malicious immediate ownership loss.
 
 ## Storage
-
-### OwnerStorage
-
-storage-location: erc8042:erc173.owner
-
-<ExpandableCode language="solidity" maxLines={15} title="Definition">
-{`struct OwnerStorage {
-    address owner;
-}`}
-</ExpandableCode>
-
----
-### PendingOwnerStorage
-
-storage-location: erc8042:erc173.owner.pending
-
-<ExpandableCode language="solidity" maxLines={15} title="Definition">
-{`struct PendingOwnerStorage {
-    address pendingOwner;
-}`}
-</ExpandableCode>
 
 ### State Variables
 
@@ -70,22 +49,41 @@ storage-location: erc8042:erc173.owner.pending
     {
       name: "OWNER_STORAGE_POSITION",
       type: "bytes32",
-      description: "Diamond storage slot position for this module (Value: `keccak256(\"erc173.owner\")`)"
+      description: "Owner storage position within the diamond (Value: `keccak256(\"erc173.owner\")`)"
     },
     {
       name: "PENDING_OWNER_STORAGE_POSITION",
       type: "bytes32",
-      description: "Diamond storage slot position for this module (Value: `keccak256(\"erc173.owner.pending\")`)"
+      description: "Pending owner storage position within the diamond (Value: `keccak256(\"erc173.owner.pending\")`)"
     }
   ]}
   showRequired={false}
 />
 
+### OwnerStorage
+
+<ExpandableCode language="solidity" maxLines={15} title="Definition">
+{`/** storage-location erc8042:erc173.owner */
+struct OwnerStorage {
+    address owner;
+}`}
+</ExpandableCode>
+
+---
+### PendingOwnerStorage
+
+<ExpandableCode language="solidity" maxLines={15} title="Definition">
+{`/** storage-location erc8042:erc173.owner.pending */
+struct PendingOwnerStorage {
+    address pendingOwner;
+}`}
+</ExpandableCode>
+
 ## Functions
 
 ### getOwnerStorage
 
-Returns a pointer to the ERC-173 storage struct. Uses inline assembly to access the storage slot defined by OWNER_STORAGE_POSITION.
+Returns a pointer to the ERC-173 storage struct. Uses inline assembly to access the storage slot defined by `OWNER_STORAGE_POSITION`.
 
 <ExpandableCode language="solidity" maxLines={8}>
 {`function getOwnerStorage() pure returns (OwnerStorage storage s);`}
@@ -107,7 +105,7 @@ Returns a pointer to the ERC-173 storage struct. Uses inline assembly to access 
 ---
 ### getPendingOwnerStorage
 
-Returns a pointer to the PendingOwner storage struct. Uses inline assembly to access the storage slot defined by PENDING_OWNER_STORAGE_POSITION.
+Returns a pointer to the PendingOwner storage struct. Uses inline assembly to access the storage slot defined by `PENDING_OWNER_STORAGE_POSITION`.
 
 <ExpandableCode language="solidity" maxLines={8}>
 {`function getPendingOwnerStorage() pure returns (PendingOwnerStorage storage s);`}
@@ -167,72 +165,15 @@ error OwnerUnauthorizedAccount();
   </Accordion>
 </AccordionGroup>
 
-<!-- Usage Example section commented out for now -->
-<!--
-## Usage Example
-
-<ExpandableCode language="solidity" maxLines={20} title="Example Implementation">
-{`pragma solidity >=0.8.30;
-
-import @compose/access/Owner/TwoSteps/Renounce/OwnerTwoStepRenounceMod;
-
-contract MyFacet {
-    OwnerTwoStepRenounceMod private ownerRenounceModule;
-
-    // Assume ownerRenounceModule is initialized with the correct storage slot
-    // via the diamond's deployment or an initializer facet.
-
-    /**
-     * @notice Initiates the ownership renouncement process.
-     * @dev This function can only be called by the current owner.
-     */
-    function initiateRenounce() external {
-        // In a real scenario, access control would verify the caller is the owner.
-        // This module's renounceOwnership function will handle the actual state changes.
-        ownerRenounceModule.renounceOwnership();
-    }
-
-    /**
-     * @notice Retrieves the current owner's storage pointer.
-     * @return OwnerStorage A pointer to the owner storage struct.
-     */
-    function getOwnerStorage() external pure returns (OwnerStorage) {
-        return ownerRenounceModule.getOwnerStorage();
-    }
-
-    /**
-     * @notice Retrieves the pending owner's storage pointer.
-     * @return PendingOwnerStorage A pointer to the pending owner storage struct.
-     */
-    function getPendingOwnerStorage() external pure returns (PendingOwnerStorage) {
-        return ownerRenounceModule.getPendingOwnerStorage();
-    }
-}
-
-struct OwnerStorage {
-    address owner;
-}
-
-struct PendingOwnerStorage {
-    address pendingOwner;
-}
-`}
-</ExpandableCode>
--->
-
 ## Best Practices
 
-<Callout type="tip" title="Best Practice">
-- Ensure the caller has the appropriate permissions before invoking state-changing functions.
-- Verify that the `OWNER_STORAGE_POSITION` and `PENDING_OWNER_STORAGE_POSITION` are correctly configured in the diamond's storage layout.
-- Handle the `OwnerUnauthorizedAccount` error if the caller is not the authorized account for ownership operations.
-</Callout>
+- Ensure the caller is the owner before invoking state-changing functions.
 
 ## Integration Notes
 
-<Callout type="success" title="Shared Storage">
-This module interacts with diamond storage at the slots defined by `OWNER_STORAGE_POSITION` and `PENDING_OWNER_STORAGE_POSITION`. The `renounceOwnership` function directly modifies the `owner` field within the `OwnerStorage` struct located at `OWNER_STORAGE_POSITION`, setting it to `address(0)` and clearing any pending owner. These changes are immediately visible to all facets that access the same storage slots.
-</Callout>
+This module interacts with diamond storage at the slots defined by `OWNER_STORAGE_POSITION` and `PENDING_OWNER_STORAGE_POSITION`. 
+
+The `renounceOwnership` function directly modifies the `owner` & `pendingOwner` fields within the storage structs, setting it to `address(0)`. These changes are immediately visible to all facets that access the same storage slots.
 
 <div style={{marginTop: "3rem", paddingTop: "2rem", borderTop: "1px solid var(--ifm-color-emphasis-200)"}}>
   <WasThisHelpful pageId="Owner Two Step Renounce Module" />

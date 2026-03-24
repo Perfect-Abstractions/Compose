@@ -1,7 +1,7 @@
 ---
 sidebar_position: 100
 title: "Owner Data Facet"
-description: "Manages owner address and facet selectors"
+description: "ERC-173 read-only owner data access for diamonds"
 sidebar_label: "Facet"
 gitSource: "https://github.com/Perfect-Abstractions/Compose/tree/main/src/access/Owner/Data/OwnerDataFacet.sol"
 ---
@@ -22,29 +22,16 @@ import GradientText from '@site/src/components/ui/GradientText';
 import GradientButton from '@site/src/components/ui/GradientButton';
 
 <DocSubtitle>
-Manages owner address and facet selectors
+Read-only ERC-173 owner data access for diamonds
 </DocSubtitle>
 
 <Callout type="info" title="Key Features">
-- Exposes owner address via an external `owner()` function.
-- Provides `exportSelectors()` for facet function discovery.
-- Utilizes diamond storage for owner data.
-- Compliant with ERC-2535 diamond standard.
+- Exposes the contract owner via external `owner()` (ERC-173).
+- Shares `OwnerStorage` at `erc8042:erc173.owner` with `OwnerDataMod` and other owner facets.
+- No state-changing functions; initialization and ownership changes use other facets or the module.
 </Callout>
 
-## Overview
-
-This facet provides external access to the owner's address and exposes its own function selectors. It interacts with diamond storage to retrieve owner information and uses the diamond pattern for selector discovery. Developers add this facet to expose owner management and facilitate diamond upgrades.
-
 ## Storage
-
-### OwnerStorage
-
-<ExpandableCode language="solidity" maxLines={15} title="Definition">
-{`struct OwnerStorage {
-    address owner;
-}`}
-</ExpandableCode>
 
 ### State Variables
 
@@ -53,17 +40,27 @@ This facet provides external access to the owner's address and exposes its own f
     {
       name: "STORAGE_POSITION",
       type: "bytes32",
-      description: "Diamond storage slot position for this module (Value: `keccak256(\"erc173.owner\")`)"
+      description: "Owner storage position within the diamond (Value: `keccak256(\"erc173.owner\")`)"
     }
   ]}
   showRequired={false}
 />
 
+### OwnerStorage
+
+
+<ExpandableCode language="solidity" maxLines={15} title="Definition">
+{`/** storage-location: erc8042:erc173.owner */
+struct OwnerStorage {
+    address owner;
+}`}
+</ExpandableCode>
+
 ## Functions
 
 ### owner
 
-Get the address of the owner
+Returns the address stored in `OwnerStorage.owner`.
 
 <ExpandableCode language="solidity" maxLines={8}>
 {`function owner() external view returns (address);`}
@@ -76,87 +73,24 @@ Get the address of the owner
     {
       name: "-",
       type: "address",
-      description: "The address of the owner."
+      description: "The current owner, or `address(0)` if unset or renounced."
     }
   ]}
   showRequired={false}
 />
 
----
-### exportSelectors
 
-Exports the function selectors of the OwnerDataFacet This function is use as a selector discovery mechanism for diamonds
-
-<ExpandableCode language="solidity" maxLines={8}>
-{`function exportSelectors() external pure returns (bytes memory);`}
-</ExpandableCode>
-
-**Returns:**
-
-<PropertyTable
-  properties={[
-    {
-      name: "-",
-      type: "bytes",
-      description: "selectors The exported function selectors of the OwnerDataFacet"
-    }
-  ]}
-  showRequired={false}
-/>
-
-<!-- Usage Example section commented out for now -->
-<!--
-## Usage Example
-
-<ExpandableCode language="solidity" maxLines={20} title="Example Implementation">
-{`pragma solidity >=0.8.30;
-
-import {IDiamond} from "@compose/diamond/IDiamond";
-import {OwnerDataFacet} from "@compose/access/Owner/Data/OwnerDataFacet";
-
-contract ExampleDiamondUser {
-    address immutable DIAMOND_ADDRESS;
-
-    constructor(address diamondAddress) {
-        DIAMOND_ADDRESS = diamondAddress;
-    }
-
-    /**
-     * @notice Get the current owner address of the diamond.
-     */
-    function getDiamondOwner() external view returns (address) {
-        // Calls the owner function exposed by the OwnerDataFacet via the diamond proxy.
-        return IDiamond(DIAMOND_ADDRESS).owner();
-    }
-
-    /**
-     * @notice Get the function selectors exported by the OwnerDataFacet.
-     */
-    function getOwnerFacetSelectors() external pure returns (bytes memory) {
-        // Calls the exportSelectors function exposed by the OwnerDataFacet via the diamond proxy.
-        return IDiamond(DIAMOND_ADDRESS).exportSelectors();
-    }
-}
-`}
-</ExpandableCode>
--->
 
 ## Best Practices
 
-<Callout type="tip" title="Best Practice">
-- Ensure the OwnerDataFacet is correctly initialized with an owner address during diamond deployment.
-- Access owner information only through the diamond proxy to maintain upgradeability.
-- Use `exportSelectors` to discover facet functions for integration or upgrade processes.
-</Callout>
+- Initialize or transfer ownership with a facet that uses `OwnerDataMod` (for example `OwnerTransferFacet`) so `owner()` reflects the real owner before relying on this facet in production.
+- Register this facet with the diamond using `exportSelectors()` so `owner()` is routed correctly after cuts or upgrades.
+- Avoid defining a second facet that writes to a different owner slot; keep all owner state at `erc173.owner`.
 
-## Security Considerations
 
-<Callout type="warning" title="Security">
-The `owner()` function is a `view` function and does not modify state. The `exportSelectors()` function is `pure` and does not access state. Access control to these functions is managed by the diamond proxy itself. Follow standard Solidity security practices.
-</Callout>
 
 <div style={{marginTop: "3rem", paddingTop: "2rem", borderTop: "1px solid var(--ifm-color-emphasis-200)"}}>
   <WasThisHelpful pageId="Owner Data Facet" />
 </div>
 
-<LastUpdated date="2026-03-13T01:53:02.818Z" />
+<LastUpdated date="2026-03-24T12:00:00.000Z" />

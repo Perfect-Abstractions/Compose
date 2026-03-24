@@ -7,6 +7,7 @@ gitSource: "https://github.com/Perfect-Abstractions/Compose/tree/main/src/token/
 ---
 
 import DocSubtitle  from '@site/src/components/docs/DocSubtitle';
+
 import Badge from '@site/src/components/ui/Badge';
 import Callout from '@site/src/components/ui/Callout';
 import CalloutBox from '@site/src/components/ui/CalloutBox';
@@ -30,10 +31,6 @@ Internal functions for cross-chain ERC20 token operations
 - Leverages diamond storage for access control roles (`trusted-bridge`).
 - Emits `CrosschainBurn` and `CrosschainMint` events for off-chain monitoring.
 - Does not use `using` directives or external dependencies.
-</Callout>
-
-<Callout type="info" title="Module Usage">
-This module provides internal functions for use in your custom facets. Import it to access shared logic and storage.
 </Callout>
 
 ## Overview

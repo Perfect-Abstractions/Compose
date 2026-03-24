@@ -7,6 +7,7 @@ gitSource: "https://github.com/Perfect-Abstractions/Compose/tree/main/src/diamon
 ---
 
 import DocSubtitle  from '@site/src/components/docs/DocSubtitle';
+
 import Callout from '@site/src/components/ui/Callout';
 import Accordion, { AccordionGroup } from '@site/src/components/ui/Accordion';
 import PropertyTable from '@site/src/components/api/PropertyTable';
@@ -26,9 +27,12 @@ Module providing the internal functions to extend the diamond's upgrade function
 </Callout>
 
 <Callout type="important" title="Module Usage">
-This module provides internal functions for use in your custom facets. Import it to access shared logic and storage.
+Import this module into facets or shared setup code. 
+Its functions are internal (including Solidity file-level helpers). Use them through your facet’s external entrypoints. 
 
-See [Facets & Modules](/docs/foundations/facets-and-modules) for more information.
+Storage follows the diamond slot layout in this file; any code using the same `STORAGE_POSITION` or related positions reads and writes shared state.
+
+See <a href="/docs/foundations/facets-and-modules">Facets &amp; Modules</a> for more information.
 </Callout>
 
 ## Storage

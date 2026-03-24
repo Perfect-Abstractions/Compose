@@ -7,6 +7,7 @@ gitSource: "https://github.com/Perfect-Abstractions/Compose/tree/main/src/token/
 ---
 
 import DocSubtitle  from '@site/src/components/docs/DocSubtitle';
+
 import Badge from '@site/src/components/ui/Badge';
 import Callout from '@site/src/components/ui/Callout';
 import CalloutBox from '@site/src/components/ui/CalloutBox';
@@ -30,10 +31,6 @@ Manages ERC-1155 token transfers within a diamond
 - Uses diamond storage for persistent token balance management.
 - Emits `TransferSingle` and `TransferBatch` events upon successful transfers.
 - Includes robust error checking for invalid inputs and state conditions.
-</Callout>
-
-<Callout type="info" title="Module Usage">
-This module provides internal functions for use in your custom facets. Import it to access shared logic and storage.
 </Callout>
 
 ## Overview
