@@ -12,7 +12,9 @@ Compose is currently under active development.</br>We actively support these ver
 
 ## Reporting a Vulnerability
 
-Email: <a href="mailto:nick@perfectabstractions.com">nick@perfectabstractions.com</a>
+Emails: </br>
+<a href="mailto:nick@perfectabstractions.com">nick@perfectabstractions.com</a></br>
+<a href="mailto:m.n@sapientlabs.xyz">m.n@sapientlabs.xyz</a>
 
 Include the following information:
 - Description of the issue
