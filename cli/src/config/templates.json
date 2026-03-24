@@ -1,0 +1,38 @@
+{
+  "templates": [
+    {
+      "id": "default",
+      "name": "Counter",
+      "description": "Simple diamond with a counter facet",
+      "variants": [
+        {
+          "id": "default-foundry",
+          "framework": "foundry",
+          "path": "templates/default/foundry"
+        },
+        {
+          "id": "default-hardhat-minimal",
+          "framework": "hardhat",
+          "path": "templates/default/hardhat/ts/minimal",
+          "language": "typescript",
+          "projectType": "minimal"
+        },
+        {
+          "id": "default-hardhat-mocha-ethers",
+          "framework": "hardhat",
+          "path": "templates/default/hardhat/ts/mocha-ethers",
+          "language": "typescript",
+          "projectType": "mocha-ethers"
+        },
+        {
+          "id": "default-hardhat-node-runner-viem",
+          "framework": "hardhat",
+          "path": "templates/default/hardhat/ts/node-runner-viem",
+          "language": "typescript",
+          "projectType": "node-runner-viem"
+        }
+      ]
+    }
+  ],
+  "defaultTemplateId": "default"
+}

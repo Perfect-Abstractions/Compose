@@ -1,0 +1,250 @@
+---
+sidebar_position: 3
+title: New Project Templates
+description: How to add new project templates to the Compose CLI and keep the template registry in sync.
+---
+
+import Badge from '@site/src/components/ui/Badge';
+import GradientText from '@site/src/components/ui/GradientText';
+import Callout from '@site/src/components/ui/Callout';
+import StepIndicator from '@site/src/components/docs/StepIndicator';
+import TerminalCommand from '@site/src/components/code/TerminalCommand';
+import DocSubtitle from '@site/src/components/docs/DocSubtitle';
+import RelatedDocs from '@site/src/components/docs/RelatedDocs';
+
+# New Template Guide 
+
+<DocSubtitle>
+  Add new project templates to the Compose CLI to scaffold diamonds and example projects.
+</DocSubtitle>
+
+## When to Add a New Template
+
+Add a new CLI template when you want to:
+
+- **Showcase a new pattern** (e.g. a new facet layout or diamond configuration).
+- **Support a new framework variant** (e.g. a different Hardhat layout).
+- **Provide an opinionated starter** (e.g. ERC‑721, ERC‑20, or example applications).
+
+<Callout type="warning" title="Keep templates minimal and focused">
+Templates should demonstrate **one clear pattern**. Avoid shipping large demo apps or unnecessary dependencies.
+</Callout>
+
+---
+
+## Overview of the Template System
+
+Templates live in the CLI package under `cli/src/templates`. Each template has:
+
+- **A template id** – top‑level folder and manifest.
+- **One or more variants** – concrete projects for a framework / language combo.
+- **A generated registry** – `src/config/templates.json`, built from all manifests.
+
+<StepIndicator
+  currentStep={-1}
+  orientation="vertical"
+  steps={[
+    { title: 'Create template folder', description: 'Add src/templates/<template-id>' },
+    { title: 'Add template.json', description: 'Describe template & variants' },
+    { title: 'Create variant directories', description: 'Add Foundry / Hardhat scaffolds' },
+    { title: 'Regenerate registry', description: 'Run npm run build:templates' },
+  ]}
+/>
+
+---
+
+## Prerequisites
+
+From the `cli` directory:
+
+```bash
+npm install
+```
+
+<br/>
+
+```bash
+npm run build:templates
+```
+
+<br/>
+
+You also need:
+
+- Node.js **20 or higher**.
+- A basic understanding of **Foundry** and/or **Hardhat** layouts. (You can always refer to the default template)
+
+### Test the CLI locally
+
+```bash
+npm link
+```
+<br/>
+
+This will create a symlink to the CLI in your global `node_modules` directory.
+
+You can then test the CLI by running:
+
+```bash
+compose --help
+```
+
+
+## 1. Create the Template Folder
+
+Templates are grouped by **template id**:
+
+- Root folder: `cli/src/templates/&lt;template-id&gt;`
+- Example: `cli/src/templates/erc721`
+
+Choose an id that is:
+
+- **Short and descriptive**, e.g. `erc721`, `erc20`, `example-counter`.
+- **Stable**, because users reference it via `--template <template-id>`.
+
+---
+
+## 2. Add `template.json`
+
+Create a manifest at:
+
+- `cli/src/templates/<template-id>/template.json`
+
+This file declares:
+
+- **id** – must match the folder name and CLI `--template` value.
+- **name** – human‑readable label shown in `compose templates`.
+- **description** – short explanation of what the template includes.
+- **variants** – list of variant ids (see next section).
+- **compatibility.frameworks** – supported frameworks (`foundry`, `hardhat`).
+
+Example:
+
+```json
+{
+  "id": "erc721",
+  "name": "ERC-721 Diamond",
+  "description": "Diamond project with an ERC-721 facet",
+  "variants": [
+    "erc721-foundry",
+    "erc721-hardhat-minimal"
+  ],
+  "compatibility": {
+    "frameworks": ["foundry", "hardhat"]
+  }
+}
+```
+
+<Callout type="tip" title="Validation is automatic">
+The `npm run build:templates` script validates all `template.json` files and regenerates the registry. If something is wrong, the build will fail.
+</Callout>
+
+
+## 3. Create Variant Directories
+
+Each **variant id** maps to a concrete folder on disk:
+
+- **Foundry**
+  - Variant id: `<template-id>-foundry`
+  - Path: `cli/src/templates/<template-id>/foundry`
+- **Hardhat (framework‑only)**
+  - Variant id: `<template-id>-hardhat`
+  - Path: `cli/src/templates/<template-id>/hardhat`
+- **Hardhat with project type (language/layout)**
+  - Variant id: `<template-id>-hardhat-<project-type>`
+  - Path: `cli/src/templates/<template-id>/hardhat/ts/<project-type>` for TypeScript
+  - Path: `cli/src/templates/<template-id>/hardhat/js/<project-type>` for JavaScript
+
+Inside each variant directory, add the full scaffolded project:
+
+- Contracts, config files, scripts, tests, etc.
+- Any `README` or notes specific to that template.
+
+<Callout type="info" title="Language detection">
+The CLI knows the language from the variant path. For Foundry templates, only the **framework** is set.
+</Callout>
+
+## 4. Regenerate the Template Registry
+
+Whenever you add or modify templates, rebuild the registry from the `cli` directory by running:
+
+```bash
+npm run build:templates
+```
+<br/>
+
+- Scans all `src/templates/**/template.json` manifests.
+- Validates ids, variants, and compatibility fields.
+- Regenerates `src/config/templates.json` used by the CLI.
+
+If the command fails, fix the manifest or folder layout until the build succeeds.
+
+---
+
+## 5. Verify Your Template
+
+First, list templates via the local CLI:
+
+```bash
+node index.js templates
+```
+<br/>
+
+
+Check that:
+
+- Your **template id** appears in the list.
+- All **variants** are listed with the expected framework and language.
+
+Then scaffold a project using your new template:
+
+```bash
+compose init \
+  --name my-test-project \
+  --template <template-id> \
+  --framework <framework> \
+  --yes
+```
+<br/>
+
+From inside the generated project, run the usual framework commands:
+
+- For **Foundry**: `forge build`, `forge test`
+- For **Hardhat**: `npm test`, `npx hardhat test`, etc.
+
+---
+
+## Review Checklist
+
+Before opening a pull request:
+
+- **Template structure**
+  - `cli/src/templates/<template-id>` exists.
+  - `template.json` is valid and matches the folder name.
+  - All variant ids map to real directories.
+- **Registry & CLI**
+  - `npm run build:templates` passes.
+  - `node index.js templates` shows the new template and variants.
+  - `node index.js init ...` successfully scaffolds a project.
+- **Quality**
+  - Template files follow existing **code style** and **project layout**.
+  - Dependencies are minimal and justified.
+  - Any README or comments clearly explain what the template demonstrates.
+
+---
+
+<RelatedDocs
+  items={[
+    {
+      title: 'How to Contribute',
+      href: '/docs/contribution/how-to-contribute',
+      description: 'General contribution workflow and development setup',
+    },
+    {
+      title: 'Compose CLI README',
+      href: 'https://github.com/Perfect-Abstractions/Compose/tree/main/cli',
+      description: 'Source of truth for CLI usage and development',
+    }
+  ]}
+/>
+

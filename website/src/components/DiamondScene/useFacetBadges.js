@@ -1,19 +1,30 @@
 import { useState, useCallback } from 'react';
 
-// A list of realistic facet names related to EIP-2535 Diamond Standard
+// Contract filenames mirrored from `src/**` and converted to display names.
 const FACET_NAMES = [
-  "DiamondUpgradeFacet",
   "DiamondInspectFacet",
-  "OwnerFacet",
-  "AccessControlFacet",
-  "ERC20DataFacet",
-  "ERC20MetadataFacet",
-  "ERC20MintFacet",
-  "ERC721DataFacet",
-  "ERC721MetadataFacet",
-  "ERC721EnumerableFacet",
+  "DiamondUpgradeFacet",
   "ERC165Facet",
-  "RoyaltyFacet",
+  "AccessControlDataFacet",
+  "AccessControlGrantFacet",
+  "AccessControlRevokeFacet",
+  "OwnerDataFacet",
+  "OwnerTransferFacet",
+  "OwnerRenounceFacet",
+  "ERC1155DataFacet",
+  "ERC1155MintFacet",
+  "ERC1155BurnFacet",
+  "ERC20DataFacet",
+  "ERC20MintFacet",
+  "ERC20BurnFacet",
+  "ERC20ApproveFacet",
+  "ERC20TransferFacet",
+  "ERC721DataFacet",
+  "ERC721MintFacet",
+  "ERC721BurnFacet",
+  "ERC721ApproveFacet",
+  "ERC721TransferFacet",
+  "ERC721MetadataFacet",
 ];
 
 export function useFacetBadges() {

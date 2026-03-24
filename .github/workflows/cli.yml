@@ -1,0 +1,170 @@
+name: CLI
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'cli/**'
+      - '.github/workflows/cli.yml'
+    tags:
+      - 'v*'
+  pull_request:
+    paths:
+      - 'cli/**'
+      - '.github/workflows/cli.yml'
+  workflow_dispatch:
+
+jobs:
+  lint-and-unit:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: cli
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24.x
+          cache: npm
+          cache-dependency-path: cli/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build templates registry
+        run: npm run build:templates
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Run unit tests
+        run: npm run test:unit
+
+  integration:
+    runs-on: ubuntu-latest
+    needs: lint-and-unit
+    defaults:
+      run:
+        working-directory: cli
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24.x
+          cache: npm
+          cache-dependency-path: cli/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build templates registry
+        run: npm run build:templates
+
+      - name: Run integration tests
+        run: npm run test:integration
+
+  template-smoke-tests:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        node-version: [20.x, 22.x, 24.x]
+    needs: lint-and-unit
+    env:
+      FOUNDRY_PROFILE: ci
+    defaults:
+      run:
+        working-directory: cli
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node-version }}
+          cache: npm
+          cache-dependency-path: cli/package-lock.json
+
+      - name: Install Foundry
+        uses: foundry-rs/foundry-toolchain@v1
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Prepare libraries
+        run: npm run prepare:lib
+
+      - name: Build templates registry
+        run: npm run build:templates
+
+      - name: Smoke test Foundry default template
+        run: |
+          set -euo pipefail
+          rm -rf ci-foundry
+          node index.js init \
+            --name ci-foundry \
+            --template default \
+            --framework foundry \
+            --yes
+          cd ci-foundry
+          forge build
+
+      # TODO: Remove once @perfect-abstractions/compose is published to npm
+      # Currently, this make the Ci fail when trying to install the dependency.
+      # - name: Smoke test Hardhat default TypeScript template
+      #   run: |
+      #     set -euo pipefail
+      #     rm -rf ci-hardhat
+      #     node index.js init \
+      #       --name ci-hardhat \
+      #       --template default \
+      #       --framework hardhat \
+      #       --language typescript \
+      #       --no-install-deps \
+      #       --yes
+      #     cd ci-hardhat
+      #     npm install
+      #     npm test
+
+  pack-verify:
+    runs-on: ubuntu-latest
+    needs:
+      - lint-and-unit
+      - integration
+      - template-smoke-tests
+    defaults:
+      run:
+        working-directory: cli
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24.x
+          cache: npm
+          cache-dependency-path: cli/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build templates registry
+        run: npm run build:templates
+
+      - name: Verify npm pack output
+        run: npm run pack:check
+
