@@ -1,0 +1,94 @@
+Data
+├── BalanceOf
+│   └── when owner and id are queried
+│       └── it should return stored balance (including zero for untouched ids)
+├── Allowance
+│   └── when owner, spender, and id are queried
+│       └── it should return stored allowance (including zero)
+└── IsOperator
+    ├── when operator has not been set
+    │   └── it should return false
+    └── when operator has been set via setOperator
+        └── it should return true
+
+Approve
+└── Approve
+    ├── when spender is the zero address
+    │   └── it should revert with ERC6909InvalidSpender
+    └── when spender is not the zero address
+        ├── it should set allowance[owner][spender][id] to amount
+        ├── it should emit Approval(owner, spender, id, amount)
+        └── when amount is zero
+            └── it should update storage and emit Approval
+
+Operator
+└── SetOperator
+    ├── when spender is the zero address
+    │   └── it should revert with ERC6909InvalidSpender
+    └── when spender is not the zero address
+        ├── it should set isOperator[owner][spender] to approved
+        └── it should emit OperatorSet(owner, spender, approved)
+
+Transfer
+├── Transfer
+│   ├── when receiver is the zero address
+│   │   └── it should revert with ERC6909InvalidReceiver
+│   ├── when balance is less than amount
+│   │   └── it should revert with ERC6909InsufficientBalance
+│   └── when preconditions hold
+│       ├── it should decrement caller balance and increment receiver balance by amount
+│       ├── it should emit Transfer(caller, sender, receiver, id, amount) with caller == sender
+│       └── when amount is zero
+│           └── it should succeed without reverting
+└── TransferFrom
+    ├── when sender is the zero address
+    │   └── it should revert with ERC6909InvalidSender
+    ├── when receiver is the zero address
+    │   └── it should revert with ERC6909InvalidReceiver
+    ├── when msg.sender is neither sender nor approved operator for sender
+    │   ├── when per-id allowance is less than amount and not type(uint256).max
+    │   │   └── it should revert with ERC6909InsufficientAllowance
+    │   └── when allowance is type(uint256).max
+    │       └── it should not decrease allowance
+    ├── when msg.sender is approved operator for sender
+    │   └── it should not require per-id allowance
+    ├── when msg.sender equals sender
+    │   └── it should not require per-id allowance
+    └── when preconditions hold
+        ├── it should decrement sender balance and increment receiver balance by amount
+        ├── when allowance is finite and sufficient
+        │   └── it should decrease allowance by amount
+        └── it should emit Transfer(caller, sender, receiver, id, amount)
+
+Burn
+├── Burn
+│   ├── when balance is less than amount
+│   │   └── it should revert with ERC6909InsufficientBalance
+│   └── when balance is sufficient
+│       ├── it should decrement caller balance by amount
+│       └── it should emit Transfer(caller, caller, address(0), id, amount)
+└── BurnFrom
+    ├── when from is the zero address
+    │   └── it should revert with ERC6909InvalidSender
+    ├── when caller is not from
+    │   ├── when allowance is less than amount and not type(uint256).max
+    │   │   └── it should revert with ERC6909InsufficientAllowance
+    │   └── when allowance is type(uint256).max
+    │       └── it should not decrease allowance
+    └── when preconditions hold
+        ├── it should decrement from balance by amount
+        ├── when allowance is finite
+        │   └── it should decrease allowance by amount
+        └── it should emit Transfer(caller, from, address(0), id, amount)
+
+Mint (Mod only; privileged entry)
+└── Mint
+    ├── when account is the zero address
+    │   └── it should revert with ERC6909InvalidReceiver
+    └── when account is not the zero address
+        ├── it should increase balanceOf[account][id] by value
+        └── it should emit Transfer(caller, address(0), account, id, value)
+
+ExportSelectors
+└── for each ERC6909 facet (Data, Transfer, Approve, Operator, Burn)
+    └── it should return an abi.encodePacked list of that facet's external function selectors in the expected order
