@@ -59,7 +59,7 @@
     "@types/mocha": "^10.0.10",
     "@types/node": "^22.19.13",
     "chai": "^6.2.2",
-    "eslint": "^10.0.2",
+    "eslint": "^10.1.0",
     "ethers": "^6.16.0",
     "forge-std": "github:foundry-rs/forge-std#v1.9.4",
     "hardhat": "^3.1.10",
