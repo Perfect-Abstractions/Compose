@@ -15,6 +15,11 @@ error ERC6909InsufficientBalance(address _sender, uint256 _balance, uint256 _nee
 error ERC6909InsufficientAllowance(address _spender, uint256 _allowance, uint256 _needed, uint256 _id);
 
 /**
+ * @notice Thrown when the sender address is invalid.
+ */
+error ERC6909InvalidSender(address _sender);
+
+/**
  * @notice Emitted when a transfer occurs.
  */
 event Transfer(
@@ -52,7 +57,7 @@ function getStorage() pure returns (ERC6909Storage storage s) {
  * @dev Emits a {Transfer} event to the zero address.
  * @param _amount The amount of tokens to burn.
  */
-function burn(uint256 _id, uint256 _amount) external {
+function burn(uint256 _id, uint256 _amount) {
     ERC6909Storage storage s = getStorage();
 
     uint256 fromBalance = s.balanceOf[msg.sender][_id];
@@ -74,7 +79,7 @@ function burn(uint256 _id, uint256 _amount) external {
  * @param _from The address whose tokens will be burned.
  * @param _amount The amount of tokens to burn.
  */
-function burnFrom(address _from, uint256 _id, uint256 _amount) external {
+function burnFrom(address _from, uint256 _id, uint256 _amount) {
     if (_from == address(0)) {
         revert ERC6909InvalidSender(_from);
     }
