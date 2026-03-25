@@ -1,0 +1,89 @@
+---
+sidebar_position: 100
+title: "Owner Two Step Data Facet"
+description: "Read-only pending-owner data for ERC-173 two-step transfers in diamonds"
+sidebar_label: "Facet"
+gitSource: "https://github.com/Perfect-Abstractions/Compose/tree/main/src/access/Owner/TwoSteps/Data/OwnerTwoStepDataFacet.sol"
+---
+
+import DocSubtitle  from '@site/src/components/docs/DocSubtitle';
+import Badge from '@site/src/components/ui/Badge';
+import Callout from '@site/src/components/ui/Callout';
+import CalloutBox from '@site/src/components/ui/CalloutBox';
+import Accordion, { AccordionGroup } from '@site/src/components/ui/Accordion';
+import PropertyTable from '@site/src/components/api/PropertyTable';
+import ExpandableCode from '@site/src/components/code/ExpandableCode';
+import CodeShowcase from '@site/src/components/code/CodeShowcase';
+import RelatedDocs from '@site/src/components/docs/RelatedDocs';
+import WasThisHelpful from '@site/src/components/docs/WasThisHelpful';
+import LastUpdated from '@site/src/components/docs/LastUpdated';
+import ReadingTime from '@site/src/components/docs/ReadingTime';
+import GradientText from '@site/src/components/ui/GradientText';
+import GradientButton from '@site/src/components/ui/GradientButton';
+
+<DocSubtitle>
+Read-only pending-owner data for ERC-173 two-step transfers in diamonds
+</DocSubtitle>
+
+<Callout type="info" title="Key Features">
+- Exposes the pending owner via external `pendingOwner()` (read-only).
+- Shares `PendingOwnerStorage` at `erc8042:erc173.owner.pending` with `OwnerTwoStepTransferFacet` and other two-step owner contracts.
+</Callout>
+
+## Storage
+
+### State Variables
+
+<PropertyTable
+  properties={[
+    {
+      name: "STORAGE_POSITION",
+      type: "bytes32",
+      description: "Pending-owner storage position within the diamond (Value: `keccak256(\"erc173.owner.pending\")`)"
+    }
+  ]}
+  showRequired={false}
+/>
+
+### PendingOwnerStorage
+
+<ExpandableCode language="solidity" maxLines={15} title="Definition">
+{`/** storage-location: erc8042:erc173.owner.pending */
+struct PendingOwnerStorage {
+    address pendingOwner;
+}`}
+</ExpandableCode>
+
+## Functions
+
+### pendingOwner
+
+Returns the address stored in `PendingOwnerStorage.pendingOwner`.
+
+<ExpandableCode language="solidity" maxLines={8}>
+{`function pendingOwner() external view returns (address);`}
+</ExpandableCode>
+
+**Returns:**
+
+<PropertyTable
+  properties={[
+    {
+      name: "-",
+      type: "address",
+      description: "The pending owner, or `address(0)` when no transfer is pending."
+    }
+  ]}
+  showRequired={false}
+/>
+
+## Best Practices
+
+- Avoid defining another facet that reads or writes a different slot for pending owner; keep pending-owner state at `erc173.owner.pending`.
+- The current owner in the Two-Step Ownership is stored in the same `OwnerStorage` as the single-step ownership. Reuse the storage struct to ensure composability.
+
+<div style={{marginTop: "3rem", paddingTop: "2rem", borderTop: "1px solid var(--ifm-color-emphasis-200)"}}>
+  <WasThisHelpful pageId="Owner Two Step Data Facet" />
+</div>
+
+<LastUpdated date="2026-03-24T12:00:00.000Z" />

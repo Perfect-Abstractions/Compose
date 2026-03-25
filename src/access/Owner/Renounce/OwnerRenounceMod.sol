@@ -5,7 +5,7 @@ pragma solidity >=0.8.30;
  * https://compose.diamonds
  */
 
-/*
+/**
  * @title ERC-173 Renounce Ownership Module
  * @notice Provides logic to renounce ownership.
  */
@@ -15,7 +15,7 @@ pragma solidity >=0.8.30;
  */
 event OwnershipTransferred(address indexed previousOwner, address indexed newOwner);
 
-/*
+/**
  * @notice Thrown when a non-owner attempts an action restricted to owner.
  */
 error OwnerUnauthorizedAccount();

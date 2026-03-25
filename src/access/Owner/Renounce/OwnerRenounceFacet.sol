@@ -56,7 +56,7 @@ contract OwnerRenounceFacet {
 
     /**
      * @notice Exports the function selectors of the OwnerRenounceFacet
-     * @dev This function is use as a selector discovery mechanism for diamonds
+     * @dev This function is used as a selector discovery mechanism for diamonds.
      * @return selectors The exported function selectors of the OwnerRenounceFacet
      */
     function exportSelectors() external pure returns (bytes memory) {

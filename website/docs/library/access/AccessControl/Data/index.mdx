@@ -1,0 +1,29 @@
+---
+title: "Data"
+description: "Data components for Compose diamonds."
+---
+
+import DocCard, { DocCardGrid } from '@site/src/components/docs/DocCard';
+import DocSubtitle from '@site/src/components/docs/DocSubtitle';
+import Icon from '@site/src/components/ui/Icon';
+
+<DocSubtitle>
+  Data components for Compose diamonds.
+</DocSubtitle>
+
+<DocCardGrid columns={2}>
+  <DocCard
+    title="Access Control Data Facet"
+    description={"Manages roles and permissions within a diamond"}
+    href="/docs/library/access/AccessControl/Data/AccessControlDataFacet"
+    icon={<Icon name="showcase-facet" size={28} />}
+    size="medium"
+  />
+  <DocCard
+    title="Access Control Data Module"
+    description={"Manage access control roles and accounts"}
+    href="/docs/library/access/AccessControl/Data/AccessControlDataMod"
+    icon={<Icon name="box-detailed" size={28} />}
+    size="medium"
+  />
+</DocCardGrid>

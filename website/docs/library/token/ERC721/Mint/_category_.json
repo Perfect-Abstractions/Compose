@@ -1,0 +1,10 @@
+{
+  "label": "Mint",
+  "position": 99,
+  "collapsible": true,
+  "collapsed": true,
+  "link": {
+    "type": "doc",
+    "id": "library/token/ERC721/Mint/index"
+  }
+}

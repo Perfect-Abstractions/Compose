@@ -1,0 +1,129 @@
+---
+sidebar_position: 100
+title: "Owner Two Step Renounce Facet"
+description: "Renounce ERC-173 ownership and clear pending owner for two-step diamonds"
+sidebar_label: "Facet"
+gitSource: "https://github.com/Perfect-Abstractions/Compose/tree/main/src/access/Owner/TwoSteps/Renounce/OwnerTwoStepRenounceFacet.sol"
+---
+
+import DocSubtitle  from '@site/src/components/docs/DocSubtitle';
+import Badge from '@site/src/components/ui/Badge';
+import Callout from '@site/src/components/ui/Callout';
+import CalloutBox from '@site/src/components/ui/CalloutBox';
+import Accordion, { AccordionGroup } from '@site/src/components/ui/Accordion';
+import PropertyTable from '@site/src/components/api/PropertyTable';
+import ExpandableCode from '@site/src/components/code/ExpandableCode';
+import CodeShowcase from '@site/src/components/code/CodeShowcase';
+import RelatedDocs from '@site/src/components/docs/RelatedDocs';
+import WasThisHelpful from '@site/src/components/docs/WasThisHelpful';
+import LastUpdated from '@site/src/components/docs/LastUpdated';
+import ReadingTime from '@site/src/components/docs/ReadingTime';
+import GradientText from '@site/src/components/ui/GradientText';
+import GradientButton from '@site/src/components/ui/GradientButton';
+
+<DocSubtitle>
+Renounce ownership and clear pending owner for two-step ERC-173 diamonds
+</DocSubtitle>
+
+<Callout type="info" title="Key Features">
+- `renounceOwnership()` clears owner and pending owner in one call.
+- Owner-only function; otherwise reverts `OwnerUnauthorizedAccount`.
+- Emits `OwnershipTransferred` to `address(0)`.
+</Callout>
+
+## Storage
+### State Variables
+
+<PropertyTable
+  properties={[
+    {
+      name: "OWNER_STORAGE_POSITION",
+      type: "bytes32",
+      description: "Owner storage position within the diamond (Value: `keccak256(\"erc173.owner\")`)"
+    },
+    {
+      name: "PENDING_OWNER_STORAGE_POSITION",
+      type: "bytes32",
+      description: "Pending owner storage position within the diamond (Value: `keccak256(\"erc173.owner.pending\")`)"
+    }
+  ]}
+  showRequired={false}
+/>
+
+### OwnerStorage
+
+<ExpandableCode language="solidity" maxLines={15} title="Definition">
+{`/** storage-location erc8042:erc173.owner */
+struct OwnerStorage {
+    address owner;
+}`}
+</ExpandableCode>
+
+---
+### PendingOwnerStorage
+
+<ExpandableCode language="solidity" maxLines={15} title="Definition">
+{`/** storage-location erc8042:erc173.owner.pending */
+struct PendingOwnerStorage {
+    address pendingOwner;
+}`}
+</ExpandableCode>
+
+## Functions
+
+### renounceOwnership
+
+Requires `msg.sender` to equal the stored owner; otherwise reverts `OwnerUnauthorizedAccount`. Sets `owner` to `address(0)`, sets `pendingOwner` to `address(0)`, and emits `OwnershipTransferred(previousOwner, address(0))`. After success, owner-only checks that read this storage should no longer authorize any account.
+
+<ExpandableCode language="solidity" maxLines={8}>
+{`function renounceOwnership() external;`}
+</ExpandableCode>
+
+
+
+## Events
+
+<AccordionGroup>
+  <Accordion title="OwnershipTransferred" defaultOpen={false}>
+
+    <div style={{marginBottom: "1rem"}}>
+      Emitted after a successful renounce with `_newOwner == address(0)`.
+    </div>
+
+    <div style={{marginBottom: "1rem"}}>
+      <strong>Signature:</strong>
+      <ExpandableCode language="solidity" maxLines={5}>
+{`event OwnershipTransferred(address indexed _previousOwner, address indexed _newOwner);`}
+      </ExpandableCode>
+    </div>
+
+  </Accordion>
+</AccordionGroup>
+
+## Errors
+
+<AccordionGroup>
+  <Accordion title="OwnerUnauthorizedAccount" defaultOpen={false}>
+
+    <div>
+      <strong>Signature:</strong>
+      <ExpandableCode language="solidity" maxLines={5}>
+{`error OwnerUnauthorizedAccount();`}
+      </ExpandableCode>
+    </div>
+  </Accordion>
+</AccordionGroup>
+
+## Best Practices
+
+- Only the current owner can renounce; there is no pending step for renounce itself, but clearing `pendingOwner` avoids leaving a nominated successor after you renounce
+
+## Security Considerations
+
+Renouncing is **immediate** and **irreversible** on-chain: the owner becomes `address(0)` in the same transaction.
+
+<div style={{marginTop: "3rem", paddingTop: "2rem", borderTop: "1px solid var(--ifm-color-emphasis-200)"}}>
+  <WasThisHelpful pageId="Owner Two Step Renounce Facet" />
+</div>
+
+<LastUpdated date="2026-03-24T12:00:00.000Z" />

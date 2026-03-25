@@ -1,0 +1,29 @@
+---
+title: "Pausable"
+description: "Pausable components for Compose diamonds."
+---
+
+import DocCard, { DocCardGrid } from '@site/src/components/docs/DocCard';
+import DocSubtitle from '@site/src/components/docs/DocSubtitle';
+import Icon from '@site/src/components/ui/Icon';
+
+<DocSubtitle>
+  Pausable components for Compose diamonds.
+</DocSubtitle>
+
+<DocCardGrid columns={2}>
+  <DocCard
+    title="Access Control Pausable Facet"
+    description={"Manage role pausing and unpausing within a diamond"}
+    href="/docs/library/access/AccessControl/Pausable/AccessControlPausableFacet"
+    icon={<Icon name="showcase-facet" size={28} />}
+    size="medium"
+  />
+  <DocCard
+    title="Access Control Pausable Module"
+    description={"Manages role pausing and checks within a diamond"}
+    href="/docs/library/access/AccessControl/Pausable/AccessControlPausableMod"
+    icon={<Icon name="box-detailed" size={28} />}
+    size="medium"
+  />
+</DocCardGrid>

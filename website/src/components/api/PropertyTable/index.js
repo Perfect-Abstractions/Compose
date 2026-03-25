@@ -2,6 +2,32 @@ import React from 'react';
 import styles from './styles.module.css';
 
 /**
+ * Parse description string and convert markdown-style code (backticks) to JSX code elements
+ * @param {string|React.ReactNode} description - Description string or React element
+ * @returns {React.ReactNode} Description with code elements rendered
+ */
+function parseDescription(description) {
+  if (!description || typeof description !== 'string') {
+    return description;
+  }
+  
+  // Split by backticks and alternate between text and code
+  const parts = description.split(/(`[^`]+`)/g);
+  return parts.map((part, index) => {
+    if (part.startsWith('`') && part.endsWith('`')) {
+      // This is a code block
+      const codeContent = part.slice(1, -1); // Remove backticks
+      return (
+        <code key={index} className={styles.inlineCode}>
+          {codeContent}
+        </code>
+      );
+    }
+    return <React.Fragment key={index}>{part}</React.Fragment>;
+  });
+}
+
+/**
  * PropertyTable Component - Modern API property documentation table
  * Inspired by Shadcn UI design patterns
  * 
@@ -51,7 +77,7 @@ export default function PropertyTable({
                     </td>
                   )}
                   <td className={styles.descriptionCell}>
-                    {prop.description || prop.desc || '-'}
+                    {prop.descriptionElement || parseDescription(prop.description || prop.desc) || '-'}
                     {prop.default !== undefined && (
                       <div className={styles.defaultValue}>
                         Default: <code>{String(prop.default)}</code>

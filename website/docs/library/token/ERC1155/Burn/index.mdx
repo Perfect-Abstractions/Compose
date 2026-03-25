@@ -1,0 +1,29 @@
+---
+title: "Burn"
+description: "Burn components for Compose diamonds."
+---
+
+import DocCard, { DocCardGrid } from '@site/src/components/docs/DocCard';
+import DocSubtitle from '@site/src/components/docs/DocSubtitle';
+import Icon from '@site/src/components/ui/Icon';
+
+<DocSubtitle>
+  Burn components for Compose diamonds.
+</DocSubtitle>
+
+<DocCardGrid columns={2}>
+  <DocCard
+    title="ERC-1155 Burn Facet"
+    description={"Burn ERC-1155 tokens within a diamond"}
+    href="/docs/library/token/ERC1155/Burn/ERC1155BurnFacet"
+    icon={<Icon name="showcase-facet" size={28} />}
+    size="medium"
+  />
+  <DocCard
+    title="ERC-1155 Burn Module"
+    description={"Internal ERC-1155 token burning functionality"}
+    href="/docs/library/token/ERC1155/Burn/ERC1155BurnMod"
+    icon={<Icon name="box-detailed" size={28} />}
+    size="medium"
+  />
+</DocCardGrid>

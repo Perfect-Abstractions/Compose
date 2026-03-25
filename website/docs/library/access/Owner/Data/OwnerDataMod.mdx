@@ -1,0 +1,221 @@
+---
+sidebar_position: 110
+title: "Owner Data Module"
+description: "ERC-173 diamond storage, owner reads, guards, and initial owner setup"
+sidebar_label: "Module"
+gitSource: "https://github.com/Perfect-Abstractions/Compose/tree/main/src/access/Owner/Data/OwnerDataMod.sol"
+---
+
+import DocSubtitle  from '@site/src/components/docs/DocSubtitle';
+import Badge from '@site/src/components/ui/Badge';
+import Callout from '@site/src/components/ui/Callout';
+import CalloutBox from '@site/src/components/ui/CalloutBox';
+import Accordion, { AccordionGroup } from '@site/src/components/ui/Accordion';
+import PropertyTable from '@site/src/components/api/PropertyTable';
+import ExpandableCode from '@site/src/components/code/ExpandableCode';
+import CodeShowcase from '@site/src/components/code/CodeShowcase';
+import RelatedDocs from '@site/src/components/docs/RelatedDocs';
+import WasThisHelpful from '@site/src/components/docs/WasThisHelpful';
+import LastUpdated from '@site/src/components/docs/LastUpdated';
+import ReadingTime from '@site/src/components/docs/ReadingTime';
+import GradientText from '@site/src/components/ui/GradientText';
+import GradientButton from '@site/src/components/ui/GradientButton';
+
+<DocSubtitle>
+ERC-173 ownership storage and helpers for diamond facets
+</DocSubtitle>
+
+<Callout type="info" title="Key Features">
+- Helper functions for owner storage, reads, and owner checks.
+- `requireOwner()` guards by requiring `msg.sender` is the stored owner; `setContractOwner` has no access checks (trusted initialization only).
+- Emits `OwnershipTransferred` from `setContractOwner` with `previousOwner == address(0)`.
+</Callout>
+
+<Callout type="important" title="Module Usage">
+Import this module into facets or shared setup code. 
+Its functions are internal (including Solidity file-level helpers). Use them through your facet’s external entrypoints. 
+
+Storage follows the diamond slot layout in this file; any code using the same `STORAGE_POSITION` or related positions reads and writes shared state.
+
+See <a href="/docs/foundations/facets-and-modules">Facets &amp; Modules</a> for more information.
+</Callout>
+
+
+## Storage
+
+### State Variables
+
+<PropertyTable
+  properties={[
+    {
+      name: "STORAGE_POSITION",
+      type: "bytes32",
+      description: "Owner storage position within the diamond (Value: `keccak256(\"erc173.owner\")`)"
+    }
+  ]}
+  showRequired={false}
+/>
+
+### OwnerStorage
+
+<ExpandableCode language="solidity" maxLines={15} title="Definition">
+{`/** storage-location: erc8042:erc173.owner */
+struct OwnerStorage {
+    address owner;
+}`}
+</ExpandableCode>
+
+## Functions
+
+### getStorage
+
+Returns a pointer to the ERC-173 storage struct. 
+
+Uses inline assembly to access the storage slot defined by `STORAGE_POSITION`.
+
+<ExpandableCode language="solidity" maxLines={8}>
+{`function getStorage() pure returns (OwnerStorage storage s);`}
+</ExpandableCode>
+
+**Returns:**
+
+<PropertyTable
+  properties={[
+    {
+      name: "s",
+      type: "OwnerStorage storage",
+      description: "The struct in storage."
+    }
+  ]}
+  showRequired={false}
+/>
+
+---
+### owner
+
+Get the address of the owner
+
+<ExpandableCode language="solidity" maxLines={8}>
+{`function owner() view returns (address);`}
+</ExpandableCode>
+
+**Returns:**
+
+<PropertyTable
+  properties={[
+    {
+      name: "-",
+      type: "address",
+      description: "The stored owner, or `address(0)` if never set or cleared."
+    }
+  ]}
+  showRequired={false}
+/>
+
+---
+### requireOwner
+
+Reverts with `OwnerUnauthorizedAccount` unless `msg.sender` equals the current owner.
+
+<ExpandableCode language="solidity" maxLines={8}>
+{`function requireOwner() view;`}
+</ExpandableCode>
+
+**Reverts:**
+
+<PropertyTable
+  properties={[
+    {
+      name: "OwnerUnauthorizedAccount",
+      type: "error",
+      description: "Caller is not the current owner."
+    }
+  ]}
+  showRequired={false}
+/>
+
+---
+### setContractOwner
+
+Writes the inital owner address to storage and emits `OwnershipTransferred(address(0), _initialOwner)`. 
+
+There is **no** `msg.sender` or role check performed. Use only from trusted initialization code, or wrap with your own checks in a facet.
+
+<ExpandableCode language="solidity" maxLines={8}>
+{`function setContractOwner(address _initialOwner);`}
+</ExpandableCode>
+
+**Parameters:**
+
+<PropertyTable
+  properties={[
+    {
+      name: "_initialOwner",
+      type: "address",
+      description: "The address of the initial owner."
+    }
+  ]}
+  showRequired={false}
+/>
+
+## Events
+
+<AccordionGroup>
+  <Accordion title="OwnershipTransferred" defaultOpen={false}>
+    <div style={{marginBottom: "1rem"}}>
+      Emitted when the stored owner changes. `setContractOwner` always uses `previousOwner == address(0)`; transfer facets typically emit with the real previous owner.
+    </div>
+
+    <div style={{marginBottom: "1rem"}}>
+      <strong>Signature:</strong>
+      <ExpandableCode language="solidity" maxLines={5}>
+{`event OwnershipTransferred(address indexed previousOwner, address indexed newOwner);`}
+      </ExpandableCode>
+    </div>
+
+  </Accordion>
+</AccordionGroup>
+
+## Errors
+
+<AccordionGroup>
+  <Accordion title="OwnerUnauthorizedAccount" defaultOpen={false}>
+    <div style={{marginBottom: "1rem"}}>
+      Thrown by `requireOwner` when `msg.sender` is not the stored owner. Other owner facets may also revert with this error.
+    </div>
+    <div>
+      <strong>Signature:</strong>
+      <ExpandableCode language="solidity" maxLines={5}>
+error OwnerUnauthorizedAccount();
+      </ExpandableCode>
+    </div>
+  </Accordion>
+  <Accordion title="OwnerAlreadyRenounced" defaultOpen={false}>
+    <div style={{marginBottom: "1rem"}}>
+      Declared here for shared use (for example renounce flows). This module does not reference it; companion facets may revert with it when ownership was already renounced.
+    </div>
+    <div>
+      <strong>Signature:</strong>
+      <ExpandableCode language="solidity" maxLines={5}>
+error OwnerAlreadyRenounced();
+      </ExpandableCode>
+    </div>
+  </Accordion>
+</AccordionGroup>
+
+## Best Practices
+
+- Call `setContractOwner` only from trusted init paths (constructor, one-off setup). For transfers, use `OwnerTransferMod.transferOwnership` or an equivalent facet so events record the real previous owner.
+- Guard external entrypoints with `requireOwner()` or equivalent before state changes restricted to the owner.
+
+## Integration Notes
+
+`OwnerStorage` is located at `keccak256("erc173.owner")` inside the diamond.
+
+All Compose Owner contracts use that slot, so `owner()` and transfer logic observe the same address.
+
+<div style={{marginTop: "3rem", paddingTop: "2rem", borderTop: "1px solid var(--ifm-color-emphasis-200)"}}>
+  <WasThisHelpful pageId="Owner Data Module" />
+</div>
+
+<LastUpdated date="2026-03-24T12:00:00.000Z" />

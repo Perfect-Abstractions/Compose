@@ -1,0 +1,22 @@
+---
+title: "Data"
+description: "Data components for Compose diamonds."
+---
+
+import DocCard, { DocCardGrid } from '@site/src/components/docs/DocCard';
+import DocSubtitle from '@site/src/components/docs/DocSubtitle';
+import Icon from '@site/src/components/ui/Icon';
+
+<DocSubtitle>
+  Data components for Compose diamonds.
+</DocSubtitle>
+
+<DocCardGrid columns={2}>
+  <DocCard
+    title="ERC-1155 Data Facet"
+    description={"View balances and approvals for ERC-1155 tokens"}
+    href="/docs/library/token/ERC1155/Data/ERC1155DataFacet"
+    icon={<Icon name="showcase-facet" size={28} />}
+    size="medium"
+  />
+</DocCardGrid>

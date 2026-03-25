@@ -1,0 +1,220 @@
+---
+sidebar_position: 100
+title: "Access Control Grant Facet"
+description: "Grants roles to accounts within a diamond"
+sidebar_label: "Facet"
+gitSource: "https://github.com/Perfect-Abstractions/Compose/tree/main/src/access/AccessControl/Grant/AccessControlGrantFacet.sol"
+---
+
+import DocSubtitle  from '@site/src/components/docs/DocSubtitle';
+import Badge from '@site/src/components/ui/Badge';
+import Callout from '@site/src/components/ui/Callout';
+import CalloutBox from '@site/src/components/ui/CalloutBox';
+import Accordion, { AccordionGroup } from '@site/src/components/ui/Accordion';
+import PropertyTable from '@site/src/components/api/PropertyTable';
+import ExpandableCode from '@site/src/components/code/ExpandableCode';
+import CodeShowcase from '@site/src/components/code/CodeShowcase';
+import RelatedDocs from '@site/src/components/docs/RelatedDocs';
+import WasThisHelpful from '@site/src/components/docs/WasThisHelpful';
+import LastUpdated from '@site/src/components/docs/LastUpdated';
+import ReadingTime from '@site/src/components/docs/ReadingTime';
+import GradientText from '@site/src/components/ui/GradientText';
+import GradientButton from '@site/src/components/ui/GradientButton';
+
+<DocSubtitle>
+Grants roles to accounts within a diamond
+</DocSubtitle>
+
+<Callout type="info" title="Key Features">
+- Exposes `grantRole` for programmatic role assignment.
+- Emits `RoleGranted` event for state changes.
+- Utilizes diamond storage for shared state management.
+- Reverts with `AccessControlUnauthorizedAccount` for unauthorized calls.
+</Callout>
+
+## Overview
+
+This facet exposes functions to grant roles to specific accounts within a Compose diamond. It leverages shared diamond storage and emits events for off-chain monitoring. Developers integrate this facet to manage permissions programmatically.
+
+## Storage
+
+### AccessControlStorage
+
+<ExpandableCode language="solidity" maxLines={15} title="Definition">
+{`struct AccessControlStorage {
+    mapping(address account => mapping(bytes32 role => bool hasRole)) hasRole;
+    mapping(bytes32 role => bytes32 adminRole) adminRole;
+}`}
+</ExpandableCode>
+
+### State Variables
+
+<PropertyTable
+  properties={[
+    {
+      name: "STORAGE_POSITION",
+      type: "bytes32",
+      description: "Diamond storage slot position for this module (Value: `keccak256(\"compose.accesscontrol\")`)"
+    }
+  ]}
+  showRequired={false}
+/>
+
+## Functions
+
+### grantRole
+
+Grants a role to an account. Emits a RoleGranted event. Reverts with AccessControlUnauthorizedAccount If the caller is not the admin of the role.
+
+<ExpandableCode language="solidity" maxLines={8}>
+{`function grantRole(bytes32 _role, address _account) external;`}
+</ExpandableCode>
+
+**Parameters:**
+
+<PropertyTable
+  properties={[
+    {
+      name: "_role",
+      type: "bytes32",
+      description: "The role to grant."
+    },
+    {
+      name: "_account",
+      type: "address",
+      description: "The account to grant the role to."
+    }
+  ]}
+  showRequired={false}
+/>
+
+---
+### exportSelectors
+
+Exports the selectors that are exposed by the facet.
+
+<ExpandableCode language="solidity" maxLines={8}>
+{`function exportSelectors() external pure returns (bytes memory);`}
+</ExpandableCode>
+
+**Returns:**
+
+<PropertyTable
+  properties={[
+    {
+      name: "-",
+      type: "bytes",
+      description: "Selectors that are exported by the facet."
+    }
+  ]}
+  showRequired={false}
+/>
+
+## Events
+
+<AccordionGroup>
+  <Accordion title="RoleGranted" defaultOpen={false}>
+    <div style={{marginBottom: "1rem"}}>
+      Emitted when a role is granted to an account.
+    </div>
+
+    <div style={{marginBottom: "1rem"}}>
+      <strong>Signature:</strong>
+      <ExpandableCode language="solidity" maxLines={5}>
+{`event RoleGranted(bytes32 indexed _role, address indexed _account, address indexed _sender);`}
+      </ExpandableCode>
+    </div>
+
+    <div style={{marginBottom: "1rem"}}>
+      <strong>Parameters:</strong>
+      <PropertyTable
+        properties={[
+          {
+            name: "_role",
+            type: "bytes32",
+            description: "The role that was granted."
+          },
+          {
+            name: "_account",
+            type: "address",
+            description: "The account that was granted the role."
+          },
+          {
+            name: "_sender",
+            type: "address",
+            description: "The sender that granted the role."
+          }
+        ]}
+        showRequired={false}
+      />
+    </div>
+  </Accordion>
+</AccordionGroup>
+
+## Errors
+
+<AccordionGroup>
+  <Accordion title="AccessControlUnauthorizedAccount" defaultOpen={false}>
+    <div style={{marginBottom: "1rem"}}>
+      Thrown when the account does not have a specific role.
+    </div>
+
+    <div>
+      <strong>Signature:</strong>
+      <ExpandableCode language="solidity" maxLines={5}>
+error AccessControlUnauthorizedAccount(address _account, bytes32 _role);
+      </ExpandableCode>
+    </div>
+  </Accordion>
+</AccordionGroup>
+
+<!-- Usage Example section commented out for now -->
+<!--
+## Usage Example
+
+<ExpandableCode language="solidity" maxLines={20} title="Example Implementation">
+{`pragma solidity >=0.8.30;
+
+import { IDiamond } from "@compose/core/diamond/IDiamond";
+import { AccessControlGrantFacet } from "@compose/access/AccessControl/Grant/AccessControlGrantFacet";
+
+// Example: Granting a role to an account via a diamond
+contract DiamondUser {
+    address public immutable DIAMOND_ADDRESS;
+
+    constructor(address diamondAddress) {
+        DIAMOND_ADDRESS = diamondAddress;
+    }
+
+    function grantAdminRole(address _account) external {
+        // Call through the diamond proxy
+        IDiamond(DIAMOND_ADDRESS).grantRole("0x7712321847679923402075779190513208827147659211475951011776895620", _account); // Example role hash for ADMIN
+    }
+
+    // If the facet itself is directly callable for testing or specific scenarios:
+    // function grantRoleDirectly(bytes32 _role, address _account) external {
+    //     AccessControlGrantFacet(DIAMOND_ADDRESS).grantRole(_role, _account);
+    // }
+}`}
+</ExpandableCode>
+-->
+
+## Best Practices
+
+<Callout type="tip" title="Best Practice">
+- Initialize roles and grant administrative permissions during diamond deployment.
+- Ensure the caller of `grantRole` has the necessary administrative privileges.
+- Monitor `RoleGranted` events for auditing and off-chain state tracking.
+</Callout>
+
+## Security Considerations
+
+<Callout type="warning" title="Security">
+The `grantRole` function is protected by access control, reverting if the caller is not the admin of the role. Input validation on `_role` and `_account` is implicitly handled by the diamond's call routing and the facet's internal logic. No reentrancy risks are apparent as the function performs a role grant before any external calls.
+</Callout>
+
+<div style={{marginTop: "3rem", paddingTop: "2rem", borderTop: "1px solid var(--ifm-color-emphasis-200)"}}>
+  <WasThisHelpful pageId="Access Control Grant Facet" />
+</div>
+
+<LastUpdated date="2026-03-13T01:54:27.990Z" />

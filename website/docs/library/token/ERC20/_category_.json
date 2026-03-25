@@ -1,0 +1,10 @@
+{
+  "label": "ERC-20",
+  "position": 1,
+  "collapsible": true,
+  "collapsed": true,
+  "link": {
+    "type": "doc",
+    "id": "library/token/ERC20/index"
+  }
+}
