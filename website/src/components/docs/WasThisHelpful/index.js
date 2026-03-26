@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import clsx from 'clsx';
 import Icon from '../../ui/Icon';
 import styles from './styles.module.css';
+import { useDocumentationFeedback } from '../../../hooks/useDocumentationFeedback';
 
 /**
  * WasThisHelpful Component - Feedback widget for documentation pages
@@ -13,6 +14,7 @@ export default function WasThisHelpful({
   pageId,
   onSubmit
 }) {
+  const { submitFeedback } = useDocumentationFeedback();
   const [feedback, setFeedback] = useState(null);
   const [comment, setComment] = useState('');
   const [submitted, setSubmitted] = useState(false);
@@ -22,12 +24,11 @@ export default function WasThisHelpful({
   };
 
   const handleSubmit = () => {
+    submitFeedback(pageId, feedback, comment.trim() || null);
     if (onSubmit) {
       onSubmit({ pageId, feedback, comment });
-    } else {
-      // Default behavior - could log to analytics
-      console.log('Feedback submitted:', { pageId, feedback, comment });
     }
+    
     setSubmitted(true);
   };
 
@@ -53,7 +54,14 @@ export default function WasThisHelpful({
             onClick={() => handleFeedback('yes')}
             aria-label="Yes, this was helpful"
           >
-            <Icon name="thumbs-up-outline" size={20} />
+            <img 
+              src={feedback === 'yes' ? "/icons/thumbs-up-white.svg" : "/icons/thumbs-up.svg"}
+              alt="" 
+              width="20" 
+              height="20"
+              className={styles.feedbackIcon}
+              aria-hidden="true"
+            />
             Yes
           </button>
           <button
@@ -64,7 +72,14 @@ export default function WasThisHelpful({
             onClick={() => handleFeedback('no')}
             aria-label="No, this was not helpful"
           >
-            <Icon name="thumbs-down-outline" size={20} />
+            <img 
+              src={feedback === 'no' ? "/icons/thumbs-down-white.svg" : "/icons/thumbs-down.svg"}
+              alt="" 
+              width="20" 
+              height="20"
+              className={styles.feedbackIcon}
+              aria-hidden="true"
+            />
             No
           </button>
         </div>

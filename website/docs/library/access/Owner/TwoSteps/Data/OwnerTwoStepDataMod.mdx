@@ -1,0 +1,118 @@
+---
+sidebar_position: 110
+title: "Owner Two Step Data Module"
+description: "Diamond storage and read helpers for ERC-173 pending owner (two-step)"
+sidebar_label: "Module"
+gitSource: "https://github.com/Perfect-Abstractions/Compose/tree/main/src/access/Owner/TwoSteps/Data/OwnerTwoStepDataMod.sol"
+---
+
+import DocSubtitle  from '@site/src/components/docs/DocSubtitle';
+import Callout from '@site/src/components/ui/Callout';
+import PropertyTable from '@site/src/components/api/PropertyTable';
+import ExpandableCode from '@site/src/components/code/ExpandableCode';
+import WasThisHelpful from '@site/src/components/docs/WasThisHelpful';
+import LastUpdated from '@site/src/components/docs/LastUpdated';
+
+<DocSubtitle>
+Diamond storage and read helpers for ERC-173 pending owner (two-step)
+</DocSubtitle>
+
+<Callout type="info" title="Key Features">
+- Single slot `erc8042:erc173.owner.pending` (`keccak256("erc173.owner.pending")`), shared with [Owner Two Step Transfer Module](/docs/library/access/Owner/TwoSteps/Transfer/OwnerTwoStepTransferMod), renounce/two-step flows, and [Owner Two Step Data Facet](/docs/library/access/Owner/TwoSteps/Data/OwnerTwoStepDataFacet).
+- File-level `getStorage()` returns a `PendingOwnerStorage` pointer; `pendingOwner()` reads `pendingOwner` (or `address(0)` when unset).
+- Read-only from this module’s perspective—facets or modules that perform two-step transfer/renounce write `pendingOwner`.
+</Callout>
+
+<Callout type="important" title="Module Usage">
+Import this module into facets or shared setup code. Its helpers are file-level (effectively internal to your compilation unit). Use them from your facet’s external entrypoints or other modules.
+
+Storage follows the diamond slot in this file; any code using the same `STORAGE_POSITION` shares state.
+
+See <a href="/docs/foundations/facets-and-modules">Facets &amp; Modules</a> for more information.
+</Callout>
+
+## Storage
+
+### State Variables
+
+<PropertyTable
+  properties={[
+    {
+      name: "STORAGE_POSITION",
+      type: "bytes32",
+      description: "Pending owner storage position within the diamond (Value: `keccak256(\"erc173.owner.pending\")`)"
+    }
+  ]}
+  showRequired={false}
+/>
+
+### PendingOwnerStorage
+
+<ExpandableCode language="solidity" maxLines={15} title="Definition">
+{`/** @custom:storage-location erc8042:erc173.owner.pending */
+struct PendingOwnerStorage {
+    address pendingOwner;
+}`}
+</ExpandableCode>
+
+## Functions
+
+### getStorage
+
+Returns a storage pointer to `PendingOwnerStorage` at `STORAGE_POSITION` using inline assembly.
+
+<ExpandableCode language="solidity" maxLines={8}>
+{`function getStorage() pure returns (PendingOwnerStorage storage s);`}
+</ExpandableCode>
+
+**Returns:**
+
+<PropertyTable
+  properties={[
+    {
+      name: "s",
+      type: "PendingOwnerStorage storage",
+      description: "The pending-owner struct in diamond storage."
+    }
+  ]}
+  showRequired={false}
+/>
+
+---
+
+### pendingOwner
+
+Returns `getStorage().pendingOwner`.
+
+<ExpandableCode language="solidity" maxLines={8}>
+{`function pendingOwner() view returns (address);`}
+</ExpandableCode>
+
+**Returns:**
+
+<PropertyTable
+  properties={[
+    {
+      name: "-",
+      type: "address",
+      description: "The pending owner, or `address(0)` when no transfer is pending."
+    }
+  ]}
+  showRequired={false}
+/>
+
+## Best Practices
+
+- Import this module (or match the same slot and struct) when adding facets so pending-owner reads stay aligned with [Owner Two Step Data Facet](/docs/library/access/Owner/TwoSteps/Data/OwnerTwoStepDataFacet) and two-step transfer/renounce code.
+- Coordinate writes with two-step transfer or renounce modules (or facets built on them); this module does not assign `pendingOwner` itself.
+- For read-only access through the diamond proxy, register [Owner Two Step Data Facet](/docs/library/access/Owner/TwoSteps/Data/OwnerTwoStepDataFacet) and expose `pendingOwner()` externally.
+
+## Integration Notes
+
+`PendingOwnerStorage` lives at `keccak256("erc173.owner.pending")`. Any code using that slot—including modules that define their own accessor with the same hash—shares the same `pendingOwner` field.
+
+<div style={{marginTop: "3rem", paddingTop: "2rem", borderTop: "1px solid var(--ifm-color-emphasis-200)"}}>
+  <WasThisHelpful pageId="Owner Two Step Data Module" />
+</div>
+
+<LastUpdated date="2026-03-24T12:00:00.000Z" />

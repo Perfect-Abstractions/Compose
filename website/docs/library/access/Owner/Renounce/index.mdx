@@ -1,0 +1,29 @@
+---
+title: "Renounce"
+description: "Renounce components for Compose diamonds."
+---
+
+import DocCard, { DocCardGrid } from '@site/src/components/docs/DocCard';
+import DocSubtitle from '@site/src/components/docs/DocSubtitle';
+import Icon from '@site/src/components/ui/Icon';
+
+<DocSubtitle>
+  Renounce components for Compose diamonds.
+</DocSubtitle>
+
+<DocCardGrid columns={2}>
+  <DocCard
+    title="Owner Renounce Facet"
+    description={"Renounce diamond ownership"}
+    href="/docs/library/access/Owner/Renounce/OwnerRenounceFacet"
+    icon={<Icon name="showcase-facet" size={28} />}
+    size="medium"
+  />
+  <DocCard
+    title="Owner Renounce Module"
+    description={"Renounces contract ownership to address(0)"}
+    href="/docs/library/access/Owner/Renounce/OwnerRenounceMod"
+    icon={<Icon name="box-detailed" size={28} />}
+    size="medium"
+  />
+</DocCardGrid>

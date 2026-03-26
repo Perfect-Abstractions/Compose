@@ -110,6 +110,10 @@
   transition: all 0.3s ease;
 }
 
+[data-theme='dark'] .docCardArrow {
+  color: #ffffff;
+}
+
 .docCard:hover .docCardArrow {
   color: var(--ifm-color-primary);
   transform: translateX(4px);

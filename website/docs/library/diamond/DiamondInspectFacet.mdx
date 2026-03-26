@@ -1,0 +1,254 @@
+---
+sidebar_position: 2
+title: "Diamond Inspect Facet"
+description: "Inspect diamond facets and selectors"
+sidebar_label: "Inspect Facet"
+gitSource: "https://github.com/Perfect-Abstractions/Compose/tree/main/src/diamond/DiamondInspectFacet.sol"
+---
+
+import DocSubtitle  from '@site/src/components/docs/DocSubtitle';
+import Badge from '@site/src/components/ui/Badge';
+import Callout from '@site/src/components/ui/Callout';
+import CalloutBox from '@site/src/components/ui/CalloutBox';
+import Accordion, { AccordionGroup } from '@site/src/components/ui/Accordion';
+import PropertyTable from '@site/src/components/api/PropertyTable';
+import ExpandableCode from '@site/src/components/code/ExpandableCode';
+import CodeShowcase from '@site/src/components/code/CodeShowcase';
+import RelatedDocs from '@site/src/components/docs/RelatedDocs';
+import WasThisHelpful from '@site/src/components/docs/WasThisHelpful';
+import LastUpdated from '@site/src/components/docs/LastUpdated';
+import ReadingTime from '@site/src/components/docs/ReadingTime';
+import GradientText from '@site/src/components/ui/GradientText';
+import GradientButton from '@site/src/components/ui/GradientButton';
+
+<DocSubtitle>
+It lets you inspect the diamond’s routing table and retrieve the registered facet list.
+</DocSubtitle>
+
+<Callout type="info" title="Key Features">
+- Query which facet a function selector is routed to.
+- Enumerate registered facets (and their exported selectors).
+- Read the diamond’s composition from shared diamond storage (`DIAMOND_STORAGE_POSITION`).
+</Callout>
+## Storage
+
+### State Variables
+
+<PropertyTable
+  properties={[
+    {
+      name: "DIAMOND_STORAGE_POSITION",
+      type: "bytes32",
+      description: "Diamond storage slot position for this module (Value: `keccak256(\"erc8153.diamond\")`)"
+    }
+  ]}
+  showRequired={false}
+/>
+
+### Diamond Storage
+
+
+<ExpandableCode language="solidity" maxLines={15} title="Definition">
+{`/** storage-location: erc8042:erc8153.diamond */
+struct DiamondStorage {
+    mapping(bytes4 functionSelector => FacetNode) facetNodes;
+    FacetList facetList;
+}
+
+struct FacetList {
+    bytes4 headFacetNodeId;
+    bytes4 tailFacetNodeId;
+    uint32 facetCount;
+    uint32 selectorCount;
+}
+
+struct FacetNode {
+    address facet;
+    bytes4 prevFacetNodeId;
+    bytes4 nextFacetNodeId;
+}
+`}
+</ExpandableCode>
+
+---
+### Facet
+
+Used as a return type for the [`facets`](#facets) function.
+
+<ExpandableCode language="solidity" maxLines={15} title="Definition">
+{`struct Facet {
+    address facet;
+    bytes4[] functionSelectors;
+}`}
+</ExpandableCode>
+
+## Functions
+
+### facetAddress
+
+Gets the facet address that handles the given selector. If facet is not found return `address(0)`.
+
+<ExpandableCode language="solidity" maxLines={8}>
+{`function facetAddress(bytes4 _functionSelector) external view returns (address facet);`}
+</ExpandableCode>
+
+**Parameters:**
+
+<PropertyTable
+  properties={[
+    {
+      name: "_functionSelector",
+      type: "bytes4",
+      description: "The function selector."
+    }
+  ]}
+  showRequired={false}
+/>
+
+**Returns:**
+
+<PropertyTable
+  properties={[
+    {
+      name: "facet",
+      type: "address",
+      description: "The facet address that handles the given selector. (If not found return `address(0)`)"
+    }
+  ]}
+  showRequired={false}
+/>
+
+---
+### facetFunctionSelectors
+
+Gets the function selectors exported by the given facet and returns them as `bytes4[]`.
+
+If the diamond is not currently routing the facet for the facet’s first exported selector, this function returns an empty array. If `_facet` does not implement `exportSelectors()` with the expected packing, the call will revert.
+
+<ExpandableCode language="solidity" maxLines={8}>
+{`function facetFunctionSelectors(address _facet) external view returns (bytes4[] memory facetSelectors);`}
+</ExpandableCode>
+
+**Parameters:**
+
+<PropertyTable
+  properties={[
+    {
+      name: "_facet",
+      type: "address",
+      description: "Facet contract address. Must implement `exportSelectors()` (packed `bytes4` selectors)."
+    }
+  ]}
+  showRequired={false}
+/>
+
+**Returns:**
+
+<PropertyTable
+  properties={[
+    {
+      name: "facetSelectors",
+      type: "bytes4[]",
+      description: "Unpacked selectors returned by `facet.exportSelectors()`, or an empty array if the facet is not registered."
+    }
+  ]}
+  showRequired={false}
+/>
+
+---
+### facetAddresses
+
+Gets the facet addresses used by the diamond. If `facetList.facetCount` is `0`, this returns an empty array.
+
+<ExpandableCode language="solidity" maxLines={8}>
+{`function facetAddresses() external view returns (address[] memory allFacets);`}
+</ExpandableCode>
+
+**Returns:**
+
+<PropertyTable
+  properties={[
+    {
+      name: "allFacets",
+      type: "address[]",
+      description: "Facet addresses in the diamond's internal traversal order."
+    }
+  ]}
+  showRequired={false}
+/>
+
+---
+### facets
+
+Returns the facet address and function selectors of all facets in the diamond.
+
+<ExpandableCode language="solidity" maxLines={8}>
+{`function facets() external view returns (Facet[] memory facetsAndSelectors);`}
+</ExpandableCode>
+
+**Returns:**
+
+<PropertyTable
+  properties={[
+    {
+      name: "facetsAndSelectors",
+      type: "Facet[]",
+      description: "An array of Facet structs containing each facet address and its function selectors."
+    }
+  ]}
+  showRequired={false}
+/>
+
+## Selector Packing Notes (`exportSelectors()`)
+
+`exportSelectors()` returns a packed `bytes` blob where each `bytes4` selector is encoded into 4 consecutive bytes (a `bytes.concat(sel1, sel2, ...)` style packing).
+
+`DiamondInspectFacet` follows that convention:
+
+- `facetFunctionSelectors(facet)` calls `facet.exportSelectors()` and unpacks the packed bytes into a `bytes4[]`.
+- `facets()` does the same for every facet discovered in the diamond.
+
+<!--
+## Usage Example (Off-chain)
+
+<ExpandableCode language="javascript" maxLines={28} title="Read facet mapping with ethers">
+{`import { ethers } from "ethers";
+
+const IDiamondInspectAbi = [
+  "function facetAddress(bytes4) view returns (address)",
+  "function facetFunctionSelectors(address) view returns (bytes4[])",
+  "function facetAddresses() view returns (address[])"
+];
+
+const diamond = new ethers.Contract(diamondAddress, IDiamondInspectAbi, provider);
+
+const signature = "transfer(address,uint256)";
+const selector = ethers.id(signature).slice(0, 10); // first 4 bytes of keccak256
+
+const facet = await diamond.facetAddress(selector);
+const allFacets = await diamond.facetAddresses();
+const selectorsForFacet = await diamond.facetFunctionSelectors(facet);
+
+console.log({ facet, allFacets, selectorsForFacet });`}
+</ExpandableCode>
+-->
+
+## Best Practices
+
+- Integrate this facet to enable external inspection of diamond facet mappings (Useful for tooling and indexing).
+- Use `facetAddress` to determine which facet handles a specific function selector.
+- Utilize `facets` and `facetFunctionSelectors` for comprehensive diamond structure analysis.
+
+## Security Considerations
+
+Most functions are `view`/`pure` and do not mutate state.
+
+However, `facetFunctionSelectors()` and `facets()` perform external calls to `IFacet(facet).exportSelectors()`. If the provided address is not a valid `IFacet` implementation (or if `exportSelectors()` reverts / returns unexpected data), these calls can revert.
+
+From on-chain code, avoid passing untrusted facet addresses.
+
+<div style={{marginTop: "3rem", paddingTop: "2rem", borderTop: "1px solid var(--ifm-color-emphasis-200)"}}>
+  <WasThisHelpful pageId="Diamond Inspect Facet" />
+</div>
+
+<LastUpdated date="2026-03-13T01:49:46.480Z" />

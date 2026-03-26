@@ -75,6 +75,12 @@
   flex-shrink: 0;
 }
 
+.feedbackIcon {
+  display: inline-block;
+  vertical-align: middle;
+  flex-shrink: 0;
+}
+
 .feedbackForm {
   margin-top: 1rem;
   padding-top: 1rem;

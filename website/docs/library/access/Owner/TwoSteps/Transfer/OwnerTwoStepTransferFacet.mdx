@@ -1,0 +1,157 @@
+---
+sidebar_position: 100
+title: "Owner Two Step Transfer Facet"
+description: "Two-step ERC-173 ownership transfer for Compose diamonds"
+sidebar_label: "Facet"
+gitSource: "https://github.com/Perfect-Abstractions/Compose/tree/main/src/access/Owner/TwoSteps/Transfer/OwnerTwoStepTransferFacet.sol"
+---
+
+import DocSubtitle  from '@site/src/components/docs/DocSubtitle';
+import Callout from '@site/src/components/ui/Callout';
+import Accordion, { AccordionGroup } from '@site/src/components/ui/Accordion';
+import PropertyTable from '@site/src/components/api/PropertyTable';
+import ExpandableCode from '@site/src/components/code/ExpandableCode';
+import WasThisHelpful from '@site/src/components/docs/WasThisHelpful';
+import LastUpdated from '@site/src/components/docs/LastUpdated';
+
+<DocSubtitle>
+Two-step ERC-173 ownership transfer for Compose diamonds
+</DocSubtitle>
+
+<Callout type="info" title="Key Features">
+- Two-step handoff: the owner calls `transferOwnership`; the nominated address calls `acceptOwnership` to become owner.
+- Storage uses `erc8042:erc173.owner` and `erc8042:erc173.owner.pending`, shared with the [two-step transfer module](/docs/library/access/Owner/TwoSteps/Transfer/OwnerTwoStepTransferMod).
+</Callout>
+
+## Storage
+
+### State Variables
+
+<PropertyTable
+  properties={[
+    {
+      name: "OWNER_STORAGE_POSITION",
+      type: "bytes32",
+      description: "Owner storage position within the diamond (Value: `keccak256(\"erc173.owner\")`)"
+    },
+    {
+      name: "PENDING_OWNER_STORAGE_POSITION",
+      type: "bytes32",
+      description: "Pending owner storage position within the diamond (Value: `keccak256(\"erc173.owner.pending\")`)"
+    }
+  ]}
+  showRequired={false}
+/>
+
+### OwnerStorage
+
+<ExpandableCode language="solidity" maxLines={15} title="Definition">
+{`/** storage-location: erc8042:erc173.owner */
+struct OwnerStorage {
+    address owner;
+}`}
+</ExpandableCode>
+
+### PendingOwnerStorage
+
+<ExpandableCode language="solidity" maxLines={15} title="Definition">
+{`/** storage-location: erc8042:erc173.owner.pending */
+struct PendingOwnerStorage {
+    address pendingOwner;
+}`}
+</ExpandableCode>
+
+## Functions
+
+### transferOwnership
+
+Callable only when `msg.sender` is the current owner; otherwise reverts `OwnerUnauthorizedAccount`. Sets `pendingOwner` to `_newOwner` and emits `OwnershipTransferStarted(owner, _newOwner)`. The on-chain owner does not change until `acceptOwnership`.
+
+<ExpandableCode language="solidity" maxLines={8}>
+{`function transferOwnership(address _newOwner) external;`}
+</ExpandableCode>
+
+**Parameters:**
+
+<PropertyTable
+  properties={[
+    {
+      name: "_newOwner",
+      type: "address",
+      description: "Address that will become owner after a successful `acceptOwnership` from that address."
+    }
+  ]}
+  showRequired={false}
+/>
+
+---
+
+### acceptOwnership
+
+Callable only when `msg.sender` is the pending owner; otherwise reverts `OwnerUnauthorizedAccount`. Assigns `owner` to the pending address, sets `pendingOwner` to `address(0)`, and emits `OwnershipTransferred(previousOwner, newOwner)`.
+
+<ExpandableCode language="solidity" maxLines={8}>
+{`function acceptOwnership() external;`}
+</ExpandableCode>
+
+## Events
+
+<AccordionGroup>
+  <Accordion title="OwnershipTransferStarted" defaultOpen={false}>
+
+    <div style={{marginBottom: "1rem"}}>
+      Emitted when the current owner calls `transferOwnership`, before the pending address accepts.
+    </div>
+
+    <div style={{marginBottom: "1rem"}}>
+      <strong>Signature:</strong>
+      <ExpandableCode language="solidity" maxLines={5}>
+{`event OwnershipTransferStarted(address indexed _previousOwner, address indexed _newOwner);`}
+      </ExpandableCode>
+    </div>
+
+  </Accordion>
+  <Accordion title="OwnershipTransferred" defaultOpen={false}>
+
+    <div style={{marginBottom: "1rem"}}>
+      Emitted when the pending owner calls `acceptOwnership` and ownership is updated.
+    </div>
+
+    <div style={{marginBottom: "1rem"}}>
+      <strong>Signature:</strong>
+      <ExpandableCode language="solidity" maxLines={5}>
+{`event OwnershipTransferred(address indexed _previousOwner, address indexed _newOwner);`}
+      </ExpandableCode>
+    </div>
+
+  </Accordion>
+</AccordionGroup>
+
+## Errors
+
+<AccordionGroup>
+  <Accordion title="OwnerUnauthorizedAccount" defaultOpen={false}>
+
+    <div style={{marginBottom: "1rem"}}>
+      Thrown when `transferOwnership` is called by anyone other than the current owner, or when `acceptOwnership` is called by anyone other than the pending owner.
+    </div>
+
+    <div>
+      <strong>Signature:</strong>
+      <ExpandableCode language="solidity" maxLines={5}>
+{`error OwnerUnauthorizedAccount();`}
+      </ExpandableCode>
+    </div>
+  </Accordion>
+</AccordionGroup>
+
+## Best Practices
+
+- Initialize `OwnerStorage.owner` during deployment before relying on owner-only behavior elsewhere.
+- After `transferOwnership`, ensure the nominated `_newOwner` can and will call `acceptOwnership`; until then, the previous owner remains owner.
+
+<div style={{marginTop: "3rem", paddingTop: "2rem", borderTop: "1px solid var(--ifm-color-emphasis-200)"}}>
+  <WasThisHelpful pageId="Owner Two Step Transfer Facet" />
+</div>
+
+<LastUpdated date="2026-03-24T12:00:00.000Z" />

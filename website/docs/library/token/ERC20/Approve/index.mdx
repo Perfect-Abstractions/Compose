@@ -1,0 +1,29 @@
+---
+title: "Approve"
+description: "Approve extension for ERC-20 tokens."
+---
+
+import DocCard, { DocCardGrid } from '@site/src/components/docs/DocCard';
+import DocSubtitle from '@site/src/components/docs/DocSubtitle';
+import Icon from '@site/src/components/ui/Icon';
+
+<DocSubtitle>
+  Approve extension for ERC-20 tokens.
+</DocSubtitle>
+
+<DocCardGrid columns={2}>
+  <DocCard
+    title="ERC-20 Approve Facet"
+    description={"Approves token spending on behalf of an owner"}
+    href="/docs/library/token/ERC20/Approve/ERC20ApproveFacet"
+    icon={<Icon name="showcase-facet" size={28} />}
+    size="medium"
+  />
+  <DocCard
+    title="ERC-20 Approve Module"
+    description={"Manages ERC-20 token allowances for spenders"}
+    href="/docs/library/token/ERC20/Approve/ERC20ApproveMod"
+    icon={<Icon name="box-detailed" size={28} />}
+    size="medium"
+  />
+</DocCardGrid>
