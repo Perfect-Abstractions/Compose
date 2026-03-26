@@ -10,6 +10,7 @@ on:
 
 permissions:
   contents: read
+  actions: write
 
 jobs:
   enforce-changeset:
@@ -22,6 +23,8 @@ jobs:
           fetch-depth: 0
 
       - name: Validate changeset presence
+        id: changeset
+        continue-on-error: true
         shell: bash
         env:
           BASE_SHA: ${{ github.event.pull_request.base.sha }}
@@ -51,3 +54,19 @@ jobs:
           echo "Run: npm run changeset"
           echo "Maintainers may add label skip-changeset for internal-only edits."
           exit 1
+
+      - name: Upload failure metadata for PR comment
+        if: steps.changeset.outcome == 'failure'
+        run: |
+          echo "PR_NUMBER=${{ github.event.pull_request.number }}" > changeset-data.txt
+
+      - name: Upload changeset failure artifact
+        if: steps.changeset.outcome == 'failure'
+        uses: actions/upload-artifact@v4
+        with:
+          name: changeset-failure-data
+          path: changeset-data.txt
+
+      - name: Fail if changeset validation failed
+        if: steps.changeset.outcome == 'failure'
+        run: exit 1
