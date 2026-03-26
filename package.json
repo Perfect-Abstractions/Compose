@@ -1,33 +1,26 @@
 {
-  "name": "@perfect-abstractions/compose",
-  "description": "Composable smart contract library for ERC-2535 Diamonds",
+  "name": "compose-workspace",
   "version": "0.0.1",
-  "license": "MIT",
-  "files": [
-    "src/**/*.sol",
-    "README.md",
-    "LICENSE.md"
+  "private": true,
+  "workspaces": [
+    "src",
+    "cli",
+    "website"
   ],
-  "scripts": { 
-    "pack:check": "npm pack --dry-run"
+  "scripts": {
+    "compose:pack:check": "npm --workspace src run pack:check",
+    "cli:pack:check": "npm --workspace cli run pack:check",
+    "cli:check": "npm --workspace cli run check",
+    "docs:start": "npm --workspace website run start"
   },
-  "repository": {
-    "type": "git",
-    "url": "https://github.com/Perfect-Abstractions/Compose.git"
-  },
-  "keywords": [
-    "solidity",
-    "ethereum",
-    "smart-contracts",
-    "diamonds",
-    "ERC-2535",
-    "ERC-8153",
-    "facets",
-    "compose"
-  ],
-  "author": "Perfect Abstractions & Compose Contributors",
   "homepage": "https://compose.diamonds",
   "bugs": {
     "url": "https://github.com/Perfect-Abstractions/Compose/issues"
+  },
+  "author": "Perfect Abstractions & Compose Contributors",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Perfect-Abstractions/Compose.git"
   }
 }
