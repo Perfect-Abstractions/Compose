@@ -1,6 +1,6 @@
 {
   "name": "@perfect-abstractions/compose-cli",
-  "version": "0.1.0",
+  "version": "0.0.1",
   "description": "CLI to scaffold Compose facet-based diamond projects",
   "main": "index.js",
   "bin": {
@@ -18,19 +18,6 @@
     "prepublishOnly": "npm run check && npm run pack:check",
     "prepare:lib": "git submodule update --init --recursive"
   },
-  "keywords": [
-    "solidity",
-    "ethereum",
-    "smart-contracts",
-    "diamonds",
-    "ERC-2535", 
-    "ERC-8153",
-    "facets",
-    "compose",
-    "cli"
-  ],
-  "author": "Perfect-Abstractions/Compose",
-  "license": "MIT",
   "engines": {
   "node": ">=20"
   },
@@ -38,9 +25,8 @@
     "index.js",
     "src/",
     "!src/templates/**/lib/",
-    "docs/",
     "README.md",
-    "LICENSE"
+    "LICENSE.md"
   ],
   "dependencies": {
     "fs-extra": "^11.3.3",
@@ -66,5 +52,26 @@
     "mocha": "^11.7.5",
     "typescript": "~5.8.0",
     "viem": "^2.47.0"
+  },
+  "keywords": [
+    "solidity",
+    "ethereum",
+    "smart-contracts",
+    "diamonds",
+    "ERC-2535", 
+    "ERC-8153",
+    "facets",
+    "compose",
+    "cli"
+  ],
+  "author": "Perfect Abstractions & Compose Contributors",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Perfect-Abstractions/Compose.git"
+  },
+  "homepage": "https://compose.diamonds",
+  "bugs": {
+    "url": "https://github.com/Perfect-Abstractions/Compose/issues"
   }
 }
