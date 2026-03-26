@@ -2,6 +2,7 @@ name: Changeset Required
 
 on:
   pull_request:
+    types: [opened, synchronize, reopened, labeled, unlabeled]
     paths:
       - "src/**"
       - "cli/**"
