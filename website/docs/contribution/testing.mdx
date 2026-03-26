@@ -1,114 +1,120 @@
 ---
 sidebar_position: 4
 title: Testing
-description: Guidelines for testing Compose facets and libraries
+description: Compose tests are **behavior-first** and primarily written with Foundry fuzz tests.
 ---
 
-## Recommended
-- Write tests for new functionality 
-- Test your changes thoroughly
-- Ensure test coverage is maintained or improved
+Compose tests are **behavior-first** and primarily written with Foundry fuzz tests.
 
-If you make changes to existing functionality, please make sure that the existing tests still work for that functionality and write new tests as necessary that cover the changes you made.
+## Testing Philosophy
 
-Please note that you can submit a pull request for new functionality **without tests**. Another person can write tests for new functionality.
+- **BTT (Behaviour Tree Testing):** specs in `test/trees/*.tree` are the source of truth.
+- **Facet/mod parity:** test both facet surfaces and modifier/module behaviour where applicable.
+- **No test-only code in production:** keep test helpers under `test/` (`harnesses`, `storage`, base fixtures).
+- **Behaviour-oriented naming:** test names should read like tree leaves and scenarios.
 
-### When writing tests
-- Write comprehensive tests for all functionality
-- Test edge cases and error conditions
-- Use descriptive test names
-- Follow the existing test patterns in the codebase
-- Include gas optimization tests where relevant
+## Test Layout
 
-### Running Tests
-```bash
-# Run all tests
-forge test
-
-# Run tests with verbose output
-forge test -vvv
-
-# Run specific test file
-forge test --match-path test/ERC20.sol
-
-# Run tests with gas reporting
-forge test --gas-report
-```
-
-### Test Structure
-
-Tests in Compose follow a specific organizational pattern:
-
-- **Facet Tests** (`test/[Feature]/[Feature]Facet.t.sol`): Test external functions of facets
-- **Library Tests** (`test/[Feature]/Lib[Feature].t.sol`): Test internal library functions
-- **Test Harnesses** (`test/[Feature]/harnesses/`): Special contracts that expose internal functions for testing
-  - Facet harnesses add initialization and helper functions
-  - Library harnesses expose internal functions as external
-
-Example structure:
-```
+```text
 test/
-├── ERC20/
-│   ├── ERC20Facet.t.sol          # Tests for facet external functions
-│   ├── LibERC20.t.sol             # Tests for library internal functions
-│   └── harnesses/
-│       ├── ERC20FacetHarness.sol  # Adds mint() and initialize()
-│       └── LibERC20Harness.sol    # Exposes internal functions
+├── Base.t.sol                    # shared base setup (users/defaults)
+├── trees/                        # behaviour specifications
+│   ├── ERC20.tree
+│   ├── ERC721.tree
+│   ├── ERC1155.tree
+│   ├── ERC6909.tree
+│   ├── AccessControl.tree
+│   ├── Owner.tree
+│   ├── ERC165.tree
+│   ├── Royalty.tree
+│   └── NonReentrancy.tree
+├── unit/
+│   ├── token/
+│   ├── access/
+│   ├── interfaceDetection/
+│   └── libraries/
+└── utils/
+    ├── harnesses/                # expose module/internal behaviour for tests
+    └── storage/                  # vm.load/vm.store storage utilities
 ```
 
-See [test/README.md](https://github.com/Perfect-Abstractions/Compose/blob/main/test/README.md) for detailed testing documentation and patterns.
+Within each feature area, tests are usually split into:
 
-## Available Commands
+- `*FacetBase.t.sol` / `*ModBase.t.sol` for setup and deployment.
+- `facet/fuzz/*.t.sol` for facet-facing behaviour.
+- `mod/fuzz/*.t.sol` for module/modifier-facing behaviour.
 
-### Build
+## How to Add or Update Tests
 
-```bash
-forge build
+### 1) Start from the tree
+
+Find the relevant tree file (for example `test/trees/ERC20.tree`) and identify the branch/leaves your change affects.
+
+If behaviour is new, add the branch/leaves first.
+
+### 2) Reuse existing fixture layers
+
+- Extend the nearest domain base test (`*Base.t.sol`) rather than building setup from scratch.
+- Prefer existing users/defaults/constants from `test/Base.t.sol` and `test/utils/*`.
+- Label deployed contracts in setup (`vm.label`) for readable traces.
+
+### 3) Keep tests tree-aligned
+
+- Add the BTT reference comment at the top of test contracts:
+
+```solidity
+/**
+ *  @dev BTT spec: test/trees/ERC20.tree
+ */
 ```
 
-### Test
+- Use naming patterns that match behaviour:
+  - `test_FunctionName_Scenario`
+  - `test_RevertWhen_Condition`
+  - `testFuzz_FunctionName_Scenario`
+  - `testFuzz_ShouldRevert_Reason`
+
+### 4) Prefer robust fuzz setup
+
+- Use `bound(...)` for numeric ranges.
+- Use `vm.assume(...)` only when needed for discrete constraints.
+- Assert custom errors with selector-encoded revert data.
+- Assert events with `vm.expectEmit` when the behaviour specifies emissions.
+
+### 5) Use harnesses and storage utils (not production hooks)
+
+- Use `test/utils/harnesses/**` to expose internals or module surfaces in tests.
+- Use `test/utils/storage/**` (`vm.load` / `vm.store`) for layout-sensitive setup/assertions.
+- Do not add test-only getters or hooks to `src/`.
+
+## Commands
 
 ```bash
-# Run all tests
+# run entire suite
 forge test
 
-# Run tests with verbose output
+# run one area while iterating
+forge test --match-path "test/unit/token/ERC20/**"
+
+# run one specific test file
+forge test --match-path "test/unit/token/ERC20/Transfer/facet/fuzz/transfer.t.sol"
+
+# run one specific test function
+forge test --match-test "test_RevertWhen_TransferInsufficientBalance"
+
+# optional detailed logs while debugging
 forge test -vvv
 
-# Run specific test file
-forge test --match-path test/ERC20.sol
-
-# Run tests with gas reporting
+# gas regression checks where relevant
 forge test --gas-report
 ```
 
-### Format
+## Pre-PR Checklist
 
-```bash
-forge fmt
-```
+- Behaviour tree updated (if behaviour changed).
+- Tests added/updated for both success and revert paths.
+- No test-only logic added to production contracts.
+- `forge test` passes locally.
+- `forge fmt --check` is clean.
 
-### Gas Snapshots
-
-```bash
-forge snapshot
-```
-
-### Local Development
-
-```bash
-# Start local node
-anvil
-
-# Interact with contracts
-cast <subcommand>
-```
-
-### Help
-
-```bash
-# Get help for any command
-forge --help
-anvil --help
-cast --help
-```
+For deeper reference and examples, see `test/README.md` in the repository root.
