@@ -5,13 +5,15 @@
   "license": "MIT",
   "files": [
     "**/*.sol",
+    "CHANGELOG.md",
     "README.md",
     "LICENSE.md"
   ],
   "scripts": { 
-    "prepack": "cp ../README.md ./README.md && cp ../LICENSE.md ./LICENSE.md",
-    "postpack": "rm -f ./README.md ./LICENSE.md",
-    "pack:check": "npm pack --dry-run"
+    "prepack": "cp ../README.md ./README.md && cp ../LICENSE.md ./LICENSE.md && cp ../CHANGELOG.md ./CHANGELOG.md",
+    "postpack": "rm -f ./README.md ./LICENSE.md ./CHANGELOG.md",
+    "pack:check": "npm pack --dry-run",
+    "prepublishOnly": "npm run pack:check"
   },
   "repository": {
     "type": "git",

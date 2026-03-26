@@ -1,0 +1,52 @@
+name: Changeset Required
+
+on:
+  pull_request:
+    paths:
+      - "src/**"
+      - "cli/**"
+      - ".github/workflows/changeset-required.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  enforce-changeset:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Validate changeset presence
+        shell: bash
+        env:
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+          LABELS_JSON: ${{ toJson(github.event.pull_request.labels) }}
+        run: |
+          set -euo pipefail
+
+          if echo "$LABELS_JSON" | jq -e 'map(.name) | contains(["skip-changeset"])' >/dev/null 2>&1; then
+            echo "Label skip-changeset present; skipping changeset requirement."
+            exit 0
+          fi
+
+          CHANGED_FILES="$(git diff --name-only "${BASE_SHA}" "${HEAD_SHA}")"
+
+          if ! echo "${CHANGED_FILES}" | grep -qE '^(src/|cli/)'; then
+            echo "No publishable package files changed."
+            exit 0
+          fi
+
+          if echo "${CHANGED_FILES}" | grep -E '^\.changeset/.+\.md$' | grep -v '^\.changeset/README\.md$'; then
+            echo "Changeset detected."
+            exit 0
+          fi
+
+          echo "Package changes detected in src/ or cli/, but no changeset file was added."
+          echo "Run: npm run changeset"
+          echo "Maintainers may add label skip-changeset for internal-only edits."
+          exit 1

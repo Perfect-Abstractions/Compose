@@ -8,10 +8,21 @@
     "website"
   ],
   "scripts": {
-    "compose:pack:check": "npm --workspace src run pack:check",
-    "cli:pack:check": "npm --workspace cli run pack:check",
-    "cli:check": "npm --workspace cli run check",
-    "docs:start": "npm --workspace website run start"
+    "docs@start": "npm --workspace website run start",
+    "compose@build": "forge build",
+    "compose@test": "forge test -vvv",
+    "compose@fmt": "forge fmt --check",
+    "compose@ci": "forge fmt --check && forge build --sizes && forge test -vvv",
+    "compose@pack:check": "npm --workspace src run pack:check",
+    "cli@pack:check": "npm --workspace cli run pack:check",
+    "cli@check": "npm --workspace cli run check",
+    "cli@lint": "npm --workspace cli run lint",
+    "cli@test": "npm --workspace cli run test",
+    "cli@link": "cd cli && npm link",
+    "check": "npm run cli@check && npm run compose@pack:check && npm run cli@pack:check",
+    "changeset": "changeset",
+    "version-packages": "sh -c 'cp CHANGELOG.md src/CHANGELOG.md 2>/dev/null || true; changeset version; cp src/CHANGELOG.md CHANGELOG.md; rm -f src/CHANGELOG.md'",
+    "release": "changeset publish"
   },
   "homepage": "https://compose.diamonds",
   "bugs": {
@@ -22,5 +33,8 @@
   "repository": {
     "type": "git",
     "url": "https://github.com/Perfect-Abstractions/Compose.git"
+  },
+  "devDependencies": {
+    "@changesets/cli": "^2.30.0"
   }
 }

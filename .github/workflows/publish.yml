@@ -1,0 +1,117 @@
+name: Publish
+
+on:
+  workflow_run:
+    workflows: ["Release"]
+    types:
+      - completed
+
+permissions:
+  contents: read
+
+jobs:
+  publish:
+    if: ${{ github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.head_branch == 'main' }}
+    runs-on: ubuntu-latest
+    environment: npm-publish
+    permissions:
+      contents: write
+      id-token: write
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.workflow_run.head_sha }}
+          fetch-depth: 0
+          submodules: recursive
+
+      - name: Install Foundry
+        uses: foundry-rs/foundry-toolchain@v1
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24.x
+          registry-url: https://registry.npmjs.org
+          cache: npm
+          cache-dependency-path: package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Skip if pending changesets remain
+        id: pending
+        run: |
+          set -euo pipefail
+          PENDING=""
+          for f in .changeset/*.md; do
+            [ -e "$f" ] || continue
+            case "$f" in
+              .changeset/README.md) continue ;;
+              *) PENDING="${PENDING}${f}"$'\n' ;;
+            esac
+          done
+          if [ -n "${PENDING}" ]; then
+            echo "Pending changesets still present (merge the chore(release) version bump PR first). Skipping publish."
+            echo "skip=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "skip=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Re-run quality checks
+        if: steps.pending.outputs.skip != 'true'
+        run: |
+          npm run compose@ci
+          npm run check
+
+      - name: Capture existing tags
+        if: steps.pending.outputs.skip != 'true'
+        run: git tag -l | sort > /tmp/tags-before.txt
+
+      - name: Publish changed packages
+        if: steps.pending.outputs.skip != 'true'
+        run: npm run release
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+          NPM_CONFIG_PROVENANCE: "true"
+
+      - name: Capture new tags
+        if: steps.pending.outputs.skip != 'true'
+        run: |
+          git fetch --tags --force
+          git tag -l | sort > /tmp/tags-after.txt
+          comm -13 /tmp/tags-before.txt /tmp/tags-after.txt > /tmp/new-tags.txt
+
+      - name: Verify published versions on npm
+        if: steps.pending.outputs.skip != 'true'
+        run: |
+          set -euo pipefail
+          if [ ! -s /tmp/new-tags.txt ]; then
+            echo "No new tags after publish (nothing published or tag step skipped)."
+            exit 0
+          fi
+          while IFS= read -r tag; do
+            [ -z "$tag" ] && continue
+            echo "Verifying npm registry for tag: $tag"
+            npm view "$tag" version
+          done < /tmp/new-tags.txt
+
+      - name: Create package-scoped GitHub Releases
+        if: steps.pending.outputs.skip != 'true'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -euo pipefail
+          if [ ! -s /tmp/new-tags.txt ]; then
+            echo "No new tags; skipping GitHub Releases."
+            exit 0
+          fi
+          while IFS= read -r tag; do
+            [ -z "$tag" ] && continue
+            if gh release view "$tag" >/dev/null 2>&1; then
+              echo "Release already exists for $tag, skipping."
+              continue
+            fi
+            gh release create "$tag" --title "$tag" --generate-notes
+          done < /tmp/new-tags.txt

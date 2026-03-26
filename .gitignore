@@ -11,26 +11,8 @@ out/
 .env
 .gas-snapshot
 
-# Docusaurus
-# Dependencies
-docs/node_modules
+node_modules/
 
-# Production
-docs/build
-
-# Generated files
-docs/.docusaurus
-docs/.cache-loader
-
-# Misc
-docs/.DS_Store
-docs/.env
-docs/.env.local
-docs/.env.development.local
-docs/.env.test.local
-docs/.env.production.local
-
-docs/npm-debug.log*
-docs/yarn-debug.log*
-docs/yarn-error.log*
+# tmp copy of CHANGELOG.md when running changeset version
+src/CHANGELOG.md
 
