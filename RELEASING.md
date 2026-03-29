@@ -25,7 +25,7 @@ Releases use [Changesets](https://github.com/changesets/changesets) and GitHub A
 ## Contributor flow
 
 1. Change code under `src/` and/or `cli/`.
-2. **[changeset-bot](https://github.com/apps/changeset-bot)** comments on the PR when a release note may be needed. You can run `npm run changeset` locally, use the bot’s **add a changeset** link on GitHub, or leave it to maintainers before release.
+2. **[changeset-bot](https://github.com/apps/changeset-bot)** comments on the PR when a release note may be needed. You can run `npx changeset` locally, use the bot’s **add a changeset** link on GitHub, or leave it to maintainers before release.
 3. Merge after required CI checks pass.
 
 There is **no** failing CI check for missing changesets; maintainers batch or add `.changeset/*.md` when preparing releases as needed.

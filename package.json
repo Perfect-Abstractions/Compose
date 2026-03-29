@@ -21,7 +21,6 @@
     "cli@check": "npm --workspace cli run check",
     "cli@pack:check": "npm --workspace cli run pack:check",
     "check": "npm run compose@check && npm run compose@pack:check && npm run cli@check && npm run cli@pack:check",
-    "changeset": "changeset",
     "version-packages": "sh -c 'cp CHANGELOG.md src/CHANGELOG.md 2>/dev/null || true; changeset version; cp src/CHANGELOG.md CHANGELOG.md; rm -f src/CHANGELOG.md'",
     "release": "changeset publish"
   },
