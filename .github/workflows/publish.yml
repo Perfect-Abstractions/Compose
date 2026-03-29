@@ -15,8 +15,8 @@ jobs:
     if: github.event_name == 'workflow_dispatch' || (github.event_name == 'pull_request' && github.event.pull_request.merged == true && startsWith(github.event.pull_request.head.ref, 'changeset-release/'))
     runs-on: ubuntu-latest
     outputs:
-      publish_library: ${{ steps.decide.outputs.publish_library }}
-      publish_cli: ${{ steps.decide.outputs.publish_cli }}
+      matrix: ${{ steps.decide.outputs.matrix }}
+      has_publish: ${{ steps.decide.outputs.has_publish }}
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -42,43 +42,35 @@ jobs:
             exit 1
           fi
 
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24.x
+          registry-url: https://registry.npmjs.org
+
       - name: Compare versions to npm
         id: decide
-        run: |
-          set -euo pipefail
-          LIB_VER=$(jq -r .version src/package.json)
-          CLI_VER=$(jq -r .version cli/package.json)
-          NPM_LIB=$(npm view @perfect-abstractions/compose version 2>/dev/null || true)
-          NPM_CLI=$(npm view @perfect-abstractions/compose-cli version 2>/dev/null || true)
-          if [ -z "$NPM_LIB" ] || [ "$LIB_VER" != "$NPM_LIB" ]; then
-            echo "publish_library=true" >> "$GITHUB_OUTPUT"
-          else
-            echo "publish_library=false" >> "$GITHUB_OUTPUT"
-          fi
-          if [ -z "$NPM_CLI" ] || [ "$CLI_VER" != "$NPM_CLI" ]; then
-            echo "publish_cli=true" >> "$GITHUB_OUTPUT"
-          else
-            echo "publish_cli=false" >> "$GITHUB_OUTPUT"
-          fi
-          echo "Library: package.json=${LIB_VER} npm=${NPM_LIB:-<not published>}"
-          echo "CLI: package.json=${CLI_VER} npm=${NPM_CLI:-<not published>}"
+        run: node .github/scripts/publish-plan.js
 
       - name: Publish plan summary
         run: |
-          if [ "${{ steps.decide.outputs.publish_library }}" = "true" ] || [ "${{ steps.decide.outputs.publish_cli }}" = "true" ]; then
+          if [ "${{ steps.decide.outputs.has_publish }}" = "true" ]; then
             echo "Publish jobs will run for packages ahead of npm."
           else
-            echo "Nothing to publish — versions on main already match npm for both packages."
+            echo "Nothing to publish — versions on main already match npm for all configured packages."
           fi
 
-  publish-library:
+  publish:
     needs: plan
-    if: needs.plan.outputs.publish_library == 'true'
+    if: needs.plan.outputs.has_publish == 'true'
     runs-on: ubuntu-latest
     environment: npm-publish
     permissions:
       contents: write
       id-token: write
+    strategy:
+      matrix:
+        include: ${{ fromJSON(needs.plan.outputs.matrix) }}
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -88,6 +80,7 @@ jobs:
           submodules: recursive
 
       - name: Install Foundry
+        if: matrix.needsFoundry == true
         uses: foundry-rs/foundry-toolchain@v1
 
       - name: Setup Node.js
@@ -101,13 +94,11 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: Library quality checks
-        run: |
-          npm run compose@check
-          npm run compose@pack:check
+      - name: Quality checks
+        run: ${{ matrix.check }}
 
       - name: Publish to npm
-        run: npm publish -w @perfect-abstractions/compose --access public
+        run: npm publish -w ${{ matrix.workspace }} --access public
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
           NPM_CONFIG_PROVENANCE: "true"
@@ -115,72 +106,12 @@ jobs:
       - name: Create git tag and GitHub Release
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          VERSION_FILE: ${{ matrix.versionFile }}
+          TAG_PREFIX: ${{ matrix.tagPrefix }}
         run: |
           set -euo pipefail
-          VERSION=$(jq -r .version src/package.json)
-          TAG="compose@${VERSION}"
-          git fetch --tags --force
-          if git rev-parse "$TAG" >/dev/null 2>&1; then
-            echo "Tag $TAG already exists locally, skipping tag push."
-          elif git ls-remote --tags origin "refs/tags/${TAG}" | grep -q .; then
-            echo "Tag $TAG already exists on remote, skipping tag push."
-          else
-            git config user.name "github-actions[bot]"
-            git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-            git tag "$TAG" HEAD
-            git push origin "refs/tags/$TAG"
-          fi
-          if gh release view "$TAG" >/dev/null 2>&1; then
-            echo "GitHub Release for $TAG already exists, skipping."
-          else
-            gh release create "$TAG" --title "$TAG" --generate-notes
-          fi
-
-  publish-cli:
-    needs: plan
-    if: needs.plan.outputs.publish_cli == 'true'
-    runs-on: ubuntu-latest
-    environment: npm-publish
-    permissions:
-      contents: write
-      id-token: write
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-        with:
-          ref: main
-          fetch-depth: 0
-          submodules: recursive
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: 24.x
-          registry-url: https://registry.npmjs.org
-          cache: npm
-          cache-dependency-path: package-lock.json
-
-      - name: Install dependencies
-        run: npm ci
-
-      - name: CLI quality checks
-        run: |
-          npm run cli@check
-          npm run cli@pack:check
-
-      - name: Publish to npm
-        run: npm publish -w @perfect-abstractions/compose-cli --access public
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
-          NPM_CONFIG_PROVENANCE: "true"
-
-      - name: Create git tag and GitHub Release
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          set -euo pipefail
-          VERSION=$(jq -r .version cli/package.json)
-          TAG="compose-cli@${VERSION}"
+          VERSION=$(jq -r .version "$VERSION_FILE")
+          TAG="${TAG_PREFIX}@${VERSION}"
           git fetch --tags --force
           if git rev-parse "$TAG" >/dev/null 2>&1; then
             echo "Tag $TAG already exists locally, skipping tag push."

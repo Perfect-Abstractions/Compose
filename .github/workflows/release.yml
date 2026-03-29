@@ -32,7 +32,7 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: Run workspace checks
+      - name: Run all packages quality checks
         run: npm run check
 
   version-packages:
