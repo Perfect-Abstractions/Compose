@@ -51,7 +51,7 @@ There is **no** failing CI check for missing changesets; maintainers batch or ad
 
 ## Manual Publish only
 
-Use **Actions → Publish → Run workflow** if you need to publish from `main` without a merge from `changeset-release/*` (for example a retry after a failed run), or when automatic Publish did not run.
+Use **Actions → Publish → Run workflow** if you need to publish from `main` without a merge from `changeset-release/*`
 
 ## Rollback
 
