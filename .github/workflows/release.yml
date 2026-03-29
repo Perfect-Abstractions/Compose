@@ -1,16 +1,7 @@
 name: Release
 
 on:
-  push:
-    branches:
-      - main
-    paths:
-      - "src/**"
-      - "cli/**"
-      - ".changeset/**"
-      - "package.json"
-      - "package-lock.json"
-      - ".github/workflows/release.yml"
+  workflow_dispatch:
 
 permissions:
   contents: read
@@ -25,6 +16,7 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
         with:
+          ref: main
           submodules: recursive
 
       - name: Install Foundry
@@ -40,9 +32,6 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: Run Forge checks (fmt, build --sizes, test)
-        run: npm run compose@ci
-
       - name: Run workspace checks
         run: npm run check
 
@@ -57,6 +46,7 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
         with:
+          ref: main
           fetch-depth: 0
           submodules: recursive
 

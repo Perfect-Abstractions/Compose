@@ -1,28 +1,89 @@
 name: Publish
 
 on:
-  workflow_run:
-    workflows: ["Release"]
-    types:
-      - completed
+  pull_request:
+    types: [closed]
+    branches:
+      - main
+  workflow_dispatch:
 
 permissions:
   contents: read
 
 jobs:
-  publish:
-    if: ${{ github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.head_branch == 'main' }}
+  plan:
+    if: github.event_name == 'workflow_dispatch' || (github.event_name == 'pull_request' && github.event.pull_request.merged == true && startsWith(github.event.pull_request.head.ref, 'changeset-release/'))
+    runs-on: ubuntu-latest
+    outputs:
+      publish_library: ${{ steps.decide.outputs.publish_library }}
+      publish_cli: ${{ steps.decide.outputs.publish_cli }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+          submodules: recursive
+
+      - name: Fail if pending changesets remain
+        run: |
+          set -euo pipefail
+          PENDING=""
+          for f in .changeset/*.md; do
+            [ -e "$f" ] || continue
+            case "$f" in
+              .changeset/README.md) continue ;;
+              *) PENDING="${PENDING}${f}"$'\n' ;;
+            esac
+          done
+          if [ -n "${PENDING}" ]; then
+            echo "::error::Merge the chore(release) version bump PR first. Pending changeset files:"
+            echo "${PENDING}"
+            exit 1
+          fi
+
+      - name: Compare versions to npm
+        id: decide
+        run: |
+          set -euo pipefail
+          LIB_VER=$(jq -r .version src/package.json)
+          CLI_VER=$(jq -r .version cli/package.json)
+          NPM_LIB=$(npm view @perfect-abstractions/compose version 2>/dev/null || true)
+          NPM_CLI=$(npm view @perfect-abstractions/compose-cli version 2>/dev/null || true)
+          if [ -z "$NPM_LIB" ] || [ "$LIB_VER" != "$NPM_LIB" ]; then
+            echo "publish_library=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "publish_library=false" >> "$GITHUB_OUTPUT"
+          fi
+          if [ -z "$NPM_CLI" ] || [ "$CLI_VER" != "$NPM_CLI" ]; then
+            echo "publish_cli=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "publish_cli=false" >> "$GITHUB_OUTPUT"
+          fi
+          echo "Library: package.json=${LIB_VER} npm=${NPM_LIB:-<not published>}"
+          echo "CLI: package.json=${CLI_VER} npm=${NPM_CLI:-<not published>}"
+
+      - name: Publish plan summary
+        run: |
+          if [ "${{ steps.decide.outputs.publish_library }}" = "true" ] || [ "${{ steps.decide.outputs.publish_cli }}" = "true" ]; then
+            echo "Publish jobs will run for packages ahead of npm."
+          else
+            echo "Nothing to publish — versions on main already match npm for both packages."
+          fi
+
+  publish-library:
+    needs: plan
+    if: needs.plan.outputs.publish_library == 'true'
     runs-on: ubuntu-latest
     environment: npm-publish
     permissions:
       contents: write
       id-token: write
-
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
         with:
-          ref: ${{ github.event.workflow_run.head_sha }}
+          ref: main
           fetch-depth: 0
           submodules: recursive
 
@@ -40,78 +101,99 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: Skip if pending changesets remain
-        id: pending
+      - name: Library quality checks
         run: |
-          set -euo pipefail
-          PENDING=""
-          for f in .changeset/*.md; do
-            [ -e "$f" ] || continue
-            case "$f" in
-              .changeset/README.md) continue ;;
-              *) PENDING="${PENDING}${f}"$'\n' ;;
-            esac
-          done
-          if [ -n "${PENDING}" ]; then
-            echo "Pending changesets still present (merge the chore(release) version bump PR first). Skipping publish."
-            echo "skip=true" >> "$GITHUB_OUTPUT"
-          else
-            echo "skip=false" >> "$GITHUB_OUTPUT"
-          fi
+          npm run compose@check
+          npm run compose@pack:check
 
-      - name: Re-run quality checks
-        if: steps.pending.outputs.skip != 'true'
-        run: |
-          npm run compose@ci
-          npm run check
-
-      - name: Capture existing tags
-        if: steps.pending.outputs.skip != 'true'
-        run: git tag -l | sort > /tmp/tags-before.txt
-
-      - name: Publish changed packages
-        if: steps.pending.outputs.skip != 'true'
-        run: npm run release
+      - name: Publish to npm
+        run: npm publish -w @perfect-abstractions/compose --access public
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
           NPM_CONFIG_PROVENANCE: "true"
 
-      - name: Capture new tags
-        if: steps.pending.outputs.skip != 'true'
-        run: |
-          git fetch --tags --force
-          git tag -l | sort > /tmp/tags-after.txt
-          comm -13 /tmp/tags-before.txt /tmp/tags-after.txt > /tmp/new-tags.txt
-
-      - name: Verify published versions on npm
-        if: steps.pending.outputs.skip != 'true'
-        run: |
-          set -euo pipefail
-          if [ ! -s /tmp/new-tags.txt ]; then
-            echo "No new tags after publish (nothing published or tag step skipped)."
-            exit 0
-          fi
-          while IFS= read -r tag; do
-            [ -z "$tag" ] && continue
-            echo "Verifying npm registry for tag: $tag"
-            npm view "$tag" version
-          done < /tmp/new-tags.txt
-
-      - name: Create package-scoped GitHub Releases
-        if: steps.pending.outputs.skip != 'true'
+      - name: Create git tag and GitHub Release
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           set -euo pipefail
-          if [ ! -s /tmp/new-tags.txt ]; then
-            echo "No new tags; skipping GitHub Releases."
-            exit 0
+          VERSION=$(jq -r .version src/package.json)
+          TAG="compose@${VERSION}"
+          git fetch --tags --force
+          if git rev-parse "$TAG" >/dev/null 2>&1; then
+            echo "Tag $TAG already exists locally, skipping tag push."
+          elif git ls-remote --tags origin "refs/tags/${TAG}" | grep -q .; then
+            echo "Tag $TAG already exists on remote, skipping tag push."
+          else
+            git config user.name "github-actions[bot]"
+            git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+            git tag "$TAG" HEAD
+            git push origin "refs/tags/$TAG"
           fi
-          while IFS= read -r tag; do
-            [ -z "$tag" ] && continue
-            if gh release view "$tag" >/dev/null 2>&1; then
-              echo "Release already exists for $tag, skipping."
-              continue
-            fi
-            gh release create "$tag" --title "$tag" --generate-notes
-          done < /tmp/new-tags.txt
+          if gh release view "$TAG" >/dev/null 2>&1; then
+            echo "GitHub Release for $TAG already exists, skipping."
+          else
+            gh release create "$TAG" --title "$TAG" --generate-notes
+          fi
+
+  publish-cli:
+    needs: plan
+    if: needs.plan.outputs.publish_cli == 'true'
+    runs-on: ubuntu-latest
+    environment: npm-publish
+    permissions:
+      contents: write
+      id-token: write
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+          submodules: recursive
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24.x
+          registry-url: https://registry.npmjs.org
+          cache: npm
+          cache-dependency-path: package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: CLI quality checks
+        run: |
+          npm run cli@check
+          npm run cli@pack:check
+
+      - name: Publish to npm
+        run: npm publish -w @perfect-abstractions/compose-cli --access public
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+          NPM_CONFIG_PROVENANCE: "true"
+
+      - name: Create git tag and GitHub Release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -euo pipefail
+          VERSION=$(jq -r .version cli/package.json)
+          TAG="compose-cli@${VERSION}"
+          git fetch --tags --force
+          if git rev-parse "$TAG" >/dev/null 2>&1; then
+            echo "Tag $TAG already exists locally, skipping tag push."
+          elif git ls-remote --tags origin "refs/tags/${TAG}" | grep -q .; then
+            echo "Tag $TAG already exists on remote, skipping tag push."
+          else
+            git config user.name "github-actions[bot]"
+            git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+            git tag "$TAG" HEAD
+            git push origin "refs/tags/$TAG"
+          fi
+          if gh release view "$TAG" >/dev/null 2>&1; then
+            echo "GitHub Release for $TAG already exists, skipping."
+          else
+            gh release create "$TAG" --title "$TAG" --generate-notes
+          fi
