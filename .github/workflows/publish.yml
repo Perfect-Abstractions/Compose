@@ -101,7 +101,7 @@ jobs:
         run: npm publish -w ${{ matrix.workspace }} --access public
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
-          NPM_CONFIG_PROVENANCE: "true"
+          NPM_CONFIG_PROVENANCE: "false"
 
       - name: Create git tag and GitHub Release
         env:
