@@ -1,0 +1,20 @@
+{
+  "packages": [
+    {
+      "id": "library",
+      "workspace": "@perfect-abstractions/compose",
+      "versionFile": "src/package.json",
+      "tagPrefix": "compose",
+      "needsFoundry": true,
+      "check": "npm run compose@check && npm run compose@pack:check"
+    },
+    {
+      "id": "cli",
+      "workspace": "@perfect-abstractions/compose-cli",
+      "versionFile": "cli/package.json",
+      "tagPrefix": "compose-cli",
+      "needsFoundry": false,
+      "check": "npm run cli@check && npm run cli@pack:check"
+    }
+  ]
+}

@@ -1,0 +1,130 @@
+name: Publish
+
+on:
+  pull_request:
+    types: [closed]
+    branches:
+      - main
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  plan:
+    if: github.event_name == 'workflow_dispatch' || (github.event_name == 'pull_request' && github.event.pull_request.merged == true && startsWith(github.event.pull_request.head.ref, 'changeset-release/'))
+    runs-on: ubuntu-latest
+    outputs:
+      matrix: ${{ steps.decide.outputs.matrix }}
+      has_publish: ${{ steps.decide.outputs.has_publish }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+          submodules: recursive
+
+      - name: Fail if pending changesets remain
+        run: |
+          set -euo pipefail
+          PENDING=""
+          for f in .changeset/*.md; do
+            [ -e "$f" ] || continue
+            case "$f" in
+              .changeset/README.md) continue ;;
+              *) PENDING="${PENDING}${f}"$'\n' ;;
+            esac
+          done
+          if [ -n "${PENDING}" ]; then
+            echo "::error::Merge the chore(release) version bump PR first. Pending changeset files:"
+            echo "${PENDING}"
+            exit 1
+          fi
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24.x
+          registry-url: https://registry.npmjs.org
+
+      - name: Compare versions to npm
+        id: decide
+        run: node .github/scripts/publish-plan.js
+
+      - name: Publish plan summary
+        run: |
+          if [ "${{ steps.decide.outputs.has_publish }}" = "true" ]; then
+            echo "Publish jobs will run for packages ahead of npm."
+          else
+            echo "Nothing to publish — versions on main already match npm for all configured packages."
+          fi
+
+  publish:
+    needs: plan
+    if: needs.plan.outputs.has_publish == 'true'
+    runs-on: ubuntu-latest
+    environment: npm-publish
+    permissions:
+      contents: write
+      id-token: write
+    strategy:
+      matrix:
+        include: ${{ fromJSON(needs.plan.outputs.matrix) }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+          submodules: recursive
+
+      - name: Install Foundry
+        if: matrix.needsFoundry == true
+        uses: foundry-rs/foundry-toolchain@v1
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24.x
+          registry-url: https://registry.npmjs.org
+          cache: npm
+          cache-dependency-path: package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Quality checks
+        run: ${{ matrix.check }}
+
+      - name: Publish to npm
+        run: npm publish -w ${{ matrix.workspace }} --access public
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+          NPM_CONFIG_PROVENANCE: "false"
+
+      - name: Create git tag and GitHub Release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          VERSION_FILE: ${{ matrix.versionFile }}
+          TAG_PREFIX: ${{ matrix.tagPrefix }}
+        run: |
+          set -euo pipefail
+          VERSION=$(jq -r .version "$VERSION_FILE")
+          TAG="${TAG_PREFIX}@${VERSION}"
+          git fetch --tags --force
+          if git rev-parse "$TAG" >/dev/null 2>&1; then
+            echo "Tag $TAG already exists locally, skipping tag push."
+          elif git ls-remote --tags origin "refs/tags/${TAG}" | grep -q .; then
+            echo "Tag $TAG already exists on remote, skipping tag push."
+          else
+            git config user.name "github-actions[bot]"
+            git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+            git tag "$TAG" HEAD
+            git push origin "refs/tags/$TAG"
+          fi
+          if gh release view "$TAG" >/dev/null 2>&1; then
+            echo "GitHub Release for $TAG already exists, skipping."
+          else
+            gh release create "$TAG" --title "$TAG" --generate-notes
+          fi

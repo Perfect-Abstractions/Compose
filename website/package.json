@@ -1,6 +1,6 @@
 {
-  "name": "Compose Documentation",
-  "version": "0.0.0",
+  "name": "compose-documentation",
+  "version": "0.0.1",
   "private": true,
   "scripts": {
     "docusaurus": "docusaurus",

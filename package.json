@@ -1,33 +1,40 @@
 {
-  "name": "@perfect-abstractions/compose",
-  "description": "Composable smart contract library for ERC-2535 Diamonds",
+  "name": "compose-workspace",
   "version": "0.0.1",
-  "license": "MIT",
-  "files": [
-    "src/**/*.sol",
-    "README.md",
-    "LICENSE.md"
+  "private": true,
+  "workspaces": [
+    "src",
+    "cli",
+    "website"
   ],
-  "scripts": { 
-    "pack:check": "npm pack --dry-run"
+  "scripts": {
+    "docs@start": "npm --workspace website run start",
+    "docs@build": "npm --workspace website run build",
+    "compose@build": "forge build",
+    "compose@test": "forge test -vvv",
+    "compose@fmt": "forge fmt",
+    "compose@check": "forge fmt --check && forge build --sizes && forge test -vvv",
+    "compose@pack:check": "npm --workspace src run pack:check",
+    "cli@lint": "npm --workspace cli run lint",
+    "cli@test": "npm --workspace cli run test",
+    "cli@link": "cd cli && npm link",
+    "cli@check": "npm --workspace cli run check",
+    "cli@pack:check": "npm --workspace cli run pack:check",
+    "check": "npm run compose@check && npm run compose@pack:check && npm run cli@check && npm run cli@pack:check",
+    "version-packages": "sh -c 'cp CHANGELOG.md src/CHANGELOG.md 2>/dev/null || true; changeset version; cp src/CHANGELOG.md CHANGELOG.md; rm -f src/CHANGELOG.md'",
+    "release": "changeset publish"
   },
+  "homepage": "https://compose.diamonds",
+  "bugs": {
+    "url": "https://github.com/Perfect-Abstractions/Compose/issues"
+  },
+  "author": "Perfect Abstractions & Compose Contributors",
+  "license": "MIT",
   "repository": {
     "type": "git",
     "url": "https://github.com/Perfect-Abstractions/Compose.git"
   },
-  "keywords": [
-    "solidity",
-    "ethereum",
-    "smart-contracts",
-    "diamonds",
-    "ERC-2535",
-    "ERC-8153",
-    "facets",
-    "compose"
-  ],
-  "author": "Perfect Abstractions & Compose Contributors",
-  "homepage": "https://compose.diamonds",
-  "bugs": {
-    "url": "https://github.com/Perfect-Abstractions/Compose/issues"
+  "devDependencies": {
+    "@changesets/cli": "^2.30.0"
   }
 }

@@ -24,6 +24,8 @@ Before submitting this PR, please ensure:
 
 - [ ] **Documentation updated** - If applicable, update relevant documentation
 
+- [ ] **Changesets** — If this PR changes publishable packages (`src/`, `cli/`), [changeset-bot](https://github.com/apps/changeset-bot) will comment if a release note might be needed. You can add one when convenient or defer to maintainers.
+
 Make sure to follow the [contributing](https://compose.diamonds/docs/contribution/how-to-contribute) guidelines.
 
 ## Additional Notes
