@@ -13,6 +13,6 @@ out/
 
 node_modules/
 
-# tmp copy of CHANGELOG.md when running changeset version
+# Mirror of root CHANGELOG.md for Changesets
 src/CHANGELOG.md
 
