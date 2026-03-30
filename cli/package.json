@@ -1,6 +1,6 @@
 {
   "name": "@perfect-abstractions/compose-cli",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "description": "CLI to scaffold Compose facet-based diamond projects",
   "main": "index.js",
   "bin": {
@@ -19,7 +19,7 @@
     "prepare:lib": "git submodule update --init --recursive"
   },
   "engines": {
-  "node": ">=20"
+    "node": ">=20"
   },
   "files": [
     "index.js",
@@ -58,7 +58,7 @@
     "ethereum",
     "smart-contracts",
     "diamonds",
-    "ERC-2535", 
+    "ERC-2535",
     "ERC-8153",
     "facets",
     "compose",

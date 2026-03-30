@@ -1,7 +1,7 @@
 {
   "name": "@perfect-abstractions/compose",
   "description": "Composable smart contract library for ERC-2535 Diamonds",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "license": "MIT",
   "files": [
     "**/*.sol",
@@ -9,7 +9,7 @@
     "README.md",
     "LICENSE.md"
   ],
-  "scripts": { 
+  "scripts": {
     "prepack": "cp ../README.md ./README.md && cp ../LICENSE.md ./LICENSE.md && cp ../CHANGELOG.md ./CHANGELOG.md",
     "postpack": "rm -f ./README.md ./LICENSE.md ./CHANGELOG.md",
     "pack:check": "npm pack --dry-run",
