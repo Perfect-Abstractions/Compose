@@ -326,18 +326,22 @@ const config = {
         },
       },
     ],
-    [
-      "posthog-docusaurus",
-      {
-        apiKey: process.env.POSTHOG_API_KEY,
-        appUrl: 'https://compose.diamonds/54Q17895d65',
-        uiHost: 'https://us.posthog.com',
-        enableInDevelopment: false,
-        capturePageLeave: true,
-        defaults: '2026-01-30',
-        cookieless_mode: 'on_reject',
-      },
-    ],
+    ...(process.env.POSTHOG_API_KEY
+      ? [
+          [
+            'posthog-docusaurus',
+            {
+              apiKey: process.env.POSTHOG_API_KEY,
+              appUrl: 'https://compose.diamonds/54Q17895d65',
+              uiHost: 'https://us.posthog.com',
+              enableInDevelopment: false,
+              capturePageLeave: true,
+              defaults: '2026-01-30',
+              cookieless_mode: 'on_reject',
+            },
+          ],
+        ]
+      : []),
   ].filter(Boolean),
 };
 

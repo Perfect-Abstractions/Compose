@@ -8,6 +8,11 @@
   transition: all 0.2s ease;
 }
 
+/* Prevent Markdown-wrapped children from adding extra space */
+.badge p {
+  margin: 0;
+}
+
 /* Sizes */
 .badge.small {
   padding: 0.25rem 0.625rem;

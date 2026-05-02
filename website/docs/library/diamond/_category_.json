@@ -1,0 +1,10 @@
+{
+  "label": "Diamond Core",
+  "position": 1,
+  "collapsible": true,
+  "collapsed": true,
+  "link": {
+    "type": "doc",
+    "id": "library/diamond/index"
+  }
+}

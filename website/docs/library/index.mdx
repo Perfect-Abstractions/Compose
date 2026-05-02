@@ -1,0 +1,30 @@
+---
+title: "Library"
+description: "Contract references for Compose modules and facets—interfaces, storage layout, and upgrade wiring."
+sidebar_class_name: "hidden"
+---
+
+import DocCard, { DocCardGrid } from '@site/src/components/docs/DocCard';
+import DocSubtitle from '@site/src/components/docs/DocSubtitle';
+import Icon from '@site/src/components/ui/Icon';
+import Callout from '@site/src/components/ui/Callout';
+
+<DocSubtitle>
+  Contract-level docs for each **Compose** module and facet. What to call on-chain, how state is organized, and how upgrades work.
+</DocSubtitle>
+
+<DocCardGrid columns={2}>
+  <DocCard
+    title="Diamond Core"
+    description={"Core diamond proxy functionality for ERC-2535 diamonds."}
+    href="/docs/library/diamond"
+    icon={<Icon name="package" size={28} />}
+    size="medium"
+  />
+</DocCardGrid>
+
+<Callout type="warning" title="Early Development">
+This library documentation is still in progress. Some facets and modules are not documented yet while we actively expand coverage. Until a specific page is available, [browse the contract source](https://github.com/Perfect-Abstractions/Compose/tree/main/src).
+
+<b>We are open to contributions to help grow these docs.</b> We still have documentation gaps today, and we welcome any related issues in the [repository](https://github.com/Perfect-Abstractions/Compose).
+</Callout>

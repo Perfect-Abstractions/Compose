@@ -40,7 +40,7 @@ contract OwnerTwoStepDataFacet {
 
     /**
      * @notice Exports the function selectors of the OwnerTwoStepDataFacet
-     * @dev This function is use as a selector discovery mechanism for diamonds
+     * @dev This function is used as a selector discovery mechanism for diamonds.
      * @return selectors The exported function selectors of the OwnerTwoStepDataFacet
      */
     function exportSelectors() external pure returns (bytes memory) {

@@ -4,17 +4,19 @@ title: Banned Solidity Features
 description: Solidity language features that are banned from Compose facets and modules.
 ---
 
+import Callout from '@site/src/components/ui/Callout';
+
 The following Solidity language features are **banned** from Compose facets and modules.
 
 Compose restricts certain Solidity features to keep facet and library code **simpler**, **more consistent**, and **easier to reason about**.
 
 Because of Compose's architecture, many of these features are either unnecessary or less helpful.
 
-:::note
+<Callout type="warning" title="Exceptions">
 These restrictions **do not** apply to tests.
 
 These restrictions **do not** apply to developers using Compose in their own projects.
-:::
+</Callout>
 
 #### Banned Solidity Features
 
@@ -36,9 +38,9 @@ contract MyContract is IMyInterface {
 }
 ```
 
-:::tip
+<Callout type="tip">
 If you want inheritance, your facet is probably too large. Split it into smaller facets. Compose replaces inheritance with **on-chain facet composition**.
-:::
+</Callout>
 
   </Accordion>
 

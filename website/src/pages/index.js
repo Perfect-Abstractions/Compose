@@ -7,10 +7,9 @@ import StatsSection from '../components/home/StatsSection';
 import CtaSection from '../components/home/CtaSection';
 
 export default function Home() {
-  const {siteConfig} = useDocusaurusContext();
   return (
     <Layout
-      title={`${siteConfig.title} - Smart Contract Library`}
+      title={`Smart Contract Library for Diamonds Proxy`}
       description="Compose is a smart contract library for ERC-2535 Diamonds. Build readable, composable smart contracts with onchain standard library facets.">
       <HomepageHeader />
       <main>

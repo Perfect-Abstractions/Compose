@@ -194,6 +194,10 @@
   opacity: 0.5;
 }
 
+[data-theme='dark'] .docCardArrow {
+  color: #ffffff;
+}
+
 .docCard:hover .docCardArrow {
   color: #1d4ed8;
   transform: translateX(5px);

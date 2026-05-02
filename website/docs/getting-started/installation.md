@@ -3,6 +3,7 @@ sidebar_position: 1
 ---
 
 import DocSubtitle from '@site/src/components/docs/DocSubtitle';
+import Callout from '@site/src/components/ui/Callout';
 
 # Installation
 
@@ -69,7 +70,7 @@ import {DiamondMod} from "@perfect-abstractions/compose/diamond/DiamondMod.sol";
 Now that you have Compose installed, let's understand the core concepts:
 
 - **[Core Concepts](/docs/foundations)** - Learn about facets, libraries, and shared storage
-- **[Explore Available Contracts](https://github.com/Perfect-Abstractions/Compose/tree/main/src)** - See what else you can add
+- **[Explore Available Contracts](/docs/library)** - See what else you can add
 
 ## Getting Help
 
@@ -79,7 +80,7 @@ Having trouble with installation?
 - Ask in **[Discord](https://discord.gg/compose)**
 - Open an **[issue on GitHub](https://github.com/Perfect-Abstractions/Compose/issues)**
 
-:::tip Development Environment
-We recommend using VSCode with the [**Solidity** extension](https://github.com/juanfranblanco/vscode-solidity) by Juan Blanco for the best development experience.
-:::
+<Callout type="tip" title="Development Environment">
+We recommend using VSCode with the **Solidity** extension by Juan Blanco for the best development experience.
+</Callout>
 

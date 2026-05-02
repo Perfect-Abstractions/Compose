@@ -5,6 +5,7 @@ description: Deploy once, reuse everywhere. Compose facets are shared across tho
 ---
 
 import DiamondFacetsSVG from '@site/static/img/svg/compose_diamond_facets.svg'
+import Callout from '@site/src/components/ui/Callout';
 
 You might be wondering: **How can I create a new project without deploying new smart contracts?**
 
@@ -53,13 +54,13 @@ If 1,000 projects use the same `ERC20Facet`:
 - **Millions in gas costs avoided**
 - **1,000 projects** benefit from the same audited, battle-tested code
 
-:::tip[Key Insight]
+<Callout type="tip" title="Key Insight">
 Many diamond contracts can be deployed that **reuse the same on-chain facets**. 
-:::
+</Callout>
 
-:::tip[Key Insight]
+<Callout type="tip" title="Key Insight">
 Each diamond manages **its own storage data** by using the code from facets.
-:::
+</Callout>
 
 
 

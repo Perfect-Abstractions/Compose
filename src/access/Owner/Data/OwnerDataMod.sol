@@ -45,6 +45,12 @@ function getStorage() pure returns (OwnerStorage storage s) {
     }
 }
 
+/**
+ * @notice Sets the stored owner and emits `OwnershipTransferred` with `previousOwner == address(0)`.
+ * @dev Does not enforce access control. Use from trusted init paths (for example the diamond constructor);
+ *      for guarded changes, use a transfer facet with `OwnerTransferMod` or similar.
+ * @param _initialOwner Address written to `OwnerStorage.owner`.
+ */
 function setContractOwner(address _initialOwner) {
     OwnerStorage storage s = getStorage();
     s.owner = _initialOwner;

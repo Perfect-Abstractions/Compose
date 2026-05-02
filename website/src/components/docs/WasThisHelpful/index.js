@@ -102,6 +102,7 @@ export default function WasThisHelpful({
     if (onSubmit) {
       onSubmit({ pageId, feedback: 'no', comment: comment.trim() });
     }
+    
     setSubmitted(true);
   };
 

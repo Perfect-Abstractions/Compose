@@ -4,6 +4,9 @@ title: Design for Composition
 description: How to design Compose facets and modules for composition.
 ---
 
+import Callout from '@site/src/components/ui/Callout';
+import ExpandableCode from '@site/src/components/code/ExpandableCode';
+
 Here are the guidelines and rules for creating composable facets.
 
 Compose replaces source-code inheritance with on-chain composition. Facets are the building blocks; diamonds wire them together.
@@ -46,9 +49,9 @@ We focus on building **small, independent, and easy-to-read facets**. Each facet
 8. A facet that adds new storage variables must define its own diamond storage struct.
 9. Never add new variables to an existing struct.
 
-:::info Important
+<Callout type="warning" title="Important">
 Maintain the same order of variables in structs when reusing them across facets or modules. Unused variables may only be removed from the end of a struct.
-:::
+</Callout>
 
 
 ### Exceptions
@@ -98,14 +101,14 @@ Only unused variables at the **end** of a struct may be safely removed. In this 
 
 Here is the final struct storage code for `ERC20PermitFacet`:
 
-```solidity
-/**
+<ExpandableCode language="solidity" maxLines={15} title="ERC20PermitFacet Storage Implementation">
+{`/**
  * @notice Storage slot identifier for ERC20 (reused to access token data).
  */
 bytes32 constant ERC20_STORAGE_POSITION = keccak256("compose.erc20");
 
 /**
- * @notice Storage struct for ERC20 but with `symbol` removed.
+ * @notice Storage struct for ERC20 but with \`symbol\` removed.
  * @dev Reused struct definition with unused variables at the end removed
  * @custom:storage-location erc8042:compose.erc20
  */
@@ -150,8 +153,8 @@ function getStorage() internal pure returns (ERC20PermitStorage storage s) {
     assembly {
         s.slot := position
     }
-}
-```
+}`}
+</ExpandableCode>
 #### Summary: How This Example Follows the Guide
 
 - **Reusing storage struct**: The `ERC20Storage` struct is copied from `ERC20Facet` and reused at the same location in storage `keccak256("compose.erc20")`, ensuring both facets access the same ERC20 token data. This demonstrates how facets can share storage.
@@ -168,8 +171,8 @@ function getStorage() internal pure returns (ERC20PermitStorage storage s) {
 
 Here's a complete example showing how to correctly extend `ERC20Facet` by creating a new `ERC20StakingFacet` that adds staking functionality:
 
-```solidity
-/**
+<ExpandableCode language="solidity" maxLines={15} title="Complete ERC20StakingFacet Implementation">
+{`/**
  * SPDX-License-Identifier: MIT
  */
 pragma solidity >=0.8.30;
@@ -218,7 +221,7 @@ contract ERC20StakingFacet {
     /**
      * @notice Storage struct for ERC20
      * @dev This struct is from ERC20Facet.
-     *      `balanceOf` is the only variable used in this struct.
+     *      \`balanceOf\` is the only variable used in this struct.
      *      All variables after it are removed.
      * @custom:storage-location erc8042:compose.erc20
      */
@@ -347,8 +350,8 @@ contract ERC20StakingFacet {
     function getStakingStartTime(address _account) external view returns (uint256) {
         return getStorage().stakingStartTimes[_account];
     }
-}
-```
+}`}
+</ExpandableCode>
 
 #### Summary: How This Example Follows the Guide
 
@@ -370,7 +373,6 @@ This example demonstrates proper facet extension by:
 
 *** 
 
-:::info Conclusion
-
+<Callout type="info" title="Conclusion">
 This level of composability strikes the right balance: it enables organized, modular, and understandable on-chain smart contract systems.
-:::
+</Callout>

@@ -1,8 +1,12 @@
 .gradientButton {
   position: relative;
+  padding-left: 0px;
   display: inline-flex;
   align-items: center;
   justify-content: center;
+  box-sizing: border-box;
+  line-height: 1;
+  vertical-align: middle;
   font-weight: 600;
   text-decoration: none;
   border: none;
@@ -14,8 +18,19 @@
 }
 
 .buttonContent {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  line-height: 1;
   position: relative;
   z-index: 2;
+}
+
+/* Prevent Markdown-wrapped children from adding extra space */
+.gradientButton p,
+.buttonContent p {
+  margin: 0;
+  color: white;
 }
 
 .buttonGlow {
@@ -46,24 +61,29 @@
 
 /* Sizes */
 .gradientButton.small {
-  padding: 0.5rem 1rem;
-  font-size: 0.875rem;
+  padding: 0.55rem 1rem;
+  font-size: 0.9rem;
 }
 
 .gradientButton.medium {
-  padding: 0.65rem 1.25rem;
+  padding: 0.7rem 1.3rem;
   font-size: 1rem;
 }
 
 .gradientButton.large {
-  padding: 0.875rem 1.75rem;
-  font-size: 1.125rem;
+  padding: 0.9rem 1.75rem;
+  font-size: 1.05rem;
 }
 
 /* Variants */
 .gradientButton.primary {
   background: linear-gradient(135deg, #3b82f6 0%, #1e40af 100%);
   color: white;
+}
+
+.gradientButton:visited,
+.gradientButton * {
+  color: inherit;
 }
 
 .gradientButton.secondary {
