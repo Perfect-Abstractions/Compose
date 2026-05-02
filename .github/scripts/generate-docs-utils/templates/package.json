@@ -4,7 +4,7 @@
   "private": true,
   "description": "Template engine for generating MDX documentation",
   "dependencies": {
-    "handlebars": "^4.7.8"
+    "handlebars": "^4.7.9"
   }
 }
 
