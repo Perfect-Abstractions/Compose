@@ -9,6 +9,7 @@ import {fileURLToPath} from 'url';
 import {createRequire} from 'module';
 import dotenv from 'dotenv';
 import {themes as prismThemes} from 'prism-react-renderer';
+import { attribute } from 'three/src/nodes/core/AttributeNode.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const require = createRequire(import.meta.url);
@@ -106,6 +107,13 @@ const config = {
         logo: 'https://compose.diamonds/img/logo.svg',
       }),
     },
+    {
+      tagName: "meta",
+      attributes: {
+        name: 'google-site-verification',
+        content: 'PZpx5Knbr928DFHv3xVot85pywhKiNT6Pn2Vw3li6tE'
+      }
+    }
   ],
 
   presets: [
