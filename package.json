@@ -35,6 +35,11 @@
     "url": "https://github.com/Perfect-Abstractions/Compose.git"
   },
   "devDependencies": {
-    "@changesets/cli": "^2.30.0"
+    "@changesets/cli": "^2.30.0",
+    "@types/fs-extra": "^11.0.4",
+    "typescript-eslint": "^8.60.0"
+  },
+  "dependencies": {
+    "commander": "^13.1.0"
   }
 }

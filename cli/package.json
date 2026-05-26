@@ -2,36 +2,37 @@
   "name": "@perfect-abstractions/compose-cli",
   "version": "0.0.5",
   "description": "CLI to scaffold Compose facet-based diamond projects",
-  "main": "index.js",
+  "type": "module",
   "bin": {
     "compose": "bin/compose.js"
   },
-  "type": "commonjs",
   "scripts": {
+    "compose": "tsx bin/compose.ts",
+    "build": "tsc",
     "lint": "eslint .",
-    "test": "node --test \"test/**/*.test.js\"",
-    "test:unit": "node --test \"test/unit/**/*.test.js\"",
-    "test:integration": "node --test \"test/integration/**/*.test.js\"",
+    "test": "tsx --test \"test/**/*.test.ts\"",
+    "test:unit": "tsx --test \"test/unit/**/*.test.ts\"",
+    "test:integration": "tsx --test \"test/integration/**/*.test.ts\"",
     "check": "npm run lint && npm run test",
-    "build:templates": "node scripts/generate-templates-config.js",
+    "build:templates": "tsx scripts/generate-templates-config.ts",
     "pack:check": "npm pack --dry-run",
-    "prepublishOnly": "npm run check && npm run pack:check",
+    "prepublishOnly": "npm run check && npm run build && npm run pack:check",
     "prepare:lib": "git submodule update --init --recursive"
   },
   "engines": {
     "node": ">=20"
   },
   "files": [
-    "index.js",
+    "dist/",
     "src/",
     "!src/templates/**/lib/",
     "README.md",
     "LICENSE.md"
   ],
   "dependencies": {
+    "commander": "^13.1.0",
     "fs-extra": "^11.3.3",
     "inquirer": "^13.3.0",
-    "minimist": "^1.2.8",
     "picocolors": "^1.1.1"
   },
   "devDependencies": {
@@ -50,7 +51,9 @@
     "forge-std": "github:foundry-rs/forge-std#v1.9.4",
     "hardhat": "^3.1.10",
     "mocha": "^11.7.5",
+    "tsx": "^4.19.0",
     "typescript": "~5.8.0",
+    "typescript-eslint": "^8.30.0",
     "viem": "^2.47.0"
   },
   "keywords": [
