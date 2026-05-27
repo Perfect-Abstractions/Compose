@@ -113,7 +113,7 @@ jobs:
         run: |
           set -euo pipefail
           rm -rf ci-foundry
-          npx tsx index.ts init \
+          npx tsx bin/compose.ts init \
             --name ci-foundry \
             --template default \
             --framework foundry \
