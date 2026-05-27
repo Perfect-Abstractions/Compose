@@ -113,7 +113,7 @@ jobs:
         run: |
           set -euo pipefail
           rm -rf ci-foundry
-          node index.js init \
+          node index.ts init \
             --name ci-foundry \
             --template default \
             --framework foundry \
