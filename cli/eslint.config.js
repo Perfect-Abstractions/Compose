@@ -1,25 +1,17 @@
-const js = require("@eslint/js");
+import js from "@eslint/js";
+import tseslint from "typescript-eslint";
 
-module.exports = [
+export default [
   {
-    ignores: ["node_modules/**", "src/templates/**"],
+    ignores: ["node_modules/**", "dist/**", "src/templates/**"],
   },
   js.configs.recommended,
+  ...tseslint.configs.recommended,
   {
-    files: ["**/*.js"],
-    languageOptions: {
-      ecmaVersion: "latest",
-      sourceType: "script",
-      globals: {
-        console: "readonly",
-        process: "readonly",
-        __dirname: "readonly",
-        module: "readonly",
-        require: "readonly",
-      },
-    },
+    files: ["**/*.ts"],
     rules: {
-      "no-unused-vars": ["error", { argsIgnorePattern: "^_" }],
+      "no-unused-vars": "off",
+      "@typescript-eslint/no-unused-vars": ["error", { argsIgnorePattern: "^_" }],
     },
   },
 ];
