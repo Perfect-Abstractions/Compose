@@ -1,21 +1,5 @@
-import { createRequire } from "node:module";
-import { fileURLToPath } from "node:url";
-import { dirname, resolve } from "node:path";
 import { assertDirectoryEmpty } from "../../scaffold/utils/fileManager.js";
-
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = dirname(__filename);
-const require = createRequire(import.meta.url);
-
-const templateConfig = require(resolve(
-  __dirname,
-  "..",
-  "..",
-  "config",
-  "templates.json"
-)) as {
-  templates: { id: string; name: string }[];
-};
+import templateConfig from "../../config/templates.json" with { type: "json" };
 
 type TemplateChoice = {
   name: string;

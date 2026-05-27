@@ -1,22 +1,30 @@
 #!/usr/bin/env node
 
+import { readFileSync, existsSync } from "node:fs";
 import { Command } from "commander";
-import { createRequire } from "node:module";
 import { fileURLToPath } from "node:url";
 import { dirname, resolve } from "node:path";
 
 const __filename = fileURLToPath(import.meta.url);
-const __dirname = dirname(__filename);
-const require = createRequire(import.meta.url);
 
-const pkg = require(resolve(__dirname, "package.json")) as {
-  version: string;
-  name: string;
-};
+function findPackageJson(startDir: string): { version: string; name: string } {
+  let dir = startDir;
+  while (true) {
+    const candidate = resolve(dir, "package.json");
+    if (existsSync(candidate)) {
+      return JSON.parse(readFileSync(candidate, "utf-8"));
+    }
+    const parent = dirname(dir);
+    if (parent === dir) throw new Error("Could not find package.json");
+    dir = parent;
+  }
+}
 
-import { runInitCommand } from "./src/commands/init.js";
-import { runUpdateCommand } from "./src/commands/update.js";
-import { runListTemplatesCommand } from "./src/commands/listTemplates.js";
+const pkg = findPackageJson(dirname(__filename));
+
+import { runInitCommand } from "./src/commands/init.ts";
+import { runUpdateCommand } from "./src/commands/update.ts";
+import { runListTemplatesCommand } from "./src/commands/listTemplates.ts";
 
 const program = new Command();
 

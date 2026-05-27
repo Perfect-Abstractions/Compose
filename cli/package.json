@@ -4,11 +4,11 @@
   "description": "CLI to scaffold Compose facet-based diamond projects",
   "type": "module",
   "bin": {
-    "compose": "bin/compose.js"
+    "compose": "dist/bin/compose.js"
   },
   "scripts": {
     "compose": "tsx bin/compose.ts",
-    "build": "tsc",
+    "build": "esbuild bin/compose.ts --bundle --outfile=dist/bin/compose.js --platform=node --format=esm --sourcemap --external:commander --external:fs-extra --external:inquirer --external:picocolors",
     "lint": "eslint .",
     "test": "tsx --test \"test/**/*.test.ts\"",
     "test:unit": "tsx --test \"test/unit/**/*.test.ts\"",
@@ -23,8 +23,9 @@
     "node": ">=20"
   },
   "files": [
-    "dist/",
-    "src/",
+    "dist/bin/compose.js",
+    "src/config/templates.json",
+    "src/templates/",
     "!src/templates/**/lib/",
     "README.md",
     "LICENSE.md"
@@ -46,6 +47,7 @@
     "@types/mocha": "^10.0.10",
     "@types/node": "^22.19.13",
     "chai": "^6.2.2",
+    "esbuild": "^0.27.3",
     "eslint": "^10.1.0",
     "ethers": "^6.16.0",
     "forge-std": "github:foundry-rs/forge-std#v1.9.4",

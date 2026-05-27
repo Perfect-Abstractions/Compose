@@ -19,7 +19,7 @@ test("template variants match snapshot", async () => {
   const snapshot: Record<string, string[]> = await fs.readJson(
     snapshotPath
   );
-  const config = await loadTemplateConfig();
+  const config = loadTemplateConfig();
 
   const actual: Record<string, string[]> = {};
   config.templates.forEach((template) => {

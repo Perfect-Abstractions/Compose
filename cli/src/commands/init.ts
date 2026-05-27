@@ -134,7 +134,7 @@ export async function runInitCommand(
   const initOptions = await collectInitOptions(argv);
   await preflightChecks(initOptions);
 
-  const templateConfig = await loadTemplateConfig();
+  const templateConfig = loadTemplateConfig();
   const selectedVariant = pickVariant(templateConfig, {
     template: initOptions.template,
     framework: initOptions.framework,

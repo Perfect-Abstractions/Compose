@@ -42,7 +42,7 @@ async function scaffoldWithVariant(
 }
 
 test("scaffolds hardhat minimal variant", async () => {
-  const config = await loadTemplateConfig();
+  const config = loadTemplateConfig();
   const variant = pickVariant(config, {
     template: "default",
     framework: "hardhat",
@@ -66,7 +66,7 @@ test("scaffolds hardhat minimal variant", async () => {
 });
 
 test("scaffolds hardhat mocha-ethers variant", async () => {
-  const config = await loadTemplateConfig();
+  const config = loadTemplateConfig();
   const variant = pickVariant(config, {
     template: "default",
     framework: "hardhat",
@@ -91,7 +91,7 @@ test("scaffolds hardhat mocha-ethers variant", async () => {
 });
 
 test("scaffolds hardhat node-runner-viem variant", async () => {
-  const config = await loadTemplateConfig();
+  const config = loadTemplateConfig();
   const variant = pickVariant(config, {
     template: "default",
     framework: "hardhat",
@@ -116,7 +116,7 @@ test("scaffolds hardhat node-runner-viem variant", async () => {
 });
 
 test("scaffolds into current directory when projectName is dot and directory is logically empty", async () => {
-  const config = await loadTemplateConfig();
+  const config = loadTemplateConfig();
   const variant = pickVariant(config, {
     template: "default",
     framework: "hardhat",

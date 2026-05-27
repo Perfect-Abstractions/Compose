@@ -1,8 +1,23 @@
+import { existsSync } from "node:fs";
 import { fileURLToPath } from "node:url";
-import { dirname, resolve } from "node:path";
+import { dirname, join } from "node:path";
 
 const __filename = fileURLToPath(import.meta.url);
-const __dirname = dirname(__filename);
+let _packageRoot: string;
+
+function getPackageRoot(): string {
+  if (_packageRoot) return _packageRoot;
+  let dir = dirname(__filename);
+  while (true) {
+    if (existsSync(join(dir, "package.json"))) {
+      _packageRoot = dir;
+      return dir;
+    }
+    const parent = dirname(dir);
+    if (parent === dir) throw new Error("Could not find package.json");
+    dir = parent;
+  }
+}
 
 export const COMPOSE_REPO_URL =
   "https://github.com/Perfect-Abstractions/Compose";
@@ -16,4 +31,4 @@ export const COMPOSE_FOUNDRY_DEP = "Perfect-Abstractions/Compose";
 export const DEFAULT_TEMPLATE_ID = "default";
 export const DEFAULT_FRAMEWORK = "foundry";
 
-export const TEMPLATE_REGISTRY_PATH = resolve(__dirname, "templates.json");
+export const TEMPLATES_ROOT = join(getPackageRoot(), "src");

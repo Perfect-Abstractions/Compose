@@ -1,12 +1,7 @@
 import path from "node:path";
-import fs from "fs-extra";
-import { fileURLToPath } from "node:url";
-import { dirname } from "node:path";
-import { TEMPLATE_REGISTRY_PATH } from "../../config/constants.js";
+import { TEMPLATES_ROOT } from "../../config/constants.js";
 import { validateTemplatesConfig } from "../../config/validateTemplatesConfig.js";
-
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = dirname(__filename);
+import templateConfig from "../../config/templates.json" with { type: "json" };
 
 type TemplateVariant = {
   id: string;
@@ -35,10 +30,9 @@ type PickOptions = {
   projectType?: string;
 };
 
-export async function loadTemplateConfig(): Promise<TemplatesConfig> {
-  const config = await fs.readJson(TEMPLATE_REGISTRY_PATH);
-  validateTemplatesConfig(config);
-  return config as TemplatesConfig;
+export function loadTemplateConfig(): TemplatesConfig {
+  validateTemplatesConfig(templateConfig);
+  return templateConfig as TemplatesConfig;
 }
 
 export function pickVariant(
@@ -83,5 +77,5 @@ export function pickVariant(
 }
 
 export function resolveTemplatePath(variant: TemplateVariant): string {
-  return path.join(__dirname, "..", "..", variant.path);
+  return path.join(TEMPLATES_ROOT, variant.path);
 }

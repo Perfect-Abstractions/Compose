@@ -7,7 +7,7 @@ import {
 } from "../../src/scaffold/utils/templateLoader.js";
 
 test("pickVariant returns foundry variant", async () => {
-  const config = await loadTemplateConfig();
+  const config = loadTemplateConfig();
   const variant = pickVariant(config, {
     template: "default",
     framework: "foundry",
@@ -17,7 +17,7 @@ test("pickVariant returns foundry variant", async () => {
 });
 
 test("pickVariant returns hardhat minimal variant", async () => {
-  const config = await loadTemplateConfig();
+  const config = loadTemplateConfig();
   const variant = pickVariant(config, {
     template: "default",
     framework: "hardhat",
@@ -29,7 +29,7 @@ test("pickVariant returns hardhat minimal variant", async () => {
 });
 
 test("pickVariant throws for unknown template", async () => {
-  const config = await loadTemplateConfig();
+  const config = loadTemplateConfig();
   assert.throws(
     () =>
       pickVariant(config, {
@@ -41,7 +41,7 @@ test("pickVariant throws for unknown template", async () => {
 });
 
 test("pickVariant throws when no variant matches", async () => {
-  const config = await loadTemplateConfig();
+  const config = loadTemplateConfig();
   assert.throws(
     () =>
       pickVariant(config, {
