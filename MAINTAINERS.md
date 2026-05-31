@@ -1,24 +1,29 @@
-# Senior Maintainer
+# Current Maintainers
+
+## Lead Maintainers
+Set project direction, approve features, maintain project standards, and handle regular maintainer work.
+
 - @mudgen
-
-Among Nick’s duties are defining the overall direction of the project, approving or rejecting the development of new functionality, and creating/approving and maintaining standards for the project. Nick also does regular maintainer activities.
-
-# Active Maintainers
-
 - @maxnorm
-- @lumoswiz
-- @panditdhamdhere
-- @Haroldwonder
+
+
+## Maintainers
+- None currently! Contributions are welcome
 
 # Past Maintainers
 
+Thank you to these former maintainers for their contributions.
+
 - @adamgall
+- @Haroldwonder
+- @lumoswiz
+- @panditdhamdhere
 
 # Volunteer Basis
 
 Work on this as little or lot as you want to. Work on what you want to work on.
 
-After a period of in-activity a person may be removed as a maintainer. A person may be added back.
+**After a period of in-activity a person may be removed as a maintainer.**
 
 # Activities
 
