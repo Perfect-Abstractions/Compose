@@ -8,7 +8,7 @@ Set project direction, approve features, maintain project standards, and handle 
 
 
 ## Maintainers
-- None currently! Contributions are welcome
+- @0x76agabond
 
 # Past Maintainers
 
