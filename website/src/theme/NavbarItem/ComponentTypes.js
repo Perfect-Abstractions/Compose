@@ -1,7 +1,7 @@
 import baseComponentTypes from '@docusaurus/theme-classic/lib/theme/NavbarItem/ComponentTypes';
-import GithubStarsNavbarItem from '@site/src/components/navigation/GithubStarsNavbarItem';
+import IconNavbarItem from '@site/src/components/navigation/IconNavbarItem';
 
 export default {
   ...baseComponentTypes,
-  'custom-githubStars': GithubStarsNavbarItem,
+  'custom-icon': IconNavbarItem,
 };
