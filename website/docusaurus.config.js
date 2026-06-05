@@ -108,6 +108,28 @@ const config = {
       }),
     },
     {
+      tagName: 'script',
+      attributes: {
+        type: 'application/ld+json',
+      },
+      innerHTML: JSON.stringify({
+        '@context': 'https://schema.org/',
+        '@type': 'WebSite',
+        name: 'Compose',
+        url: 'https://compose.diamonds/',
+        about: "Modular Smart Contract Library for ERC-2535 / ERC-8153 diamond proxies",
+        author: "Perfect Abstractions & the Compose Community",
+        potentialAction: {
+          '@type': 'SearchAction',
+          target: {
+            '@type': 'EntryPoint',
+            urlTemplate: 'https://compose.diamonds/?q={search_term_string}',
+          },
+          'query-input': 'required name=search_term_string',
+        },
+      }),
+    },
+    {
       tagName: "meta",
       attributes: {
         name: 'google-site-verification',
