@@ -15,6 +15,7 @@ import DocItemContent from '@theme/DocItem/Content';
 import DocBreadcrumbs from '@theme/DocBreadcrumbs';
 import ContentVisibility from '@theme/ContentVisibility';
 import DocPageAside from '@site/src/components/docs/DocPageAside';
+import DocItemStructuredData from '@theme/DocItem/StructuredData';
 
 import styles from './styles.module.css';
 
@@ -49,6 +50,7 @@ export default function DocItemLayout({ children }) {
 
   return (
     <div className="row">
+      <DocItemStructuredData />
       <div
         className={clsx(
           'col',
