@@ -1,5 +1,7 @@
 ---
 sidebar_position: 1
+title: "Installation"
+description: "Get up and running with Compose in just a few minutes."
 ---
 
 import DocSubtitle from '@site/src/components/docs/DocSubtitle';

@@ -161,6 +161,7 @@ const config = {
     /** @type {import('@docusaurus/preset-classic').ThemeConfig} */
     ({
       image: 'img/socialcard-compose.png',
+      titleTemplate: '%s | Compose',
       colorMode: {
         defaultMode: 'light',
         disableSwitch: false,
