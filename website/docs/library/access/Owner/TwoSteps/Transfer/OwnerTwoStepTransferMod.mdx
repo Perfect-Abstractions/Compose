@@ -18,21 +18,16 @@ import PackageImport from '@site/src/components/docs/PackageImport';
 <PackageImport/>
 
 <DocSubtitle>
-Two-step ERC-173 ownership transfer logic
+Helpers for the two step handoff ownership for your diamonds
 </DocSubtitle>
 
 <Callout type="info" title="Key Features">
 - Two-step handoff: current owner calls `transferOwnership`; the nominated address calls `acceptOwnership` to finalize (unlike single-step [`OwnerTransferMod`](/docs/library/access/Owner/Transfer/OwnerTransferMod)).
-- Uses `erc8042:erc173.owner` and `erc8042:erc173.owner.pending`; same layout as [Owner Two Step Transfer Facet](/docs/library/access/Owner/TwoSteps/Transfer/OwnerTwoStepTransferFacet).
-- File-level `getOwnerStorage`, `getPendingOwnerStorage`, `transferOwnership`, and `acceptOwnership`; emits `OwnershipTransferStarted` then `OwnershipTransferred` when acceptance completes.
+- Uses same layout as [Owner Two Step Transfer Facet](/docs/library/access/Owner/TwoSteps/Transfer/OwnerTwoStepTransferFacet).
 </Callout>
 
 <Callout type="important" title="Module Usage">
-Import this module into facets or shared setup code. Its helpers are file-level (effectively internal to your compilation unit). Call them from your facet’s external entrypoints.
-
-Storage follows the diamond slot layout in this file; any code using the same `OWNER_STORAGE_POSITION` or `PENDING_OWNER_STORAGE_POSITION` shares state.
-
-See <a href="/docs/foundations/facets-and-modules">Facets &amp; Modules</a> for more information.
+Helpers modules for composing the library logic into your own facets. See <a href="/docs/foundations/facets-and-modules">Facets &amp; Modules</a> for more information.
 </Callout>
 
 ## Storage
@@ -77,7 +72,7 @@ struct PendingOwnerStorage {
 
 ### getOwnerStorage
 
-Returns a storage pointer to `OwnerStorage` at `OWNER_STORAGE_POSITION` using inline assembly.
+Returns a storage pointer to `OwnerStorage`.
 
 <ExpandableCode language="solidity" maxLines={8}>
 {`function getOwnerStorage() pure returns (OwnerStorage storage s);`}
@@ -100,7 +95,7 @@ Returns a storage pointer to `OwnerStorage` at `OWNER_STORAGE_POSITION` using in
 
 ### getPendingOwnerStorage
 
-Returns a storage pointer to `PendingOwnerStorage` at `PENDING_OWNER_STORAGE_POSITION` using inline assembly.
+Returns a storage pointer to `PendingOwnerStorage`.
 
 <ExpandableCode language="solidity" maxLines={8}>
 {`function getPendingOwnerStorage() pure returns (PendingOwnerStorage storage s);`}
@@ -199,100 +194,10 @@ Requires `msg.sender == pendingOwner`; otherwise reverts `OwnerUnauthorizedAccou
   </Accordion>
 </AccordionGroup>
 
-<!-- Usage Example section commented out for now -->
-<!--
-## Usage Example
-
-<ExpandableCode language="solidity" maxLines={20} title="Example Implementation">
-{`pragma solidity >=0.8.30;
-
-import {OwnerTwoStepTransferMod} from "@compose/access/Owner/TwoSteps/Transfer/OwnerTwoStepTransferMod";
-
-contract MyOwnerFacet {
-    OwnerTwoStepTransferMod private ownerTransferModule;
-
-    // Assume OwnerTwoStepTransferMod is initialized elsewhere and its address is set.
-    // For demonstration, we'll assume it's available via a diamond storage lookup or similar mechanism.
-    // In a real scenario, you'd likely have a way to access module instances.
-
-    // Placeholder for accessing the module instance
-    function getOwnerTransferModule() internal view returns (OwnerTwoStepTransferMod) {
-        // This is a placeholder. Actual access depends on diamond architecture.
-        // For example, it might be stored in diamond storage.
-        // return OwnerTwoStepTransferMod(address(this)); // Incorrect: module is not callable directly
-        // Assuming a mechanism to get the module instance:
-        // return OwnerTwoStepTransferMod(diamond.getModuleAddress(OwnerTwoStepTransferMod.selector));
-
-        // For the sake of a runnable example, we'll simulate its presence
-        // In a real facet, you would use the module's actual address.
-        // This example cannot be fully runnable without the diamond context.
-
-        // To make this example compile and demonstrate calls:
-        // We will call the functions as if the module were directly available.
-        // Replace this with actual module interaction in your facet.
-        revert("Module access mechanism not implemented in example");
-    }
-
-    /**
-     * @notice Initiates an ownership transfer.
-     * @param _newOwner The address to transfer ownership to.
-     */
-    function startOwnershipTransfer(address _newOwner) external {
-        // Example call to the module's function
-        // ownerTransferModule.transferOwnership(_newOwner);
-
-        // Placeholder call to demonstrate signature usage
-        // In a real scenario, you would call the actual module instance.
-        // For compilation, we simulate the call:
-        OwnerTwoStepTransferMod(address(this)).transferOwnership(_newOwner); // This will not actually work, just for compile check
-    }
-
-    /**
-     * @notice Accepts a pending ownership transfer.
-     */
-    function acceptPendingOwnership() external {
-        // Example call to the module's function
-        // ownerTransferModule.acceptOwnership();
-
-        // Placeholder call to demonstrate signature usage
-        OwnerTwoStepTransferMod(address(this)).acceptOwnership(); // This will not actually work, just for compile check
-    }
-
-    /**
-     * @notice Gets the current owner storage pointer.
-     * @return OwnerStorage A pointer to the owner storage struct.
-     */
-    function getCurrentOwnerStorage() internal view returns (OwnerTwoStepTransferMod.OwnerStorage storage) {
-        // Example call to the module's function
-        // return ownerTransferModule.getOwnerStorage();
-
-        // Placeholder call to demonstrate signature usage
-        return OwnerTwoStepTransferMod(address(this)).getOwnerStorage(); // This will not actually work, just for compile check
-    }
-
-    /**
-     * @notice Gets the pending owner storage pointer.
-     * @return PendingOwnerStorage A pointer to the pending owner storage struct.
-     */
-    function getPendingOwnerStorage() internal view returns (OwnerTwoStepTransferMod.PendingOwnerStorage storage) {
-        // Example call to the module's function
-        // return ownerTransferModule.getPendingOwnerStorage();
-
-        // Placeholder call to demonstrate signature usage
-        return OwnerTwoStepTransferMod(address(this)).getPendingOwnerStorage(); // This will not actually work, just for compile check
-    }
-}`}
-</ExpandableCode>
--->
-
 ## Best Practices
 
-- Expose `transferOwnership` and `acceptOwnership` only through vetted `external` facet entrypoints; confirm `_newOwner` before initiating.
+- Expose `transferOwnership` and `acceptOwnership` only through trusted `external` facet entrypoints; confirm `_newOwner` before initiating.
 - Keep the same `OwnerStorage` / `PendingOwnerStorage` layout as [Owner Two Step Transfer Facet](/docs/library/access/Owner/TwoSteps/Transfer/OwnerTwoStepTransferFacet) and [Owner Two Step Data Module](/docs/library/access/Owner/TwoSteps/Data/OwnerTwoStepDataMod)
 - `owner` is shared with [`OwnerDataMod`](/docs/library/access/Owner/Data/OwnerDataMod) and single-step owner code at `keccak256("erc173.owner")`.
 
-<div style={{marginTop: "3rem", paddingTop: "2rem", borderTop: "1px solid var(--ifm-color-emphasis-200)"}}>
-  <WasThisHelpful pageId="Owner Two Step Transfer Module" />
-</div>
-
-<LastUpdated date="2026-03-24T12:00:00.000Z" />
+<LastUpdated date="2026-06-05T12:00:00.000Z" />
