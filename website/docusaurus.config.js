@@ -330,6 +330,7 @@ const config = {
     }),
   plugins: [
     path.join(__dirname, 'plugins', 'markdown-source-docs.js'),
+    path.join(__dirname, 'plugins', 'canonical-inject.js'),
     [
       '@acid-info/docusaurus-og',
       {
