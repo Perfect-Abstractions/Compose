@@ -1,0 +1,10 @@
+{
+  "label": "Owner",
+  "position": 1,
+  "collapsible": true,
+  "collapsed": true,
+  "link": {
+    "type": "doc",
+    "id": "library/access/Owner/index"
+  }
+}
