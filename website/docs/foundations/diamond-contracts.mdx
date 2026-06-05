@@ -8,6 +8,8 @@ description: "Understand Diamonds from the ground up—facets, storage, delegati
 import SvgThemeRenderer from '@site/src/components/theme/SvgThemeRenderer';
 import Callout from '@site/src/components/ui/Callout';
 
+# Diamond Contracts
+
 A **diamond contract** is a smart contract that is made up of multiple parts instead of one large block of code. The diamond exists at **one address** and holds **all of the contract's storage**, but it uses separate smart contracts called **facets** to provide its functionality.
 
 Users interact only with the **diamond**, but the diamond's features come from its **facets**. Each facet provides a small, focused set of functions, and the diamond uses those functions to perform its actions. 
