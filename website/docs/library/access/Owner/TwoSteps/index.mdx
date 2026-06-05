@@ -1,0 +1,57 @@
+---
+title: "Two Steps"
+description: "Two Steps components for Compose diamonds."
+---
+
+import DocCard, { DocCardGrid } from '@site/src/components/docs/DocCard';
+import DocSubtitle from '@site/src/components/docs/DocSubtitle';
+import Icon from '@site/src/components/ui/Icon';
+
+<DocSubtitle>
+  Two Steps components for Compose diamonds.
+</DocSubtitle>
+
+<DocCardGrid columns={2}>
+  <DocCard
+    title="Owner Two Step Data Facet"
+    description={"External pending Owner getter for diamonds running a two-step ownership"}
+    href="/docs/library/access/Owner/TwoSteps/Data/OwnerTwoStepDataFacet"
+    icon={<Icon name="showcase-facet" size={28} />}
+    size="medium"
+  />
+  <DocCard
+    title="Owner Two Step Data Module"
+    description={"Pointer and reader for the pending owner storage slot"}
+    href="/docs/library/access/Owner/TwoSteps/Data/OwnerTwoStepDataMod"
+    icon={<Icon name="box-detailed" size={28} />}
+    size="medium"
+  />
+  <DocCard
+    title="Owner Two Step Renounce Facet"
+    description={"Owner-only renouncement that zeroes both owner and pendingOwner in one call"}
+    href="/docs/library/access/Owner/TwoSteps/Renounce/OwnerTwoStepRenounceFacet"
+    icon={<Icon name="showcase-facet" size={28} />}
+    size="medium"
+  />
+  <DocCard
+    title="Owner Two Step Renounce Module"
+    description={"Internal helpers renouncement routine while storage pointer"}
+    href="/docs/library/access/Owner/TwoSteps/Renounce/OwnerTwoStepRenounceMod"
+    icon={<Icon name="box-detailed" size={28} />}
+    size="medium"
+  />
+  <DocCard
+    title="Owner Two Step Transfer Facet"
+    description={"External transferOwnership and acceptOwnership handoff that emit two step event flow"}
+    href="/docs/library/access/Owner/TwoSteps/Transfer/OwnerTwoStepTransferFacet"
+    icon={<Icon name="showcase-facet" size={28} />}
+    size="medium"
+  />
+  <DocCard
+    title="Owner Two Step Transfer Module"
+    description={"Helpers to the nominate-then-accept logic where the owner stages a successor who finalizes by accepting"}
+    href="/docs/library/access/Owner/TwoSteps/Transfer/OwnerTwoStepTransferMod"
+    icon={<Icon name="box-detailed" size={28} />}
+    size="medium"
+  />
+</DocCardGrid>

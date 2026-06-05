@@ -1,0 +1,64 @@
+---
+title: "Owner"
+description: "Single-owner access control pattern."
+---
+
+import DocCard, { DocCardGrid } from '@site/src/components/docs/DocCard';
+import DocSubtitle from '@site/src/components/docs/DocSubtitle';
+import Icon from '@site/src/components/ui/Icon';
+
+<DocSubtitle>
+  Single-owner access control pattern based on [ERC-173](https://eips.ethereum.org/EIPS/eip-173)
+</DocSubtitle>
+
+<DocCardGrid columns={2}>
+  <DocCard
+    title="Owner Data Facet"
+    description={"Read-only Owner access"}
+    href="/docs/library/access/Owner/Data/OwnerDataFacet"
+    icon={<Icon name="showcase-facet" size={28} />}
+    size="medium"
+  />
+  <DocCard
+    title="Owner Data Module"
+    description={"Storage helpers and initial owner setup"}
+    href="/docs/library/access/Owner/Data/OwnerDataMod"
+    icon={<Icon name="box-detailed" size={28} />}
+    size="medium"
+  />
+  <DocCard
+    title="Owner Renounce Facet"
+    description={"Renounce diamond ownership"}
+    href="/docs/library/access/Owner/Renounce/OwnerRenounceFacet"
+    icon={<Icon name="showcase-facet" size={28} />}
+    size="medium"
+  />
+  <DocCard
+    title="Owner Renounce Module"
+    description={"Helper to renouce ownership from your facets"}
+    href="/docs/library/access/Owner/Renounce/OwnerRenounceMod"
+    icon={<Icon name="box-detailed" size={28} />}
+    size="medium"
+  />
+  <DocCard
+    title="Owner Transfer Facet"
+    description={"Ownership transfer for diamonds owners"}
+    href="/docs/library/access/Owner/Transfer/OwnerTransferFacet"
+    icon={<Icon name="showcase-facet" size={28} />}
+    size="medium"
+  />
+  <DocCard
+    title="Owner Transfer Module"
+    description={"Ownership transfer helpers for diamond facets"}
+    href="/docs/library/access/Owner/Transfer/OwnerTransferMod"
+    icon={<Icon name="box-detailed" size={28} />}
+    size="medium"
+  />
+  <DocCard
+    title="Two Steps"
+    description={"Two Step ownership adding a pending state to your actions"}
+    href="/docs/library/access/Owner/TwoSteps"
+    icon={<Icon name="package" size={28} />}
+    size="medium"
+  />
+</DocCardGrid>

@@ -37,7 +37,20 @@
 .menu__link {
   color: #475569;
   border-radius: 0.375rem;
+  font-size: 0.8125rem;
+  padding: 0.3rem 0.5rem;
   transition: all 0.2s ease;
+}
+
+/* Top-level non-collapsible items (e.g. Introduction) */
+.menu__list-item > .menu__link {
+  font-size: 0.875rem;
+}
+
+.menu__list-item-collapsible > .menu__caret,
+.menu__list-item-collapsible > .menu__link {
+  font-size: 0.875rem;
+  padding: 0.3rem 0.5rem;
 }
 
 .menu__link:hover {

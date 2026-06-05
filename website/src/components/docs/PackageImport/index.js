@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import {useDoc} from '@docusaurus/plugin-content-docs/client';
 import styles from './styles.module.css';
 
 function getRelativePath(gitSource) {
@@ -9,7 +10,9 @@ function getRelativePath(gitSource) {
   return after;
 }
 
-export default function PackageImport({ gitSource }) {
+export default function PackageImport() {
+  const {frontMatter} = useDoc();
+  const gitSource = frontMatter?.gitSource;
   const [copied, setCopied] = useState(false);
 
   if (!gitSource) return null;
