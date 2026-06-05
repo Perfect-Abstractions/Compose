@@ -1,6 +1,7 @@
 ---
 sidebar_position: 1
 title: "Installation"
+sidebar_label: "Installation"
 description: "Get up and running with Compose in just a few minutes."
 ---
 
