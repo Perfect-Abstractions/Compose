@@ -123,7 +123,7 @@ You can replicate the renouncement by setting the new owner to `address(0)`. Thi
 
 ## Security Considerations
 
-`transferOwnership` is restricted to the address currently stored as owner (`msg.sender == s.owner`). The facet does not implement any additional role system. View [Access Control](/docs/library/access/AccessControl) for granular role-based access.
+`transferOwnership` is restricted to the address currently stored as owner (`msg.sender == s.owner`). The facet does not implement any additional role system.
 
 The main risks are **social** and **operational**: transferring to the wrong address, or setting `_newOwner` to `address(0)` when you did not intend to remove all owner control.
 
