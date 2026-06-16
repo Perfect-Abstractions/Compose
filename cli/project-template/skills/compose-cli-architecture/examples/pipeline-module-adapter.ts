@@ -57,14 +57,14 @@ enum DependencyKey {
 }
 
 const DependencyResolver = {
-  async resolve(requests: { key: DependencyKey; params?: unknown }[]) {
+  async resolve(_requests: { key: DependencyKey; params?: unknown }[]) {
     return {
       diamondInspect: {} as DiamondInspectAdapter,
     };
   },
 };
 
-async function validatePipeline(
+export async function validatePipeline(
   ctx: ComposeContext
 ): Promise<ComposeContext> {
   const deps = (await DependencyResolver.resolve([
