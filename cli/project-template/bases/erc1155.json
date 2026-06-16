@@ -1,0 +1,27 @@
+{
+  "erc-1155": {
+    "label": "ERC-1155",
+    "required": {
+      "ERC1155DataFacet": {
+        "path": "./src/templates/token/ERC1155/Data/ERC1155DataFacet.sol"
+      },
+      "ERC1155ApproveFacet": {
+        "path": "./src/templates/token/ERC1155/Approve/ERC1155ApproveFacet.sol"
+      },
+      "ERC1155TransferFacet": {
+        "path": "./src/templates/token/ERC1155/Transfer/ERC1155TransferFacet.sol"
+      }
+    },
+    "optional": {
+      "ERC1155BurnFacet": {
+        "path": "./src/templates/token/ERC1155/Burn/ERC1155BurnFacet.sol"
+      },
+      "ERC1155MetadataFacet": {
+        "path": "./src/templates/token/ERC1155/Metadata/ERC1155MetadataFacet.sol"
+      },
+      "RoyaltyFacet": {
+        "path": "./src/templates/token/Royalty/RoyaltyFacet.sol"
+      }
+    }
+  }
+}

@@ -1,0 +1,15 @@
+{
+  "diamond": {
+    "label": "Diamond",
+    "required": {
+      "DiamondInspectFacet": {
+        "path": "./src/templates/diamond/DiamondInspectFacet.sol"
+      }
+    },
+    "optional": {
+      "DiamondUpgradeFacet": {
+        "path": "./src/templates/diamond/DiamondUpgradeFacet.sol"
+      }
+    }
+  }
+}

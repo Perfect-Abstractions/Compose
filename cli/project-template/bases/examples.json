@@ -1,0 +1,17 @@
+{
+  "examples": {
+    "label": "Local Examples",
+    "required": {},
+    "optional": {
+      "ERC20MissingExportSelector": {
+        "path": "./src/templates/examples/ERC20MissingExportSelector.sol"
+      },
+      "ERC20SelectorCollisionError": {
+        "path": "./src/templates/examples/ERC20SelectorCollisionError.sol"
+      },
+      "ERC20IdentifierCollisionError": {
+        "path": "./src/templates/examples/ERC20IdentifierCollisionError.sol"
+      }
+    }
+  }
+}

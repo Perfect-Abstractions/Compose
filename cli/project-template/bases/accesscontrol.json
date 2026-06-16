@@ -1,0 +1,42 @@
+{
+  "access-control": {
+    "label": "AccessControl",
+    "required": {
+      "AccessControlDataFacet": {
+        "path": "./src/templates/access/AccessControl/Data/AccessControlDataFacet.sol"
+      },
+      "AccessControlGrantFacet": {
+        "path": "./src/templates/access/AccessControl/Grant/AccessControlGrantFacet.sol"
+      },
+      "AccessControlRevokeFacet": {
+        "path": "./src/templates/access/AccessControl/Revoke/AccessControlRevokeFacet.sol"
+      }
+    },
+    "optional": {
+      "AccessControlAdminFacet": {
+        "path": "./src/templates/access/AccessControl/Admin/AccessControlAdminFacet.sol"
+      },
+      "AccessControlGrantBatchFacet": {
+        "path": "./src/templates/access/AccessControl/Batch/Grant/AccessControlGrantBatchFacet.sol"
+      },
+      "AccessControlRevokeBatchFacet": {
+        "path": "./src/templates/access/AccessControl/Batch/Revoke/AccessControlRevokeBatchFacet.sol"
+      },
+      "AccessControlPausableFacet": {
+        "path": "./src/templates/access/AccessControl/Pausable/AccessControlPausableFacet.sol"
+      },
+      "AccessControlRenounceFacet": {
+        "path": "./src/templates/access/AccessControl/Renounce/AccessControlRenounceFacet.sol"
+      },
+      "AccessControlTemporalDataFacet": {
+        "path": "./src/templates/access/AccessControl/Temporal/Data/AccessControlTemporalDataFacet.sol"
+      },
+      "AccessControlTemporalGrantFacet": {
+        "path": "./src/templates/access/AccessControl/Temporal/Grant/AccessControlTemporalGrantFacet.sol"
+      },
+      "AccessControlTemporalRevokeFacet": {
+        "path": "./src/templates/access/AccessControl/Temporal/Revoke/AccessControlTemporalRevokeFacet.sol"
+      }
+    }
+  }
+}

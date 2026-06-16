@@ -1,0 +1,30 @@
+{
+  "erc-20": {
+    "label": "ERC-20",
+    "required": {
+      "ERC20DataFacet": {
+        "path": "./src/templates/token/ERC20/Data/ERC20DataFacet.sol"
+      },
+      "ERC20ApproveFacet": {
+        "path": "./src/templates/token/ERC20/Approve/ERC20ApproveFacet.sol"
+      },
+      "ERC20TransferFacet": {
+        "path": "./src/templates/token/ERC20/Transfer/ERC20TransferFacet.sol"
+      }
+    },
+    "optional": {
+      "ERC20BurnFacet": {
+        "path": "./src/templates/token/ERC20/Burn/ERC20BurnFacet.sol"
+      },
+      "ERC20MetadataFacet": {
+        "path": "./src/templates/token/ERC20/Metadata/ERC20MetadataFacet.sol"
+      },
+      "ERC20PermitFacet": {
+        "path": "./src/templates/token/ERC20/Permit/ERC20PermitFacet.sol"
+      },
+      "ERC20BridgeableFacet": {
+        "path": "./src/templates/token/ERC20/Bridgeable/ERC20BridgeableFacet.sol"
+      }
+    }
+  }
+}

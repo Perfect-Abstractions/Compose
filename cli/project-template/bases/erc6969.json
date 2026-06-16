@@ -1,0 +1,27 @@
+{
+  "erc-6909": {
+    "label": "ERC-6909",
+    "required": {
+      "ERC6909DataFacet": {
+        "path": "./src/templates/token/ERC6909/Data/ERC6909DataFacet.sol"
+      },
+      "ERC6909TransferFacet": {
+        "path": "./src/templates/token/ERC6909/Transfer/ERC6909TransferFacet.sol"
+      },
+      "ERC6909ApproveFacet": {
+        "path": "./src/templates/token/ERC6909/Approve/ERC6909ApproveFacet.sol"
+      },
+      "ERC6909OperatorFacet": {
+        "path": "./src/templates/token/ERC6909/Operator/ERC6909OperatorFacet.sol"
+      }
+    },
+    "optional": {
+      "ERC6909BurnFacet": {
+        "path": "./src/templates/token/ERC6909/Burn/ERC6909BurnFacet.sol"
+      },
+      "RoyaltyFacet": {
+        "path": "./src/templates/token/Royalty/RoyaltyFacet.sol"
+      }
+    }
+  }
+}

@@ -1,0 +1,27 @@
+{
+  "owner": {
+    "label": "Owner",
+    "required": {
+      "OwnerDataFacet": {
+        "path": "./src/templates/access/Owner/Data/OwnerDataFacet.sol"
+      },
+      "OwnerTransferFacet": {
+        "path": "./src/templates/access/Owner/Transfer/OwnerTransferFacet.sol"
+      }
+    },
+    "optional": {
+      "OwnerRenounceFacet": {
+        "path": "./src/templates/access/Owner/Renounce/OwnerRenounceFacet.sol"
+      },
+      "OwnerTwoStepDataFacet": {
+        "path": "./src/templates/access/Owner/TwoSteps/Data/OwnerTwoStepDataFacet.sol"
+      },
+      "OwnerTwoStepTransferFacet": {
+        "path": "./src/templates/access/Owner/TwoSteps/Transfer/OwnerTwoStepTransferFacet.sol"
+      },
+      "OwnerTwoStepRenounceFacet": {
+        "path": "./src/templates/access/Owner/TwoSteps/Renounce/OwnerTwoStepRenounceFacet.sol"
+      }
+    }
+  }
+}
