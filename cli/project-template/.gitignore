@@ -1,5 +1,7 @@
 node_modules/
 dist/
 my-diamond/
+spec/
+skills/
 *.tsbuildinfo
 .vscode/
