@@ -80,4 +80,13 @@ contract RoyaltyFacet {
         receiver = royalty.receiver;
         royaltyAmount = (_salePrice * royalty.royaltyFraction) / FEE_DENOMINATOR;
     }
+
+    /**
+     * @notice Exports the function selectors of the RoyaltyFacet.
+     * @dev Used as the selector discovery mechanism for diamonds.
+     * @return selectors The exported function selectors of the RoyaltyFacet.
+     */
+    function exportSelectors() external pure returns (bytes memory selectors) {
+        return bytes.concat(this.royaltyInfo.selector);
+    }
 }
