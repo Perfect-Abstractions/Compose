@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.0.4
+
+### Patch Changes
+
+- 6bf9946: Add exportSelectors() to RoyaltyFacet.
+- 2a69f80: Add IERC1155Metadata_URI
+
 ## 0.0.3
 
 ### Patch Changes
