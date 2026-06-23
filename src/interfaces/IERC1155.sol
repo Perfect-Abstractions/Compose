@@ -156,11 +156,4 @@ interface IERC1155 {
         uint256[] calldata _values,
         bytes calldata _data
     ) external;
-
-    /**
-     * @notice Returns the URI for token type `id`.
-     * @param _id The token type to query.
-     * @return The URI for the token type.
-     */
-    function uri(uint256 _id) external view returns (string memory);
 }
