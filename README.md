@@ -42,7 +42,7 @@ npx @perfect-abstractions/compose-cli init
 ### Foundry
 
 ```bash
-forge install Perfect-Abstractions/Compose@tag=compose@0.0.3
+forge install Perfect-Abstractions/Compose@tag=compose@0.0.4
 ```
 
 ### Hardhat / NPM
