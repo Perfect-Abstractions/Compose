@@ -215,7 +215,7 @@ main {
 /* Markdown headings */
 .markdown h1 {
   color: var(--ifm-heading-color);
-  margin-bottom: 2rem;
+  margin-bottom: .5rem;
 }
 
 .markdown h2 {
