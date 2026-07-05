@@ -36,7 +36,7 @@ function BreadcrumbsItem({ children, active }) {
   );
 }
 
-export default function BlogArticleBreadcrumbs() {
+export default function BlogArticleBreadcrumbs({ pageTitle }) {
   const { metadata } = useBlogPost();
   const {
     isHidden: sidebarFullyHidden,
@@ -76,7 +76,7 @@ export default function BlogArticleBreadcrumbs() {
           </BreadcrumbsItem>
           <BreadcrumbsItem active>
             <BreadcrumbsItemLink href={undefined} isLast>
-              {metadata.title}
+              {pageTitle || metadata.title}
             </BreadcrumbsItemLink>
           </BreadcrumbsItem>
         </ul>

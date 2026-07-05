@@ -14,6 +14,7 @@
 }
 
 .markdown > h1 {
+  font-family: var(--ifm-heading-font-family);
   font-size: 2.75rem;
   font-weight: 800;
   letter-spacing: -0.02em;

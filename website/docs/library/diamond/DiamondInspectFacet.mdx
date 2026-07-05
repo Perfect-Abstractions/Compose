@@ -209,7 +209,7 @@ Returns the facet address and function selectors of all facets in the diamond.
 - `facetFunctionSelectors(facet)` calls `facet.exportSelectors()` and unpacks the packed bytes into a `bytes4[]`.
 - `facets()` does the same for every facet discovered in the diamond.
 
-<!--
+{/*
 ## Usage Example (Off-chain)
 
 <ExpandableCode language="javascript" maxLines={28} title="Read facet mapping with ethers">
@@ -232,7 +232,7 @@ const selectorsForFacet = await diamond.facetFunctionSelectors(facet);
 
 console.log({ facet, allFacets, selectorsForFacet });`}
 </ExpandableCode>
--->
+*/}
 
 ## Best Practices
 

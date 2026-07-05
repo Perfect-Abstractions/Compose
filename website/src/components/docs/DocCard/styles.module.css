@@ -138,6 +138,10 @@
   box-shadow: 0 1px 0 rgba(255, 255, 255, 0.06) inset;
 }
 
+[data-theme='dark'] .docCardIcon img {
+  filter: brightness(0) invert(1);
+}
+
 .iconEmoji {
   font-size: 2rem;
   line-height: 1;

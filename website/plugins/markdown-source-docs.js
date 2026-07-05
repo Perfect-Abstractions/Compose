@@ -52,9 +52,7 @@ function convertDocCardGridToMarkdown(content) {
   return content.replace(
     /<DocCardGrid[^>]*>([\s\S]*?)<\/DocCardGrid>/g,
     (_, inner) => {
-      // Remove icon={...} so nested JSX doesn't break the DocCard match
       const withoutIcon = inner.replace(/icon=\{[^}]*\}/g, 'icon=""');
-      // DocCard attributes can be in any order; match full tag (no nested /> now)
       const cardPattern = /<DocCard\s+([\s\S]*?)\s*\/>/g;
       const items = [];
       let m;
@@ -104,7 +102,6 @@ function cleanMarkdownForDisplay(content, filepath) {
     '<video controls>\n  <source src="$1" type="video/mp4" />\n  <p>Video demonstration: $1</p>\n</video>'
   );
   content = content.replace(/<Head>[\s\S]*?<\/Head>/g, '');
-  // Convert SvgThemeRenderer to markdown image so diagram appears in source .md view
   content = content.replace(/<SvgThemeRenderer\s+([\s\S]+?)\/>/g, (_, attrs) => {
     const lightMatch = attrs.match(/lightSrc=\{?["']([^"']+)["']\}?/);
     const darkMatch = attrs.match(/darkSrc=\{?["']([^"']+)["']\}?/);
@@ -115,9 +112,7 @@ function cleanMarkdownForDisplay(content, filepath) {
   });
   content = convertTabsToMarkdown(content);
   content = convertDetailsToMarkdown(content);
-  // Convert DocCardGrid + DocCard to markdown links first so .md is readable
   content = convertDocCardGridToMarkdown(content);
-  // Strip any remaining JSX (nested-aware) so we don't leave fragments
   content = stripJsxComponents(content);
   content = content.replace(
     /!\[([^\]]*)\]\((\.\/)?img\/([^)]+)\)/g,
@@ -140,6 +135,20 @@ function findDocFiles(dir, fileList = [], baseDir = dir) {
     }
   });
   return fileList;
+}
+
+function findPageMdxFiles(pagesDir) {
+  const mdxFiles = [];
+  if (!fs.existsSync(pagesDir)) return mdxFiles;
+  const files = fs.readdirSync(pagesDir);
+  for (const file of files) {
+    const filePath = path.join(pagesDir, file);
+    const stat = fs.statSync(filePath);
+    if (stat.isFile() && file.endsWith('.mdx')) {
+      mdxFiles.push(file);
+    }
+  }
+  return mdxFiles;
 }
 
 async function copyImageDirectories(docsDir, buildDir) {
@@ -177,8 +186,32 @@ async function copyImageDirectories(docsDir, buildDir) {
 
 export default function markdownSourceDocsPlugin(context, options) {
   const base = basePlugin(context, options);
+
   return {
     ...base,
+    name: 'markdown-source-plugin',
+
+    async loadContent() {
+      const markdownContent = {};
+
+      const pagesDir = path.join(context.siteDir, 'src', 'pages');
+      const pageMdxFiles = findPageMdxFiles(pagesDir);
+      for (const mdxFile of pageMdxFiles) {
+        const sourcePath = path.join(pagesDir, mdxFile);
+        const urlKey = `/${mdxFile.replace(/\.mdx$/, '.md')}`;
+        try {
+          const raw = await fs.readFile(sourcePath, 'utf8');
+          markdownContent[urlKey] = cleanMarkdownForDisplay(raw, '');
+        } catch { /* skip */ }
+      }
+
+      return markdownContent;
+    },
+
+    contentLoaded({ content, actions }) {
+      actions.setGlobalData(content);
+    },
+
     async postBuild({ outDir }) {
       const docsDir = path.join(context.siteDir, 'docs');
       const buildDocsDir = path.join(outDir, 'docs');
@@ -200,6 +233,23 @@ export default function markdownSourceDocsPlugin(context, options) {
         }
       }
       console.log(`[markdown-source-plugin] Successfully copied ${copiedCount} doc files`);
+
+      const pagesDir = path.join(context.siteDir, 'src', 'pages');
+      const pageMdxFiles = findPageMdxFiles(pagesDir);
+      for (const mdxFile of pageMdxFiles) {
+        const sourcePath = path.join(pagesDir, mdxFile);
+        const destPath = path.join(outDir, mdxFile.replace(/\.mdx$/, '.md'));
+        try {
+          const content = await fs.readFile(sourcePath, 'utf8');
+          const cleanedContent = cleanMarkdownForDisplay(content, '');
+          await fs.writeFile(destPath, cleanedContent, 'utf8');
+          copiedCount++;
+          console.log(`  ✓ Processed: ${mdxFile} → ${path.basename(destPath)}`);
+        } catch (error) {
+          console.error(`  ✗ Failed to process ${mdxFile}:`, error.message);
+        }
+      }
+
       console.log('[markdown-source-plugin] Copying image directories...');
       const imgDirCount = await copyImageDirectories(docsDir, buildDocsDir);
       console.log(`[markdown-source-plugin] Successfully copied ${imgDirCount} image directories`);

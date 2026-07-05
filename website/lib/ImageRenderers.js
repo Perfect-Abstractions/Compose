@@ -7,8 +7,8 @@ const React = require('react');
 const WIDTH = 1200;
 const HEIGHT = 630;
 
-// Inter from @fontsource (woff); Satori accepts ArrayBuffer
-const fontPath = path.join(__dirname, '../node_modules/@fontsource/inter/files/inter-latin-400-normal.woff');
+// IBM Plex Sans from @fontsource (woff); Satori accepts ArrayBuffer
+const fontPath = path.join(__dirname, '../../node_modules/@fontsource/ibm-plex-sans/files/ibm-plex-sans-latin-400-normal.woff');
 const fontData = fs.readFileSync(fontPath);
 const fontBuffer = fontPath.endsWith('.woff2')
   ? fontData.buffer
@@ -16,7 +16,7 @@ const fontBuffer = fontPath.endsWith('.woff2')
 
 const fontConfig = [
   {
-    name: 'Inter',
+    name: 'IBM Plex Sans',
     data: fontBuffer,
     weight: 400,
     style: 'normal',
@@ -65,7 +65,7 @@ function buildLayout(title, subtitle = 'Smart Contract Oriented Programming for 
         height: '100%',
         background: BACKGROUND_GRADIENT,
         color: '#ffffff',
-        fontFamily: 'Inter',
+        fontFamily: 'IBM Plex Sans',
         padding: 80,
         justifyContent: 'center',
       },

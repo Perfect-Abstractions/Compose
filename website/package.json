@@ -16,9 +16,10 @@
   },
   "dependencies": {
     "@acid-info/docusaurus-og": "^1.0.3-beta.2",
-    "@docusaurus/core": "3.9.2",
-    "@docusaurus/preset-classic": "3.9.2",
-    "@docusaurus/theme-mermaid": "^3.9.2",
+    "@docusaurus/core": "^3.9.2",
+    "@docusaurus/faster": "^3.10.1",
+    "@docusaurus/preset-classic": "^3.10.1",
+    "@docusaurus/theme-mermaid": "^3.10.1",
     "@giscus/react": "^3.1.0",
     "@mdx-js/react": "^3.0.0",
     "clsx": "^2.0.0",
@@ -33,10 +34,9 @@
     "three": "^0.181.2"
   },
   "devDependencies": {
-    "@docusaurus/module-type-aliases": "3.9.2",
-    "@docusaurus/types": "3.9.2",
-    "@fontsource/geist-sans": "^5.2.5",
-    "@fontsource/inter": "^5.2.8"
+    "@docusaurus/module-type-aliases": "^3.10.1",
+    "@docusaurus/types": "^3.9.2",
+    "@fontsource/ibm-plex-sans": "^5.2.8"
   },
   "browserslist": {
     "production": [

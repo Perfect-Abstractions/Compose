@@ -11,7 +11,7 @@ import { STORAGE_KEYS } from '@site/src/constants/sidebar';
 import { BlogSidebarVisibilityContext } from '@site/src/contexts/BlogSidebarVisibilityContext';
 
 export default function BlogLayout(props) {
-  const { sidebar, toc, children, isBlogPostPage, ...layoutProps } = props;
+  const { sidebar, toc, children, isBlogPostPage, pageTitle, ...layoutProps } = props;
   const hasSidebar = sidebar && sidebar.items.length > 0;
   const isBlogArticlePage = isBlogPostPage === true || !!toc;
   const [sidebarFullyHidden, toggleSidebarFullyHidden] = useSidebarVisibility(
@@ -44,7 +44,7 @@ export default function BlogLayout(props) {
               /* Left sidebar hidden: main uses 9 cols so right ToC (col--2) stays visible */
               'col--9': hasSidebar && effectiveSidebarHidden,
             })}>
-            {isBlogArticlePage && <BlogArticleBreadcrumbs />}
+            {isBlogArticlePage && <BlogArticleBreadcrumbs pageTitle={pageTitle} />}
             {children}
           </main>
           {toc && <div className="col col--2">{toc}</div>}

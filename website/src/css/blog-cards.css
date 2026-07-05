@@ -5,6 +5,7 @@
 
 /* Override theme BlogPostItem/Header/Title (.title_xxxx) from 3rem to 2rem */
 .theme-blog-wrapper [class*="title_"] {
+  font-family: var(--ifm-heading-font-family);
   font-size: 2.5rem !important;
 }
 

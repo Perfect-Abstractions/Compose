@@ -198,6 +198,12 @@ const config = {
         hideOnScroll: false,
         items: [
           {
+            to: '/whitepaper',
+            label: 'Whitepaper',
+            position: 'left',
+            activeBaseRegex: '/whitepaper',
+          },
+          {
             to: "/docs",
             position: 'left',
             label: 'Docs',
@@ -238,7 +244,7 @@ const config = {
           {
             type: 'custom-icon',
             position: 'right',
-            href: 'https://discord.gg/DCBD2UKbxc',
+            href: 'https://discord.gg/5dyhH4ENdx',
             iconSrc: '/icons/discord-white.svg',
             label: 'Discord',
           },
@@ -281,7 +287,7 @@ const config = {
               },
               {
                 label: 'Discord',
-                href: 'https://discord.gg/DCBD2UKbxc',
+                href: 'https://discord.gg/5dyhH4ENdx',
               },
               {
                 label: 'GitHub Discussions',

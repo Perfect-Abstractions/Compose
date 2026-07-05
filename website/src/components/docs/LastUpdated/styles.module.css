@@ -18,9 +18,13 @@
   color: #909090;
 }
 
-.lastUpdated svg {
+.lastUpdated img {
   flex-shrink: 0;
-  color: var(--ifm-color-emphasis-500);
+  filter: brightness(0) saturate(100%) invert(40%) sepia(0%) saturate(0%) hue-rotate(0deg) brightness(95%) contrast(90%);
+}
+
+[data-theme='dark'] .lastUpdated img {
+  filter: brightness(0) invert(1);
 }
 
 .label {

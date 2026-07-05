@@ -125,6 +125,7 @@
 }
 
 .heroTitle {
+  font-family: var(--ifm-heading-font-family);
   font-size: clamp(2.5rem, 5vw, 4rem); /* Reduced max size from 5rem to 4rem */
   font-weight: 900;
   line-height: 1.2;
