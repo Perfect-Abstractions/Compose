@@ -10,7 +10,7 @@ export default function FeaturesSection() {
       link: '/docs/design/written-to-be-read',
     },
     {
-      kicker: 'ERC-2535',
+      kicker: 'ERC-2535 / ERC-8153',
       title: 'Diamond-Native',
       description: 'Deploy facets once, reuse them across multiple diamonds on chain.',
       link: '/docs/foundations/diamond-contracts',
@@ -36,7 +36,7 @@ export default function FeaturesSection() {
     {
       kicker: 'Ecosystem',
       title: 'Community-Driven',
-      description: 'Built with love by the community. Join us in creating the standard library for ERC-2535 Diamonds.',
+      description: 'Built with love by the community. Join us in creating the standard library for ERC-2535 / ERC-8153 Diamonds.',
       link: '/docs/contribution/how-to-contribute',
     },
   ];

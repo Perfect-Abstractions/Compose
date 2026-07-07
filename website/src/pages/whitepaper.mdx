@@ -4,7 +4,7 @@ description: How Smart Contract Oriented Programming and diamond-native architec
 hide_table_of_contents: false
 toc_min_heading_level: 2
 toc_max_heading_level: 2
-pdf: /compose-whitepaper-20260704.pdf
+pdf: /compose-whitepaper-20260707.pdf
 ---
 
 import DocSubtitle from '@site/src/components/docs/DocSubtitle';
@@ -17,17 +17,17 @@ import DocSubtitle from '@site/src/components/docs/DocSubtitle';
 
 The smart-contract ecosystem already depends heavily on code reuse, but that reuse has not yet become shared on-chain infrastructure. Similar logic is repeatedly redeployed across projects, creating duplicated infrastructure that increases long-term maintenance, audit, and security burdens for the ecosystem.
 
-Compose introduces Smart Contract Oriented Programming, or SCOP, to bring reuse into the deployed architecture itself. Using diamonds and stateless facets, Compose enables modular on-chain systems that are easier to build and trust across their lifecycle.
+<b>Compose</b> introduces <b>Smart Contract Oriented Programming</b>, or <b>SCOP</b>, to bring reuse into the deployed architecture itself. Using diamonds and stateless facets, Compose enables modular on-chain systems that are easier to build and trust across their lifecycle. 
 
 ## 1. Introduction
 
-Blockchain systems are reshaping how value, ownership, and coordination can operate across digital infrastructure. While their applications differ across industries, they share a common objective: to create decentralized systems that are programmable, trust-minimized and secure.
+Blockchain systems are reshaping how value, ownership, and coordination can operate on digital infrastructure. While their applications differ across industries, they share a common objective: to create decentralized systems that are programmable, trust-minimized and secure.
 
 Modern on-chain applications, however, are rarely built from entirely isolated logic. They increasingly rely on shared standards, external libraries and reusable code patterns. An empirical study of more than 350,000 Solidity smart contracts found that a typical smart-contract project contains multiple contracts, with more than 80% originating from external sources <a href="#ref-1">[1, p. 1]</a>. This finding shows how deeply Solidity development already depends on shared components and reusable patterns.
 
 As smart-contract systems grow in size and functionality, code reuse becomes a development best practice as much as an ecosystem burden. Similar standards and contract logic are repeatedly redeployed across new applications. Each redeployment places duplicate infrastructure on-chain, consumes gas, and creates another instance that must be audited. In practice, the ecosystem often pays to publish logic that already exists elsewhere because reusable on-chain components are not yet standardized enough to be trusted and used broadly.
 
-To address this gap, Compose introduces Smart Contract Oriented Programming, or SCOP: a development paradigm for building modular on-chain applications as composed systems rather than isolated deployments. SCOP treats reusable logic, application identity, shared state, and lifecycle management as explicit parts of system design. In this model, Compose is the practical composition layer that makes SCOP usable through diamond-native architecture, where diamonds provide the application container, facets provide reusable deployed functionality, and modules support storage access, initialization, and internal extension.
+To address this gap, Compose introduces Smart Contract Oriented Programming, or SCOP: a development paradigm for building modular on-chain applications as composed systems rather than isolated deployments. SCOP treats reusable logic, application identity, shared state, and lifecycle management as explicit parts of the system design. In this model, Compose is the practical composition layer that makes SCOP usable through diamond-native architecture, where diamonds provide the application container, facets provide reusable deployed functionality, and modules support storage access, initialization, and internal extension helpers.
 
 This whitepaper presents Compose as a composition layer for on-chain applications and explains how SCOP can make smart-contract systems more modular, reusable, auditable, and easier to reason about as the ecosystem continues to mature.
 
@@ -45,11 +45,11 @@ As a result, the main transition is from contract-level reasoning to system-leve
 
 Developers commonly reuse standards, import libraries, copy templates, or fork repositories. These practices reduce development time, but most reuse still happens before deployment. Once an application is compiled and deployed, familiar logic often reappears on-chain as a new contract instance, with its own address, bytecode, maintenance surface, and audit requirements.
 
-The security implications are also significant. A large-scale study of Ethereum code clones found that more than 96% of contracts in its dataset had duplicates, and that roughly 9.7% of similar contract pairs shared exactly the same vulnerabilities <a href="#ref-3">[3, p. 3]</a>. This suggests that copy-based reuse can spread risk across the ecosystem. When vulnerable logic is copied into many independent deployments, remediation becomes fragmented. Each affected project must be identified and handled separately.
+The security implications are also significant. A large-scale study of Ethereum code clones found that more than 96% of contracts in its dataset had duplicates, and that roughly 9.7% of similar contract pairs shared exactly the same vulnerabilities <a href="#ref-3">[3, p. 3]</a>. This suggests that copy-based reuse can spread risk across the ecosystem. When vulnerable logic is copied into many independent deployments, remediation becomes fragmented. <b>Each affected project must be identified and handled separately.</b>
 
 This is not only a vulnerability problem. It is a knowledge gap. When logic is repeatedly redeployed, the ecosystem loses a clear relationship between the original code and the applications that depend on it.
 
-Traditional software ecosystems provide a useful contrast. Developers in other ecosystems can rely on mature package managers to discover reusable code modules, track versions, manage dependencies, and integrate them into their new applications. Smart-contract development has source-code libraries, but on-chain logic is rarely treated as shared infrastructure.
+Traditional software ecosystems provide a useful contrast. Developers in other ecosystems can rely on mature [package managers](https://en.wikipedia.org/wiki/Package_manager) to discover reusable code modules, track versions, manage dependencies, and integrate them into their new applications. Smart-contract development has source-code libraries, but on-chain logic is rarely treated as shared infrastructure.
 
 This leaves the Solidity application ecosystem with an important gap. Reuse exists, but it is not yet organized around deployed systems. As a result, developers continue to rebuild similar features instead of building from a shared base of verified on-chain components.
 
@@ -57,15 +57,17 @@ This leaves the Solidity application ecosystem with an important gap. Reuse exis
 
 Many common smart-contract development practices borrow heavily from traditional software engineering. Developers use familiar principles such as modularity, abstraction, reuse, and separation of concerns to structure their contracts and reduce duplicated work. These principles remain valuable, but the question is whether they have been adapted correctly to the assumptions of on-chain applications.
 
-Traditional applications are usually built under a different execution model. A command-line tool, backend service, or Web2 application can be patched, replaced, or shut down when it becomes obsolete or unsafe. Its runtime environment is controlled by its operator, its internal infrastructure, and business logic are not normally exposed for arbitrary public execution.
+Traditional applications are usually built under a different execution model. A command-line tool, backend service, or [Web2 application](https://en.wikipedia.org/wiki/Web_2.0) can be patched, replaced, or shut down when it becomes obsolete or unsafe. Its runtime environment is controlled by its operator, its internal infrastructure, and business logic are not normally exposed for arbitrary public execution.
 
-On-chain applications operate under a different set of assumptions. Smart contracts are persistent on-chain artifacts. Once deployed, their code, address, state, and interfaces become part of a public execution environment. Even when a system is designed to be upgradeable, the deployed artifacts themselves remain visible, callable, and part of the historical record.
+<b>On-chain applications operate under a different set of assumptions.</b><br/><br/>
 
-Smart contracts are also shared by default. Their bytecode can be inspected, their public interfaces can be called by anyone, and their behavior is executed by a distributed network rather than by a private operator. This means they are constrained not only by the language used to write them, but also by the Ethereum Virtual Machine (EVM), gas costs, consensus rules, and the network on which they are deployed.
+[Smart contracts](https://ethereum.org/smart-contracts/) are persistent on-chain artifacts. Once deployed, their code, address, state, and interfaces become part of a public execution environment. Even when a system is designed to be upgradeable, the deployed artifacts themselves remain visible, callable, and part of the historical record.
+
+Smart contracts are also shared by default. Their bytecode can be inspected, their public interfaces can be called by anyone, and their behavior is executed by a distributed network rather than by a private operator. This means they are constrained not only by the language used to write them, but also by the [Ethereum Virtual Machine (EVM)](https://ethereum.org/developers/docs/evm/), gas costs, consensus rules, and the network on which they are deployed.
 
 Because smart contracts can hold value and coordinate permissions, failures can have serious consequences. A bug, storage collision, or unsafe upgrade path can affect not only the application itself, but also users, integrators, and other contracts that depend on it.
 
-Smart Contract Oriented Programming, or SCOP, addresses these constraints by adapting established software-engineering principles to the execution model of the EVM and the lifecycle of deployed on-chain systems.
+<b>Smart Contract Oriented Programming</b>, or <b>SCOP</b>, addresses these constraints by adapting established software-engineering principles to the execution model of the EVM and the lifecycle of deployed on-chain systems.
 
 #### Stateless logic components
 
@@ -83,7 +85,7 @@ Smart contracts already exist inside a shared execution environment. SCOP uses t
 
 SCOP treats reuse as an architectural property of deployed components, not only as a source-code practice before deployment. Components should be designed with clear interfaces, predictable boundaries, and assumptions that make them easier to verify and reuse across applications. When components are built this way, they can become shared on-chain infrastructure rather than project-specific copies.
 
-#### Independent system evolution
+#### Independent System Evolution
 
 When components are separated by clear boundaries, unrelated parts of the system can evolve independently. New functionality can be added, existing functionality can be replaced, and unused functionality can be removed without forcing the entire application to be redeployed or redesigned. This makes change more local, auditable, and easier to reason about.
 
@@ -95,34 +97,41 @@ In this sense, SCOP defines a programming model shaped by deployed code, shared 
 
 ## 5. Technical Foundation & Trade-Offs
 
-Compose makes SCOP practical by building on diamond-native architecture originally defined by ERC-2535 and further refined by ERC-8153. <a href="#ref-4">[4]</a> <a href="#ref-5">[5]</a>
+Compose makes SCOP practical by building on diamond-native architecture originally defined by [ERC-2535](https://eips.ethereum.org/EIPS/eip-2535) and further refined by [ERC-8153](https://eips.ethereum.org/EIPS/eip-8153).
 
 In this smart contract paradigm, an application is not treated as one monolithic contract that contains all of its logic. Instead, it is organized as a composed system: a diamond proxy provides the stable contract address and owns the application state, while stateless facets provide focused units of functionality that can be added, replaced, removed, and reused depending on the needs of the application.
 
-Although the system is internally composed of multiple facets, it still behaves externally like a single contract. Users interact with one address, one externally callable surface, and one selector space. This means duplicated selectors cannot coexist in the same diamond: each external function selector must resolve to a single implementation at any given time. When desired, the application can also become immutable by removing the upgrade mechanism while keeping other administrative features, such as ownership or access control, intact.
+Although the system is internally composed of multiple facets, it still behaves externally like a single contract. <b>Users interact with one address, one externally callable surface, and one selector space.</b> This means duplicated selectors cannot coexist in the same diamond: each external function selector must resolve to a single implementation at any given time. When desired, the application can also become immutable by removing the upgrade mechanism while keeping other administrative features, such as ownership or access control, intact.
 
 ![Diamond-native composition model: identity, logic, and state](/img/svg/figure-1-diamond-composition-model.svg)
 
 *<b>Figure 1:</b> Diamond-native composition model: identity, logic, and state*
 
-This architecture separates three concerns that are often tightly coupled in traditional smart-contract deployments: identity, logic, and state. The diamond proxy gives the application a stable on-chain identity and routes external calls by function selector. Facets provide reusable logic components. Storage domains define how shared state is organized and accessed across the composed system. Together, these parts allow a smart-contract application to grow without embedding every feature, standard, or extension into a single deployment.
+This architecture separates three concerns that are often tightly coupled in traditional smart-contract deployments: identity, logic, and state. 
+
+The diamond [proxy](https://refactoring.guru/design-patterns/proxy) gives the application a stable on-chain identity and routes external calls by function selector. Facets provide reusable logic components. Storage domains define how shared state is organized and accessed across the composed system. <b>Together, these parts allow a smart-contract application to grow without embedding every feature, standard, or extension into a single deployment.</b>
 
 Facets are the logic layer of the system. Each facet is a deployed contract that implements a focused set of external functions. In Compose, facets are intended to be small, readable, and self-contained. Instead of relying primarily on inheritance trees or project-specific copies of common code, developers can compose applications from pre-deployed facets, then add custom facets for the functionality unique to their system.
 
-Selectors make this composition explicit. Each external function is identified by its selector, and the diamond maps selectors to the facets that currently own them. Adding, replacing, or removing functionality becomes a precise change to that mapping rather than a full redeployment of the application. Because facets execute in the context of the diamond, they read and write the diamond's storage rather than their own. This makes storage discipline essential. Compose uses explicit storage locations, so components can share state intentionally or define independent storage domains when needed.
+Selectors make this composition explicit. Each external function is identified by its selector, and the diamond maps selectors to the facets that currently own them. Adding, replacing, or removing functionality becomes a precise change to that mapping rather than a full redeployment of the application. 
+
+Because facets execute in the context of the diamond, they read and write the diamond's storage rather than their own. This makes storage discipline essential. Compose uses explicit storage locations, so components can share state intentionally or define independent storage domains when needed.
 
 ![Facet and Module Interaction](/img/svg/figure-2-facet-and-module-interaction.svg)
-*<b>Figure 2:</b> Facet and Module Interaction*
+*<b>Figure 2:</b> Facet & Module Interaction*
 
-Compose also distinguishes between deployed facets and internal modules. Facets provide complete external functionality that can be composed directly into a diamond. Modules act as a bridge between reusable facet infrastructure and project-specific logic: they provide internal helper code for deployment, initialization, storage access, and custom integrations. Unlike facets, modules are not installed into the diamond as externally callable components. Instead, they are used by facets or custom facets. Because those facets execute in the diamond context, modules can help project-specific logic read and write the same explicit storage domains used by the composed system.
+Compose also distinguishes between deployed facets and internal modules. Facets provide complete external functionality that can be composed directly into a diamond. <b>Modules act as a bridge between reusable facet infrastructure and project-specific logic</b>: they provide internal helper code for deployment, initialization, storage access, and custom integrations. Unlike facets, modules are not installed into the diamond as externally callable components. Instead, they are used by custom facets. Because those facets execute in the diamond context, modules can help project-specific logic read and write the same explicit storage domains used by the composed system.
 
-These benefits come with trade-offs. Diamond-based systems introduce an additional routing layer, and delegated execution has runtime overhead compared with logic implemented directly in a single contract. Diamond-based systems also require careful storage management, clear selector ownership, disciplined initialization, and well-governed upgrade authority. Compose accepts these trade-offs by making the system structure explicit, so routing, selector ownership, storage access, and upgrade paths can be inspected rather than hidden inside a monolithic deployment.
+These benefits come with trade-offs. Diamond-based systems introduce an additional routing layer, and delegated execution has runtime overhead compared with logic implemented directly in a single contract. Diamond-based systems also require careful storage management, clear selector ownership, disciplined initialization, and well-governed upgrade authority. 
+
+Compose accepts these trade-offs by making the system structure explicit, so routing, selector ownership, storage access, and upgrade paths can be inspected rather than hidden inside a monolithic deployment.
 
 ## 6. Trusted Reuse & Auditability
 
-*<b>Figure 3:</b> Trusted Reuse Through Shared Facet Infrastructure*
-
 For reusable on-chain logic to become shared infrastructure, it must be more than available logic components. It must be identifiable, verifiable, and understandable in the systems that use it. Compose treats trust as a property of explicit composition: developers and auditors should be able to see which components are used, what assumptions they make, how they are connected, and how the system has changed over time.
+
+![Trusted Reuse Through Shared Facet Infrastructure](/img/svg/figure-3-trusted-infra.svg)
+*<b>Figure 3:</b> Trusted Reuse Through Shared Facet Infrastructure*
 
 A reusable component becomes more valuable when its identity is preserved across deployments and integrations. Its deployed address, verified source code, function selectors, version information, and known assumptions help establish what the component is and how it is expected to behave. This does not make the component automatically safe, but it gives developers and auditors a clearer basis for review.
 
@@ -130,7 +139,7 @@ Trust also depends on how components are assembled. A component may expose speci
 
 Metadata and deployment history strengthen traceability by showing what a component is, where it is used, and how a system reached its current configuration. Neither replaces verification, but both provide important context for review.
 
-This traceability also matters after deployment. If a reusable facet is later found to be vulnerable, preserving its identity can make it easier to identify which systems use it and which functions are affected. Events, indexers, and monitoring tools can help discover affected diamonds and support faster mitigation. This is much harder with pure source-code reuse, where similar logic may be redeployed many times as unrelated contract instances.
+This traceability also matters after deployment. If a [reusable facet](/docs/foundations/reusable-facet-logic) is later found to be vulnerable, preserving its identity can make it easier to identify which systems use it and which functions are affected. Events, indexers, and monitoring tools can help discover affected diamonds and support faster mitigation. This is much harder with pure source-code reuse, where similar logic may be redeployed many times as unrelated contract instances.
 
 This visibility has a trade-off. If a pre-deployed facet is vulnerable, attackers could also be able to identify affected systems more quickly. Compose does not eliminate this risk. The same problem already exists with source-code reuse, where attackers can scan for contracts that contain a known vulnerable pattern. The difference is that explicit composition gives projects, auditors, and monitoring tools a clearer mechanism to detect affected systems, issue warnings, and coordinate response across the ecosystem.
 
@@ -148,7 +157,7 @@ By applying SCOP through explicit components, Compose turns the same underlying 
 
 Larger protocols often contain multiple domains of logic, such as permissions, accounting, transfers, governance, rewards, or integrations. Compose makes this separation natural by organizing each domain into focused components that are easier to understand and reason about. This makes the overall system easier to review, audit, and maintain.
 
-This structure also makes collaboration easier. Teams can divide work around clear modules, allowing each developer or team to own a focused part of the system with less risk of unintended coupling. Well-understood facets can be implemented quickly to deliver features, while modules that require deeper research can be isolated, documented, and developed on their own timeline without destabilizing the rest of the system.
+This structure also makes collaboration easier. Teams can divide work around clear modules, allowing each developer or team to own a focused part of the system with less risk of unintended coupling. Well-understood facets can be implemented quickly to deliver features, while modules that require deeper research can be isolated, documented, and developed on their own timeline without destabilizing the rest of the development cycle.
 
 #### Transparent Upgradeable Systems
 
@@ -160,13 +169,11 @@ This flexibility matters in real-world environments where requirements can chang
 
 Compose is also useful for systems that are intended to become immutable. A project can begin with upgradeability during development or governance-controlled operation, then remove its upgrade mechanism once the system is complete. This makes immutability a final deployment posture without giving up flexibility during the earlier stages of development.
 
-Through facet-based composition, Compose allows large immutable systems to move beyond what a single contract can practically contain, without sacrificing readability or auditability.
-
 #### Standard-Based Applications
 
 Compose is not limited to large protocols. Many applications only need a standard base, ownership, access control, and a few extensions, but they can still benefit from being assembled quickly from known components. By deploying a lightweight diamond proxy and reusing verified facets, teams can reduce time to market, lower duplicated deployment cost, and still benefit from the natural properties of the diamond model.
 
-Across these use cases, Compose provides a different way to think about how on-chain applications can be implemented, deployed, and operated. By placing smart contracts at the center of the design, Compose gives teams and developers a clearer way to build, review, and operate modular systems that can evolve without becoming opaque.
+Across these use cases, Compose provides a different way to think about how on-chain applications can be implemented, deployed, and operated. By placing smart contracts at the center of the design, Compose gives teams and developers a clearer way to build, review, and operate modular systems that can evolve over time.
 
 ## 8. Building the Compose Ecosystem
 
@@ -174,9 +181,11 @@ Compose grew from practical work around diamond-based smart-contract development
 
 That work created the foundation for a broader view of modular on-chain applications: systems built from shared pre-deployed contracts. The direction behind Compose took time to form because the problem extends beyond any single library, tool, or architectural pattern. It sits at the intersection of code reuse, upgradeability, auditability, deployed infrastructure, developer workflow, and long-term trust.
 
-For Compose to become useful beyond its core library, it must make modular smart-contract systems easier to assemble, inspect, and operate across their lifecycle. Developers need practical workflows for composing systems, while auditors need a clearer view of how known components, custom logic, permissions, storage, and upgrades fit together.
+For Compose to become useful beyond its core library, it must make modular smart-contract systems easier to assemble, inspect, and operate across their lifecycle. Developers need a practical framework for composing systems, while auditors need a clearer view of how known components, custom logic, permissions, storage, and upgrades fit together.
 
-Over time, this will expand into a broader ecosystem of open-source libraries, developer tooling, deployed component libraries, and trusted registries. The goal is not only to provide reusable contracts, but to create the conditions for reusable on-chain infrastructure to be discovered, verified, monitored, and safely reused.
+Over time, this will expand into a broader ecosystem of open-source libraries, developer tooling, deployed component libraries, and trusted registries. 
+
+<b>The goal is not only to provide reusable contracts, but to create the conditions for reusable on-chain infrastructure to be discovered, verified, monitored, and safely reused.</b><br/><br/>
 
 In this sense, Compose is not only a library for building diamonds. It is a step toward an ecosystem where modular on-chain applications can be assembled from known components and reviewed as structured systems.
 
@@ -184,9 +193,9 @@ In this sense, Compose is not only a library for building diamonds. It is a step
 
 On-chain applications are evolving from isolated contracts into long-lived systems made of many interacting parts. As this happens, source-code reuse alone is no longer enough. Reused logic must remain identifiable, inspectable, and trustworthy after deployment.
 
-Compose introduces Smart Contract Oriented Programming as a practical model for that shift. By building on diamond-native architecture, it treats applications as composed systems made from explicit components, where logic, state, identity, and lifecycle management can be reasoned about directly.
+<b>Compose</b> introduces <b>Smart Contract Oriented Programming</b> as a practical model for that shift. By building on diamond-native architecture, it treats applications as composed systems made from explicit components, where logic, state, identity, and lifecycle management can be reasoned about directly.
 
-The goal is not to hide complexity, but to make modular on-chain systems clearer. Compose provides a foundation for applications that can be assembled from known components, reviewed as structured systems, and operated with greater confidence over time.
+Rather than hiding complexity, Compose gives modular on-chain systems a clearer structure. It provides a foundation for applications that can be assembled from known components, reviewed as structured systems, and operated with greater confidence over time.
 
 <LastUpdated date="2026-07-04T12:00:00.000Z" />
 

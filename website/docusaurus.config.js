@@ -299,6 +299,10 @@ const config = {
             title: 'Project',
             items: [
               {
+                label: 'Whitepaper',
+                href: '/whitepaper'
+              },
+              {
                 label: 'GitHub',
                 href: 'https://github.com/Perfect-Abstractions/Compose',
               },

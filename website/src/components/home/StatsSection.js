@@ -11,9 +11,9 @@ export default function StatsSection() {
 
   const stats = [
     {label: 'Open Source', value: 'MIT', icon: 'scroll'},
-    {label: 'Diamond Standard', value: 'ERC-2535', icon: 'diamond'},
+    {label: 'Diamond Standard', value: 'ERC-2535/8153', icon: 'diamond'},
     {label: 'Contributors', value: contributorsValue, icon: 'community'},
-    {label: 'Built with Love', value: 'Community', icon: 'heart'},
+    {label: 'Diamond Ecosystem TVL', value: 'Over $1B', icon: 'chart'},
   ];
 
   return (
