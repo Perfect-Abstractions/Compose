@@ -25,6 +25,7 @@
     "clsx": "^2.0.0",
     "docusaurus-markdown-source-plugin": "^2.0.1",
     "dotenv": "^17.2.3",
+    "fs-extra": "^11.2.0",
     "gsap": "^3.13.0",
     "posthog-docusaurus": "^2.0.5",
     "prism-react-renderer": "^2.3.0",
