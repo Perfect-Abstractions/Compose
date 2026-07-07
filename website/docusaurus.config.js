@@ -363,16 +363,7 @@ const config = {
   plugins: [
     path.join(__dirname, 'plugins', 'markdown-source-docs.js'),
     path.join(__dirname, 'plugins', 'canonical-inject.js'),
-    [
-      '@acid-info/docusaurus-og',
-      {
-        path: './preview-images',
-        imageRenderers: {
-          'docusaurus-plugin-content-docs': require('./lib/ImageRenderers.js').docs,
-          'docusaurus-plugin-content-blog': require('./lib/ImageRenderers.js').blog,
-        },
-      },
-    ],
+    path.join(__dirname, 'plugins', 'social-cards.js'),
     ...(process.env.POSTHOG_API_KEY
       ? [
           [
