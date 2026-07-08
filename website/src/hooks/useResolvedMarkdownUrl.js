@@ -1,9 +1,17 @@
 import { useState, useEffect } from 'react';
+import { usePluginData } from '@docusaurus/useGlobalData';
 
-/** Normalize path so /docs is treated as /docs/ for URL building. */
 function normalizeDocsPath(path) {
   if (path === '/docs') return '/docs/';
   return path;
+}
+
+function isolateHash(pathname) {
+  const idx = pathname.indexOf('#');
+  return idx === -1 ? { path: pathname, hash: '' } : {
+    path: pathname.slice(0, idx),
+    hash: pathname.slice(idx),
+  };
 }
 
 /**
@@ -11,18 +19,27 @@ function normalizeDocsPath(path) {
  * pathname must not include hash (use location.pathname).
  */
 function getMarkdownUrlCandidates(currentPath) {
-  const path = normalizeDocsPath(currentPath);
-  if (path !== '/docs/' && !path.startsWith('/docs/')) return null;
-  if (path === '/docs/') {
-    return { primary: `${path}intro.md` };
+  const { path } = isolateHash(currentPath);
+  const normalizedPath = normalizeDocsPath(path);
+
+  if (normalizedPath === '/docs/' || normalizedPath.startsWith('/docs/')) {
+    if (normalizedPath === '/docs/') {
+      return { primary: '/docs/intro.md' };
+    }
+    if (normalizedPath.endsWith('/')) {
+      return {
+        primary: normalizedPath.slice(0, -1) + '.md',
+        fallback: normalizedPath + 'index.md',
+      };
+    }
+    return { primary: normalizedPath + '.md' };
   }
-  if (path.endsWith('/')) {
-    return {
-      primary: path.slice(0, -1) + '.md',
-      fallback: path + 'index.md',
-    };
+
+  const cleanPath = normalizedPath.replace(/\/$/, '');
+  if (cleanPath) {
+    return { primary: cleanPath + '.md' };
   }
-  return { primary: path + '.md' };
+  return null;
 }
 
 /**
@@ -30,11 +47,12 @@ function getMarkdownUrlCandidates(currentPath) {
  * slash, performs a HEAD request to choose between single-doc (.md) and category
  * index (index.md).
  * @param {string} pathname - location.pathname (no hash)
- * @returns {{ candidates: object | null, resolvedUrl: string | null, urlReady: boolean, markdownUrl: string | null }}
+ * @returns {{ candidates: object | null, resolvedUrl: string | null, urlReady: boolean, markdownUrl: string | null, markdownContent: string | null }}
  */
 export function useResolvedMarkdownUrl(pathname) {
   const [resolvedUrl, setResolvedUrl] = useState(null);
   const candidates = pathname ? getMarkdownUrlCandidates(pathname) : null;
+  const allMarkdownContent = usePluginData('markdown-source-plugin');
 
   useEffect(() => {
     if (!candidates) {
@@ -61,5 +79,10 @@ export function useResolvedMarkdownUrl(pathname) {
   const markdownUrl = resolvedUrl ?? candidates?.primary ?? null;
   const urlReady = !candidates?.fallback || resolvedUrl != null;
 
-  return { candidates, resolvedUrl, urlReady, markdownUrl };
+  const markdownContent =
+    candidates?.primary && allMarkdownContent?.[candidates.primary]
+      ? allMarkdownContent[candidates.primary]
+      : null;
+
+  return { candidates, resolvedUrl, urlReady, markdownUrl, markdownContent };
 }

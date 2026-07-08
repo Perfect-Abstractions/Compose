@@ -11,7 +11,7 @@ While working on Compose, I decided to revisit parts of [ERC-2535 Diamonds](http
 
 However, that effort revealed deeper opportunities for improvement — enough that I ultimately decided to propose a new standard for diamond contracts.
 
-<!-- truncate -->
+{/* truncate */}
 
 ## A Flawed Narrative
 

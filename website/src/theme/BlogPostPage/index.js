@@ -17,7 +17,7 @@ import BlogPostPageStructuredData from '@theme/BlogPostPage/StructuredData';
 import TOC from '@theme/TOC';
 import ContentVisibility from '@theme/ContentVisibility';
 
-function BlogPostPageContent({ sidebar, children }) {
+function BlogPostPageContent({ sidebar, pageTitle, children }) {
   const { metadata, toc } = useBlogPost();
   const { nextItem, prevItem, frontMatter } = metadata;
   const {
@@ -29,6 +29,7 @@ function BlogPostPageContent({ sidebar, children }) {
     <BlogLayout
       sidebar={sidebar}
       isBlogPostPage
+      pageTitle={pageTitle}
       toc={
         !hideTableOfContents && toc.length > 0 ? (
           <TOC
@@ -51,6 +52,7 @@ function BlogPostPageContent({ sidebar, children }) {
 
 export default function BlogPostPage(props) {
   const BlogPostContent = props.content;
+  const pageTitle = props.content.contentTitle || props.content.metadata.title;
   return (
     <BlogPostProvider content={props.content} isBlogPostPage>
       <HtmlClassNameProvider
@@ -60,7 +62,7 @@ export default function BlogPostPage(props) {
         )}>
         <BlogPostPageMetadata />
         <BlogPostPageStructuredData />
-        <BlogPostPageContent sidebar={props.sidebar}>
+        <BlogPostPageContent sidebar={props.sidebar} pageTitle={pageTitle}>
           <BlogPostContent />
         </BlogPostPageContent>
       </HtmlClassNameProvider>

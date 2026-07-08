@@ -24,6 +24,9 @@
 .markdown-actions-breadcrumbs-row .markdown-actions-container {
   flex-shrink: 0;
   position: relative;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
 }
 
 /* Style the dropdown button to match the active breadcrumb (light and dark mode) */

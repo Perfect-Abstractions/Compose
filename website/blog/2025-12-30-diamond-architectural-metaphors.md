@@ -8,7 +8,7 @@ tags: [architecture]
 
 > The following sections use metaphors to clarify diamond architectural intent and design philosophy.
 
-<!-- truncate -->
+{/* truncate */}
 
 ## Modularity
 

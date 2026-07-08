@@ -9,8 +9,8 @@ import CtaSection from '../components/home/CtaSection';
 export default function Home() {
   return (
     <Layout
-      title={`Smart Contract Library for ERC-2535 Diamonds`}
-      description="Compose is a smart contract library for ERC-2535 Diamonds. Build readable, composable smart contracts with onchain standard library facets.">
+      title={`The Composition Toolkit for ERC-2535 / ERC-8153 Diamonds`}
+      description="Compose provides a facets library and developer tooling for building modular diamond systems. Assemble applications from reusable on-chain components with on-chain composition">
       <HomepageHeader />
       <main>
         <FeaturesSection />

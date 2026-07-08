@@ -26,7 +26,9 @@ export default function HomepageHeader() {
     <>
       <div className={styles.heroDescriptionWrapper}>
         <p className={styles.heroSubtitle}>
-          Compose provides the standard facet library for building modular, diamond-based smart contract systems
+        On-chain infrastructure should be shared, not rebuilt.
+        <br/>
+        Compose is the composition toolkit for modular on-chain systems.
         </p>
       </div>
       <div className={styles.heroCta}>
@@ -49,8 +51,8 @@ export default function HomepageHeader() {
             />
           </svg>
         </Link>
-        <Link className={clsx(styles.ctaButton, styles.ctaSecondary)} to="/docs/foundations">
-          <span>Learn Core Concepts</span>
+        <Link className={clsx(styles.ctaButton, styles.ctaSecondary)} to="/whitepaper">
+          <span>Read Our Whitepaper</span>
         </Link>
       </div>
     </>

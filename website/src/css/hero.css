@@ -26,6 +26,7 @@
 }
 
 .hero__title {
+  font-family: var(--ifm-heading-font-family);
   font-size: 3.5rem;
   font-weight: 800;
   letter-spacing: -0.02em;

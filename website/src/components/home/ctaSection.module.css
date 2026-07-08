@@ -1,5 +1,3 @@
-@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@500;600;700&display=swap');
-
 /* Fluid aurora banner — Compose blues (reference: centered pill CTAs + curved glow) */
 
 .ctaSection {
@@ -111,7 +109,7 @@
 }
 
 .ctaTitle {
-  font-family: 'Outfit', var(--ifm-font-family-base);
+  font-family: var(--ifm-font-family-base);
   font-size: clamp(1.65rem, 4.2vw, 2.35rem);
   font-weight: 700;
   line-height: 1.2;

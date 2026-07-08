@@ -52,6 +52,7 @@
 }
 
 .docHeroTitle {
+  font-family: var(--ifm-heading-font-family);
   margin: 0 0 1.5rem 0;
   font-size: 3rem;
   font-weight: 800;

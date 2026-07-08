@@ -61,6 +61,10 @@
   color: var(--ifm-color-emphasis-600);
 }
 
+[data-theme='dark'] .reportLink :global(img) {
+  filter: brightness(0) invert(1);
+}
+
 @media (hover: hover) and (pointer: fine) {
   .editWrap :global(a),
   .reportLink {

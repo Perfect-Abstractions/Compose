@@ -197,9 +197,8 @@ export default function CodeShowcase() {
       <div className="container">
         <div className={styles.showcaseGrid}>
           <div className={styles.showcaseContent}>
-            <span className={styles.showcaseBadge}>Shared Storage Architecture</span>
             <Heading as="h2" className={styles.showcaseTitle}>
-              Facets and Modules Working Together
+              {`Ship Extensions on Shared State`}
             </Heading>
             <p className={styles.showcaseDescription}>
               Both facets and modules access the same storage in your diamond.

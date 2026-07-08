@@ -26,3 +26,7 @@ website/node_modules
 /docs/
 # Ignore Docs generation summary file
 docgen-summary.json
+
+.agents
+.cursor
+.opencode

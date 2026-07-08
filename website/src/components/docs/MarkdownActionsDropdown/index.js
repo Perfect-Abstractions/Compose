@@ -5,12 +5,16 @@
  * of intro.md (which only exists for the root /docs & /docs/ page).
  * When path has a trailing slash (e.g. /docs/contribution/code-style-guide/#hash),
  * we try single-doc URL first (code-style-guide.md), then category index (index.md).
+ *
+ * Also supports standalone MDX pages (e.g. /whitepaper) via
+ * useResolvedMarkdownUrl which now handles non-/docs paths.
  */
 import React, { useState, useRef, useCallback } from 'react';
 import ChevronDownIcon from '@site/static/icons/chevron-down-filled.svg';
 import ViewIcon from '@site/static/icons/view.svg';
 import CopyIcon from '@site/static/icons/copy.svg';
 import CheckmarkFilledIcon from '@site/static/icons/checkmark-filled.svg';
+import { useLocation } from '@docusaurus/router';
 import { useResolvedMarkdownUrl } from '../../../hooks/useResolvedMarkdownUrl';
 import { useClickOutside } from '../../../hooks/useClickOutside';
 
@@ -19,48 +23,62 @@ export default function MarkdownActionsDropdown() {
   const [isOpen, setIsOpen] = useState(false);
   const dropdownRef = useRef(null);
 
-  const rawPath = typeof window !== 'undefined' ? window.location.pathname : '';
-  const isDocsPage = rawPath === '/docs' || rawPath.startsWith('/docs/');
-  const { candidates, urlReady, markdownUrl } = useResolvedMarkdownUrl(rawPath);
+  const location = useLocation();
+  const rawPath = location?.pathname ?? '';
+  const { candidates, urlReady, markdownUrl, markdownContent } = useResolvedMarkdownUrl(rawPath);
   const closeDropdown = useCallback(() => setIsOpen(false), []);
 
   useClickOutside(dropdownRef, isOpen, closeDropdown);
 
-  if (!isDocsPage || !candidates) {
+  if (!candidates) {
     return null;
   }
 
   const handleOpenMarkdown = () => {
     if (!urlReady || !markdownUrl) return;
-    window.open(markdownUrl, '_blank');
+    if (markdownContent) {
+      const blob = new Blob([markdownContent], { type: 'text/markdown' });
+      window.open(URL.createObjectURL(blob), '_blank');
+    } else {
+      window.open(markdownUrl, '_blank');
+    }
     setIsOpen(false);
   };
 
   const handleCopyMarkdown = async () => {
-    if (!urlReady || !markdownUrl) return;
+    if (!urlReady) return;
     try {
-      const urlToFetch = markdownUrl;
-      const fetchMarkdown = () =>
-        fetch(urlToFetch).then((r) => {
-          if (r.ok) return r.text();
-          if (candidates.fallback && urlToFetch === candidates.primary) {
-            return fetch(candidates.fallback).then((r2) => {
-              if (!r2.ok) throw new Error('Failed to fetch markdown');
-              return r2.text();
-            });
-          }
-          throw new Error('Failed to fetch markdown');
-        });
-      // iOS Safari: clipboard.write() must run in the same user gesture as the click;
-      // ClipboardItem + Promise keeps the gesture context after fetch().
-      if (typeof ClipboardItem !== 'undefined') {
-        const item = new ClipboardItem({
-          'text/plain': fetchMarkdown().then((text) => new Blob([text], { type: 'text/plain' })),
-        });
-        await navigator.clipboard.write([item]);
+      if (markdownContent) {
+        await navigator.clipboard.writeText(markdownContent);
       } else {
-        const text = await fetchMarkdown();
-        await navigator.clipboard.writeText(text);
+        const urlToFetch = markdownUrl;
+        const fetchMarkdown = () =>
+          fetch(urlToFetch).then((r) => {
+            if (!r.ok) {
+              if (candidates.fallback && urlToFetch === candidates.primary) {
+                return fetch(candidates.fallback).then((r2) => {
+                  if (!r2.ok) throw new Error('Failed to fetch markdown');
+                  return r2.text();
+                });
+              }
+              throw new Error('Failed to fetch markdown');
+            }
+            return r.text().then((text) => {
+              if (text.trim().startsWith('<!DOCTYPE') || text.trim().startsWith('<html')) {
+                throw new Error('Server returned HTML instead of markdown');
+              }
+              return text;
+            });
+          });
+        if (typeof ClipboardItem !== 'undefined') {
+          const item = new ClipboardItem({
+            'text/plain': fetchMarkdown().then((text) => new Blob([text], { type: 'text/plain' })),
+          });
+          await navigator.clipboard.write([item]);
+        } else {
+          const text = await fetchMarkdown();
+          await navigator.clipboard.writeText(text);
+        }
       }
 
       setCopied(true);

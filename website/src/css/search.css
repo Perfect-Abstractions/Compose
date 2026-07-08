@@ -630,7 +630,7 @@
   justify-content: center;
   text-align: center;
   box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05), inset 0 -1px 0 rgba(0, 0, 0, 0.05);
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  font-family: var(--ifm-font-family-base);
 }
 
 [data-theme='dark'] .DocSearch-Commands-Key {
