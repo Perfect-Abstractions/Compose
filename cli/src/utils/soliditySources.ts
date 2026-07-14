@@ -2,8 +2,21 @@ import path from "node:path";
 
 /** Prefix used to identify Compose package imports. */
 export const COMPOSE_PACKAGE_PREFIX = "@perfect-abstractions/compose/";
-const CLI_COMPOSE_PATH = "./node_modules/@perfect-abstractions/compose/";
 const LOCAL_TEMPLATE_PREFIX = "./src/templates/";
+
+/**
+ * Resolves the installed root directory of the `@perfect-abstractions/compose`
+ * package using Node module resolution.
+ *
+ * This correctly handles monorepo workspaces where npm may hoist the
+ * dependency to the root `node_modules/` instead of the CLI's own
+ * `node_modules/`. It also works for global installs and any other
+ * layout where the CLI's dependencies are resolved by Node.
+ */
+function getComposePackageRoot(): string {
+  const pkgJson = require.resolve("@perfect-abstractions/compose/package.json");
+  return path.dirname(pkgJson);
+}
 
 /**
  * Identifies catalog paths that should resolve through the installed Compose package.
@@ -46,7 +59,8 @@ export function toComposePackagePath(sourcePath: string): string {
 
 /**
  * Resolves a catalog Solidity path to a local file the CLI can read for validation.
- * Package paths resolve from the CLI's own `node_modules/@perfect-abstractions/compose/`.
+ * Package paths resolve via Node module resolution from the CLI's installed
+ * `@perfect-abstractions/compose` dependency.
  * Local paths resolve from the CLI's `src/templates/` directory.
  *
  * @param sourcePath - The catalog source path to resolve.
@@ -54,7 +68,7 @@ export function toComposePackagePath(sourcePath: string): string {
  */
 export function resolveCatalogSourceForRead(sourcePath: string): string {
   if (isComposePackagePath(sourcePath)) {
-    return path.resolve(process.cwd(), CLI_COMPOSE_PATH, composePackageSubpath(sourcePath));
+    return path.join(getComposePackageRoot(), composePackageSubpath(sourcePath));
   }
 
   return path.resolve(process.cwd(), sourcePath);
