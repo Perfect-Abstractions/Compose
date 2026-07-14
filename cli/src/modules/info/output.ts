@@ -77,21 +77,18 @@ function printDiamond(diamond: DiamondInfo): void {
 function printFacet(facet: FacetInfo, isLast: boolean, prefix: string): void {
   const branch = isLast ? TREE_LAST : TREE_BRANCH;
   const childPrefix = prefix + (isLast ? TREE_SPACE : TREE_PIPE);
-
-  console.log(dim(`${prefix}${branch}`) + green(facet.name));
-
   const sourceLine = formatSource(facet);
-  if (sourceLine) {
-    console.log(dim(childPrefix) + sourceLine);
-  }
 
-  for (const selector of facet.selectors) {
-    console.log(dim(childPrefix) + selector);
-  }
+  console.log(dim(`${prefix}${branch}`) + green(facet.name) + (sourceLine ? " " + sourceLine : ""));
 
   for (const slot of facet.storageSlots) {
     console.log(dim(childPrefix) + formatStorageSlot(slot));
   }
+
+  for (const selector of facet.selectors) {
+    console.log(dim(childPrefix) + "• " + selector);
+  }
+  console.log(dim(childPrefix));
 }
 
 /**
@@ -103,9 +100,9 @@ function printFacet(facet: FacetInfo, isLast: boolean, prefix: string): void {
 function formatSource(facet: FacetInfo): string {
   switch (facet.source) {
     case "local":
-      return dim(`local   ${facet.contract}`);
+      return dim(`${facet.contract}`);
     case "package":
-      return dim(`package ${facet.package ?? "unknown"}`);
+      return dim(`${facet.package ?? "unknown package"}`);
     case "registry":
       return dim("registry");
     default:
@@ -122,5 +119,5 @@ function formatSource(facet: FacetInfo): string {
 function formatStorageSlot(slot: StorageSlotInfo): string {
   const structLabel = slot.structName ? `  ${slot.structName}` : "";
   const layoutStr = slot.layout.length > 0 ? `  ${dim(`[${slot.layout.join(", ")}]`)}` : "";
-  return dim(slot.slot) + structLabel + layoutStr;
+  return yellow(slot.slot) + structLabel + layoutStr;
 }
