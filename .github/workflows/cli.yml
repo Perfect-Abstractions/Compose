@@ -84,8 +84,7 @@ jobs:
             --framework foundry \
             --base counter \
             --ownership owner \
-            --yes \
-            --no-install-deps
+            --yes
           cd ci-foundry
           forge build
 
@@ -98,8 +97,7 @@ jobs:
             --toolbox ethers \
             --base counter \
             --ownership owner \
-            --yes \
-            --no-install-deps
+            --yes
           cd ci-hardhat
           npx hardhat compile
 
