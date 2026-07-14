@@ -5,8 +5,10 @@ pragma solidity >=0.8.30;
  * https://compose.diamonds
  */
 
-// TEST FIXTURE: This facet intentionally has identifier collisions.
-// Used by the CLI to validate that identifier collisions are detected.
+/*
+ * TEST FIXTURE: This facet intentionally has identifier collisions.
+ * Used by the CLI to validate that identifier collisions are detected.
+ */
 
 contract ERC20IdentifierCollisionError {
     bytes32 constant STORAGE_POSITION = keccak256("erc20.identifier");
@@ -23,7 +25,7 @@ contract ERC20IdentifierCollisionError {
         }
     }
 
-    // ERROR: Two functions with the same name but different signatures
+    /* ERROR: Two functions with the same name but different signatures */
     function getValue() external view returns (uint256) {
         return getStorage().value;
     }

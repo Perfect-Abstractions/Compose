@@ -5,8 +5,10 @@ pragma solidity >=0.8.30;
  * https://compose.diamonds
  */
 
-// TEST FIXTURE: This facet intentionally does NOT implement exportSelectors().
-// Used by the CLI to validate that missing exportSelectors() is detected.
+/*
+ * TEST FIXTURE: This facet intentionally does NOT implement exportSelectors().
+ * Used by the CLI to validate that missing exportSelectors() is detected.
+ */
 
 contract ERC20MissingExportSelector {
     bytes32 constant STORAGE_POSITION = keccak256("erc20.missing");

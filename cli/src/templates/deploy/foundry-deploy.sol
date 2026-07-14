@@ -18,13 +18,13 @@ contract DeployScript is Script {
 
         address[] memory facets = new address[]({{FACET_COUNT}});
 
-        // Base facet generation.
+        /* Base facet generation. */
 {{BASE_LINES}}
 
-        // Library facet generation.
+        /* Library facet generation. */
 {{LIBRARY_LINES}}
 
-        // Define diamond proxy.
+        /* Define diamond proxy. */
         diamond = new Diamond(facets);
         console.log("Diamond:", address(diamond));
 

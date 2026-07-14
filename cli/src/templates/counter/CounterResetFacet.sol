@@ -5,7 +5,7 @@ pragma solidity >=0.8.30;
  * https://compose.diamonds
  */
 
-/// @custom:storage-location erc7201:counter
+/** @custom:storage-location erc7201:counter */
 contract CounterResetFacet {
     bytes32 constant STORAGE_POSITION = keccak256("counter");
 
