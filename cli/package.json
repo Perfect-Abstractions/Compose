@@ -28,8 +28,8 @@
     "LICENSE.md"
   ],
   "dependencies": {
-    "@perfect-abstractions/compose": "0.0.4",
     "@inquirer/prompts": "^8.5.2",
+    "@perfect-abstractions/compose": "0.0.4",
     "commander": "^13.1.0",
     "fs-extra": "^11.3.3",
     "inquirer": "^13.3.0",

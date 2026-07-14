@@ -19,6 +19,7 @@ This starts an interactive flow to scaffold a new diamond project with:
 
 ```bash
 compose init [options]
+compose catalog
 compose info
 compose validate
 compose --version | -v
@@ -43,6 +44,10 @@ Scaffold a new Compose diamond project.
 - `--no-install-deps`: skip dependency installation
 
 When `--yes` is not provided, `compose init` will prompt for any values you omit.
+
+### `compose catalog`
+
+List all available bases for init. Displays bases grouped by type (Features, Access Control) with their required and optional facet counts.
 
 ### `compose info`
 

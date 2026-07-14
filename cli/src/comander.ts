@@ -40,6 +40,10 @@ export function buildProgram(): Command {
     .command("info")
     .description("Display a summary of the local project")
 
+  program
+    .command("catalog")
+    .description("List all available bases in the Compose Catalog")
+
   return program;
 }
 
