@@ -1,0 +1,71 @@
+import path from "node:path";
+
+/** Prefix used to identify Compose package imports. */
+export const COMPOSE_PACKAGE_PREFIX = "@perfect-abstractions/compose/";
+const CLI_COMPOSE_PATH = "./node_modules/@perfect-abstractions/compose/";
+const LOCAL_TEMPLATE_PREFIX = "./src/templates/";
+
+/**
+ * Identifies catalog paths that should resolve through the installed Compose package.
+ *
+ * @param sourcePath - The catalog source path to test.
+ * @returns `true` if the path starts with the Compose package prefix.
+ */
+export function isComposePackagePath(sourcePath: string): boolean {
+  return sourcePath.startsWith(COMPOSE_PACKAGE_PREFIX);
+}
+
+/**
+ * Returns the path segment inside the Compose package for package imports.
+ *
+ * @param sourcePath - A Compose package path (must start with {@link COMPOSE_PACKAGE_PREFIX}).
+ * @returns The subpath after the package prefix.
+ * @throws {Error} If the path is not a Compose package path.
+ */
+export function composePackageSubpath(sourcePath: string): string {
+  if (!isComposePackagePath(sourcePath)) {
+    throw new Error(`Not a Compose package path: ${sourcePath}`);
+  }
+
+  return sourcePath.slice(COMPOSE_PACKAGE_PREFIX.length);
+}
+
+/**
+ * Converts old local template paths to Compose package imports while preserving local examples.
+ *
+ * @param sourcePath - The catalog source path to convert.
+ * @returns The converted path (package import or unchanged local path).
+ */
+export function toComposePackagePath(sourcePath: string): string {
+  if (!sourcePath.startsWith(LOCAL_TEMPLATE_PREFIX)) {
+    return sourcePath;
+  }
+
+  return `${COMPOSE_PACKAGE_PREFIX}${sourcePath.slice(LOCAL_TEMPLATE_PREFIX.length)}`;
+}
+
+/**
+ * Resolves a catalog Solidity path to a local file the CLI can read for validation.
+ * Package paths resolve from the CLI's own `node_modules/@perfect-abstractions/compose/`.
+ * Local paths resolve from the CLI's `src/templates/` directory.
+ *
+ * @param sourcePath - The catalog source path to resolve.
+ * @returns The absolute file path on disk.
+ */
+export function resolveCatalogSourceForRead(sourcePath: string): string {
+  if (isComposePackagePath(sourcePath)) {
+    return path.resolve(process.cwd(), CLI_COMPOSE_PATH, composePackageSubpath(sourcePath));
+  }
+
+  return path.resolve(process.cwd(), sourcePath);
+}
+
+/**
+ * Returns the Solidity contract name implied by a catalog source path.
+ *
+ * @param sourcePath - The source file path (e.g., `contracts/Foo.sol`).
+ * @returns The filename without its extension.
+ */
+export function contractNameFromSourcePath(sourcePath: string): string {
+  return path.basename(sourcePath, path.extname(sourcePath));
+}

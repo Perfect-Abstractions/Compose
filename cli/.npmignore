@@ -3,5 +3,6 @@ test/
 .github/
 .cursor/
 .tmp/
-lib/
-src/templates/**/foundry/lib/
+tsconfig.json
+eslint.config.js
+*.log

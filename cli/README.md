@@ -1,162 +1,163 @@
 # Compose CLI
 
-Creates new diamond-based projects using the Compose Library.
-Supports both [Foundry](https://book.getfoundry.sh/) and [Hardhat](https://hardhat.org/) frameworks.
+Command-line toolkit for building, deploying, and managing diamond smart contracts using the Compose Library. Supports both [Foundry](https://book.getfoundry.sh/) and [Hardhat](https://hardhat.org/) frameworks.
 
-## Create a new project with Compose CLI
+## Quick Start
 
 ```bash
 npx @perfect-abstractions/compose-cli init
 ```
 
+This starts an interactive flow to scaffold a new diamond project with:
+- Base preset selection (Counter, ERC-20, ERC-721, ERC-1155, ERC-6909)
+- Extension facet selection
+- Ownership and access control configuration
+- Compose library facet selection
+- Framework setup (Foundry or Hardhat)
+
 ## Usage
 
 ```bash
 compose init [options]
-compose templates
+compose info
+compose validate
 compose --version | -v
 compose --help | -h
-compose update
 ```
 
-### Options
+### `compose init`
 
-- `--name <project-name>`: directory / package name for the new project.
-- `--template <template-id>`: template to use (see Template registry below).
-- `--framework <foundry|hardhat>`: target framework.
-- `--language <javascript|typescript>`: source language (Hardhat only; defaults to `typescript` when omitted).
-- `--install-deps` / `--no-install-deps`: whether to install npm dependencies for Hardhat templates (defaults to `true` unless disabled or using `--yes` with an explicit value).
-- `--yes`: non-interactive mode. Skips prompts and fills missing values with sensible defaults.
-- `--help`: print CLI help text.
+Scaffold a new Compose diamond project.
+
+**Options:**
+- `--name <project-name>`: directory name for the new project
+- `--framework <foundry|hardhat>`: target framework
+- `--toolbox <ethers|viem>`: Hardhat toolbox (default: ethers)
+- `--base <base-id>`: base preset (counter, erc-20, erc-721, erc-1155, erc-6909)
+- `--ownership <none|owner|owner-two-step>`: ownership model
+- `--access-control <facets...>`: access control facets to include
+- `--libraries <facets...>`: Compose library facets to include
+- `--extensions <facets...>`: extension facets to include
+- `--examples`: include local example facets
+- `--yes`: non-interactive mode with sensible defaults
+- `--no-install-deps`: skip dependency installation
 
 When `--yes` is not provided, `compose init` will prompt for any values you omit.
+
+### `compose info`
+
+Display a summary of the local project:
+- All diamonds defined in the project
+- Facets and their selectors
+- Storage slot annotations
+- Validation warnings
+
+### `compose validate` (Coming Soon...)
+
+Run static analysis on the local codebase:
+- Storage layout validation
+- Selector clash detection
+- `exportSelectors` consistency checks
+- Missing facet registration warnings
+
+Exit code non-zero on failure (CI-friendly).
+
+## Base Presets
+
+Each base preset provides a starting point for common diamond patterns:
+
+| Base | Description | Required Facets |
+|------|-------------|-----------------|
+| **Counter** (local) | Simple counter with increment/decrement | CounterDataFacet, CounterIncrementFacet, CounterDecrementFacet |
+| **ERC-20** (package) | Fungible token standard | ERC20DataFacet, ERC20ApproveFacet, ERC20TransferFacet |
+| **ERC-721** (package) | Non-fungible token standard | ERC721DataFacet, ERC721ApproveFacet, ERC721TransferFacet |
+| **ERC-1155** (package) | Multi-token standard | ERC1155DataFacet, ERC1155ApproveFacet, ERC1155TransferFacet |
+| **ERC-6909** (package) | Minimal multi-token standard | ERC6909DataFacet, ERC6909TransferFacet |
+
+Each base has compatible extension facets that are filtered during interactive selection to prevent cross-standard conflicts.
+
+## Examples
+
+### Interactive mode
+
+```bash
+compose init
+```
+
+Follow the prompts to select framework, base, extensions, ownership, and access control.
 
 ### Non-interactive examples
 
 ```bash
-# Foundry default template
-compose init --name my-foundry-app --template default --framework foundry --yes
+# Foundry project with Counter base
+compose init --name my-counter --framework foundry --base counter --ownership owner --yes
 
-# Hardhat minimal TypeScript template, skip dependency install
-compose init --name my-hardhat-minimal \
-  --template default \
+# Hardhat project with ERC-20 base and extensions
+compose init --name my-token \
   --framework hardhat \
-  --language typescript \
-  --install-deps=false \
+  --toolbox ethers \
+  --base erc-20 \
+  --ownership owner-two-step \
+  --extensions ERC20BurnFacet,ERC20MintFacet \
+  --libraries ERC165Facet \
   --yes
 
-# Hardhat mocha-ethers TypeScript template
-compose init --name my-hardhat-mocha-ethers \
-  --template default \
+# Hardhat project with Viem toolbox
+compose init --name my-nft \
   --framework hardhat \
-  --language typescript \
+  --toolbox viem \
+  --base erc-721 \
+  --ownership owner \
+  --libraries DiamondUpgradeFacet,ERC165Facet \
   --yes
 ```
 
+## Generated Project Structure
 
-`compose templates` prints this information in a friendly format.
+The CLI generates a project with the following structure:
 
-## Development
-
-From the `cli` directory:
-
-```bash
-npm install
-npm run build:templates
-npm run check
+```
+my-diamond/
+  src/
+    diamond/
+      Diamond.sol
+    libraries/
+      (Compose library facets)
+    facets/
+      (Custom and extension facets)
+  test/
+    Diamond.t.sol (Foundry) or Diamond.ts (Hardhat)
+  script/
+    Deploy.s.sol (Foundry) or deploy.ts (Hardhat)
+  compose.json
+  foundry.toml or hardhat.config.ts
 ```
 
-### Template registry generation
+## Documentation
 
-The template registry at `src/config/templates.json` is generated from per-template manifests under `src/templates/**/template.json`.
+Please see our [documentation website](https://compose.diamonds/docs/) for full documentation.
 
-- To regenerate the registry after changing templates:
 
-```bash
-npm run build:templates
-```
+## Contributing
 
-## Add a new template
+We welcome contributions from everyone! Compose grows through community involvement.
 
-To make a new template:
+Please see the [documentation for contributing](https://compose.diamonds/docs/contribution/how-to-contribute). 
 
-1. **Create the template folder**
-   - Add a new directory under `src/templates/<template-id>`.
-   - Example: `src/templates/erc721`.
+---
 
-2. **Add a `template.json` manifest**
-   - Place it at `src/templates/<template-id>/template.json`.
-   - Required fields:
-     - `id`: the template id (must match `<template-id>`).
-     - `name`: human‑readable name shown in `compose templates`.
-     - `description`: short description.
-     - `variants`: list of variant ids (see below).
-     - `compatibility.frameworks`: array of supported frameworks, e.g. `["foundry"]` or `["foundry","hardhat"]`.
-   - Example:
-     ```json
-     {
-       "id": "erc721",
-       "name": "ERC‑721 Diamond",
-       "description": "Diamond project with an ERC‑721 facet",
-       "variants": [
-         "erc721-foundry",
-         "erc721-hardhat-minimal"
-       ],
-       "compatibility": {
-         "frameworks": ["foundry", "hardhat"]
-       }
-     }
-     ```
+<br>
 
-3. **Add variant directories**
-   - Variant ids follow the pattern: `<template-id>-<framework>[-<project-type>]`.
-   - The generator maps variants to paths as follows:
-     - **Foundry**: `templates/<template-id>/foundry`
-       - Example variant id: `erc721-foundry` → `src/templates/erc721/foundry`
-     - **Hardhat (no project type)**: `templates/<template-id>/hardhat`
-       - Example variant id: `erc721-hardhat` → `src/templates/erc721/hardhat`
-     - **Hardhat with project type (TypeScript/JS layout)**:
-       - Path pattern: `templates/<template-id>/hardhat/ts/<project-type>`
-       - Example variant id: `erc721-hardhat-minimal` → `src/templates/erc721/hardhat/ts/minimal`
-   - Place the scaffolded project files (contracts, configs, tests, etc.) inside each variant directory.
+**Compose is evolving with your help. Join us in building the future of smart contract development.**
 
-4. **Language detection**
-   - The CLI infers the language from the variant path:
-     - Paths containing `/ts/` → `language: "typescript"`.
-     - Paths containing `/js/` → `language: "javascript"`.
-   - For Foundry templates, language is not set on the variant; the framework alone is enough.
+**-Nick & The Compose Community**
 
-5. **Regenerate the templates registry**
-   - From the `cli` directory run:
-     ```bash
-     npm run build:templates
-     ```
-   - This rebuilds `src/config/templates.json` from all `template.json` manifests and validates the result.
+<!-- automd:contributors github="Perfect-Abstractions/Compose" license="MIT" -->
 
-6. **Verify your template is available**
-   - Run:
-     ```bash
-     node index.js templates
-     ```
-   - Confirm your new template and variants appear in the list.
+### Made with 🩵 by the [Compose Community](https://github.com/Perfect-Abstractions/Compose/graphs/contributors)
 
-7. **Smoke‑test the template**
-   - Use your new template to scaffold a project:
-     ```bash
-     node index.js init --name my-test-project --template <template-id> --framework <framework> --yes
-     ```
-   - Then run the framework’s own test / build commands in the generated project.
+<a href="https://github.com/Perfect-Abstractions/Compose/graphs/contributors">
+<img src="https://contrib.rocks/image?repo=Perfect-Abstractions/Compose" />
+</a>
 
-### Test the CLI locally
-
-```bash
-npm link
-```
-
-This will create a symlink to the CLI in your global `node_modules` directory.
-
-You can then test the CLI by running:
-
-```bash
-compose --help
-```
+<!-- /automd -->

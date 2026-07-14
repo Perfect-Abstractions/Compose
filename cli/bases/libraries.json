@@ -1,0 +1,11 @@
+{
+  "libraries": {
+    "label": "Libraries",
+    "required": {},
+    "optional": {
+      "ERC165Facet": {
+        "path": "@perfect-abstractions/compose/interfaceDetection/ERC165/ERC165Facet.sol"
+      }
+    }
+  }
+}

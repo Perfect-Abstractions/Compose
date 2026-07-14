@@ -1,0 +1,67 @@
+{
+  "owner": {
+    "label": "Owner",
+    "order": 7,
+    "access": true,
+    "accessType": "ownership",
+    "erc165": {
+      "path": "@perfect-abstractions/compose/interfaces/IERC173.sol",
+      "id": "type(IERC173).interfaceId",
+      "comments": ["Register ERC-173 ownership interface support."]
+    },
+    "required": {
+      "OwnerDataFacet": {
+        "path": "@perfect-abstractions/compose/access/Owner/Data/OwnerDataFacet.sol",
+        "mod": "@perfect-abstractions/compose/access/Owner/Data/OwnerDataMod.sol",
+        "constructor": [
+          {
+            "comments": ["TODO: Review the initial owner policy before deployment."],
+            "code": "OwnerDataMod.setContractOwner(msg.sender);"
+          }
+        ]
+      },
+      "OwnerTransferFacet": {
+        "path": "@perfect-abstractions/compose/access/Owner/Transfer/OwnerTransferFacet.sol",
+        "mod": "@perfect-abstractions/compose/access/Owner/Transfer/OwnerTransferMod.sol"
+      }
+    },
+    "optional": {
+      "OwnerRenounceFacet": {
+        "path": "@perfect-abstractions/compose/access/Owner/Renounce/OwnerRenounceFacet.sol",
+        "mod": "@perfect-abstractions/compose/access/Owner/Renounce/OwnerRenounceMod.sol"
+      }
+    }
+  },
+  "owner-two-step": {
+    "label": "Owner Two-Step",
+    "order": 8,
+    "access": true,
+    "accessType": "ownership",
+    "required": {
+      "OwnerDataFacet": {
+        "path": "@perfect-abstractions/compose/access/Owner/Data/OwnerDataFacet.sol",
+        "mod": "@perfect-abstractions/compose/access/Owner/Data/OwnerDataMod.sol",
+        "constructor": [
+          {
+            "comments": ["TODO: Review the initial owner policy before deployment."],
+            "code": "OwnerDataMod.setContractOwner(msg.sender);"
+          }
+        ]
+      },
+      "OwnerTwoStepDataFacet": {
+        "path": "@perfect-abstractions/compose/access/Owner/TwoSteps/Data/OwnerTwoStepDataFacet.sol",
+        "mod": "@perfect-abstractions/compose/access/Owner/TwoSteps/Data/OwnerTwoStepDataMod.sol"
+      },
+      "OwnerTwoStepTransferFacet": {
+        "path": "@perfect-abstractions/compose/access/Owner/TwoSteps/Transfer/OwnerTwoStepTransferFacet.sol",
+        "mod": "@perfect-abstractions/compose/access/Owner/TwoSteps/Transfer/OwnerTwoStepTransferMod.sol"
+      }
+    },
+    "optional": {
+      "OwnerTwoStepRenounceFacet": {
+        "path": "@perfect-abstractions/compose/access/Owner/TwoSteps/Renounce/OwnerTwoStepRenounceFacet.sol",
+        "mod": "@perfect-abstractions/compose/access/Owner/TwoSteps/Renounce/OwnerTwoStepRenounceMod.sol"
+      }
+    }
+  }
+}

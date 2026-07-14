@@ -1,0 +1,56 @@
+{
+  "access-control": {
+    "label": "AccessControl",
+    "order": 9,
+    "access": true,
+    "accessType": "roles",
+    "required": {
+      "AccessControlDataFacet": {
+        "path": "@perfect-abstractions/compose/access/AccessControl/Data/AccessControlDataFacet.sol",
+        "mod": "@perfect-abstractions/compose/access/AccessControl/Data/AccessControlDataMod.sol"
+      },
+      "AccessControlGrantFacet": {
+        "path": "@perfect-abstractions/compose/access/AccessControl/Grant/AccessControlGrantFacet.sol",
+        "mod": "@perfect-abstractions/compose/access/AccessControl/Grant/AccessControlGrantMod.sol"
+      },
+      "AccessControlRevokeFacet": {
+        "path": "@perfect-abstractions/compose/access/AccessControl/Revoke/AccessControlRevokeFacet.sol",
+        "mod": "@perfect-abstractions/compose/access/AccessControl/Revoke/AccessControlRevokeMod.sol"
+      }
+    },
+    "optional": {
+      "AccessControlAdminFacet": {
+        "path": "@perfect-abstractions/compose/access/AccessControl/Admin/AccessControlAdminFacet.sol",
+        "mod": "@perfect-abstractions/compose/access/AccessControl/Admin/AccessControlAdminMod.sol"
+      },
+      "AccessControlGrantBatchFacet": {
+        "path": "@perfect-abstractions/compose/access/AccessControl/Batch/Grant/AccessControlGrantBatchFacet.sol",
+        "mod": "@perfect-abstractions/compose/access/AccessControl/Batch/Grant/AccessControlGrantBatchMod.sol"
+      },
+      "AccessControlRevokeBatchFacet": {
+        "path": "@perfect-abstractions/compose/access/AccessControl/Batch/Revoke/AccessControlRevokeBatchFacet.sol",
+        "mod": "@perfect-abstractions/compose/access/AccessControl/Batch/Revoke/AccessControlRevokeBatchMod.sol"
+      },
+      "AccessControlPausableFacet": {
+        "path": "@perfect-abstractions/compose/access/AccessControl/Pausable/AccessControlPausableFacet.sol",
+        "mod": "@perfect-abstractions/compose/access/AccessControl/Pausable/AccessControlPausableMod.sol"
+      },
+      "AccessControlRenounceFacet": {
+        "path": "@perfect-abstractions/compose/access/AccessControl/Renounce/AccessControlRenounceFacet.sol",
+        "mod": "@perfect-abstractions/compose/access/AccessControl/Renounce/AccessControlRenounceMod.sol"
+      },
+      "AccessControlTemporalDataFacet": {
+        "path": "@perfect-abstractions/compose/access/AccessControl/Temporal/Data/AccessControlTemporalDataFacet.sol",
+        "mod": "@perfect-abstractions/compose/access/AccessControl/Temporal/Data/AccessControlTemporalDataMod.sol"
+      },
+      "AccessControlTemporalGrantFacet": {
+        "path": "@perfect-abstractions/compose/access/AccessControl/Temporal/Grant/AccessControlTemporalGrantFacet.sol",
+        "mod": "@perfect-abstractions/compose/access/AccessControl/Temporal/Grant/AccessControlTemporalGrantMod.sol"
+      },
+      "AccessControlTemporalRevokeFacet": {
+        "path": "@perfect-abstractions/compose/access/AccessControl/Temporal/Revoke/AccessControlTemporalRevokeFacet.sol",
+        "mod": "@perfect-abstractions/compose/access/AccessControl/Temporal/Revoke/AccessControlTemporalRevokeMod.sol"
+      }
+    }
+  }
+}

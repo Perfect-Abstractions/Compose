@@ -1,0 +1,49 @@
+{
+  "erc-6909": {
+    "label": "ERC-6909",
+    "order": 6,
+    "erc165": {
+      "path": "@perfect-abstractions/compose/interfaces/IERC6909.sol",
+      "id": "type(IERC6909).interfaceId",
+      "comments": ["Register ERC-6909 interface support."]
+    },
+    "required": {
+      "ERC6909DataFacet": {
+        "path": "@perfect-abstractions/compose/token/ERC6909/Data/ERC6909DataFacet.sol"
+      },
+      "ERC6909TransferFacet": {
+        "path": "@perfect-abstractions/compose/token/ERC6909/Transfer/ERC6909TransferFacet.sol",
+        "mod": "@perfect-abstractions/compose/token/ERC6909/Transfer/ERC6909TransferMod.sol"
+      },
+      "ERC6909ApproveFacet": {
+        "path": "@perfect-abstractions/compose/token/ERC6909/Approve/ERC6909ApproveFacet.sol",
+        "mod": "@perfect-abstractions/compose/token/ERC6909/Approve/ERC6909ApproveMod.sol"
+      },
+      "ERC6909OperatorFacet": {
+        "path": "@perfect-abstractions/compose/token/ERC6909/Operator/ERC6909OperatorFacet.sol",
+        "mod": "@perfect-abstractions/compose/token/ERC6909/Operator/ERC6909OperatorMod.sol"
+      }
+    },
+    "optional": {
+      "ERC6909BurnFacet": {
+        "path": "@perfect-abstractions/compose/token/ERC6909/Burn/ERC6909BurnFacet.sol",
+        "mod": "@perfect-abstractions/compose/token/ERC6909/Burn/ERC6909BurnMod.sol"
+      },
+      "RoyaltyFacet": {
+        "path": "@perfect-abstractions/compose/token/Royalty/RoyaltyFacet.sol",
+        "mod": "@perfect-abstractions/compose/token/Royalty/RoyaltyMod.sol",
+        "constructor": [
+          {
+            "comments": ["TODO: Replace the sample royalty receiver and fee before deployment."],
+            "code": "RoyaltyMod.setDefaultRoyalty(0x0000000000000000000000000000000000000001, 500);"
+          }
+        ],
+        "erc165": {
+          "path": "@perfect-abstractions/compose/interfaces/IERC2981.sol",
+          "id": "type(IERC2981).interfaceId",
+          "comments": ["Register ERC-2981 royalty interface support."]
+        }
+      }
+    }
+  }
+}
