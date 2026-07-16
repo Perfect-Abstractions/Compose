@@ -1,0 +1,70 @@
+{
+  "erc-1155": {
+    "label": "ERC-1155",
+    "order": 5,
+    "erc165": {
+      "path": "@perfect-abstractions/compose/interfaces/IERC1155.sol",
+      "id": "type(IERC1155).interfaceId",
+      "comments": [
+        "Register ERC-1155 interface support."
+      ]
+    },
+    "required": {
+      "ERC1155DataFacet": {
+        "path": "@perfect-abstractions/compose/token/ERC1155/Data/ERC1155DataFacet.sol"
+      },
+      "ERC1155ApproveFacet": {
+        "path": "@perfect-abstractions/compose/token/ERC1155/Approve/ERC1155ApproveFacet.sol",
+        "mod": "@perfect-abstractions/compose/token/ERC1155/Approve/ERC1155ApproveMod.sol"
+      },
+      "ERC1155TransferFacet": {
+        "path": "@perfect-abstractions/compose/token/ERC1155/Transfer/ERC1155TransferFacet.sol",
+        "mod": "@perfect-abstractions/compose/token/ERC1155/Transfer/ERC1155TransferMod.sol"
+      }
+    },
+    "optional": {
+      "ERC1155BurnFacet": {
+        "path": "@perfect-abstractions/compose/token/ERC1155/Burn/ERC1155BurnFacet.sol",
+        "mod": "@perfect-abstractions/compose/token/ERC1155/Burn/ERC1155BurnMod.sol"
+      },
+      "ERC1155MetadataFacet": {
+        "path": "@perfect-abstractions/compose/token/ERC1155/Metadata/ERC1155MetadataFacet.sol",
+        "mod": "@perfect-abstractions/compose/token/ERC1155/Metadata/ERC1155MetadataMod.sol",
+        "constructor": [
+          {
+            "comments": [
+              "TODO: Review the sample ERC-1155 metadata URI before deployment."
+            ],
+            "code": "ERC1155MetadataMod.setURI(\"https://example.com/metadata/{id}.json\");"
+          }
+        ],
+        "erc165": {
+          "path": "@perfect-abstractions/compose/interfaces/IERC1155Metadata_URI.sol",
+          "id": "type(IERC1155Metadata_URI).interfaceId",
+          "comments": [
+            "Register ERC-1155 metadata URI interface support."
+          ]
+        }
+      },
+      "RoyaltyFacet": {
+        "path": "@perfect-abstractions/compose/token/Royalty/RoyaltyFacet.sol",
+        "mod": "@perfect-abstractions/compose/token/Royalty/RoyaltyMod.sol",
+        "constructor": [
+          {
+            "comments": [
+              "TODO: Replace the sample royalty receiver and fee before deployment."
+            ],
+            "code": "RoyaltyMod.setDefaultRoyalty(0x0000000000000000000000000000000000000001, 500);"
+          }
+        ],
+        "erc165": {
+          "path": "@perfect-abstractions/compose/interfaces/IERC2981.sol",
+          "id": "type(IERC2981).interfaceId",
+          "comments": [
+            "Register ERC-2981 royalty interface support."
+          ]
+        }
+      }
+    }
+  }
+}

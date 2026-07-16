@@ -1,0 +1,17 @@
+{
+  "diamond": {
+    "label": "Diamond",
+    "pragma": ">=0.8.30",
+    "compilerVersion": "0.8.30",
+    "required": {
+      "DiamondInspectFacet": {
+        "path": "@perfect-abstractions/compose/diamond/DiamondInspectFacet.sol"
+      }
+    },
+    "optional": {
+      "DiamondUpgradeFacet": {
+        "path": "@perfect-abstractions/compose/diamond/DiamondUpgradeFacet.sol"
+      }
+    }
+  }
+}

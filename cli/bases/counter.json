@@ -1,0 +1,25 @@
+{
+  "counter": {
+    "label": "Counter",
+    "order": 2,
+    "required": {
+      "CounterDataFacet": {
+        "path": "./src/templates/counter/CounterDataFacet.sol"
+      },
+      "CounterIncrementFacet": {
+        "path": "./src/templates/counter/CounterIncrementFacet.sol"
+      }
+    },
+    "optional": {
+      "CounterDecrementFacet": {
+        "path": "./src/templates/counter/CounterDecrementFacet.sol"
+      },
+      "CounterResetFacet": {
+        "path": "./src/templates/counter/CounterResetFacet.sol"
+      },
+      "CounterSetFacet": {
+        "path": "./src/templates/counter/CounterSetFacet.sol"
+      }
+    }
+  }
+}

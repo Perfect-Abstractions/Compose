@@ -2,6 +2,9 @@ node_modules/
 coverage/
 dist/
 tmp/
+my-diamond/
+*.tsbuildinfo
+.vscode/
 .env
 .env.local
 

@@ -1,0 +1,45 @@
+{
+  "erc-20": {
+    "label": "ERC-20",
+    "order": 2,
+    "erc165": {
+      "path": "@perfect-abstractions/compose/interfaces/IERC20.sol",
+      "id": "type(IERC20).interfaceId",
+      "comments": ["Register ERC-20 interface support."]
+    },
+    "required": {
+      "ERC20DataFacet": {
+        "path": "@perfect-abstractions/compose/token/ERC20/Data/ERC20DataFacet.sol"
+      },
+      "ERC20ApproveFacet": {
+        "path": "@perfect-abstractions/compose/token/ERC20/Approve/ERC20ApproveFacet.sol"
+      },
+      "ERC20TransferFacet": {
+        "path": "@perfect-abstractions/compose/token/ERC20/Transfer/ERC20TransferFacet.sol"
+      }
+    },
+    "optional": {
+      "ERC20BurnFacet": {
+        "path": "@perfect-abstractions/compose/token/ERC20/Burn/ERC20BurnFacet.sol"
+      },
+      "ERC20MetadataFacet": {
+        "path": "@perfect-abstractions/compose/token/ERC20/Metadata/ERC20MetadataFacet.sol",
+        "mod": "@perfect-abstractions/compose/token/ERC20/Metadata/ERC20MetadataMod.sol",
+        "constructor": [
+          {
+            "comments": [
+              "TODO: Review the sample token name, symbol, and decimals before deployment."
+            ],
+            "code": "ERC20MetadataMod.setMetadata({_name: \"ExampleToken\", _symbol: \"EXT\", _decimals: 18});"
+          }
+        ]
+      },
+      "ERC20PermitFacet": {
+        "path": "@perfect-abstractions/compose/token/ERC20/Permit/ERC20PermitFacet.sol"
+      },
+      "ERC20BridgeableFacet": {
+        "path": "@perfect-abstractions/compose/token/ERC20/Bridgeable/ERC20BridgeableFacet.sol"
+      }
+    }
+  }
+}

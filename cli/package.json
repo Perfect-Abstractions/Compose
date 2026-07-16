@@ -1,19 +1,18 @@
 {
   "name": "@perfect-abstractions/compose-cli",
-  "version": "0.0.5",
+  "version": "0.1.0",
   "description": "CLI to scaffold Compose facet-based diamond projects",
-  "main": "index.js",
+  "main": "dist/index.js",
   "bin": {
     "compose": "bin/compose.js"
   },
   "type": "commonjs",
   "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "start": "node dist/index.js",
+    "dev": "tsx src/index.ts",
     "lint": "eslint .",
-    "test": "node --test \"test/**/*.test.js\"",
-    "test:unit": "node --test \"test/unit/**/*.test.js\"",
-    "test:integration": "node --test \"test/integration/**/*.test.js\"",
-    "check": "npm run lint && npm run test",
-    "build:templates": "node scripts/generate-templates-config.js",
+    "check": "npm run lint",
     "pack:check": "npm pack --dry-run",
     "prepublishOnly": "npm run check && npm run pack:check",
     "prepare:lib": "git submodule update --init --recursive"
@@ -22,36 +21,28 @@
     "node": ">=20"
   },
   "files": [
-    "index.js",
-    "src/",
-    "!src/templates/**/lib/",
+    "dist/",
+    "bases/",
+    "src/templates/",
     "README.md",
     "LICENSE.md"
   ],
   "dependencies": {
+    "@inquirer/prompts": "^8.5.2",
+    "@perfect-abstractions/compose": "0.0.4",
+    "commander": "^13.1.0",
     "fs-extra": "^11.3.3",
     "inquirer": "^13.3.0",
-    "minimist": "^1.2.8",
-    "picocolors": "^1.1.1"
+    "picocolors": "^1.1.1",
+    "viem": "^2.52.2"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",
-    "@nomicfoundation/hardhat-ethers": "^4.0.5",
-    "@nomicfoundation/hardhat-ignition": "^3.0.8",
-    "@nomicfoundation/hardhat-toolbox-mocha-ethers": "^3.0.3",
-    "@nomicfoundation/hardhat-toolbox-viem": "^5.0.2",
-    "@types/chai": "^5.2.3",
-    "@types/chai-as-promised": "^8.0.2",
-    "@types/mocha": "^10.0.10",
     "@types/node": "^22.19.13",
-    "chai": "^6.2.2",
     "eslint": "^10.1.0",
-    "ethers": "^6.16.0",
-    "forge-std": "github:foundry-rs/forge-std#v1.9.4",
-    "hardhat": "^3.1.10",
-    "mocha": "^11.7.5",
+    "tsx": "^4.19.1",
     "typescript": "~5.8.0",
-    "viem": "^2.47.0"
+    "typescript-eslint": "^8.0.0"
   },
   "keywords": [
     "solidity",

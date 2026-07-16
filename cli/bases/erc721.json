@@ -1,0 +1,115 @@
+{
+  "erc-721": {
+    "label": "ERC-721",
+    "order": 3,
+    "erc165": {
+      "path": "@perfect-abstractions/compose/interfaces/IERC721.sol",
+      "id": "type(IERC721).interfaceId",
+      "comments": ["Register ERC-721 interface support."]
+    },
+    "required": {
+      "ERC721ApproveFacet": {
+        "path": "@perfect-abstractions/compose/token/ERC721/Approve/ERC721ApproveFacet.sol"
+      },
+      "ERC721DataFacet": {
+        "path": "@perfect-abstractions/compose/token/ERC721/Data/ERC721DataFacet.sol"
+      },
+      "ERC721TransferFacet": {
+        "path": "@perfect-abstractions/compose/token/ERC721/Transfer/ERC721TransferFacet.sol"
+      }
+    },
+    "optional": {
+      "ERC721BurnFacet": {
+        "path": "@perfect-abstractions/compose/token/ERC721/Burn/ERC721BurnFacet.sol"
+      },
+      "ERC721MetadataFacet": {
+        "path": "@perfect-abstractions/compose/token/ERC721/Metadata/ERC721MetadataFacet.sol",
+        "mod": "@perfect-abstractions/compose/token/ERC721/Metadata/ERC721MetadataMod.sol",
+        "constructor": [
+          {
+            "comments": ["TODO: Review the sample collection name, symbol, and base URI before deployment."],
+            "code": "ERC721MetadataMod.setMetadata({_name: \"ExampleDiamondNFT\", _symbol: \"EDN\", _baseURI: \"https://example.com/metadata/\"});"
+          }
+        ],
+        "erc165": {
+          "path": "@perfect-abstractions/compose/interfaces/IERC721Metadata.sol",
+          "id": "type(IERC721Metadata).interfaceId",
+          "comments": ["Register ERC-721 Metadata interface support."]
+        }
+      },
+      "RoyaltyFacet": {
+        "path": "@perfect-abstractions/compose/token/Royalty/RoyaltyFacet.sol",
+        "mod": "@perfect-abstractions/compose/token/Royalty/RoyaltyMod.sol",
+        "constructor": [
+          {
+            "comments": ["TODO: Replace the sample royalty receiver and fee before deployment."],
+            "code": "RoyaltyMod.setDefaultRoyalty(0x0000000000000000000000000000000000000001, 500);"
+          }
+        ],
+        "erc165": {
+          "path": "@perfect-abstractions/compose/interfaces/IERC2981.sol",
+          "id": "type(IERC2981).interfaceId",
+          "comments": ["Register ERC-2981 royalty interface support."]
+        }
+      }
+    }
+  },
+  "erc-721-enumerable": {
+    "label": "ERC-721 Enumerable",
+    "order": 4,
+    "erc165": {
+      "path": "@perfect-abstractions/compose/interfaces/IERC721.sol",
+      "id": "type(IERC721).interfaceId",
+      "comments": ["Register ERC-721 interface support."]
+    },
+    "required": {
+      "ERC721ApproveFacet": {
+        "path": "@perfect-abstractions/compose/token/ERC721/Approve/ERC721ApproveFacet.sol"
+      },
+      "ERC721DataFacet": {
+        "path": "@perfect-abstractions/compose/token/ERC721/Data/ERC721DataFacet.sol"
+      },
+      "ERC721EnumerableDataFacet": {
+        "path": "@perfect-abstractions/compose/token/ERC721/Enumerable/Data/ERC721EnumerableDataFacet.sol"
+      },
+      "ERC721EnumerableTransferFacet": {
+        "path": "@perfect-abstractions/compose/token/ERC721/Enumerable/Transfer/ERC721EnumerableTransferFacet.sol"
+      }
+    },
+    "optional": {
+      "ERC721EnumerableBurnFacet": {
+        "path": "@perfect-abstractions/compose/token/ERC721/Enumerable/Burn/ERC721EnumerableBurnFacet.sol"
+      },
+      "ERC721MetadataFacet": {
+        "path": "@perfect-abstractions/compose/token/ERC721/Metadata/ERC721MetadataFacet.sol",
+        "mod": "@perfect-abstractions/compose/token/ERC721/Metadata/ERC721MetadataMod.sol",
+        "constructor": [
+          {
+            "comments": ["TODO: Review the sample collection name, symbol, and base URI before deployment."],
+            "code": "ERC721MetadataMod.setMetadata({_name: \"ExampleDiamondNFT\", _symbol: \"EDN\", _baseURI: \"https://example.com/metadata/\"});"
+          }
+        ],
+        "erc165": {
+          "path": "@perfect-abstractions/compose/interfaces/IERC721Metadata.sol",
+          "id": "type(IERC721Metadata).interfaceId",
+          "comments": ["Register ERC-721 Metadata interface support."]
+        }
+      },
+      "RoyaltyFacet": {
+        "path": "@perfect-abstractions/compose/token/Royalty/RoyaltyFacet.sol",
+        "mod": "@perfect-abstractions/compose/token/Royalty/RoyaltyMod.sol",
+        "constructor": [
+          {
+            "comments": ["TODO: Replace the sample royalty receiver and fee before deployment."],
+            "code": "RoyaltyMod.setDefaultRoyalty(0x0000000000000000000000000000000000000001, 500);"
+          }
+        ],
+        "erc165": {
+          "path": "@perfect-abstractions/compose/interfaces/IERC2981.sol",
+          "id": "type(IERC2981).interfaceId",
+          "comments": ["Register ERC-2981 royalty interface support."]
+        }
+      }
+    }
+  }
+}
