@@ -3,6 +3,7 @@ import path from "node:path";
 import { ComposeContext } from "../../context/types";
 import { BasesCatalog, BaseDefinition, BaseManifest } from "./types";
 import { sortBaseFeatures } from "./catalog";
+import { CLI_ROOT } from "../../utils/cliRoot";
 
 export { EMPTY_BASE, getDiamondCompilerVersion } from "./catalog";
 export { resolveCatalogSelection, getAccessBases, getAvailableLibraryFacets, validateGroupedAccessFlags } from "./selection";
@@ -26,12 +27,11 @@ export const ConfigModule = {
    * The catalog is stored on `ctx.config.bases` and a summary is written to
    * `ctx.state.config`.
    *
-   * @param ctx - The compose context (must have `process.cwd()` pointing to a
-   *   directory containing a `bases/` folder).
+   * @param ctx - The compose context.
    * @returns The context with the loaded bases catalog.
    */
   async loadBasesCatalog(ctx: ComposeContext): Promise<ComposeContext> {
-    const basesRoot = path.resolve(process.cwd(), "bases");
+    const basesRoot = path.resolve(CLI_ROOT, "bases");
     const entries = await fs.readdir(basesRoot, { withFileTypes: true });
 
     const globals: BasesCatalog["globals"] = {};

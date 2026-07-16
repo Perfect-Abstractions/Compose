@@ -5,6 +5,7 @@ import { ConfigOptions, IFrameworkAdapter } from "./interface/IFrameworkAdapter"
 import { writeFileIfMissing } from "../utils/files";
 import { runCommand } from "../utils/exec";
 import { resolveCatalogSourceForRead } from "../utils/soliditySources";
+import { CLI_ROOT } from "../utils/cliRoot";
 
 function ensureTomlSectionSettings(
   content: string,
@@ -96,7 +97,7 @@ const adapter: IFrameworkAdapter = {
 
     let readme: string;
     try {
-      const templatePath = path.resolve(process.cwd(), "src/templates/readme/foundry-readme.md");
+      const templatePath = path.resolve(CLI_ROOT, "src/templates/readme/foundry-readme.md");
       const template = await fs.readFile(templatePath, "utf8");
       readme = template.replace(/\{\{PROJECT_NAME\}\}/g, opts.projectName);
     } catch {

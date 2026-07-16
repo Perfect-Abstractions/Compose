@@ -6,6 +6,7 @@ import { writeFileIfMissing } from "../utils/files";
 import { runCommand } from "../utils/exec";
 import { isComposePackagePath, resolveCatalogSourceForRead } from "../utils/soliditySources";
 import { getSelectedFacets } from "../modules/scaffolding/module";
+import { CLI_ROOT } from "../utils/cliRoot";
 
 /** Framework adapter for Hardhat-based Diamond projects. */
 const adapter: IFrameworkAdapter = {
@@ -146,7 +147,7 @@ dist/
 
     let readme: string;
     try {
-      const templatePath = path.resolve(process.cwd(), "src/templates/readme/hardhat-readme.md");
+      const templatePath = path.resolve(CLI_ROOT, "src/templates/readme/hardhat-readme.md");
       const template = await fs.readFile(templatePath, "utf8");
       readme = template.replace(/\{\{PROJECT_NAME\}\}/g, opts.projectName);
     } catch {

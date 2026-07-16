@@ -1,4 +1,5 @@
 import path from "node:path";
+import { CLI_ROOT } from "./cliRoot";
 
 /** Prefix used to identify Compose package imports. */
 export const COMPOSE_PACKAGE_PREFIX = "@perfect-abstractions/compose/";
@@ -71,7 +72,7 @@ export function resolveCatalogSourceForRead(sourcePath: string): string {
     return path.join(getComposePackageRoot(), composePackageSubpath(sourcePath));
   }
 
-  return path.resolve(process.cwd(), sourcePath);
+  return path.resolve(CLI_ROOT, sourcePath);
 }
 
 /**
