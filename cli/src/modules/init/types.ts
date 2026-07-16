@@ -37,6 +37,7 @@ export type PromptApi = {
   input: (config: {
     message: string;
     default?: string;
+    validate?: (value: string) => boolean | string | Promise<boolean | string>;
     theme?: {
       prefix?: string | { idle?: string; done?: string };
     };

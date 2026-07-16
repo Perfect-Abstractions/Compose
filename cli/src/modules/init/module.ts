@@ -17,9 +17,10 @@ import {
   selectTheme,
   toFacetChoices,
 } from "./prompts";
-import { getFrameworkDependencies } from "./framework-deps";
+import { getFrameworkDependencies } from "./frameworkDeps";
 import { resolveAccessFlags } from "./flags";
 import { splitCommaSeparated } from "../../utils/strings";
+import { validateProjectName, validateProjectNameWithFolder } from "./projectNameValidation";
 import { TerminalOutputModule } from "../terminalOutput/module";
 
 /**
@@ -92,6 +93,10 @@ export const InitModule = {
     );
 
     ctx.param.projectName = ctx.param.projectName ?? "my-diamond";
+    const projectNameValidation = validateProjectName(String(ctx.param.projectName));
+    if (projectNameValidation !== true) {
+      throw new Error(projectNameValidation);
+    }
     ctx.param.framework = framework;
     ctx.param.base = baseKey;
     ctx.param.libraries = selectedLibraries;
@@ -136,11 +141,19 @@ export const InitModule = {
     const catalog = ctx.config.bases as BasesCatalog;
 
     if (!ctx.param.projectName) {
+      const outDir = String(ctx.param.outDir ?? process.cwd());
+
       const projectName = await input({
         message: "Enter project name:",
         default: "my-diamond",
+        validate: (name) => validateProjectNameWithFolder(name, outDir),
       });
       ctx.param.projectName = projectName;
+    } else {
+      const projectNameValidation = validateProjectName(String(ctx.param.projectName));
+      if (projectNameValidation !== true) {
+        throw new Error(projectNameValidation);
+      }
     }
 
     const featureChoices = [
