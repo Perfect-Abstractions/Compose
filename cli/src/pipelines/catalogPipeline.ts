@@ -1,6 +1,6 @@
 import { ComposeContext } from "../context/types";
 import { ConfigModule } from "../modules/config/module";
-import { TerminalOutputModule } from "../modules/terminalOutput/module";
+import { CatalogModule } from "../modules/catalog/module";
 
 /**
  * Catalog Pipeline.
@@ -11,7 +11,7 @@ import { TerminalOutputModule } from "../modules/terminalOutput/module";
 export const CatalogPipeline = {
   async execute(ctx: ComposeContext): Promise<ComposeContext> {
     ctx = await ConfigModule.loadBasesCatalog(ctx);
-    TerminalOutputModule.showTemplates(ctx);
+    CatalogModule.showTemplates(ctx);
     return ctx;
   },
 };

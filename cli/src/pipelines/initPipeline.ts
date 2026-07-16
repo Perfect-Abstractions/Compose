@@ -1,18 +1,16 @@
 import { ComposeContext } from "../context/types";
 import { ConfigModule } from "../modules/config/module";
-import { TerminalOutputModule } from "../modules/terminalOutput/module";
 import { InitModule } from "../modules/init/module";
+import { ValidationModule } from "../modules/validation/module";
 import { PreflightModule } from "../modules/preflight/module";
 import { ProjectDirModule } from "../modules/projectDir/module";
 import { ScaffoldingModule } from "../modules/scaffolding/module";
 import { DiamondGenerationModule } from "../modules/diamondGeneration/module";
 import { DeployGenerationModule } from "../modules/deployGeneration/module";
 import { TestGenerationModule } from "../modules/testGeneration/module";
-import { ValidationModule } from "../modules/validation/module";
 import { DependencyKey } from "../resolver/dependencyKey";
 import { DependencyResolver } from "../resolver/dependencyResolver";
 import { IFrameworkAdapter } from "../adapters/interface/IFrameworkAdapter";
-import { getDiamondCompilerVersion } from "../modules/config/module";
 import { BasesCatalog } from "../modules/config/types";
 
 /**
@@ -30,7 +28,7 @@ export const InitPipeline = {
    * @returns Context with init results or validation errors
    */
   async execute(ctx: ComposeContext): Promise<ComposeContext> {
-    TerminalOutputModule.showComposeHeader();
+    InitModule.showComposeHeader();
 
     ctx = await ConfigModule.loadBasesCatalog(ctx);
 
@@ -61,7 +59,7 @@ export const InitPipeline = {
 
     const root = String(ctx.param.projectRoot ?? "");
     const contractSourceRoot = adapter.getContractSourceRoot(root);
-    const compilerVersion = getDiamondCompilerVersion(ctx.config.bases as BasesCatalog);
+    const compilerVersion = ConfigModule.getDiamondCompilerVersion(ctx.config.bases as BasesCatalog);
     const projectName = String(ctx.param.projectName ?? "my-diamond");
     const installDeps = ctx.param.installDeps !== false;
 
@@ -74,7 +72,7 @@ export const InitPipeline = {
     ctx = await ValidationModule.validateSelectorExports(ctx);
 
     if (ValidationModule.hasSelectorExportFailure(ctx)) {
-      ctx = await TerminalOutputModule.showReport(ctx);
+      ctx = await ValidationModule.showReport(ctx);
       return ctx;
     }
 
@@ -83,14 +81,14 @@ export const InitPipeline = {
     });
 
     if (ValidationModule.hasSelectorCollisionFailure(ctx)) {
-      ctx = await TerminalOutputModule.showReport(ctx);
+      ctx = await ValidationModule.showReport(ctx);
       return ctx;
     }
 
     ctx = await ValidationModule.detectIdentifierCollisions(ctx);
 
     if (ValidationModule.hasIdentifierCollisionFailure(ctx)) {
-      ctx = await TerminalOutputModule.showReport(ctx);
+      ctx = await ValidationModule.showReport(ctx);
       return ctx;
     }
 
@@ -116,14 +114,14 @@ export const InitPipeline = {
       error: null,
     };
 
-    ctx = await TerminalOutputModule.showReport(ctx);
+    ctx = await ValidationModule.showReport(ctx);
 
     if (ValidationModule.hasBlockingFailure(ctx)) {
       return ctx;
     }
 
     if (ctx.state.initPipeline?.success) {
-      TerminalOutputModule.showSuccess(ctx);
+      InitModule.showSuccess(ctx);
     }
 
     return ctx;

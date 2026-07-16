@@ -11,10 +11,6 @@ import { getSelectedFacets } from "./facetSelection";
 import { parseStorageLayouts } from "./storage";
 import { targetDirectoryForFacet } from "./paths";
 
-export { getSelectedFacets } from "./facetSelection";
-export { targetDirectoryForFacet } from "./paths";
-export { parseStorageLayouts } from "./storage";
-
 /**
  * Scans selected Solidity facets and writes the final project configuration.
  *
@@ -23,6 +19,9 @@ export { parseStorageLayouts } from "./storage";
  * `compose.json` to the project root.
  */
 export const ScaffoldingModule = {
+  getSelectedFacets,
+  targetDirectoryForFacet,
+  parseStorageLayouts,
   /**
    * Records the framework scaffold map so later modules can resolve generated files.
    *

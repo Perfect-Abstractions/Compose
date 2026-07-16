@@ -2,11 +2,9 @@ import fs from "node:fs/promises";
 import path from "node:path";
 import { ComposeContext } from "../../context/types";
 import { BasesCatalog, BaseDefinition, BaseManifest } from "./types";
-import { sortBaseFeatures } from "./catalog";
+import { sortBaseFeatures, EMPTY_BASE, getDiamondCompilerVersion } from "./catalog";
+import { resolveCatalogSelection, getAccessBases, getAvailableLibraryFacets, validateGroupedAccessFlags } from "./selection";
 import { CLI_ROOT } from "../../utils/cliRoot";
-
-export { EMPTY_BASE, getDiamondCompilerVersion } from "./catalog";
-export { resolveCatalogSelection, getAccessBases, getAvailableLibraryFacets, validateGroupedAccessFlags } from "./selection";
 
 /**
  * Loads and indexes the Compose bases catalog from JSON manifest files.
@@ -16,6 +14,12 @@ export { resolveCatalogSelection, getAccessBases, getAvailableLibraryFacets, val
  * standard order, and stores the result on the context.
  */
 export const ConfigModule = {
+  EMPTY_BASE,
+  getDiamondCompilerVersion,
+  resolveCatalogSelection,
+  getAccessBases,
+  getAvailableLibraryFacets,
+  validateGroupedAccessFlags,
   /**
    * Reads JSON manifest files from `bases/` and builds the {@link BasesCatalog}.
    *

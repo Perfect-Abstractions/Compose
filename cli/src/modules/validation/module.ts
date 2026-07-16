@@ -7,12 +7,12 @@ import {
 } from "./validators";
 import {
   getFacetScanResult,
+  getFacetScanState,
   getIdentifierCollisionValidationState,
   getSelectorCollisionValidationState,
   getSelectorExportValidationState,
 } from "./state";
-
-export { getFacetScanState, getSelectorExportValidationState, getSelectorCollisionValidationState, getIdentifierCollisionValidationState } from "./state";
+import { showReport } from "./output";
 
 /**
  * Validates facet scans for selector export correctness and collision-free layouts.
@@ -26,6 +26,12 @@ export { getFacetScanState, getSelectorExportValidationState, getSelectorCollisi
  * `success: false` when issues are found.
  */
 export const ValidationModule = {
+  showReport,
+  getFacetScanState,
+  getSelectorExportValidationState,
+  getSelectorCollisionValidationState,
+  getIdentifierCollisionValidationState,
+  
   /**
    * Returns true when selector export validation has found blocking issues.
    *

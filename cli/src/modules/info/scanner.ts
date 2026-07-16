@@ -6,7 +6,7 @@ import {
   parseExportedSelectorSignatures,
   parseSolidityFunctions,
 } from "../../utils/solidityText";
-import { parseStorageLayouts } from "../scaffolding/module";
+import { ScaffoldingModule } from "../scaffolding/module";
 import { ComposeProjectInfo, DiamondInfo, FacetInfo } from "./types";
 
 /**
@@ -188,7 +188,7 @@ function extractFacetInfo(
   }
 
   // Extract storage layouts
-  const storageScan = parseStorageLayouts(source);
+  const storageScan = ScaffoldingModule.parseStorageLayouts(source);
   facet.storageSlots = storageScan.layouts.map((layout) => ({
     slot: layout.slot,
     layout: layout.layout,

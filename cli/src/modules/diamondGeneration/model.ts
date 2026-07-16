@@ -1,9 +1,9 @@
 import path from "node:path";
 import { ComposeContext } from "../../context/types";
 import { ConstructorEntry, Erc165Entry } from "../config/types";
-import { getSelectedFacets, targetDirectoryForFacet } from "../scaffolding/module";
+import { ScaffoldingModule } from "../scaffolding/module";
 import { BasesCatalog } from "../config/types";
-import { resolveCatalogSelection, EMPTY_BASE } from "../config/module";
+import { ConfigModule } from "../config/module";
 import { DiamondGenerationFile, DiamondGenerationModel, DiamondImport } from "./types";
 import {
   contractNameFromSourcePath,
@@ -32,7 +32,7 @@ export function resolveDiamondGenerationModel(
   const catalog = ctx.config.bases as BasesCatalog;
   const selectedBaseKey = String(ctx.param.base ?? "");
   const selectedBase = selectedBaseKey === "none"
-    ? EMPTY_BASE
+    ? ConfigModule.EMPTY_BASE
     : catalog.features[selectedBaseKey];
   const projectRoot = String(ctx.param.projectRoot ?? "");
   const solidityPragma = catalog.globals.diamond?.pragma;
@@ -51,8 +51,8 @@ export function resolveDiamondGenerationModel(
     throw new Error("Cannot generate Diamond.sol: diamond pragma is missing or invalid.");
   }
 
-  const selectedFacets = getSelectedFacets(ctx);
-  const selection = resolveCatalogSelection(
+  const selectedFacets = ScaffoldingModule.getSelectedFacets(ctx);
+  const selection = ConfigModule.resolveCatalogSelection(
     catalog,
     selectedBaseKey,
     (ctx.param.libraries as string[] | undefined) ?? [],
@@ -99,7 +99,7 @@ export function resolveDiamondGenerationModel(
 
     if (entry.mod) {
       const alias = contractNameFromSourcePath(entry.mod);
-      const target = path.join(targetDirectoryForFacet(contractSourceRoot, facet), path.basename(entry.mod));
+      const target = path.join(ScaffoldingModule.targetDirectoryForFacet(contractSourceRoot, facet), path.basename(entry.mod));
       if (!isComposePackagePath(entry.mod)) {
         addGenerationFile(files, resolveCatalogSourceForRead(entry.mod), target);
       }

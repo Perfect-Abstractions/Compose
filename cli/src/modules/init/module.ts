@@ -1,12 +1,6 @@
 import { ComposeContext } from "../../context/types";
 import { BasesCatalog } from "../config/types";
-import {
-  EMPTY_BASE,
-  getAccessBases,
-  getAvailableLibraryFacets,
-  resolveCatalogSelection,
-  validateGroupedAccessFlags,
-} from "../config/module";
+import { ConfigModule } from "../config/module";
 import {
   checkboxTheme,
   getOwnershipChoices,
@@ -21,7 +15,7 @@ import { getFrameworkDependencies } from "./frameworkDeps";
 import { resolveAccessFlags } from "./flags";
 import { splitCommaSeparated } from "../../utils/strings";
 import { validateProjectName, validateProjectNameWithFolder } from "./projectNameValidation";
-import { TerminalOutputModule } from "../terminalOutput/module";
+import { showComposeHeader, showDependencies, showSuccess } from "./output";
 
 /**
  * Handles interactive and non-interactive init input collection.
@@ -31,6 +25,8 @@ import { TerminalOutputModule } from "../terminalOutput/module";
  * the assembled configuration on the context.
  */
 export const InitModule = {
+  showComposeHeader,
+  showSuccess,
   /**
    * Runs the init flow non-interactively from CLI flags.
    *
@@ -74,7 +70,7 @@ export const InitModule = {
       selectedAccessExtensions,
     } = resolveAccessFlags(ctx.param);
 
-    validateGroupedAccessFlags(
+    ConfigModule.validateGroupedAccessFlags(
       catalog,
       baseKey,
       selectedOwnership,
@@ -83,7 +79,7 @@ export const InitModule = {
       selectedRoleAccessExtensions,
     );
 
-    const selection = resolveCatalogSelection(
+    const selection = ConfigModule.resolveCatalogSelection(
       catalog,
       baseKey,
       selectedLibraries,
@@ -196,7 +192,7 @@ export const InitModule = {
     });
 
     const selectedBase = selectedBaseKey === "none"
-      ? EMPTY_BASE
+      ? ConfigModule.EMPTY_BASE
       : catalog.features[selectedBaseKey];
 
     const availableExtensions = selectedBase.optional ?? {};
@@ -210,7 +206,7 @@ export const InitModule = {
         })
       : [];
 
-    const availableLibraryFacets = getAvailableLibraryFacets(catalog, selectedBase);
+    const availableLibraryFacets = ConfigModule.getAvailableLibraryFacets(catalog, selectedBase);
     const libraryChoices = toFacetChoices(Object.keys(availableLibraryFacets));
 
     const selectedLibraries = await checkbox({
@@ -219,7 +215,7 @@ export const InitModule = {
       theme: checkboxTheme,
     });
 
-    const accessBases = getAccessBases(catalog, selectedBaseKey);
+    const accessBases = ConfigModule.getAccessBases(catalog, selectedBaseKey);
     const selectedOwnership = selectedBase.accessType === "ownership"
       ? undefined
       : await select({
@@ -265,14 +261,14 @@ export const InitModule = {
     ];
 
     const { deps, packageType } = getFrameworkDependencies(framework, String(ctx.param.toolbox));
-    TerminalOutputModule.showDependencies(deps, packageType);
+    showDependencies(deps, packageType);
     const installDeps = await (await loadPrompts()).confirm({
       message: "Install project dependencies?",
       default: true,
     });
     ctx.param.installDeps = installDeps;
 
-    const selection = resolveCatalogSelection(
+    const selection = ConfigModule.resolveCatalogSelection(
       catalog,
       selectedBaseKey,
       selectedLibraries,

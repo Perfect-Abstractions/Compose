@@ -1,5 +1,5 @@
 import { BasesCatalog, FacetEntry } from "../config/types";
-import { resolveCatalogSelection } from "../config/module";
+import { ConfigModule } from "../config/module";
 import { SelectedFacet } from "./types";
 import { ComposeContext } from "../../context/types";
 import { isDeepEqual } from "../../utils/objects";
@@ -22,7 +22,7 @@ export function getSelectedFacets(ctx: ComposeContext): SelectedFacet[] {
   const selectedExtensionNames = new Set((ctx.param.extensions as string[] | undefined) ?? []);
   const selectedAccessNames = new Set((ctx.param.access as string[] | undefined) ?? []);
   const selectedAccessExtensionNames = new Set((ctx.param.accessExtensions as string[] | undefined) ?? []);
-  const selection = resolveCatalogSelection(
+  const selection = ConfigModule.resolveCatalogSelection(
     catalog,
     selectedBaseKey,
     [...selectedLibraryNames],

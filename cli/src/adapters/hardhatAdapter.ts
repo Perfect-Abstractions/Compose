@@ -5,7 +5,7 @@ import { ConfigOptions, IFrameworkAdapter } from "./interface/IFrameworkAdapter"
 import { writeFileIfMissing } from "../utils/files";
 import { runCommand } from "../utils/exec";
 import { isComposePackagePath, resolveCatalogSourceForRead } from "../utils/soliditySources";
-import { getSelectedFacets } from "../modules/scaffolding/module";
+import { ScaffoldingModule } from "../modules/scaffolding/module";
 import { CLI_ROOT } from "../utils/cliRoot";
 
 /** Framework adapter for Hardhat-based Diamond projects. */
@@ -67,7 +67,7 @@ const adapter: IFrameworkAdapter = {
   async writeConfig(ctx: ComposeContext, opts: ConfigOptions): Promise<void> {
     const root = String(ctx.param.projectRoot ?? "");
     const toolbox = String(ctx.param.toolbox ?? "ethers");
-    const selectedFacets = getSelectedFacets(ctx);
+    const selectedFacets = ScaffoldingModule.getSelectedFacets(ctx);
     const packageFacetPaths = selectedFacets
       .map((facet) => facet.entry.path)
       .filter(isComposePackagePath);

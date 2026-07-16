@@ -1,6 +1,6 @@
 import path from "node:path";
 import { ComposeContext, ModuleState } from "../../context/types";
-import { getSelectedFacets } from "../scaffolding/module";
+import { ScaffoldingModule } from "../scaffolding/module";
 import { ScaffoldMapEntry, SelectedFacet, SelectedFacetSource } from "../scaffolding/types";
 import { DeployFacetEntry, DeployFacetGroup, DeployGenerationModel } from "./types";
 import { toPosixPath } from "../../utils/files";
@@ -60,7 +60,7 @@ export function resolveDeployGenerationModel(
 
   const scaffoldEntries = getScaffoldEntries(ctx);
   const scaffoldByFacetName = new Map(scaffoldEntries.map((entry) => [entry.facetName, entry]));
-  const selectedFacets = getSelectedFacets(ctx);
+  const selectedFacets = ScaffoldingModule.getSelectedFacets(ctx);
   
   const deployEntries = selectedFacets.map((facet: SelectedFacet): DeployFacetEntry => {
     const scaffoldEntry = scaffoldByFacetName.get(facet.name);
