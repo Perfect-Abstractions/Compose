@@ -1,6 +1,6 @@
 {
   "name": "@perfect-abstractions/compose-cli",
-  "version": "0.0.5",
+  "version": "0.1.0",
   "description": "CLI to scaffold Compose facet-based diamond projects",
   "main": "dist/index.js",
   "bin": {
