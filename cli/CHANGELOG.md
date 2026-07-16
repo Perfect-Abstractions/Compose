@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.1.0
+
+### Minor Changes
+
+- 630dd70: Rewrite CLI from JavaScript to TypeScript with pipeline/context architecture, add `catalog` and `info` commands, bases catalog, validation, Solidity parsing, framework adapters, and scaffolding. Special thanks to @0x76agabond for his contributions on this.
+
 ## 0.0.5
 
 ### Patch Changes
