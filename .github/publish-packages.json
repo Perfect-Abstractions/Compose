@@ -16,7 +16,7 @@
       "versionFile": "cli/package.json",
       "tagPrefix": "compose-cli",
       "needsFoundry": false,
-      "check": "npm run cli@check && npm run cli@pack:check",
+      "check": "npm run cli@build && npm run cli@check && npm run cli@pack:check",
       "releaseNotesPaths": ["cli"],
       "releaseNotesMode": "pr"
     }
