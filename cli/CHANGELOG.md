@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.1.1
+
+### Patch Changes
+
+- 0e83bb5: Build the CLI before publishing so the npm package includes dist output.
+
 ## 0.1.0
 
 ### Minor Changes
