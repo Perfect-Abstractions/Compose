@@ -1,3 +1,7 @@
+export type PromptContext = {
+  clearPromptOnDone?: boolean;
+};
+
 export type PromptApi = {
   checkbox: <Value>(
     config: {
@@ -17,6 +21,7 @@ export type PromptApi = {
         };
       };
     },
+    context?: PromptContext,
   ) => Promise<Value[]>;
   select: <Value>(
     config: {
@@ -33,6 +38,7 @@ export type PromptApi = {
         };
       };
     },
+    context?: PromptContext,
   ) => Promise<Value>;
   input: (config: {
     message: string;
@@ -41,14 +47,14 @@ export type PromptApi = {
     theme?: {
       prefix?: string | { idle?: string; done?: string };
     };
-  }) => Promise<string>;
+  }, context?: PromptContext) => Promise<string>;
   confirm: (config: {
     message: string;
     default?: boolean;
     theme?: {
       prefix?: string | { idle?: string; done?: string };
     };
-  }) => Promise<boolean>;
+  }, context?: PromptContext) => Promise<boolean>;
 };
 
 export type InitOptions = {

@@ -1,20 +1,33 @@
 import { BaseDefinition } from "../config/types";
 import { PromptApi } from "./types";
 
-/** A choice option for an @inquirer/prompts select or checkbox prompt. */
+/** A choice option for an Inquirer select or checkbox prompt. */
 export type PromptChoice<Value> = {
   name: string;
   value: Value;
 };
 
 /**
- * Dynamically imports and returns the @inquirer/prompts API.
- * Uses dynamic import to avoid bundling the dependency when unused.
+ * Dynamically imports the prompt primitives used by init.
+ * Importing the primitives directly keeps npm hoisting from resolving newer
+ * transitive prompt internals through the umbrella @inquirer/prompts package.
  *
  * @returns The prompt API with input, select, checkbox, and confirm methods.
  */
 export async function loadPrompts(): Promise<PromptApi> {
-  return (await import("@inquirer/prompts")) as unknown as PromptApi;
+  const [
+    { default: input },
+    { default: select },
+    { default: checkbox },
+    { default: confirm },
+  ] = await Promise.all([
+    import("@inquirer/input"),
+    import("@inquirer/select"),
+    import("@inquirer/checkbox"),
+    import("@inquirer/confirm"),
+  ]);
+
+  return { input, select, checkbox, confirm } as unknown as PromptApi;
 }
 
 /**
