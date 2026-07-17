@@ -121,7 +121,7 @@ export const InitModule = {
   },
 
   /**
-   * Runs the init flow interactively using `@inquirer/prompts`.
+   * Runs the init flow interactively using Inquirer prompt primitives.
    *
    * Prompts the user for project name, framework (Foundry/Hardhat), toolbox
    * (for Hardhat), base, library facets, extension facets, access layers,
@@ -134,6 +134,7 @@ export const InitModule = {
    */
   async runInitInteractive(ctx: ComposeContext): Promise<ComposeContext> {
     const { input, checkbox, select } = await loadPrompts();
+    const promptContext = { clearPromptOnDone: true };
     const catalog = ctx.config.bases as BasesCatalog;
 
     if (!ctx.param.projectName) {
@@ -143,7 +144,7 @@ export const InitModule = {
         message: "Enter project name:",
         default: "my-diamond",
         validate: (name) => validateProjectNameWithFolder(name, outDir),
-      });
+      }, promptContext);
       ctx.param.projectName = projectName;
     } else {
       const projectNameValidation = validateProjectName(String(ctx.param.projectName));
@@ -170,7 +171,7 @@ export const InitModule = {
       ] as const,
       default: "foundry",
       theme: selectTheme,
-    });
+    }, promptContext);
 
     if (framework === "hardhat") {
       const toolbox = await select({
@@ -181,7 +182,7 @@ export const InitModule = {
         ],
         default: "ethers",
         theme: selectTheme,
-      });
+      }, promptContext);
       ctx.param.toolbox = toolbox;
     }
 
@@ -189,7 +190,7 @@ export const InitModule = {
       message: "Select base:",
       choices: featureChoices,
       theme: selectTheme,
-    });
+    }, promptContext);
 
     const selectedBase = selectedBaseKey === "none"
       ? ConfigModule.EMPTY_BASE
@@ -203,7 +204,7 @@ export const InitModule = {
           message: "Select extension facets:",
           choices: extensionChoices,
           theme: checkboxTheme,
-        })
+        }, promptContext)
       : [];
 
     const availableLibraryFacets = ConfigModule.getAvailableLibraryFacets(catalog, selectedBase);
@@ -213,7 +214,7 @@ export const InitModule = {
       message: "Select Compose library facets:",
       choices: libraryChoices,
       theme: checkboxTheme,
-    });
+    }, promptContext);
 
     const accessBases = ConfigModule.getAccessBases(catalog, selectedBaseKey);
     const selectedOwnership = selectedBase.accessType === "ownership"
@@ -222,7 +223,7 @@ export const InitModule = {
           message: "Select ownership:",
           choices: getOwnershipChoices(accessBases),
           theme: selectTheme,
-        });
+        }, promptContext);
 
     const ownershipExtensionChoices = getOwnershipExtensionChoices(accessBases, selectedOwnership);
     const selectedOwnershipExtensions = ownershipExtensionChoices.length > 0
@@ -230,7 +231,7 @@ export const InitModule = {
           message: "Select ownership extension facets:",
           choices: ownershipExtensionChoices,
           theme: checkboxTheme,
-        })
+        }, promptContext)
       : [];
 
     const accessChoices = getRoleAccessChoices(accessBases);
@@ -239,7 +240,7 @@ export const InitModule = {
       message: "Select access control:",
       choices: accessChoices,
       theme: selectTheme,
-    });
+    }, promptContext);
     const selectedRoleAccess = selectedAccessControl ? [selectedAccessControl] : [];
     const selectedAccess = [
       ...(selectedOwnership ? [selectedOwnership] : []),
@@ -253,7 +254,7 @@ export const InitModule = {
           message: "Select access control extension facets:",
           choices: accessExtensionChoices,
           theme: checkboxTheme,
-        })
+        }, promptContext)
       : [];
     const selectedAccessExtensions = [
       ...selectedOwnershipExtensions,
@@ -265,7 +266,7 @@ export const InitModule = {
     const installDeps = await (await loadPrompts()).confirm({
       message: "Install project dependencies?",
       default: true,
-    });
+    }, promptContext);
     ctx.param.installDeps = installDeps;
 
     const selection = ConfigModule.resolveCatalogSelection(
