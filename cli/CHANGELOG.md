@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.1.2
+
+### Patch Changes
+
+- 7984bcf: Refresh CLI dependency locks and fix interactive init prompts on Windows.
+- fccdf34: fix: sync release lock for CLI prompt deps
+
 ## 0.1.1
 
 ### Patch Changes
