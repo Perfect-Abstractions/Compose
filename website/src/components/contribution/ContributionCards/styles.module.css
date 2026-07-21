@@ -1,0 +1,289 @@
+.contributionCard {
+  display: flex;
+  flex-direction: column;
+  padding: 2rem;
+  text-decoration: none;
+  color: inherit;
+  position: relative;
+  overflow: hidden;
+  isolation: isolate;
+  cursor: pointer;
+  border-radius: 1.25rem;
+  background: linear-gradient(155deg, #ffffff 0%, #f1f5f9 55%, #f8fafc 100%);
+  border-top: 1px solid rgba(15, 23, 42, 0.08);
+  border-left: 1px solid rgba(15, 23, 42, 0.08);
+  border-right: 1px solid rgba(15, 23, 42, 0.08);
+  border-bottom: none;
+  box-shadow:
+    0 0 0 1px rgba(255, 255, 255, 0.7) inset,
+    0 1px 0 rgba(255, 255, 255, 0.9) inset,
+    0 22px 44px -18px rgba(15, 23, 42, 0.12),
+    0 4px 12px rgba(15, 23, 42, 0.04);
+  transition:
+    border-color var(--motion-duration-normal) var(--motion-ease-standard),
+    box-shadow var(--motion-duration-normal) var(--motion-ease-standard),
+    transform var(--motion-duration-normal) var(--motion-ease-standard);
+}
+
+.contributionCard:focus-visible {
+  outline: 3px solid var(--focus-ring-color);
+  outline-offset: 3px;
+}
+
+.contributionCard::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    #60a5fa 22%,
+    #2563eb 55%,
+    rgba(37, 99, 235, 0.35) 100%
+  );
+  transform: scaleX(0);
+  transform-origin: left;
+  transition: transform 320ms cubic-bezier(0.22, 1, 0.36, 1);
+  z-index: 2;
+  pointer-events: none;
+}
+
+.contributionCard::after {
+  content: '';
+  position: absolute;
+  inset: -40% -20% auto -20%;
+  height: 85%;
+  background: radial-gradient(closest-side, rgba(59, 130, 246, 0.14), transparent 72%);
+  opacity: 0;
+  transition: opacity var(--motion-duration-normal) var(--motion-ease-standard);
+  pointer-events: none;
+  z-index: 0;
+}
+
+.contributionCard:hover {
+  transform: translateY(-5px);
+}
+
+.contributionCard:hover::before {
+  transform: scaleX(1);
+}
+
+.contributionCard:hover::after {
+  opacity: 1;
+}
+
+.cardMeta {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 1rem;
+  position: relative;
+  z-index: 1;
+}
+
+.kickerLogo {
+  height: 1.25rem;
+  width: auto;
+}
+
+.kicker {
+  font-family: var(--ifm-font-family-monospace);
+  font-size: 0.6875rem;
+  font-weight: 600;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: #475569;
+}
+
+.cardTitle {
+  position: relative;
+  z-index: 1;
+  font-size: 1.3125rem;
+  font-weight: 750;
+  letter-spacing: -0.025em;
+  line-height: 1.22;
+  color: #0f172a;
+  margin: 0 0 0.75rem;
+}
+
+.cardDescription {
+  position: relative;
+  z-index: 1;
+  flex: 1;
+  font-size: 0.96875rem;
+  line-height: 1.65;
+  color: #334155;
+  margin: 0 0 1.25rem;
+}
+
+.tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-bottom: 1.5rem;
+  position: relative;
+  z-index: 1;
+}
+
+.tag {
+  font-family: var(--ifm-font-family-monospace);
+  font-size: 0.6875rem;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  padding: 0.3rem 0.65rem;
+  border-radius: 9999px;
+  border: 1px solid transparent;
+  transition: all var(--motion-duration-normal) var(--motion-ease-standard);
+}
+
+.cardLinkHint {
+  position: relative;
+  z-index: 1;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-family: var(--ifm-font-family-monospace);
+  font-size: 0.6875rem;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  transition: all var(--motion-duration-normal) var(--motion-ease-standard);
+}
+
+.cardLinkArrow {
+  display: inline-block;
+  transition: transform var(--motion-duration-normal) var(--motion-ease-standard);
+}
+
+.contributionCard:hover .cardLinkArrow {
+  transform: translateX(5px);
+}
+
+.contributionCard:hover {
+  border-color: rgba(59, 130, 246, 0.28);
+  box-shadow:
+    0 0 0 1px rgba(59, 130, 246, 0.12) inset,
+    0 28px 56px -20px rgba(37, 99, 235, 0.18),
+    0 12px 28px rgba(15, 23, 42, 0.08);
+}
+
+.contributionCard .tag {
+  background: rgba(59, 130, 246, 0.08);
+  color: #1e40af;
+  border-color: rgba(59, 130, 246, 0.15);
+}
+
+.contributionCard .cardLinkHint {
+  color: #1e40af;
+}
+
+.contributionCard:hover .cardLinkHint {
+  color: #1d4ed8;
+}
+
+/* Grid container */
+.contributionCardGrid {
+  display: grid;
+  grid-template-columns: repeat(var(--grid-columns, 2), 1fr);
+  gap: 1.5rem;
+  margin: 2rem 0;
+}
+
+@media (max-width: 768px) {
+  .contributionCardGrid {
+    grid-template-columns: 1fr;
+    gap: 1.25rem;
+  }
+
+  .contributionCard {
+    padding: 1.75rem 1.5rem 2rem;
+  }
+
+  .cardTitle {
+    font-size: 1.1875rem;
+  }
+
+  .cardDescription {
+    font-size: 0.9375rem;
+  }
+}
+
+/* Dark mode */
+[data-theme='dark'] .contributionCard {
+  background: linear-gradient(
+    155deg,
+    rgba(30, 41, 59, 0.92) 0%,
+    rgba(15, 23, 42, 0.72) 48%,
+    rgba(10, 14, 26, 0.55) 100%
+  );
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  border-color: rgba(148, 163, 184, 0.14);
+  box-shadow:
+    0 0 0 1px rgba(0, 0, 0, 0.45) inset,
+    0 1px 0 rgba(255, 255, 255, 0.06) inset,
+    0 28px 56px -24px rgba(0, 0, 0, 0.65),
+    0 0 0 1px rgba(59, 130, 246, 0.06);
+}
+
+[data-theme='dark'] .contributionCard::after {
+  background: radial-gradient(closest-side, rgba(96, 165, 250, 0.22), transparent 70%);
+}
+
+[data-theme='dark'] .contributionCard:hover {
+  border-color: rgba(96, 165, 250, 0.35);
+  box-shadow:
+    0 0 0 1px rgba(59, 130, 246, 0.2) inset,
+    0 1px 0 rgba(255, 255, 255, 0.09) inset,
+    0 0 40px -8px rgba(59, 130, 246, 0.35),
+    0 32px 64px -28px rgba(0, 0, 0, 0.75);
+}
+
+[data-theme='dark'] .kicker {
+  color: rgba(148, 163, 184, 0.85);
+}
+
+[data-theme='dark'] .cardTitle {
+  color: #ffffff;
+}
+
+[data-theme='dark'] .cardDescription {
+  color: rgba(226, 232, 240, 0.82);
+}
+
+[data-theme='dark'] .contributionCard .tag {
+  background: rgba(255, 255, 255, 0.06);
+  color: #93c5fd;
+  border-color: rgba(59, 130, 246, 0.2);
+}
+
+[data-theme='dark'] .contributionCard .cardLinkHint {
+  color: #93c5fd;
+  opacity: 0.5;
+}
+
+[data-theme='dark'] .contributionCard:hover .cardLinkHint {
+  color: #4189f7;
+  opacity: 0.95;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .contributionCard {
+    transition: border-color var(--motion-duration-fast) ease, box-shadow var(--motion-duration-fast) ease;
+  }
+
+  .contributionCard:hover {
+    transform: none;
+  }
+
+  .contributionCard::before {
+    transition: transform 0.01ms;
+  }
+
+  .cardLinkArrow {
+    transition: none;
+  }
+}

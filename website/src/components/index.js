@@ -47,6 +47,9 @@ export { default as FeatureCard } from './features/FeatureCard';
 export { default as FeatureGrid, FeatureGridItem } from './features/FeatureGrid';
 export { default as HomepageFeatures } from './features/HomepageFeatures';
 
+// Contribution Components
+export { default as ContributionCard, ContributionCardGrid } from './contribution/ContributionCards';
+
 // Animation Components
 export { default as AnimatedBackground } from './animations/AnimatedBackground';
 export { default as AnimatedCounter } from './animations/AnimatedCounter';

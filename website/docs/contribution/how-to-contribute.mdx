@@ -5,9 +5,12 @@ sidebar_label: "How to Contribute"
 description: Learn how to contribute to Compose
 ---
 
+import DocCard, { DocCardGrid } from '@site/src/components/docs/DocCard';
+import DocSubtitle from '@site/src/components/docs/DocSubtitle';
+
 # How to Contribute
 
-Thank you for your interest in contributing to Compose!
+<DocSubtitle>Thank you for your interest in contributing to Compose!</DocSubtitle>
 
 Compose is a community developed project. We welcome you and want your help.
 
@@ -45,52 +48,27 @@ There are many ways to contribute to Compose. Here are some ways:
 
 9. Have other ideas about how to contribute? Please let us know!
 
-## Development Setup
+## Choose where you want to contribute
 
-### Prerequisites
-- [Solidity](https://soliditylang.org/) (version 0.8.30 or higher)
-- [Foundry](https://book.getfoundry.sh/getting-started/installation) (version 1.4.3-stable or higher)
-- Git
+<ContributionCardGrid columns={2}>
+  <ContributionCard
+    kicker="Solidity"
+    kickerLogo="/img/svg/solidity_logo.svg"
+    kickerLogoDark="/img/svg/solidity_logo_white.svg"
+    title="Library Development"
+    description="Help us extend our library of Solidity contracts, facets, and modules."
+    href="/docs/contribution/library/development"
+  />
+  <ContributionCard
+    kicker="Typescript"
+    kickerLogo="/img/svg/ts-logo.svg"
+    title="CLI Development"
+    description="Help us develop a complete diamond-based development framework."
+    href="/docs/contribution/cli/development"
+  />
+</ContributionCardGrid>
 
-### Setup Steps
-1. Fork the repository
-2. Clone your fork:
-   ```bash
-   git clone https://github.com/YOUR_USERNAME/Compose.git
-   cd Compose
-   ```
-3. Install dependencies:
-   ```bash
-   forge install
-   ```
-4. Build the project:
-   ```bash
-   forge build
-   ```
-5. Run tests:
-   ```bash
-   forge test
-   ```
-
-## Development Workflow
-
-Once you are assigned to an issue:
-1. Fork the repository.
-2. Create a new branch for your work.
-3. Implement your changes.
-4. Make sure your changes follow the [design of Compose](/docs/design).
-5. Format your code: `forge fmt`.
-6. Run tests to ensure everything works.
-7. Submit a pull request.
-8. We will review it and merge it and/or give you feedback on the work.
-
-You can also make new issues to suggest new functionality or work.
-
-## Changing `lib/forge-std` by Accident
-
-If your pull request will by accident make any changes to the files in `lib/forge-std`, the way to fix this is to run `forge install` and commit the change.
-
-### Ideas & Discussions
+## Ideas & Discussions
 
 **We use GitHub Discussions for ideas, debates, and brainstorming!** 
 
@@ -108,30 +86,6 @@ This is the perfect place to:
 - Explore possibilities before committing to implementation.
 
 Once you have a clear idea of what you want to do, [create an issue](https://github.com/Perfect-Abstractions/Compose/issues/new). Provide as much data as you can and we will give you the go ahead to start or give more feedback about it.
-
-### Required
-Before submitting a pull request:
-- Format your code: `forge fmt`.
-- Run all tests: `forge test`.
-- Update gas snapshots: `forge snapshot`.
-- Ensure your code follows the [design of Compose](/docs/design).
-- Ensure your code doesn't use any [banned language features](/docs/design/banned-solidity-features).
-- Ensure your code follows the coding style in the existing code base.
-
-
-## Code Style Guide
-
-Follow the [Code Style Guide](/docs/contribution/code-style-guide) when contributing code.
-
-### Development Considerations
-- Make sure that you understand all code that you use or write.
-- Gas efficiency is important but how easy the code is to read is more important.
-- Write secure code.
-- Write bug free code.
-- Consider edge cases and potential attack vectors.
-
-## Testing
-Follow the [Testing Guidelines](/docs/contribution/testing) when writing tests.
 
 ## Code of Conduct
 
@@ -171,6 +125,5 @@ This is the beginning and we are still working out how this will all work. We ar
 </a>
 
 {/* /automd */}
-
 
 
