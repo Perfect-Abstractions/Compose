@@ -1,34 +1,4 @@
 import { BaseDefinition } from "../config/types";
-import { PromptApi } from "./types";
-
-/** A choice option for an Inquirer select or checkbox prompt. */
-export type PromptChoice<Value> = {
-  name: string;
-  value: Value;
-};
-
-/**
- * Dynamically imports the prompt primitives used by init.
- * Importing the primitives directly keeps npm hoisting from resolving newer
- * transitive prompt internals through the umbrella @inquirer/prompts package.
- *
- * @returns The prompt API with input, select, checkbox, and confirm methods.
- */
-export async function loadPrompts(): Promise<PromptApi> {
-  const [
-    { default: input },
-    { default: select },
-    { default: checkbox },
-    { default: confirm },
-  ] = await Promise.all([
-    import("@inquirer/input"),
-    import("@inquirer/select"),
-    import("@inquirer/checkbox"),
-    import("@inquirer/confirm"),
-  ]);
-
-  return { input, select, checkbox, confirm } as unknown as PromptApi;
-}
 
 /**
  * Converts an array of facet names into prompt choice objects.
@@ -36,7 +6,7 @@ export async function loadPrompts(): Promise<PromptApi> {
  * @param facetNames - The facet names to convert.
  * @returns Array of prompt choices with name and value set to the facet name.
  */
-export function toFacetChoices(facetNames: string[]): PromptChoice<string>[] {
+export function toFacetChoices(facetNames: string[]): { name: string; value: string }[] {
   return facetNames.map((facetName) => ({
     name: facetName,
     value: facetName,
@@ -51,7 +21,7 @@ export function toFacetChoices(facetNames: string[]): PromptChoice<string>[] {
  */
 export function getOwnershipChoices(
   accessBases: Record<string, BaseDefinition>,
-): PromptChoice<string | undefined>[] {
+): { name: string; value: string | undefined }[] {
   return [
     { name: "None", value: undefined },
     ...Object.entries(accessBases)
@@ -73,7 +43,7 @@ export function getOwnershipChoices(
 export function getOwnershipExtensionChoices(
   accessBases: Record<string, BaseDefinition>,
   selectedOwnership: string | undefined,
-): PromptChoice<string>[] {
+): { name: string; value: string }[] {
   if (!selectedOwnership) return [];
   return toFacetChoices(Object.keys(accessBases[selectedOwnership]?.optional ?? {}));
 }
@@ -86,7 +56,7 @@ export function getOwnershipExtensionChoices(
  */
 export function getRoleAccessChoices(
   accessBases: Record<string, BaseDefinition>,
-): PromptChoice<string | undefined>[] {
+): { name: string; value: string | undefined }[] {
   return [
     { name: "None", value: undefined },
     ...Object.entries(accessBases)
@@ -108,37 +78,7 @@ export function getRoleAccessChoices(
 export function getRoleAccessExtensionChoices(
   accessBases: Record<string, BaseDefinition>,
   selectedRoleAccess: string | undefined,
-): PromptChoice<string>[] {
+): { name: string; value: string }[] {
   if (!selectedRoleAccess) return [];
   return toFacetChoices(Object.keys(accessBases[selectedRoleAccess]?.optional ?? {}));
 }
-
-/** Custom theme for checkbox prompts with simplified icons, no help tip, and "None" when empty. */
-export const checkboxTheme = {
-  prefix: "",
-  icon: {
-    checked: "[✓]",
-    unchecked: "[ ]",
-    cursor: ">",
-    disabledChecked: "[✓]",
-    disabledUnchecked: "[ ]",
-  },
-  style: {
-    keysHelpTip: () => undefined,
-    renderSelectedChoices: (selected: readonly { short: string }[]) => {
-      if (selected.length === 0) return "None";
-      return selected.map((c) => c.short).join(", ");
-    },
-  },
-} as const;
-
-/** Custom theme for select prompts with simplified cursor and no help tip. */
-export const selectTheme = {
-  prefix: "",
-  icon: {
-    cursor: ">",
-  },
-  style: {
-    keysHelpTip: () => undefined,
-  },
-} as const;

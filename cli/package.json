@@ -28,11 +28,11 @@
     "LICENSE.md"
   ],
   "dependencies": {
-    "@inquirer/checkbox": "5.1.0",
-    "@inquirer/confirm": "6.0.8",
-    "@inquirer/core": "11.1.5",
-    "@inquirer/input": "5.0.8",
-    "@inquirer/select": "5.1.0",
+    "@inquirer/checkbox": "5.2.1",
+    "@inquirer/confirm": "6.1.1",
+    "@inquirer/core": "11.2.1",
+    "@inquirer/input": "5.1.2",
+    "@inquirer/select": "5.2.1",
     "@perfect-abstractions/compose": "0.0.4",
     "commander": "^13.1.0",
     "fs-extra": "^11.3.3",
