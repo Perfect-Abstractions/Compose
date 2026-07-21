@@ -20,6 +20,8 @@ import WasThisHelpful from '@site/src/components/docs/WasThisHelpful';
 import LastUpdated from '@site/src/components/docs/LastUpdated';
 import ReadingTime from '@site/src/components/docs/ReadingTime';
 import RelatedDocs from '@site/src/components/docs/RelatedDocs';
+import DocCard from '@site/src/components/docs/DocCard';
+import ContributionCard, { ContributionCardGrid } from '@site/src/components/contribution/ContributionCards';
 
 export default {
   ...MDXComponents,
@@ -44,5 +46,8 @@ export default {
   LastUpdated,
   ReadingTime,
   RelatedDocs,
+  DocCard,
+  ContributionCard,
+  ContributionCardGrid
 };
 

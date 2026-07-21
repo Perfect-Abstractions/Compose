@@ -1,0 +1,82 @@
+---
+sidebar_position: 1
+title: "Library Development"
+sidebar_label: "Development Setup"
+description: Set up your environment and workflow for developing Compose's Solidity library
+---
+
+import DocSubtitle from '@site/src/components/docs/DocSubtitle';
+
+# Library Development
+
+<DocSubtitle>This guide covers setting up your environment and workflow for contributing to Compose's Solidity library.</DocSubtitle>
+
+## Prerequisites
+
+- [Solidity](https://soliditylang.org/) (version 0.8.30 or higher)
+- [Foundry](https://book.getfoundry.sh/getting-started/installation) (version 1.4.3-stable or higher)
+- Git
+
+## Setup Steps
+
+1. Fork the repository
+2. Clone your fork:
+   ```bash
+   git clone https://github.com/YOUR_USERNAME/Compose.git
+   cd Compose
+   ```
+3. Install dependencies:
+   ```bash
+   forge install
+   ```
+4. Build the project:
+   ```bash
+   forge build
+   ```
+5. Run tests:
+   ```bash
+   forge test
+   ```
+
+## Development Workflow
+
+Once you are assigned to an issue:
+1. Fork the repository.
+2. Create a new branch for your work.
+3. Implement your changes.
+4. Make sure your changes follow the [design of Compose](/docs/design).
+5. Format your code: `forge fmt`.
+6. Run tests to ensure everything works.
+7. Submit a pull request.
+8. We will review it and merge it and/or give you feedback on the work.
+
+You can also make new issues to suggest new functionality or work.
+
+## Pre-PR Checklist
+
+Before submitting a pull request:
+- Format your code: `forge fmt`.
+- Run all tests: `forge test`.
+- Update gas snapshots: `forge snapshot`.
+- Ensure your code follows the [design of Compose](/docs/design).
+- Ensure your code doesn't use any [banned Solidity features](/docs/design/banned-solidity-features).
+- Ensure your code follows the coding style in the existing codebase.
+
+## Technical Considerations
+- Make sure that you understand all code that you use or write.
+- Gas efficiency is important but how easy the code is to read is more important.
+- Write secure and bug free code.
+- Consider edge cases and potential attack vectors.
+
+## Code Style Guide
+
+Follow the [Code Style Guide](/docs/contribution/library/code-style-guide) when contributing code.
+
+## Testing
+
+Follow the [Testing Guidelines](/docs/contribution/library/testing) when writing tests.
+
+## Changing `lib/forge-std` by Accident
+
+If your pull request will by accident make any changes to the files in `lib/forge-std`, the way to fix this is to run `forge install` and commit the change.
+

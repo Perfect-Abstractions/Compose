@@ -197,3 +197,18 @@
 [data-theme='dark'] .card-hover:hover {
   box-shadow: 0 20px 40px -10px rgba(0, 0, 0, 0.45);
 }
+
+.contribution-cards {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 1.5rem;
+  max-width: 1000px;
+  margin: 2rem auto;
+}
+
+@media screen and (max-width: 768px) {
+  .contribution-cards {
+    grid-template-columns: 1fr;
+    gap: 1.25rem;
+  }
+}

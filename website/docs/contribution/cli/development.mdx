@@ -1,0 +1,100 @@
+---
+sidebar_position: 1
+title: "CLI Development"
+sidebar_label: "Development Setup"
+description: Set up your environment and workflow for developing the Compose CLI
+---
+
+import DocSubtitle from '@site/src/components/docs/DocSubtitle';
+
+# CLI Development
+
+<DocSubtitle>This guide covers setting up your environment and workflow for contributing to the Compose CLI.</DocSubtitle>
+
+## Prerequisites
+
+- [Node.js](https://nodejs.org/) (version 20 or higher)
+- [npm](https://www.npmjs.com/)
+- Git
+
+## Setup Steps
+
+1. Fork the repository
+2. Clone your fork:
+   ```bash
+   git clone https://github.com/YOUR_USERNAME/Compose.git
+   cd Compose
+   ```
+3. Navigate to the CLI directory:
+   ```bash
+   cd cli
+   ```
+4. Install dependencies:
+   ```bash
+   npm install
+   ```
+5. Build the CLI:
+   ```bash
+   npm run build
+   ```
+6. Link the CLI globally for local testing:
+   ```bash
+   npm link
+   ```
+7. Verify the installation:
+   ```bash
+   compose --help
+   ```
+
+## Development Workflow
+
+Once you are assigned to an issue:
+1. Fork the repository.
+2. Create a new branch for your work.
+3. Navigate to the `cli` directory.
+4. Implement your changes.
+5. Run linting: `npm run lint`.
+6. Build the project: `npm run build`.
+7. Test locally using one of these methods:
+   - **Development mode** (with hot reload): `npm run dev -- init`
+   - **Built version**: `npm run build && node dist/index.js init`
+   - **Linked Package**: `npm link && compose init`
+8. Submit a pull request.
+9. We will review it and merge it and/or give you feedback on the work.
+
+## Available Scripts
+
+- `npm run build` - Compile TypeScript to JavaScript in `dist/`
+- `npm run dev` - Run in development mode with hot reload using `tsx`
+- `npm run start` - Run the compiled version from `dist/`
+- `npm run lint` - Run ESLint on the codebase
+
+## Project Structure
+
+```
+cli/
+├── src/
+│   ├── adapters/        # Dependency adapters
+│   ├── context/         # Shared context
+│   ├── modules/         # Feature modules (init, info, validation, etc.)
+│   ├── pipelines/       # Execution pipelines
+│   ├── resolver/        # Dependency resolution
+│   ├── templates/       # Local template files
+│   ├── utils/           
+│   ├── comander.ts      # CLI argument parsing
+│   └── index.ts         # Entrypoint
+├── bases/               # Base preset configurations
+├── bin/                 # CLI executable
+├── package.json
+├── tsconfig.json
+└── eslint.config.js
+```
+
+## Pre-PR Checklist
+
+Before submitting a pull request:
+- Run linter: `npm run lint` (must pass with no errors).
+- Build successfully: `npm run build`.
+- Test your changes locally using `npm run dev` or `npm link`.
+- Update documentation if adding new features.
+- Follow the modular architecture patterns in existing modules.
