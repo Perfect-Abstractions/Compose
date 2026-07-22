@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.1.3
+
+### Patch Changes
+
+- 39c213a: fix cli rendering on windows
+
 ## 0.1.2
 
 ### Patch Changes
