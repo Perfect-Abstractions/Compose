@@ -2,15 +2,13 @@ import { ComposeContext } from "../../context/types";
 import { BasesCatalog } from "../config/types";
 import { ConfigModule } from "../config/module";
 import {
-  checkboxTheme,
   getOwnershipChoices,
   getOwnershipExtensionChoices,
   getRoleAccessChoices,
   getRoleAccessExtensionChoices,
-  loadPrompts,
-  selectTheme,
   toFacetChoices,
 } from "./prompts";
+import { checkboxTheme, clearStdin , inputTheme, loadPrompts, selectTheme } from "../../utils/inquirer";
 import { getFrameworkDependencies } from "./frameworkDeps";
 import { resolveAccessFlags } from "./flags";
 import { splitCommaSeparated } from "../../utils/strings";
@@ -134,17 +132,17 @@ export const InitModule = {
    */
   async runInitInteractive(ctx: ComposeContext): Promise<ComposeContext> {
     const { input, checkbox, select } = await loadPrompts();
-    const promptContext = { clearPromptOnDone: true };
     const catalog = ctx.config.bases as BasesCatalog;
 
     if (!ctx.param.projectName) {
       const outDir = String(ctx.param.outDir ?? process.cwd());
-
+      await clearStdin();
       const projectName = await input({
         message: "Enter project name:",
         default: "my-diamond",
         validate: (name) => validateProjectNameWithFolder(name, outDir),
-      }, promptContext);
+        theme: inputTheme,
+      });
       ctx.param.projectName = projectName;
     } else {
       const projectNameValidation = validateProjectName(String(ctx.param.projectName));
@@ -163,6 +161,7 @@ export const InitModule = {
         })),
     ];
 
+    await clearStdin();
     const framework = await select({
       message: "Select project framework:",
       choices: [
@@ -171,9 +170,10 @@ export const InitModule = {
       ] as const,
       default: "foundry",
       theme: selectTheme,
-    }, promptContext);
+    });
 
     if (framework === "hardhat") {
+      await clearStdin();
       const toolbox = await select({
         message: "Select Hardhat toolbox:",
         choices: [
@@ -182,15 +182,16 @@ export const InitModule = {
         ],
         default: "ethers",
         theme: selectTheme,
-      }, promptContext);
+      });
       ctx.param.toolbox = toolbox;
     }
 
+    await clearStdin();
     const selectedBaseKey = await select({
       message: "Select base:",
       choices: featureChoices,
       theme: selectTheme,
-    }, promptContext);
+    });
 
     const selectedBase = selectedBaseKey === "none"
       ? ConfigModule.EMPTY_BASE
@@ -200,47 +201,58 @@ export const InitModule = {
     const extensionChoices = toFacetChoices(Object.keys(availableExtensions));
 
     const selectedExtensions = extensionChoices.length > 0
-      ? await checkbox({
-          message: "Select extension facets:",
-          choices: extensionChoices,
-          theme: checkboxTheme,
-        }, promptContext)
+      ? await (async () => {
+          await clearStdin();
+          return checkbox({
+            message: "Select extension facets:",
+            choices: extensionChoices,
+            theme: checkboxTheme,
+          });
+        })()
       : [];
 
     const availableLibraryFacets = ConfigModule.getAvailableLibraryFacets(catalog, selectedBase);
     const libraryChoices = toFacetChoices(Object.keys(availableLibraryFacets));
 
+    await clearStdin();
     const selectedLibraries = await checkbox({
       message: "Select Compose library facets:",
       choices: libraryChoices,
       theme: checkboxTheme,
-    }, promptContext);
+    });
 
     const accessBases = ConfigModule.getAccessBases(catalog, selectedBaseKey);
     const selectedOwnership = selectedBase.accessType === "ownership"
       ? undefined
-      : await select({
-          message: "Select ownership:",
-          choices: getOwnershipChoices(accessBases),
-          theme: selectTheme,
-        }, promptContext);
+      : await (async () => {
+          await clearStdin();
+          return select({
+            message: "Select ownership:",
+            choices: getOwnershipChoices(accessBases),
+            theme: selectTheme,
+          });
+        })();
 
     const ownershipExtensionChoices = getOwnershipExtensionChoices(accessBases, selectedOwnership);
     const selectedOwnershipExtensions = ownershipExtensionChoices.length > 0
-      ? await checkbox({
-          message: "Select ownership extension facets:",
-          choices: ownershipExtensionChoices,
-          theme: checkboxTheme,
-        }, promptContext)
+      ? await (async () => {
+          await clearStdin();
+          return checkbox({
+            message: "Select ownership extension facets:",
+            choices: ownershipExtensionChoices,
+            theme: checkboxTheme,
+          });
+        })()
       : [];
 
     const accessChoices = getRoleAccessChoices(accessBases);
 
+    await clearStdin();
     const selectedAccessControl = await select({
       message: "Select access control:",
       choices: accessChoices,
       theme: selectTheme,
-    }, promptContext);
+    });
     const selectedRoleAccess = selectedAccessControl ? [selectedAccessControl] : [];
     const selectedAccess = [
       ...(selectedOwnership ? [selectedOwnership] : []),
@@ -250,11 +262,14 @@ export const InitModule = {
     const accessExtensionChoices = getRoleAccessExtensionChoices(accessBases, selectedAccessControl);
 
     const selectedRoleAccessExtensions = accessExtensionChoices.length > 0
-      ? await checkbox({
-          message: "Select access control extension facets:",
-          choices: accessExtensionChoices,
-          theme: checkboxTheme,
-        }, promptContext)
+      ? await (async () => {
+          await clearStdin();
+          return checkbox({
+            message: "Select access control extension facets:",
+            choices: accessExtensionChoices,
+            theme: checkboxTheme,
+          });
+        })()
       : [];
     const selectedAccessExtensions = [
       ...selectedOwnershipExtensions,
@@ -263,10 +278,11 @@ export const InitModule = {
 
     const { deps, packageType } = getFrameworkDependencies(framework, String(ctx.param.toolbox));
     showDependencies(deps, packageType);
+    await clearStdin();
     const installDeps = await (await loadPrompts()).confirm({
       message: "Install project dependencies?",
       default: true,
-    }, promptContext);
+    });
     ctx.param.installDeps = installDeps;
 
     const selection = ConfigModule.resolveCatalogSelection(

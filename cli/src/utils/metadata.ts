@@ -1,5 +1,5 @@
 export const COMPOSE_DOCS_URL = "https://compose.diamonds/";
-export const VERSION = "0.1.0";
+export const VERSION = require("../../package.json").version;
 
 export const COMPOSE_HEADER = `
    _____ ____  __  __ _____   ____   _____ ______     _____ _      _____ 
