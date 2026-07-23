@@ -110,9 +110,9 @@
   --ifm-color-accent-light: #7dd3fc;
   
   /* Dark blue backgrounds */
-  --ifm-background-color: #0f172a;
-  --ifm-background-surface-color: #1e293b;
-  --ifm-navbar-background-color: #0a0e1a;
+  --ifm-background-color: #020613;
+  --ifm-background-surface-color: #020613;
+  --ifm-navbar-background-color: #050b1d;
   
   /* Sidebar colors */
   --ifm-menu-color: #a0a0a0;
@@ -131,30 +131,30 @@
   --ifm-color-emphasis-900: #ffffff;
   
   /* Border colors - blue tones */
-  --ifm-color-emphasis-100: #1e293b;
-  --ifm-color-emphasis-200: #334155;
+  --ifm-color-emphasis-100: #020613;
+  --ifm-color-emphasis-200: #020613;
   
-  --ifm-code-background: #1e293b;
+  --ifm-code-background: #020613;
   --docusaurus-highlighted-code-line-bg: rgba(59, 130, 246, 0.15);
   
-  /* Brand tokens (dark) */
-  --compose-bg-900: #0f172a;
-  --compose-bg-800: #1e293b;
+/* Brand tokens (dark) */
+  --compose-bg-900: #020613;
+  --compose-bg-800: #020613;
   --compose-primary-500: #60a5fa;
   --compose-primary-600: #3b82f6;
 
   /* Homepage CTA + stats — reversed gradients meet at same hue (mirrors light band) */
-  --home-band-bg: linear-gradient(180deg, var(--compose-bg-900) 0%, #0c1323 100%);
-  /* CTA bottom (#0c1323) must equal stats top — same as light reverse-bg, not duplicate of --home-band-bg */
-  --home-band-reverse-bg: linear-gradient(180deg, #0c1323 0%, var(--compose-bg-900) 100%);
+  --home-band-bg: linear-gradient(180deg, var(--compose-bg-900) 0%, #020613 100%);
+  /* CTA bottom (#020613) must equal stats top — same as light reverse-bg, not duplicate of --home-band-bg */
+  --home-band-reverse-bg: linear-gradient(180deg, #020613 0%, var(--compose-bg-900) 100%);
 
   /* Hero gradient - dark blue */
   --hero-gradient: linear-gradient(135deg, var(--compose-bg-900) 0%, var(--compose-bg-800) 100%);
-  --hero-gradient-alt: linear-gradient(135deg, var(--compose-bg-800) 0%, #334155 100%);
+  --hero-gradient-alt: linear-gradient(135deg, var(--compose-bg-800) 0%, #020613 100%);
 
   /* Homepage hero tokens (dark overrides if needed) */
-  --hero-bg-start: #0f172a;
-  --hero-bg-end: #1e293b;
+  --hero-bg-start: #020613;
+  --hero-bg-end: #020613;
   --hero-text-strong: rgba(255, 255, 255, 1);
   --hero-text-medium: rgba(255, 255, 255, 0.9);
   --hero-text-weak: rgba(255, 255, 255, 0.75);
@@ -182,15 +182,15 @@ html {
 
 /* Main content area dark styling */
 [data-theme='dark'] .main-wrapper {
-  background: #0f172a;
+  background: #020613;
 }
 
 [data-theme='dark'] .docMainContainer {
-  background: #0f172a;
+  background: #020613;
 }
 
 [data-theme='dark'] article {
-  background: #0f172a;
+  background: #020613;
 }
 
 /* Documentation content wrapper */

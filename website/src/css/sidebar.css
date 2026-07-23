@@ -21,12 +21,12 @@
 
 /* Dark mode sidebar */
 [data-theme='dark'] .theme-doc-sidebar-container {
-  background-color: #0f172a;
-  border-right: 1px solid #1e293b;
+  background-color: #020613;
+  border-right: 1px solid #020613;
 }
 
 [data-theme='dark'] .menu {
-  background-color: #0f172a;
+  background-color: #020613;
 }
 
 [data-theme='dark'] .theme-doc-toc-desktop {
