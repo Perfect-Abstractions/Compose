@@ -8,6 +8,7 @@ description: "Follow along to scaffold, build, test, and deploy your first diamo
 import DocSubtitle from '@site/src/components/docs/DocSubtitle';
 import DocCard, { DocCardGrid } from '@site/src/components/docs/DocCard';
 import Callout from '@site/src/components/ui/Callout';
+import ExpandableCode from '@site/src/components/code/ExpandableCode';
 
 # Building My First Diamond
 
@@ -15,7 +16,7 @@ import Callout from '@site/src/components/ui/Callout';
 Create a working diamond project using Compose then explore every file so you know exactly what you have.
 </DocSubtitle>
 
-This tutorial uses the **Counter** example: a minimal diamond with increment, decrement, and read functions.  It's the simplest way to see how diamonds works end-to-end.
+This tutorial uses the `Counter` example: a minimal diamond with increment and read functions.  It's the simplest way to see how diamonds works end-to-end.
 
 ## Prerequisites
 
@@ -32,89 +33,81 @@ If you haven't used Foundry before, follow the <a href="https://book.getfoundry.
 
 Install the Compose CLI so you can run all the CLI commands
 
-```bash
-npm install -g @perfect-abstractions/compose-cli
-```
+<ExpandableCode language="bash" maxLines={3}>
+{`npm install -g @perfect-abstractions/compose-cli`}
+</ExpandableCode>
 
 Verify it's installed:
 
-```bash
-compose --help
-```
+<ExpandableCode language="bash" maxLines={2}>
+{`compose --help`}
+</ExpandableCode>
 
 You can skip the global package installation. Just use `npx @perfect-abstractions/compose-cli` wherever you see `compose` in this tutorial.
 
 ## Step 2) Scaffold the project
 
-```bash
-compose init
-```
+<ExpandableCode language="bash" maxLines={2}>
+{`compose init`}
+</ExpandableCode>
 
-You'll be prompt to choose from a lot of different options from framework, ERC standards templates, and others. For this tutorial, we will choose the Counter example with the following options:
+You'll be prompt to choose from a lot of different options from framework, ERC standards templates, and others. 
 
-```bash
+For this tutorial, we will choose the `Counter` example with the following options:
 
-```
+<ExpandableCode language="text" maxLines={15}>
+{`Enter project name: my-diamond
+Select project framework: Foundry
+Select base: Counter
+Select extension facets: None
+Select Compose library facets: None
+Select ownership: None
+Select access control: None
+
+? Install project dependencies? (Y/n) Yes`}
+</ExpandableCode>
+
+Take the time to review the full library available to you. We support most major token standards like `ERC20`, `ERC721` with different type of access control. 
+
+You can always skip the interactive prompts entirely:
+<ExpandableCode language="bash" maxLines={2}>
+{`compose init my-first-diamond --framework foundry --base counter --yes`}
+</ExpandableCode>
 
 
+When the CLI finishes, follow the next steps instruction to move into your project and test it:
 
-
-<Callout type="info" title="Non-interactive alternative">
-You can skip the prompts entirely:
-```bash
-compose init my-first-diamond --framework foundry --base counter --yes
-```
-</Callout>
-
-When the CLI finishes you'll see:
-
-```
-✔ Project "my-first-diamond" scaffolded in ".../my-first-diamond"
+<ExpandableCode language="text" maxLines={8}>
+{`✔ Project "my-first-diamond" scaffolded in ".../my-first-diamond"
 
 Next steps:
 1. cd my-first-diamond
-2. forge build && forge test
-```
+2. forge build && forge test`}
+</ExpandableCode>
 
 ## Step 3) Explore the project structure
 
-`cd` into your new project and look around:
+The scaffold generates a diamond with two local facets and 1 from teh Compose library.
 
-```bash
-cd my-first-diamond
-ls -R src/
-```
-
-You'll see something like this:
-
-```
-src/
-  diamond/
-    Diamond.sol            ← The diamond proxy contract
+<ExpandableCode language="text" maxLines={10}>
+{`src/
+  Diamond.sol                    ← proxy: wires everything together
   facets/
-    CounterDataFacet.sol   ← Read the counter value
-    CounterIncrementFacet.sol  ← Increment functions
-    CounterDecrementFacet.sol  ← Decrement functions
-```
+    CounterDataFacet.sol         ← get the current count
+    CounterIncrementFacet.sol    ← increment the counter`}
+</ExpandableCode>
 
-There's also:
+Each facet owns a slice of the logic. `CounterDataFacet` exposes the count, `CounterIncrementFacet` mutates it. The `Diamond.sol` proxy routes calls to the right facet via function selectors.
 
-```
-test/
-  Diamond.t.sol            ← Your test file
-script/
-  Deploy.s.sol             ← Deployment script
-compose.json               ← Compose project config
-```
+### Diamond.sol: The proxy
 
-### Diamond.sol — The proxy
+The diamond is the application entrypoint. Users call it, but it holds no logic itself, only the storage state. Every call is delegated to a stateless facet via the fallback function:
 
-Open `src/diamond/Diamond.sol`. This is the contract users interact with. It doesn't contain any business logic itself — it **delegates** every call to the facets you registered:
-
-```solidity
-contract Diamond {
+<ExpandableCode language="solidity" maxLines={20}>
+{`contract Diamond {
     constructor(address[] memory _facets) {
-        // Registers each facet's selectors
+        // Add all the facets address provided to constructor
+        DiamondMod.addFacets(_facets);
     }
 
     fallback() external payable {
@@ -122,23 +115,28 @@ contract Diamond {
     }
 
     receive() external payable {}
-}
-```
+}`}
+</ExpandableCode>
 
-The `fallback` function is the magic: when someone calls a function on the diamond, `DiamondMod` figures out which facet has that function and forwards the call.
+When a function is called on the diamond, [`DiamondMod.diamondFallback()`](/docs/library/diamond/DiamondMod#diamondfallback) looks up which contract owns that selector and forwards the call.
 
-### CounterDataFacet.sol — Shared storage
+There nothing more to make a diamond proxy work. Now, let's transition where our application logic lives
 
-Open `src/facets/CounterDataFacet.sol`. This defines how the counter's data is stored:
+### CounterDataFacet.sol
 
-```solidity
-contract CounterDataFacet {
+Facets need to share state. They do this by pointing to the same storage slot:
+
+<ExpandableCode language="solidity" maxLines={40}>
+{`contract CounterDataFacet {
+    // 1. Slot address: a deterministic location shared across the diamond
     bytes32 constant STORAGE_POSITION = keccak256("counter");
 
+    // 2. Data struct: defines the shape of data stored at that slot:
     struct CounterStorage {
         uint256 count;
     }
 
+    // 3. Assembly storage getter: \`storage\` reference pointer to that slot:
     function getStorage() internal pure returns (CounterStorage storage s) {
         bytes32 position = STORAGE_POSITION;
         assembly {
@@ -146,163 +144,166 @@ contract CounterDataFacet {
         }
     }
 
+    // ----------------------------------
+    // Facet functions
+    // ----------------------------------
+
     function getCount() external view returns (uint256) {
         return getStorage().count;
     }
-}
-```
 
-Every facet that touches counter data uses the same `STORAGE_POSITION` and `CounterStorage` struct. This is how facets **share state** without importing each other — they all point to the same storage slot.
+    // Declares which selectors this facet registers on the diamond proxy
+    function exportSelectors() external pure returns (bytes memory) {
+        return bytes.concat(this.getCount.selector);
+    }
+}`}
+</ExpandableCode>
 
-### exportSelectors()
+Any facet that need `Counter` data uses the same `STORAGE_POSITION [ keccak256("counter") ]` and `CounterStorage` struct. They never import each other. They just agree on the same storage location.
 
-Each facet has an `exportSelectors()` function that declares which functions the diamond should register. For example, `CounterIncrementFacet`:
+Facets can be scoped based on your project needs. Compose encourages small scoped facets, one facet per responsibility, to allow granular composition. In this example, `CounterDataFacet` handles reads and `CounterIncrementFacet` handles mutations. You could combine them into a single facet, but keeping them separate lets you pick exactly the functionality you need at anytime
 
-```solidity
-function exportSelectors() external pure returns (bytes memory) {
-    return bytes.concat(this.increment.selector, this.incrementBy.selector);
-}
-```
-
-This is how Compose knows which selectors belong to which facet during scaffolding and validation.
-
-## Step 3 — Build and test
+## Step 4) Build and test
 
 Now let's compile and run the tests:
 
-```bash
-forge build && forge test -vv
-```
+<ExpandableCode language="bash" maxLines={2}>
+{`forge build && forge test -vv`}
+</ExpandableCode>
 
-You should see compilation succeed and a passing test:
+You should see compilation succeed and one passing test in `/test/Diamond.t.sol`
 
-```
-[PASS] test_inspect_facetAddresses() (gas: ...)
-```
+The test deploys a diamond with all three facets the `Counter` needs, then calls `facetAddresses()` on `DiamondInspectFacet` to verify the right number of facets are registered.
 
-The test deploys a diamond with all three counter facets, then calls `facetAddresses()` on `DiamondInspectFacet` to verify the right number of facets are registered.
+## Step 5) Write your own test
 
-<Callout type="note" title="What is DiamondInspectFacet?">
-It's a Compose library facet that comes baked into every scaffolded diamond. It gives you functions like `facetAddresses()`, `facetFunctionSelectors()`, and `facets()` — standard introspection for ERC-2535 diamonds.
-</Callout>
+Let's interact with the `Counter` through a test. Open `test/Diamond.t.sol` and take a look at what's already there:
 
-## Step 4) Deploy locally
+<ExpandableCode language="solidity" maxLines={40}>
+{`// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.30;
+
+import {Test} from "forge-std/Test.sol";
+import {Diamond} from "../src/Diamond.sol";
+import {CounterDataFacet} from "../src/facets/CounterDataFacet.sol";
+import {CounterIncrementFacet} from "../src/facets/CounterIncrementFacet.sol";
+import {DiamondInspectFacet} from "@perfect-abstractions/compose/diamond/DiamondInspectFacet.sol";
+
+contract DiamondTest is Test {
+    Diamond diamond;
+
+    // This setup function runs before each test
+    function setUp() public {
+        address[] memory facets = new address[](3);
+
+        // 1. Deploying the Counter specific facets 
+        facets[0] = address(new CounterDataFacet());
+        facets[1] = address(new CounterIncrementFacet());
+
+        // 2. Deploying the required Inspection Facet from @perfect-abstractions/compose
+        facets[2] = address(new DiamondInspectFacet());
+
+        // 3. Deploying your proxy with all 3 addresses passed to the constructor
+        diamond = new Diamond(facets);
+    }
+
+    function test_inspect_facetAddresses() public view {
+        DiamondInspectFacet inspect = DiamondInspectFacet(address(diamond));
+        address[] memory addresses = inspect.facetAddresses();
+        assertEq(addresses.length, 3);
+    }
+}`}
+</ExpandableCode>
+
+The test file already has a `setUp()` function that deploys a fresh `Diamond` instance before each test. There's also one test that verifies all three facets are properly registered on the proxy.
+
+Take a look at the order here. The facets are deployed first as separate contracts, then the Diamond proxy is created with references to those pre-deployed facet addresses. This is the core of [composition](/docs/design/design-for-composition) over inheritance. Instead of a monolithic contract that `is` everything through inheritance chains, the Diamond `has` the facets it needs. They're composed at runtime via the constructor or the upgrade functionality.
+
+Now let's add a test that actually uses our `Counter`. Add this function inside the `DiamondTest` contract:
+
+<ExpandableCode language="solidity" maxLines={30}>
+{`function test_counter_incrementAndRead() public {
+    // Unique address entrypoint
+    address diamondAddress = address(diamond);
+
+    // Cast diamond to both facet interfaces
+    CounterIncrementFacet incrementer = CounterIncrementFacet(diamondAddress);
+    CounterDataFacet getter = CounterDataFacet(diamondAddress);
+
+    // Initial count should be 0
+    assertEq(getter.getCount(), 0);
+    
+    // Increment through one facet
+    incrementer.increment();
+    
+    // Counter should now be 1
+    assertEq(getter.getCount(), 1);
+    
+    // Increment again by 2 (counter should now be 3)
+    incrementer.incrementBy(2);
+    assertEq(getter.getCount(), 3);
+}
+`}
+</ExpandableCode>
+
+Run the test suite:
+
+<ExpandableCode language="bash" maxLines={2}>
+{`forge test`}
+</ExpandableCode>
+
+All tests pass, demonstrating that data written by one facet is immediately visible to another through the diamond's shared storage.
+
+## Step 6) Deploy locally
 
 Start a local Ethereum node in one terminal:
 
-```bash
-anvil
-```
+<ExpandableCode language="bash" maxLines={2}>
+{`anvil`}
+</ExpandableCode>
 
-In a second terminal, deploy your diamond:
+In a second terminal, deploy your Counter application:
 
-```bash
-forge script script/Deploy.s.sol:DeployScript \
-  --rpc-url http://localhost:8545 \
-  --private-key 0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80 \
-  --broadcast
-```
+<ExpandableCode language="bash" maxLines={5}>
+{`forge script script/Deploy.s.sol:DeployScript \\
+  --rpc-url http://localhost:8545 \\
+  --private-key 0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80 \\
+  --broadcast`}
+</ExpandableCode>
 
 <Callout type="warning" title="Test private key only">
-The private key above is Anvil's default test key. **Never** use it on a real network.
+The private key above is Anvil's default test key. **Never use it on a real network.**
 </Callout>
 
-You'll see the diamond address logged:
+You'll see the deployed addresses logged:
 
-```
-Diamond: 0x5FbDB2315678afecb367f032d93F642f64180aa3
-```
+<ExpandableCode language="text" maxLines={10}>
+{`== Logs ==
+  CounterDataFacet: 0x5FbDB2315678afecb367f032d93F642f64180aa3
+  CounterIncrementFacet: 0xe7f1725E7734CE288F8367e1Bb143E90bb3F0512
+  DiamondInspectFacet: 0x9fE46736679d2D9a65F0992F2272dE9f3c7fa6e0
+  Diamond: 0xCf7Ed3AccA5a467e9e704C703E8D87F634fB0Fc9`}
+</ExpandableCode>
 
-## Step 5) Understand the counter facets
+#### Congratulations!
 
-Your diamond now has three facets wired up. Here's what each one does:
+You just deployed your first diamond proxy application. You've scaffolded a `Counter` project using the CLI, written tests that verify shared storage across facets, and deployed a composed system to a local network.
 
-### CounterDataFacet
-
-| Function | Description |
-|----------|-------------|
-| `getCount()` | Returns the current counter value |
-
-### CounterIncrementFacet
-
-| Function | Description |
-|----------|-------------|
-| `increment()` | Adds 1 to the counter |
-| `incrementBy(uint256)` | Adds a custom amount |
-
-### CounterDecrementFacet
-
-| Function | Description |
-|----------|-------------|
-| `decrement()` | Subtracts 1 (reverts on underflow) |
-| `decrementBy(uint256)` | Subtracts a custom amount (reverts on underflow) |
-
-All three facets share the same `CounterStorage` struct at the same storage slot. That's how `increment()` in one facet can affect what `getCount()` returns in another.
-
-## Step 6) Write your own test
-
-Let's interact with the counter through a test. Open `test/Diamond.t.sol` and add a new test:
-
-```solidity
-function test_increment_and_read() public {
-    // Deploy with counter facets
-    address[] memory facets = new address[](4);
-    facets[0] = address(new CounterDataFacet());
-    facets[1] = address(new CounterIncrementFacet());
-    facets[2] = address(new CounterDecrementFacet());
-    facets[3] = address(new DiamondInspectFacet());
-
-    Diamond diamond = new Diamond(facets);
-
-    // Interact through the diamond
-    CounterIncrementFacet inc = CounterIncrementFacet(address(diamond));
-    CounterDataFacet data = CounterDataFacet(address(diamond));
-
-    assertEq(data.getCount(), 0);
-
-    inc.increment();
-    assertEq(data.getCount(), 1);
-
-    inc.incrementBy(9);
-    assertEq(data.getCount(), 10);
-}
-```
-
-Run it:
-
-```bash
-forge test --match-test test_increment_and_read -vvv
-```
-
-The `-vvv` flag gives you full trace output if anything fails.
+We recommend you to explore all the template available to scaffold. Use the the `catalog` command to review what's available to you.
 
 ## What's next?
 
-You've built a working diamond with shared storage, multiple facets, and a working test suite. From here you can:
-
 <DocCardGrid columns={2}>
   <DocCard
-    title="Add extension facets"
-    description="Browse available extension facets like ERC165, DiamondUpgrade, and more."
-    href="/docs/library"
-    size="medium"
-  />
-  <DocCard
-    title="Learn the foundations"
+    title="Learn Compose foundations"
     description="Understand how facets, modules, and storage work together."
     href="/docs/foundations"
     size="medium"
   />
   <DocCard
-    title="Write custom facets"
-    description="Build your own facets that compose with the Compose library."
-    href="/docs/foundations/custom-facets"
-    size="medium"
-  />
-  <DocCard
-    title="CLI reference"
-    description="See all compose init flags, catalog, info, and validate commands."
-    href="/docs/contribution/cli/development"
+    title="Design for composition"
+    description="Learn patterns for breaking logic into composable facets."
+    href="/docs/design/design-for-composition"
     size="medium"
   />
 </DocCardGrid>

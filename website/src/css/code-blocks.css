@@ -144,7 +144,11 @@ code {
 }
 
 .token.comment {
-  color: #546e7a;
-  font-style: italic;
+  color: #425c68 !important;
+}
+
+/* Dark mode - lighter comment color for readability on dark background */
+[data-theme='dark'] .token.comment {
+  color: #b0b9c7 !important;
 }
 
