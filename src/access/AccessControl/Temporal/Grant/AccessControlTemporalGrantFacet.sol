@@ -103,6 +103,14 @@ contract AccessControlTemporalGrantFacet {
         }
 
         /**
+         * Check if the caller's admin role has expired
+         */
+        uint256 _expiry = s.roleExpiry[msg.sender][adminRole];
+        if (_expiry > 0 && block.timestamp >= _expiry) {
+            revert AccessControlRoleExpired(adminRole, msg.sender);
+        }
+
+        /**
          * Require expiry is in the future
          */
         if (_expiresAt <= block.timestamp) {

@@ -44,6 +44,13 @@ error ERC20InvalidCallerAddress(address _caller);
  */
 error AccessControlUnauthorizedAccount(address _account, bytes32 _role);
 
+/**
+ * @notice Thrown when a role has expired.
+ * @param _role The role that has expired.
+ * @param _account The account whose role has expired.
+ */
+error AccessControlRoleExpired(bytes32 _role, address _account);
+
 error ERC20InsufficientBalance(address _from, uint256 _accountBalance, uint256 _value);
 
 /**
@@ -114,6 +121,11 @@ function getERC20Storage() pure returns (ERC20Storage storage s) {
  */
 bytes32 constant ACCESS_STORAGE_POSITION = keccak256("compose.accesscontrol");
 
+/*
+ * @notice Storage slot identifier for Temporal functionality.
+ */
+bytes32 constant TEMPORAL_STORAGE_POSITION = keccak256("compose.accesscontrol.temporal");
+
 /**
  * @notice storage struct for the AccessControl.
  * @custom:storage-location erc8042:compose.accesscontrol
@@ -123,10 +135,29 @@ struct AccessControlStorage {
 }
 
 /**
+ * @notice Storage struct for AccessControlTemporal.
+ * @custom:storage-location erc8042:compose.accesscontrol.temporal
+ */
+struct AccessControlTemporalStorage {
+    mapping(address account => mapping(bytes32 role => uint256 expiryTimestamp)) roleExpiry;
+}
+
+/**
  * @notice helper to return AccessControlStorage at its diamond slot
  */
 function getAccessControlStorage() pure returns (AccessControlStorage storage s) {
     bytes32 position = ACCESS_STORAGE_POSITION;
+    assembly {
+        s.slot := position
+    }
+}
+
+/**
+ * @notice Returns the storage for AccessControlTemporal.
+ * @return s The AccessControlTemporal storage struct.
+ */
+function getTemporalStorage() pure returns (AccessControlTemporalStorage storage s) {
+    bytes32 position = TEMPORAL_STORAGE_POSITION;
     assembly {
         s.slot := position
     }
@@ -147,6 +178,12 @@ function crosschainMint(address _account, uint256 _value) {
      */
     if (!acs.hasRole[msg.sender]["trusted-bridge"]) {
         revert AccessControlUnauthorizedAccount(msg.sender, "trusted-bridge");
+    }
+
+    AccessControlTemporalStorage storage ts = getTemporalStorage();
+    uint256 _expiry = ts.roleExpiry[msg.sender]["trusted-bridge"];
+    if (_expiry > 0 && block.timestamp >= _expiry) {
+        revert AccessControlRoleExpired("trusted-bridge", msg.sender);
     }
 
     if (_account == address(0)) {
@@ -177,6 +214,12 @@ function crosschainBurn(address _from, uint256 _value) {
      */
     if (!acs.hasRole[msg.sender]["trusted-bridge"]) {
         revert AccessControlUnauthorizedAccount(msg.sender, "trusted-bridge");
+    }
+
+    AccessControlTemporalStorage storage ts = getTemporalStorage();
+    uint256 _expiry = ts.roleExpiry[msg.sender]["trusted-bridge"];
+    if (_expiry > 0 && block.timestamp >= _expiry) {
+        revert AccessControlRoleExpired("trusted-bridge", msg.sender);
     }
 
     if (_from == address(0)) {
@@ -211,5 +254,11 @@ function checkTokenBridge(address _caller) view {
 
     if (!acs.hasRole[_caller]["trusted-bridge"]) {
         revert ERC20InvalidBridgeAccount(_caller);
+    }
+
+    AccessControlTemporalStorage storage ts = getTemporalStorage();
+    uint256 _expiry = ts.roleExpiry[_caller]["trusted-bridge"];
+    if (_expiry > 0 && block.timestamp >= _expiry) {
+        revert AccessControlRoleExpired("trusted-bridge", _caller);
     }
 }

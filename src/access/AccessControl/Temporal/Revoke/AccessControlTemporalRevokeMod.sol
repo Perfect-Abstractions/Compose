@@ -20,6 +20,13 @@ event TemporalRoleRevoked(bytes32 indexed _role, address indexed _account, addre
  */
 error AccessControlUnauthorizedAccount(address _account, bytes32 _role);
 
+/**
+ * @notice Thrown when a role has expired.
+ * @param _role The role that has expired.
+ * @param _account The account whose role has expired.
+ */
+error AccessControlRoleExpired(bytes32 _role, address _account);
+
 /*
  * @notice Storage slot identifier for AccessControl (reused to access roles).
  */
@@ -88,6 +95,14 @@ function revokeTemporalRole(bytes32 _role, address _account) {
      */
     if (!acs.hasRole[msg.sender][adminRole]) {
         revert AccessControlUnauthorizedAccount(msg.sender, adminRole);
+    }
+
+    /**
+     * Check if the caller's admin role has expired
+     */
+    uint256 _expiry = s.roleExpiry[msg.sender][adminRole];
+    if (_expiry > 0 && block.timestamp >= _expiry) {
+        revert AccessControlRoleExpired(adminRole, msg.sender);
     }
 
     /**

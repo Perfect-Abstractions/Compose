@@ -65,3 +65,13 @@ function hasRole(bytes32 _role, address _account) view returns (bool) {
     AccessControlStorage storage s = getStorage();
     return s.hasRole[_account][_role];
 }
+
+/**
+ * @notice function to get the admin role for a role.
+ * @param _role The role to get the admin for.
+ * @return The admin role for the given role.
+ */
+function getRoleAdmin(bytes32 _role) view returns (bytes32) {
+    AccessControlStorage storage s = getStorage();
+    return s.adminRole[_role];
+}

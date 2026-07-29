@@ -20,10 +20,22 @@ event RoleAdminChanged(bytes32 indexed _role, bytes32 indexed _previousAdminRole
  */
 error AccessControlUnauthorizedAccount(address _account, bytes32 _role);
 
+/**
+ * @notice Thrown when a role has expired.
+ * @param _role The role that has expired.
+ * @param _account The account whose role has expired.
+ */
+error AccessControlRoleExpired(bytes32 _role, address _account);
+
 /*
  * @notice Storage slot identifier.
  */
 bytes32 constant STORAGE_POSITION = keccak256("compose.accesscontrol");
+
+/*
+ * @notice Storage slot identifier for Temporal functionality.
+ */
+bytes32 constant TEMPORAL_STORAGE_POSITION = keccak256("compose.accesscontrol.temporal");
 
 /**
  * @notice Storage struct for the AccessControl.
@@ -35,11 +47,30 @@ struct AccessControlStorage {
 }
 
 /**
+ * @notice Storage struct for AccessControlTemporal.
+ * @custom:storage-location erc8042:compose.accesscontrol.temporal
+ */
+struct AccessControlTemporalStorage {
+    mapping(address account => mapping(bytes32 role => uint256 expiryTimestamp)) roleExpiry;
+}
+
+/**
  * @notice Returns the storage for the AccessControl.
  * @return s The storage for the AccessControl.
  */
 function getStorage() pure returns (AccessControlStorage storage s) {
     bytes32 position = STORAGE_POSITION;
+    assembly {
+        s.slot := position
+    }
+}
+
+/**
+ * @notice Returns the storage for AccessControlTemporal.
+ * @return s The AccessControlTemporal storage struct.
+ */
+function getTemporalStorage() pure returns (AccessControlTemporalStorage storage s) {
+    bytes32 position = TEMPORAL_STORAGE_POSITION;
     assembly {
         s.slot := position
     }
@@ -61,6 +92,12 @@ function setRoleAdmin(bytes32 _role, bytes32 _adminRole) {
      */
     if (!s.hasRole[msg.sender][previousAdminRole]) {
         revert AccessControlUnauthorizedAccount(msg.sender, previousAdminRole);
+    }
+
+    AccessControlTemporalStorage storage ts = getTemporalStorage();
+    uint256 _expiry = ts.roleExpiry[msg.sender][previousAdminRole];
+    if (_expiry > 0 && block.timestamp >= _expiry) {
+        revert AccessControlRoleExpired(previousAdminRole, msg.sender);
     }
 
     s.adminRole[_role] = _adminRole;
