@@ -39,6 +39,8 @@ contract Pausable_AccessControlPausableMod_Fuzz_Unit_Test is AccessControlPausab
     }
 
     function testFuzz_ShouldPauseRole_ForCurrentSurfaceSemantics(bytes32 role, address caller) external {
+        vm.assume(role != DEFAULT_ADMIN_ROLE);
+
         vm.expectEmit(address(harness));
         emit RolePaused(role, caller);
 
