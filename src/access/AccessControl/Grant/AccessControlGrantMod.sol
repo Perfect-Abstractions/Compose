@@ -142,7 +142,7 @@ function _requireRole(bytes32 _role) view {
 function grantRole(bytes32 _role, address _account) returns (bool) {
     AccessControlStorage storage s = getStorage();
     bytes32 adminRole = s.adminRole[_role];
-    
+
     _requireRole(adminRole);
 
     bool _hasRole = s.hasRole[_account][_role];
