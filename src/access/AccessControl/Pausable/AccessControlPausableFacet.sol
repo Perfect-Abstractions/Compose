@@ -34,11 +34,16 @@ contract AccessControlPausableFacet {
     error AccessControlRolePaused(bytes32 _role);
 
     /**
-     * @notice Thrown when a role has expired.
+     * Thrown when a role has expired.
      * @param _role The role that has expired.
      * @param _account The account whose role has expired.
      */
     error AccessControlRoleExpired(bytes32 _role, address _account);
+
+    /**
+     * Thrown when attempting to pause the DEFAULT_ADMIN_ROLE.
+     */
+    error AccessControlDefaultAdminRolePaused();
 
     /**
      * @notice Storage slot identifier for AccessControl (reused to access roles).
@@ -157,6 +162,10 @@ contract AccessControlPausableFacet {
      * @custom:error AccessControlUnauthorizedAccount If the caller is not the admin of the role.
      */
     function pauseRole(bytes32 _role) external {
+        if (_role == 0x00) {
+          revert AccessControlDefaultAdminRolePaused();
+        }
+
         AccessControlPausableStorage storage s = getStorage();
         bytes32 adminRole = getAccessControlStorage().adminRole[_role];
 

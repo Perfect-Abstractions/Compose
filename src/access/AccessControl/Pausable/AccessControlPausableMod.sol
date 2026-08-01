@@ -33,11 +33,16 @@ error AccessControlUnauthorizedAccount(address _account, bytes32 _role);
 error AccessControlRolePaused(bytes32 _role);
 
 /**
- * @notice Thrown when a role has expired.
+ * Thrown when a role has expired.
  * @param _role The role that has expired.
  * @param _account The account whose role has expired.
  */
 error AccessControlRoleExpired(bytes32 _role, address _account);
+
+/**
+ * Thrown when attempting to pause the DEFAULT_ADMIN_ROLE.
+ */
+error AccessControlDefaultAdminRolePaused();
 
 /*
  * @notice Storage slot identifier for AccessControl (reused to access roles).
@@ -128,6 +133,10 @@ function isRolePaused(bytes32 _role) view returns (bool) {
  * @param _role The role to pause.
  */
 function pauseRole(bytes32 _role) {
+    if (_role == 0x00) {
+      revert AccessControlDefaultAdminRolePaused();
+    }
+
     AccessControlPausableStorage storage s = getStorage();
     s.pausedRoles[_role] = true;
     emit RolePaused(_role, msg.sender);

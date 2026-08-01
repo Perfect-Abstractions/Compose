@@ -48,6 +48,12 @@ contract Pausable_AccessControlPausableMod_Fuzz_Unit_Test is AccessControlPausab
         assertEq(address(harness).isRolePaused(role), true, "isRolePaused");
     }
 
+    function test_ShouldRevert_PauseRole_WhenRoleIsDefaultAdminRole() external {
+        vm.expectRevert(abi.encodeWithSignature("AccessControlDefaultAdminRolePaused()"));
+        vm.prank(users.admin);
+        harness.pauseRole(DEFAULT_ADMIN_ROLE);
+    }
+
     function testFuzz_ShouldUnpauseRole_ForCurrentSurfaceSemantics(bytes32 role, address caller) external {
         seedPausedRole(address(harness), role, true);
 
