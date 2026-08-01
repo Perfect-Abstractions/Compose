@@ -38,6 +38,10 @@ function ensureTomlSectionSettings(
 
 /** Framework adapter for Foundry-based Diamond projects. */
 const adapter: IFrameworkAdapter = {
+  isAvailable(projectRoot: string): boolean {
+    return existsSync(path.join(projectRoot, "foundry.toml"));
+  },
+
   getContractSourceRoot(projectRoot: string): string {
     return path.join(projectRoot, "src");
   },
@@ -48,6 +52,14 @@ const adapter: IFrameworkAdapter = {
 
   getTestRoot(projectRoot: string): string {
     return path.join(projectRoot, "test");
+  },
+
+  getArtifactDir(projectRoot: string): string {
+    return path.join(projectRoot, "out");
+  },
+
+  async compile(projectRoot: string): Promise<void> {
+    await runCommand("forge", ["build"], { cwd: projectRoot });
   },
 
   async resolveSoliditySourcePath(ctx: ComposeContext, sourcePath: string): Promise<string> {

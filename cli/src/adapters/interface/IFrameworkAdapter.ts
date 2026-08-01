@@ -18,6 +18,12 @@ export interface IFrameworkAdapter {
   /** Resolve the framework's test root inside the generated project. */
   getTestRoot(projectRoot: string): string;
 
+  /** Resolve the framework's artifact output directory inside the generated project. */
+  getArtifactDir(projectRoot: string): string;
+
+  /** Compile the project using the framework's build tool. */
+  compile(projectRoot: string): Promise<void>;
+
   /**
    * Resolve a catalog Solidity path to a readable local file.
    *

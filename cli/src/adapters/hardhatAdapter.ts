@@ -1,4 +1,5 @@
 import fs from "node:fs/promises";
+import fsSync from "node:fs";
 import path from "node:path";
 import { ComposeContext } from "../context/types";
 import { ConfigOptions, IFrameworkAdapter } from "./interface/IFrameworkAdapter";
@@ -8,8 +9,21 @@ import { isComposePackagePath, resolveCatalogSourceForRead } from "../utils/soli
 import { ScaffoldingModule } from "../modules/scaffolding/module";
 import { CLI_ROOT } from "../utils/cliRoot";
 
+const HARDHAT_CONFIG_FILES = [
+  "hardhat.config.js",
+  "hardhat.config.ts",
+  "hardhat.config.cjs",
+  "hardhat.config.mjs",
+];
+
 /** Framework adapter for Hardhat-based Diamond projects. */
 const adapter: IFrameworkAdapter = {
+  isAvailable(projectRoot: string): boolean {
+    return HARDHAT_CONFIG_FILES.some((config) =>
+      fsSync.existsSync(path.join(projectRoot, config)),
+    );
+  },
+
   getContractSourceRoot(projectRoot: string): string {
     return path.join(projectRoot, "contracts");
   },
@@ -20,6 +34,14 @@ const adapter: IFrameworkAdapter = {
 
   getTestRoot(projectRoot: string): string {
     return path.join(projectRoot, "test");
+  },
+
+  getArtifactDir(projectRoot: string): string {
+    return path.join(projectRoot, "artifacts");
+  },
+
+  async compile(projectRoot: string): Promise<void> {
+    await runCommand("npx", ["hardhat", "compile"], { cwd: projectRoot });
   },
 
   async resolveSoliditySourcePath(ctx: ComposeContext, sourcePath: string): Promise<string> {

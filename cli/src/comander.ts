@@ -44,6 +44,10 @@ export function buildProgram(): Command {
     .command("catalog")
     .description("List all available bases in the Compose Catalog")
 
+  program
+    .command("build")
+    .description("Compile the project if artifacts are stale or missing")
+
   return program;
 }
 
