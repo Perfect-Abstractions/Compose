@@ -123,6 +123,7 @@ function _requireRole(bytes32 _role) view {
 
     AccessControlTemporalStorage storage ts = getStorage();
     uint256 expiry = ts.roleExpiry[msg.sender][_role];
+
     if (expiry > 0 && block.timestamp >= expiry) {
         revert AccessControlRoleExpired(_role, msg.sender);
     }
