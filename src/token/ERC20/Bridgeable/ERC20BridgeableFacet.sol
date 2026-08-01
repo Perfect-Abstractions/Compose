@@ -51,6 +51,12 @@ contract ERC20BridgeableFacet {
      */
     error AccessControlRoleExpired(bytes32 _role, address _account);
 
+    /**
+     * @notice Thrown when a role is paused and an operation requiring that role is attempted.
+     * @param _role The role that is paused.
+     */
+    error AccessControlRolePaused(bytes32 _role);
+
     error ERC20InsufficientBalance(address _from, uint256 _accountBalance, uint256 _value);
 
     /**
@@ -127,6 +133,11 @@ contract ERC20BridgeableFacet {
     bytes32 constant TEMPORAL_STORAGE_POSITION = keccak256("compose.accesscontrol.temporal");
 
     /**
+     * @notice Storage slot identifier for Pausable functionality.
+     */
+    bytes32 constant PAUSABLE_STORAGE_POSITION = keccak256("compose.accesscontrol.pausable");
+
+    /**
      * @notice storage struct for the AccessControl.
      * @custom:storage-location erc8042:compose.accesscontrol
      */
@@ -140,6 +151,14 @@ contract ERC20BridgeableFacet {
      */
     struct AccessControlTemporalStorage {
         mapping(address account => mapping(bytes32 role => uint256 expiryTimestamp)) roleExpiry;
+    }
+
+    /**
+     * @notice Storage struct for AccessControlPausable.
+     * @custom:storage-location erc8042:compose.accesscontrol.pausable
+     */
+    struct AccessControlPausableStorage {
+        mapping(bytes32 role => bool paused) pausedRoles;
     }
 
     /**
@@ -164,6 +183,43 @@ contract ERC20BridgeableFacet {
     }
 
     /**
+     * @notice Returns the storage for AccessControlPausable.
+     * @return s The AccessControlPausable storage struct.
+     */
+    function getPausableStorage() internal pure returns (AccessControlPausableStorage storage s) {
+        bytes32 position = PAUSABLE_STORAGE_POSITION;
+        assembly {
+            s.slot := position
+        }
+    }
+
+    /**
+     * @notice Requires the caller to have a specific role that has not expired and is not paused.
+     * @param _role The role that the caller must have.
+     * @dev Reverts with {AccessControlUnauthorizedAccount} if the caller does not have the role.
+     * @dev Reverts with {AccessControlRoleExpired} if the caller's role has expired.
+     * @dev Reverts with {AccessControlRolePaused} if the role is paused.
+     */
+    function _requireRole(bytes32 _role) internal view {
+        AccessControlStorage storage s = getAccessControlStorage();
+
+        if (!s.hasRole[msg.sender][_role]) {
+            revert AccessControlUnauthorizedAccount(msg.sender, _role);
+        }
+
+        AccessControlTemporalStorage storage ts = getTemporalStorage();
+        uint256 expiry = ts.roleExpiry[msg.sender][_role];
+        if (expiry > 0 && block.timestamp >= expiry) {
+            revert AccessControlRoleExpired(_role, msg.sender);
+        }
+
+        AccessControlPausableStorage storage ps = getPausableStorage();
+        if (ps.pausedRoles[_role]) {
+            revert AccessControlRolePaused(_role);
+        }
+    }
+
+    /**
      * @notice Cross-chain mint — callable only by an address having the `trusted-bridge` role.
      * @param _account The account to mint tokens to.
      * @param _value The amount to mint.
@@ -171,20 +227,7 @@ contract ERC20BridgeableFacet {
     function crosschainMint(address _account, uint256 _value) external {
         ERC20Storage storage erc20Storage = getERC20Storage();
 
-        AccessControlStorage storage acs = getAccessControlStorage();
-
-        /**
-         * authorize: caller must have the trusted-bridge role
-         */
-        if (!acs.hasRole[msg.sender]["trusted-bridge"]) {
-            revert AccessControlUnauthorizedAccount(msg.sender, "trusted-bridge");
-        }
-
-        AccessControlTemporalStorage storage ts = getTemporalStorage();
-        uint256 _expiry = ts.roleExpiry[msg.sender]["trusted-bridge"];
-        if (_expiry > 0 && block.timestamp >= _expiry) {
-            revert AccessControlRoleExpired("trusted-bridge", msg.sender);
-        }
+        _requireRole("trusted-bridge");
 
         if (_account == address(0)) {
             revert ERC20InvalidReceiver(address(0));
@@ -206,20 +249,7 @@ contract ERC20BridgeableFacet {
     function crosschainBurn(address _from, uint256 _value) external {
         ERC20Storage storage erc20Storage = getERC20Storage();
 
-        AccessControlStorage storage acs = getAccessControlStorage();
-
-        /**
-         * authorize: caller must have the trusted-bridge role
-         */
-        if (!acs.hasRole[msg.sender]["trusted-bridge"]) {
-            revert AccessControlUnauthorizedAccount(msg.sender, "trusted-bridge");
-        }
-
-        AccessControlTemporalStorage storage ts = getTemporalStorage();
-        uint256 _expiry = ts.roleExpiry[msg.sender]["trusted-bridge"];
-        if (_expiry > 0 && block.timestamp >= _expiry) {
-            revert AccessControlRoleExpired("trusted-bridge", msg.sender);
-        }
+        _requireRole("trusted-bridge");
 
         if (_from == address(0)) {
             revert ERC20InvalidReceiver(address(0));
@@ -256,10 +286,21 @@ contract ERC20BridgeableFacet {
             revert ERC20InvalidBridgeAccount(_caller);
         }
 
+        /**
+         * Check if the caller role is expired
+         */
         AccessControlTemporalStorage storage ts = getTemporalStorage();
         uint256 _expiry = ts.roleExpiry[_caller]["trusted-bridge"];
         if (_expiry > 0 && block.timestamp >= _expiry) {
             revert AccessControlRoleExpired("trusted-bridge", _caller);
+        }
+
+        /**
+         * Check if the caller role is paused
+         */
+        AccessControlPausableStorage storage ps = getPausableStorage();
+        if (ps.pausedRoles["trusted-bridge"]) {
+            revert AccessControlRolePaused("trusted-bridge");
         }
     }
 

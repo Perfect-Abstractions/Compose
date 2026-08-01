@@ -124,6 +124,32 @@ contract AccessControlPausableFacet {
     }
 
     /**
+     * @notice Requires the caller to have a specific role that has not expired and is not paused.
+     * @param _role The role that the caller must have.
+     * @dev Reverts with {AccessControlUnauthorizedAccount} if the caller does not have the role.
+     * @dev Reverts with {AccessControlRoleExpired} if the caller's role has expired.
+     * @dev Reverts with {AccessControlRolePaused} if the role is paused.
+     */
+    function _requireRole(bytes32 _role) internal view {
+        AccessControlStorage storage s = getAccessControlStorage();
+
+        if (!s.hasRole[msg.sender][_role]) {
+            revert AccessControlUnauthorizedAccount(msg.sender, _role);
+        }
+
+        AccessControlTemporalStorage storage ts = getTemporalStorage();
+        uint256 expiry = ts.roleExpiry[msg.sender][_role];
+        if (expiry > 0 && block.timestamp >= expiry) {
+            revert AccessControlRoleExpired(_role, msg.sender);
+        }
+
+        AccessControlPausableStorage storage ps = getStorage();
+        if (ps.pausedRoles[_role]) {
+            revert AccessControlRolePaused(_role);
+        }
+    }
+
+    /**
      * @notice Temporarily disables a role, preventing all accounts from using it.
      * @param _role The role to pause.
      * @dev Only the admin of the role can pause it.
@@ -131,26 +157,10 @@ contract AccessControlPausableFacet {
      * @custom:error AccessControlUnauthorizedAccount If the caller is not the admin of the role.
      */
     function pauseRole(bytes32 _role) external {
-        AccessControlStorage storage acs = getAccessControlStorage();
         AccessControlPausableStorage storage s = getStorage();
+        bytes32 adminRole = getAccessControlStorage().adminRole[_role];
 
-        /**
-         * Get the admin role for this role
-         */
-        bytes32 adminRole = acs.adminRole[_role];
-
-        /**
-         * Check if the caller is the admin of the role.
-         */
-        if (!acs.hasRole[msg.sender][adminRole]) {
-            revert AccessControlUnauthorizedAccount(msg.sender, adminRole);
-        }
-
-        AccessControlTemporalStorage storage ts = getTemporalStorage();
-        uint256 _expiry = ts.roleExpiry[msg.sender][adminRole];
-        if (_expiry > 0 && block.timestamp >= _expiry) {
-            revert AccessControlRoleExpired(adminRole, msg.sender);
-        }
+        _requireRole(adminRole);
 
         /**
          * Pause the role
@@ -167,26 +177,10 @@ contract AccessControlPausableFacet {
      * @custom:error AccessControlUnauthorizedAccount If the caller is not the admin of the role.
      */
     function unpauseRole(bytes32 _role) external {
-        AccessControlStorage storage acs = getAccessControlStorage();
         AccessControlPausableStorage storage s = getStorage();
+        bytes32 adminRole = getAccessControlStorage().adminRole[_role];
 
-        /**
-         * Get the admin role for this role
-         */
-        bytes32 adminRole = acs.adminRole[_role];
-
-        /**
-         * Check if the caller is the admin of the role.
-         */
-        if (!acs.hasRole[msg.sender][adminRole]) {
-            revert AccessControlUnauthorizedAccount(msg.sender, adminRole);
-        }
-
-        AccessControlTemporalStorage storage ts = getTemporalStorage();
-        uint256 _expiry = ts.roleExpiry[msg.sender][adminRole];
-        if (_expiry > 0 && block.timestamp >= _expiry) {
-            revert AccessControlRoleExpired(adminRole, msg.sender);
-        }
+        _requireRole(adminRole);
 
         /**
          * Unpause the role

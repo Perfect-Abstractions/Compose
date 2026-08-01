@@ -46,9 +46,11 @@ contract OwnerRenounceFacet {
      */
     function renounceOwnership() external {
         OwnerStorage storage s = getStorage();
+
         if (msg.sender != s.owner) {
             revert OwnerUnauthorizedAccount();
         }
+
         address previousOwner = s.owner;
         s.owner = address(0);
         emit OwnershipTransferred(previousOwner, address(0));

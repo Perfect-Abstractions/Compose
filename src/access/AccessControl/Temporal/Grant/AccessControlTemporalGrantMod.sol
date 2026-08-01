@@ -30,6 +30,12 @@ error AccessControlUnauthorizedAccount(address _account, bytes32 _role);
  */
 error AccessControlRoleExpired(bytes32 _role, address _account);
 
+/**
+ * @notice Thrown when a role is paused and an operation requiring that role is attempted.
+ * @param _role The role that is paused.
+ */
+error AccessControlRolePaused(bytes32 _role);
+
 /*
  * @notice Storage slot identifier for AccessControl (reused to access roles).
  */
@@ -58,6 +64,19 @@ struct AccessControlTemporalStorage {
     mapping(address account => mapping(bytes32 role => uint256 expiryTimestamp)) roleExpiry;
 }
 
+/*
+ * @notice Storage slot identifier for Pausable functionality.
+ */
+bytes32 constant PAUSABLE_STORAGE_POSITION = keccak256("compose.accesscontrol.pausable");
+
+/**
+ * @notice Storage struct for AccessControlPausable.
+ * @custom:storage-location erc8042:compose.accesscontrol.pausable
+ */
+struct AccessControlPausableStorage {
+    mapping(bytes32 role => bool paused) pausedRoles;
+}
+
 /**
  * @notice Returns the storage for AccessControl.
  * @return s The AccessControl storage struct.
@@ -81,6 +100,43 @@ function getStorage() pure returns (AccessControlTemporalStorage storage s) {
 }
 
 /**
+ * @notice Returns the storage for AccessControlPausable.
+ * @return s The AccessControlPausable storage struct.
+ */
+function getPausableStorage() pure returns (AccessControlPausableStorage storage s) {
+    bytes32 position = PAUSABLE_STORAGE_POSITION;
+    assembly {
+        s.slot := position
+    }
+}
+
+/**
+ * @notice Requires the caller to have a specific role that has not expired and is not paused.
+ * @param _role The role that the caller must have.
+ * @dev Reverts with {AccessControlUnauthorizedAccount} if the caller does not have the role.
+ * @dev Reverts with {AccessControlRoleExpired} if the caller's role has expired.
+ * @dev Reverts with {AccessControlRolePaused} if the role is paused.
+ */
+function _requireRole(bytes32 _role) view {
+    AccessControlStorage storage s = getAccessControlStorage();
+
+    if (!s.hasRole[msg.sender][_role]) {
+        revert AccessControlUnauthorizedAccount(msg.sender, _role);
+    }
+
+    AccessControlTemporalStorage storage ts = getStorage();
+    uint256 expiry = ts.roleExpiry[msg.sender][_role];
+    if (expiry > 0 && block.timestamp >= expiry) {
+        revert AccessControlRoleExpired(_role, msg.sender);
+    }
+
+    AccessControlPausableStorage storage ps = getPausableStorage();
+    if (ps.pausedRoles[_role]) {
+        revert AccessControlRolePaused(_role);
+    }
+}
+
+/**
  * @notice Grants a role to an account with an expiry timestamp.
  * @param _role The role to grant.
  * @param _account The account to grant the role to.
@@ -94,20 +150,7 @@ function grantRoleWithExpiry(bytes32 _role, address _account, uint256 _expiresAt
     AccessControlTemporalStorage storage s = getStorage();
     bytes32 adminRole = acs.adminRole[_role];
 
-    /**
-     * Check if the caller is the admin of the role.
-     */
-    if (!acs.hasRole[msg.sender][adminRole]) {
-        revert AccessControlUnauthorizedAccount(msg.sender, adminRole);
-    }
-
-    /**
-     * Check if the caller's admin role has expired
-     */
-    uint256 _expiry = s.roleExpiry[msg.sender][adminRole];
-    if (_expiry > 0 && block.timestamp >= _expiry) {
-        revert AccessControlRoleExpired(adminRole, msg.sender);
-    }
+    _requireRole(adminRole);
 
     /**
      * Require expiry is in the future

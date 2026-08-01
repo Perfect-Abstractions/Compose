@@ -47,9 +47,11 @@ contract OwnerTransferFacet {
      */
     function transferOwnership(address _newOwner) external {
         OwnerStorage storage s = getStorage();
+
         if (msg.sender != s.owner) {
             revert OwnerUnauthorizedAccount();
         }
+
         address previousOwner = s.owner;
         s.owner = _newOwner;
         emit OwnershipTransferred(previousOwner, _newOwner);
