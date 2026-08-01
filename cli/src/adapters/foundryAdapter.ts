@@ -38,10 +38,6 @@ function ensureTomlSectionSettings(
 
 /** Framework adapter for Foundry-based Diamond projects. */
 const adapter: IFrameworkAdapter = {
-  isAvailable(projectRoot: string): boolean {
-    return existsSync(path.join(projectRoot, "foundry.toml"));
-  },
-
   getContractSourceRoot(projectRoot: string): string {
     return path.join(projectRoot, "src");
   },

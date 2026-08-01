@@ -9,21 +9,8 @@ import { isComposePackagePath, resolveCatalogSourceForRead } from "../utils/soli
 import { ScaffoldingModule } from "../modules/scaffolding/module";
 import { CLI_ROOT } from "../utils/cliRoot";
 
-const HARDHAT_CONFIG_FILES = [
-  "hardhat.config.js",
-  "hardhat.config.ts",
-  "hardhat.config.cjs",
-  "hardhat.config.mjs",
-];
-
 /** Framework adapter for Hardhat-based Diamond projects. */
 const adapter: IFrameworkAdapter = {
-  isAvailable(projectRoot: string): boolean {
-    return HARDHAT_CONFIG_FILES.some((config) =>
-      fsSync.existsSync(path.join(projectRoot, config)),
-    );
-  },
-
   getContractSourceRoot(projectRoot: string): string {
     return path.join(projectRoot, "contracts");
   },
