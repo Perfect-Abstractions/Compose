@@ -163,7 +163,7 @@ contract AccessControlPausableFacet {
      */
     function pauseRole(bytes32 _role) external {
         if (_role == 0x00) {
-          revert AccessControlDefaultAdminRolePaused();
+            revert AccessControlDefaultAdminRolePaused();
         }
 
         AccessControlPausableStorage storage s = getStorage();

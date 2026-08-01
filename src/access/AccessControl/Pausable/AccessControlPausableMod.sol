@@ -134,7 +134,7 @@ function isRolePaused(bytes32 _role) view returns (bool) {
  */
 function pauseRole(bytes32 _role) {
     if (_role == 0x00) {
-      revert AccessControlDefaultAdminRolePaused();
+        revert AccessControlDefaultAdminRolePaused();
     }
 
     AccessControlPausableStorage storage s = getStorage();
