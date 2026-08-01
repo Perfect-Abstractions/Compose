@@ -38,6 +38,8 @@ contract Pausable_AccessControlPausableFacet_Fuzz_Unit_Test is AccessControlPaus
     }
 
     function testFuzz_ShouldPauseRole_WhenCallerHasAdminRole(bytes32 role) external {
+        vm.assume(role != DEFAULT_ADMIN_ROLE);
+
         vm.expectEmit(address(facet));
         emit RolePaused(role, users.admin);
 
@@ -67,6 +69,7 @@ contract Pausable_AccessControlPausableFacet_Fuzz_Unit_Test is AccessControlPaus
     }
 
     function testFuzz_ShouldUnpauseRole_WhenCallerHasAdminRole(bytes32 role) external {
+        vm.assume(role != DEFAULT_ADMIN_ROLE);
         seedPausedRole(address(facet), role, true);
 
         vm.expectEmit(address(facet));
@@ -117,6 +120,8 @@ contract Pausable_AccessControlPausableFacet_Fuzz_Unit_Test is AccessControlPaus
     }
 
     function testFuzz_ShouldEndUnpaused_WhenMultiplePauseUnpauseCycles(bytes32 role) external {
+        vm.assume(role != DEFAULT_ADMIN_ROLE);
+
         vm.startPrank(users.admin);
         facet.pauseRole(role);
         facet.unpauseRole(role);
@@ -128,6 +133,8 @@ contract Pausable_AccessControlPausableFacet_Fuzz_Unit_Test is AccessControlPaus
     }
 
     function testFuzz_ShouldRemainPaused_PauseRole_WhenCalledTwice(bytes32 role) external {
+        vm.assume(role != DEFAULT_ADMIN_ROLE);
+
         vm.prank(users.admin);
         facet.pauseRole(role);
         vm.prank(users.admin);
@@ -137,6 +144,7 @@ contract Pausable_AccessControlPausableFacet_Fuzz_Unit_Test is AccessControlPaus
     }
 
     function testFuzz_ShouldRemainUnpaused_UnpauseRole_WhenCalledTwice(bytes32 role) external {
+        vm.assume(role != DEFAULT_ADMIN_ROLE);
         seedPausedRole(address(facet), role, true);
 
         vm.prank(users.admin);

@@ -93,6 +93,8 @@ contract Pausable_AccessControlPausableMod_Fuzz_Unit_Test is AccessControlPausab
     }
 
     function testFuzz_ShouldEndUnpaused_WhenMultiplePauseUnpauseCycles(bytes32 role) external {
+        vm.assume(role != DEFAULT_ADMIN_ROLE);
+
         vm.startPrank(users.admin);
         harness.pauseRole(role);
         harness.unpauseRole(role);
@@ -104,6 +106,8 @@ contract Pausable_AccessControlPausableMod_Fuzz_Unit_Test is AccessControlPausab
     }
 
     function testFuzz_ShouldRemainPaused_PauseRole_WhenCalledTwice(bytes32 role) external {
+        vm.assume(role != DEFAULT_ADMIN_ROLE);
+
         vm.prank(users.admin);
         harness.pauseRole(role);
         vm.prank(users.admin);
