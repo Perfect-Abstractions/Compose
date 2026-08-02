@@ -1,0 +1,229 @@
+---
+sidebar_position: 3
+title: "CLI Testing"
+sidebar_label: "Testing"
+description: Testing guidelines for Compose CLI modules, pipelines, adapters, and utilities
+---
+
+# CLI Testing
+
+The Compose CLI uses [Vitest](https://vitest.dev/) as its test runner.
+
+Tests follow the same boundaries as the implementation: module behavior is tested through modules, workflow behavior through pipelines, external behavior through adapters, and standalone logic through utilities.
+
+## Test Structure
+
+The `cli/test` directory mirrors `cli/src`. Keep each feature's test, harness, and fixtures together.
+
+```text
+cli/test/
+├── adapters/
+│   └── hashingAdapter.test.ts
+├── modules/
+│   └── deployGeneration/
+│       ├── fixtures/
+│       │   └── expected/
+│       │       └── Deploy.s.sol
+│       ├── harness.ts
+│       └── module.test.ts
+├── pipelines/
+│   └── infoPipeline/
+│       ├── harness.ts
+│       └── infoPipeline.test.ts
+└── utils/
+    └── regex.test.ts
+```
+
+Use `*.test.ts` for test files. Use `harness.ts` when a test needs reusable context, files, adapters, or prerequisite state.
+
+## Configuration
+
+The CLI test setup uses:
+
+- `vitest.config.ts` for the Node test environment and `test/**/*.test.ts` discovery.
+- `tsconfig.test.json` to type-check `src`, tests, and Vitest types without emitting test files into `dist`.
+- The `test` script in `cli/package.json` to run `vitest run`.
+
+## Harnesses
+
+A harness prepares the environment required by a test. It may create a context, populate prerequisite state, write a temporary project, and expose cleanup.
+
+```ts
+export type ExampleHarness = {
+  ctx: ComposeContext;
+  projectRoot: string;
+  cleanup(): Promise<void>;
+};
+
+export async function createExampleHarness(): Promise<ExampleHarness> {
+  const projectRoot = await fs.mkdtemp(
+    path.join(os.tmpdir(), "compose-cli-example-"),
+  );
+  const ctx = Context.create();
+  ctx.param.projectRoot = projectRoot;
+
+  return {
+    ctx,
+    projectRoot,
+    cleanup: () => fs.rm(projectRoot, { recursive: true, force: true }),
+  };
+}
+```
+
+Use the operating system's temporary directory for generated test projects. Always clean it in a `finally` block so a failed assertion does not leave files behind.
+
+## Fixtures and Snapshot Files
+
+Use fixtures for input or expected files that are easier to review as complete artifacts. Generated Solidity and TypeScript files should normally be compared directly with a snapshot file.
+
+An exact comparison makes formatting and content changes visible in review:
+
+```ts
+expect(generated).toBe(expected);
+```
+
+Update a snapshot file intentionally when generated output changes. Do not normalize whitespace or replace the comparison with a hash unless formatting is explicitly outside the behavior under test.
+
+## Module Tests
+
+Modules are the main place to test CLI behavior.
+
+- Import and execute the real module action.
+- Use a small harness to create the required `ctx` and filesystem state.
+- Mock only the `ctx.param`, `ctx.config`, and `ctx.state` fields read by the module.
+- Assert the resulting module state and any generated files.
+- Keep harnesses, fixtures, and mocks under `cli/test`.
+
+The deploy generation test builds a complete ERC-20 context through its harness, executes the real module, and compares the generated script with an expected-output snapshot:
+
+```ts
+const harness = await createDeployGenerationHarness();
+
+try {
+  const result = await DeployGenerationModule.generateDeployScript(
+    harness.ctx,
+    harness.scriptRoot,
+  );
+  const state = result.state.generateDeployScript as ModuleState<GeneratedDeployScriptState>;
+  const generated = await fs.readFile(state.result!.outputPath, "utf8");
+  const expected = await fs.readFile(expectedDeployScriptPath, "utf8");
+
+  expect(state.success).toBe(true);
+  expect(generated).toBe(expected);
+} finally {
+  await harness.cleanup();
+}
+```
+
+## Required Previous State
+
+Some module actions depend on state produced by an earlier action.
+
+- Create focused mock state when the prerequisite is small and its behavior is not under test.
+- Call the real prerequisite action when it is easier and clearer than reproducing its result.
+- Use a pipeline test when module order or the complete workflow is part of the behavior.
+- Avoid reproducing a large production state object in every test; move shared setup into the feature harness.
+
+For example, a deploy generation harness provides the selected catalog, scaffold map, and project parameters because those are direct inputs to `DeployGenerationModule`. An info pipeline harness instead writes a real `compose.json` and facet source because loading and scanning are part of that pipeline's behavior.
+
+## Pipeline Tests
+
+Pipeline tests exercise a workflow through the real pipeline entry point.
+
+- Build a realistic starting context with a harness.
+- Let the pipeline call its real modules in production order.
+- Assert meaningful final state, scanned data, generated files, or displayed output.
+- Keep internal module edge cases in module tests.
+
+The info pipeline test creates a temporary local project, scans a `CounterFacet`, and checks the resulting selector and storage metadata:
+
+```ts
+const harness = await createInfoPipelineHarness();
+const output = vi.spyOn(console, "log");
+
+try {
+  const result = await InfoPipeline.execute(harness.ctx);
+  const state = result.state.infoProject as ModuleState<ComposeProjectInfo>;
+  const facet = state.result?.diamonds[0]?.facets[0];
+
+  expect(state.success).toBe(true);
+  expect(facet?.selectors).toEqual(["getValue()"]);
+  expect(facet?.storageSlots[0]?.slot).toBe("counter");
+  expect(
+    output.mock.calls.flat().some((value) => String(value).includes("info-example")),
+  ).toBe(true);
+} finally {
+  output.mockRestore();
+  await harness.cleanup();
+}
+```
+
+Spying on `console.log` without replacing its implementation records the output while preserving the command's normal display behavior.
+
+## Adapter Tests
+
+Test adapters separately when their external or runtime behavior is the target. Assert the complete adapter result and keep higher-level interpretation outside the adapter test.
+
+For example, `HashingAdapter` returns a full Keccak-256 digest. Deriving a four-byte selector belongs to selector logic, not the hashing adapter test:
+
+```ts
+expect(HashingAdapter.keccak256("transfer(address,uint256)")).toBe(
+  "0xa9059cbb2ab09eb219583f4a59a5d0623ade346d962bcd4e46b11da047c9049b",
+);
+```
+
+When a module requires an adapter and adapter resolution is not under test, pass a focused mock implementing the real interface. When resolution is part of the workflow, resolve it as the production pipeline does and guard the partial result:
+
+```ts
+const deps = await DependencyResolver.resolve([
+  { key: DependencyKey.Hashing },
+]);
+
+if (!deps.hashing) {
+  throw new Error("Hashing adapter was not resolved");
+}
+
+const result = await ValidationModule.detectSelectorCollisions(ctx, {
+  hashing: deps.hashing,
+});
+
+expect(result.state.validationSelectorCollisions?.success).toBe(true);
+```
+
+## Utility Tests
+
+Utility tests cover small, standalone logic directly. Prefer behavior-oriented cases over checking implementation details.
+
+```ts
+const value = "Facet[0].getValue(address,uint256) + $slot?";
+const pattern = new RegExp(`^${escapeRegExp(value)}$`);
+
+expect(pattern.test(value)).toBe(true);
+```
+
+## Running Tests
+
+Run the suite from the CLI package:
+
+```bash
+cd cli
+npm run test
+```
+
+Type-check the tests separately when changing harnesses or test-only types:
+
+```bash
+npx tsc -p tsconfig.test.json
+```
+
+## Checklist
+
+- Test files mirror the corresponding `src` boundary.
+- Module behavior is covered through real module actions.
+- Complex setup is isolated in a feature harness.
+- Temporary projects are removed in a `finally` block.
+- Generated code is compared with a reviewable snapshot file.
+- Pipeline tests cover real workflow behavior and meaningful final state.
+- Adapter tests assert adapter behavior without leaking higher-level logic.
+- Utility tests cover standalone behavior directly.
+- `npm run test` and the test TypeScript check pass.
