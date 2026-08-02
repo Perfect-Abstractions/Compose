@@ -1,5 +1,4 @@
 import fs from "node:fs/promises";
-import fsSync from "node:fs";
 import path from "node:path";
 import { ComposeContext } from "../context/types";
 import { ConfigOptions, IFrameworkAdapter } from "./interface/IFrameworkAdapter";
