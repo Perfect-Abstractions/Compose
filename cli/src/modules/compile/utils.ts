@@ -1,13 +1,5 @@
 import fs from "node:fs";
 import path from "node:path";
-import { Framework } from "./types";
-
-const HARDHAT_CONFIG_FILES = [
-  "hardhat.config.js",
-  "hardhat.config.ts",
-  "hardhat.config.cjs",
-  "hardhat.config.mjs",
-];
 
 export function getNewestSourceMtime(sourceDir: string): number | null {
   if (!fs.existsSync(sourceDir)) return null;
@@ -51,18 +43,4 @@ export function getOldestArtifactMtime(artifactDir: string): number | null {
   }
 
   return oldest < Infinity ? oldest : null;
-}
-
-export function detectFramework(projectRoot: string): Framework | null {
-  if (fs.existsSync(path.join(projectRoot, "foundry.toml"))) {
-    return "foundry";
-  }
-
-  for (const config of HARDHAT_CONFIG_FILES) {
-    if (fs.existsSync(path.join(projectRoot, config))) {
-      return "hardhat";
-    }
-  }
-
-  return null;
 }

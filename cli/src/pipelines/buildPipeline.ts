@@ -1,5 +1,6 @@
 import { ComposeContext } from "../context/types";
-import { CompileModule, detectFramework } from "../modules/compile/module";
+import { CompileModule } from "../modules/compile/module";
+import { FrameworkModule } from "../modules/framework/module";
 import { DependencyKey } from "../resolver/dependencyKey";
 import { DependencyResolver } from "../resolver/dependencyResolver";
 import { IFrameworkAdapter } from "../adapters/interface/IFrameworkAdapter";
@@ -8,7 +9,7 @@ export const BuildPipeline = {
   async execute(ctx: ComposeContext): Promise<ComposeContext> {
     const projectRoot = String(ctx.param.projectRoot ?? process.cwd());
 
-    const framework = detectFramework(projectRoot);
+    const framework = FrameworkModule.detect(projectRoot);
 
     if (!framework) {
       throw new Error(

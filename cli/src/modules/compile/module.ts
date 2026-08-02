@@ -1,9 +1,8 @@
 import fs from "node:fs";
 import { IFrameworkAdapter } from "../../adapters/interface/IFrameworkAdapter";
-import { getNewestSourceMtime, getOldestArtifactMtime, detectFramework } from "./utils";
+import { getNewestSourceMtime, getOldestArtifactMtime } from "./utils";
 
 export const CompileModule = {
-  detectFramework,
   areArtifactsStale(projectRoot: string, adapter: IFrameworkAdapter): boolean {
     const artifactDir = adapter.getArtifactDir(projectRoot);
 
