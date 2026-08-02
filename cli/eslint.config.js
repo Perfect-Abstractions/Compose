@@ -3,7 +3,7 @@ const tseslint = require("typescript-eslint");
 
 module.exports = [
   {
-    ignores: ["node_modules/**", "dist/**", "src/templates/**"],
+    ignores: ["node_modules/**", "dist/**", "src/templates/**", "soljson-latest.js"],
   },
   js.configs.recommended,
   {

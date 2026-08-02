@@ -1,6 +1,5 @@
 import { ComposeContext } from "../context/types";
-import { detectFramework } from "../modules/compile/module";
-import { compileIfNeeded } from "../modules/compile/module";
+import { CompileModule, detectFramework } from "../modules/compile/module";
 import { DependencyKey } from "../resolver/dependencyKey";
 import { DependencyResolver } from "../resolver/dependencyResolver";
 import { IFrameworkAdapter } from "../adapters/interface/IFrameworkAdapter";
@@ -27,7 +26,7 @@ export const BuildPipeline = {
       throw new Error(`${framework} adapter was not resolved.`);
     }
 
-    await compileIfNeeded(projectRoot, adapter);
+    await CompileModule.compileIfNeeded(projectRoot, adapter);
 
     return ctx;
   },
