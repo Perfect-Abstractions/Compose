@@ -11,6 +11,7 @@
     "build": "tsc -p tsconfig.json",
     "start": "node dist/index.js",
     "dev": "tsx src/index.ts",
+    "test": "vitest run",
     "lint": "eslint .",
     "check": "npm run lint",
     "pack:check": "npm pack --dry-run",
@@ -45,7 +46,8 @@
     "eslint": "^10.1.0",
     "tsx": "^4.19.1",
     "typescript": "~5.8.0",
-    "typescript-eslint": "^8.0.0"
+    "typescript-eslint": "^8.0.0",
+    "vitest": "^4.1.10"
   },
   "keywords": [
     "solidity",
