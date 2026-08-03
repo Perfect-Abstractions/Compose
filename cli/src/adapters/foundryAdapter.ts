@@ -50,6 +50,14 @@ const adapter: IFrameworkAdapter = {
     return path.join(projectRoot, "test");
   },
 
+  getArtifactDir(projectRoot: string): string {
+    return path.join(projectRoot, "out");
+  },
+
+  async compile(projectRoot: string): Promise<void> {
+    await runCommand("forge", ["build"], { cwd: projectRoot });
+  },
+
   async resolveSoliditySourcePath(ctx: ComposeContext, sourcePath: string): Promise<string> {
     return resolveCatalogSourceForRead(sourcePath);
   },
