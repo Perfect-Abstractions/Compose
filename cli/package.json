@@ -43,6 +43,7 @@
   "devDependencies": {
     "@eslint/js": "^10.0.1",
     "@types/node": "^22.19.13",
+    "@vitest/coverage-v8": "^4.1.10",
     "eslint": "^10.1.0",
     "tsx": "^4.19.1",
     "typescript": "~5.8.0",

@@ -1,5 +1,6 @@
 export const COMPOSE_DOCS_URL = "https://compose.diamonds/";
 export const VERSION = require("../../package.json").version;
+export const LOCK_FILE_NAME = "compose.lock";
 
 export const COMPOSE_HEADER = `
    _____ ____  __  __ _____   ____   _____ ______     _____ _      _____ 
@@ -10,5 +11,4 @@ export const COMPOSE_HEADER = `
   \\_____\\____/|_|  |_|_|     \\____/|_____/|______|   \\_____|______|_____|
   
   `;
-
 
