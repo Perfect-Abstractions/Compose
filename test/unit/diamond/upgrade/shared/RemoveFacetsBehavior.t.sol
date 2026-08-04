@@ -21,9 +21,14 @@ abstract contract RemoveFacetsBehavior is DiamondUpgrade_Base_Test {
     function _cannotRemoveFacetThatDoesNotExistError() internal pure virtual returns (bytes4);
 
     function test_ShouldNotChangeState_WhenRemoveArrayIsEmpty() external {
-        _remove(_emptyAddresses());
+        _seedRemovalABC();
 
-        _assertRemovalList(bytes4(0), bytes4(0), 0, 0);
+        vm.recordLogs();
+        _remove(_emptyAddresses());
+        Vm.Log[] memory logs = vm.getRecordedLogs();
+
+        assertEq(logs.length, 0, "empty removal log count");
+        _assertRemovalOriginalABC();
     }
 
     function test_RevertWhen_RemovingFacetThatDoesNotExist() external {
@@ -38,7 +43,7 @@ abstract contract RemoveFacetsBehavior is DiamondUpgrade_Base_Test {
     function test_ShouldClearList_WhenRemovingOnlyFacet() external {
         _addRemovalFacet(address(facetA));
 
-        _remove(_singleAddress(address(facetA)));
+        _removeAndAssertSingleEvent(address(facetA));
 
         _assertFacetACleared();
         _assertRemovalList(bytes4(0), bytes4(0), 0, 0);
@@ -47,7 +52,7 @@ abstract contract RemoveFacetsBehavior is DiamondUpgrade_Base_Test {
     function test_ShouldRelink_WhenRemovingHeadFacet() external {
         _seedRemovalABC();
 
-        _remove(_singleAddress(address(facetA)));
+        _removeAndAssertSingleEvent(address(facetA));
 
         _assertFacetACleared();
         _assertNode(FacetB.b1.selector, address(facetB), bytes4(0), FacetC.c1.selector);
@@ -60,7 +65,7 @@ abstract contract RemoveFacetsBehavior is DiamondUpgrade_Base_Test {
     function test_ShouldRelink_WhenRemovingMiddleFacet() external {
         _seedRemovalABC();
 
-        _remove(_singleAddress(address(facetB)));
+        _removeAndAssertSingleEvent(address(facetB));
 
         _assertFacetBCleared();
         _assertNode(FacetA.a1.selector, address(facetA), bytes4(0), FacetC.c1.selector);
@@ -73,7 +78,7 @@ abstract contract RemoveFacetsBehavior is DiamondUpgrade_Base_Test {
     function test_ShouldRelink_WhenRemovingTailFacet() external {
         _seedRemovalABC();
 
-        _remove(_singleAddress(address(facetC)));
+        _removeAndAssertSingleEvent(address(facetC));
 
         _assertFacetCCleared();
         _assertNode(FacetA.a1.selector, address(facetA), bytes4(0), FacetB.b1.selector);
@@ -121,6 +126,15 @@ abstract contract RemoveFacetsBehavior is DiamondUpgrade_Base_Test {
 
     function _remove(address[] memory _facets) private {
         _upgrade(_emptyAddresses(), _emptyReplacements(), _facets, address(0), bytes(""), bytes32(0), bytes(""));
+    }
+
+    function _removeAndAssertSingleEvent(address _facet) private {
+        vm.recordLogs();
+        _remove(_singleAddress(_facet));
+        Vm.Log[] memory logs = vm.getRecordedLogs();
+
+        assertEq(logs.length, 1, "removal log count");
+        _assertRemovalLog(logs[0], _facet);
     }
 
     function _addRemovalFacet(address _facet) private {
@@ -203,5 +217,18 @@ abstract contract RemoveFacetsBehavior is DiamondUpgrade_Base_Test {
         assertEq(_log.topics[0], FACET_REMOVED_TOPIC, "removal topic");
         assertEq(address(uint160(uint256(_log.topics[1]))), _facet, "removed facet");
         assertEq(_log.data.length, 0, "removal data length");
+    }
+
+    function _assertRemovalOriginalABC() private view {
+        _assertNode(FacetA.a1.selector, address(facetA), bytes4(0), FacetB.b1.selector);
+        _assertNode(FacetA.a2.selector, address(facetA), bytes4(0), bytes4(0));
+        _assertNode(FacetA.a3.selector, address(facetA), bytes4(0), bytes4(0));
+        _assertNode(FacetB.b1.selector, address(facetB), FacetA.a1.selector, FacetC.c1.selector);
+        _assertNode(FacetB.b2.selector, address(facetB), bytes4(0), bytes4(0));
+        _assertNode(FacetB.b3.selector, address(facetB), bytes4(0), bytes4(0));
+        _assertNode(FacetC.c1.selector, address(facetC), FacetB.b1.selector, bytes4(0));
+        _assertNode(FacetC.c2.selector, address(facetC), bytes4(0), bytes4(0));
+        _assertNode(FacetC.c3.selector, address(facetC), bytes4(0), bytes4(0));
+        _assertRemovalList(FacetA.a1.selector, FacetC.c1.selector, 3, 9);
     }
 }

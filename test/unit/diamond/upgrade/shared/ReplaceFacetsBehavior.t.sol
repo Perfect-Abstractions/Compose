@@ -59,15 +59,24 @@ abstract contract ReplaceFacetsBehavior is DiamondUpgrade_Base_Test {
         _replace(address(facetA), address(facetBChanged));
     }
 
+    function test_ShouldNotChangeState_WhenReplacementArrayIsEmpty() external {
+        _seedReplacementABC();
+
+        vm.recordLogs();
+        _upgrade(
+            _emptyAddresses(), _emptyReplacements(), _emptyAddresses(), address(0), bytes(""), bytes32(0), bytes("")
+        );
+        Vm.Log[] memory logs = vm.getRecordedLogs();
+
+        assertEq(logs.length, 0, "empty replacement log count");
+        _assertReplacementOriginalABC();
+    }
+
     function test_ShouldReplaceInPlace_WhenSelectorSetsAreIdentical() external {
         _addReplacementFacet(address(facetA));
 
-        vm.recordLogs();
-        _replace(address(facetA), address(facetAReplacement));
-        Vm.Log[] memory logs = vm.getRecordedLogs();
+        _replaceAndAssertSingleEvent(address(facetA), address(facetAReplacement));
 
-        assertEq(logs.length, 1, "replacement log count");
-        _assertReplacementLog(logs[0], address(facetA), address(facetAReplacement));
         _assertNode(FacetA.a1.selector, address(facetAReplacement), bytes4(0), bytes4(0));
         _assertNode(FacetA.a2.selector, address(facetAReplacement), bytes4(0), bytes4(0));
         _assertNode(FacetA.a3.selector, address(facetAReplacement), bytes4(0), bytes4(0));
@@ -77,9 +86,9 @@ abstract contract ReplaceFacetsBehavior is DiamondUpgrade_Base_Test {
     function test_ShouldAddSharedAndRemoveStaleSelectors_WhenSelectorSetsDiffer() external {
         _addReplacementFacet(address(facetA));
 
-        _replace(address(facetA), address(facetAChanged));
+        _replaceAndAssertSingleEvent(address(facetA), address(facetAChanged));
 
-        _assertSelectorOwner(FacetA.a1.selector, address(0));
+        _assertNode(FacetA.a1.selector, address(0), bytes4(0), bytes4(0));
         _assertSelectorOwner(FacetA.a2.selector, address(facetAChanged));
         _assertSelectorOwner(FacetA.a3.selector, address(0));
         _assertSelectorOwner(FacetAChanged.a4.selector, address(facetAChanged));
@@ -94,9 +103,9 @@ abstract contract ReplaceFacetsBehavior is DiamondUpgrade_Base_Test {
     function test_ShouldRelink_WhenReplacingHeadFacet() external {
         _seedReplacementABC();
 
-        _replace(address(facetA), address(facetAChanged));
+        _replaceAndAssertSingleEvent(address(facetA), address(facetAChanged));
 
-        _assertSelectorOwner(FacetA.a1.selector, address(0));
+        _assertNode(FacetA.a1.selector, address(0), bytes4(0), bytes4(0));
         _assertSelectorOwner(FacetA.a3.selector, address(0));
         _assertNode(FacetAChanged.a4.selector, address(facetAChanged), bytes4(0), FacetB.b1.selector);
         _assertNode(FacetA.a2.selector, address(facetAChanged), bytes4(0), bytes4(0));
@@ -110,9 +119,9 @@ abstract contract ReplaceFacetsBehavior is DiamondUpgrade_Base_Test {
     function test_ShouldRelink_WhenReplacingMiddleFacet() external {
         _seedReplacementABC();
 
-        _replace(address(facetB), address(facetBChanged));
+        _replaceAndAssertSingleEvent(address(facetB), address(facetBChanged));
 
-        _assertSelectorOwner(FacetB.b1.selector, address(0));
+        _assertNode(FacetB.b1.selector, address(0), bytes4(0), bytes4(0));
         _assertSelectorOwner(FacetB.b3.selector, address(0));
         _assertNode(FacetA.a1.selector, address(facetA), bytes4(0), FacetBChanged.b4.selector);
         _assertNode(FacetBChanged.b4.selector, address(facetBChanged), FacetA.a1.selector, FacetC.c1.selector);
@@ -126,9 +135,9 @@ abstract contract ReplaceFacetsBehavior is DiamondUpgrade_Base_Test {
     function test_ShouldRelink_WhenReplacingTailFacet() external {
         _seedReplacementABC();
 
-        _replace(address(facetC), address(facetCChanged));
+        _replaceAndAssertSingleEvent(address(facetC), address(facetCChanged));
 
-        _assertSelectorOwner(FacetC.c1.selector, address(0));
+        _assertNode(FacetC.c1.selector, address(0), bytes4(0), bytes4(0));
         _assertSelectorOwner(FacetC.c3.selector, address(0));
         _assertNode(FacetA.a1.selector, address(facetA), bytes4(0), FacetB.b1.selector);
         _assertNode(FacetB.b1.selector, address(facetB), FacetA.a1.selector, FacetCChanged.c4.selector);
@@ -149,6 +158,15 @@ abstract contract ReplaceFacetsBehavior is DiamondUpgrade_Base_Test {
             bytes32(0),
             bytes("")
         );
+    }
+
+    function _replaceAndAssertSingleEvent(address _oldFacet, address _newFacet) private {
+        vm.recordLogs();
+        _replace(_oldFacet, _newFacet);
+        Vm.Log[] memory logs = vm.getRecordedLogs();
+
+        assertEq(logs.length, 1, "replacement log count");
+        _assertReplacementLog(logs[0], _oldFacet, _newFacet);
     }
 
     function _addReplacementFacet(address _facet) private {
@@ -193,6 +211,19 @@ abstract contract ReplaceFacetsBehavior is DiamondUpgrade_Base_Test {
         assertEq(address(uint160(uint256(_log.topics[1]))), _oldFacet, "replacement old facet");
         assertEq(address(uint160(uint256(_log.topics[2]))), _newFacet, "replacement new facet");
         assertEq(_log.data.length, 0, "replacement data length");
+    }
+
+    function _assertReplacementOriginalABC() private view {
+        _assertNode(FacetA.a1.selector, address(facetA), bytes4(0), FacetB.b1.selector);
+        _assertNode(FacetA.a2.selector, address(facetA), bytes4(0), bytes4(0));
+        _assertNode(FacetA.a3.selector, address(facetA), bytes4(0), bytes4(0));
+        _assertNode(FacetB.b1.selector, address(facetB), FacetA.a1.selector, FacetC.c1.selector);
+        _assertNode(FacetB.b2.selector, address(facetB), bytes4(0), bytes4(0));
+        _assertNode(FacetB.b3.selector, address(facetB), bytes4(0), bytes4(0));
+        _assertNode(FacetC.c1.selector, address(facetC), FacetB.b1.selector, bytes4(0));
+        _assertNode(FacetC.c2.selector, address(facetC), bytes4(0), bytes4(0));
+        _assertNode(FacetC.c3.selector, address(facetC), bytes4(0), bytes4(0));
+        _assertReplacementList(FacetA.a1.selector, FacetC.c1.selector, 3, 9);
     }
 
     function _assertUnchangedAAndBSelectors() private view {
