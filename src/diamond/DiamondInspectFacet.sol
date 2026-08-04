@@ -114,7 +114,7 @@ contract DiamondInspectFacet {
     function facetFunctionSelectors(address _facet) external view returns (bytes4[] memory facetSelectors) {
         DiamondStorage storage s = getStorage();
         facetSelectors = unpackSelectors(IFacet(_facet).exportSelectors());
-        if (facetSelectors.length == 0 || s.facetNodes[facetSelectors[0]].facet == address(0)) {
+        if (facetSelectors.length == 0 || s.facetNodes[facetSelectors[0]].facet != _facet) {
             facetSelectors = new bytes4[](0);
         }
     }
