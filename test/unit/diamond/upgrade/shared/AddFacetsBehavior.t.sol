@@ -15,6 +15,9 @@ import {
     ShortReturnFacet
 } from "test/utils/mocks/diamond/DiamondFacetMocks.sol";
 
+/**
+ * @dev BTT spec: test/trees/Diamond.tree
+ */
 abstract contract AddFacetsBehavior is DiamondUpgrade_Base_Test {
     function _noBytecodeAtAddressError() internal pure virtual returns (bytes4);
 

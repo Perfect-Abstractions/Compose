@@ -125,6 +125,9 @@ abstract contract DiamondUpgrade_Base_Test is Base_Test {
     }
 }
 
+/**
+ * @dev BTT spec: test/trees/Diamond.tree
+ */
 contract DiamondStorageLayout_Unit_Test is Base_Test {
     function test_ShouldProveStorageBitOffsets() external {
         FacetA facetA = new FacetA();
