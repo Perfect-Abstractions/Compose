@@ -3,7 +3,7 @@ import tseslint from "typescript-eslint";
 
 export default [
   {
-    ignores: ["node_modules/**", "dist/**", "src/templates/**", "eslint.config.js", "soljson-latest.js"],
+    ignores: ["node_modules/**", "dist/**", "src/templates/**", "soljson-latest.js", "eslint.config.js"],
   },
   js.configs.recommended,
   {
