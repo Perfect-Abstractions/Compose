@@ -60,6 +60,7 @@ contract Data_ERC1155DataFacet_Fuzz_Test is ERC1155DataFacet_Base_Test {
         uint256 v1
     ) external {
         vm.assume(v0 != type(uint256).max && v1 != type(uint256).max);
+        vm.assume(a0 != a1 || id0 != id1);
         address(facet).setBalanceOf(id0, a0, v0);
         address(facet).setBalanceOf(id1, a1, v1);
 

@@ -22,6 +22,14 @@ const adapter: IFrameworkAdapter = {
     return path.join(projectRoot, "test");
   },
 
+  getArtifactDir(projectRoot: string): string {
+    return path.join(projectRoot, "artifacts");
+  },
+
+  async compile(projectRoot: string): Promise<void> {
+    await runCommand("npx", ["hardhat", "compile"], { cwd: projectRoot });
+  },
+
   async resolveSoliditySourcePath(ctx: ComposeContext, sourcePath: string): Promise<string> {
     return resolveCatalogSourceForRead(sourcePath);
   },

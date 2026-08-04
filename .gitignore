@@ -34,3 +34,5 @@ docgen-summary.json
 .agents
 .cursor
 .opencode
+
+soljson-latest.js
