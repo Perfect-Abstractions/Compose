@@ -10,6 +10,7 @@ import {DiamondUpgrade_Base_Test, Replacement} from "test/unit/diamond/DiamondUp
 import {AddFacetsBehavior} from "test/unit/diamond/upgrade/shared/AddFacetsBehavior.t.sol";
 import {RemoveFacetsBehavior} from "test/unit/diamond/upgrade/shared/RemoveFacetsBehavior.t.sol";
 import {ReplaceFacetsBehavior} from "test/unit/diamond/upgrade/shared/ReplaceFacetsBehavior.t.sol";
+import {UpgradeEffectsBehavior} from "test/unit/diamond/upgrade/shared/UpgradeEffectsBehavior.t.sol";
 import {DiamondUpgradeModHarness} from "test/utils/harnesses/diamond/DiamondUpgradeModHarness.sol";
 
 /**
@@ -18,7 +19,8 @@ import {DiamondUpgradeModHarness} from "test/utils/harnesses/diamond/DiamondUpgr
 contract UpgradeDiamond_DiamondUpgradeMod_Fuzz_Unit_Test is
     AddFacetsBehavior,
     ReplaceFacetsBehavior,
-    RemoveFacetsBehavior
+    RemoveFacetsBehavior,
+    UpgradeEffectsBehavior
 {
     DiamondUpgradeModHarness internal harness;
 
@@ -49,7 +51,12 @@ contract UpgradeDiamond_DiamondUpgradeMod_Fuzz_Unit_Test is
         harness.upgradeDiamond(_adds, replacements, _removes, _delegate, _delegateCalldata, _tag, _metadata);
     }
 
-    function _noBytecodeAtAddressError() internal pure override returns (bytes4) {
+    function _noBytecodeAtAddressError()
+        internal
+        pure
+        override(AddFacetsBehavior, UpgradeEffectsBehavior)
+        returns (bytes4)
+    {
         return DiamondUpgradeMod.NoBytecodeAtAddress.selector;
     }
 
@@ -79,5 +86,9 @@ contract UpgradeDiamond_DiamondUpgradeMod_Fuzz_Unit_Test is
 
     function _cannotRemoveFacetThatDoesNotExistError() internal pure override returns (bytes4) {
         return DiamondUpgradeMod.CannotRemoveFacetThatDoesNotExist.selector;
+    }
+
+    function _delegateCallRevertedError() internal pure override returns (bytes4) {
+        return DiamondUpgradeMod.DelegateCallReverted.selector;
     }
 }

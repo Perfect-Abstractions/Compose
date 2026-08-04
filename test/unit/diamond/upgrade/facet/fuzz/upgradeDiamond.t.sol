@@ -10,6 +10,7 @@ import {DiamondUpgrade_Base_Test, Replacement} from "test/unit/diamond/DiamondUp
 import {AddFacetsBehavior} from "test/unit/diamond/upgrade/shared/AddFacetsBehavior.t.sol";
 import {RemoveFacetsBehavior} from "test/unit/diamond/upgrade/shared/RemoveFacetsBehavior.t.sol";
 import {ReplaceFacetsBehavior} from "test/unit/diamond/upgrade/shared/ReplaceFacetsBehavior.t.sol";
+import {UpgradeEffectsBehavior} from "test/unit/diamond/upgrade/shared/UpgradeEffectsBehavior.t.sol";
 import {OwnerStorageUtils} from "test/utils/storage/OwnerStorageUtils.sol";
 
 /**
@@ -18,7 +19,8 @@ import {OwnerStorageUtils} from "test/utils/storage/OwnerStorageUtils.sol";
 contract UpgradeDiamond_DiamondUpgradeFacet_Fuzz_Unit_Test is
     AddFacetsBehavior,
     ReplaceFacetsBehavior,
-    RemoveFacetsBehavior
+    RemoveFacetsBehavior,
+    UpgradeEffectsBehavior
 {
     DiamondUpgradeFacet internal upgradeFacet;
 
@@ -52,7 +54,12 @@ contract UpgradeDiamond_DiamondUpgradeFacet_Fuzz_Unit_Test is
         upgradeFacet.upgradeDiamond(_adds, replacements, _removes, _delegate, _delegateCalldata, _tag, _metadata);
     }
 
-    function _noBytecodeAtAddressError() internal pure override returns (bytes4) {
+    function _noBytecodeAtAddressError()
+        internal
+        pure
+        override(AddFacetsBehavior, UpgradeEffectsBehavior)
+        returns (bytes4)
+    {
         return DiamondUpgradeFacet.NoBytecodeAtAddress.selector;
     }
 
@@ -82,5 +89,27 @@ contract UpgradeDiamond_DiamondUpgradeFacet_Fuzz_Unit_Test is
 
     function _cannotRemoveFacetThatDoesNotExistError() internal pure override returns (bytes4) {
         return DiamondUpgradeFacet.CannotRemoveFacetThatDoesNotExist.selector;
+    }
+
+    function _delegateCallRevertedError() internal pure override returns (bytes4) {
+        return DiamondUpgradeFacet.DelegateCallReverted.selector;
+    }
+
+    function test_RevertWhen_CallerIsNotOwner() external {
+        setMsgSender(users.bob);
+        vm.expectRevert(DiamondUpgradeFacet.OwnerUnauthorizedAccount.selector);
+        upgradeFacet.upgradeDiamond(
+            new address[](0),
+            new DiamondUpgradeFacet.FacetReplacement[](0),
+            new address[](0),
+            address(0),
+            bytes(""),
+            bytes32(0),
+            bytes("")
+        );
+    }
+
+    function test_ShouldExportOnlyUpgradeDiamondSelector() external view {
+        assertEq(upgradeFacet.exportSelectors(), bytes.concat(DiamondUpgradeFacet.upgradeDiamond.selector));
     }
 }
