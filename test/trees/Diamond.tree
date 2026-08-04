@@ -1,0 +1,147 @@
+SelectorImport
+├── when the facet address has no bytecode
+│   └── it should revert with {NoBytecodeAtAddress}
+├── when exportSelectors cannot be called successfully
+│   └── it should revert with the surface-specific {FunctionSelectorsCallFailed} or {ExportSelectorsCallFailed} error
+├── when exportSelectors return data is shorter than the ABI offset and length words
+│   └── it should revert with {IncorrectSelectorsEncoding}
+├── when the ABI offset is not 32
+│   └── it should revert with {IncorrectSelectorsEncoding}
+├── when the encoded selector length exceeds the returned payload
+│   └── it should revert with {IncorrectSelectorsEncoding}
+├── when the packed selector bytes are empty
+│   └── it should revert with {NoSelectorsForFacet}
+├── when the packed selector length is not a multiple of four
+│   └── it should revert with {IncorrectSelectorsEncoding}
+└── when the facet returns valid packed selectors
+    └── it should import every selector in export order
+
+AddFacets
+├── when the facet array is empty
+│   └── it should leave the facet list and counts unchanged
+├── when adding the first facet
+│   ├── it should map every exported selector to the facet
+│   ├── it should set head and tail to the first exported selector
+│   ├── it should set the first node links to zero
+│   ├── it should increment facetCount and selectorCount exactly
+│   └── it should emit {FacetAdded} exactly once
+├── when adding multiple facets
+│   ├── it should preserve input order in the linked list
+│   ├── it should link head, middle, and tail nodes in both directions
+│   ├── it should keep non-head selector links zero
+│   ├── it should increment facetCount and selectorCount exactly
+│   └── it should emit one {FacetAdded} event per facet in input order
+├── when appending facets to an existing list
+│   ├── it should connect the previous tail to the appended head
+│   └── it should preserve the existing head and set the new tail
+├── when a selector already belongs to the diamond
+│   └── it should revert with {CannotAddFunctionToDiamondThatAlreadyExists}
+└── when a facet exports a selector more than once
+    └── it should revert with {CannotAddFunctionToDiamondThatAlreadyExists}
+
+ReplaceFacets
+├── when the replacement array is empty
+│   └── it should leave the facet list and counts unchanged
+├── when old and new facet addresses are the same
+│   └── it should revert with {CannotReplaceFacetWithSameFacet}
+├── when the old facet is not registered
+│   └── it should revert with {FacetToReplaceDoesNotExist}
+├── when a new selector belongs to a different registered facet
+│   └── it should revert with {CannotReplaceFunctionFromNonReplacementFacet}
+├── when old and new facets export identical selectors
+│   ├── it should route every selector to the new facet
+│   ├── it should preserve head, tail, links, and counts
+│   └── it should emit {FacetReplaced} exactly once
+├── when the selector sets overlap but differ
+│   ├── it should route shared selectors to the new facet
+│   ├── it should add selectors unique to the new facet
+│   ├── it should remove selectors unique to the old facet
+│   └── it should update selectorCount to the exact new total
+├── when replacing the first facet with a different node selector
+│   └── it should update head and the next node's previous link
+├── when replacing a middle facet with a different node selector
+│   └── it should relink both neighboring nodes through the new node
+└── when replacing the last facet with a different node selector
+    └── it should update tail and the previous node's next link
+
+RemoveFacets
+├── when the removal array is empty
+│   └── it should leave the facet list and counts unchanged
+├── when the facet is not registered
+│   └── it should revert with {CannotRemoveFacetThatDoesNotExist}
+├── when removing the only facet
+│   ├── it should clear every selector mapping
+│   ├── it should clear head and tail
+│   └── it should set facetCount and selectorCount to zero
+├── when removing the first facet
+│   └── it should move head and clear the new head's previous link
+├── when removing a middle facet
+│   └── it should link the previous and next nodes to each other
+├── when removing the last facet
+│   └── it should move tail and clear the new tail's next link
+├── when removing multiple facets
+│   ├── it should remove every exported selector
+│   ├── it should decrement both counts exactly
+│   └── it should emit one {FacetRemoved} event per facet in input order
+└── when a removal fails
+    └── it should roll back all earlier removals in the transaction
+
+UpgradeDiamond
+├── when the caller is not the owner on the upgrade facet
+│   └── it should revert with {OwnerUnauthorizedAccount}
+├── when additions replacements and removals are supplied together
+│   ├── it should execute add then replace then remove
+│   └── it should leave routing list links and counts consistent
+├── when delegate is the zero address
+│   └── it should skip delegatecall and omit {DiamondDelegateCall}
+├── when delegate has no bytecode
+│   └── it should revert with {NoBytecodeAtAddress}
+├── when delegatecall succeeds
+│   ├── it should mutate the caller diamond's storage
+│   └── it should emit {DiamondDelegateCall} with exact calldata
+├── when delegatecall reverts with data
+│   └── it should bubble the exact revert data
+├── when delegatecall reverts without data
+│   └── it should revert with {DelegateCallReverted}
+├── when tag is zero and metadata is empty
+│   └── it should omit {DiamondMetadata}
+├── when tag is nonzero or metadata is nonempty
+│   └── it should emit {DiamondMetadata} with exact values
+└── ExportSelectors
+    └── it should return only the upgradeDiamond selector
+
+Fallback
+├── when no facet owns msg.sig
+│   └── it should revert with {FunctionNotFound} and msg.sig
+├── when a facet owns msg.sig
+│   ├── it should forward exact calldata
+│   ├── it should preserve msg.sender and msg.value
+│   ├── it should write state in diamond storage not facet storage
+│   └── it should return exact returndata
+└── when the facet call reverts
+    └── it should bubble exact revert data
+
+Inspect
+├── when no facets are registered
+│   ├── facetAddress should return address zero
+│   ├── facetAddresses should return an empty array
+│   └── facets should return an empty array
+├── when facets are registered
+│   ├── facetAddress should return the owner of each selector
+│   ├── facetFunctionSelectors should unpack selectors in export order
+│   ├── facetAddresses should return linked-list order
+│   └── facets should pair every facet with its exported selectors
+├── when a queried valid facet is not registered
+│   └── facetFunctionSelectors should return an empty array
+├── when an old facet has been replaced and its first selector is now owned by the replacement
+│   └── facetFunctionSelectors for the old facet should return an empty array
+├── when a facet has been removed
+│   └── every inspection view should exclude it and its selectors
+├── ExportSelectors
+│   └── it should return the four inspection selectors in declaration order
+└── when add replace remove sequences are fuzzed
+    ├── facetCount should equal the number of traversable facet nodes
+    ├── selectorCount should equal the number of routed unique selectors
+    ├── head and tail should match the first and last traversable nodes
+    ├── every next link should have a matching previous link
+    └── inspection output should match the model after every step
