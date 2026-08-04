@@ -17,9 +17,6 @@ on:
 jobs:
   lint:
     runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: cli
 
     steps:
       - name: Checkout repository
@@ -30,16 +27,15 @@ jobs:
         with:
           node-version: 24.x
           cache: npm
-          cache-dependency-path: cli/package-lock.json
 
       - name: Install dependencies
-        run: npm ci --workspaces=false
+        run: npm ci
 
       - name: Build TypeScript
-        run: npm run build
+        run: npm run cli@build
 
       - name: Lint
-        run: npm run lint
+        run: npm run cli@lint
 
   smoke-tests:
     runs-on: ubuntu-latest
@@ -50,9 +46,6 @@ jobs:
     needs: lint
     env:
       FOUNDRY_PROFILE: ci
-    defaults:
-      run:
-        working-directory: cli
 
     steps:
       - name: Checkout repository
@@ -65,22 +58,21 @@ jobs:
         with:
           node-version: ${{ matrix.node-version }}
           cache: npm
-          cache-dependency-path: cli/package-lock.json
 
       - name: Install Foundry
         uses: foundry-rs/foundry-toolchain@v1
 
       - name: Install dependencies
-        run: npm ci --workspaces=false
+        run: npm ci
 
       - name: Build TypeScript
-        run: npm run build
+        run: npm run cli@build
 
       - name: Smoke test Foundry counter base
         run: |
           set -euo pipefail
           rm -rf ci-foundry
-          node dist/index.js init ci-foundry \
+          node cli/dist/index.js init ci-foundry \
             --framework foundry \
             --base counter \
             --ownership owner \
@@ -92,7 +84,7 @@ jobs:
         run: |
           set -euo pipefail
           rm -rf ci-hardhat
-          node dist/index.js init ci-hardhat \
+          node cli/dist/index.js init ci-hardhat \
             --framework hardhat \
             --toolbox ethers \
             --base counter \
@@ -106,9 +98,6 @@ jobs:
     needs:
       - lint
       - smoke-tests
-    defaults:
-      run:
-        working-directory: cli
 
     steps:
       - name: Checkout repository
@@ -119,13 +108,12 @@ jobs:
         with:
           node-version: 24.x
           cache: npm
-          cache-dependency-path: cli/package-lock.json
 
       - name: Install dependencies
-        run: npm ci --workspaces=false
+        run: npm ci
 
       - name: Build TypeScript
-        run: npm run build
+        run: npm run cli@build
 
       - name: Verify npm pack output
-        run: npm run pack:check
+        run: npm run cli@pack:check

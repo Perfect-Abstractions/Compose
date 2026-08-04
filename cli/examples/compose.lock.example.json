@@ -1,0 +1,45 @@
+{
+  "compose": "0.0.3",
+  "deployments": {
+    "MyDiamond": {
+      "sepolia": {
+        "diamond": "0x1234567890abcdef1234567890abcdef12345678",
+        "facets": {
+          "DiamondInspectFacet": "0xabcdef1234567890abcdef1234567890abcdef12",
+          "DiamondUpgradeFacet": "0x9876543210fedcba9876543210fedcba98765432",
+          "CounterFacet": "0x567890abcdef1234567890abcdef123456789012"
+        },
+        "facetHash": "0x7a8b9c0d1e2f3a4b5c6d7e8f9a0b1c2d3e4f5a6b7c8d9e0f1a2b3c4d5e6f7a8b",
+        "lastSync": "2026-08-03T12:00:00Z",
+        "txHash": "0xabcdef1234567890abcdef1234567890abcdef1234567890abcdef1234567890"
+      },
+      "base": {
+        "diamond": "0x234567890abcdef1234567890abcdef12345678",
+        "facets": {
+          "DiamondInspectFacet": "0xbcdef1234567890abcdef1234567890abcdef12",
+          "DiamondUpgradeFacet": "0x876543210fedcba9876543210fedcba98765432",
+          "ERC20DataFacet": "0x4567890abcdef1234567890abcdef1234567890",
+          "ERC20ApproveFacet": "0x67890abcdef1234567890abcdef123456789012",
+          "ERC20TransferFacet": "0x890abcdef1234567890abcdef1234567890abcd"
+        },
+        "facetHash": "0x1b2c3d4e5f6a7b8c9d0e1f2a3b4c5d6e7f8a9b0c1d2e3f4a5b6c7d8e9f0a1b2c",
+        "lastSync": "2026-08-02T08:30:00Z",
+        "txHash": "0x1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef"
+      }
+    },
+    "ERC721Diamond": {
+      "sepolia": {
+        "diamond": "0x34567890abcdef1234567890abcdef12345678",
+        "facets": {
+          "DiamondInspectFacet": "0xcdef1234567890abcdef1234567890abcdef12",
+          "ERC721DataFacet": "0x567890abcdef1234567890abcdef1234567890",
+          "ERC721MintFacet": "0x7890abcdef1234567890abcdef123456789012",
+          "ERC721BurnFacet": "0x90abcdef1234567890abcdef1234567890abcd"
+        },
+        "facetHash": "0x2c3d4e5f6a7b8c9d0e1f2a3b4c5d6e7f8a9b0c1d2e3f4a5b6c7d8e9f0a1b2c3d",
+        "lastSync": "2026-08-01T15:45:00Z",
+        "txHash": "0xabcdef1234567890abcdef1234567890abcdef1234567890abcdef1234567891"
+      }
+    }
+  }
+}

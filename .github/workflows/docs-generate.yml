@@ -128,10 +128,9 @@ jobs:
 
       - name: Verify documentation site build
         if: steps.check-generated.outputs.has_generated == 'true'
-        working-directory: website
         run: |
           npm ci
-          npm run build
+          npm run docs@build
         env:
           ALGOLIA_APP_ID: 'dummy'
           ALGOLIA_API_KEY: 'dummy'

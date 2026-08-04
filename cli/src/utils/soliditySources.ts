@@ -1,9 +1,12 @@
 import path from "node:path";
+import { createRequire } from "node:module";
 import { CLI_ROOT } from "./cliRoot";
 
 /** Prefix used to identify Compose package imports. */
 export const COMPOSE_PACKAGE_PREFIX = "@perfect-abstractions/compose/";
 const LOCAL_TEMPLATE_PREFIX = "./src/templates/";
+
+const require = createRequire(import.meta.url);
 
 /**
  * Resolves the installed root directory of the `@perfect-abstractions/compose`
