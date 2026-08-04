@@ -283,6 +283,33 @@ contract DiamondUpgradeFacet {
         }
     }
 
+    /*
+     * Add all selectors of a facet to the diamond, except the first.
+     *
+     * The first selector (index 0) is the facet's linked-list node identifier.
+     * It carries prev/next pointers and must be stored by the caller after
+     * resolving the linked-list position. This function stores the remaining
+     * selectors as leaf nodes with zero prev/next links.
+     *
+     * Reverts if any selector already belongs to a different facet.
+     * Returns the number of selectors processed (excluding the first).
+     */
+    function addFacetSelectors(address _facet, bytes memory _selectors) internal returns (uint256 selectorsLength) {
+        DiamondStorage storage s = getDiamondStorage();
+        /*
+         * Shift right by 2 is the same as dividing by 4, but cheaper.
+         * We do this to get the number of selectors.
+         */
+        selectorsLength = _selectors.length >> 2;
+        for (uint256 selectorIndex = 1; selectorIndex < selectorsLength; selectorIndex++) {
+            bytes4 selector = at(_selectors, selectorIndex);
+            if (s.facetNodes[selector].facet != address(0)) {
+                revert CannotAddFunctionToDiamondThatAlreadyExists(selector);
+            }
+            s.facetNodes[selector] = FacetNode(_facet, bytes4(0), bytes4(0));
+        }
+    }
+
     function addFacets(address[] calldata _facets) internal {
         DiamondStorage storage s = getDiamondStorage();
         uint256 facetLength = _facets.length;
@@ -336,22 +363,12 @@ contract DiamondUpgradeFacet {
             s.facetNodes[prevFacetNodeId].nextFacetNodeId = currentFacetNodeId;
         }
         /*
-         * Shift right by 2 is the same as dividing by 4, but cheaper.
-         * We do this to get the number of selectors
-         */
-        uint256 selectorsLength = selectors.length >> 2;
-        unchecked {
-            facetList.selectorCount += uint32(selectorsLength);
-        }
-        /*
          * Add all selectors, except the first, to the diamond.
+         * The first selector was already extracted as currentFacetNodeId above.
+         * The returned count is used to update selectorCount.
          */
-        for (uint256 selectorIndex = 1; selectorIndex < selectorsLength; selectorIndex++) {
-            bytes4 selector = at(selectors, selectorIndex);
-            if (s.facetNodes[selector].facet != address(0)) {
-                revert CannotAddFunctionToDiamondThatAlreadyExists(selector);
-            }
-            s.facetNodes[selector] = FacetNode(facet, bytes4(0), bytes4(0));
+        unchecked {
+            facetList.selectorCount += uint32(addFacetSelectors(facet, selectors));
         }
         /*
          * Reset memory for the main loop.
@@ -397,22 +414,12 @@ contract DiamondUpgradeFacet {
             prevFacetNodeId = currentFacetNodeId;
             currentFacetNodeId = nextFacetNodeId;
             /*
-             * Shift right by 2 is the same as dividing by 4, but cheaper.
-             * We do this to get the number of selectors.
-             */
-            selectorsLength = selectors.length >> 2;
-            /*
              * Add all the selectors of the facet to the diamond, except the first selector.
+             * The first selector (currentFacetNodeId) is the pending linked-list node
+             * that will be stored in the next iteration once nextFacetNodeId is known.
              */
-            for (uint256 selectorIndex = 1; selectorIndex < selectorsLength; selectorIndex++) {
-                bytes4 selector = at(selectors, selectorIndex);
-                if (s.facetNodes[selector].facet != address(0)) {
-                    revert CannotAddFunctionToDiamondThatAlreadyExists(selector);
-                }
-                s.facetNodes[selector] = FacetNode(facet, bytes4(0), bytes4(0));
-            }
             unchecked {
-                facetList.selectorCount += uint32(selectorsLength);
+                facetList.selectorCount += uint32(addFacetSelectors(facet, selectors));
             }
             /*
              * Restore Free Memory Pointer to reuse memory from packedSelectors() calls.
