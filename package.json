@@ -17,6 +17,7 @@
     "compose@pack:check": "npm --workspace src run pack:check",
     "cli@build": "npm --workspace cli run build",
     "cli@lint": "npm --workspace cli run lint",
+    "cli@test": "npm --workspace cli run test",
     "cli@link": "cd cli && npm link",
     "cli@check": "npm --workspace cli run check",
     "cli@pack:check": "npm --workspace cli run pack:check",
