@@ -8,12 +8,18 @@ pragma solidity >=0.8.30 <0.9.0;
 import {DiamondUpgradeFacet} from "src/diamond/DiamondUpgradeFacet.sol";
 import {DiamondUpgrade_Base_Test, Replacement} from "test/unit/diamond/DiamondUpgradeBase.t.sol";
 import {AddFacetsBehavior} from "test/unit/diamond/upgrade/shared/AddFacetsBehavior.t.sol";
+import {RemoveFacetsBehavior} from "test/unit/diamond/upgrade/shared/RemoveFacetsBehavior.t.sol";
+import {ReplaceFacetsBehavior} from "test/unit/diamond/upgrade/shared/ReplaceFacetsBehavior.t.sol";
 import {OwnerStorageUtils} from "test/utils/storage/OwnerStorageUtils.sol";
 
 /**
  * @dev BTT spec: test/trees/Diamond.tree
  */
-contract UpgradeDiamond_DiamondUpgradeFacet_Fuzz_Unit_Test is AddFacetsBehavior {
+contract UpgradeDiamond_DiamondUpgradeFacet_Fuzz_Unit_Test is
+    AddFacetsBehavior,
+    ReplaceFacetsBehavior,
+    RemoveFacetsBehavior
+{
     DiamondUpgradeFacet internal upgradeFacet;
 
     function setUp() public override(DiamondUpgrade_Base_Test) {
@@ -60,5 +66,21 @@ contract UpgradeDiamond_DiamondUpgradeFacet_Fuzz_Unit_Test is AddFacetsBehavior 
 
     function _incorrectSelectorsEncodingError() internal pure override returns (bytes4) {
         return DiamondUpgradeFacet.IncorrectSelectorsEncoding.selector;
+    }
+
+    function _cannotReplaceFacetWithSameFacetError() internal pure override returns (bytes4) {
+        return DiamondUpgradeFacet.CannotReplaceFacetWithSameFacet.selector;
+    }
+
+    function _facetToReplaceDoesNotExistError() internal pure override returns (bytes4) {
+        return DiamondUpgradeFacet.FacetToReplaceDoesNotExist.selector;
+    }
+
+    function _cannotReplaceFunctionFromNonReplacementFacetError() internal pure override returns (bytes4) {
+        return DiamondUpgradeFacet.CannotReplaceFunctionFromNonReplacementFacet.selector;
+    }
+
+    function _cannotRemoveFacetThatDoesNotExistError() internal pure override returns (bytes4) {
+        return DiamondUpgradeFacet.CannotRemoveFacetThatDoesNotExist.selector;
     }
 }
