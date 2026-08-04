@@ -32,9 +32,8 @@ abstract contract UpgradeEffectsBehavior is DiamondUpgrade_Base_Test {
 
     function testFuzz_ShouldDelegatecallAndEmit(uint256 _value) external {
         bytes memory callData = abi.encodeCall(DelegateTarget.initialize, (_value));
-        vm.expectEmit(target);
-        emit DiamondDelegateCall(address(delegateTarget), callData);
 
+        vm.recordLogs();
         _upgrade(
             _emptyAddresses(),
             _emptyReplacements(),
@@ -44,7 +43,10 @@ abstract contract UpgradeEffectsBehavior is DiamondUpgrade_Base_Test {
             bytes32(0),
             bytes("")
         );
+        Vm.Log[] memory logs = vm.getRecordedLogs();
 
+        assertEq(logs.length, 1, "delegate log count");
+        _assertDelegateCallLog(logs[0], address(delegateTarget), callData);
         assertEq(uint256(vm.load(target, DIAMOND_TEST_STORAGE_POSITION)), _value, "target state");
         assertEq(uint256(vm.load(address(delegateTarget), DIAMOND_TEST_STORAGE_POSITION)), 0, "delegate state");
     }
