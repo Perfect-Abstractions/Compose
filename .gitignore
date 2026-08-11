@@ -21,7 +21,11 @@ src/CHANGELOG.md
 # Docusaurus
 # Dependencies
 website/node_modules
+website/package-lock.json
 .github/scripts/generate-docs-utils/templates/node_modules
+
+# Workspace sub-package lock files (root lock file is authoritative)
+cli/package-lock.json
 
 # Ignore forge docs output (root level only)
 /docs/
@@ -31,3 +35,5 @@ docgen-summary.json
 .agents
 .cursor
 .opencode
+
+soljson-latest.js

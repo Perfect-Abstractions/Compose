@@ -1,9 +1,9 @@
-const js = require("@eslint/js");
-const tseslint = require("typescript-eslint");
+import js from "@eslint/js";
+import tseslint from "typescript-eslint";
 
-module.exports = [
+export default [
   {
-    ignores: ["node_modules/**", "dist/**", "src/templates/**"],
+    ignores: ["node_modules/**", "dist/**", "src/templates/**", "soljson-latest.js", "eslint.config.js"],
   },
   js.configs.recommended,
   {

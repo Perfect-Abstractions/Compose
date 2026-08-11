@@ -51,6 +51,39 @@ export function runCommand(command: string, args: string[], options?: { cwd?: st
  * @param binaryName - Name of the binary to find (e.g., "node", "forge").
  * @throws {Error} If the binary is not found in PATH.
  */
+export function runCommandCapture(
+  command: string,
+  args: string[],
+  options?: { cwd?: string },
+): Promise<void> {
+  return new Promise((resolve, reject) => {
+    const resolvedCommand = resolveCommand(command);
+    const useShell = process.platform === "win32" && (command === "npm" || command === "npx");
+    const child = spawn(resolvedCommand, args, {
+      stdio: ["inherit", "pipe", "pipe"],
+      shell: useShell,
+      ...options,
+    });
+
+    let stderr = "";
+    child.stderr?.on("data", (chunk: Buffer) => {
+      stderr += chunk.toString();
+    });
+
+    child.on("error", reject);
+    child.on("exit", (code) => {
+      if (code === 0) {
+        resolve();
+        return;
+      }
+      if (stderr) {
+        process.stderr.write(stderr);
+      }
+      reject(new Error(`Compilation failed: ${command} ${args.join(" ")} (exit ${code})`));
+    });
+  });
+}
+
 export async function isBinaryInPath(binaryName: string): Promise<void> {
   const pathEnv = process.env.PATH || "";
   const separator = process.platform === "win32" ? ";" : ":";

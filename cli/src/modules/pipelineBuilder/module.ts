@@ -2,6 +2,7 @@ import { ComposeContext } from "../../context/types";
 import { InitPipeline } from "../../pipelines/initPipeline";
 import { InfoPipeline } from "../../pipelines/infoPipeline";
 import { CatalogPipeline } from "../../pipelines/catalogPipeline";
+import { BuildPipeline } from "../../pipelines/buildPipeline";
 
 /**
  * Pipeline builder module that routes CLI commands to their corresponding pipelines.
@@ -51,6 +52,13 @@ export const PipelineBuilderModule = {
           error: null,
         };
         return CatalogPipeline.execute(ctx);
+      case "build":
+        ctx.state.commandSelected = {
+          success: true,
+          result: { command: ctx.param.command },
+          error: null,
+        };
+        return BuildPipeline.execute(ctx);
       default:
         ctx.state.commandRouting = {
           success: false,

@@ -66,6 +66,21 @@ export async function writeFileIfMissing(to: string, content: string): Promise<v
 }
 
 /**
+ * Atomically writes content to a file by writing to a temp file first,
+ * then renaming to the target path. This prevents corruption on crash.
+ * Creates any intermediate directories as needed.
+ *
+ * @param filePath - The destination file path.
+ * @param content - The text content to write.
+ */
+export async function atomicWriteFile(filePath: string, content: string): Promise<void> {
+  const tempPath = `${filePath}.tmp`;
+  await fs.mkdir(path.dirname(filePath), { recursive: true });
+  await fs.writeFile(tempPath, content, "utf8");
+  await fs.rename(tempPath, filePath);
+}
+
+/**
  * Converts a platform-specific path to POSIX format using forward slashes.
  *
  * @param value - The file system path to convert.
