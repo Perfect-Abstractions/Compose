@@ -18,14 +18,6 @@ contract AccessControlTemporalDataFacet {
     );
 
     /**
-     * @notice Event emitted when a temporal role is revoked.
-     * @param _role The role that was revoked.
-     * @param _account The account from which the role was revoked.
-     * @param _sender The account that revoked the role.
-     */
-    event TemporalRoleRevoked(bytes32 indexed _role, address indexed _account, address indexed _sender);
-
-    /**
      * @notice Thrown when the account does not have a specific role.
      * @param _role The role that the account does not have.
      * @param _account The account that does not have the role.
@@ -45,6 +37,11 @@ contract AccessControlTemporalDataFacet {
     bytes32 constant ACCESS_CONTROL_STORAGE_POSITION = keccak256("compose.accesscontrol");
 
     /**
+     * @notice Storage slot identifier for Temporal functionality.
+     */
+    bytes32 constant TEMPORAL_STORAGE_POSITION = keccak256("compose.accesscontrol.temporal");
+
+    /**
      * @notice Storage struct for AccessControl (reused struct definition).
      * @dev Must match the struct definition in AccessControlDataFacet.
      * @custom:storage-location erc8042:compose.accesscontrol
@@ -53,11 +50,6 @@ contract AccessControlTemporalDataFacet {
         mapping(address account => mapping(bytes32 role => bool hasRole)) hasRole;
         mapping(bytes32 role => bytes32 adminRole) adminRole;
     }
-
-    /**
-     * @notice Storage slot identifier for Temporal functionality.
-     */
-    bytes32 constant TEMPORAL_STORAGE_POSITION = keccak256("compose.accesscontrol.temporal");
 
     /**
      * @notice Storage struct for AccessControlTemporal.

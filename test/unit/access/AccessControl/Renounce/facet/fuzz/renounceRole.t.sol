@@ -29,6 +29,7 @@ contract RenounceRole_AccessControlRenounceFacet_Fuzz_Unit_Test is AccessControl
 
     function testFuzz_ShouldRenounceRole_WhenSenderMatchesAccount(bytes32 role, address account) external {
         address(facet).setHasRole(account, role, true);
+        address(facet).setRoleExpiry(account, role, block.timestamp + 1 hours);
 
         vm.expectEmit(address(facet));
         emit RoleRevoked(role, account, account);
@@ -37,6 +38,7 @@ contract RenounceRole_AccessControlRenounceFacet_Fuzz_Unit_Test is AccessControl
         facet.renounceRole(role, account);
 
         assertEq(address(facet).hasRole(account, role), false, "hasRole");
+        assertEq(address(facet).roleExpiry(account, role), 0, "roleExpiry");
     }
 
     function testFuzz_ShouldNotEmit_WhenAccountDoesNotHaveRole(bytes32 role, address account) external {

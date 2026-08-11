@@ -14,9 +14,32 @@ contract AccessControlDataFacet {
     error AccessControlUnauthorizedAccount(address _account, bytes32 _role);
 
     /**
+     * @notice Thrown when a role has expired.
+     * @param _role The role that has expired.
+     * @param _account The account whose role has expired.
+     */
+    error AccessControlRoleExpired(bytes32 _role, address _account);
+
+    /**
+     * @notice Thrown when a role is paused and an operation requiring that role is attempted.
+     * @param _role The role that is paused.
+     */
+    error AccessControlRolePaused(bytes32 _role);
+
+    /**
      * @notice Storage slot identifier.
      */
     bytes32 constant STORAGE_POSITION = keccak256("compose.accesscontrol");
+
+    /**
+     * @notice Storage slot identifier for Temporal functionality.
+     */
+    bytes32 constant TEMPORAL_STORAGE_POSITION = keccak256("compose.accesscontrol.temporal");
+
+    /**
+     * @notice Storage slot identifier for Pausable functionality.
+     */
+    bytes32 constant PAUSABLE_STORAGE_POSITION = keccak256("compose.accesscontrol.pausable");
 
     /**
      * @notice storage struct for the AccessControl.
@@ -28,11 +51,49 @@ contract AccessControlDataFacet {
     }
 
     /**
+     * @notice Storage struct for AccessControlTemporal.
+     * @custom:storage-location erc8042:compose.accesscontrol.temporal
+     */
+    struct AccessControlTemporalStorage {
+        mapping(address account => mapping(bytes32 role => uint256 expiryTimestamp)) roleExpiry;
+    }
+
+    /**
+     * @notice Storage struct for AccessControlPausable.
+     * @custom:storage-location erc8042:compose.accesscontrol.pausable
+     */
+    struct AccessControlPausableStorage {
+        mapping(bytes32 role => bool paused) pausedRoles;
+    }
+
+    /**
      * @notice Returns the storage for the AccessControl.
      * @return s The storage for the AccessControl.
      */
     function getStorage() internal pure returns (AccessControlStorage storage s) {
         bytes32 position = STORAGE_POSITION;
+        assembly {
+            s.slot := position
+        }
+    }
+
+    /**
+     * @notice Returns the storage for AccessControlTemporal.
+     * @return s The AccessControlTemporal storage struct.
+     */
+    function getTemporalStorage() internal pure returns (AccessControlTemporalStorage storage s) {
+        bytes32 position = TEMPORAL_STORAGE_POSITION;
+        assembly {
+            s.slot := position
+        }
+    }
+
+    /**
+     * @notice Returns the storage for AccessControlPausable.
+     * @return s The AccessControlPausable storage struct.
+     */
+    function getPausableStorage() internal pure returns (AccessControlPausableStorage storage s) {
+        bytes32 position = PAUSABLE_STORAGE_POSITION;
         assembly {
             s.slot := position
         }
@@ -50,15 +111,28 @@ contract AccessControlDataFacet {
     }
 
     /**
-     * @notice Checks if an account has a required role.
+     * @notice Checks if an account has a required role that has not expired and is not paused.
      * @param _role The role to check.
      * @param _account The account to check the role for.
      * @custom:error AccessControlUnauthorizedAccount If the account does not have the role.
+     * @custom:error AccessControlRoleExpired If the account's role has expired.
+     * @custom:error AccessControlRolePaused If the role is paused.
      */
     function requireRole(bytes32 _role, address _account) external view {
         AccessControlStorage storage s = getStorage();
         if (!s.hasRole[_account][_role]) {
             revert AccessControlUnauthorizedAccount(_account, _role);
+        }
+
+        AccessControlTemporalStorage storage ts = getTemporalStorage();
+        uint256 expiry = ts.roleExpiry[_account][_role];
+        if (expiry > 0 && block.timestamp >= expiry) {
+            revert AccessControlRoleExpired(_role, _account);
+        }
+
+        AccessControlPausableStorage storage ps = getPausableStorage();
+        if (ps.pausedRoles[_role]) {
+            revert AccessControlRolePaused(_role);
         }
     }
 

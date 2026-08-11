@@ -72,9 +72,11 @@ contract OwnerTwoStepTransferFacet {
      */
     function transferOwnership(address _newOwner) external {
         OwnerStorage storage ownerStorage = getOwnerStorage();
+
         if (msg.sender != ownerStorage.owner) {
             revert OwnerUnauthorizedAccount();
         }
+
         getPendingOwnerStorage().pendingOwner = _newOwner;
         emit OwnershipTransferStarted(ownerStorage.owner, _newOwner);
     }
@@ -86,9 +88,11 @@ contract OwnerTwoStepTransferFacet {
     function acceptOwnership() external {
         OwnerStorage storage ownerStorage = getOwnerStorage();
         PendingOwnerStorage storage pendingStorage = getPendingOwnerStorage();
+
         if (msg.sender != pendingStorage.pendingOwner) {
             revert OwnerUnauthorizedAccount();
         }
+
         address previousOwner = ownerStorage.owner;
         ownerStorage.owner = pendingStorage.pendingOwner;
         pendingStorage.pendingOwner = address(0);

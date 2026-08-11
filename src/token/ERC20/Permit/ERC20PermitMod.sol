@@ -62,6 +62,7 @@ bytes32 constant ERC20_STORAGE_POSITION = keccak256("erc20");
  */
 struct ERC20Storage {
     mapping(address owner => uint256 balance) balanceOf;
+
     uint256 totalSupply;
     mapping(address owner => mapping(address spender => uint256 allowance)) allowance;
 }
@@ -123,6 +124,7 @@ function permit(address _owner, address _spender, uint256 _value, uint256 _deadl
     if (_spender == address(0)) {
         revert ERC20InvalidSpender(address(0));
     }
+
     if (block.timestamp > _deadline) {
         revert ERC2612InvalidSignature(_owner, _spender, _value, _deadline, _v, _r, _s);
     }

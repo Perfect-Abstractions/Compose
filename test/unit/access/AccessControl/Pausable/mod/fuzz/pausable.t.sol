@@ -39,6 +39,8 @@ contract Pausable_AccessControlPausableMod_Fuzz_Unit_Test is AccessControlPausab
     }
 
     function testFuzz_ShouldPauseRole_ForCurrentSurfaceSemantics(bytes32 role, address caller) external {
+        vm.assume(role != DEFAULT_ADMIN_ROLE);
+
         vm.expectEmit(address(harness));
         emit RolePaused(role, caller);
 
@@ -46,6 +48,12 @@ contract Pausable_AccessControlPausableMod_Fuzz_Unit_Test is AccessControlPausab
         harness.pauseRole(role);
 
         assertEq(address(harness).isRolePaused(role), true, "isRolePaused");
+    }
+
+    function test_ShouldRevert_PauseRole_WhenRoleIsDefaultAdminRole() external {
+        vm.expectRevert(abi.encodeWithSignature("AccessControlDefaultAdminRolePaused()"));
+        vm.prank(users.admin);
+        harness.pauseRole(DEFAULT_ADMIN_ROLE);
     }
 
     function testFuzz_ShouldUnpauseRole_ForCurrentSurfaceSemantics(bytes32 role, address caller) external {
@@ -85,6 +93,8 @@ contract Pausable_AccessControlPausableMod_Fuzz_Unit_Test is AccessControlPausab
     }
 
     function testFuzz_ShouldEndUnpaused_WhenMultiplePauseUnpauseCycles(bytes32 role) external {
+        vm.assume(role != DEFAULT_ADMIN_ROLE);
+
         vm.startPrank(users.admin);
         harness.pauseRole(role);
         harness.unpauseRole(role);
@@ -96,6 +106,8 @@ contract Pausable_AccessControlPausableMod_Fuzz_Unit_Test is AccessControlPausab
     }
 
     function testFuzz_ShouldRemainPaused_PauseRole_WhenCalledTwice(bytes32 role) external {
+        vm.assume(role != DEFAULT_ADMIN_ROLE);
+
         vm.prank(users.admin);
         harness.pauseRole(role);
         vm.prank(users.admin);

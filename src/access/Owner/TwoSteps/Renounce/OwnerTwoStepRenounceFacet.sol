@@ -68,9 +68,11 @@ contract OwnerTwoStepRenounceFacet {
     function renounceOwnership() external {
         OwnerStorage storage ownerStorage = getOwnerStorage();
         PendingOwnerStorage storage pendingStorage = getPendingOwnerStorage();
+
         if (msg.sender != ownerStorage.owner) {
             revert OwnerUnauthorizedAccount();
         }
+
         address previousOwner = ownerStorage.owner;
         ownerStorage.owner = address(0);
         pendingStorage.pendingOwner = address(0);

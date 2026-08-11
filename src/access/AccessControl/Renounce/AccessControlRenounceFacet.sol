@@ -26,6 +26,11 @@ contract AccessControlRenounceFacet {
      */
     bytes32 constant STORAGE_POSITION = keccak256("compose.accesscontrol");
 
+    /*
+     * @notice Storage slot identifier for Temporal functionality.
+     */
+    bytes32 constant TEMPORAL_STORAGE_POSITION = keccak256("compose.accesscontrol.temporal");
+
     /**
      * @notice Storage struct for the AccessControl.
      * @custom:storage-location erc8042:compose.accesscontrol
@@ -36,11 +41,30 @@ contract AccessControlRenounceFacet {
     }
 
     /**
+     * @notice Storage struct for AccessControlTemporal.
+     * @custom:storage-location erc8042:compose.accesscontrol.temporal
+     */
+    struct AccessControlTemporalStorage {
+        mapping(address account => mapping(bytes32 role => uint256 expiryTimestamp)) roleExpiry;
+    }
+
+    /**
      * @notice Returns the storage for the AccessControl.
      * @return s The storage for the AccessControl.
      */
     function getStorage() internal pure returns (AccessControlStorage storage s) {
         bytes32 position = STORAGE_POSITION;
+        assembly {
+            s.slot := position
+        }
+    }
+
+    /**
+     * @notice Returns the storage for AccessControlTemporal.
+     * @return s The AccessControlTemporal storage struct.
+     */
+    function getTemporalStorage() internal pure returns (AccessControlTemporalStorage storage s) {
+        bytes32 position = TEMPORAL_STORAGE_POSITION;
         assembly {
             s.slot := position
         }
@@ -65,6 +89,7 @@ contract AccessControlRenounceFacet {
         bool _hasRole = s.hasRole[_account][_role];
         if (_hasRole) {
             s.hasRole[_account][_role] = false;
+            delete getTemporalStorage().roleExpiry[_account][_role];
             emit RoleRevoked(_role, _account, msg.sender);
         }
     }

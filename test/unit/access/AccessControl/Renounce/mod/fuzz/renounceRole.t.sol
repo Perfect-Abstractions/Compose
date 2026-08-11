@@ -29,6 +29,7 @@ contract RenounceRole_AccessControlRenounceMod_Fuzz_Unit_Test is AccessControlRe
 
     function testFuzz_ShouldRenounceRole_WhenSenderMatchesAccount(bytes32 role, address account) external {
         address(harness).setHasRole(account, role, true);
+        address(harness).setRoleExpiry(account, role, block.timestamp + 1 hours);
 
         vm.expectEmit(address(harness));
         emit RoleRevoked(role, account, account);
@@ -37,6 +38,7 @@ contract RenounceRole_AccessControlRenounceMod_Fuzz_Unit_Test is AccessControlRe
         harness.renounceRole(role, account);
 
         assertEq(address(harness).hasRole(account, role), false, "hasRole");
+        assertEq(address(harness).roleExpiry(account, role), 0, "roleExpiry");
     }
 
     function testFuzz_ShouldNotEmit_WhenAccountDoesNotHaveRole(bytes32 role, address account) external {

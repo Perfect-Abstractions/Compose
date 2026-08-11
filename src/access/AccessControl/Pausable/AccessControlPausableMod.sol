@@ -32,10 +32,27 @@ error AccessControlUnauthorizedAccount(address _account, bytes32 _role);
  */
 error AccessControlRolePaused(bytes32 _role);
 
+/**
+ * Thrown when a role has expired.
+ * @param _role The role that has expired.
+ * @param _account The account whose role has expired.
+ */
+error AccessControlRoleExpired(bytes32 _role, address _account);
+
+/**
+ * Thrown when attempting to pause the DEFAULT_ADMIN_ROLE.
+ */
+error AccessControlDefaultAdminRolePaused();
+
 /*
  * @notice Storage slot identifier for AccessControl (reused to access roles).
  */
 bytes32 constant ACCESS_CONTROL_STORAGE_POSITION = keccak256("compose.accesscontrol");
+
+/*
+ * @notice Storage slot identifier for Temporal functionality.
+ */
+bytes32 constant TEMPORAL_STORAGE_POSITION = keccak256("compose.accesscontrol.temporal");
 
 /**
  * @notice Storage struct for AccessControl (reused struct definition).
@@ -45,6 +62,14 @@ bytes32 constant ACCESS_CONTROL_STORAGE_POSITION = keccak256("compose.accesscont
 struct AccessControlStorage {
     mapping(address account => mapping(bytes32 role => bool hasRole)) hasRole;
     mapping(bytes32 role => bytes32 adminRole) adminRole;
+}
+
+/**
+ * @notice Storage struct for AccessControlTemporal.
+ * @custom:storage-location erc8042:compose.accesscontrol.temporal
+ */
+struct AccessControlTemporalStorage {
+    mapping(address account => mapping(bytes32 role => uint256 expiryTimestamp)) roleExpiry;
 }
 
 /*
@@ -66,6 +91,17 @@ struct AccessControlPausableStorage {
  */
 function getAccessControlStorage() pure returns (AccessControlStorage storage s) {
     bytes32 position = ACCESS_CONTROL_STORAGE_POSITION;
+    assembly {
+        s.slot := position
+    }
+}
+
+/**
+ * @notice Returns the storage for AccessControlTemporal.
+ * @return s The AccessControlTemporal storage struct.
+ */
+function getTemporalStorage() pure returns (AccessControlTemporalStorage storage s) {
+    bytes32 position = TEMPORAL_STORAGE_POSITION;
     assembly {
         s.slot := position
     }
@@ -97,6 +133,10 @@ function isRolePaused(bytes32 _role) view returns (bool) {
  * @param _role The role to pause.
  */
 function pauseRole(bytes32 _role) {
+    if (_role == 0x00) {
+        revert AccessControlDefaultAdminRolePaused();
+    }
+
     AccessControlPausableStorage storage s = getStorage();
     s.pausedRoles[_role] = true;
     emit RolePaused(_role, msg.sender);
