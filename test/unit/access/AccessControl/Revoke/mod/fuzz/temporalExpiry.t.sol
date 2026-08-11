@@ -47,6 +47,7 @@ contract TemporalExpiry_AccessControlRevokeMod_Test is AccessControlRevoke_Base_
         harness.grantRoleWithExpiry(DEFAULT_ADMIN_ROLE, users.admin, expiry);
 
         seedRole(address(harness), role, users.alice);
+        address(harness).setRoleExpiry(users.alice, role, expiry);
 
         vm.warp(block.timestamp + 30 minutes);
 
@@ -54,5 +55,10 @@ contract TemporalExpiry_AccessControlRevokeMod_Test is AccessControlRevoke_Base_
         harness.revokeRole(role, users.alice);
 
         assertFalse(address(harness).hasRole(users.alice, role));
+        assertEq(address(harness).roleExpiry(users.alice, role), 0);
+
+        vm.prank(users.admin);
+        harness.grantRole(role, users.alice);
+        harness.requireRole(role, users.alice);
     }
 }

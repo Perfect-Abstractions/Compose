@@ -34,6 +34,8 @@ contract TemporalExpiry_AccessControlRevokeBatchMod_Test is AccessControlRevokeB
 
         seedRole(address(harness), role, users.alice);
         seedRole(address(harness), role, users.bob);
+        address(harness).setRoleExpiry(users.alice, role, expiry);
+        address(harness).setRoleExpiry(users.bob, role, expiry);
 
         vm.prank(users.admin);
         harness.grantRoleWithExpiry(DEFAULT_ADMIN_ROLE, users.admin, expiry);
@@ -67,5 +69,7 @@ contract TemporalExpiry_AccessControlRevokeBatchMod_Test is AccessControlRevokeB
 
         assertFalse(address(harness).hasRole(users.alice, role));
         assertFalse(address(harness).hasRole(users.bob, role));
+        assertEq(address(harness).roleExpiry(users.alice, role), 0);
+        assertEq(address(harness).roleExpiry(users.bob, role), 0);
     }
 }

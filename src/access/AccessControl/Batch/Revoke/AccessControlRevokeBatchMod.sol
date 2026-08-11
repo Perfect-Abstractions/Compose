@@ -151,8 +151,8 @@ function revokeRoleBatch(bytes32 _role, address[] calldata _accounts) {
         bool _hasRole = s.hasRole[account][_role];
         if (_hasRole) {
             s.hasRole[account][_role] = false;
+            delete getTemporalStorage().roleExpiry[account][_role];
             emit RoleRevoked(_role, account, msg.sender);
         }
     }
 }
-

@@ -148,9 +148,9 @@ function revokeRole(bytes32 _role, address _account) returns (bool) {
     bool _hasRole = s.hasRole[_account][_role];
     if (_hasRole) {
         s.hasRole[_account][_role] = false;
+        delete getTemporalStorage().roleExpiry[_account][_role];
         emit RoleRevoked(_role, _account, msg.sender);
         return true;
     }
     return false;
 }
-

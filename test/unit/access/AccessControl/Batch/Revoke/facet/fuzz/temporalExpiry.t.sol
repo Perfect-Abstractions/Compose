@@ -32,6 +32,8 @@ contract TemporalExpiry_AccessControlRevokeBatchFacet_Test is AccessControlRevok
 
         seedRole(address(revokeBatchFacet), role, users.alice);
         seedRole(address(revokeBatchFacet), role, users.bob);
+        address(revokeBatchFacet).setRoleExpiry(users.alice, role, expiry);
+        address(revokeBatchFacet).setRoleExpiry(users.bob, role, expiry);
 
         address(revokeBatchFacet).setHasRole(users.admin, DEFAULT_ADMIN_ROLE, true);
         address(revokeBatchFacet).setRoleExpiry(users.admin, DEFAULT_ADMIN_ROLE, expiry);
@@ -67,5 +69,7 @@ contract TemporalExpiry_AccessControlRevokeBatchFacet_Test is AccessControlRevok
 
         assertFalse(address(revokeBatchFacet).hasRole(users.alice, role));
         assertFalse(address(revokeBatchFacet).hasRole(users.bob, role));
+        assertEq(address(revokeBatchFacet).roleExpiry(users.alice, role), 0);
+        assertEq(address(revokeBatchFacet).roleExpiry(users.bob, role), 0);
     }
 }

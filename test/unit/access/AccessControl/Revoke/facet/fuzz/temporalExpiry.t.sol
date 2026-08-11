@@ -47,6 +47,7 @@ contract TemporalExpiry_AccessControlRevokeFacet_Test is AccessControlRevoke_Bas
         address(revokeFacet).setRoleExpiry(users.admin, DEFAULT_ADMIN_ROLE, expiry);
 
         seedRole(address(revokeFacet), role, users.alice);
+        address(revokeFacet).setRoleExpiry(users.alice, role, expiry);
 
         vm.warp(block.timestamp + 30 minutes);
 
@@ -54,5 +55,6 @@ contract TemporalExpiry_AccessControlRevokeFacet_Test is AccessControlRevoke_Bas
         revokeFacet.revokeRole(role, users.alice);
 
         assertFalse(address(revokeFacet).hasRole(users.alice, role));
+        assertEq(address(revokeFacet).roleExpiry(users.alice, role), 0);
     }
 }

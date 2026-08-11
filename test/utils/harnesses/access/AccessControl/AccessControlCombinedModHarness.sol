@@ -32,9 +32,6 @@ import {
     grantRoleWithExpiry as accessControlGrantRoleWithExpiry
 } from "src/access/AccessControl/Temporal/Grant/AccessControlTemporalGrantMod.sol";
 import {
-    revokeTemporalRole as accessControlRevokeTemporalRole
-} from "src/access/AccessControl/Temporal/Revoke/AccessControlTemporalRevokeMod.sol";
-import {
     isRolePaused as accessControlIsRolePaused,
     pauseRole as accessControlPauseRole,
     unpauseRole as accessControlUnpauseRole
@@ -95,10 +92,6 @@ contract AccessControlCombinedModHarness {
 
     function grantRoleWithExpiry(bytes32 role, address account, uint256 expiresAt) external {
         accessControlGrantRoleWithExpiry(role, account, expiresAt);
-    }
-
-    function revokeTemporalRole(bytes32 role, address account) external {
-        accessControlRevokeTemporalRole(role, account);
     }
 
     function isRolePaused(bytes32 role) external view returns (bool) {

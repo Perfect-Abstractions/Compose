@@ -152,6 +152,7 @@ contract AccessControlRevokeBatchFacet {
             bool _hasRole = s.hasRole[account][_role];
             if (_hasRole) {
                 s.hasRole[account][_role] = false;
+                delete getTemporalStorage().roleExpiry[account][_role];
                 emit RoleRevoked(_role, account, msg.sender);
             }
         }
@@ -165,4 +166,3 @@ contract AccessControlRevokeBatchFacet {
         return bytes.concat(this.revokeRoleBatch.selector);
     }
 }
-

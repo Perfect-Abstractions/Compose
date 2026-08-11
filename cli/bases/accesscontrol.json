@@ -46,10 +46,6 @@
       "AccessControlTemporalGrantFacet": {
         "path": "@perfect-abstractions/compose/access/AccessControl/Temporal/Grant/AccessControlTemporalGrantFacet.sol",
         "mod": "@perfect-abstractions/compose/access/AccessControl/Temporal/Grant/AccessControlTemporalGrantMod.sol"
-      },
-      "AccessControlTemporalRevokeFacet": {
-        "path": "@perfect-abstractions/compose/access/AccessControl/Temporal/Revoke/AccessControlTemporalRevokeFacet.sol",
-        "mod": "@perfect-abstractions/compose/access/AccessControl/Temporal/Revoke/AccessControlTemporalRevokeMod.sol"
       }
     }
   }

@@ -25,6 +25,11 @@ error AccessControlUnauthorizedSender(address _sender, address _account);
  */
 bytes32 constant STORAGE_POSITION = keccak256("compose.accesscontrol");
 
+/*
+ * @notice Storage slot identifier for Temporal functionality.
+ */
+bytes32 constant TEMPORAL_STORAGE_POSITION = keccak256("compose.accesscontrol.temporal");
+
 /**
  * @notice storage struct for the AccessControl.
  * @custom:storage-location erc8042:compose.accesscontrol
@@ -35,6 +40,14 @@ struct AccessControlStorage {
 }
 
 /**
+ * @notice Storage struct for AccessControlTemporal.
+ * @custom:storage-location erc8042:compose.accesscontrol.temporal
+ */
+struct AccessControlTemporalStorage {
+    mapping(address account => mapping(bytes32 role => uint256 expiryTimestamp)) roleExpiry;
+}
+
+/**
  * @notice Returns the storage for the AccessControl.
  * @return _s The storage for the AccessControl.
  */
@@ -42,6 +55,17 @@ function getStorage() pure returns (AccessControlStorage storage _s) {
     bytes32 position = STORAGE_POSITION;
     assembly {
         _s.slot := position
+    }
+}
+
+/**
+ * @notice Returns the storage for AccessControlTemporal.
+ * @return s The AccessControlTemporal storage struct.
+ */
+function getTemporalStorage() pure returns (AccessControlTemporalStorage storage s) {
+    bytes32 position = TEMPORAL_STORAGE_POSITION;
+    assembly {
+        s.slot := position
     }
 }
 
@@ -61,6 +85,7 @@ function renounceRole(bytes32 _role, address _account) {
     bool _hasRole = s.hasRole[_account][_role];
     if (_hasRole) {
         s.hasRole[_account][_role] = false;
+        delete getTemporalStorage().roleExpiry[_account][_role];
         emit RoleRevoked(_role, _account, msg.sender);
     }
 }

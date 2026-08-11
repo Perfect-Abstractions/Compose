@@ -46,6 +46,7 @@ Revoke
     ├── when the caller has the admin role for the target role
     │   ├── and the account currently has the role
     │   │   ├── it should set hasRole[account][role] to false
+    │   │   ├── it should clear roleExpiry[account][role]
     │   │   ├── it should emit a {RoleRevoked} event
     │   │   └── it should return true from the module function
     │   └── and the account does not have the role
@@ -59,6 +60,7 @@ Renounce
     ├── when msg.sender equals the account
     │   ├── and the account currently has the role
     │   │   ├── it should set hasRole[account][role] to false
+    │   │   ├── it should clear roleExpiry[account][role]
     │   │   └── it should emit a {RoleRevoked} event
     │   └── and the account does not have the role
     │       └── it should be a no-op and not emit any event
@@ -66,7 +68,7 @@ Renounce
         └── it should revert with {AccessControlUnauthorizedSender}
 
 Batch
-├── Grant
+└── Grant
 │   └── GrantRoleBatch
 │       ├── when the caller has the admin role for the target role
 │       │   ├── and the accounts array is empty
@@ -87,6 +89,7 @@ Batch
         │   └── and the accounts array is non-empty
         │       ├── for each account with the role
         │       │   ├── it should set hasRole[account][role] to false
+        │       │   ├── it should clear roleExpiry[account][role]
         │       │   └── it should emit a {RoleRevoked} event
         │       └── for each account that does not have the role
         │           └── it should not change storage or emit {RoleRevoked}
@@ -174,18 +177,6 @@ Temporal
 │       │       └── it should revert with {AccessControlRoleExpired}
 │       └── when the caller does not have the admin role for the target role
 │           └── it should revert with {AccessControlUnauthorizedAccount}
-└── Revoke
-    └── RevokeTemporalRole
-        ├── when the caller has the admin role for the target role
-        │   ├── and the account currently has the role
-        │   │   ├── it should set hasRole[account][role] to false
-        │   │   ├── it should clear the expiry timestamp
-        │   │   └── it should emit a {TemporalRoleRevoked} event
-        │   └── and the account does not have the role
-        │       └── it should be a no-op
-        └── when the caller does not have the admin role for the target role
-            └── it should revert with {AccessControlUnauthorizedAccount}
-
 ExportSelectors
 └── for each AccessControl facet (data, admin, grant, revoke, renounce, batch, pausable, temporal)
     └── it should return an abi.encodePacked list of that facet's external function selectors in the expected order
