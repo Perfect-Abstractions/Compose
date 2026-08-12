@@ -41,7 +41,7 @@ export const DependencyResolver = {
         throw new Error(`Dependency factory not found: ${request.key}`);
       }
 
-      deps[request.key] = await factory(request.params) as any;
+      Object.assign(deps, { [request.key]: await factory(request.params) });
     }
 
     return deps;

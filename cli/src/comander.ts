@@ -48,6 +48,12 @@ export function buildProgram(): Command {
     .command("build")
     .description("Compile the project if artifacts are stale or missing")
 
+  program
+    .command("rpc")
+    .description("Check RPC connectivity and optionally inspect contract bytecode")
+    .option("--chain <chain-key>", "Chain key from compose.json", "local")
+    .option("--address <address>", "Contract address to check or inspect")
+
   return program;
 }
 
