@@ -1,7 +1,7 @@
 import { describe, expect, it, vi } from "vitest";
 import { Context } from "../../../src/context/context";
 import { DependencyKey } from "../../../src/resolver/dependencyKey";
-import { decodeSelector } from "../../../src/modules/inspect/module";
+import { decodeSelector } from "../../../src/modules/inspect/selectorDecoder";
 
 const mocks = vi.hoisted(() => ({
   resolveChainConfig: vi.fn(),

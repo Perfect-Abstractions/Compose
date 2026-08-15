@@ -2,13 +2,17 @@ import fs from "node:fs/promises";
 import path from "node:path";
 import { keccak256, slice, toBytes } from "viem";
 import { FrameworkModule, type Framework } from "../../modules/framework/module";
+import type { AbiEntry } from "./types";
 
-type AbiEntry = {
-  type: string;
-  name?: string;
-  inputs?: { type: string }[];
-};
-
+/**
+ * Extracts human-readable function signatures from a parsed ABI array.
+ *
+ * Only `function` entries with a `name` are included; fallback and receive
+ * entries are skipped.
+ *
+ * @param abi - The parsed ABI entries.
+ * @returns An array of signatures like `"transfer(address,uint256)"`.
+ */
 function extractSignaturesFromAbi(abi: AbiEntry[]): string[] {
   const signatures: string[] = [];
   for (const entry of abi) {
@@ -19,11 +23,26 @@ function extractSignaturesFromAbi(abi: AbiEntry[]): string[] {
   return signatures;
 }
 
+/**
+ * Computes the 4-byte selector for a function signature using Keccak-256.
+ *
+ * @param signature - The function signature (e.g., `"transfer(address,uint256)"`).
+ * @returns The lowercase hex-encoded 4-byte selector.
+ */
 function computeSelector(signature: string): string {
   const hash = keccak256(toBytes(signature));
   return slice(hash, 0, 4).toLowerCase();
 }
 
+/**
+ * Reads all compiled ABI JSON files from the given directory.
+ *
+ * Expects Hardhat-style (`artifacts/`) or Foundry-style (`out/`) artifact
+ * layouts where each JSON file contains an `abi` array.
+ *
+ * @param dir - Absolute path to the artifacts directory.
+ * @returns An array of parsed ABI arrays, one per artifact file.
+ */
 async function readAbiFiles(dir: string): Promise<AbiEntry[][]> {
   const abis: AbiEntry[][] = [];
   let entries: string[];
@@ -48,6 +67,18 @@ async function readAbiFiles(dir: string): Promise<AbiEntry[][]> {
   return abis;
 }
 
+/**
+ * Loads all function signatures from the project's compiled ABI files and
+ * returns a selector-to-signature map.
+ *
+ * Automatically detects the framework (Hardhat or Foundry) to locate the
+ * correct artifact directory.
+ *
+ * @param projectRoot - Absolute path to the project root.
+ * @param framework - Optional framework override. When `null` or omitted the
+ *     framework is auto-detected.
+ * @returns A map from lowercase 4-byte selectors to function signatures.
+ */
 export async function loadProjectSignatures(
   projectRoot: string,
   framework?: Framework | null,
