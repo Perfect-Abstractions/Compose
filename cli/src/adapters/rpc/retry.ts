@@ -1,4 +1,5 @@
 import { withRetry } from "viem";
+import { errorChain, errorText, statusCode } from "./utils";
 
 /** Maximum number of retries after the initial RPC request. */
 const RETRY_COUNT = 2;
@@ -6,48 +7,6 @@ const RETRY_COUNT = 2;
 const RETRY_DELAYS = [100, 200] as const;
 /** Maximum delay accepted from a server Retry-After header. */
 const RETRY_AFTER_CAP = 2_000;
-
-/**
- * Returns an error and each distinct cause in its cause chain.
- * @param error Error whose causes should be traversed.
- * @returns The error and its reachable cause values in traversal order.
- */
-function errorChain(error: unknown): unknown[] {
-  const errors: unknown[] = [];
-  let current = error;
-  while (current && typeof current === "object" && !errors.includes(current)) {
-    errors.push(current);
-    current = "cause" in current ? (current as { cause?: unknown }).cause : undefined;
-  }
-  return errors;
-}
-
-/**
- * Combines error messages across an error's cause chain for matching.
- * @param error Error whose messages should be combined.
- * @returns Lowercase text containing all chained error messages.
- */
-function errorText(error: unknown): string {
-  return errorChain(error)
-    .map((item) => (item instanceof Error ? item.message : String(item)))
-    .join(" ")
-    .toLowerCase();
-}
-
-/**
- * Finds an HTTP/status code in an error or one of its causes.
- * @param error Error that may contain a status code.
- * @returns The first numeric status code found, or `undefined`.
- */
-export function statusCode(error: unknown): number | undefined {
-  for (const item of errorChain(error)) {
-    if (!item || typeof item !== "object") continue;
-    const value = item as { status?: unknown; statusCode?: unknown; response?: { status?: unknown } };
-    const status = value.status ?? value.statusCode ?? value.response?.status;
-    if (typeof status === "number") return status;
-  }
-  return undefined;
-}
 
 /**
  * Reads a Retry-After header and converts it to a bounded delay.

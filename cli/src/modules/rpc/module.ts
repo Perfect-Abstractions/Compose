@@ -9,7 +9,7 @@ import type { RPCCheckResult } from "./types";
 /** Runs the CLI's real-RPC smoke test without domain-specific contract logic. */
 export const RPCModule = {
   async check(ctx: ComposeContext): Promise<ComposeContext> {
-    const chainKey = ctx.param.chain === undefined ? "local" : ctx.param.chain;
+    const chainKey = typeof ctx.param.chain === "string" ? ctx.param.chain : "local";
     const configuredChain = await resolveChainConfig({ chainKey });
     const addressValue = ctx.param.address;
 

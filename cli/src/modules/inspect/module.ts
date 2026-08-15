@@ -1,6 +1,6 @@
 import path from "node:path";
 import { isAddress, type Address, type Hex } from "viem";
-import { ComposeContext, type ModuleState } from "../../context/types";
+import { ComposeContext } from "../../context/types";
 import { DependencyKey } from "../../resolver/dependencyKey";
 import { DependencyResolver } from "../../resolver/dependencyResolver";
 import { resolveChainConfig } from "../../utils/chainConfig";

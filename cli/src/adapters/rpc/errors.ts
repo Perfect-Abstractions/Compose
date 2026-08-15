@@ -1,4 +1,4 @@
-import { statusCode } from "./retry";
+import { statusCode } from "./utils";
 
 /** Stable error categories emitted by the RPC adapter. */
 export type RPCErrorCode =
