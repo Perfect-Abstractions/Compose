@@ -3,8 +3,12 @@ on:
   push:
     branches:
       - '**'
+    paths:
+      - '**.sol'
   pull_request:
     types: [opened, synchronize, reopened, edited]
+    paths:
+      - '**.sol'
 
 permissions:
   contents: read

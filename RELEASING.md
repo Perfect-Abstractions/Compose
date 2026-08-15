@@ -16,9 +16,13 @@ Releases use [Changesets](https://github.com/changesets/changesets) and GitHub A
 
 - **Branch:** `main` only for production releases.
 - **Versioning:** independent per package.
-- **Batching:** Multiple PRs can add `.changeset/*.md` files; one **version bump PR** (same PR updated) applies all pending bumps together.
-- **Open/update the version PR:** Run the **Release** workflow manually (**Actions → Release → Run workflow**). It checks out `main`, runs checks, then [changesets/action](https://github.com/changesets/action) creates or updates the PR (branch is usually `changeset-release/main`).
-- **Publish:** Runs automatically when that **version bump PR is merged** into `main` (workflow **Publish**). You can also run **Publish** manually (`workflow_dispatch`) to retry or publish without merging from that branch (e.g. hotfix).
+- **Selective releases:** The **Release** workflow has a dropdown to choose which packages to release: **all**, **compose** only, or **compose-cli** only. Selecting a single package uses `changeset version --ignore` to skip the other, so its changesets stay pending for a future release.
+- **Batching:** Multiple PRs can add `.changeset/*.md` files; one **version bump PR** (same PR updated) applies all pending bumps for the selected package(s).
+- **Open/update the version PR:** Run the **Release** workflow manually (**Actions → Release → Run workflow**). It checks out `main`, runs only the quality gates for the selected package(s), then [changesets/action](https://github.com/changesets/action) creates or updates a version PR on a target-specific branch:
+  - **All:** `changeset-release/main`
+  - **Compose:** `changeset-release/main-compose`
+  - **Compose-cli:** `changeset-release/main-cli`
+- **Publish:** Runs automatically when any **version bump PR is merged** into `main` (workflow **Publish**). You can also run **Publish** manually (`workflow_dispatch`) to retry or publish without merging from that branch (e.g. hotfix).
 - **Publish approval:** Jobs that publish to npm use GitHub Environment **`npm-publish`** (required reviewers). Approval is requested when those jobs run, including after an automatic trigger.
 - **Authentication:** Publishes use **npm Trusted Publishing (OIDC)**
 - **Provenance:** For public repos, npm generates provenance automatically when publishing via trusted publishing.
@@ -33,11 +37,14 @@ There is **no** failing CI check for missing changesets; maintainers batch or ad
 
 ## Maintainer release flow
 
-1. When you want a version bump PR, run **Release** manually on `main`.
-2. Review and merge the **chore(release): bump npm versions & changelogs** PR (from `changeset-release/main` or the same prefix — automatic **Publish** only runs for merges from branches named `changeset-release/*`).
+1. Go to **Actions → Release → Run workflow**. Select the target:
+   - **all** — releases both packages together
+   - **compose** — releases only the library (CLI changesets stay pending)
+   - **compose-cli** — releases only the CLI (library changesets stay pending)
+2. Review and merge the **chore(release): bump npm versions & changelogs** PR. Each release target creates a PR on a different branch (`changeset-release/main`, `changeset-release/main-compose`, or `changeset-release/main-cli` — automatic **Publish** only runs for merges from branches named `changeset-release/*`).
 3. **Publish** starts automatically on that merge. Approve the **`npm-publish`** environment when GitHub prompts you.
 4. The **plan** job fails if any real `.changeset/*.md` files remain (finish merging the version PR so only `.changeset/README.md` is left).
-5. The **plan** job compares each package’s `package.json` version to npm (see [`.github/publish-packages.json`](.github/publish-packages.json)). If every configured package already matches npm, the publish job is skipped (nothing new to ship).
+5. The **plan** job compares each package's `package.json` version to npm (see [`.github/publish-packages.json`](.github/publish-packages.json)). If every configured package already matches npm, the publish job is skipped (nothing new to ship).
 6. A single **publish** workflow job runs a **matrix**: one row per package that is ahead of npm. Rows run in parallel when several packages need a release. Each row publishes to npm, then creates a short git tag and GitHub Release:
    - Library tag: `compose@<version>` (e.g. `compose@0.2.0`)
    - CLI tag: `compose-cli@<version>` (e.g. `compose-cli@0.2.0`)
