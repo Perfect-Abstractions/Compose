@@ -9,6 +9,9 @@
  *   node .github/scripts/version-packages.js
  *   node .github/scripts/version-packages.js --ignore @perfect-abstractions/compose-cli
  *   node .github/scripts/version-packages.js --ignore @perfect-abstractions/compose
+ *
+ * Permanent ignores (e.g. private packages) are always included.
+ * The --ignore flag is additive with the permanent list.
  */
 
 const { execSync } = require('child_process');
@@ -18,6 +21,9 @@ const path = require('path');
 const ROOT = process.cwd();
 const ROOT_CL = path.join(ROOT, 'CHANGELOG.md');
 const SRC_CL = path.join(ROOT, 'src', 'CHANGELOG.md');
+
+// Packages that should never be versioned (private / non-publishable)
+const PERMANENT_IGNORE = ['compose-documentation'];
 
 function copyFile(src, dest) {
   if (fs.existsSync(src)) {
@@ -32,24 +38,21 @@ function execOrDie(cmd) {
 
 // --- Parse --ignore flag ---
 const ignoreIdx = process.argv.indexOf('--ignore');
-const ignorePkg = ignoreIdx !== -1 ? process.argv[ignoreIdx + 1] : null;
+const selectiveIgnore = ignoreIdx !== -1 ? process.argv[ignoreIdx + 1] : null;
 
-if (ignorePkg) {
-  console.log(`Selective release: ignoring ${ignorePkg}`);
+const allIgnore = [...PERMANENT_IGNORE];
+if (selectiveIgnore) {
+  allIgnore.push(selectiveIgnore);
+  console.log(`Selective release: ignoring ${selectiveIgnore}`);
 }
 
 // --- Pre-sync: copy root CHANGELOG into src/ so changeset version reads the latest ---
 copyFile(ROOT_CL, SRC_CL);
 
 // --- Run changeset version ---
-const versionCmd = ignorePkg
-  ? `npx changeset version --ignore ${ignorePkg}`
-  : 'npx changeset version';
-
-execOrDie(versionCmd);
+const ignoreArg = allIgnore.length > 0 ? ` --ignore ${allIgnore.join(',')}` : '';
+execOrDie(`npx changeset version${ignoreArg}`);
 
 // --- Post-sync: copy updated src/ CHANGELOG back to root, then back to src/ ---
-// This mirrors the original shell one-liner behavior:
-//   cp src/CHANGELOG.md CHANGELOG.md; cp CHANGELOG.md src/CHANGELOG.md
 copyFile(SRC_CL, ROOT_CL);
 copyFile(ROOT_CL, SRC_CL);

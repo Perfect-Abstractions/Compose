@@ -6,8 +6,5 @@
   "linked": [],
   "access": "public",
   "baseBranch": "main",
-  "updateInternalDependencies": "patch",
-  "ignore": [
-    "compose-documentation"
-  ]
+  "updateInternalDependencies": "patch"
 }
