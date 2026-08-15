@@ -29,3 +29,42 @@ describe("rpc command", () => {
     });
   });
 });
+
+describe("inspect command", () => {
+  it("parses address positional and chain flag", () => {
+    const result = parseArgs([
+      "node",
+      "compose",
+      "inspect",
+      "0x0000000000000000000000000000000000000001",
+      "--chain",
+      "sepolia",
+    ]);
+
+    expect(result).toEqual({
+      command: "inspect",
+      flags: {
+        address: "0x0000000000000000000000000000000000000001",
+        chain: "sepolia",
+      },
+    });
+  });
+
+  it("defaults chain to local", () => {
+    const result = parseArgs([
+      "node",
+      "compose",
+      "inspect",
+      "0x0000000000000000000000000000000000000001",
+    ]);
+
+    expect(result).toEqual({
+      command: "inspect",
+      flags: {
+        address: "0x0000000000000000000000000000000000000001",
+        chain: "local",
+      },
+    });
+  });
+
+});

@@ -8,7 +8,8 @@ export type RPCErrorCode =
   | "RPC_CHAIN_ID_MISMATCH"
   | "RPC_UNAUTHORIZED"
   | "RPC_CONTRACT_NOT_FOUND"
-  | "RPC_REQUEST_FAILED";
+  | "RPC_REQUEST_FAILED"
+  | "RPC_INVALID_ADDRESS";
 
 /**
  * Diagnostic error thrown at the RPC/configuration boundary.
