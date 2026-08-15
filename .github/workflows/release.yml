@@ -29,15 +29,15 @@ jobs:
           case "${{ inputs.release_target }}" in
             all)
               echo "ignore_flag=" >> "$GITHUB_OUTPUT"
-              echo "version_branch=changeset-release/main" >> "$GITHUB_OUTPUT"
+              echo "version_branch=main" >> "$GITHUB_OUTPUT"
               ;;
             compose)
               echo "ignore_flag=--ignore @perfect-abstractions/compose-cli" >> "$GITHUB_OUTPUT"
-              echo "version_branch=changeset-release/main-compose" >> "$GITHUB_OUTPUT"
+              echo "version_branch=main-compose" >> "$GITHUB_OUTPUT"
               ;;
             compose-cli)
               echo "ignore_flag=--ignore @perfect-abstractions/compose" >> "$GITHUB_OUTPUT"
-              echo "version_branch=changeset-release/main-cli" >> "$GITHUB_OUTPUT"
+              echo "version_branch=main-cli" >> "$GITHUB_OUTPUT"
               ;;
           esac
 
