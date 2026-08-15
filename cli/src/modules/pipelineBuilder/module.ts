@@ -3,6 +3,8 @@ import { InitPipeline } from "../../pipelines/initPipeline";
 import { InfoPipeline } from "../../pipelines/infoPipeline";
 import { CatalogPipeline } from "../../pipelines/catalogPipeline";
 import { BuildPipeline } from "../../pipelines/buildPipeline";
+import { RPCPipeline } from "../../pipelines/rpcPipeline";
+import { InspectPipeline } from "../../pipelines/inspectPipeline";
 
 /**
  * Pipeline builder module that routes CLI commands to their corresponding pipelines.
@@ -59,6 +61,20 @@ export const PipelineBuilderModule = {
           error: null,
         };
         return BuildPipeline.execute(ctx);
+      case "rpc":
+        ctx.state.commandSelected = {
+          success: true,
+          result: { command: ctx.param.command, chain: ctx.param.chain },
+          error: null,
+        };
+        return RPCPipeline.execute(ctx);
+      case "inspect":
+        ctx.state.commandSelected = {
+          success: true,
+          result: { command: ctx.param.command, address: ctx.param.address, chain: ctx.param.chain },
+          error: null,
+        };
+        return InspectPipeline.execute(ctx);
       default:
         ctx.state.commandRouting = {
           success: false,

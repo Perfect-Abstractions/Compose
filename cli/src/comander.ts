@@ -48,6 +48,18 @@ export function buildProgram(): Command {
     .command("build")
     .description("Compile the project if artifacts are stale or missing")
 
+  program
+    .command("rpc")
+    .description("Check RPC connectivity and optionally inspect contract bytecode")
+    .option("--chain <chain-key>", "Chain key from compose.json", "local")
+    .option("--address <address>", "Contract address to check or inspect")
+
+  program
+    .command("inspect")
+    .description("Inspect a deployed diamond's facets and selectors via Loupe")
+    .argument("<address>", "Diamond contract address")
+    .option("--chain <chain-key>", "Chain key from compose.json", "local")
+
   return program;
 }
 
@@ -75,8 +87,12 @@ export function parseArgs(argv: string[]): { command: string; flags: Record<stri
   const positionalArgs = commandInstance.args.filter(
     (arg): arg is string => typeof arg === "string" && arg !== command,
   );
-  if (positionalArgs.length > 0 && !flags.projectName) {
-    flags.projectName = positionalArgs[0];
+  if (positionalArgs.length > 0) {
+    if (command === "inspect" && !flags.address) {
+      flags.address = positionalArgs[0];
+    } else if (!flags.projectName) {
+      flags.projectName = positionalArgs[0];
+    }
   }
 
   return { command, flags };

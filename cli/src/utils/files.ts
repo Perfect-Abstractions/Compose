@@ -116,11 +116,12 @@ export async function isDirectoryEmpty(dirPath: string, ignoredEntries: string[]
 }
 
 /**
- * Searches for a file by walking up the directory tree from the given start path.
+ * Searches for a file by walking up the directory tree from the given start
+ * path.
  *
  * @param startDir - The directory to start searching from.
- * @param fileName - The name of the file to find (e.g., "compose.json").
- * @returns The full path to the file, or null if not found.
+ * @param fileName - The name of the file to find (e.g., `"compose.json"`).
+ * @returns The full path to the file, or `null` if not found.
  */
 export async function findFileAncestor(startDir: string, fileName: string): Promise<string | null> {
   let currentDir = startDir;

@@ -6,6 +6,7 @@
  */
 export enum DependencyKey {
   Hashing = "hashing",
+  RPC = "rpc",
   Foundry = "foundry",
   Hardhat = "hardhat",
 }
