@@ -3,15 +3,21 @@ name: Test
 on:
   push:
     branches: [main]
-    paths-ignore:
-      - '**.md'
-      - 'website/**'
-      - 'cli/**'
+    paths:
+      - 'src/**'
+      - 'test/**'
+      - 'script/**'
+      - 'foundry.toml'
+      - 'remappings.txt'
+      - '.github/workflows/test.yml'
   pull_request:
-    paths-ignore:
-      - '**.md'
-      - 'website/**'
-      - 'cli/**'
+    paths:
+      - 'src/**'
+      - 'test/**'
+      - 'script/**'
+      - 'foundry.toml'
+      - 'remappings.txt'
+      - '.github/workflows/test.yml'
   workflow_dispatch:
 
 env:

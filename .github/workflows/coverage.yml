@@ -2,10 +2,12 @@ name: Coverage
 
 on:
   pull_request:
-    paths-ignore:
-      - '**.md'
-      - 'website/**'
-      - 'cli/**'
+    paths:
+      - 'src/**'
+      - 'test/**'
+      - 'script/**'
+      - 'foundry.toml'
+      - '.github/workflows/coverage.yml'
   workflow_dispatch:
 
 env:

@@ -2,10 +2,11 @@ name: Gas Report
 
 on:
   pull_request:
-    paths-ignore:
-      - '**.md'
-      - 'website/**'
-      - 'cli/**'
+    paths:
+      - 'src/**'
+      - 'test/**'
+      - 'foundry.toml'
+      - '.github/workflows/gas-report.yml'
   workflow_dispatch:
 
 env:

@@ -4,15 +4,13 @@ name: Slither
 on:
   push:
     branches: [main]
-    paths-ignore:
-      - '**.md'
-      - 'website/**'
-      - 'cli/**'
+    paths:
+      - 'src/**'
+      - '.github/workflows/slither.yml'
   pull_request:
-    paths-ignore:
-      - '**.md'
-      - 'website/**'
-      - 'cli/**'
+    paths:
+      - 'src/**'
+      - '.github/workflows/slither.yml'
   workflow_dispatch:
 
 env:
