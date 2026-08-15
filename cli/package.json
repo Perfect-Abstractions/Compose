@@ -36,6 +36,7 @@
     "@inquirer/select": "5.2.1",
     "@perfect-abstractions/compose": "0.0.4",
     "commander": "^13.1.0",
+    "dotenv": "^16.4.7",
     "fs-extra": "^11.3.3",
     "picocolors": "^1.1.1",
     "viem": "^2.52.2"
