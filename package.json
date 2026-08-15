@@ -37,7 +37,7 @@
     "url": "https://github.com/Perfect-Abstractions/Compose.git"
   },
   "devDependencies": {
-    "@changesets/cli": "^2.30.0"
+    "@changesets/cli": "^3.0.0"
   },
   "dependencies": {
     "@docusaurus/core": "^3.10.1"
