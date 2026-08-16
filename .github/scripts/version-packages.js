@@ -8,7 +8,7 @@
  * Usage:
  *   node .github/scripts/version-packages.js
  *   node .github/scripts/version-packages.js --ignore @perfect-abstractions/compose-cli
- *   node .github/scripts/version-packages.js --ignore @perfect-abstractions/compose --ignore @perfect-abstractions/compose-cli
+ *   node .github/scripts/version-packages.js --ignore @perfect-abstractions/compose
  *
  * Permanent ignores (e.g. private packages) are always included.
  * The --ignore flag is additive with the permanent list.
@@ -48,22 +48,6 @@ for (let i = 2; i < process.argv.length; i++) {
 
 if (ignoredPkgs.length > 0) {
   allIgnore.push(...ignoredPkgs);
-
-  // Auto-include dependents of ignored packages
-  const workspaceDirs = ['src', 'cli', 'website'];
-  for (const dir of workspaceDirs) {
-    const pkgPath = path.join(ROOT, dir, 'package.json');
-    if (!fs.existsSync(pkgPath)) continue;
-    const pkg = JSON.parse(fs.readFileSync(pkgPath, 'utf-8'));
-    const deps = { ...pkg.dependencies, ...pkg.devDependencies };
-    for (const dep of Object.keys(deps)) {
-      if (ignoredPkgs.includes(dep) && !allIgnore.includes(pkg.name)) {
-        allIgnore.push(pkg.name);
-        console.log(`Auto-ignoring dependent: ${pkg.name}`);
-      }
-    }
-  }
-
   console.log(`Selective release: ignoring ${allIgnore.join(', ')}`);
 }
 
