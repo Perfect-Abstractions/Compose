@@ -5,6 +5,7 @@ import { CatalogPipeline } from "../../pipelines/catalogPipeline";
 import { BuildPipeline } from "../../pipelines/buildPipeline";
 import { RPCPipeline } from "../../pipelines/rpcPipeline";
 import { InspectPipeline } from "../../pipelines/inspectPipeline";
+import { ValidatePipeline } from "../../pipelines/validatePipeline";
 
 /**
  * Pipeline builder module that routes CLI commands to their corresponding pipelines.
@@ -39,7 +40,7 @@ export const PipelineBuilderModule = {
           result: { command: ctx.param.command },
           error: null,
         };
-        return ctx;
+        return ValidatePipeline.execute(ctx);
       case "info":
         ctx.state.commandSelected = {
           success: true,

@@ -68,27 +68,39 @@ export const InitPipeline = {
     await adapter.writeConfig(ctx, { compilerVersion, projectName, installDeps });
     ctx = ScaffoldingModule.recordScaffoldMap(ctx, scaffoldMapEntries);
 
-    ctx = await ScaffoldingModule.scanSelectedFacets(ctx, adapter);
+    ctx = await ValidationModule.resolveComposeFacetSources(ctx, adapter);
+    ctx = await ValidationModule.resolveProjectFacetSources(ctx, adapter);
+    const facetSources = ValidationModule.getResolvedFacetSources(ctx);
+    const facetNames = facetSources.map((facet) => facet.facetName);
+    const astSources = await adapter.compileAst(
+      ctx,
+      facetSources.map((facet) => facet.sourcePath),
+    );
+
+    ctx = ValidationModule.scanFacetSelectors(ctx, astSources, facetNames);
+    ctx = ValidationModule.buildVirtualStorageLayout(ctx, astSources, facetNames);
     ctx = await ValidationModule.validateSelectorExports(ctx);
+    ctx = await ValidationModule.detectSelectorCollisions(ctx, { hashing: deps.hashing });
 
-    if (ValidationModule.hasSelectorExportFailure(ctx)) {
-      ctx = await ValidationModule.showReport(ctx);
-      return ctx;
-    }
+    const selectorCollisions = ValidationModule.getSelectorCollisionValidationState(ctx);
+    const virtualStorageLayout = ValidationModule.getVirtualStorageLayoutValidationState(ctx);
+    const validationError = selectorCollisions?.error ?? virtualStorageLayout?.error ?? null;
+    const validationSuccess =
+      selectorCollisions?.success === true && virtualStorageLayout?.success === true;
+    ctx.state.initValidation = {
+      success: validationSuccess,
+      result: { checkedFacets: facetNames.length },
+      error: validationError,
+    };
+    ctx = await ValidationModule.showReport(ctx);
 
-    ctx = await ValidationModule.detectSelectorCollisions(ctx, {
-      hashing: deps.hashing,
-    });
-
-    if (ValidationModule.hasSelectorCollisionFailure(ctx)) {
-      ctx = await ValidationModule.showReport(ctx);
-      return ctx;
-    }
-
-    ctx = await ValidationModule.detectIdentifierCollisions(ctx);
-
-    if (ValidationModule.hasIdentifierCollisionFailure(ctx)) {
-      ctx = await ValidationModule.showReport(ctx);
+    if (!validationSuccess) {
+      ctx.status = {
+        success: false,
+        stopped: true,
+        failedAt: "initValidation",
+        error: validationError,
+      };
       return ctx;
     }
 
@@ -113,12 +125,6 @@ export const InitPipeline = {
       },
       error: null,
     };
-
-    ctx = await ValidationModule.showReport(ctx);
-
-    if (ValidationModule.hasBlockingFailure(ctx)) {
-      return ctx;
-    }
 
     if (ctx.state.initPipeline?.success) {
       InitModule.showSuccess(ctx);

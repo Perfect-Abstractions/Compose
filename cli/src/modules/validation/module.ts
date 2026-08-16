@@ -1,5 +1,8 @@
 import { ComposeContext } from "../../context/types";
+import { SolidityAstSource } from "../../adapters/interface/IFrameworkAdapter";
 import { SelectorCollisionDeps } from "./types";
+import { scanFacetSelectorsFromAst } from "./astSelectors";
+import { buildVirtualStorageLayout } from "./virtualStorageLayout";
 import {
   findIdentifierCollisions,
   findSelectorCollisions,
@@ -11,29 +14,100 @@ import {
   getIdentifierCollisionValidationState,
   getSelectorCollisionValidationState,
   getSelectorExportValidationState,
+  getVirtualStorageLayoutValidationState,
 } from "./state";
-import { showReport } from "./output";
+import { showReport, showSuccess } from "./output";
+import { getResolvedFacetSources, resolveFacetSources } from "./sourceResolution";
+import { IFrameworkAdapter } from "../../adapters/interface/IFrameworkAdapter";
 
 /**
- * Validates facet scans for selector export correctness and collision-free layouts.
+ * Validates facet scans for selector export guidance and collision-free layouts.
  *
- * Provides three validation steps that run sequentially in the init pipelines:
- * 1. Selector export validation — ensures every public/external function is declared in `exportSelectors()`.
- * 2. Selector collision detection — detects duplicate 4-byte selectors across facets.
- * 3. Identifier collision detection — detects incompatible storage layouts for the same storage slot.
- *
- * Each step stores its result as a `ModuleState` in `ctx.state` and sets
- * `success: false` when issues are found.
+ * Compiler AST supplies selector evidence and the source-side virtual storage
+ * map. Advisory uncertainty is retained while clear selector or storage
+ * contradictions are blocking.
  */
 export const ValidationModule = {
   showReport,
+  showSuccess,
   getFacetScanState,
   getSelectorExportValidationState,
   getSelectorCollisionValidationState,
   getIdentifierCollisionValidationState,
+  getVirtualStorageLayoutValidationState,
+  getResolvedFacetSources,
+
+  /** Resolves selected Compose package facets into compiler input paths. */
+  async resolveComposeFacetSources(
+    ctx: ComposeContext,
+    adapter: IFrameworkAdapter,
+  ): Promise<ComposeContext> {
+    const sources = await resolveFacetSources(ctx, adapter, "package");
+    ctx.state.validationComposeFacetSources = {
+      success: true,
+      result: { sources },
+      error: null,
+    };
+    return ctx;
+  },
+
+  /** Resolves copied project facets into compiler input paths. */
+  async resolveProjectFacetSources(
+    ctx: ComposeContext,
+    adapter: IFrameworkAdapter,
+  ): Promise<ComposeContext> {
+    const sources = await resolveFacetSources(ctx, adapter, "local");
+    ctx.state.validationProjectFacetSources = {
+      success: true,
+      result: { sources },
+      error: null,
+    };
+    return ctx;
+  },
+
+  /** Scans named facets from compiler AST and stores selector evidence in facetScan state. */
+  scanFacetSelectors(
+    ctx: ComposeContext,
+    sources: SolidityAstSource[],
+    facetNames: string[],
+  ): ComposeContext {
+    const facets = scanFacetSelectorsFromAst(sources, facetNames);
+    ctx.state.facetScan = {
+      success: true,
+      result: {
+        facets,
+        facetCount: facets.length,
+      },
+      error: null,
+    };
+    return ctx;
+  },
+
+  /** Builds and validates the source-side virtual storage layout from compiler AST. */
+  buildVirtualStorageLayout(
+    ctx: ComposeContext,
+    sources: SolidityAstSource[],
+    facetNames: string[],
+  ): ComposeContext {
+    const result = buildVirtualStorageLayout(sources, facetNames);
+    const success = result.collisions.length === 0;
+
+    ctx.state.validationVirtualStorageLayout = {
+      success,
+      result,
+      error: success
+        ? null
+        : {
+            code: "VIRTUAL_STORAGE_COLLISION_DETECTED",
+            message: "Selected facets declare incompatible storage layouts.",
+            nativeError: null,
+          },
+    };
+    return ctx;
+  },
   
   /**
-   * Returns true when selector export validation has found blocking issues.
+   * Returns true when selector export validation could not run.
    *
    * Keeps validation state reads inside the validation module boundary.
    */
@@ -62,6 +136,12 @@ export const ValidationModule = {
     return Boolean(state && !state.success);
   },
 
+  /** Returns true when source-derived virtual storage layouts collide. */
+  hasVirtualStorageLayoutFailure(ctx: ComposeContext): boolean {
+    const state = getVirtualStorageLayoutValidationState(ctx);
+    return Boolean(state && !state.success);
+  },
+
   /**
    * Returns true when any validation stage has produced a blocking failure.
    *
@@ -71,17 +151,17 @@ export const ValidationModule = {
     return (
       ValidationModule.hasSelectorExportFailure(ctx) ||
       ValidationModule.hasSelectorCollisionFailure(ctx) ||
+      ValidationModule.hasVirtualStorageLayoutFailure(ctx) ||
       ValidationModule.hasIdentifierCollisionFailure(ctx)
     );
   },
 
   /**
-   * Validates that every public/external function is exported by `exportSelectors()`.
+   * Records advisory differences between public/external functions and `exportSelectors()`.
    *
-   * Requires `ctx.state.facetScan` to have been populated by
-   * {@link ScaffoldingModule.scanSelectedFacets}. For each facet, checks that
-   * every public/external function name appears in the facet's exported
-   * selector list and that no extra names are declared.
+   * Requires `ctx.state.facetScan` to have been populated. For each facet,
+   * checks whether `exportSelectors()` exists and reports missing or extra
+   * signatures without blocking validation.
    *
    * @param ctx - The compose context with facet scan results.
    * @returns The context with `ctx.state.validationSelectorExports` populated.
@@ -103,21 +183,13 @@ export const ValidationModule = {
     }
 
     const issues = findSelectorExportIssues(facetScan.facets);
-    const success = issues.length === 0;
-
     ctx.state.validationSelectorExports = {
-      success,
+      success: true,
       result: {
         checkedFacets: facetScan.facetCount,
         issues,
       },
-      error: success
-        ? null
-        : {
-            code: "SELECTOR_EXPORT_INVALID",
-            message: "One or more selected facets do not export all intended selectors.",
-            nativeError: null,
-          },
+      error: null,
     };
 
     return ctx;

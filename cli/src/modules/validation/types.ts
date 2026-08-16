@@ -11,13 +11,24 @@ export type FacetScanResult = {
   path: string;
   functions: FunctionInfo[];
   exportedSelectors: string[];
+  hasExportSelectorsFunction?: boolean;
   missingExports: string[];
   extraExports: string[];
   storageLayouts: StorageLayoutInfo[];
+  warnings: string[];
 };
 
 export type FacetScanResultCollection = {
-  facets: FacetScanWarning[];
+  facets: FacetScanResult[];
+};
+
+export type ResolvedFacetSource = {
+  facetName: string;
+  sourcePath: string;
+};
+
+export type ResolvedFacetSourceResult = {
+  sources: ResolvedFacetSource[];
 };
 
 export type FacetScanStateResult = {
@@ -28,6 +39,7 @@ export type FacetScanStateResult = {
 export type SelectorExportIssue = {
   facetName: string;
   path: string;
+  missingExportSelectorsFunction: boolean;
   missingExports: string[];
   extraExports: string[];
 };
@@ -88,4 +100,42 @@ export type FacetScanWarning = {
   facetName: string;
   path: string;
   warnings: string[];
+};
+
+export type VirtualStorageLayoutKind = "normal" | "immutable";
+
+export type VirtualStorageLayoutSource =
+  | "erc8042"
+  | "erc7201"
+  | "slot-assignment"
+  | "implicit-state";
+
+export type VirtualStorageLayoutRecord = {
+  id: string;
+  kind: VirtualStorageLayoutKind;
+  codeWidth: 1;
+  layout: string[];
+  serializedLayout: string[];
+  slots: number[][];
+  source: VirtualStorageLayoutSource;
+  sourceName: string;
+  contractName: string;
+  structName: string | null;
+};
+
+export type VirtualStorageLayoutWarning = {
+  sourceName: string;
+  message: string;
+};
+
+export type VirtualStorageLayoutCollision = {
+  id: string;
+  reason: string;
+  records: VirtualStorageLayoutRecord[];
+};
+
+export type VirtualStorageLayoutResult = {
+  records: VirtualStorageLayoutRecord[];
+  warnings: VirtualStorageLayoutWarning[];
+  collisions: VirtualStorageLayoutCollision[];
 };

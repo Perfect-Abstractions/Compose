@@ -34,7 +34,8 @@ export function buildProgram(): Command {
 
   program
     .command("validate")
-    .description("Validate your project (Coming Soon...)")
+    .description("Validate selectors and virtual storage layouts")
+    .option("--project-root <dir>", "Compose project directory")
 
   program
     .command("info")
@@ -82,6 +83,11 @@ export function parseArgs(argv: string[]): { command: string; flags: Record<stri
 
   const opts = commandInstance.opts();
   const flags: Record<string, unknown> = { ...opts };
+
+  if (flags.out !== undefined) {
+    flags.outDir = flags.out;
+    delete flags.out;
+  }
 
   // Map the first positional argument to projectName if --name wasn't passed
   const positionalArgs = commandInstance.args.filter(

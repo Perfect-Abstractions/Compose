@@ -20,10 +20,16 @@ export function findSelectorExportIssues(facets: FacetScanResult[]): SelectorExp
     .map((facet) => ({
       facetName: facet.facetName,
       path: facet.path,
+      missingExportSelectorsFunction: facet.hasExportSelectorsFunction === false,
       missingExports: facet.missingExports,
       extraExports: facet.extraExports,
     }))
-    .filter((issue) => issue.missingExports.length > 0 || issue.extraExports.length > 0);
+    .filter(
+      (issue) =>
+        issue.missingExportSelectorsFunction ||
+        issue.missingExports.length > 0 ||
+        issue.extraExports.length > 0,
+    );
 }
 
 /**
