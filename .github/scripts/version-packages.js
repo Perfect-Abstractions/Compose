@@ -8,7 +8,7 @@
  * Usage:
  *   node .github/scripts/version-packages.js
  *   node .github/scripts/version-packages.js --ignore @perfect-abstractions/compose-cli
- *   node .github/scripts/version-packages.js --ignore @perfect-abstractions/compose
+ *   node .github/scripts/version-packages.js --ignore @perfect-abstractions/compose --ignore @perfect-abstractions/compose-cli
  *
  * Permanent ignores (e.g. private packages) are always included.
  * The --ignore flag is additive with the permanent list.
@@ -36,21 +36,42 @@ function execOrDie(cmd) {
   execSync(cmd, { stdio: 'inherit', cwd: ROOT });
 }
 
-// --- Parse --ignore flag ---
-const ignoreIdx = process.argv.indexOf('--ignore');
-const selectiveIgnore = ignoreIdx !== -1 ? process.argv[ignoreIdx + 1] : null;
-
+// --- Parse --ignore flags (supports multiple --ignore and comma-separated values) ---
 const allIgnore = [...PERMANENT_IGNORE];
-if (selectiveIgnore) {
-  allIgnore.push(selectiveIgnore);
-  console.log(`Selective release: ignoring ${selectiveIgnore}`);
+const ignoredPkgs = [];
+for (let i = 2; i < process.argv.length; i++) {
+  if (process.argv[i] === '--ignore' && i + 1 < process.argv.length) {
+    ignoredPkgs.push(...process.argv[i + 1].split(',').map(s => s.trim()));
+    i++; // skip the value
+  }
+}
+
+if (ignoredPkgs.length > 0) {
+  allIgnore.push(...ignoredPkgs);
+
+  // Auto-include dependents of ignored packages
+  const workspaceDirs = ['src', 'cli', 'website'];
+  for (const dir of workspaceDirs) {
+    const pkgPath = path.join(ROOT, dir, 'package.json');
+    if (!fs.existsSync(pkgPath)) continue;
+    const pkg = JSON.parse(fs.readFileSync(pkgPath, 'utf-8'));
+    const deps = { ...pkg.dependencies, ...pkg.devDependencies };
+    for (const dep of Object.keys(deps)) {
+      if (ignoredPkgs.includes(dep) && !allIgnore.includes(pkg.name)) {
+        allIgnore.push(pkg.name);
+        console.log(`Auto-ignoring dependent: ${pkg.name}`);
+      }
+    }
+  }
+
+  console.log(`Selective release: ignoring ${allIgnore.join(', ')}`);
 }
 
 // --- Pre-sync: copy root CHANGELOG into src/ so changeset version reads the latest ---
 copyFile(ROOT_CL, SRC_CL);
 
 // --- Run changeset version ---
-const ignoreArg = allIgnore.length > 0 ? ` --ignore ${allIgnore.join(',')}` : '';
+const ignoreArg = allIgnore.map(pkg => ` --ignore ${pkg}`).join('');
 execOrDie(`npx changeset version${ignoreArg}`);
 
 // --- Post-sync: copy updated src/ CHANGELOG back to root, then back to src/ ---
