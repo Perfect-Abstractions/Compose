@@ -138,8 +138,16 @@ jobs:
             fi
             BODY="${BODY}\n\nWhen merged, **Publish** will run automatically and publish packages whose versions are ahead of npm."
 
+            if [ "${RELEASE_TARGET}" = "compose-cli" ]; then
+              PR_TITLE="chore(release cli): bump npm versions & changelogs"
+            elif [ "${RELEASE_TARGET}" = "compose" ]; then
+              PR_TITLE="chore(release library): bump npm versions & changelogs"
+            else
+              PR_TITLE="chore(release): bump npm versions & changelogs"
+            fi
+
             gh pr create \
-              --title "chore(release): bump npm versions & changelogs" \
+              --title "$PR_TITLE" \
               --body "$(echo -e "$BODY")" \
               --base main \
               --head "$HEAD_BRANCH"
