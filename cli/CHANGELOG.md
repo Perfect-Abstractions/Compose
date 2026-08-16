@@ -1,5 +1,15 @@
 # Changelog
 
+## 0.1.4
+
+### Patch Changes
+
+- 9ac686e: adds compose.lock support for tracking diamond deployment state across chains, and migrates the CLI package from CommonJS to ESM with tsup bundling and CI workflow fixes.
+- e56eba6: add project build + auto detect project framework
+- 9e5db52: remove temporal revoke facet in base
+- 987e64c: Add CLI testing infrastructure, example tests, and contributor documentation for testing and code style.
+- 787dab2: add rpc adapter using viem, add diamond inspect command querying deployed diamonds
+
 ## 0.1.3
 
 ### Patch Changes
