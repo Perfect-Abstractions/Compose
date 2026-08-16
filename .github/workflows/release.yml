@@ -21,7 +21,7 @@ jobs:
     runs-on: ubuntu-latest
     outputs:
       ignore_flag: ${{ steps.map.outputs.ignore_flag }}
-      version_branch: ${{ steps.map.outputs.version_branch }}
+      head_branch: ${{ steps.map.outputs.head_branch }}
     steps:
       - name: Map release target to flags
         id: map
@@ -29,15 +29,15 @@ jobs:
           case "${{ inputs.release_target }}" in
             all)
               echo "ignore_flag=" >> "$GITHUB_OUTPUT"
-              echo "version_branch=main" >> "$GITHUB_OUTPUT"
+              echo "head_branch=changeset-release/main" >> "$GITHUB_OUTPUT"
               ;;
             compose)
               echo "ignore_flag=--ignore @perfect-abstractions/compose-cli" >> "$GITHUB_OUTPUT"
-              echo "version_branch=main-compose" >> "$GITHUB_OUTPUT"
+              echo "head_branch=changeset-release/main-compose" >> "$GITHUB_OUTPUT"
               ;;
             compose-cli)
               echo "ignore_flag=--ignore @perfect-abstractions/compose" >> "$GITHUB_OUTPUT"
-              echo "version_branch=main-cli" >> "$GITHUB_OUTPUT"
+              echo "head_branch=changeset-release/main-cli" >> "$GITHUB_OUTPUT"
               ;;
           esac
 
@@ -101,12 +101,46 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
+      - name: Version packages
+        run: npm run version-packages -- ${{ needs.prepare.outputs.ignore_flag }}
+
       - name: Create or update version PR
-        uses: changesets/action@v1
-        with:
-          version: npm run version-packages -- ${{ needs.prepare.outputs.ignore_flag }}
-          commit: "chore(release): apply changesets and bump versions"
-          title: "chore(release): bump npm versions & changelogs"
-          branch: ${{ needs.prepare.outputs.version_branch }}
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          HEAD_BRANCH: ${{ needs.prepare.outputs.head_branch }}
+          RELEASE_TARGET: ${{ inputs.release_target }}
+        run: |
+          set -euo pipefail
+
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+          git checkout -b "$HEAD_BRANCH"
+          git add .
+          git commit -m "chore(release): apply changesets and bump versions"
+          git push origin "$HEAD_BRANCH" --force
+
+          # Check if PR already exists for this branch
+          EXISTING_PR=$(gh pr list --head "$HEAD_BRANCH" --state open --json number --jq '.[0].number' || true)
+
+          if [ -n "$EXISTING_PR" ]; then
+            echo "Updating existing PR #$EXISTING_PR"
+          else
+            # Build PR body
+            BODY="## Release: ${RELEASE_TARGET}"
+            BODY="${BODY}\n\n"
+            if [ "${RELEASE_TARGET}" = "all" ]; then
+              BODY="${BODY}Releases both \`@perfect-abstractions/compose\` and \`@perfect-abstractions/compose-cli\`."
+            elif [ "${RELEASE_TARGET}" = "compose" ]; then
+              BODY="${BODY}Releases \`@perfect-abstractions/compose\` only. CLI changesets remain pending."
+            else
+              BODY="${BODY}Releases \`@perfect-abstractions/compose-cli\` only. Library changesets remain pending."
+            fi
+            BODY="${BODY}\n\nWhen merged, **Publish** will run automatically and publish packages whose versions are ahead of npm."
+
+            gh pr create \
+              --title "chore(release): bump npm versions & changelogs" \
+              --body "$(echo -e "$BODY")" \
+              --base main \
+              --head "$HEAD_BRANCH"
+          fi
