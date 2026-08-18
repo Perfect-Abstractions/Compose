@@ -1,7 +1,10 @@
 import fs from "node:fs/promises";
 import path from "node:path";
 import { beforeAll, describe, expect, it } from "vitest";
-import { hardhatAdapter } from "../../../../src/adapters/hardhatAdapter";
+import {
+  hardhatAdapter,
+  resolveHardhatAstSourcePath,
+} from "../../../../src/adapters/hardhatAdapter";
 import { canonicalizeAst } from "../canonicalAst";
 import {
   createHardhatAdapterFixtureHarness,
@@ -11,6 +14,26 @@ import {
 /** Tests Hardhat AST compilation and build-info normalization. */
 describe("hardhatAdapter.compileAst", () => {
   beforeAll(() => ensureHardhatFixtureDependencies(), 120_000);
+
+  it("resolves project and versioned npm source names to readable paths", () => {
+    const projectRoot = path.resolve("project-root");
+
+    expect(resolveHardhatAstSourcePath(
+      projectRoot,
+      "project/contracts/CounterFacet.sol",
+    )).toBe(path.join(projectRoot, "contracts", "CounterFacet.sol"));
+    expect(resolveHardhatAstSourcePath(
+      projectRoot,
+      "npm/@perfect-abstractions/compose@0.0.4/diamond/DiamondInspectFacet.sol",
+    )).toBe(path.join(
+      projectRoot,
+      "node_modules",
+      "@perfect-abstractions",
+      "compose",
+      "diamond",
+      "DiamondInspectFacet.sol",
+    ));
+  });
 
   it(
     "generates and returns a fresh Solidity AST",
@@ -26,7 +49,11 @@ describe("hardhatAdapter.compileAst", () => {
         ]);
         const buildInfoFiles = await fs.readdir(buildInfoRoot);
         const normalSource = result.find(
-          (source) => source.sourceName === "project/contracts/Normal.sol",
+          (source) => source.sourceName === path.join(
+            harness.projectRoot,
+            "contracts",
+            "Normal.sol",
+          ),
         );
         const expected = JSON.parse(
           await fs.readFile(

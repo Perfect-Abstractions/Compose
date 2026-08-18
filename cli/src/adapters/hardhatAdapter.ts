@@ -16,6 +16,29 @@ import { ScaffoldingModule } from "../modules/scaffolding/module";
 import { CLI_ROOT } from "../utils/cliRoot";
 import { isSourceUnitAst, listJsonFiles, uniqueAstSources } from "../utils/solidityAst";
 
+/** Converts a Hardhat compiler source name into its readable filesystem path. */
+export function resolveHardhatAstSourcePath(projectRoot: string, sourceName: string): string {
+  const segments = sourceName.replace(/\\/g, "/").split("/");
+
+  if (segments[0] === "project") {
+    return path.resolve(projectRoot, ...segments.slice(1));
+  }
+
+  if (segments[0] === "npm") {
+    const packageNameIndex = segments[1]?.startsWith("@") ? 2 : 1;
+    const versionedPackageName = segments[packageNameIndex] ?? "";
+    const versionSeparator = versionedPackageName.lastIndexOf("@");
+    if (versionSeparator > 0) {
+      segments[packageNameIndex] = versionedPackageName.slice(0, versionSeparator);
+    }
+    return path.resolve(projectRoot, "node_modules", ...segments.slice(1));
+  }
+
+  return path.isAbsolute(sourceName)
+    ? path.normalize(sourceName)
+    : path.resolve(projectRoot, sourceName);
+}
+
 /** Framework adapter for Hardhat-based Diamond projects. */
 const adapter: IFrameworkAdapter = {
   getContractSourceRoot(projectRoot: string): string {
@@ -72,7 +95,10 @@ const adapter: IFrameworkAdapter = {
 
       for (const [sourceName, compilerSource] of Object.entries(compilerSources)) {
         if (isSourceUnitAst(compilerSource.ast)) {
-          sources.push({ sourceName, ast: compilerSource.ast });
+          sources.push({
+            sourceName: resolveHardhatAstSourcePath(root, sourceName),
+            ast: compilerSource.ast,
+          });
         }
       }
     }
