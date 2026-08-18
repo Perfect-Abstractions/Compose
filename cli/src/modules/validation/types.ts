@@ -22,10 +22,12 @@ export type FacetScanResultCollection = {
   facets: FacetScanResult[];
 };
 
-export type ResolvedFacetSource = {
-  facetName: string;
+export type FacetReference = {
+  contractName: string;
   sourcePath: string;
 };
+
+export type ResolvedFacetSource = FacetReference;
 
 export type ResolvedFacetSourceResult = {
   sources: ResolvedFacetSource[];
@@ -54,10 +56,17 @@ export type SelectorOwner = {
 export type SelectorCollision = {
   selector: string;
   owners: SelectorOwner[];
+  diamondName?: string;
+};
+
+export type DiamondValidationScope = {
+  diamondName: string;
+  facets: FacetReference[];
 };
 
 export type SelectorCollisionDeps = {
   hashing: IHashingAdapter;
+  scopes?: DiamondValidationScope[];
 };
 
 export type StorageLayoutInfo = {
@@ -112,6 +121,7 @@ export type VirtualStorageLayoutSource =
 
 export type VirtualStorageLayoutRecord = {
   id: string;
+  virtualPath: string;
   kind: VirtualStorageLayoutKind;
   codeWidth: 1;
   layout: string[];
@@ -121,17 +131,21 @@ export type VirtualStorageLayoutRecord = {
   sourceName: string;
   contractName: string;
   structName: string | null;
+  diamondName?: string;
 };
 
 export type VirtualStorageLayoutWarning = {
   sourceName: string;
   message: string;
+  diamondName?: string;
 };
 
 export type VirtualStorageLayoutCollision = {
   id: string;
+  virtualPath: string;
   reason: string;
   records: VirtualStorageLayoutRecord[];
+  diamondName?: string;
 };
 
 export type VirtualStorageLayoutResult = {

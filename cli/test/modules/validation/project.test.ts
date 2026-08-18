@@ -35,19 +35,123 @@ describe("validation project loader", () => {
 
       const project = await loadValidationProject(ctx);
 
-      expect(project.facetNames).toEqual(["CounterFacet"]);
+      expect(project.diamonds).toEqual([
+        {
+          name: "Example",
+          sourcePath: path.join(projectRoot, "src", "Diamond.sol"),
+          facets: [{
+            contractName: "CounterFacet",
+            sourcePath: path.join(projectRoot, "src", "facets", "CounterFacet.sol"),
+          }],
+        },
+      ]);
       expect(project.diamondSourcePaths).toEqual([
         path.join(projectRoot, "src", "Diamond.sol"),
       ]);
       expect(project.facetSources).toEqual([
         {
-          facetName: "CounterFacet",
+          contractName: "CounterFacet",
           sourcePath: path.join(projectRoot, "src", "facets", "CounterFacet.sol"),
         },
       ]);
       expect(ctx.param.projectRoot).toBe(projectRoot);
       expect(ctx.param.framework).toBe("foundry");
       expect(ctx.state.validationProject?.success).toBe(true);
+    } finally {
+      await fs.rm(projectRoot, { recursive: true, force: true });
+    }
+  });
+
+  it("preserves facet ownership for each diamond", async () => {
+    const projectRoot = await fs.mkdtemp(path.join(os.tmpdir(), "compose-validation-scopes-"));
+    const ctx = Context.create();
+
+    try {
+      await fs.writeFile(
+        path.join(projectRoot, "compose.json"),
+        JSON.stringify({
+          framework: "foundry",
+          diamonds: {
+            Alpha: {
+              contract: "src/Alpha.sol:Alpha",
+              facets: {
+                AlphaFacet: {
+                  source: "local",
+                  contract: "src/AlphaFacet.sol:AlphaFacet",
+                },
+              },
+            },
+            Beta: {
+              contract: "src/Beta.sol:Beta",
+              facets: {
+                BetaFacet: {
+                  source: "local",
+                  contract: "src/BetaFacet.sol:BetaFacet",
+                },
+              },
+            },
+          },
+        }),
+        "utf8",
+      );
+      ctx.param.projectRoot = projectRoot;
+
+      const project = await loadValidationProject(ctx);
+
+      expect(project.diamonds).toEqual([
+        {
+          name: "Alpha",
+          sourcePath: path.join(projectRoot, "src", "Alpha.sol"),
+          facets: [{
+            contractName: "AlphaFacet",
+            sourcePath: path.join(projectRoot, "src", "AlphaFacet.sol"),
+          }],
+        },
+        {
+          name: "Beta",
+          sourcePath: path.join(projectRoot, "src", "Beta.sol"),
+          facets: [{
+            contractName: "BetaFacet",
+            sourcePath: path.join(projectRoot, "src", "BetaFacet.sol"),
+          }],
+        },
+      ]);
+    } finally {
+      await fs.rm(projectRoot, { recursive: true, force: true });
+    }
+  });
+
+  it("preserves source identity for duplicate contract names", async () => {
+    const projectRoot = await fs.mkdtemp(path.join(os.tmpdir(), "compose-validation-identity-"));
+    const ctx = Context.create();
+
+    try {
+      await fs.writeFile(
+        path.join(projectRoot, "compose.json"),
+        JSON.stringify({
+          framework: "foundry",
+          diamonds: {
+            Example: {
+              contract: "src/Diamond.sol:Diamond",
+              facets: {
+                fooA: { source: "local", contract: "src/a/Foo.sol:Foo" },
+                fooB: { source: "local", contract: "src/b/Foo.sol:Foo" },
+              },
+            },
+          },
+        }),
+        "utf8",
+      );
+      ctx.param.projectRoot = projectRoot;
+
+      const project = await loadValidationProject(ctx);
+      const expectedFacets = [
+        { contractName: "Foo", sourcePath: path.join(projectRoot, "src", "a", "Foo.sol") },
+        { contractName: "Foo", sourcePath: path.join(projectRoot, "src", "b", "Foo.sol") },
+      ];
+
+      expect(project.facetSources).toEqual(expectedFacets);
+      expect(project.diamonds[0].facets).toEqual(expectedFacets);
     } finally {
       await fs.rm(projectRoot, { recursive: true, force: true });
     }
@@ -92,7 +196,7 @@ describe("validation project loader", () => {
       const project = await loadValidationProject(ctx);
 
       expect(project.facetSources).toEqual([
-        { facetName: "PackageFacet", sourcePath: packageFacetPath },
+        { contractName: "PackageFacet", sourcePath: packageFacetPath },
       ]);
     } finally {
       await fs.rm(projectRoot, { recursive: true, force: true });

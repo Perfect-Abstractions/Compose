@@ -27,11 +27,23 @@ export const ValidatePipeline = {
       ctx,
       project.facetSources.map((facet) => facet.sourcePath),
     );
+    const scopes = project.diamonds.map((diamond) => ({
+      diamondName: diamond.name,
+      facets: diamond.facets,
+    }));
 
-    ctx = ValidationModule.scanFacetSelectors(ctx, sources, project.facetNames);
-    ctx = ValidationModule.buildVirtualStorageLayout(ctx, sources, project.facetNames);
+    ctx = ValidationModule.scanFacetSelectors(ctx, sources, project.facetSources);
+    ctx = ValidationModule.buildVirtualStorageLayout(
+      ctx,
+      sources,
+      project.facetSources,
+      scopes,
+    );
     ctx = await ValidationModule.validateSelectorExports(ctx);
-    ctx = await ValidationModule.detectSelectorCollisions(ctx, { hashing: deps.hashing });
+    ctx = await ValidationModule.detectSelectorCollisions(ctx, {
+      hashing: deps.hashing,
+      scopes,
+    });
 
     const selectorCollisions = ValidationModule.getSelectorCollisionValidationState(ctx);
     const virtualStorageLayout = ValidationModule.getVirtualStorageLayoutValidationState(ctx);
@@ -39,7 +51,7 @@ export const ValidatePipeline = {
     ctx.state.validatePipeline = {
       success: selectorCollisions?.success === true && virtualStorageLayout?.success === true,
       result: {
-        checkedFacets: project.facetNames.length,
+        checkedFacets: project.facetSources.length,
       },
       error: pipelineError,
     };

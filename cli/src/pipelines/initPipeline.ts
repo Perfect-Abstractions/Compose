@@ -71,14 +71,13 @@ export const InitPipeline = {
     ctx = await ValidationModule.resolveComposeFacetSources(ctx, adapter);
     ctx = await ValidationModule.resolveProjectFacetSources(ctx, adapter);
     const facetSources = ValidationModule.getResolvedFacetSources(ctx);
-    const facetNames = facetSources.map((facet) => facet.facetName);
     const astSources = await adapter.compileAst(
       ctx,
       facetSources.map((facet) => facet.sourcePath),
     );
 
-    ctx = ValidationModule.scanFacetSelectors(ctx, astSources, facetNames);
-    ctx = ValidationModule.buildVirtualStorageLayout(ctx, astSources, facetNames);
+    ctx = ValidationModule.scanFacetSelectors(ctx, astSources, facetSources);
+    ctx = ValidationModule.buildVirtualStorageLayout(ctx, astSources, facetSources);
     ctx = await ValidationModule.validateSelectorExports(ctx);
     ctx = await ValidationModule.detectSelectorCollisions(ctx, { hashing: deps.hashing });
 
@@ -89,7 +88,7 @@ export const InitPipeline = {
       selectorCollisions?.success === true && virtualStorageLayout?.success === true;
     ctx.state.initValidation = {
       success: validationSuccess,
-      result: { checkedFacets: facetNames.length },
+      result: { checkedFacets: facetSources.length },
       error: validationError,
     };
     ctx = await ValidationModule.showReport(ctx);

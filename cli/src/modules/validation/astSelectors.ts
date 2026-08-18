@@ -1,5 +1,6 @@
 import { SolidityAstSource } from "../../adapters/interface/IFrameworkAdapter";
-import { FacetScanResult, FunctionInfo } from "./types";
+import { matchesAstSource } from "./astIdentity";
+import { FacetReference, FacetScanResult, FunctionInfo } from "./types";
 
 type AstNode = Record<string, unknown> & {
   id?: number;
@@ -12,23 +13,29 @@ type AstIndex = {
   sourceByContractId: Map<number, string>;
 };
 
-/** Extracts selector declarations for named facets from compiler AST output. */
+/** Extracts selector declarations for referenced facets from compiler AST output. */
 export function scanFacetSelectorsFromAst(
   sources: SolidityAstSource[],
-  facetNames: string[],
+  facets: FacetReference[],
 ): FacetScanResult[] {
   const index = buildAstIndex(sources);
 
-  return facetNames.map((facetName) => {
+  return facets.map((facet) => {
     const matches = [...index.contractsById.values()].filter(
-      (contract) => contract.name === facetName,
+      (contract) => contract.name === facet.contractName &&
+        typeof contract.id === "number" &&
+        matchesAstSource(
+          index.sourceByContractId.get(contract.id) ?? "",
+          facet.sourcePath,
+        ),
     );
+    const identity = `${facet.sourcePath}:${facet.contractName}`;
 
     if (matches.length !== 1) {
       throw new Error(
         matches.length === 0
-          ? `Facet contract not found in Solidity AST: ${facetName}`
-          : `Facet contract is ambiguous in Solidity AST: ${facetName}`,
+          ? `Facet contract not found in Solidity AST: ${identity}`
+          : `Facet contract is ambiguous in Solidity AST: ${identity}`,
       );
     }
 

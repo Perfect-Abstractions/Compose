@@ -20,7 +20,7 @@ export async function resolveFacetSources(
     entries
       .filter((entry) => entry.origin === origin)
       .map(async (entry) => ({
-        facetName: entry.contractName,
+        contractName: entry.contractName,
         sourcePath: await adapter.resolveSoliditySourcePath(ctx, entry.targetPath),
       })),
   );

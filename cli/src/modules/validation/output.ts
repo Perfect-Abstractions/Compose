@@ -81,7 +81,8 @@ export async function showReport(ctx: ComposeContext): Promise<ComposeContext> {
   if (virtualStorageLayoutWarnings.length > 0) {
     console.warn(yellow("\nVirtual storage warnings"));
     for (const warning of virtualStorageLayoutWarnings) {
-      console.warn(`\n${warning.sourceName}`);
+      const scope = warning.diamondName ? `${warning.diamondName} / ` : "";
+      console.warn(`\n${scope}${warning.sourceName}`);
       console.warn(`  ${warning.message}`);
     }
   }
@@ -93,7 +94,8 @@ export async function showReport(ctx: ComposeContext): Promise<ComposeContext> {
     console.error(red(selectorCollisionValidation.error?.message ?? "Validation failed."));
 
     for (const collision of selectorCollisionValidation.result?.collisions ?? []) {
-      console.error(`\n${collision.selector}`);
+      const scope = collision.diamondName ? `${collision.diamondName} / ` : "";
+      console.error(`\n${scope}${collision.selector}`);
       for (const owner of collision.owners) {
         console.error(`  ${owner.facetName}: ${owner.signature}`);
         console.error(`    ${owner.path}`);
@@ -109,7 +111,8 @@ export async function showReport(ctx: ComposeContext): Promise<ComposeContext> {
     for (const collision of virtualStorageLayoutValidation.result?.collisions ?? []) {
       const mismatch = findLayoutMismatch(collision.records, true);
       if (!mismatch) continue;
-      printLayoutMismatch(collision.id, mismatch);
+      const scope = collision.diamondName ? `${collision.diamondName} / ` : "";
+      printLayoutMismatch(`${scope}${collision.virtualPath}`, mismatch);
     }
 
   }

@@ -27,9 +27,24 @@ type ComposeProjectDefinition = {
 };
 
 export type ValidationProject = {
-  facetNames: string[];
+  diamonds: ValidationDiamond[];
   diamondSourcePaths: string[];
   facetSources: ResolvedFacetSource[];
+};
+
+export type ValidationDiamond = {
+  name: string;
+  sourcePath: string;
+  facets: ResolvedFacetSource[];
+};
+
+type PendingDiamond = Omit<ValidationDiamond, "facets"> & {
+  facetIndexes: number[];
+};
+
+type PendingFacet = {
+  kind: "compose" | "user";
+  kindIndex: number;
 };
 
 /** Loads validation inputs from the nearest Compose project definition. */
@@ -54,17 +69,20 @@ export async function loadValidationProject(
     throw new Error(`Unsupported framework in compose.json: ${framework || "missing"}.`);
   }
 
-  const facetNames = new Set<string>();
   const diamondSourcePaths = new Set<string>();
+  const pendingDiamonds: PendingDiamond[] = [];
+  const pendingFacets: PendingFacet[] = [];
   const composeFacets: ComposeProjectFacet[] = [];
   const userFacets: UserProjectFacet[] = [];
-  for (const diamond of Object.values(composeJson.diamonds ?? {})) {
+  for (const [diamondName, diamond] of Object.entries(composeJson.diamonds ?? {})) {
     const diamondReference = typeof diamond.contract === "string" ? diamond.contract : "";
     const diamondSourcePath = diamondReference.split(":")[0];
     if (!diamondSourcePath) {
       throw new Error("Every diamond in compose.json must define its generated contract path.");
     }
-    diamondSourcePaths.add(path.resolve(projectRoot, diamondSourcePath));
+    const resolvedDiamondSourcePath = path.resolve(projectRoot, diamondSourcePath);
+    const diamondFacetIndexes: number[] = [];
+    diamondSourcePaths.add(resolvedDiamondSourcePath);
 
     for (const [facetAlias, facet] of Object.entries(diamond.facets ?? {})) {
       const contractReference = typeof facet.contract === "string" ? facet.contract : "";
@@ -74,30 +92,48 @@ export async function loadValidationProject(
         : facetAlias;
       if (!contractName) continue;
 
-      facetNames.add(contractName);
       if (facet.source === "package") {
         const packageName = typeof facet.package === "string" ? facet.package : "";
         if (!packageName) {
           throw new Error(`Package facet ${contractName} is missing its package name.`);
         }
-        composeFacets.push({ facetName: contractName, packageName });
+        diamondFacetIndexes.push(pendingFacets.length);
+        pendingFacets.push({ kind: "compose", kindIndex: composeFacets.length });
+        composeFacets.push({ contractName, packageName });
       } else {
         const contractPath = contractReference.split(":")[0];
         if (!contractPath) {
           throw new Error(`Local facet ${contractName} is missing its contract path.`);
         }
-        userFacets.push({ facetName: contractName, contractPath });
+        diamondFacetIndexes.push(pendingFacets.length);
+        pendingFacets.push({ kind: "user", kindIndex: userFacets.length });
+        userFacets.push({ contractName, contractPath });
       }
     }
+
+    pendingDiamonds.push({
+      name: diamondName,
+      sourcePath: resolvedDiamondSourcePath,
+      facetIndexes: diamondFacetIndexes,
+    });
   }
-  if (facetNames.size === 0) {
+  if (pendingFacets.length === 0) {
     throw new Error("compose.json does not define any facets to validate.");
   }
 
-  const facetSources = [
-    ...await resolveComposeProjectFacetSources(projectRoot, composeFacets),
-    ...resolveUserProjectFacetSources(projectRoot, userFacets),
-  ];
+  const composeFacetSources = await resolveComposeProjectFacetSources(projectRoot, composeFacets);
+  const userFacetSources = resolveUserProjectFacetSources(projectRoot, userFacets);
+  const resolvedFacets = pendingFacets.map((facet) => facet.kind === "compose"
+    ? composeFacetSources[facet.kindIndex]
+    : userFacetSources[facet.kindIndex]);
+  const diamonds = pendingDiamonds.map((diamond) => ({
+    name: diamond.name,
+    sourcePath: diamond.sourcePath,
+    facets: diamond.facetIndexes.map((index) => resolvedFacets[index]),
+  }));
+  const facetSources = [...new Map(
+    resolvedFacets.map((facet) => [`${facet.sourcePath}:${facet.contractName}`, facet]),
+  ).values()];
 
   ctx.param.projectRoot = projectRoot;
   ctx.param.framework = framework;
@@ -108,7 +144,7 @@ export async function loadValidationProject(
       composeJsonPath,
       projectRoot,
       framework,
-      facetNames: [...facetNames],
+      diamonds,
       diamondSourcePaths: [...diamondSourcePaths],
       facetSources,
     },
@@ -116,7 +152,7 @@ export async function loadValidationProject(
   };
 
   return {
-    facetNames: [...facetNames],
+    diamonds,
     diamondSourcePaths: [...diamondSourcePaths],
     facetSources,
   };

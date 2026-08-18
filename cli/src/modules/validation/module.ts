@@ -1,8 +1,12 @@
 import { ComposeContext } from "../../context/types";
 import { SolidityAstSource } from "../../adapters/interface/IFrameworkAdapter";
-import { SelectorCollisionDeps } from "./types";
+import { DiamondValidationScope, FacetReference, SelectorCollisionDeps } from "./types";
+import { matchesAstSource } from "./astIdentity";
 import { scanFacetSelectorsFromAst } from "./astSelectors";
-import { buildVirtualStorageLayout } from "./virtualStorageLayout";
+import {
+  buildScopedVirtualStorageLayout,
+  buildVirtualStorageLayout,
+} from "./virtualStorageLayout";
 import {
   findIdentifierCollisions,
   findSelectorCollisions,
@@ -65,18 +69,18 @@ export const ValidationModule = {
     return ctx;
   },
 
-  /** Scans named facets from compiler AST and stores selector evidence in facetScan state. */
+  /** Scans referenced facets from compiler AST and stores selector evidence in facetScan state. */
   scanFacetSelectors(
     ctx: ComposeContext,
     sources: SolidityAstSource[],
-    facetNames: string[],
+    facets: FacetReference[],
   ): ComposeContext {
-    const facets = scanFacetSelectorsFromAst(sources, facetNames);
+    const scannedFacets = scanFacetSelectorsFromAst(sources, facets);
     ctx.state.facetScan = {
       success: true,
       result: {
-        facets,
-        facetCount: facets.length,
+        facets: scannedFacets,
+        facetCount: scannedFacets.length,
       },
       error: null,
     };
@@ -87,9 +91,12 @@ export const ValidationModule = {
   buildVirtualStorageLayout(
     ctx: ComposeContext,
     sources: SolidityAstSource[],
-    facetNames: string[],
+    facets: FacetReference[],
+    scopes?: DiamondValidationScope[],
   ): ComposeContext {
-    const result = buildVirtualStorageLayout(sources, facetNames);
+    const result = scopes
+      ? buildScopedVirtualStorageLayout(sources, scopes)
+      : buildVirtualStorageLayout(sources, facets);
     const success = result.collisions.length === 0;
 
     ctx.state.validationVirtualStorageLayout = {
@@ -208,7 +215,7 @@ export const ValidationModule = {
    */
   async detectSelectorCollisions(
     ctx: ComposeContext,
-    { hashing }: SelectorCollisionDeps,
+    { hashing, scopes }: SelectorCollisionDeps,
   ): Promise<ComposeContext> {
     const facetScan = getFacetScanResult(ctx);
 
@@ -225,7 +232,18 @@ export const ValidationModule = {
       return ctx;
     }
 
-    const collisions = findSelectorCollisions(facetScan.facets, hashing);
+    const collisions = scopes
+      ? scopes.flatMap((scope) => {
+          const scopedFacets = facetScan.facets.filter((scannedFacet) =>
+            scope.facets.some((facet) =>
+              facet.contractName === scannedFacet.facetName &&
+              matchesAstSource(scannedFacet.path, facet.sourcePath)));
+          return findSelectorCollisions(scopedFacets, hashing).map((collision) => ({
+            ...collision,
+            diamondName: scope.diamondName,
+          }));
+        })
+      : findSelectorCollisions(facetScan.facets, hashing);
     const success = collisions.length === 0;
 
     ctx.state.validationSelectorCollisions = {

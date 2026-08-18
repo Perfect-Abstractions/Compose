@@ -44,7 +44,8 @@ describe("validation output", () => {
         records: [],
         warnings: [],
         collisions: [{
-          id: "erc20",
+          id: "0x5a28e9363bb942b639270062aa6bb295f434bcdfc42c97267bf003f272060dc9",
+          virtualPath: "erc20",
           reason: "normal layout is not append-only compatible",
           records: [
             storageRecord("ERC20DataFacet", "ERC20DataFacet.sol", ["0xf1", "0x03"]),
@@ -78,7 +79,8 @@ describe("validation output", () => {
 
 function storageRecord(contractName: string, sourceName: string, layout: string[]) {
   return {
-    id: "erc20",
+    id: "0x5a28e9363bb942b639270062aa6bb295f434bcdfc42c97267bf003f272060dc9",
+    virtualPath: "erc20",
     kind: "normal" as const,
     codeWidth: 1 as const,
     layout,

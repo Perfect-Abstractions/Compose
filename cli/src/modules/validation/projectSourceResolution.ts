@@ -3,12 +3,12 @@ import path from "node:path";
 import { ResolvedFacetSource } from "./types";
 
 export type ComposeProjectFacet = {
-  facetName: string;
+  contractName: string;
   packageName: string;
 };
 
 export type UserProjectFacet = {
-  facetName: string;
+  contractName: string;
   contractPath: string;
 };
 
@@ -19,11 +19,11 @@ export async function resolveComposeProjectFacetSources(
 ): Promise<ResolvedFacetSource[]> {
   return Promise.all(
     facets.map(async (facet) => ({
-      facetName: facet.facetName,
+      contractName: facet.contractName,
       sourcePath: await findPackageFacetSource(
         projectRoot,
         facet.packageName,
-        facet.facetName,
+        facet.contractName,
       ),
     })),
   );
@@ -35,7 +35,7 @@ export function resolveUserProjectFacetSources(
   facets: UserProjectFacet[],
 ): ResolvedFacetSource[] {
   return facets.map((facet) => ({
-    facetName: facet.facetName,
+    contractName: facet.contractName,
     sourcePath: path.resolve(projectRoot, facet.contractPath),
   }));
 }

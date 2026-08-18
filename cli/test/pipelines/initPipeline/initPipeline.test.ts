@@ -60,7 +60,7 @@ describe("InitPipeline source validation", () => {
     });
 
     const compileAst = vi.fn(async () => [
-      contractAst(packagePath, "PackageFacet", 1),
+      contractAst(resolvedPackagePath, "PackageFacet", 1),
       contractAst(projectPath, "ProjectFacet", 10),
     ]);
     const adapter = {

@@ -1,11 +1,50 @@
-import { createHash } from "node:crypto";
+import { keccak256, stringToBytes } from "viem";
 import { SolidityAstSource } from "../../adapters/interface/IFrameworkAdapter";
+import { matchesAstSource } from "./astIdentity";
 import {
+  DiamondValidationScope,
+  FacetReference,
   VirtualStorageLayoutCollision,
   VirtualStorageLayoutRecord,
   VirtualStorageLayoutResult,
   VirtualStorageLayoutWarning,
 } from "./types";
+
+/** Builds independent virtual storage layouts for each diamond. */
+export function buildScopedVirtualStorageLayout(
+  sources: SolidityAstSource[],
+  scopes: DiamondValidationScope[],
+): VirtualStorageLayoutResult {
+  const results = scopes.map((scope) => {
+    const result = buildVirtualStorageLayout(sources, scope.facets);
+    const records = result.records.map((record) => ({
+      ...record,
+      diamondName: scope.diamondName,
+    }));
+
+    return {
+      records,
+      warnings: result.warnings.map((warning) => ({
+        ...warning,
+        diamondName: scope.diamondName,
+      })),
+      collisions: result.collisions.map((collision) => ({
+        ...collision,
+        diamondName: scope.diamondName,
+        records: collision.records.map((record) => ({
+          ...record,
+          diamondName: scope.diamondName,
+        })),
+      })),
+    };
+  });
+
+  return {
+    records: results.flatMap((result) => result.records),
+    warnings: results.flatMap((result) => result.warnings),
+    collisions: results.flatMap((result) => result.collisions),
+  };
+}
 
 type AstNode = Record<string, unknown> & {
   id?: number;
@@ -74,24 +113,25 @@ const CODE = {
 /** Builds compact virtual storage records and detects source-side collisions. */
 export function buildVirtualStorageLayout(
   sources: SolidityAstSource[],
-  facetNames: string[],
+  facets: FacetReference[],
 ): VirtualStorageLayoutResult {
   const index = buildAstIndex(sources);
   const warnings: VirtualStorageLayoutWarning[] = [];
   const roots: StorageRoot[] = [];
-  for (const facetName of facetNames) {
-    const storageScope = traceFacetStorageScope(index, [facetName]);
+  for (const facet of facets) {
+    const contract = resolveFacetContract(index, facet);
+    const contractId = Number(contract.id);
+    const storageScope = traceFacetStorageScope(index, [contractId]);
     const facetRoots = [
       ...findExplicitRoots(index, storageScope),
-      ...findImplicitRoots(index, [facetName]),
+      ...findImplicitRoots(index, [contract]),
     ];
     roots.push(...facetRoots);
 
     if (facetRoots.length === 0) {
-      const contract = [...index.contractsById.values()].find((node) => node.name === facetName);
       warnings.push({
-        sourceName: contract ? sourceNameFor(contract, index) : facetName,
-        message: `${facetName}: no storage pattern found; storage validation skipped for this facet.`,
+        sourceName: sourceNameFor(contract, index),
+        message: `${facet.contractName}: no storage pattern found; storage validation skipped for this facet.`,
       });
     }
   }
@@ -99,12 +139,13 @@ export function buildVirtualStorageLayout(
   const seenRoots = new Set<string>();
 
   for (const root of roots) {
-    const rootKey = `${root.id}:${root.structId ?? root.contractName}`;
+    const rootKey = `${root.id}:${root.sourceName}:${root.structId ?? root.contractName}`;
     if (seenRoots.has(rootKey)) continue;
     seenRoots.add(rootKey);
 
     const emitted = emitRecord({
-      id: root.id,
+      id: buildRootVirtualId(root.id),
+      virtualPath: root.id,
       kind: "normal",
       fields: root.fields ?? structMembers(root.structId, index),
       root,
@@ -139,7 +180,12 @@ export function findVirtualStorageLayoutCollisions(
 
     const kinds = new Set(owners.map((record) => record.kind));
     if (kinds.size > 1) {
-      collisions.push({ id, reason: "mixed normal and immutable records", records: owners });
+      collisions.push({
+        id,
+        virtualPath: owners[0].virtualPath,
+        reason: "mixed normal and immutable records",
+        records: owners,
+      });
       continue;
     }
 
@@ -150,6 +196,7 @@ export function findVirtualStorageLayoutCollisions(
     if (!compatible) {
       collisions.push({
         id,
+        virtualPath: owners[0].virtualPath,
         reason: kinds.has("immutable")
           ? "immutable layout changed"
           : "normal layout is not append-only compatible",
@@ -163,6 +210,7 @@ export function findVirtualStorageLayoutCollisions(
 
 function emitRecord(options: {
   id: string;
+  virtualPath: string;
   kind: VirtualStorageLayoutRecord["kind"];
   fields: AstNode[];
   root: StorageRoot;
@@ -172,6 +220,7 @@ function emitRecord(options: {
   const analysis = analyzeFields(options.fields, options.index);
   const record: VirtualStorageLayoutRecord = {
     id: options.id,
+    virtualPath: options.virtualPath,
     kind: options.kind,
     codeWidth: 1,
     layout: analysis.layout,
@@ -189,12 +238,14 @@ function emitRecord(options: {
   }));
 
   for (const child of analysis.children) {
-    const childId = buildChildId(options.id, child.slot);
+    const childPath = buildChildPath(options.virtualPath, child.slot);
+    const childId = hashVirtualPath(childPath);
     const cycleKey = `${childId}:${child.structId}`;
     if (options.seen.has(cycleKey)) continue;
 
     const emitted = emitRecord({
       id: childId,
+      virtualPath: childPath,
       kind: child.containerKind === "mapping" ? "normal" : "immutable",
       fields: structMembers(child.structId, options.index),
       root: options.root,
@@ -337,23 +388,23 @@ function analyzeType(
 
   const declaration = referencedDeclaration(type, index);
   if (declaration?.nodeType === "StructDefinition") {
+    const nested = analyzeFields(childNodes(declaration, "members"), index);
     if (options.insideContainer) {
       return {
         layout: [CODE.end],
         packBits: [],
-        slotGroups: [],
+        slotGroups: nested.slotGroups,
         children: [{
           slot: 0,
           structId: Number(declaration.id),
           containerKind: options.containerKind ?? "mapping",
         }],
-        warnings: [],
+        warnings: nested.warnings,
         boundaryBefore: false,
         boundaryAfter: false,
       };
     }
 
-    const nested = analyzeFields(childNodes(declaration, "members"), index);
     return {
       layout: [CODE.struct, ...nested.layout, CODE.end],
       packBits: [],
@@ -471,13 +522,10 @@ function findExplicitRoots(index: AstIndex, scope: StorageScope): StorageRoot[] 
   return roots;
 }
 
-function findImplicitRoots(index: AstIndex, facetNames: string[]): StorageRoot[] {
+function findImplicitRoots(index: AstIndex, contracts: AstNode[]): StorageRoot[] {
   const roots: StorageRoot[] = [];
 
-  for (const facetName of facetNames) {
-    const contract = [...index.contractsById.values()].find((node) => node.name === facetName);
-    if (!contract) continue;
-
+  for (const contract of contracts) {
     const fields: AstNode[] = [];
     const linearized = numberArray(contract.linearizedBaseContracts);
     const contractIds = linearized.length > 0
@@ -505,7 +553,7 @@ function findImplicitRoots(index: AstIndex, facetNames: string[]): StorageRoot[]
         id: "0x0",
         source: "implicit-state",
         sourceName: sourceNameFor(contract, index),
-        contractName: facetName,
+        contractName: stringValue(contract.name),
         structName: null,
         fields,
       });
@@ -636,7 +684,7 @@ function buildAstIndex(sources: SolidityAstSource[]): AstIndex {
   };
 }
 
-function traceFacetStorageScope(index: AstIndex, facetNames: string[]): StorageScope {
+function traceFacetStorageScope(index: AstIndex, facetContractIds: number[]): StorageScope {
   const completeContractIds = new Set<number>();
   const routineIds = new Set<number>();
   const referencedDeclarationIds = new Set<number>();
@@ -644,8 +692,9 @@ function traceFacetStorageScope(index: AstIndex, facetNames: string[]): StorageS
   const storageExecutionOwnerIds = new Set<number>();
   const routineQueue: number[] = [];
 
-  for (const contract of index.contractsById.values()) {
-    if (!facetNames.includes(stringValue(contract.name))) continue;
+  for (const contractId of facetContractIds) {
+    const contract = index.contractsById.get(contractId);
+    if (!contract) continue;
 
     const lineage = numberArray(contract.linearizedBaseContracts);
     const lineageIds = lineage.length > 0
@@ -707,6 +756,24 @@ function traceFacetStorageScope(index: AstIndex, facetNames: string[]): StorageS
     referencedDeclarationIds,
     rootOwnerIds,
   };
+}
+
+function resolveFacetContract(index: AstIndex, facet: FacetReference): AstNode {
+  const matches = [...index.contractsById.values()].filter((contract) =>
+    contract.name === facet.contractName &&
+    typeof contract.id === "number" &&
+    matchesAstSource(sourceNameFor(contract, index), facet.sourcePath));
+  const identity = `${facet.sourcePath}:${facet.contractName}`;
+
+  if (matches.length !== 1) {
+    throw new Error(
+      matches.length === 0
+        ? `Facet contract not found in Solidity AST: ${identity}`
+        : `Facet contract is ambiguous in Solidity AST: ${identity}`,
+    );
+  }
+
+  return matches[0];
 }
 
 function facetRuntimeEntryIds(contractIds: number[], index: AstIndex): number[] {
@@ -916,10 +983,20 @@ function sourceNameFor(node: AstNode, index: AstIndex): string {
   return typeof node.id === "number" ? index.sourceByNodeId.get(node.id) ?? "" : "";
 }
 
-function buildChildId(parentId: string, slot: number): string {
-  const pattern = `keccak(${parentId} . ${slot})`;
-  const digest = createHash("sha256").update(pattern).digest("hex");
-  return `0x${digest} // ${pattern}`;
+/** Hashes a canonical readable virtual storage path with EVM Keccak-256. */
+export function hashVirtualPath(virtualPath: string): string {
+  return keccak256(stringToBytes(virtualPath));
+}
+
+function buildRootVirtualId(rootIdentifier: string): string {
+  if (/^0x[0-9a-fA-F]{1,64}$/.test(rootIdentifier)) {
+    return `0x${rootIdentifier.slice(2).padStart(64, "0").toLowerCase()}`;
+  }
+  return hashVirtualPath(rootIdentifier);
+}
+
+function buildChildPath(parentPath: string, slot: number): string {
+  return `${parentPath}.${slot}`;
 }
 
 function ensureEnd(layout: string[]): string[] {

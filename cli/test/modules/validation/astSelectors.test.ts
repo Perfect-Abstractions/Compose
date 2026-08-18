@@ -99,10 +99,35 @@ const astSources: SolidityAstSource[] = [
 ];
 
 describe("ValidationModule AST selector scan", () => {
+  it("uses source path to disambiguate contracts with the same name", () => {
+    const ctx = Context.create();
+    const duplicateSources: SolidityAstSource[] = [
+      namedContractSource("src/a/Foo.sol", 3000, "fromA"),
+      namedContractSource("src/b/Foo.sol", 4000, "fromB"),
+    ];
+
+    ValidationModule.scanFacetSelectors(ctx, duplicateSources, [{
+      contractName: "Foo",
+      sourcePath: "src/b/Foo.sol",
+    }]);
+
+    const scan = ctx.state.facetScan as ModuleState<FacetScanStateResult>;
+    expect(scan.result?.facets).toEqual([
+      expect.objectContaining({
+        facetName: "Foo",
+        path: "src/b/Foo.sol",
+        functions: [expect.objectContaining({ signature: "fromB()" })],
+      }),
+    ]);
+  });
+
   it("resolves inherited functions and reports missing exports as warnings", async () => {
     const ctx = Context.create();
 
-    ValidationModule.scanFacetSelectors(ctx, astSources, ["SelectorFacet"]);
+    ValidationModule.scanFacetSelectors(ctx, astSources, [{
+      contractName: "SelectorFacet",
+      sourcePath: "src/SelectorFacet.sol",
+    }]);
     await ValidationModule.validateSelectorExports(ctx);
 
     const scan = ctx.state.facetScan as ModuleState<FacetScanStateResult>;
@@ -136,7 +161,10 @@ describe("ValidationModule AST selector scan", () => {
   it("warns when a facet does not declare exportSelectors", async () => {
     const ctx = Context.create();
 
-    ValidationModule.scanFacetSelectors(ctx, astSources, ["BaseFacet"]);
+    ValidationModule.scanFacetSelectors(ctx, astSources, [{
+      contractName: "BaseFacet",
+      sourcePath: "src/SelectorFacet.sol",
+    }]);
     await ValidationModule.validateSelectorExports(ctx);
 
     const validation = ctx.state.validationSelectorExports as ModuleState<SelectorExportValidationResult>;
@@ -162,6 +190,8 @@ describe("ValidationModule AST selector scan", () => {
       foundry: adapter,
       hashing: HashingAdapter,
     });
+    const detectSelectorCollisions = vi.spyOn(ValidationModule, "detectSelectorCollisions");
+    const buildVirtualStorageLayout = vi.spyOn(ValidationModule, "buildVirtualStorageLayout");
     const output = vi.spyOn(console, "log").mockImplementation(() => undefined);
 
     try {
@@ -194,12 +224,61 @@ describe("ValidationModule AST selector scan", () => {
       expect(compileAst).toHaveBeenCalledWith(ctx, [
         path.join(projectRoot, "src", "SelectorFacet.sol"),
       ]);
+      expect(detectSelectorCollisions).toHaveBeenCalledWith(ctx, {
+        hashing: HashingAdapter,
+        scopes: [{
+          diamondName: "Example",
+          facets: [{
+            contractName: "SelectorFacet",
+            sourcePath: path.join(projectRoot, "src", "SelectorFacet.sol"),
+          }],
+        }],
+      });
+      expect(buildVirtualStorageLayout).toHaveBeenCalledWith(
+        ctx,
+        astSources,
+        [{
+          contractName: "SelectorFacet",
+          sourcePath: path.join(projectRoot, "src", "SelectorFacet.sol"),
+        }],
+        [{
+          diamondName: "Example",
+          facets: [{
+            contractName: "SelectorFacet",
+            sourcePath: path.join(projectRoot, "src", "SelectorFacet.sol"),
+          }],
+        }],
+      );
       expect(output.mock.calls.flat().some((value) => String(value).includes("Validation passed")))
         .toBe(true);
     } finally {
       output.mockRestore();
+      detectSelectorCollisions.mockRestore();
+      buildVirtualStorageLayout.mockRestore();
       resolveDependencies.mockRestore();
       await fs.rm(projectRoot, { recursive: true, force: true });
     }
   });
 });
+
+function namedContractSource(
+  sourceName: string,
+  id: number,
+  functionName: string,
+): SolidityAstSource {
+  return {
+    sourceName,
+    ast: {
+      id: id + 100,
+      nodeType: "SourceUnit",
+      src: "0:0:0",
+      nodes: [{
+        id,
+        linearizedBaseContracts: [id],
+        name: "Foo",
+        nodeType: "ContractDefinition",
+        nodes: [functionNode(id + 1, functionName, "external")],
+      }],
+    },
+  };
+}
