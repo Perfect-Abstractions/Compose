@@ -32,7 +32,10 @@ async function main(): Promise<void> {
   ctx.param = { ...ctx.param, ...flags };
 
   try {
-    await EntryPipeline.execute(ctx);
+    const result = await EntryPipeline.execute(ctx);
+    if (!result.status.success) {
+      process.exitCode = 1;
+    }
   } catch (error) {
     exitWithError(error);
   }

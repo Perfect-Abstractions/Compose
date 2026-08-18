@@ -1,19 +1,35 @@
 import { ComposeContext } from "../../context/types";
-import { yellow, red } from "../../utils/terminal";
+import { green, yellow, red } from "../../utils/terminal";
 import {
   getFacetScanState,
   getSelectorExportValidationState,
   getSelectorCollisionValidationState,
   getIdentifierCollisionValidationState,
+  getVirtualStorageLayoutValidationState,
 } from "./state";
-import { FacetScanWarning } from "./types";
+import {
+  FacetScanWarning,
+  IdentifierCollisionOwner,
+  VirtualStorageLayoutRecord,
+} from "./types";
+
+type LayoutOwner = {
+  contractName: string;
+  sourceName: string;
+  layout: string[];
+};
+
+type LayoutMismatch = {
+  position: number;
+  left: LayoutOwner;
+  right: LayoutOwner;
+};
 
 /**
  * Renders validation warnings and fail-fast error reports.
  *
- * Displays facet scan warnings (yellow), then checks for selector export
- * issues, selector collisions, and identifier collisions in order. Each
- * failure is printed in red with details and the method returns early.
+ * Displays facet scan and selector export warnings in yellow, then checks
+ * selector and identifier collisions. Blocking failures are printed in red.
  *
  * @param ctx - The compose context with validation state populated.
  * @returns The context unchanged.
@@ -36,25 +52,39 @@ export async function showReport(ctx: ComposeContext): Promise<ComposeContext> {
   }
 
   const selectorExportValidation = getSelectorExportValidationState(ctx);
+  const selectorExportIssues = selectorExportValidation?.result?.issues ?? [];
 
-  if (selectorExportValidation && !selectorExportValidation.success) {
-    console.error(red("\nValidation failed"));
-    console.error(red(selectorExportValidation.error?.message ?? "Validation failed."));
+  if (selectorExportIssues.length > 0) {
+    console.warn(yellow("\nSelector export warnings"));
 
-    for (const issue of selectorExportValidation.result?.issues ?? []) {
-      console.error(`\n${issue.facetName}`);
-      console.error(`  ${issue.path}`);
+    for (const issue of selectorExportIssues) {
+      console.warn(`\n${issue.facetName}`);
+      console.warn(`  ${issue.path}`);
+
+      if (issue.missingExportSelectorsFunction) {
+        console.warn("  Missing exportSelectors() function");
+      }
 
       if (issue.missingExports.length > 0) {
-        console.error(`  Missing exports: ${issue.missingExports.join(", ")}`);
+        console.warn(`  Missing exports: ${issue.missingExports.join(", ")}`);
       }
 
       if (issue.extraExports.length > 0) {
-        console.error(`  Extra exports: ${issue.extraExports.join(", ")}`);
+        console.warn(`  Extra exports: ${issue.extraExports.join(", ")}`);
       }
     }
+  }
 
-    return ctx;
+  const virtualStorageLayoutValidation = getVirtualStorageLayoutValidationState(ctx);
+  const virtualStorageLayoutWarnings = virtualStorageLayoutValidation?.result?.warnings ?? [];
+
+  if (virtualStorageLayoutWarnings.length > 0) {
+    console.warn(yellow("\nVirtual storage warnings"));
+    for (const warning of virtualStorageLayoutWarnings) {
+      const scope = warning.diamondName ? `${warning.diamondName} / ` : "";
+      console.warn(`\n${scope}${warning.sourceName}`);
+      console.warn(`  ${warning.message}`);
+    }
   }
 
   const selectorCollisionValidation = getSelectorCollisionValidationState(ctx);
@@ -64,14 +94,27 @@ export async function showReport(ctx: ComposeContext): Promise<ComposeContext> {
     console.error(red(selectorCollisionValidation.error?.message ?? "Validation failed."));
 
     for (const collision of selectorCollisionValidation.result?.collisions ?? []) {
-      console.error(`\n${collision.selector}`);
+      const scope = collision.diamondName ? `${collision.diamondName} / ` : "";
+      console.error(`\n${scope}${collision.selector}`);
       for (const owner of collision.owners) {
         console.error(`  ${owner.facetName}: ${owner.signature}`);
         console.error(`    ${owner.path}`);
       }
     }
 
-    return ctx;
+  }
+
+  if (virtualStorageLayoutValidation && !virtualStorageLayoutValidation.success) {
+    console.error(red("\nValidation failed"));
+    console.error(red(virtualStorageLayoutValidation.error?.message ?? "Validation failed."));
+
+    for (const collision of virtualStorageLayoutValidation.result?.collisions ?? []) {
+      const mismatch = findLayoutMismatch(collision.records, true);
+      if (!mismatch) continue;
+      const scope = collision.diamondName ? `${collision.diamondName} / ` : "";
+      printLayoutMismatch(`${scope}${collision.virtualPath}`, mismatch);
+    }
+
   }
 
   const identifierCollisionValidation = getIdentifierCollisionValidationState(ctx);
@@ -81,13 +124,71 @@ export async function showReport(ctx: ComposeContext): Promise<ComposeContext> {
     console.error(red(identifierCollisionValidation.error?.message ?? "Validation failed."));
 
     for (const collision of identifierCollisionValidation.result?.collisions ?? []) {
-      console.error(`\n${collision.identifier}`);
-      for (const owner of collision.owners) {
-        console.error(`  ${owner.facetName}: [${owner.layout.join(", ")}]`);
-        console.error(`    ${owner.path}`);
-      }
+      const owners = collision.owners.map(identifierOwnerToLayoutOwner);
+      const mismatch = findLayoutMismatch(owners, false);
+      if (!mismatch) continue;
+      printLayoutMismatch(collision.identifier, mismatch);
     }
   }
 
   return ctx;
+}
+
+/** Prints the command-level success message after all validation stages pass. */
+export function showSuccess(): void {
+  console.log(green("\nValidation passed.\n"));
+}
+
+function findLayoutMismatch(
+  records: VirtualStorageLayoutRecord[] | LayoutOwner[],
+  allowUncertainTypes: boolean,
+): LayoutMismatch | null {
+  const owners = records.map((record) => ({
+    contractName: record.contractName,
+    sourceName: record.sourceName,
+    layout: record.layout,
+  }));
+
+  for (let leftIndex = 0; leftIndex < owners.length; leftIndex += 1) {
+    for (let rightIndex = leftIndex + 1; rightIndex < owners.length; rightIndex += 1) {
+      const left = owners[leftIndex];
+      const right = owners[rightIndex];
+      const length = Math.min(left.layout.length, right.layout.length);
+
+      for (let position = 0; position < length; position += 1) {
+        const leftCode = left.layout[position];
+        const rightCode = right.layout[position];
+        if (leftCode === rightCode) continue;
+        if (allowUncertainTypes && (isUncertainCode(leftCode) || isUncertainCode(rightCode))) {
+          continue;
+        }
+        return { position, left, right };
+      }
+    }
+  }
+
+  return null;
+}
+
+function printLayoutMismatch(identifier: string, mismatch: LayoutMismatch): void {
+  console.error(`\n${identifier}: layout position ${mismatch.position}`);
+  printLayoutOwner(mismatch.left, mismatch.position);
+  printLayoutOwner(mismatch.right, mismatch.position);
+}
+
+function printLayoutOwner(owner: LayoutOwner, position: number): void {
+  console.error(`  ${owner.contractName}: ${owner.layout[position]}`);
+  console.error(`    ${owner.sourceName}`);
+}
+
+function identifierOwnerToLayoutOwner(owner: IdentifierCollisionOwner): LayoutOwner {
+  return {
+    contractName: owner.facetName,
+    sourceName: owner.path,
+    layout: owner.layout,
+  };
+}
+
+function isUncertainCode(code: string): boolean {
+  return code === "0x71" || code === "0xfe";
 }

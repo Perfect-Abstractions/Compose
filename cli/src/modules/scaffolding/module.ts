@@ -184,16 +184,11 @@ export const ScaffoldingModule = {
     const scaffoldMapState = ctx.state.scaffoldMap as ModuleState<{ entries: ScaffoldMapEntry[] }> | undefined;
     const entries = scaffoldMapState?.result?.entries ?? [];
 
-    const facetScanState = ctx.state.facetScan as ModuleState<{ facets: FacetScanResult[] }> | undefined;
-    const facetScanResults = facetScanState?.result?.facets ?? [];
-
     const facets: Record<string, { source: string; contract: string; package?: string }> = {};
     for (const entry of entries) {
       const relativePath = toPosixPath(path.relative(root, entry.targetPath));
       if (entry.origin === "package") {
-        const scanResult = facetScanResults.find((f) => f.facetName === entry.facetName);
-        const sourcePath = scanResult?.path ?? entry.contractName;
-        const packageName = parsePackageName(sourcePath);
+        const packageName = parsePackageName(entry.targetPath);
         facets[entry.facetName] = {
           source: "package",
           contract: entry.contractName,

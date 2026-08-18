@@ -1,12 +1,43 @@
 import fs from "node:fs/promises";
 import path from "node:path";
 import { ComposeContext } from "../context/types";
-import { ConfigOptions, IFrameworkAdapter } from "./interface/IFrameworkAdapter";
+import {
+  ConfigOptions,
+  IFrameworkAdapter,
+  SolidityAstSource,
+} from "./interface/IFrameworkAdapter";
 import { writeFileIfMissing } from "../utils/files";
 import { runCommand } from "../utils/exec";
-import { isComposePackagePath, resolveCatalogSourceForRead } from "../utils/soliditySources";
+import {
+  composePackageSubpath,
+  isComposePackagePath,
+} from "../utils/soliditySources";
 import { ScaffoldingModule } from "../modules/scaffolding/module";
 import { CLI_ROOT } from "../utils/cliRoot";
+import { isSourceUnitAst, listJsonFiles, uniqueAstSources } from "../utils/solidityAst";
+
+/** Converts a Hardhat compiler source name into its readable filesystem path. */
+export function resolveHardhatAstSourcePath(projectRoot: string, sourceName: string): string {
+  const segments = sourceName.replace(/\\/g, "/").split("/");
+
+  if (segments[0] === "project") {
+    return path.resolve(projectRoot, ...segments.slice(1));
+  }
+
+  if (segments[0] === "npm") {
+    const packageNameIndex = segments[1]?.startsWith("@") ? 2 : 1;
+    const versionedPackageName = segments[packageNameIndex] ?? "";
+    const versionSeparator = versionedPackageName.lastIndexOf("@");
+    if (versionSeparator > 0) {
+      segments[packageNameIndex] = versionedPackageName.slice(0, versionSeparator);
+    }
+    return path.resolve(projectRoot, "node_modules", ...segments.slice(1));
+  }
+
+  return path.isAbsolute(sourceName)
+    ? path.normalize(sourceName)
+    : path.resolve(projectRoot, sourceName);
+}
 
 /** Framework adapter for Hardhat-based Diamond projects. */
 const adapter: IFrameworkAdapter = {
@@ -31,7 +62,53 @@ const adapter: IFrameworkAdapter = {
   },
 
   async resolveSoliditySourcePath(ctx: ComposeContext, sourcePath: string): Promise<string> {
-    return resolveCatalogSourceForRead(sourcePath);
+    if (path.isAbsolute(sourcePath)) return sourcePath;
+
+    const root = String(ctx.param.projectRoot ?? "");
+    if (isComposePackagePath(sourcePath)) {
+      return path.join(
+        root,
+        "node_modules",
+        "@perfect-abstractions",
+        "compose",
+        composePackageSubpath(sourcePath),
+      );
+    }
+
+    return path.resolve(root, sourcePath);
+  },
+
+  async compileAst(ctx: ComposeContext, sourcePaths: string[]): Promise<SolidityAstSource[]> {
+    const root = String(ctx.param.projectRoot ?? "");
+    await Promise.all(sourcePaths.map((sourcePath) => fs.access(sourcePath)));
+    await runCommand("npx", ["hardhat", "compile", "--force"], { cwd: root });
+
+    const sources: SolidityAstSource[] = [];
+    const buildInfoPaths = await listJsonFiles(path.join(root, "artifacts", "build-info"));
+
+    for (const buildInfoPath of buildInfoPaths) {
+      const buildInfo = JSON.parse(await fs.readFile(buildInfoPath, "utf8")) as {
+        output?: { sources?: Record<string, { ast?: unknown }> };
+        sources?: Record<string, { ast?: unknown }>;
+      };
+      const compilerSources = buildInfo.output?.sources ?? buildInfo.sources ?? {};
+
+      for (const [sourceName, compilerSource] of Object.entries(compilerSources)) {
+        if (isSourceUnitAst(compilerSource.ast)) {
+          sources.push({
+            sourceName: resolveHardhatAstSourcePath(root, sourceName),
+            ast: compilerSource.ast,
+          });
+        }
+      }
+    }
+
+    const uniqueSources = uniqueAstSources(sources);
+    if (uniqueSources.length === 0) {
+      throw new Error("Hardhat compilation did not produce any Solidity AST source units.");
+    }
+
+    return uniqueSources;
   },
 
   async initProject(ctx: ComposeContext): Promise<void> {
