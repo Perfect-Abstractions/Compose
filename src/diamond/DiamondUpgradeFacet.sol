@@ -271,7 +271,7 @@ contract DiamondUpgradeFacet {
              * 1. Calculate Pointer
              * add(selectors, 32) - skips the length field of the bytes array
              * shl(2, index) is the same as index * 4 but cheaper
-             * This line executes: ptr = selectorsLength + (4 * index)
+             * This line executes: ptr = selectors + 32 + (4 * index)
              */
             let ptr := add(add(selectors, 32), shl(2, index))
             /**
@@ -292,7 +292,7 @@ contract DiamondUpgradeFacet {
      * selectors as leaf nodes with zero prev/next links.
      *
      * Reverts if any selector already belongs to a different facet.
-     * Returns the number of selectors processed (excluding the first).
+     * Returns the number of selectors processed.
      */
     function addFacetSelectors(address _facet, bytes memory _selectors) internal returns (uint256 selectorsLength) {
         DiamondStorage storage s = getDiamondStorage();
@@ -319,7 +319,7 @@ contract DiamondUpgradeFacet {
         FacetList memory facetList = s.facetList;
         /*
          * Snapshot free memory pointer. We restore this at the end of every loop
-         * to prevent memory expansion costs from repeated `packedSelectors` calls.
+         * to prevent memory expansion costs from repeated `importSelectors` calls.
          */
         uint256 freeMemPtr;
         assembly ("memory-safe") {
@@ -330,7 +330,7 @@ contract DiamondUpgradeFacet {
          * This allows us to avoid additional conditional checks for linked list management in the main facet loop.
          *
          * For the first facet, we link the first selector to the previous facet or if this is the first facet in
-         * the diamond then we assign the first selector to facetList.firstFacetNodeId.
+         * the diamond then we assign the first selector to facetList.headFacetNodeId.
          *
          * All the selectors (except the first one) in the first facet are then added to the diamond.
          *
@@ -382,9 +382,9 @@ contract DiamondUpgradeFacet {
          * 2. Now that the nextFacetNodeId value for the previous facet is available, adds the previous
          *    facet's first selector to the diamond.
          * 3. Emits FacetAdded event for the previous facet.
-         * 3. Updates facet values: facet = nextFacet, etc.
-         * 4. Adds all the selectors (except the first) to the diamond.
-         * 5. Repeat loop.
+         * 4. Updates facet values: facet = nextFacet, etc.
+         * 5. Adds all the selectors (except the first) to the diamond.
+         * 6. Repeat loop.
          */
         for (uint256 i = 1; i < facetLength; i++) {
             address nextFacet = _facets[i];
