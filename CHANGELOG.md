@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.0.5
+
+### Patch Changes
+
+- 4909bb1: add diamond related tests (DiamondMod, DiamondUpgrade, DiamondInspect) by @megabyte0x
+- 4909bb1: extract add selector looping in diamond addFacets to fix stack too deep error when running --ir-minimum
+- 9e5db52: fix temporal and pausable access control integration
+
 ## 0.0.4
 
 ### Patch Changes
