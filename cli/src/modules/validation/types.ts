@@ -11,13 +11,26 @@ export type FacetScanResult = {
   path: string;
   functions: FunctionInfo[];
   exportedSelectors: string[];
+  hasExportSelectorsFunction?: boolean;
   missingExports: string[];
   extraExports: string[];
   storageLayouts: StorageLayoutInfo[];
+  warnings: string[];
 };
 
 export type FacetScanResultCollection = {
-  facets: FacetScanWarning[];
+  facets: FacetScanResult[];
+};
+
+export type FacetReference = {
+  contractName: string;
+  sourcePath: string;
+};
+
+export type ResolvedFacetSource = FacetReference;
+
+export type ResolvedFacetSourceResult = {
+  sources: ResolvedFacetSource[];
 };
 
 export type FacetScanStateResult = {
@@ -28,6 +41,7 @@ export type FacetScanStateResult = {
 export type SelectorExportIssue = {
   facetName: string;
   path: string;
+  missingExportSelectorsFunction: boolean;
   missingExports: string[];
   extraExports: string[];
 };
@@ -42,10 +56,17 @@ export type SelectorOwner = {
 export type SelectorCollision = {
   selector: string;
   owners: SelectorOwner[];
+  diamondName?: string;
+};
+
+export type DiamondValidationScope = {
+  diamondName: string;
+  facets: FacetReference[];
 };
 
 export type SelectorCollisionDeps = {
   hashing: IHashingAdapter;
+  scopes?: DiamondValidationScope[];
 };
 
 export type StorageLayoutInfo = {
@@ -88,4 +109,73 @@ export type FacetScanWarning = {
   facetName: string;
   path: string;
   warnings: string[];
+};
+
+export type VirtualStorageLayoutKind = "normal" | "immutable";
+
+export type VirtualStorageLayoutSource =
+  | "erc8042"
+  | "erc7201"
+  | "slot-assignment"
+  | "implicit-state";
+
+export type VirtualStorageLayoutRecord = {
+  id: string;
+  virtualPath: string;
+  kind: VirtualStorageLayoutKind;
+  codeWidth: 1;
+  layout: string[];
+  serializedLayout: string[];
+  slots: number[][];
+  source: VirtualStorageLayoutSource;
+  sourceName: string;
+  contractName: string;
+  structName: string | null;
+  diamondName?: string;
+};
+
+export type VirtualStorageLayoutWarning = {
+  sourceName: string;
+  message: string;
+  contractName?: string;
+  storagePath?: string;
+  diamondName?: string;
+};
+
+export type StorageVariableReference = {
+  contractName: string;
+  structName: string | null;
+  variableName: string;
+  typeName: string;
+  storagePath: string;
+  sourceName: string;
+};
+
+export type VirtualStorageLayoutCollision = {
+  id: string;
+  virtualPath: string;
+  reason: string;
+  records: VirtualStorageLayoutRecord[];
+  mismatches: Array<{
+    position: number;
+    left: StorageVariableReference;
+    right: StorageVariableReference;
+  }>;
+  diamondName?: string;
+};
+
+export type UnsupportedVirtualStorageLayout = {
+  id: string;
+  virtualPath: string;
+  reason: string;
+  records: VirtualStorageLayoutRecord[];
+  variables: StorageVariableReference[];
+  diamondName?: string;
+};
+
+export type VirtualStorageLayoutResult = {
+  records: VirtualStorageLayoutRecord[];
+  warnings: VirtualStorageLayoutWarning[];
+  collisions: VirtualStorageLayoutCollision[];
+  unsupported: UnsupportedVirtualStorageLayout[];
 };

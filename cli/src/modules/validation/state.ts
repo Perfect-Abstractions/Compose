@@ -5,6 +5,7 @@ import {
   SelectorExportValidationResult,
   SelectorCollisionValidationResult,
   IdentifierCollisionValidationResult,
+  VirtualStorageLayoutResult,
 } from "./types";
 
 /**
@@ -65,5 +66,14 @@ export function getIdentifierCollisionValidationState(
 ): ModuleState<IdentifierCollisionValidationResult> | null {
   return (
     ctx.state.validationIdentifierCollisions as ModuleState<IdentifierCollisionValidationResult> | undefined
+  ) ?? null;
+}
+
+/** Returns the source-derived virtual storage layout validation state. */
+export function getVirtualStorageLayoutValidationState(
+  ctx: ComposeContext,
+): ModuleState<VirtualStorageLayoutResult> | null {
+  return (
+    ctx.state.validationVirtualStorageLayout as ModuleState<VirtualStorageLayoutResult> | undefined
   ) ?? null;
 }

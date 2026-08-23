@@ -1,6 +1,43 @@
 import { describe, expect, it } from "vitest";
 import { parseArgs } from "../src/comander";
 
+describe("validate command arguments", () => {
+  it("accepts a Compose project root", () => {
+    expect(parseArgs(["node", "compose", "validate", "--project-root", "./example"])).toEqual({
+      command: "validate",
+      flags: { projectRoot: "./example" },
+    });
+  });
+});
+
+describe("init command arguments", () => {
+  it("normalizes --out to the project output directory parameter", () => {
+    expect(
+      parseArgs([
+        "node",
+        "compose",
+        "init",
+        "example",
+        "--base",
+        "counter",
+        "--out",
+        "./projects",
+        "--yes",
+      ]),
+    ).toEqual({
+      command: "init",
+      flags: {
+        framework: "foundry",
+        toolbox: "ethers",
+        projectName: "example",
+        base: "counter",
+        outDir: "./projects",
+        yes: true,
+      },
+    });
+  });
+});
+
 describe("rpc command", () => {
   it("parses chain and optional address flags", () => {
     const result = parseArgs([

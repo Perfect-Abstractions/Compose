@@ -1,11 +1,19 @@
 import fs from "node:fs/promises";
 import path from "node:path";
 import { ComposeContext } from "../context/types";
-import { ConfigOptions, IFrameworkAdapter } from "./interface/IFrameworkAdapter";
+import {
+  ConfigOptions,
+  IFrameworkAdapter,
+  SolidityAstSource,
+} from "./interface/IFrameworkAdapter";
 import { writeFileIfMissing } from "../utils/files";
 import { runCommand } from "../utils/exec";
-import { resolveCatalogSourceForRead } from "../utils/soliditySources";
+import {
+  composePackageSubpath,
+  isComposePackagePath,
+} from "../utils/soliditySources";
 import { CLI_ROOT } from "../utils/cliRoot";
+import { isSourceUnitAst, listJsonFiles, uniqueAstSources } from "../utils/solidityAst";
 
 function ensureTomlSectionSettings(
   content: string,
@@ -59,7 +67,45 @@ const adapter: IFrameworkAdapter = {
   },
 
   async resolveSoliditySourcePath(ctx: ComposeContext, sourcePath: string): Promise<string> {
-    return resolveCatalogSourceForRead(sourcePath);
+    if (path.isAbsolute(sourcePath)) return sourcePath;
+
+    const root = String(ctx.param.projectRoot ?? "");
+    if (isComposePackagePath(sourcePath)) {
+      return path.join(root, "lib", "Compose", "src", composePackageSubpath(sourcePath));
+    }
+
+    return path.resolve(root, sourcePath);
+  },
+
+  async compileAst(ctx: ComposeContext, sourcePaths: string[]): Promise<SolidityAstSource[]> {
+    const root = String(ctx.param.projectRoot ?? "");
+    const buildPaths = sourcePaths.map((sourcePath) => {
+      const relativePath = path.relative(root, sourcePath);
+      return relativePath && !relativePath.startsWith("..") && !path.isAbsolute(relativePath)
+        ? relativePath.replace(/\\/g, "/")
+        : sourcePath;
+    });
+    await runCommand("forge", ["build", ...buildPaths, "--ast", "--force"], { cwd: root });
+
+    const sources: SolidityAstSource[] = [];
+    const artifactPaths = await listJsonFiles(path.join(root, "out"));
+
+    for (const artifactPath of artifactPaths) {
+      const artifact = JSON.parse(await fs.readFile(artifactPath, "utf8")) as {
+        ast?: unknown;
+      };
+      if (!isSourceUnitAst(artifact.ast)) continue;
+
+      const sourceName = artifact.ast.absolutePath ?? path.basename(path.dirname(artifactPath));
+      sources.push({ sourceName, ast: artifact.ast });
+    }
+
+    const uniqueSources = uniqueAstSources(sources);
+    if (uniqueSources.length === 0) {
+      throw new Error("Foundry compilation did not produce any Solidity AST source units.");
+    }
+
+    return uniqueSources;
   },
 
   async initProject(ctx: ComposeContext): Promise<void> {

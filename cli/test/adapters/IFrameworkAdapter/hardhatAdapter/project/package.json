@@ -1,0 +1,8 @@
+{
+  "name": "compose-hardhat-ast-fixture",
+  "private": true,
+  "type": "module",
+  "devDependencies": {
+    "hardhat": "3.8.0"
+  }
+}
