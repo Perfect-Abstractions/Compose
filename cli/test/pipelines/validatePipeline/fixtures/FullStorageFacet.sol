@@ -22,7 +22,9 @@ contract FullStorageFacet {
         address owner;
     }
 
-    /// @custom:storage-location erc8042:compose.fixture.virtual-storage
+    /**
+     * @custom:storage-location erc8042:compose.fixture.virtual-storage
+     */
     struct Storage {
         bool flag;
         Status status;

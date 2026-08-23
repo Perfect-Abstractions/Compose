@@ -5,7 +5,9 @@ contract CompatibleStorageFacet {
     enum Status { None, Active, Paused }
     type UserId is uint64;
 
-    /// @custom:storage-location erc8042:compose.fixture.virtual-storage
+    /**
+     * @custom:storage-location erc8042:compose.fixture.virtual-storage
+     */
     struct Storage {
         bool flag;
         Status status;
