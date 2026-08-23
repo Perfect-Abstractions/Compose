@@ -116,6 +116,14 @@ describe("validation output", () => {
           virtualPath: "erc20",
           reason: "layout contains an unknown storage type",
           records,
+          variables: [{
+            contractName: "UnknownFacet",
+            structName: "Data",
+            variableName: "value",
+            typeName: "unknown",
+            storagePath: "Data.value",
+            sourceName: "UnknownFacet.sol",
+          }],
         }],
       },
       error: {
@@ -135,7 +143,59 @@ describe("validation output", () => {
       expect(messages.some(
         (message) => message.includes("Storage layout compatibility could not be proven."),
       )).toBe(true);
+      expect(messages.some((message) => message.includes("UnknownFacet: Data.value"))).toBe(true);
+      expect(messages.some((message) => message.includes("Storage path: Data.value"))).toBe(true);
       expect(errors).not.toHaveBeenCalled();
+    } finally {
+      warnings.mockRestore();
+      errors.mockRestore();
+    }
+  });
+
+  it("reports collisions and uncertain storage in the same run", async () => {
+    const ctx = Context.create();
+    const records = [
+      storageRecord("KnownFacet", "KnownFacet.sol", ["0x2f", "0x03"]),
+      storageRecord("UnknownFacet", "UnknownFacet.sol", ["0x2f", "0xfe"]),
+    ];
+    ctx.state.validationVirtualStorageLayout = {
+      success: false,
+      result: {
+        records,
+        warnings: [],
+        collisions: [{
+          id: records[0].id,
+          virtualPath: "erc20",
+          reason: "normal layout is not append-only compatible",
+          records,
+          mismatches: [],
+        }],
+        unsupported: [{
+          id: records[0].id,
+          virtualPath: "erc20",
+          reason: "layout contains an unknown storage type",
+          records,
+          variables: [],
+        }],
+      },
+      error: {
+        code: "VIRTUAL_STORAGE_COLLISION_DETECTED",
+        message: "Selected facets declare incompatible storage layouts.",
+        nativeError: null,
+      },
+    };
+    const warnings = vi.spyOn(console, "warn").mockImplementation(() => undefined);
+    const errors = vi.spyOn(console, "error").mockImplementation(() => undefined);
+
+    try {
+      await showReport(ctx);
+
+      expect(errors.mock.calls.flat().map(String).some(
+        (message) => message.includes("Validation failed"),
+      )).toBe(true);
+      expect(warnings.mock.calls.flat().map(String).some(
+        (message) => message.includes("Validation incomplete"),
+      )).toBe(true);
     } finally {
       warnings.mockRestore();
       errors.mockRestore();

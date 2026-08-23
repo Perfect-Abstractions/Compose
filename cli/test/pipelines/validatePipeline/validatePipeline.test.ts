@@ -47,10 +47,11 @@ describe("validate pipeline", () => {
         "compose.fixture.virtual-storage | Storage.fixedFive: uint256[5] | Storage.fixedFive: address[5]",
         "compose.fixture.virtual-storage | Storage.fixedThreeHundred: uint256[300] | Storage.fixedThreeHundred: address[300]",
         "compose.fixture.virtual-storage | Storage.nestedFixed: uint256[5][10] | Storage.nestedFixed: address[5][10]",
+        "compose.fixture.virtual-storage | Storage.internalFn: function (uint256) returns (uint256) | Storage.internalFn: uint256",
+        "compose.fixture.virtual-storage.367 | ContainerChild.amount: uint256 | ContainerChild.amount: address",
         "compose.fixture.virtual-storage.368 | ContainerChild.amount: uint256 | ContainerChild.amount: address",
         "compose.fixture.virtual-storage.369 | ContainerChild.amount: uint256 | ContainerChild.amount: address",
-        "compose.fixture.virtual-storage.370 | ContainerChild.amount: uint256 | ContainerChild.amount: address",
-        "compose.fixture.virtual-storage.374 | ContainerChild.amount: uint256 | ContainerChild.amount: address",
+        "compose.fixture.virtual-storage.373 | ContainerChild.amount: uint256 | ContainerChild.amount: address",
       ]);
       expect(findVirtualStorageLayoutCollisions([
         recordFor("FullStorageFacet"),
@@ -78,12 +79,20 @@ describe("validate pipeline", () => {
       expect(output).toContain("      Storage path: Storage.childList[index].amount");
       expect(output).toContain("      Storage path: Storage.fixedChildren[index].amount");
       expect(output).toContain("      Storage path: Storage.nestedChildren[key][index].amount");
-      expect(output.filter((message) => message === "")).toHaveLength(11);
-      expect(output.filter((message) => message === `  ${"─".repeat(48)}`)).toHaveLength(6);
+      expect(output.filter((message) => message === "")).toHaveLength(12);
+      expect(output.filter((message) => message === `  ${"─".repeat(48)}`)).toHaveLength(7);
       expect(output.filter((message) => message.includes("ContainerChild.amount"))).toHaveLength(8);
       expect(output.some((message) => message.includes("CompatibleStorageFacet:"))).toBe(false);
       expect(output.some((message) => message.includes("0xf1"))).toBe(false);
       expect(output.some((message) => message.includes("0x2f"))).toBe(false);
+
+      const warningOutput = warnings.mock.calls.flat().map(String);
+      expect(warningOutput.some(
+        (message) => message.includes("FullStorageFacet: Storage.internalFn"),
+      )).toBe(true);
+      expect(warningOutput.some(
+        (message) => message.includes("internal function storage type uses compiler-specific representation"),
+      )).toBe(true);
     } finally {
       errors.mockRestore();
       warnings.mockRestore();

@@ -39,7 +39,6 @@ contract IncompatibleStorageFacet {
         string text;
 
         function(uint256) external returns (uint256) externalFn;
-        function(uint256) internal returns (uint256) internalFn;
 
         InlineOuter inlineStruct;
 
@@ -59,6 +58,8 @@ contract IncompatibleStorageFacet {
 
         mapping(bytes => uint256) bytesKeyed;
         mapping(string => uint256) stringKeyed;
+
+        uint256 internalFn;
     }
 
     bytes32 private constant STORAGE_POSITION =

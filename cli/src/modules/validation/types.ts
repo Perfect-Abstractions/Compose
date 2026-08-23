@@ -137,6 +137,8 @@ export type VirtualStorageLayoutRecord = {
 export type VirtualStorageLayoutWarning = {
   sourceName: string;
   message: string;
+  contractName?: string;
+  storagePath?: string;
   diamondName?: string;
 };
 
@@ -167,6 +169,7 @@ export type UnsupportedVirtualStorageLayout = {
   virtualPath: string;
   reason: string;
   records: VirtualStorageLayoutRecord[];
+  variables: StorageVariableReference[];
   diamondName?: string;
 };
 

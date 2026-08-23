@@ -70,8 +70,14 @@ export async function showReport(ctx: ComposeContext): Promise<ComposeContext> {
     console.warn(yellow("\nVirtual storage warnings"));
     for (const warning of virtualStorageLayoutWarnings) {
       const scope = warning.diamondName ? `${warning.diamondName} / ` : "";
-      console.warn(`\n${scope}${warning.sourceName}`);
-      console.warn(`  ${warning.message}`);
+      if (warning.contractName && warning.storagePath) {
+        console.warn(yellow(`\n${scope}${warning.contractName}: ${warning.storagePath}`));
+        console.warn(yellow(`  ${warning.message}`));
+        console.warn(yellow(`  ${warning.sourceName}`));
+      } else {
+        console.warn(yellow(`\n${scope}${warning.sourceName}`));
+        console.warn(yellow(`  ${warning.message}`));
+      }
     }
   }
 
@@ -96,22 +102,31 @@ export async function showReport(ctx: ComposeContext): Promise<ComposeContext> {
     const unsupported = virtualStorageLayoutValidation.result?.unsupported ?? [];
     const hasCollisions = (virtualStorageLayoutValidation.result?.collisions.length ?? 0) > 0;
 
-    if (!hasCollisions && unsupported.length > 0) {
-      console.warn(yellow("\nValidation incomplete"));
-      console.warn(yellow(
-        virtualStorageLayoutValidation.error?.message ?? "Storage layout compatibility is unknown.",
-      ));
-      for (const item of unsupported) {
-        const scope = item.diamondName ? `${item.diamondName} / ` : "";
-        console.warn(`\n${scope}${item.virtualPath}`);
-        for (const record of item.records) {
-          console.warn(`  ${record.contractName}`);
-          console.warn(`    ${record.sourceName}`);
-        }
-      }
-    } else {
+    if (hasCollisions) {
       console.error(red("\nValidation failed"));
       console.error(red(virtualStorageLayoutValidation.error?.message ?? "Validation failed."));
+    }
+
+    if (!hasCollisions && unsupported.length === 0) {
+      console.error(red("\nValidation failed"));
+      console.error(red(virtualStorageLayoutValidation.error?.message ?? "Validation failed."));
+    }
+
+    if (unsupported.length > 0) {
+      console.warn(yellow("\nValidation incomplete"));
+      console.warn(yellow("Storage layout compatibility could not be proven."));
+      for (const item of unsupported) {
+        const scope = item.diamondName ? `${item.diamondName} / ` : "";
+        console.warn(yellow(`\n${scope}${item.virtualPath}`));
+        if (item.variables.length > 0) {
+          for (const variable of item.variables) printUncertainStorageVariable(variable);
+        } else {
+          for (const record of item.records) {
+            console.warn(yellow(`  ${record.contractName}`));
+            console.warn(yellow(`    ${record.sourceName}`));
+          }
+        }
+      }
     }
 
     for (const collision of virtualStorageLayoutValidation.result?.collisions ?? []) {
@@ -162,6 +177,16 @@ function printStorageVariable(variable: StorageVariableReference): void {
   console.error(`      Type: ${variable.typeName}`);
   console.error(`      Storage path: ${variable.storagePath}`);
   console.error(`      Source: ${variable.sourceName}`);
+}
+
+function printUncertainStorageVariable(variable: StorageVariableReference): void {
+  const name = variable.structName
+    ? `${variable.structName}.${variable.variableName}`
+    : variable.variableName;
+  console.warn(yellow(`  ${variable.contractName}: ${name}`));
+  console.warn(yellow(`      Type: ${variable.typeName}`));
+  console.warn(yellow(`      Storage path: ${variable.storagePath}`));
+  console.warn(yellow(`      Source: ${variable.sourceName}`));
 }
 
 function printStorageRecord(record: VirtualStorageLayoutRecord): void {

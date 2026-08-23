@@ -661,5 +661,15 @@ describe("virtual storage layout", () => {
       record(["0x2f", "0x71"]),
       record(["0x2f", "0x03"]),
     ])).toEqual([]);
+
+    expect(findVirtualStorageLayoutCollisions([
+      record(["0x2f", "0x71"]),
+      record(["0x2f", "0x03"]),
+    ])).toHaveLength(1);
+
+    expect(findVirtualStorageLayoutCollisions([
+      record(["0x2f", "0x71"]),
+      record(["0x2f", "0x71"]),
+    ])).toEqual([]);
   });
 });

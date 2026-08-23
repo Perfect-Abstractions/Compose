@@ -78,9 +78,14 @@ type TypeAnalysis = {
   packBits: number[];
   slotGroups: number[][];
   children: ChildLayout[];
-  warnings: string[];
+  warnings: TypeAnalysisWarning[];
   boundaryBefore: boolean;
   boundaryAfter: boolean;
+};
+
+type TypeAnalysisWarning = {
+  storagePath: string;
+  message: string;
 };
 
 type StorageVariableOrigin = Omit<StorageVariableReference, "contractName">;
@@ -248,6 +253,7 @@ function compareVirtualStorageLayouts(
         virtualPath: owners[0].virtualPath,
         reason: "layout contains an unknown storage type",
         records: owners,
+        variables: findUnsupportedVariables(owners),
       });
     }
   }
@@ -287,9 +293,11 @@ function emitRecord(options: {
   };
   originsByRecord.set(record, analysis.origins);
   const records = [record];
-  const warnings = analysis.warnings.map((message) => ({
+  const warnings = analysis.warnings.map((warning) => ({
     sourceName: options.root.sourceName,
-    message,
+    contractName: options.root.contractName,
+    storagePath: warning.storagePath,
+    message: warning.message,
   }));
 
   for (const child of analysis.children) {
@@ -326,7 +334,7 @@ function analyzeFields(
   const origins: Array<StorageVariableOrigin | null> = [];
   const slotGroups: number[][] = [];
   const children: ChildLayout[] = [];
-  const warnings: string[] = [];
+  const warnings: TypeAnalysisWarning[] = [];
   let currentSlot: number[] = [];
   let usedBits = 0;
 
@@ -344,7 +352,7 @@ function analyzeFields(
     layout.push(...analysis.layout);
     const origin = storageVariableOrigin(field, index, structName, fieldPath);
     origins.push(...analysis.origins.map((item) => item ?? origin));
-    warnings.push(...analysis.warnings.map((warning) => `${stringValue(field.name)}: ${warning}`));
+    warnings.push(...analysis.warnings);
 
     const startsNewSlot =
       analysis.boundaryBefore ||
@@ -404,7 +412,7 @@ function analyzeType(
     containerKind?: ContainerKind;
   },
 ): TypeAnalysis {
-  if (!type) return unknownType("missing AST type node");
+  if (!type) return unknownType(options.storagePath, "missing AST type node");
 
   if (type.nodeType === "Mapping") {
     const key = scalarType(astNode(type.keyType), index);
@@ -419,7 +427,13 @@ function analyzeType(
       packBits: [],
       slotGroups: [[256]],
       children: value.children,
-      warnings: [...key.warnings, ...value.warnings],
+      warnings: [
+        ...key.warnings.map((message) => ({
+          storagePath: `${options.storagePath}[key]`,
+          message,
+        })),
+        ...value.warnings,
+      ],
       boundaryBefore: false,
       boundaryAfter: false,
     };
@@ -508,7 +522,10 @@ function analyzeType(
     packBits: scalar.bits ? [scalar.bits] : [],
     slotGroups: scalar.wholeSlot ? [[256]] : [],
     children: [],
-    warnings: scalar.warnings,
+    warnings: scalar.warnings.map((message) => ({
+      storagePath: options.storagePath,
+      message,
+    })),
     boundaryBefore: false,
     boundaryAfter: false,
   };
@@ -537,7 +554,6 @@ function scalarType(
     }
     return {
       code: CODE.internalFunction,
-      wholeSlot: true,
       warnings: ["internal function storage type uses compiler-specific representation"],
     };
   }
@@ -1041,14 +1057,14 @@ function numericTypeCode(
   return { code: hexByte(base + bits / 8 - 1), bits, warnings: [] };
 }
 
-function unknownType(message: string): TypeAnalysis {
+function unknownType(storagePath: string, message: string): TypeAnalysis {
   return {
     layout: [CODE.unknown],
     origins: [null],
     packBits: [],
     slotGroups: [[256]],
     children: [],
-    warnings: [message],
+    warnings: [{ storagePath, message }],
     boundaryBefore: false,
     boundaryAfter: false,
   };
@@ -1137,8 +1153,6 @@ function findVariableMismatches(
         const rightCode = right.layout[position];
         if (
           leftCode === rightCode ||
-          leftCode === CODE.internalFunction ||
-          rightCode === CODE.internalFunction ||
           leftCode === CODE.unknown ||
           rightCode === CODE.unknown
         ) continue;
@@ -1167,6 +1181,24 @@ function findVariableMismatches(
   return mismatches;
 }
 
+function findUnsupportedVariables(records: VirtualStorageLayoutRecord[]): StorageVariableReference[] {
+  const variables: StorageVariableReference[] = [];
+  const seen = new Set<string>();
+  for (const record of records) {
+    const origins = originsByRecord.get(record) ?? [];
+    for (let position = 0; position < record.layout.length; position += 1) {
+      if (record.layout[position] !== CODE.unknown) continue;
+      const origin = origins[position];
+      if (!origin) continue;
+      const key = `${record.contractName}:${origin.storagePath}`;
+      if (seen.has(key)) continue;
+      seen.add(key);
+      variables.push({ contractName: record.contractName, ...origin });
+    }
+  }
+  return variables;
+}
+
 type LayoutCompatibility = "compatible" | "collision" | "unsupported";
 
 function comparePrefixLayouts(layouts: string[][]): LayoutCompatibility {
@@ -1192,10 +1224,10 @@ function compareImmutableRecords(records: VirtualStorageLayoutRecord[]): LayoutC
       if (compatibility === "collision") return "collision";
       if (compatibility === "unsupported") unsupported = true;
     }
-    if (!hasInternalFunction([...left.layout, ...right.layout]) && (
+    if (
       left.slots.length !== right.slots.length ||
       !left.slots.every((slot, index) => arraysEqual(slot, right.slots[index]))
-    )) {
+    ) {
       return "collision";
     }
   }
@@ -1205,13 +1237,7 @@ function compareImmutableRecords(records: VirtualStorageLayoutRecord[]): LayoutC
 function compareTokens(left: string, right: string | undefined): LayoutCompatibility {
   if (right === undefined) return "collision";
   if (left === CODE.unknown || right === CODE.unknown) return "unsupported";
-  return left === right || left === CODE.internalFunction || right === CODE.internalFunction
-    ? "compatible"
-    : "collision";
-}
-
-function hasInternalFunction(layout: string[]): boolean {
-  return layout.includes(CODE.internalFunction);
+  return left === right ? "compatible" : "collision";
 }
 
 function arraysEqual<T>(left: T[], right: T[]): boolean {
