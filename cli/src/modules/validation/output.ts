@@ -9,21 +9,9 @@ import {
 } from "./state";
 import {
   FacetScanWarning,
-  IdentifierCollisionOwner,
+  StorageVariableReference,
   VirtualStorageLayoutRecord,
 } from "./types";
-
-type LayoutOwner = {
-  contractName: string;
-  sourceName: string;
-  layout: string[];
-};
-
-type LayoutMismatch = {
-  position: number;
-  left: LayoutOwner;
-  right: LayoutOwner;
-};
 
 /**
  * Renders validation warnings and fail-fast error reports.
@@ -105,14 +93,40 @@ export async function showReport(ctx: ComposeContext): Promise<ComposeContext> {
   }
 
   if (virtualStorageLayoutValidation && !virtualStorageLayoutValidation.success) {
-    console.error(red("\nValidation failed"));
-    console.error(red(virtualStorageLayoutValidation.error?.message ?? "Validation failed."));
+    const unsupported = virtualStorageLayoutValidation.result?.unsupported ?? [];
+    const hasCollisions = (virtualStorageLayoutValidation.result?.collisions.length ?? 0) > 0;
+
+    if (!hasCollisions && unsupported.length > 0) {
+      console.warn(yellow("\nValidation incomplete"));
+      console.warn(yellow(
+        virtualStorageLayoutValidation.error?.message ?? "Storage layout compatibility is unknown.",
+      ));
+      for (const item of unsupported) {
+        const scope = item.diamondName ? `${item.diamondName} / ` : "";
+        console.warn(`\n${scope}${item.virtualPath}`);
+        for (const record of item.records) {
+          console.warn(`  ${record.contractName}`);
+          console.warn(`    ${record.sourceName}`);
+        }
+      }
+    } else {
+      console.error(red("\nValidation failed"));
+      console.error(red(virtualStorageLayoutValidation.error?.message ?? "Validation failed."));
+    }
 
     for (const collision of virtualStorageLayoutValidation.result?.collisions ?? []) {
-      const mismatch = findLayoutMismatch(collision.records, true);
-      if (!mismatch) continue;
       const scope = collision.diamondName ? `${collision.diamondName} / ` : "";
-      printLayoutMismatch(`${scope}${collision.virtualPath}`, mismatch);
+      console.error(`\n${scope}${collision.virtualPath}`);
+      if (collision.mismatches.length > 0) {
+        for (const [index, mismatch] of collision.mismatches.entries()) {
+          if (index > 0) console.error("  " + "─".repeat(48));
+          printStorageVariable(mismatch.left);
+          console.error("");
+          printStorageVariable(mismatch.right);
+        }
+      } else {
+        for (const record of collision.records) printStorageRecord(record);
+      }
     }
 
   }
@@ -124,10 +138,11 @@ export async function showReport(ctx: ComposeContext): Promise<ComposeContext> {
     console.error(red(identifierCollisionValidation.error?.message ?? "Validation failed."));
 
     for (const collision of identifierCollisionValidation.result?.collisions ?? []) {
-      const owners = collision.owners.map(identifierOwnerToLayoutOwner);
-      const mismatch = findLayoutMismatch(owners, false);
-      if (!mismatch) continue;
-      printLayoutMismatch(collision.identifier, mismatch);
+      console.error(`\n${collision.identifier}`);
+      for (const owner of collision.owners) {
+        console.error(`  ${owner.facetName}`);
+        console.error(`    ${owner.path}`);
+      }
     }
   }
 
@@ -139,56 +154,17 @@ export function showSuccess(): void {
   console.log(green("\nValidation passed.\n"));
 }
 
-function findLayoutMismatch(
-  records: VirtualStorageLayoutRecord[] | LayoutOwner[],
-  allowUncertainTypes: boolean,
-): LayoutMismatch | null {
-  const owners = records.map((record) => ({
-    contractName: record.contractName,
-    sourceName: record.sourceName,
-    layout: record.layout,
-  }));
-
-  for (let leftIndex = 0; leftIndex < owners.length; leftIndex += 1) {
-    for (let rightIndex = leftIndex + 1; rightIndex < owners.length; rightIndex += 1) {
-      const left = owners[leftIndex];
-      const right = owners[rightIndex];
-      const length = Math.min(left.layout.length, right.layout.length);
-
-      for (let position = 0; position < length; position += 1) {
-        const leftCode = left.layout[position];
-        const rightCode = right.layout[position];
-        if (leftCode === rightCode) continue;
-        if (allowUncertainTypes && (isUncertainCode(leftCode) || isUncertainCode(rightCode))) {
-          continue;
-        }
-        return { position, left, right };
-      }
-    }
-  }
-
-  return null;
+function printStorageVariable(variable: StorageVariableReference): void {
+  const name = variable.structName
+    ? `${variable.structName}.${variable.variableName}`
+    : variable.variableName;
+  console.error(`  ${variable.contractName}: ${name}`);
+  console.error(`      Type: ${variable.typeName}`);
+  console.error(`      Storage path: ${variable.storagePath}`);
+  console.error(`      Source: ${variable.sourceName}`);
 }
 
-function printLayoutMismatch(identifier: string, mismatch: LayoutMismatch): void {
-  console.error(`\n${identifier}: layout position ${mismatch.position}`);
-  printLayoutOwner(mismatch.left, mismatch.position);
-  printLayoutOwner(mismatch.right, mismatch.position);
-}
-
-function printLayoutOwner(owner: LayoutOwner, position: number): void {
-  console.error(`  ${owner.contractName}: ${owner.layout[position]}`);
-  console.error(`    ${owner.sourceName}`);
-}
-
-function identifierOwnerToLayoutOwner(owner: IdentifierCollisionOwner): LayoutOwner {
-  return {
-    contractName: owner.facetName,
-    sourceName: owner.path,
-    layout: owner.layout,
-  };
-}
-
-function isUncertainCode(code: string): boolean {
-  return code === "0x71" || code === "0xfe";
+function printStorageRecord(record: VirtualStorageLayoutRecord): void {
+  console.error(`  ${record.contractName}: ${record.structName ?? "storage layout"}`);
+  console.error(`    ${record.sourceName}`);
 }

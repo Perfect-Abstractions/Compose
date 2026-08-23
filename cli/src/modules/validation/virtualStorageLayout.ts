@@ -1,12 +1,15 @@
-import { keccak256, stringToBytes } from "viem";
+import { keccak256, stringToBytes, toHex } from "viem";
 import { SolidityAstSource } from "../../adapters/interface/IFrameworkAdapter";
 import { matchesAstSource } from "./astIdentity";
 import {
   DiamondValidationScope,
   FacetReference,
+  StorageVariableReference,
+  UnsupportedVirtualStorageLayout,
   VirtualStorageLayoutCollision,
   VirtualStorageLayoutRecord,
   VirtualStorageLayoutResult,
+  VirtualStorageLayoutSource,
   VirtualStorageLayoutWarning,
 } from "./types";
 
@@ -36,6 +39,14 @@ export function buildScopedVirtualStorageLayout(
           diamondName: scope.diamondName,
         })),
       })),
+      unsupported: result.unsupported.map((unsupported) => ({
+        ...unsupported,
+        diamondName: scope.diamondName,
+        records: unsupported.records.map((record) => ({
+          ...record,
+          diamondName: scope.diamondName,
+        })),
+      })),
     };
   });
 
@@ -43,6 +54,7 @@ export function buildScopedVirtualStorageLayout(
     records: results.flatMap((result) => result.records),
     warnings: results.flatMap((result) => result.warnings),
     collisions: results.flatMap((result) => result.collisions),
+    unsupported: results.flatMap((result) => result.unsupported),
   };
 }
 
@@ -57,10 +69,12 @@ type ChildLayout = {
   slot: number;
   structId: number;
   containerKind: ContainerKind;
+  storagePath: string;
 };
 
 type TypeAnalysis = {
   layout: string[];
+  origins: Array<StorageVariableOrigin | null>;
   packBits: number[];
   slotGroups: number[][];
   children: ChildLayout[];
@@ -68,6 +82,8 @@ type TypeAnalysis = {
   boundaryBefore: boolean;
   boundaryAfter: boolean;
 };
+
+type StorageVariableOrigin = Omit<StorageVariableReference, "contractName">;
 
 type AstIndex = {
   nodesById: Map<number, AstNode>;
@@ -110,6 +126,11 @@ const CODE = {
   end: "0xff",
 } as const;
 
+const originsByRecord = new WeakMap<
+  VirtualStorageLayoutRecord,
+  Array<StorageVariableOrigin | null>
+>();
+
 /** Builds compact virtual storage records and detects source-side collisions. */
 export function buildVirtualStorageLayout(
   sources: SolidityAstSource[],
@@ -144,11 +165,13 @@ export function buildVirtualStorageLayout(
     seenRoots.add(rootKey);
 
     const emitted = emitRecord({
-      id: buildRootVirtualId(root.id),
+      id: deriveStorageRootId(root.id, root.source),
       virtualPath: root.id,
       kind: "normal",
       fields: root.fields ?? structMembers(root.structId, index),
       root,
+      layoutStructName: root.structName,
+      storagePath: root.structName ?? root.contractName,
       index,
       seen: new Set(),
     });
@@ -156,10 +179,11 @@ export function buildVirtualStorageLayout(
     warnings.push(...emitted.warnings);
   }
 
+  const comparison = compareVirtualStorageLayouts(records);
   return {
     records,
     warnings,
-    collisions: findVirtualStorageLayoutCollisions(records),
+    ...comparison,
   };
 }
 
@@ -167,6 +191,19 @@ export function buildVirtualStorageLayout(
 export function findVirtualStorageLayoutCollisions(
   records: VirtualStorageLayoutRecord[],
 ): VirtualStorageLayoutCollision[] {
+  return compareVirtualStorageLayouts(records).collisions;
+}
+
+/** Finds shared layouts whose compatibility cannot be proven from known type codes. */
+export function findUnsupportedVirtualStorageLayouts(
+  records: VirtualStorageLayoutRecord[],
+): UnsupportedVirtualStorageLayout[] {
+  return compareVirtualStorageLayouts(records).unsupported;
+}
+
+function compareVirtualStorageLayouts(
+  records: VirtualStorageLayoutRecord[],
+): Pick<VirtualStorageLayoutResult, "collisions" | "unsupported"> {
   const recordsById = new Map<string, VirtualStorageLayoutRecord[]>();
   for (const record of records) {
     const owners = recordsById.get(record.id) ?? [];
@@ -175,6 +212,7 @@ export function findVirtualStorageLayoutCollisions(
   }
 
   const collisions: VirtualStorageLayoutCollision[] = [];
+  const unsupported: UnsupportedVirtualStorageLayout[] = [];
   for (const [id, owners] of recordsById) {
     if (owners.length <= 1) continue;
 
@@ -185,15 +223,16 @@ export function findVirtualStorageLayoutCollisions(
         virtualPath: owners[0].virtualPath,
         reason: "mixed normal and immutable records",
         records: owners,
+        mismatches: findVariableMismatches(owners),
       });
       continue;
     }
 
-    const compatible = kinds.has("immutable")
-      ? owners.every((record) => immutableRecordsCompatible(owners[0], record))
-      : arePrefixCompatible(owners.map((record) => record.layout));
+    const compatibility = kinds.has("immutable")
+      ? compareImmutableRecords(owners)
+      : comparePrefixLayouts(owners.map((record) => record.layout));
 
-    if (!compatible) {
+    if (compatibility === "collision") {
       collisions.push({
         id,
         virtualPath: owners[0].virtualPath,
@@ -201,11 +240,19 @@ export function findVirtualStorageLayoutCollisions(
           ? "immutable layout changed"
           : "normal layout is not append-only compatible",
         records: owners,
+        mismatches: findVariableMismatches(owners),
+      });
+    } else if (compatibility === "unsupported") {
+      unsupported.push({
+        id,
+        virtualPath: owners[0].virtualPath,
+        reason: "layout contains an unknown storage type",
+        records: owners,
       });
     }
   }
 
-  return collisions;
+  return { collisions, unsupported };
 }
 
 function emitRecord(options: {
@@ -214,10 +261,17 @@ function emitRecord(options: {
   kind: VirtualStorageLayoutRecord["kind"];
   fields: AstNode[];
   root: StorageRoot;
+  layoutStructName: string | null;
+  storagePath: string;
   index: AstIndex;
   seen: Set<string>;
 }): { records: VirtualStorageLayoutRecord[]; warnings: VirtualStorageLayoutWarning[] } {
-  const analysis = analyzeFields(options.fields, options.index);
+  const analysis = analyzeFields(
+    options.fields,
+    options.index,
+    options.layoutStructName,
+    options.storagePath,
+  );
   const record: VirtualStorageLayoutRecord = {
     id: options.id,
     virtualPath: options.virtualPath,
@@ -231,6 +285,7 @@ function emitRecord(options: {
     contractName: options.root.contractName,
     structName: options.root.structName,
   };
+  originsByRecord.set(record, analysis.origins);
   const records = [record];
   const warnings = analysis.warnings.map((message) => ({
     sourceName: options.root.sourceName,
@@ -249,6 +304,8 @@ function emitRecord(options: {
       kind: child.containerKind === "mapping" ? "normal" : "immutable",
       fields: structMembers(child.structId, options.index),
       root: options.root,
+      layoutStructName: stringValue(options.index.nodesById.get(child.structId)?.name) || null,
+      storagePath: child.storagePath,
       index: options.index,
       seen: new Set([...options.seen, cycleKey]),
     });
@@ -259,8 +316,14 @@ function emitRecord(options: {
   return { records, warnings };
 }
 
-function analyzeFields(fields: AstNode[], index: AstIndex): TypeAnalysis {
+function analyzeFields(
+  fields: AstNode[],
+  index: AstIndex,
+  structName: string | null,
+  storagePath: string,
+): TypeAnalysis {
   const layout: string[] = [];
+  const origins: Array<StorageVariableOrigin | null> = [];
   const slotGroups: number[][] = [];
   const children: ChildLayout[] = [];
   const warnings: string[] = [];
@@ -275,8 +338,12 @@ function analyzeFields(fields: AstNode[], index: AstIndex): TypeAnalysis {
   };
 
   for (const field of fields) {
-    const analysis = analyzeType(astNode(field.typeName), index, {});
+    const fieldName = stringValue(field.name) || "<unknown>";
+    const fieldPath = `${storagePath}.${fieldName}`;
+    const analysis = analyzeType(astNode(field.typeName), index, { storagePath: fieldPath });
     layout.push(...analysis.layout);
+    const origin = storageVariableOrigin(field, index, structName, fieldPath);
+    origins.push(...analysis.origins.map((item) => item ?? origin));
     warnings.push(...analysis.warnings.map((warning) => `${stringValue(field.name)}: ${warning}`));
 
     const startsNewSlot =
@@ -318,6 +385,7 @@ function analyzeFields(fields: AstNode[], index: AstIndex): TypeAnalysis {
   flushSlot();
   return {
     layout,
+    origins,
     packBits: [],
     slotGroups,
     children,
@@ -330,18 +398,24 @@ function analyzeFields(fields: AstNode[], index: AstIndex): TypeAnalysis {
 function analyzeType(
   type: AstNode | null,
   index: AstIndex,
-  options: { insideContainer?: boolean; containerKind?: ContainerKind },
+  options: {
+    storagePath: string;
+    insideContainer?: boolean;
+    containerKind?: ContainerKind;
+  },
 ): TypeAnalysis {
   if (!type) return unknownType("missing AST type node");
 
   if (type.nodeType === "Mapping") {
     const key = scalarType(astNode(type.keyType), index);
     const value = analyzeType(astNode(type.valueType), index, {
+      storagePath: `${options.storagePath}[key]`,
       insideContainer: true,
       containerKind: "mapping",
     });
     return {
       layout: [CODE.mapping, key.code, ...ensureEnd(value.layout)],
+      origins: [null, null, ...ensureEndOrigins(value)],
       packBits: [],
       slotGroups: [[256]],
       children: value.children,
@@ -356,6 +430,7 @@ function analyzeType(
     const fixedLength = lengthNode ? Number(lengthNode.value) : null;
     const containerKind: ContainerKind = fixedLength === null ? "dynamic-array" : "fixed-array";
     const element = analyzeType(astNode(type.baseType), index, {
+      storagePath: `${options.storagePath}[index]`,
       insideContainer: true,
       containerKind,
     });
@@ -366,6 +441,7 @@ function analyzeType(
     if (fixedLength === null) {
       return {
         layout: [...prefix, ...ensureEnd(element.layout)],
+        origins: [...prefix.map(() => null), ...ensureEndOrigins(element)],
         packBits: [],
         slotGroups: [[256]],
         children: element.children,
@@ -377,6 +453,7 @@ function analyzeType(
 
     return {
       layout: [...prefix, ...ensureEnd(element.layout)],
+      origins: [...prefix.map(() => null), ...ensureEndOrigins(element)],
       packBits: [],
       slotGroups: repeatFixedArraySlots(fixedLength, element),
       children: element.children,
@@ -388,16 +465,23 @@ function analyzeType(
 
   const declaration = referencedDeclaration(type, index);
   if (declaration?.nodeType === "StructDefinition") {
-    const nested = analyzeFields(childNodes(declaration, "members"), index);
+    const nested = analyzeFields(
+      childNodes(declaration, "members"),
+      index,
+      stringValue(declaration.name) || null,
+      options.storagePath,
+    );
     if (options.insideContainer) {
       return {
         layout: [CODE.end],
+        origins: [null],
         packBits: [],
         slotGroups: nested.slotGroups,
         children: [{
           slot: 0,
           structId: Number(declaration.id),
           containerKind: options.containerKind ?? "mapping",
+          storagePath: options.storagePath,
         }],
         warnings: nested.warnings,
         boundaryBefore: false,
@@ -407,6 +491,7 @@ function analyzeType(
 
     return {
       layout: [CODE.struct, ...nested.layout, CODE.end],
+      origins: [null, ...nested.origins, null],
       packBits: [],
       slotGroups: nested.slotGroups,
       children: nested.children,
@@ -419,6 +504,7 @@ function analyzeType(
   const scalar = scalarType(type, index);
   return {
     layout: [scalar.code],
+    origins: [null],
     packBits: scalar.bits ? [scalar.bits] : [],
     slotGroups: scalar.wholeSlot ? [[256]] : [],
     children: [],
@@ -958,6 +1044,7 @@ function numericTypeCode(
 function unknownType(message: string): TypeAnalysis {
   return {
     layout: [CODE.unknown],
+    origins: [null],
     packBits: [],
     slotGroups: [[256]],
     children: [],
@@ -988,9 +1075,18 @@ export function hashVirtualPath(virtualPath: string): string {
   return keccak256(stringToBytes(virtualPath));
 }
 
-function buildRootVirtualId(rootIdentifier: string): string {
+/** Derives the physical namespace root for a supported storage convention. */
+export function deriveStorageRootId(
+  rootIdentifier: string,
+  source: VirtualStorageLayoutSource,
+): string {
   if (/^0x[0-9a-fA-F]{1,64}$/.test(rootIdentifier)) {
     return `0x${rootIdentifier.slice(2).padStart(64, "0").toLowerCase()}`;
+  }
+  if (source === "erc7201") {
+    const namespaceHash = BigInt(hashVirtualPath(rootIdentifier));
+    const alignedHash = BigInt(keccak256(toHex(namespaceHash - 1n, { size: 32 }))) & ~0xffn;
+    return toHex(alignedHash, { size: 32 });
   }
   return hashVirtualPath(rootIdentifier);
 }
@@ -1003,39 +1099,119 @@ function ensureEnd(layout: string[]): string[] {
   return layout.at(-1) === CODE.end ? layout : [...layout, CODE.end];
 }
 
-function arePrefixCompatible(layouts: string[][]): boolean {
-  const sorted = [...layouts].sort((left, right) => left.length - right.length);
-  return sorted.every((layout, index) =>
-    index === 0 || sorted[index - 1].every(
-      (token, tokenIndex) => tokensCompatible(token, layout[tokenIndex]),
-    ),
-  );
+function ensureEndOrigins(analysis: TypeAnalysis): Array<StorageVariableOrigin | null> {
+  return analysis.layout.at(-1) === CODE.end
+    ? analysis.origins
+    : [...analysis.origins, null];
 }
 
-function immutableRecordsCompatible(
-  left: VirtualStorageLayoutRecord,
-  right: VirtualStorageLayoutRecord,
-): boolean {
-  if (left.layout.length !== right.layout.length) return false;
-  if (!left.layout.every((token, index) => tokensCompatible(token, right.layout[index]))) {
-    return false;
+function storageVariableOrigin(
+  field: AstNode,
+  index: AstIndex,
+  structName: string | null,
+  storagePath: string,
+): StorageVariableOrigin {
+  const descriptions = isRecord(field.typeDescriptions) ? field.typeDescriptions : {};
+  const type = astNode(field.typeName);
+  return {
+    structName,
+    variableName: stringValue(field.name) || "<unknown>",
+    typeName: stringValue(descriptions.typeString) || stringValue(type?.name) || type?.nodeType || "unknown",
+    storagePath,
+    sourceName: sourceNameFor(field, index),
+  };
+}
+
+function findVariableMismatches(
+  records: VirtualStorageLayoutRecord[],
+): VirtualStorageLayoutCollision["mismatches"] {
+  const mismatches: VirtualStorageLayoutCollision["mismatches"] = [];
+  const seen = new Set<string>();
+  for (let leftIndex = 0; leftIndex < records.length; leftIndex += 1) {
+    for (let rightIndex = leftIndex + 1; rightIndex < records.length; rightIndex += 1) {
+      const left = records[leftIndex];
+      const right = records[rightIndex];
+      const length = Math.min(left.layout.length, right.layout.length);
+      for (let position = 0; position < length; position += 1) {
+        const leftCode = left.layout[position];
+        const rightCode = right.layout[position];
+        if (
+          leftCode === rightCode ||
+          leftCode === CODE.internalFunction ||
+          rightCode === CODE.internalFunction ||
+          leftCode === CODE.unknown ||
+          rightCode === CODE.unknown
+        ) continue;
+
+        const leftOrigin = originsByRecord.get(left)?.[position];
+        const rightOrigin = originsByRecord.get(right)?.[position];
+        if (!leftOrigin || !rightOrigin) continue;
+        const key = [
+          left.contractName,
+          leftOrigin.structName,
+          leftOrigin.variableName,
+          right.contractName,
+          rightOrigin.structName,
+          rightOrigin.variableName,
+        ].join(":");
+        if (seen.has(key)) continue;
+        seen.add(key);
+        mismatches.push({
+          position,
+          left: { contractName: left.contractName, ...leftOrigin },
+          right: { contractName: right.contractName, ...rightOrigin },
+        });
+      }
+    }
   }
-
-  const hasUncertainType = [...left.layout, ...right.layout].some(isUncertainCode);
-  return hasUncertainType || (
-    left.slots.length === right.slots.length &&
-    left.slots.every((slot, index) => arraysEqual(slot, right.slots[index]))
-  );
+  return mismatches;
 }
 
-function tokensCompatible(left: string, right: string | undefined): boolean {
-  return right !== undefined && (
-    left === right || isUncertainCode(left) || isUncertainCode(right)
-  );
+type LayoutCompatibility = "compatible" | "collision" | "unsupported";
+
+function comparePrefixLayouts(layouts: string[][]): LayoutCompatibility {
+  const sorted = [...layouts].sort((left, right) => left.length - right.length);
+  let unsupported = false;
+  for (let index = 1; index < sorted.length; index += 1) {
+    for (let tokenIndex = 0; tokenIndex < sorted[index - 1].length; tokenIndex += 1) {
+      const compatibility = compareTokens(sorted[index - 1][tokenIndex], sorted[index][tokenIndex]);
+      if (compatibility === "collision") return "collision";
+      if (compatibility === "unsupported") unsupported = true;
+    }
+  }
+  return unsupported ? "unsupported" : "compatible";
 }
 
-function isUncertainCode(code: string): boolean {
-  return code === CODE.internalFunction || code === CODE.unknown;
+function compareImmutableRecords(records: VirtualStorageLayoutRecord[]): LayoutCompatibility {
+  let unsupported = false;
+  for (const right of records.slice(1)) {
+    const left = records[0];
+    if (left.layout.length !== right.layout.length) return "collision";
+    for (let index = 0; index < left.layout.length; index += 1) {
+      const compatibility = compareTokens(left.layout[index], right.layout[index]);
+      if (compatibility === "collision") return "collision";
+      if (compatibility === "unsupported") unsupported = true;
+    }
+    if (!hasInternalFunction([...left.layout, ...right.layout]) && (
+      left.slots.length !== right.slots.length ||
+      !left.slots.every((slot, index) => arraysEqual(slot, right.slots[index]))
+    )) {
+      return "collision";
+    }
+  }
+  return unsupported ? "unsupported" : "compatible";
+}
+
+function compareTokens(left: string, right: string | undefined): LayoutCompatibility {
+  if (right === undefined) return "collision";
+  if (left === CODE.unknown || right === CODE.unknown) return "unsupported";
+  return left === right || left === CODE.internalFunction || right === CODE.internalFunction
+    ? "compatible"
+    : "collision";
+}
+
+function hasInternalFunction(layout: string[]): boolean {
+  return layout.includes(CODE.internalFunction);
 }
 
 function arraysEqual<T>(left: T[], right: T[]): boolean {

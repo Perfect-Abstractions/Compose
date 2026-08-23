@@ -97,7 +97,8 @@ export const ValidationModule = {
     const result = scopes
       ? buildScopedVirtualStorageLayout(sources, scopes)
       : buildVirtualStorageLayout(sources, facets);
-    const success = result.collisions.length === 0;
+    const success = result.collisions.length === 0 && result.unsupported.length === 0;
+    const unsupported = result.collisions.length === 0 && result.unsupported.length > 0;
 
     ctx.state.validationVirtualStorageLayout = {
       success,
@@ -105,8 +106,12 @@ export const ValidationModule = {
       error: success
         ? null
         : {
-            code: "VIRTUAL_STORAGE_COLLISION_DETECTED",
-            message: "Selected facets declare incompatible storage layouts.",
+            code: unsupported
+              ? "VIRTUAL_STORAGE_LAYOUT_UNSUPPORTED"
+              : "VIRTUAL_STORAGE_COLLISION_DETECTED",
+            message: unsupported
+              ? "Storage layout compatibility could not be proven."
+              : "Selected facets declare incompatible storage layouts.",
             nativeError: null,
           },
     };

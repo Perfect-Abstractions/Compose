@@ -140,7 +140,29 @@ export type VirtualStorageLayoutWarning = {
   diamondName?: string;
 };
 
+export type StorageVariableReference = {
+  contractName: string;
+  structName: string | null;
+  variableName: string;
+  typeName: string;
+  storagePath: string;
+  sourceName: string;
+};
+
 export type VirtualStorageLayoutCollision = {
+  id: string;
+  virtualPath: string;
+  reason: string;
+  records: VirtualStorageLayoutRecord[];
+  mismatches: Array<{
+    position: number;
+    left: StorageVariableReference;
+    right: StorageVariableReference;
+  }>;
+  diamondName?: string;
+};
+
+export type UnsupportedVirtualStorageLayout = {
   id: string;
   virtualPath: string;
   reason: string;
@@ -152,4 +174,5 @@ export type VirtualStorageLayoutResult = {
   records: VirtualStorageLayoutRecord[];
   warnings: VirtualStorageLayoutWarning[];
   collisions: VirtualStorageLayoutCollision[];
+  unsupported: UnsupportedVirtualStorageLayout[];
 };

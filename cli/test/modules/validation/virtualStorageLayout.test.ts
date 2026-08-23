@@ -9,6 +9,8 @@ import {
 import {
   buildScopedVirtualStorageLayout,
   buildVirtualStorageLayout,
+  deriveStorageRootId,
+  findUnsupportedVirtualStorageLayouts,
   findVirtualStorageLayoutCollisions,
   hashVirtualPath,
 } from "../../../src/modules/validation/virtualStorageLayout";
@@ -85,7 +87,9 @@ function duplicateContractAstSources(): SolidityAstSource[] {
   ];
 }
 
-function nestedVirtualPathAstSource(): SolidityAstSource {
+function nestedVirtualPathAstSource(
+  standard: "erc8042" | "erc7201" = "erc8042",
+): SolidityAstSource {
   const uintField = (id: number, name: string) => ({
     id,
     name,
@@ -125,7 +129,7 @@ function nestedVirtualPathAstSource(): SolidityAstSource {
     nodeType: "StructDefinition",
   };
   const rootStruct = {
-    documentation: { text: "@custom:storage-location erc8042:erc20" },
+    documentation: { text: `@custom:storage-location ${standard}:erc20` },
     id: 100,
     members: [
       uintField(101, "a"),
@@ -395,6 +399,26 @@ describe("virtual storage layout", () => {
     );
   });
 
+  it("derives ERC-8042 and ERC-7201 namespace roots with their canonical formulas", () => {
+    expect(deriveStorageRootId("example.main", "erc8042")).toBe(
+      hashVirtualPath("example.main"),
+    );
+    expect(deriveStorageRootId("example.main", "erc7201")).toBe(
+      "0x183a6125c38840424c4a85fa12bab2ab606c4b6d0e7cc73c0c06ba5300eab500",
+    );
+    expect(deriveStorageRootId(
+      "0x183a6125c38840424c4a85fa12bab2ab606c4b6d0e7cc73c0c06ba5300eab500",
+      "slot-assignment",
+    )).toBe("0x183a6125c38840424c4a85fa12bab2ab606c4b6d0e7cc73c0c06ba5300eab500");
+
+    const result = buildVirtualStorageLayout(
+      [nestedVirtualPathAstSource("erc7201")],
+      [facet("PathFacet", "src/PathFacet.sol")],
+    );
+    expect(result.records[0].id).toBe(deriveStorageRootId("erc20", "erc7201"));
+    expect(result.records[0].source).toBe("erc7201");
+  });
+
   it("uses source path to scope storage for duplicate contract names", () => {
     const sources = duplicateContractAstSources();
     const fooA = facet("Foo", "src/a/Foo.sol");
@@ -414,6 +438,10 @@ describe("virtual storage layout", () => {
       expect.objectContaining({
         id: `0x${"0".repeat(64)}`,
         virtualPath: "0x0",
+        mismatches: expect.arrayContaining([expect.objectContaining({
+          left: expect.objectContaining({ variableName: "value" }),
+          right: expect.objectContaining({ variableName: "value" }),
+        })]),
       }),
     ]);
   });
@@ -616,6 +644,21 @@ describe("virtual storage layout", () => {
 
     expect(findVirtualStorageLayoutCollisions([
       record(["0x2f", "0xfe"]),
+      record(["0x2f", "0x03"]),
+    ])).toEqual([]);
+
+    expect(findUnsupportedVirtualStorageLayouts([
+      record(["0x2f", "0xfe"]),
+      record(["0x2f", "0x03"]),
+    ])).toEqual([
+      expect.objectContaining({
+        virtualPath: "shared.storage",
+        reason: "layout contains an unknown storage type",
+      }),
+    ]);
+
+    expect(findUnsupportedVirtualStorageLayouts([
+      record(["0x2f", "0x71"]),
       record(["0x2f", "0x03"]),
     ])).toEqual([]);
   });
