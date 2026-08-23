@@ -1,5 +1,23 @@
 # Changelog
 
+## 0.2.0
+
+### Minor Changes
+
+- cd8f28d: Add compiler AST support for Foundry and Hardhat, introduce Virtual Storage Layout compatibility checks, and add the standalone `compose validate` pipeline with traceable selector and storage diagnostics.
+
+### Patch Changes
+
+- 9ac686e: adds compose.lock support for tracking diamond deployment state across chains, and migrates the CLI package from CommonJS to ESM with tsup bundling and CI workflow fixes.
+- e56eba6: add project build + auto detect project framework
+- 9e5db52: remove temporal revoke facet in base
+- 987e64c: Add CLI testing infrastructure, example tests, and contributor documentation for testing and code style.
+- 787dab2: add rpc adapter using viem, add diamond inspect command querying deployed diamonds
+- Updated dependencies [4909bb1]
+- Updated dependencies [4909bb1]
+- Updated dependencies [9e5db52]
+  - @perfect-abstractions/compose@0.0.5
+
 ## 0.1.3
 
 ### Patch Changes
