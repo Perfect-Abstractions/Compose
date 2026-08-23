@@ -61,3 +61,6 @@ execOrDie(`npx changeset version${ignoreArg}`);
 // --- Post-sync: copy updated src/ CHANGELOG back to root, then back to src/ ---
 copyFile(SRC_CL, ROOT_CL);
 copyFile(ROOT_CL, SRC_CL);
+
+// Keep npm ci reproducible after workspace manifests are versioned.
+execOrDie('npm install --package-lock-only --ignore-scripts');

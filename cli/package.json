@@ -34,7 +34,7 @@
     "@inquirer/core": "11.2.1",
     "@inquirer/input": "5.1.2",
     "@inquirer/select": "5.2.1",
-    "@perfect-abstractions/compose": "0.0.4",
+    "@perfect-abstractions/compose": "0.0.5",
     "commander": "^13.1.0",
     "dotenv": "^16.4.7",
     "fs-extra": "^11.3.3",
