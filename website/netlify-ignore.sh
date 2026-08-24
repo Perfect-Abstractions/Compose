@@ -3,26 +3,20 @@
 # Based on official Netlify documentation: https://docs.netlify.com/configure-builds/ignore-builds/
 # Exit code: 0 = skip build, 1 = proceed with build
 
-# This script runs from the base directory (website/) but needs to check
-# changes relative to the repository root
+# This script runs from the base directory (website/) but compares paths from
+# the repository root.
 REPO_ROOT=$(git rev-parse --show-toplevel)
-BASE_BRANCH="main"
+cd "$REPO_ROOT" || exit 1
 
-# First, try using Netlify's environment variables (works for regular PRs)
-if [ -n "$CACHED_COMMIT_REF" ] && [ -n "$COMMIT_REF" ]; then
-  if git diff --quiet $CACHED_COMMIT_REF $COMMIT_REF -- "$REPO_ROOT/website/" 2>/dev/null; then
-    exit 0
-  else
-    exit 1
-  fi
-fi
-
-# For forked PRs or when env vars aren't available, fetch base branch and compare
-git fetch origin $BASE_BRANCH 2>/dev/null || true
-
-# Check for changes in the website/ directory using three-dot syntax (merge base comparison)
-if git diff --quiet origin/$BASE_BRANCH...HEAD -- "$REPO_ROOT/website/" 2>/dev/null; then
-  exit 0
-else
+# A missing cache can make both refs point to the current commit. In that case
+# there is no trustworthy baseline, so run the build.
+if [ -z "$CACHED_COMMIT_REF" ] || [ -z "$COMMIT_REF" ] || [ "$CACHED_COMMIT_REF" = "$COMMIT_REF" ]; then
   exit 1
 fi
+
+# Skip only when Netlify provides a valid baseline and website content is unchanged.
+if git diff --quiet "$CACHED_COMMIT_REF" "$COMMIT_REF" -- website/ 2>/dev/null; then
+  exit 0
+fi
+
+exit 1
