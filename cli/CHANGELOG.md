@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.2.1
+
+### Patch Changes
+
+- 92f92d6: Update the Compose CLI to use `@perfect-abstractions/compose` 0.0.6.
+
 ## 0.2.0
 
 ### Minor Changes
