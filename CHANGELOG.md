@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.0.6
+
+### Patch Changes
+
+- d481706: Update the packaged installation instructions for the latest Compose release.
+
 ## 0.0.5
 
 ### Patch Changes
