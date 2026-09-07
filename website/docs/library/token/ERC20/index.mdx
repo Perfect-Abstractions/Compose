@@ -1,0 +1,39 @@
+---
+title: "ERC-20 — Fungible Token Standard"
+sidebar_label: "ERC-20"
+description: "ERC-20 fungible token implementation, split into composable facets and modules."
+---
+
+import DocCard, { DocCardGrid } from '@site/src/components/docs/DocCard';
+import DocSubtitle from '@site/src/components/docs/DocSubtitle';
+import Icon from '@site/src/components/ui/Icon';
+
+# ERC-20: Fungible Tokens
+
+<DocSubtitle>
+  Fungible token functionality, split into granular facets you add only as needed
+</DocSubtitle>
+
+<DocCardGrid columns={2}>
+  <DocCard
+    title="ERC-20 Data Facet"
+    description={"Read-only supply, balance, and allowance queries"}
+    href="/docs/library/token/ERC20/Data/ERC20DataFacet"
+    icon={<Icon name="showcase-facet" size={28} />}
+    size="medium"
+  />
+  <DocCard
+    title="ERC-20 Approve Facet"
+    description={"Grant a spender an allowance over your tokens"}
+    href="/docs/library/token/ERC20/Approve/ERC20ApproveFacet"
+    icon={<Icon name="showcase-facet" size={28} />}
+    size="medium"
+  />
+  <DocCard
+    title="ERC-20 Transfer Facet"
+    description={"Move tokens directly or through an allowance"}
+    href="/docs/library/token/ERC20/Transfer/ERC20TransferFacet"
+    icon={<Icon name="showcase-facet" size={28} />}
+    size="medium"
+  />
+</DocCardGrid>
