@@ -163,4 +163,4 @@ This facet only reads storage, so it cannot corrupt token state on its own. Two 
 - `balanceOf()` reflects whatever the write-side facets recorded. A custom facet that writes to the `erc20` slot with an incompatible struct layout makes these reads report wrong values with no error.
 - An allowance of `type(uint256).max` is a deliberate sentinel for "unlimited" in ERC20TransferFacet. Interfaces that render the raw number should special-case it rather than showing the full integer.
 
-<LastUpdated date="2026-09-06T12:00:00.000Z" />
+<LastUpdated date="2026-09-06T13:00:00.000Z" />
