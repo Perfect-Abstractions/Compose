@@ -1,0 +1,30 @@
+---
+title: "ERC-20 Approve"
+sidebar_label: "Approve"
+description: "Grant a spender an allowance over ERC-20 tokens."
+---
+
+import DocCard, { DocCardGrid } from '@site/src/components/docs/DocCard';
+import DocSubtitle from '@site/src/components/docs/DocSubtitle';
+import Icon from '@site/src/components/ui/Icon';
+
+<DocSubtitle>
+  Set how many of an owner's tokens a spender may move
+</DocSubtitle>
+
+<DocCardGrid columns={2}>
+  <DocCard
+    title="ERC-20 Approve Facet"
+    description={"Set how many of the caller's tokens a spender may move"}
+    href="/docs/library/token/ERC20/Approve/ERC20ApproveFacet"
+    icon={<Icon name="showcase-facet" size={28} />}
+    size="medium"
+  />
+  <DocCard
+    title="ERC-20 Approve Module"
+    description={"Allowance helper for use inside your own facets"}
+    href="/docs/library/token/ERC20/Approve/ERC20ApproveMod"
+    icon={<Icon name="box-detailed" size={28} />}
+    size="medium"
+  />
+</DocCardGrid>

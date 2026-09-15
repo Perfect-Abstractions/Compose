@@ -1,0 +1,10 @@
+{
+  "label": "Bridgeable",
+  "position": 8,
+  "collapsible": true,
+  "collapsed": true,
+  "link": {
+    "type": "doc",
+    "id": "library/token/ERC20/Bridgeable/index"
+  }
+}

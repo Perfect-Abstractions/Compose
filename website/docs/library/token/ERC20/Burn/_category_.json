@@ -1,10 +1,10 @@
 {
-  "label": "Data",
-  "position": 1,
+  "label": "Burn",
+  "position": 5,
   "collapsible": true,
   "collapsed": true,
   "link": {
     "type": "doc",
-    "id": "library/token/ERC20/Data/index"
+    "id": "library/token/ERC20/Burn/index"
   }
 }
