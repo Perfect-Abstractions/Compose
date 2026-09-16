@@ -252,7 +252,7 @@ contract ERC20BridgeableFacet {
         _requireRole("trusted-bridge");
 
         if (_from == address(0)) {
-            revert ERC20InvalidReceiver(address(0));
+            revert ERC20InvalidSender(address(0));
         }
 
         uint256 accountBalance = erc20Storage.balanceOf[_from];
