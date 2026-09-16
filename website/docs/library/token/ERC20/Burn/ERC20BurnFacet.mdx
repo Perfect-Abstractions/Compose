@@ -1,0 +1,282 @@
+---
+sidebar_position: 100
+title: "ERC-20 Burn Facet"
+description: "Destroy ERC-20 tokens from the caller's balance or from an allowance"
+sidebar_label: "Facet"
+gitSource: "https://github.com/Perfect-Abstractions/Compose/tree/main/src/token/ERC20/Burn/ERC20BurnFacet.sol"
+---
+
+import DocSubtitle  from '@site/src/components/docs/DocSubtitle';
+import Callout from '@site/src/components/ui/Callout';
+import Accordion, { AccordionGroup } from '@site/src/components/ui/Accordion';
+import PropertyTable from '@site/src/components/api/PropertyTable';
+import ExpandableCode from '@site/src/components/code/ExpandableCode';
+import LastUpdated from '@site/src/components/docs/LastUpdated';
+import PackageImport from '@site/src/components/docs/PackageImport';
+
+<PackageImport/>
+
+<DocSubtitle>
+Destroy tokens and reduce the total supply
+</DocSubtitle>
+
+<Callout type="info" title="Key Features">
+- `burn` destroys the caller's own tokens. `burnFrom` destroys someone else's using an allowance.
+- Both reduce `balanceOf` and `totalSupply` in `ERC20Storage` at `erc8042:erc20`.
+- Both emit `Transfer` to `address(0)`, which is the ERC-20 convention for a burn.
+</Callout>
+
+## Storage
+
+### State Variables
+
+<PropertyTable
+  properties={[
+    {
+      name: "STORAGE_POSITION",
+      type: "bytes32",
+      description: "ERC-20 storage position within the diamond (Value: `keccak256(\"erc20\")`)"
+    }
+  ]}
+  showRequired={false}
+/>
+
+### ERC20Storage
+
+<ExpandableCode language="solidity" maxLines={15} title="Definition">
+{`/** @custom:storage-location erc8042:erc20 */
+struct ERC20Storage {
+    mapping(address owner => uint256 balance) balanceOf;
+    uint256 totalSupply;
+    mapping(address owner => mapping(address spender => uint256 allowance)) allowance;
+}`}
+</ExpandableCode>
+
+## Functions
+
+### burn
+
+Destroys `_value` of the caller's own tokens and reduces the total supply by the same amount.
+
+Burning `0` is allowed and still emits `Transfer`. Neither function returns a value, so check for a revert rather than a boolean.
+
+<ExpandableCode language="solidity" maxLines={8}>
+{`function burn(uint256 _value) external;`}
+</ExpandableCode>
+
+**Parameters:**
+
+<PropertyTable
+  properties={[
+    {
+      name: "_value",
+      type: "uint256",
+      description: "The number of tokens to destroy. Must not exceed the caller's balance."
+    }
+  ]}
+  showRequired={false}
+/>
+
+**Reverts:**
+
+<PropertyTable
+  properties={[
+    {
+      name: "ERC20InsufficientBalance",
+      type: "error",
+      description: "The caller holds fewer than `_value` tokens."
+    }
+  ]}
+  showRequired={false}
+/>
+
+---
+### burnFrom
+
+Destroys `_value` tokens held by `_account`, spending the allowance that `_account` granted to the caller, and reduces the total supply.
+
+The allowance is checked **before** the balance, so if both are insufficient the call reverts with `ERC20InsufficientAllowance`. When the allowance is exactly `type(uint256).max` it is left untouched, otherwise it is reduced by `_value`.
+
+<ExpandableCode language="solidity" maxLines={8}>
+{`function burnFrom(address _account, uint256 _value) external;`}
+</ExpandableCode>
+
+**Parameters:**
+
+<PropertyTable
+  properties={[
+    {
+      name: "_account",
+      type: "address",
+      description: "The address whose tokens are destroyed. Must have granted the caller an allowance of at least `_value`."
+    },
+    {
+      name: "_value",
+      type: "uint256",
+      description: "The number of tokens to destroy. Must not exceed the caller's allowance or `_account`'s balance."
+    }
+  ]}
+  showRequired={false}
+/>
+
+**Reverts:**
+
+<PropertyTable
+  properties={[
+    {
+      name: "ERC20InsufficientAllowance",
+      type: "error",
+      description: "The caller's allowance over `_account` is below `_value`."
+    },
+    {
+      name: "ERC20InsufficientBalance",
+      type: "error",
+      description: "`_account` holds fewer than `_value` tokens."
+    }
+  ]}
+  showRequired={false}
+/>
+
+## Events
+
+<AccordionGroup>
+  <Accordion title="Transfer" defaultOpen={false}>
+
+    <div style={{marginBottom: "1rem"}}>
+      Emitted by both `burn` and `burnFrom`, always with `address(0)` as the destination. This is how ERC-20 represents a burn, so indexers reading `Transfer` see the supply decrease without a separate event.
+    </div>
+
+    <div style={{marginBottom: "1rem"}}>
+      <strong>Signature:</strong>
+      <ExpandableCode language="solidity" maxLines={5}>
+{`event Transfer(address indexed _from, address indexed _to, uint256 _value);`}
+      </ExpandableCode>
+    </div>
+
+    <div style={{marginBottom: "1rem"}}>
+      <strong>Parameters:</strong>
+      <PropertyTable
+        properties={[
+          {
+            name: "_from",
+            type: "address",
+            description: "The account the tokens were destroyed from. `msg.sender` for `burn`, `_account` for `burnFrom`."
+          },
+          {
+            name: "_to",
+            type: "address",
+            description: "Always `address(0)`."
+          },
+          {
+            name: "_value",
+            type: "uint256",
+            description: "The number of tokens destroyed."
+          }
+        ]}
+        showRequired={false}
+      />
+    </div>
+
+  </Accordion>
+</AccordionGroup>
+
+## Errors
+
+<AccordionGroup>
+  <Accordion title="ERC20InsufficientBalance" defaultOpen={false}>
+
+    <div style={{marginBottom: "1rem"}}>
+      Thrown by `burn` when the caller, or by `burnFrom` when `_account`, holds less than `_value`.
+    </div>
+
+    <div style={{marginBottom: "1rem"}}>
+      <strong>Signature:</strong>
+      <ExpandableCode language="solidity" maxLines={5}>
+{`error ERC20InsufficientBalance(address _sender, uint256 _balance, uint256 _needed);`}
+      </ExpandableCode>
+    </div>
+
+    <div style={{marginBottom: "1rem"}}>
+      <strong>Parameters:</strong>
+      <PropertyTable
+        properties={[
+          {
+            name: "_sender",
+            type: "address",
+            description: "The account whose tokens would have been destroyed."
+          },
+          {
+            name: "_balance",
+            type: "uint256",
+            description: "That account's current balance."
+          },
+          {
+            name: "_needed",
+            type: "uint256",
+            description: "The amount the call required."
+          }
+        ]}
+        showRequired={false}
+      />
+    </div>
+
+  </Accordion>
+
+  <Accordion title="ERC20InsufficientAllowance" defaultOpen={false}>
+
+    <div style={{marginBottom: "1rem"}}>
+      Thrown by `burnFrom` when the caller's allowance over `_account` is below `_value`.
+    </div>
+
+    <div style={{marginBottom: "1rem"}}>
+      <strong>Signature:</strong>
+      <ExpandableCode language="solidity" maxLines={5}>
+{`error ERC20InsufficientAllowance(address _spender, uint256 _allowance, uint256 _needed);`}
+      </ExpandableCode>
+    </div>
+
+    <div style={{marginBottom: "1rem"}}>
+      <strong>Parameters:</strong>
+      <PropertyTable
+        properties={[
+          {
+            name: "_spender",
+            type: "address",
+            description: "The account trying to burn. Always `msg.sender`."
+          },
+          {
+            name: "_allowance",
+            type: "uint256",
+            description: "The current allowance."
+          },
+          {
+            name: "_needed",
+            type: "uint256",
+            description: "The amount the call required."
+          }
+        ]}
+        showRequired={false}
+      />
+    </div>
+
+  </Accordion>
+</AccordionGroup>
+
+## Best Practices
+
+- `burnFrom` needs an allowance first, from [`ERC20ApproveFacet`](/docs/library/token/ERC20/Approve/ERC20ApproveFacet) or [`ERC20PermitFacet`](/docs/library/token/ERC20/Permit/ERC20PermitFacet). It is the same allowance `transferFrom` spends, so burning consumes budget a spender could otherwise have transferred.
+- Add [`ERC20DataFacet`](/docs/library/token/ERC20/Data/ERC20DataFacet) so holders can watch `totalSupply` fall as tokens are destroyed.
+- Treat burns as irreversible. Nothing in this facet can recreate destroyed tokens. Supply only rises again through [`ERC20MintMod`](/docs/library/token/ERC20/Mint/ERC20MintMod), which ships without a facet of its own, or through `crosschainMint` on [`ERC20BridgeableFacet`](/docs/library/token/ERC20/Bridgeable/ERC20BridgeableFacet), which is restricted to holders of the `trusted-bridge` role.
+- To destroy tokens from an account that has **not** approved the caller, this facet cannot do it. Use [`ERC20BurnMod`](/docs/library/token/ERC20/Burn/ERC20BurnMod) behind your own authorization check.
+
+## Security Considerations
+
+**The `totalSupply` subtraction is unchecked and depends on an invariant.** Both functions verify the account's balance, then subtract from the balance and `totalSupply` inside the same `unchecked` block. That is safe only while no balance exceeds `totalSupply`. A custom facet that writes `balanceOf` directly without adjusting `totalSupply` breaks that invariant, and a later burn can then underflow `totalSupply` to a huge number with no revert.
+
+**`burnFrom` emits no `Approval` when it reduces the allowance.** Only the Approve and Permit contracts emit `Approval` anywhere in Compose, so an indexer tracking allowances from events alone will drift. Read `allowance()` for the current value.
+
+**`burnFrom` does not reject `address(0)` explicitly.** It has no zero-address guard. A call naming `address(0)` fails the allowance check instead, because that allowance is always zero, unless `_value` is also `0`, in which case the call succeeds as a no-op and emits `Transfer(address(0), address(0), 0)`.
+
+There are no external calls in either function, so there is no reentrancy surface here.
+
+<LastUpdated date="2026-09-16T12:00:00.000Z" />

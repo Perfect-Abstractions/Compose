@@ -1,0 +1,265 @@
+---
+sidebar_position: 110
+title: "ERC-20 Burn Module"
+description: "ERC-20 burn helper for your own diamond facets"
+sidebar_label: "Module"
+gitSource: "https://github.com/Perfect-Abstractions/Compose/tree/main/src/token/ERC20/Burn/ERC20BurnMod.sol"
+---
+
+import DocSubtitle  from '@site/src/components/docs/DocSubtitle';
+import Callout from '@site/src/components/ui/Callout';
+import Accordion, { AccordionGroup } from '@site/src/components/ui/Accordion';
+import PropertyTable from '@site/src/components/api/PropertyTable';
+import ExpandableCode from '@site/src/components/code/ExpandableCode';
+import LastUpdated from '@site/src/components/docs/LastUpdated';
+import PackageImport from '@site/src/components/docs/PackageImport';
+
+<PackageImport/>
+
+<DocSubtitle>
+Helper function for destroying ERC-20 tokens from any account
+</DocSubtitle>
+
+<Callout type="warning" title="No Authorization Check">
+`burn` destroys tokens from **any** account you name. It performs no allowance check and no role check. Whatever facet calls it is responsible for proving the caller is allowed to do this.
+</Callout>
+
+<Callout type="info" title="Key Features">
+- `burn(_account, _value)` takes the account as a parameter, unlike the facet's caller-only `burn(_value)`.
+- Reduces `balanceOf` and `totalSupply`, then emits `Transfer` to `address(0)`.
+- Declares a reduced `ERC20Storage` with no `allowance` field. See below.
+</Callout>
+
+<Callout type="important" title="Module Usage">
+Use helper functions from Compose using your own custom facets. See <a href="/docs/foundations/facets-and-modules">Facets &amp; Modules</a> for more information.
+</Callout>
+
+## Storage
+
+### State Variables
+
+<PropertyTable
+  properties={[
+    {
+      name: "STORAGE_POSITION",
+      type: "bytes32",
+      description: "ERC-20 storage position within the diamond (Value: `keccak256(\"erc20\")`)"
+    }
+  ]}
+  showRequired={false}
+/>
+
+### ERC20Storage
+
+This module declares only the two fields it uses. The `allowance` mapping that other ERC-20 contracts declare is absent.
+
+<ExpandableCode language="solidity" maxLines={15} title="Definition">
+{`/** @custom:storage-location erc8042:erc20 */
+struct ERC20Storage {
+    mapping(address owner => uint256 balance) balanceOf;
+    uint256 totalSupply;
+}`}
+</ExpandableCode>
+
+<Callout type="info" title="Why the struct is shorter here">
+This is a layout-compatible prefix of the full struct, not a different slot. `balanceOf` and `totalSupply` occupy the same positions either way, so this module reads and writes exactly the same storage as the rest of ERC-20. It simply does not declare the field it never touches.
+
+[`ERC20MintMod`](/docs/library/token/ERC20/Mint/ERC20MintMod) and the two Bridgeable contracts use the same two-field form. Everything that reads or writes an allowance, including [`ERC20BurnFacet`](/docs/library/token/ERC20/Burn/ERC20BurnFacet), declares all three fields.
+</Callout>
+
+## Functions
+
+### getStorage
+
+Returns a pointer to the `ERC20Storage` struct.
+
+Because this module's struct has no `allowance` field, the returned pointer cannot reach allowances. If your facet needs to inspect one, import a module that declares the full struct, such as [`ERC20TransferMod`](/docs/library/token/ERC20/Transfer/ERC20TransferMod) or [`ERC20ApproveMod`](/docs/library/token/ERC20/Approve/ERC20ApproveMod).
+
+<ExpandableCode language="solidity" maxLines={8}>
+{`function getStorage() pure returns (ERC20Storage storage s);`}
+</ExpandableCode>
+
+**Returns:**
+
+<PropertyTable
+  properties={[
+    {
+      name: "s",
+      type: "ERC20Storage storage",
+      description: "The struct in storage, with `balanceOf` and `totalSupply` only."
+    }
+  ]}
+  showRequired={false}
+/>
+
+---
+
+### burn
+
+Destroys `_value` tokens held by `_account` and reduces the total supply by the same amount.
+
+No allowance is consulted and no permission is checked. Gate this behind your own authorization, exactly as you would with a mint. Burning `0` is allowed and still emits `Transfer`.
+
+<ExpandableCode language="solidity" maxLines={8}>
+{`function burn(address _account, uint256 _value);`}
+</ExpandableCode>
+
+**Parameters:**
+
+<PropertyTable
+  properties={[
+    {
+      name: "_account",
+      type: "address",
+      description: "The address whose tokens are destroyed. Cannot be `address(0)`."
+    },
+    {
+      name: "_value",
+      type: "uint256",
+      description: "The number of tokens to destroy. Must not exceed `_account`'s balance."
+    }
+  ]}
+  showRequired={false}
+/>
+
+**Reverts:**
+
+<PropertyTable
+  properties={[
+    {
+      name: "ERC20InvalidSender",
+      type: "error",
+      description: "`_account` is `address(0)`."
+    },
+    {
+      name: "ERC20InsufficientBalance",
+      type: "error",
+      description: "`_account` holds fewer than `_value` tokens."
+    }
+  ]}
+  showRequired={false}
+/>
+
+## Events
+
+<AccordionGroup>
+  <Accordion title="Transfer" defaultOpen={false}>
+    <div style={{marginBottom: "1rem"}}>
+      Emitted on every successful burn, always with `address(0)` as the destination. This is how ERC-20 represents a burn.
+    </div>
+
+    <div style={{marginBottom: "1rem"}}>
+      <strong>Signature:</strong>
+      <ExpandableCode language="solidity" maxLines={5}>
+{`event Transfer(address indexed _from, address indexed _to, uint256 _value);`}
+      </ExpandableCode>
+    </div>
+
+    <div style={{marginBottom: "1rem"}}>
+      <strong>Parameters:</strong>
+      <PropertyTable
+        properties={[
+          {
+            name: "_from",
+            type: "address",
+            description: "The account the tokens were destroyed from. Always `_account`."
+          },
+          {
+            name: "_to",
+            type: "address",
+            description: "Always `address(0)`."
+          },
+          {
+            name: "_value",
+            type: "uint256",
+            description: "The number of tokens destroyed."
+          }
+        ]}
+        showRequired={false}
+      />
+    </div>
+  </Accordion>
+</AccordionGroup>
+
+## Errors
+
+<AccordionGroup>
+  <Accordion title="ERC20InsufficientBalance" defaultOpen={false}>
+    <div style={{marginBottom: "1rem"}}>
+      Thrown when `_account` holds less than `_value`.
+    </div>
+
+    <div style={{marginBottom: "1rem"}}>
+      <strong>Signature:</strong>
+      <ExpandableCode language="solidity" maxLines={5}>
+{`error ERC20InsufficientBalance(address _sender, uint256 _balance, uint256 _needed);`}
+      </ExpandableCode>
+    </div>
+
+    <div style={{marginBottom: "1rem"}}>
+      <strong>Parameters:</strong>
+      <PropertyTable
+        properties={[
+          {
+            name: "_sender",
+            type: "address",
+            description: "The account whose tokens would have been destroyed."
+          },
+          {
+            name: "_balance",
+            type: "uint256",
+            description: "That account's current balance."
+          },
+          {
+            name: "_needed",
+            type: "uint256",
+            description: "The amount the call required."
+          }
+        ]}
+        showRequired={false}
+      />
+    </div>
+  </Accordion>
+
+  <Accordion title="ERC20InvalidSender" defaultOpen={false}>
+    <div style={{marginBottom: "1rem"}}>
+      Thrown when `_account` is the zero address. The facet's `burnFrom` has no equivalent guard, so this module is the stricter of the two.
+    </div>
+
+    <div>
+      <strong>Signature:</strong>
+      <ExpandableCode language="solidity" maxLines={5}>
+{`error ERC20InvalidSender(address _sender);`}
+      </ExpandableCode>
+    </div>
+  </Accordion>
+</AccordionGroup>
+
+## Best Practices
+
+- Wrap `burn` in an `external` function that checks permission first, for example an owner or role guard, or proof that the caller holds the tokens.
+- If you want the ordinary "holders burn their own tokens" behaviour, use [`ERC20BurnFacet`](/docs/library/token/ERC20/Burn/ERC20BurnFacet) instead of writing a wrapper. It already binds the burn to `msg.sender`.
+- If you want allowance-based burning, use the facet's `burnFrom`, or check the allowance yourself through a module that declares it before calling this helper.
+- Keep the same `STORAGE_POSITION` and field order as the other ERC-20 contracts. Do not introduce a second balance mapping.
+
+## Integration Notes
+
+Import the module under a namespace and call it from your facet:
+
+<ExpandableCode language="solidity" maxLines={16} title="Calling burn from a guarded facet">
+{`import "src/token/ERC20/Burn/ERC20BurnMod.sol" as ERC20BurnMod;
+import "src/access/Owner/Data/OwnerDataMod.sol" as OwnerDataMod;
+
+contract MyFacet {
+    function burnFromAccount(address _account, uint256 _value) external {
+        OwnerDataMod.requireOwner();
+        ERC20BurnMod.burn(_account, _value);
+    }
+}`}
+</ExpandableCode>
+
+`ERC20Storage` lives at `keccak256("erc20")` inside the diamond, the same slot [`ERC20DataFacet`](/docs/library/token/ERC20/Data/ERC20DataFacet) reads, so a burn here is immediately visible through `balanceOf()` and `totalSupply()`.
+
+The balance and `totalSupply` subtractions sit inside `unchecked`, after an explicit balance comparison. That is safe only while no balance exceeds `totalSupply`. If your facet writes `balanceOf` directly without adjusting `totalSupply`, a later burn can underflow `totalSupply` silently. Keep the two in step.
+
+<LastUpdated date="2026-09-16T12:00:00.000Z" />
