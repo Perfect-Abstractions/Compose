@@ -1,0 +1,230 @@
+---
+sidebar_position: 110
+title: "ERC-20 Mint Module"
+description: "Create new ERC-20 tokens from your own diamond facet"
+sidebar_label: "Module"
+gitSource: "https://github.com/Perfect-Abstractions/Compose/tree/main/src/token/ERC20/Mint/ERC20MintMod.sol"
+---
+
+import DocSubtitle  from '@site/src/components/docs/DocSubtitle';
+import Callout from '@site/src/components/ui/Callout';
+import Accordion, { AccordionGroup } from '@site/src/components/ui/Accordion';
+import PropertyTable from '@site/src/components/api/PropertyTable';
+import ExpandableCode from '@site/src/components/code/ExpandableCode';
+import LastUpdated from '@site/src/components/docs/LastUpdated';
+import PackageImport from '@site/src/components/docs/PackageImport';
+
+<PackageImport/>
+
+<DocSubtitle>
+Helper function for creating new ERC-20 tokens
+</DocSubtitle>
+
+<Callout type="warning" title="No Authorization Check">
+`mint` creates tokens for **any** account you name, with no permission check of any kind. Whatever facet calls it is responsible for deciding who may mint. Compose ships no general-purpose mint facet precisely so that this decision stays yours.
+</Callout>
+
+<Callout type="info" title="Key Features">
+- `mint(_account, _value)` increases both `balanceOf[_account]` and `totalSupply`.
+- Emits `Transfer` from `address(0)`, which is the ERC-20 convention for a mint.
+- Arithmetic is checked, so an overflowing mint reverts rather than wrapping.
+- Declares a reduced `ERC20Storage` with no `allowance` field. See below.
+</Callout>
+
+<Callout type="important" title="Module Usage">
+Use helper functions from Compose using your own custom facets. See <a href="/docs/foundations/facets-and-modules">Facets &amp; Modules</a> for more information.
+</Callout>
+
+## Storage
+
+### State Variables
+
+<PropertyTable
+  properties={[
+    {
+      name: "STORAGE_POSITION",
+      type: "bytes32",
+      description: "ERC-20 storage position within the diamond (Value: `keccak256(\"erc20\")`)"
+    }
+  ]}
+  showRequired={false}
+/>
+
+### ERC20Storage
+
+This module declares only the two fields it uses. The `allowance` mapping that other ERC-20 contracts declare is absent.
+
+<ExpandableCode language="solidity" maxLines={15} title="Definition">
+{`/** @custom:storage-location erc8042:erc20 */
+struct ERC20Storage {
+    mapping(address owner => uint256 balance) balanceOf;
+    uint256 totalSupply;
+}`}
+</ExpandableCode>
+
+<Callout type="info" title="Why the struct is shorter here">
+This is a layout-compatible prefix of the full struct, not a different slot. `balanceOf` and `totalSupply` occupy the same positions either way, so this module reads and writes exactly the same storage as the rest of ERC-20. It simply does not declare the field it never touches.
+
+[`ERC20BurnMod`](/docs/library/token/ERC20/Burn/ERC20BurnMod) and the two Bridgeable contracts use the same two-field form. Everything that reads or writes an allowance declares all three fields.
+</Callout>
+
+## Functions
+
+### getStorage
+
+Returns a pointer to the `ERC20Storage` struct.
+
+Because this module's struct has no `allowance` field, the returned pointer cannot reach allowances. If your facet needs to inspect one, import a module that declares the full struct, such as [`ERC20TransferMod`](/docs/library/token/ERC20/Transfer/ERC20TransferMod) or [`ERC20ApproveMod`](/docs/library/token/ERC20/Approve/ERC20ApproveMod).
+
+<ExpandableCode language="solidity" maxLines={8}>
+{`function getStorage() pure returns (ERC20Storage storage s);`}
+</ExpandableCode>
+
+**Returns:**
+
+<PropertyTable
+  properties={[
+    {
+      name: "s",
+      type: "ERC20Storage storage",
+      description: "The struct in storage, with `balanceOf` and `totalSupply` only."
+    }
+  ]}
+  showRequired={false}
+/>
+
+---
+
+### mint
+
+Creates `_value` new tokens, credits them to `_account`, and increases the total supply by the same amount.
+
+No permission is checked. Gate this behind your own authorization. Minting `0` is allowed and still emits `Transfer`.
+
+<ExpandableCode language="solidity" maxLines={8}>
+{`function mint(address _account, uint256 _value);`}
+</ExpandableCode>
+
+**Parameters:**
+
+<PropertyTable
+  properties={[
+    {
+      name: "_account",
+      type: "address",
+      description: "The address receiving the new tokens. Cannot be `address(0)`."
+    },
+    {
+      name: "_value",
+      type: "uint256",
+      description: "The number of tokens to create."
+    }
+  ]}
+  showRequired={false}
+/>
+
+**Reverts:**
+
+<PropertyTable
+  properties={[
+    {
+      name: "ERC20InvalidReceiver",
+      type: "error",
+      description: "`_account` is `address(0)`."
+    },
+    {
+      name: "Panic (0x11)",
+      type: "arithmetic",
+      description: "The mint would overflow `totalSupply` or the recipient's balance. Solidity's checked arithmetic reverts."
+    }
+  ]}
+  showRequired={false}
+/>
+
+## Events
+
+<AccordionGroup>
+  <Accordion title="Transfer" defaultOpen={false}>
+    <div style={{marginBottom: "1rem"}}>
+      Emitted on every successful mint, always with `address(0)` as the source. This is how ERC-20 represents newly created tokens, so indexers reading `Transfer` see the supply increase without a separate event.
+    </div>
+
+    <div style={{marginBottom: "1rem"}}>
+      <strong>Signature:</strong>
+      <ExpandableCode language="solidity" maxLines={5}>
+{`event Transfer(address indexed _from, address indexed _to, uint256 _value);`}
+      </ExpandableCode>
+    </div>
+
+    <div style={{marginBottom: "1rem"}}>
+      <strong>Parameters:</strong>
+      <PropertyTable
+        properties={[
+          {
+            name: "_from",
+            type: "address",
+            description: "Always `address(0)`."
+          },
+          {
+            name: "_to",
+            type: "address",
+            description: "The account credited with the new tokens. Always `_account`."
+          },
+          {
+            name: "_value",
+            type: "uint256",
+            description: "The number of tokens created."
+          }
+        ]}
+        showRequired={false}
+      />
+    </div>
+  </Accordion>
+</AccordionGroup>
+
+## Errors
+
+<AccordionGroup>
+  <Accordion title="ERC20InvalidReceiver" defaultOpen={false}>
+    <div style={{marginBottom: "1rem"}}>
+      Thrown when `_account` is the zero address. Without this guard the mint would emit `Transfer(address(0), address(0), _value)`, indistinguishable from a burn to any indexer that keys off `_to == address(0)`, and would credit a balance nobody can ever spend.
+    </div>
+
+    <div>
+      <strong>Signature:</strong>
+      <ExpandableCode language="solidity" maxLines={5}>
+{`error ERC20InvalidReceiver(address _receiver);`}
+      </ExpandableCode>
+    </div>
+  </Accordion>
+</AccordionGroup>
+
+## Best Practices
+
+- Wrap `mint` in an `external` function that checks permission first, for example an owner guard or a role check. Without one, any caller reaching your facet can inflate the supply.
+- Decide on a supply policy before deploying. Nothing here enforces a cap, so if you need one, check it in your facet before calling.
+- Mint during initialization if you want a fixed supply. Call `mint` from your diamond constructor and never expose an external mint path at all.
+- Keep `balanceOf` and `totalSupply` in step. If you ever write balances directly, adjust the supply to match, or the unchecked subtractions in [`ERC20BurnMod`](/docs/library/token/ERC20/Burn/ERC20BurnMod) can underflow later.
+- Keep the same `STORAGE_POSITION` and field order as the other ERC-20 contracts. Do not introduce a second balance mapping.
+
+## Integration Notes
+
+Import the module under a namespace and call it from your facet:
+
+<ExpandableCode language="solidity" maxLines={16} title="Calling mint from a guarded facet">
+{`import "src/token/ERC20/Mint/ERC20MintMod.sol" as ERC20MintMod;
+import "src/access/Owner/Data/OwnerDataMod.sol" as OwnerDataMod;
+
+contract MyFacet {
+    function mintTo(address _account, uint256 _value) external {
+        OwnerDataMod.requireOwner();
+        ERC20MintMod.mint(_account, _value);
+    }
+}`}
+</ExpandableCode>
+
+`ERC20Storage` lives at `keccak256("erc20")` inside the diamond, the same slot [`ERC20DataFacet`](/docs/library/token/ERC20/Data/ERC20DataFacet) reads, so a mint is immediately visible through `balanceOf()` and `totalSupply()`.
+
+**This module is not the only way supply grows.** `crosschainMint` on [`ERC20BridgeableFacet`](/docs/library/token/ERC20/Bridgeable/ERC20BridgeableFacet) also increases `totalSupply`, gated to holders of the `trusted-bridge` role. The two differ in one important way: this module uses checked arithmetic, so an overflowing mint reverts, while the bridge performs its additions inside an `unchecked` block.
+
+<LastUpdated date="2026-09-16T12:00:00.000Z" />

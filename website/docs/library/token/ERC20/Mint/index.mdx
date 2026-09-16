@@ -9,13 +9,13 @@ import DocSubtitle from '@site/src/components/docs/DocSubtitle';
 import Icon from '@site/src/components/ui/Icon';
 
 <DocSubtitle>
-  Create new tokens from your own facet. Compose ships no public mint facet
+  Create new tokens from your own facet. Minting ships as a module only, so your facet decides who may mint.
 </DocSubtitle>
 
 <DocCardGrid columns={2}>
   <DocCard
     title="ERC-20 Mint Module"
-    description={"Create new tokens from your own facet. There is no public mint facet"}
+    description={"Create new tokens from your own facet. Minting ships as a module only"}
     href="/docs/library/token/ERC20/Mint/ERC20MintMod"
     icon={<Icon name="box-detailed" size={28} />}
     size="medium"
