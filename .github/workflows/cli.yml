@@ -34,9 +34,6 @@ jobs:
       - name: Build TypeScript
         run: npm run cli@build
 
-      - name: Run tests
-        run: npm run cli@test
-
       - name: Lint
         run: npm run cli@lint
 
@@ -70,6 +67,9 @@ jobs:
 
       - name: Build TypeScript
         run: npm run cli@build
+
+      - name: Run tests
+        run: npm run cli@test
 
       - name: Smoke test Foundry counter base
         run: |
