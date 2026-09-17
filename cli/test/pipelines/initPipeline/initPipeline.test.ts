@@ -1,132 +1,135 @@
-import { describe, expect, it, vi } from "vitest";
-import {
-  IFrameworkAdapter,
-  SolidityAstSource,
-} from "../../../src/adapters/interface/IFrameworkAdapter";
+import fs from "node:fs/promises";
+import path from "node:path";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import { HashingAdapter } from "../../../src/adapters/hashingAdapter";
-import { Context } from "../../../src/context/context";
-import { ConfigModule } from "../../../src/modules/config/module";
-import { DeployGenerationModule } from "../../../src/modules/deployGeneration/module";
-import { DiamondGenerationModule } from "../../../src/modules/diamondGeneration/module";
 import { InitModule } from "../../../src/modules/init/module";
 import { PreflightModule } from "../../../src/modules/preflight/module";
-import { ProjectDirModule } from "../../../src/modules/projectDir/module";
-import { ScaffoldingModule } from "../../../src/modules/scaffolding/module";
-import { TestGenerationModule } from "../../../src/modules/testGeneration/module";
 import { ValidationModule } from "../../../src/modules/validation/module";
 import { InitPipeline } from "../../../src/pipelines/initPipeline";
 import { DependencyResolver } from "../../../src/resolver/dependencyResolver";
+import { createInitPipelineHarness, InitPipelineHarness } from "./harness";
 
-function contractAst(sourceName: string, contractName: string, id: number): SolidityAstSource {
-  return {
-    sourceName,
-    ast: {
-      id,
-      nodeType: "SourceUnit",
-      src: "0:0:0",
-      absolutePath: sourceName,
-      nodes: [
-        {
-          id: id + 1,
-          nodeType: "ContractDefinition",
-          name: contractName,
-          contractKind: "contract",
-          linearizedBaseContracts: [id + 1],
-          nodes: [],
-          src: "0:0:0",
-        },
-      ],
-    },
-  };
+type ComposeJson = {
+  project: string;
+  framework: string;
+  diamonds: Record<string, {
+    contract: string;
+    facets: Record<string, {
+      source: string;
+      contract: string;
+      package?: string;
+    }>;
+  }>;
+};
+
+async function expectFiles(projectRoot: string, files: string[]): Promise<void> {
+  await Promise.all(files.map((file) =>
+    expect(fs.access(path.join(projectRoot, file))).resolves.toBeUndefined()
+  ));
 }
 
-describe("InitPipeline source validation", () => {
-  it("merges Compose package and project facet paths before compiling AST", async () => {
-    const ctx = Context.create();
-    const packagePath = "@perfect-abstractions/compose/diamond/PackageFacet.sol";
-    const resolvedPackagePath = "/tmp/compose-project/lib/Compose/src/diamond/PackageFacet.sol";
-    const projectPath = "/tmp/compose-project/src/facets/ProjectFacet.sol";
-    Object.assign(ctx.param, {
-      yes: true,
-      framework: "foundry",
-      projectRoot: "/tmp/compose-project",
-      projectName: "example",
-      installDeps: false,
-      base: "counter",
-      libraries: [],
-      extensions: [],
-      access: [],
-      accessExtensions: [],
-    });
+async function readComposeJson(projectRoot: string): Promise<ComposeJson> {
+  return JSON.parse(
+    await fs.readFile(path.join(projectRoot, "compose.json"), "utf8"),
+  ) as ComposeJson;
+}
 
-    const compileAst = vi.fn(async () => [
-      contractAst(resolvedPackagePath, "PackageFacet", 1),
-      contractAst(projectPath, "ProjectFacet", 10),
-    ]);
-    const adapter = {
-      getContractSourceRoot: vi.fn(() => "/tmp/compose-project/src"),
-      getScriptRoot: vi.fn(() => "/tmp/compose-project/script"),
-      getTestRoot: vi.fn(() => "/tmp/compose-project/test"),
-      resolveSoliditySourcePath: vi.fn(async (_ctx, sourcePath: string) =>
-        sourcePath === packagePath ? resolvedPackagePath : sourcePath),
-      compileAst,
-      initProject: vi.fn(async () => undefined),
-      writeConfig: vi.fn(async () => undefined),
-    } as unknown as IFrameworkAdapter;
+function useHarnessDependencies(harness: InitPipelineHarness): void {
+  vi.spyOn(InitModule, "showComposeHeader").mockImplementation(() => undefined);
+  vi.spyOn(InitModule, "showSuccess").mockImplementation(() => undefined);
+  vi.spyOn(PreflightModule, "check").mockImplementation(async (ctx) => ctx);
+  vi.spyOn(ValidationModule, "showReport").mockImplementation(async (ctx) => ctx);
+  vi.spyOn(DependencyResolver, "resolve").mockResolvedValue({
+    [String(harness.ctx.param.framework)]: harness.adapter,
+    hashing: HashingAdapter,
+  });
+}
 
-    vi.spyOn(InitModule, "showComposeHeader").mockImplementation(() => undefined);
-    vi.spyOn(InitModule, "showSuccess").mockImplementation(() => undefined);
-    vi.spyOn(ConfigModule, "loadBasesCatalog").mockImplementation(async (parentCtx) => {
-      parentCtx.config.bases = {};
-      return parentCtx;
-    });
-    vi.spyOn(ConfigModule, "getDiamondCompilerVersion").mockReturnValue("0.8.30");
-    vi.spyOn(InitModule, "runInitNonInteractive").mockImplementation(async (parentCtx) => parentCtx);
-    vi.spyOn(PreflightModule, "check").mockImplementation(async (parentCtx) => parentCtx);
-    vi.spyOn(ProjectDirModule, "resolve").mockImplementation(async (parentCtx) => parentCtx);
-    vi.spyOn(ProjectDirModule, "validate").mockImplementation(async (parentCtx) => parentCtx);
-    vi.spyOn(ScaffoldingModule, "copyFacets").mockResolvedValue([
-      {
-        facetName: "package",
-        contractName: "PackageFacet",
-        targetPath: packagePath,
-        origin: "package",
-      },
-      {
-        facetName: "project",
-        contractName: "ProjectFacet",
-        targetPath: projectPath,
-        origin: "local",
-      },
-    ]);
-    vi.spyOn(ValidationModule, "showReport").mockImplementation(async (parentCtx) => parentCtx);
-    vi.spyOn(DiamondGenerationModule, "generateDiamondContract")
-      .mockImplementation(async (parentCtx) => parentCtx);
-    vi.spyOn(DeployGenerationModule, "generateDeployScript")
-      .mockImplementation(async (parentCtx) => parentCtx);
-    vi.spyOn(TestGenerationModule, "generateTestFile")
-      .mockImplementation(async (parentCtx) => parentCtx);
-    vi.spyOn(ScaffoldingModule, "buildComposeJson").mockImplementation((parentCtx) => parentCtx);
-    vi.spyOn(ScaffoldingModule, "validateLocalFacetFiles")
-      .mockImplementation(async (parentCtx) => parentCtx);
-    vi.spyOn(ScaffoldingModule, "writeComposeConfig")
-      .mockImplementation(async (parentCtx) => parentCtx);
-    vi.spyOn(DependencyResolver, "resolve").mockResolvedValue({
-      foundry: adapter,
-      hashing: HashingAdapter,
-    });
+afterEach(() => {
+  vi.restoreAllMocks();
+});
+
+/**
+ * Exercises the complete InitPipeline with real modules and filesystem output.
+ *
+ * Framework process and compiler behavior stay behind an IFrameworkAdapter
+ * fixture; their real implementations are covered by the adapter test suite.
+ */
+describe("InitPipeline", () => {
+  it.each([
+    {
+      framework: "foundry" as const,
+      projectName: "bare-foundry",
+      contract: "src/Diamond.sol:Diamond",
+      files: [
+        "compose.json",
+        "foundry.toml",
+        "src/Diamond.sol",
+        "script/Deploy.s.sol",
+        "test/Diamond.t.sol",
+      ],
+    },
+    {
+      framework: "hardhat" as const,
+      projectName: "bare-hardhat",
+      contract: "contracts/Diamond.sol:Diamond",
+      files: [
+        "compose.json",
+        "package.json",
+        "hardhat.config.ts",
+        "contracts/Diamond.sol",
+        "scripts/deploy.ts",
+        "test/Diamond.ts",
+      ],
+    },
+  ])("scaffolds a bare $framework diamond", async ({
+    framework,
+    projectName,
+    contract,
+    files,
+  }) => {
+    const harness = await createInitPipelineHarness(framework, "none", projectName);
+    useHarnessDependencies(harness);
 
     try {
-      const result = await InitPipeline.execute(ctx);
+      const result = await InitPipeline.execute(harness.ctx);
+      const composeJson = await readComposeJson(harness.projectRoot);
+      const diamond = composeJson.diamonds[projectName];
 
-      expect(result).toBe(ctx);
-      expect(compileAst).toHaveBeenCalledWith(ctx, [resolvedPackagePath, projectPath]);
-      expect(result.state.validationComposeFacetSources?.success).toBe(true);
-      expect(result.state.validationProjectFacetSources?.success).toBe(true);
-      expect(result.state.initValidation?.success).toBe(true);
       expect(result.status.success).toBe(true);
+      expect(result.state.initValidation?.success).toBe(true);
+      expect(result.state.initPipeline?.success).toBe(true);
+      expect(composeJson.project).toBe(projectName);
+      expect(composeJson.framework).toBe(framework);
+      expect(diamond.contract).toBe(contract);
+      expect(Object.keys(diamond.facets)).toEqual(["DiamondInspectFacet"]);
+      await expectFiles(harness.projectRoot, files);
+      expect(harness.adapter.compileAst).toHaveBeenCalledOnce();
     } finally {
-      vi.restoreAllMocks();
+      await harness.cleanup();
+    }
+  });
+
+  it("scaffolds an ERC-20 diamond from non-interactive flags", async () => {
+    const harness = await createInitPipelineHarness("foundry", "erc-20", "erc20-foundry");
+    useHarnessDependencies(harness);
+
+    try {
+      const result = await InitPipeline.execute(harness.ctx);
+      const composeJson = await readComposeJson(harness.projectRoot);
+      const facetNames = Object.keys(composeJson.diamonds["erc20-foundry"].facets).sort();
+
+      expect(result.status.success).toBe(true);
+      expect(result.state.initValidation?.success).toBe(true);
+      expect(facetNames).toEqual([
+        "DiamondInspectFacet",
+        "ERC20ApproveFacet",
+        "ERC20DataFacet",
+        "ERC20TransferFacet",
+      ]);
+      expect(harness.adapter.compileAst).toHaveBeenCalledOnce();
+    } finally {
+      await harness.cleanup();
     }
   });
 });

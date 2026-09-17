@@ -37,6 +37,8 @@ const catalog: BasesCatalog = {
   globals: {
     diamond: {
       label: "Diamond",
+      pragma: ">=0.8.30",
+      compilerVersion: "0.8.30",
       required: {
         DiamondInspectFacet: facet(facetPaths.DiamondInspectFacet),
       },
