@@ -3,7 +3,7 @@ import { CompileModule } from "../modules/compile/module";
 import { FrameworkModule } from "../modules/framework/module";
 import { DependencyKey } from "../resolver/dependencyKey";
 import { DependencyResolver } from "../resolver/dependencyResolver";
-import { IFrameworkAdapter } from "../adapters/interface/IFrameworkAdapter";
+import { IFrameworkAdapter } from "../adapters/IFrameworkAdapter/interface";
 
 export const BuildPipeline = {
   async execute(ctx: ComposeContext): Promise<ComposeContext> {

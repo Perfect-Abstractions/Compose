@@ -18,7 +18,14 @@ The `cli/test` directory mirrors `cli/src`. Keep each feature's test, harness, a
 ```text
 cli/test/
 ├── adapters/
-│   └── hashingAdapter.test.ts
+│   ├── IFrameworkAdapter/
+│   │   ├── fixtures/
+│   │   ├── foundryAdapter/
+│   │   └── hardhatAdapter/
+│   ├── IHashingAdapter/
+│   │   └── adapter.test.ts
+│   └── IRPCAdapter/
+│       └── adapter.test.ts
 ├── modules/
 │   └── deployGeneration/
 │       ├── fixtures/

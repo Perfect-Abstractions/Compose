@@ -1,10 +1,8 @@
 import fs from "node:fs/promises";
 import path from "node:path";
 import { beforeAll, describe, expect, it } from "vitest";
-import {
-  hardhatAdapter,
-  resolveHardhatAstSourcePath,
-} from "../../../../src/adapters/hardhatAdapter";
+import { hardhatAdapter } from "../../../../src/adapters/IFrameworkAdapter/hardhatAdapter/adapter";
+import { resolveHardhatAstSourcePath } from "../../../../src/adapters/IFrameworkAdapter/hardhatAdapter/helpers";
 import { canonicalizeAst } from "../canonicalAst";
 import {
   createHardhatAdapterFixtureHarness,

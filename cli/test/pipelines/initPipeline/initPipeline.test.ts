@@ -1,7 +1,7 @@
 import fs from "node:fs/promises";
 import path from "node:path";
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { HashingAdapter } from "../../../src/adapters/hashingAdapter";
+import { HashingAdapter } from "../../../src/adapters/IHashingAdapter/adapter";
 import { InitModule } from "../../../src/modules/init/module";
 import { PreflightModule } from "../../../src/modules/preflight/module";
 import { ValidationModule } from "../../../src/modules/validation/module";

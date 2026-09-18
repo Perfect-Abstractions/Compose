@@ -1,6 +1,6 @@
 import fs from "node:fs/promises";
 import { findFileAncestor } from "./files";
-import { RPCAdapterError } from "../adapters/rpc/errors";
+import { RPCAdapterError } from "../adapters/IRPCAdapter/errors";
 
 export type ResolvedChainConfig = {
   /** Name used to select the chain in compose.json. */

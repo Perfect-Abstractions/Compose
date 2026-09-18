@@ -3,7 +3,7 @@ import path from "node:path";
 import {
   SolidityAstSource,
   SoliditySourceUnitAst,
-} from "../adapters/interface/IFrameworkAdapter";
+} from "../adapters/IFrameworkAdapter/interface";
 
 /** Recursively lists JSON files below an adapter output directory. */
 export async function listJsonFiles(root: string): Promise<string[]> {

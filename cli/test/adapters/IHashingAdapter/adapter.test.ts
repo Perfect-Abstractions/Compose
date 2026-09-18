@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { HashingAdapter } from "../../src/adapters/hashingAdapter";
+import { HashingAdapter } from "../../../src/adapters/IHashingAdapter/adapter";
 
 /**
  * Tests HashingAdapter against the full Keccak-256 digest of a Solidity signature.

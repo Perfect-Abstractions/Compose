@@ -1,4 +1,4 @@
-import { IHashingAdapter } from "../../adapters/interface/IHashingAdapter";
+import { IHashingAdapter } from "../../adapters/IHashingAdapter/interface";
 
 export type FunctionInfo = {
   name: string;

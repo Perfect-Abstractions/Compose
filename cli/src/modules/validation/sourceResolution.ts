@@ -1,4 +1,4 @@
-import { IFrameworkAdapter } from "../../adapters/interface/IFrameworkAdapter";
+import { IFrameworkAdapter } from "../../adapters/IFrameworkAdapter/interface";
 import { ComposeContext, ModuleState } from "../../context/types";
 import { ScaffoldMapEntry } from "../scaffolding/types";
 import { ResolvedFacetSource, ResolvedFacetSourceResult } from "./types";

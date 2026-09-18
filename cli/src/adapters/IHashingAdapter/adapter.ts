@@ -1,5 +1,5 @@
 import { keccak256, stringToBytes, type Hex } from "viem";
-import { IHashingAdapter } from "./interface/IHashingAdapter";
+import { IHashingAdapter } from "./interface";
 
 /** Adapter providing keccak256 hashing over UTF-8 strings, returning a hex digest. */
 export const HashingAdapter: IHashingAdapter = {

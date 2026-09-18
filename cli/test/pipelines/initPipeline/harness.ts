@@ -6,7 +6,7 @@ import {
   ConfigOptions,
   IFrameworkAdapter,
   SolidityAstSource,
-} from "../../../src/adapters/interface/IFrameworkAdapter";
+} from "../../../src/adapters/IFrameworkAdapter/interface";
 import { Context } from "../../../src/context/context";
 import { ComposeContext } from "../../../src/context/types";
 import {

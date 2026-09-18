@@ -1,12 +1,12 @@
 import {
   HashingAdapter,
-} from "../adapters/hashingAdapter";
-import { IHashingAdapter } from "../adapters/interface/IHashingAdapter";
-import { IFrameworkAdapter } from "../adapters/interface/IFrameworkAdapter";
-import { foundryAdapter } from "../adapters/foundryAdapter";
-import { hardhatAdapter } from "../adapters/hardhatAdapter";
-import type { IRPCAdapter } from "../adapters/interface/IRPCAdapter";
-import { createRPCAdapter } from "../adapters/rpc/adapter";
+} from "../adapters/IHashingAdapter/adapter";
+import { IHashingAdapter } from "../adapters/IHashingAdapter/interface";
+import { IFrameworkAdapter } from "../adapters/IFrameworkAdapter/interface";
+import { foundryAdapter } from "../adapters/IFrameworkAdapter/foundryAdapter/adapter";
+import { hardhatAdapter } from "../adapters/IFrameworkAdapter/hardhatAdapter/adapter";
+import type { IRPCAdapter } from "../adapters/IRPCAdapter/interface";
+import { createRPCAdapter } from "../adapters/IRPCAdapter/adapter";
 import { resolveChainConfig } from "../utils/chainConfig";
 import { DependencyKey } from "./dependencyKey";
 

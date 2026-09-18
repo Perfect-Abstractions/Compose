@@ -5,7 +5,7 @@ import { DependencyKey } from "../../resolver/dependencyKey";
 import { DependencyResolver } from "../../resolver/dependencyResolver";
 import { resolveChainConfig } from "../../utils/chainConfig";
 import { findFileAncestor } from "../../utils/files";
-import { RPCAdapterError } from "../../adapters/rpc/errors";
+import { RPCAdapterError } from "../../adapters/IRPCAdapter/errors";
 import { showInspect } from "./output";
 import { DIAMOND_LOUPE_ABI } from "./diamondLoupeAbi";
 import { toFacetInfo } from "./facetFormatter";

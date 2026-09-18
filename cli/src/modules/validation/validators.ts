@@ -1,4 +1,4 @@
-import { IHashingAdapter } from "../../adapters/interface/IHashingAdapter";
+import { IHashingAdapter } from "../../adapters/IHashingAdapter/interface";
 import { isArrayPrefix } from "../../utils/arrays";
 import {
   FacetScanResult,

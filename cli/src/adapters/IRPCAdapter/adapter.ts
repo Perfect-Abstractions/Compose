@@ -8,7 +8,7 @@ import {
   type Hex,
   type ReadContractParameters,
 } from "viem";
-import type { IRPCAdapter, RPCReadContractOptions } from "../interface/IRPCAdapter";
+import type { IRPCAdapter, RPCReadContractOptions } from "./interface";
 import { requestError, RPCAdapterError } from "./errors";
 import { retryRPC } from "./retry";
 import type { RPCAdapterOptions } from "./types";
