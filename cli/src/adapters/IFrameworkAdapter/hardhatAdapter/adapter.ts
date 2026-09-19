@@ -1,43 +1,21 @@
 import fs from "node:fs/promises";
 import path from "node:path";
-import { ComposeContext } from "../context/types";
+import { ComposeContext } from "../../../context/types";
 import {
   ConfigOptions,
   IFrameworkAdapter,
   SolidityAstSource,
-} from "./interface/IFrameworkAdapter";
-import { writeFileIfMissing } from "../utils/files";
-import { runCommand } from "../utils/exec";
+} from "../interface";
+import { writeFileIfMissing } from "../../../utils/files";
+import { runCommand } from "../../../utils/exec";
 import {
   composePackageSubpath,
   isComposePackagePath,
-} from "../utils/soliditySources";
-import { ScaffoldingModule } from "../modules/scaffolding/module";
-import { CLI_ROOT } from "../utils/cliRoot";
-import { isSourceUnitAst, listJsonFiles, uniqueAstSources } from "../utils/solidityAst";
-
-/** Converts a Hardhat compiler source name into its readable filesystem path. */
-export function resolveHardhatAstSourcePath(projectRoot: string, sourceName: string): string {
-  const segments = sourceName.replace(/\\/g, "/").split("/");
-
-  if (segments[0] === "project") {
-    return path.resolve(projectRoot, ...segments.slice(1));
-  }
-
-  if (segments[0] === "npm") {
-    const packageNameIndex = segments[1]?.startsWith("@") ? 2 : 1;
-    const versionedPackageName = segments[packageNameIndex] ?? "";
-    const versionSeparator = versionedPackageName.lastIndexOf("@");
-    if (versionSeparator > 0) {
-      segments[packageNameIndex] = versionedPackageName.slice(0, versionSeparator);
-    }
-    return path.resolve(projectRoot, "node_modules", ...segments.slice(1));
-  }
-
-  return path.isAbsolute(sourceName)
-    ? path.normalize(sourceName)
-    : path.resolve(projectRoot, sourceName);
-}
+} from "../../../utils/soliditySources";
+import { ScaffoldingModule } from "../../../modules/scaffolding/module";
+import { CLI_ROOT } from "../../../utils/cliRoot";
+import { isSourceUnitAst, listJsonFiles, uniqueAstSources } from "../../../utils/solidityAst";
+import { resolveHardhatAstSourcePath } from "./helpers";
 
 /** Framework adapter for Hardhat-based Diamond projects. */
 const adapter: IFrameworkAdapter = {

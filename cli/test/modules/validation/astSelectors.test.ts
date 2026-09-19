@@ -5,8 +5,8 @@ import path from "node:path";
 import {
   IFrameworkAdapter,
   SolidityAstSource,
-} from "../../../src/adapters/interface/IFrameworkAdapter";
-import { HashingAdapter } from "../../../src/adapters/hashingAdapter";
+} from "../../../src/adapters/IFrameworkAdapter/interface";
+import { HashingAdapter } from "../../../src/adapters/IHashingAdapter/adapter";
 import { Context } from "../../../src/context/context";
 import { ModuleState } from "../../../src/context/types";
 import { ValidationModule } from "../../../src/modules/validation/module";

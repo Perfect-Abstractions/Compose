@@ -1,7 +1,7 @@
 import fs from "node:fs/promises";
 import path from "node:path";
 import { describe, expect, it } from "vitest";
-import { foundryAdapter } from "../../../../src/adapters/foundryAdapter";
+import { foundryAdapter } from "../../../../src/adapters/IFrameworkAdapter/foundryAdapter/adapter";
 import { canonicalizeAst } from "../canonicalAst";
 import { createFoundryAdapterFixtureHarness } from "./harness";
 

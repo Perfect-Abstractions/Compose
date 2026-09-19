@@ -1,7 +1,7 @@
 import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
 import { describe, expect, it } from "vitest";
-import { SolidityAstSource } from "../../../src/adapters/interface/IFrameworkAdapter";
+import { SolidityAstSource } from "../../../src/adapters/IFrameworkAdapter/interface";
 import {
   FacetReference,
   VirtualStorageLayoutRecord,

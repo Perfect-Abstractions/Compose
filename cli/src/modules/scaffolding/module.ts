@@ -1,6 +1,6 @@
 import fs from "node:fs/promises";
 import path from "node:path";
-import { IFrameworkAdapter } from "../../adapters/interface/IFrameworkAdapter";
+import { IFrameworkAdapter } from "../../adapters/IFrameworkAdapter/interface";
 import { ComposeContext, ModuleState } from "../../context/types";
 import { VERSION } from "../../utils/metadata";
 import { copyFileIfMissing, parsePackageName, resolveLocalSolidityImportClosure, toPosixPath } from "../../utils/files";

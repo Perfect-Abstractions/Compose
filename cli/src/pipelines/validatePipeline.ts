@@ -1,4 +1,4 @@
-import { IFrameworkAdapter } from "../adapters/interface/IFrameworkAdapter";
+import { IFrameworkAdapter } from "../adapters/IFrameworkAdapter/interface";
 import { ComposeContext } from "../context/types";
 import { ValidationModule } from "../modules/validation/module";
 import { DependencyKey } from "../resolver/dependencyKey";

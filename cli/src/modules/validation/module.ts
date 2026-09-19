@@ -1,5 +1,5 @@
 import { ComposeContext } from "../../context/types";
-import { SolidityAstSource } from "../../adapters/interface/IFrameworkAdapter";
+import { SolidityAstSource } from "../../adapters/IFrameworkAdapter/interface";
 import { DiamondValidationScope, FacetReference, SelectorCollisionDeps } from "./types";
 import { matchesAstSource } from "./astIdentity";
 import { scanFacetSelectorsFromAst } from "./astSelectors";
@@ -22,7 +22,7 @@ import {
 } from "./state";
 import { showReport, showSuccess } from "./output";
 import { getResolvedFacetSources, resolveFacetSources } from "./sourceResolution";
-import { IFrameworkAdapter } from "../../adapters/interface/IFrameworkAdapter";
+import { IFrameworkAdapter } from "../../adapters/IFrameworkAdapter/interface";
 
 /**
  * Validates facet scans for selector export guidance and collision-free layouts.

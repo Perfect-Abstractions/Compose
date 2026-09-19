@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { HashingAdapter } from "../../../src/adapters/hashingAdapter";
+import { HashingAdapter } from "../../../src/adapters/IHashingAdapter/adapter";
 import { Context } from "../../../src/context/context";
 import { ValidationModule } from "../../../src/modules/validation/module";
 import { FacetScanResult } from "../../../src/modules/validation/types";

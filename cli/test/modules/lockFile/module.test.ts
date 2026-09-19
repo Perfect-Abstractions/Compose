@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { HashingAdapter } from "../../../src/adapters/hashingAdapter";
+import { HashingAdapter } from "../../../src/adapters/IHashingAdapter/adapter";
 import { LockFileModule } from "../../../src/modules/lockFile/module";
 import { ComposeLock, DiamondDeployment } from "../../../src/modules/lockFile/types";
 

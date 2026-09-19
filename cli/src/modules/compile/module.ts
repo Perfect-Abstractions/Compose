@@ -1,5 +1,5 @@
 import fs from "node:fs";
-import { IFrameworkAdapter } from "../../adapters/interface/IFrameworkAdapter";
+import { IFrameworkAdapter } from "../../adapters/IFrameworkAdapter/interface";
 import { getNewestSourceMtime, getOldestArtifactMtime } from "./utils";
 
 export const CompileModule = {

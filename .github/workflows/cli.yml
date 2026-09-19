@@ -68,6 +68,9 @@ jobs:
       - name: Build TypeScript
         run: npm run cli@build
 
+      - name: Run tests
+        run: npm run cli@test
+
       - name: Smoke test Foundry counter base
         run: |
           set -euo pipefail

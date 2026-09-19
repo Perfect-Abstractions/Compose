@@ -30,7 +30,7 @@ vi.mock("viem", () => ({
   withRetry: mocks.withRetry,
 }));
 
-import { createRPCAdapter } from "../../src/adapters/rpc/adapter";
+import { createRPCAdapter } from "../../../src/adapters/IRPCAdapter/adapter";
 
 type MockClient = {
   chain: { id: number };

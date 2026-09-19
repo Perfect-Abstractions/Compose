@@ -10,7 +10,7 @@ import { DeployGenerationModule } from "../modules/deployGeneration/module";
 import { TestGenerationModule } from "../modules/testGeneration/module";
 import { DependencyKey } from "../resolver/dependencyKey";
 import { DependencyResolver } from "../resolver/dependencyResolver";
-import { IFrameworkAdapter } from "../adapters/interface/IFrameworkAdapter";
+import { IFrameworkAdapter } from "../adapters/IFrameworkAdapter/interface";
 import { BasesCatalog } from "../modules/config/types";
 
 /**

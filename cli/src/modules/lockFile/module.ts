@@ -2,7 +2,7 @@ import fs from "node:fs/promises";
 import path from "node:path";
 import { type Hex } from "viem";
 import { ComposeContext } from "../../context/types";
-import { IHashingAdapter } from "../../adapters/interface/IHashingAdapter";
+import { IHashingAdapter } from "../../adapters/IHashingAdapter/interface";
 import { atomicWriteFile, findFileAncestor } from "../../utils/files";
 import { ComposeLock, DiamondDeployment } from "./types";
 import { validateLockFile } from "./validators";
