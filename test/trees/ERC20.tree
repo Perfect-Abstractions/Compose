@@ -112,7 +112,7 @@ Bridgeable
 │   ├── when caller does not have trusted-bridge role
 │   │   └── it should revert with AccessControlUnauthorizedAccount
 │   ├── when from is zero address
-│   │   └── it should revert with ERC20InvalidReceiver
+│   │   └── it should revert with ERC20InvalidSender
 │   ├── when from balance is less than the amount
 │   │   └── it should revert with ERC20InsufficientBalance
 │   └── when caller has trusted-bridge role and from has sufficient balance

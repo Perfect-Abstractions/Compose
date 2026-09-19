@@ -35,7 +35,7 @@ contract CrosschainBurn_ERC20BridgeableFacet_Fuzz_Unit_Test is ERC20BridgeableFa
         seedTrustedBridge(users.admin);
         vm.stopPrank();
         vm.prank(users.admin);
-        vm.expectRevert(abi.encodeWithSelector(ERC20BridgeableFacet.ERC20InvalidReceiver.selector, ADDRESS_ZERO));
+        vm.expectRevert(abi.encodeWithSelector(ERC20BridgeableFacet.ERC20InvalidSender.selector, ADDRESS_ZERO));
         facet.crosschainBurn(ADDRESS_ZERO, value);
     }
 
