@@ -194,6 +194,7 @@ Use an adapter when a module needs to call an external tool, framework, library,
 - A pipeline should resolve adapter dependencies explicitly and pass them into the module.
 - Feature logic and validation should be handled in modules.
 - External communication and library-specific details should be handled in adapters.
+- Organize adapters by interface. Keep the interface and every implementation of that contract in the same `I<AdapterName>/` directory.
 - For stable dependencies that are unlikely to change often, such as basic CLI parsing or filesystem access, a module helper, module, or util may be more practical than adding an adapter.
 
 Example:
