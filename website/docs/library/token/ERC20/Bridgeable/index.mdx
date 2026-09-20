@@ -1,0 +1,30 @@
+---
+title: "ERC-20 Bridgeable"
+sidebar_label: "Bridgeable"
+description: "Crosschain ERC-20 mint and burn for authorized bridges."
+---
+
+import DocCard, { DocCardGrid } from '@site/src/components/docs/DocCard';
+import DocSubtitle from '@site/src/components/docs/DocSubtitle';
+import Icon from '@site/src/components/ui/Icon';
+
+<DocSubtitle>
+  Mint and burn tokens across chains, restricted to authorized bridges
+</DocSubtitle>
+
+<DocCardGrid columns={2}>
+  <DocCard
+    title="ERC-20 Bridgeable Facet"
+    description={"Crosschain mint and burn, restricted to authorized bridges"}
+    href="/docs/library/token/ERC20/Bridgeable/ERC20BridgeableFacet"
+    icon={<Icon name="showcase-facet" size={28} />}
+    size="medium"
+  />
+  <DocCard
+    title="ERC-20 Bridgeable Module"
+    description={"Crosschain mint and burn helpers for use inside your own facets"}
+    href="/docs/library/token/ERC20/Bridgeable/ERC20BridgeableMod"
+    icon={<Icon name="box-detailed" size={28} />}
+    size="medium"
+  />
+</DocCardGrid>

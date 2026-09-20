@@ -1,0 +1,74 @@
+---
+title: "ERC-20 — Fungible Token Standard"
+sidebar_label: "ERC-20"
+description: "ERC-20 fungible token implementation, split into composable facets and modules."
+---
+
+import DocCard, { DocCardGrid } from '@site/src/components/docs/DocCard';
+import DocSubtitle from '@site/src/components/docs/DocSubtitle';
+import Icon from '@site/src/components/ui/Icon';
+
+# ERC-20: Fungible Tokens
+
+<DocSubtitle>
+  Fungible token functionality, split into granular facets you add only as needed
+</DocSubtitle>
+
+<DocCardGrid columns={2}>
+  <DocCard
+    title="Data"
+    description={"Read-only supply, balance, and allowance queries"}
+    href="/docs/library/token/ERC20/Data"
+    icon={<Icon name="package" size={28} />}
+    size="medium"
+  />
+  <DocCard
+    title="Metadata"
+    description={"Token name, symbol, and decimals"}
+    href="/docs/library/token/ERC20/Metadata"
+    icon={<Icon name="package" size={28} />}
+    size="medium"
+  />
+  <DocCard
+    title="Approve"
+    description={"Grant a spender an allowance over your tokens"}
+    href="/docs/library/token/ERC20/Approve"
+    icon={<Icon name="package" size={28} />}
+    size="medium"
+  />
+  <DocCard
+    title="Transfer"
+    description={"Move tokens directly or through an allowance"}
+    href="/docs/library/token/ERC20/Transfer"
+    icon={<Icon name="package" size={28} />}
+    size="medium"
+  />
+  <DocCard
+    title="Burn"
+    description={"Destroy tokens and reduce the total supply"}
+    href="/docs/library/token/ERC20/Burn"
+    icon={<Icon name="package" size={28} />}
+    size="medium"
+  />
+  <DocCard
+    title="Mint"
+    description={"Create new tokens from your own facet"}
+    href="/docs/library/token/ERC20/Mint"
+    icon={<Icon name="package" size={28} />}
+    size="medium"
+  />
+  <DocCard
+    title="Permit"
+    description={"Approvals signed off-chain with EIP-2612"}
+    href="/docs/library/token/ERC20/Permit"
+    icon={<Icon name="package" size={28} />}
+    size="medium"
+  />
+  <DocCard
+    title="Bridgeable"
+    description={"Crosschain mint and burn for authorized bridges"}
+    href="/docs/library/token/ERC20/Bridgeable"
+    icon={<Icon name="package" size={28} />}
+    size="medium"
+  />
+</DocCardGrid>

@@ -1,0 +1,134 @@
+---
+sidebar_position: 100
+title: "ERC-20 Metadata Facet"
+description: "Read the ERC-20 token name, symbol, and decimals"
+sidebar_label: "Facet"
+gitSource: "https://github.com/Perfect-Abstractions/Compose/tree/main/src/token/ERC20/Metadata/ERC20MetadataFacet.sol"
+---
+
+import DocSubtitle  from '@site/src/components/docs/DocSubtitle';
+import Callout from '@site/src/components/ui/Callout';
+import PropertyTable from '@site/src/components/api/PropertyTable';
+import ExpandableCode from '@site/src/components/code/ExpandableCode';
+import LastUpdated from '@site/src/components/docs/LastUpdated';
+import PackageImport from '@site/src/components/docs/PackageImport';
+
+<PackageImport/>
+
+<DocSubtitle>
+Read-only access to the token name, symbol, and decimals
+</DocSubtitle>
+
+<Callout type="info" title="Key Features">
+- Exposes the three ERC-20 metadata view functions: `name()`, `symbol()` and `decimals()`.
+- Uses `ERC20MetadataStorage` at `erc8042:erc20.metadata`, a different slot from balances and allowances.
+- Read-only facet. Values are written by [`ERC20MetadataMod`](/docs/library/token/ERC20/Metadata/ERC20MetadataMod).
+</Callout>
+
+## Storage
+
+### State Variables
+
+<PropertyTable
+  properties={[
+    {
+      name: "STORAGE_POSITION",
+      type: "bytes32",
+      description: "ERC-20 metadata storage position within the diamond (Value: `keccak256(\"erc20.metadata\")`)"
+    }
+  ]}
+  showRequired={false}
+/>
+
+### ERC20MetadataStorage
+
+<ExpandableCode language="solidity" maxLines={15} title="Definition">
+{`/** @custom:storage-location erc8042:erc20.metadata */
+struct ERC20MetadataStorage {
+    string name;
+    string symbol;
+    uint8 decimals;
+}`}
+</ExpandableCode>
+
+## Functions
+
+### name
+
+Returns the descriptive name of the token, for example `"My Token"`.
+
+<ExpandableCode language="solidity" maxLines={8}>
+{`function name() external view returns (string memory);`}
+</ExpandableCode>
+
+**Returns:**
+
+<PropertyTable
+  properties={[
+    {
+      name: "-",
+      type: "string",
+      description: "The token name, or an empty string if metadata was never set."
+    }
+  ]}
+  showRequired={false}
+/>
+
+---
+### symbol
+
+Returns the short ticker of the token, for example `"MTK"`.
+
+<ExpandableCode language="solidity" maxLines={8}>
+{`function symbol() external view returns (string memory);`}
+</ExpandableCode>
+
+**Returns:**
+
+<PropertyTable
+  properties={[
+    {
+      name: "-",
+      type: "string",
+      description: "The token symbol, or an empty string if metadata was never set."
+    }
+  ]}
+  showRequired={false}
+/>
+
+---
+### decimals
+
+Returns how many decimal places wallets and interfaces should use when displaying balances.
+
+<ExpandableCode language="solidity" maxLines={8}>
+{`function decimals() external view returns (uint8);`}
+</ExpandableCode>
+
+**Returns:**
+
+<PropertyTable
+  properties={[
+    {
+      name: "-",
+      type: "uint8",
+      description: "The number of decimals, or `0` if metadata was never set. `18` is the usual choice."
+    }
+  ]}
+  showRequired={false}
+/>
+
+## Best Practices
+
+- Add this facet together with [`ERC20DataFacet`](/docs/library/token/ERC20/Data/ERC20DataFacet). Wallets and explorers expect both the balance functions and the metadata functions.
+- Set all three values once during deployment with [`ERC20MetadataMod.setMetadata`](/docs/library/token/ERC20/Metadata/ERC20MetadataMod#setmetadata). Reading this facet before that happens returns empty strings and `0`.
+- Choose `decimals` before launch and leave it alone. Changing it later reinterprets every balance already held.
+
+## Security Considerations
+
+This facet only reads storage, so it cannot corrupt token state on its own. Two consequences of the shared slot are worth knowing:
+
+- **Renaming the token invalidates outstanding permit signatures.** [`ERC20PermitFacet`](/docs/library/token/ERC20/Permit/ERC20PermitFacet) hashes the stored `name` into its EIP-712 domain, both in `DOMAIN_SEPARATOR()` and again inside `permit()`. If `name` changes, previously signed permits no longer verify and integrators that cached the old domain separator will produce failing signatures.
+- **`decimals` is display only.** Nothing in Compose does arithmetic with it. Balances, allowances, and the total supply are raw integers, so treat this value as a hint for user interfaces rather than a unit of account.
+
+<LastUpdated date="2026-09-16T12:00:00.000Z" />

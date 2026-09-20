@@ -1,0 +1,145 @@
+---
+sidebar_position: 110
+title: "ERC-20 Metadata Module"
+description: "Set the ERC-20 token name, symbol, and decimals during initialization"
+sidebar_label: "Module"
+gitSource: "https://github.com/Perfect-Abstractions/Compose/tree/main/src/token/ERC20/Metadata/ERC20MetadataMod.sol"
+---
+
+import DocSubtitle  from '@site/src/components/docs/DocSubtitle';
+import Callout from '@site/src/components/ui/Callout';
+import PropertyTable from '@site/src/components/api/PropertyTable';
+import ExpandableCode from '@site/src/components/code/ExpandableCode';
+import LastUpdated from '@site/src/components/docs/LastUpdated';
+import PackageImport from '@site/src/components/docs/PackageImport';
+
+<PackageImport/>
+
+<DocSubtitle>
+Helper functions for writing token metadata and accessing metadata storage
+</DocSubtitle>
+
+<Callout type="info" title="Key Features">
+- `setMetadata` writes the name, symbol, and decimals in one call.
+- No access control is performed. Use it from trusted initialization code only.
+- Emits no event, so metadata changes leave no log for off-chain indexers.
+</Callout>
+
+<Callout type="important" title="Module Usage">
+Use helper functions from Compose using your own custom facets. See <a href="/docs/foundations/facets-and-modules">Facets &amp; Modules</a> for more information.
+</Callout>
+
+## Storage
+
+### State Variables
+
+<PropertyTable
+  properties={[
+    {
+      name: "STORAGE_POSITION",
+      type: "bytes32",
+      description: "ERC-20 metadata storage position within the diamond (Value: `keccak256(\"erc20.metadata\")`)"
+    }
+  ]}
+  showRequired={false}
+/>
+
+### ERC20MetadataStorage
+
+<ExpandableCode language="solidity" maxLines={15} title="Definition">
+{`/** @custom:storage-location erc8042:erc20.metadata */
+struct ERC20MetadataStorage {
+    string name;
+    string symbol;
+    uint8 decimals;
+}`}
+</ExpandableCode>
+
+## Functions
+
+### getStorage
+
+Returns a pointer to the `ERC20MetadataStorage` struct.
+
+<ExpandableCode language="solidity" maxLines={8}>
+{`function getStorage() pure returns (ERC20MetadataStorage storage s);`}
+</ExpandableCode>
+
+**Returns:**
+
+<PropertyTable
+  properties={[
+    {
+      name: "s",
+      type: "ERC20MetadataStorage storage",
+      description: "The struct in storage."
+    }
+  ]}
+  showRequired={false}
+/>
+
+---
+
+### setMetadata
+
+Writes the token name, symbol, and decimals.
+
+All three fields are overwritten on every call. There is no way to update one field and leave the others untouched, so pass the current values for the fields you are not changing, or write through [`getStorage`](#getstorage) instead.
+
+There is **no** `msg.sender` or role check. Use only from trusted initialization code, or wrap it with your own checks in a facet.
+
+<ExpandableCode language="solidity" maxLines={8}>
+{`function setMetadata(string memory _name, string memory _symbol, uint8 _decimals);`}
+</ExpandableCode>
+
+**Parameters:**
+
+<PropertyTable
+  properties={[
+    {
+      name: "_name",
+      type: "string",
+      description: "The descriptive name of the token, for example `\"My Token\"`."
+    },
+    {
+      name: "_symbol",
+      type: "string",
+      description: "The short ticker of the token, for example `\"MTK\"`."
+    },
+    {
+      name: "_decimals",
+      type: "uint8",
+      description: "Decimal places used when displaying balances. `18` is the usual choice."
+    }
+  ]}
+  showRequired={false}
+/>
+
+## Best Practices
+
+- Call `setMetadata` once, from your diamond constructor or a one-time setup path, before anyone reads [`ERC20MetadataFacet`](/docs/library/token/ERC20/Metadata/ERC20MetadataFacet).
+- If you expose metadata updates as an external function, gate them. Anything that reaches this helper can rename the token.
+- Settle on `_decimals` before launch. Changing it later reinterprets every balance already held, since balances are stored as raw integers.
+- Keep the same `STORAGE_POSITION` and `ERC20MetadataStorage` layout as `ERC20MetadataFacet`. Do not introduce a second metadata slot.
+
+## Integration Notes
+
+Import the module under a namespace and call it from your diamond constructor:
+
+<ExpandableCode language="solidity" maxLines={12} title="Setting metadata during deployment">
+{`import "src/token/ERC20/Metadata/ERC20MetadataMod.sol" as ERC20MetadataMod;
+
+contract MyDiamond {
+    constructor() {
+        ERC20MetadataMod.setMetadata("My Token", "MTK", 18);
+    }
+}`}
+</ExpandableCode>
+
+`ExampleDiamond` wires the ERC-721 equivalent the same way, calling `ERC721MetadataMod.setMetadata` from its constructor.
+
+`ERC20MetadataStorage` lives at `keccak256("erc20.metadata")`, which is a separate slot from the `erc20` slot holding balances and allowances. Adding or removing metadata contracts never touches balances.
+
+[`ERC20PermitFacet`](/docs/library/token/ERC20/Permit/ERC20PermitFacet) reads `name` from this same slot to build its EIP-712 domain. Changing the name after deployment invalidates permit signatures that have already been issued but not yet used.
+
+<LastUpdated date="2026-09-16T12:00:00.000Z" />

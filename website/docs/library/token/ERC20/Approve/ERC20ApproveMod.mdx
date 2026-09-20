@@ -1,0 +1,234 @@
+---
+sidebar_position: 110
+title: "ERC-20 Approve Module"
+description: "ERC-20 allowance helper for your own diamond facets"
+sidebar_label: "Module"
+gitSource: "https://github.com/Perfect-Abstractions/Compose/tree/main/src/token/ERC20/Approve/ERC20ApproveMod.sol"
+---
+
+import DocSubtitle  from '@site/src/components/docs/DocSubtitle';
+import Callout from '@site/src/components/ui/Callout';
+import Accordion, { AccordionGroup } from '@site/src/components/ui/Accordion';
+import PropertyTable from '@site/src/components/api/PropertyTable';
+import ExpandableCode from '@site/src/components/code/ExpandableCode';
+import LastUpdated from '@site/src/components/docs/LastUpdated';
+import PackageImport from '@site/src/components/docs/PackageImport';
+
+<PackageImport/>
+
+<DocSubtitle>
+Helper functions for setting ERC-20 allowances and accessing ERC-20 storage
+</DocSubtitle>
+
+<Callout type="info" title="Key Features">
+- `approve` always sets the allowance of `msg.sender`. It cannot approve on behalf of another owner.
+- No access control check is performed, and none is needed because the caller only spends their own allowance.
+- Emits `Approval` on every successful call.
+</Callout>
+
+<Callout type="important" title="Module Usage">
+Use helper functions from Compose using your own custom facets. See <a href="/docs/foundations/facets-and-modules">Facets &amp; Modules</a> for more information.
+</Callout>
+
+## Storage
+
+### State Variables
+
+<PropertyTable
+  properties={[
+    {
+      name: "STORAGE_POSITION",
+      type: "bytes32",
+      description: "ERC-20 storage position within the diamond (Value: `keccak256(\"erc20\")`)"
+    }
+  ]}
+  showRequired={false}
+/>
+
+### ERC20Storage
+
+<ExpandableCode language="solidity" maxLines={15} title="Definition">
+{`/** @custom:storage-location erc8042:erc20 */
+struct ERC20Storage {
+    mapping(address owner => uint256 balance) balanceOf;
+    uint256 totalSupply;
+    mapping(address owner => mapping(address spender => uint256 allowance)) allowance;
+}`}
+</ExpandableCode>
+
+## Functions
+
+### getStorage
+
+Returns a pointer to the `ERC20Storage` struct.
+
+<ExpandableCode language="solidity" maxLines={8}>
+{`function getStorage() pure returns (ERC20Storage storage s);`}
+</ExpandableCode>
+
+**Returns:**
+
+<PropertyTable
+  properties={[
+    {
+      name: "s",
+      type: "ERC20Storage storage",
+      description: "The struct in storage."
+    }
+  ]}
+  showRequired={false}
+/>
+
+---
+
+### approve
+
+Sets how many of the caller's tokens `_spender` may move. The stored allowance becomes exactly `_value`, overwriting any previous allowance for that spender.
+
+Inside a diamond, your facet runs through `delegatecall`, so `msg.sender` here is the account that called the diamond, not the diamond itself.
+
+<ExpandableCode language="solidity" maxLines={8}>
+{`function approve(address _spender, uint256 _value) returns (bool);`}
+</ExpandableCode>
+
+**Parameters:**
+
+<PropertyTable
+  properties={[
+    {
+      name: "_spender",
+      type: "address",
+      description: "The address allowed to spend the caller's tokens. Cannot be `address(0)`."
+    },
+    {
+      name: "_value",
+      type: "uint256",
+      description: "The new allowance. `0` revokes it. `type(uint256).max` grants an unlimited allowance that is never decremented."
+    }
+  ]}
+  showRequired={false}
+/>
+
+**Returns:**
+
+<PropertyTable
+  properties={[
+    {
+      name: "-",
+      type: "bool",
+      description: "Always `true`. Failures revert instead of returning `false`."
+    }
+  ]}
+  showRequired={false}
+/>
+
+**Reverts:**
+
+<PropertyTable
+  properties={[
+    {
+      name: "ERC20InvalidSpender",
+      type: "error",
+      description: "`_spender` is `address(0)`."
+    }
+  ]}
+  showRequired={false}
+/>
+
+## Events
+
+<AccordionGroup>
+  <Accordion title="Approval" defaultOpen={false}>
+    <div style={{marginBottom: "1rem"}}>
+      Emitted on every successful `approve`, including when `_value` is `0` or unchanged.
+    </div>
+
+    <div style={{marginBottom: "1rem"}}>
+      <strong>Signature:</strong>
+      <ExpandableCode language="solidity" maxLines={5}>
+{`event Approval(address indexed _owner, address indexed _spender, uint256 _value);`}
+      </ExpandableCode>
+    </div>
+
+    <div style={{marginBottom: "1rem"}}>
+      <strong>Parameters:</strong>
+      <PropertyTable
+        properties={[
+          {
+            name: "_owner",
+            type: "address",
+            description: "The address granting the allowance. Always `msg.sender`."
+          },
+          {
+            name: "_spender",
+            type: "address",
+            description: "The address receiving the allowance."
+          },
+          {
+            name: "_value",
+            type: "uint256",
+            description: "The new allowance."
+          }
+        ]}
+        showRequired={false}
+      />
+    </div>
+  </Accordion>
+</AccordionGroup>
+
+## Errors
+
+<AccordionGroup>
+  <Accordion title="ERC20InvalidSpender" defaultOpen={false}>
+    <div style={{marginBottom: "1rem"}}>
+      Thrown by `approve` when `_spender` is the zero address.
+    </div>
+
+    <div style={{marginBottom: "1rem"}}>
+      <strong>Signature:</strong>
+      <ExpandableCode language="solidity" maxLines={5}>
+{`error ERC20InvalidSpender(address _spender);`}
+      </ExpandableCode>
+    </div>
+
+    <div>
+      <strong>Parameters:</strong>
+      <PropertyTable
+        properties={[
+          {
+            name: "_spender",
+            type: "address",
+            description: "The rejected spender. Always `address(0)`."
+          }
+        ]}
+        showRequired={false}
+      />
+    </div>
+  </Accordion>
+</AccordionGroup>
+
+## Best Practices
+
+- Use `approve` when your facet sets an allowance on behalf of whoever is calling it, for example a wrapper that approves and then performs a second action in one transaction.
+- Keep the same `STORAGE_POSITION` and `ERC20Storage` layout as the other ERC-20 modules. Do not introduce a second allowance mapping.
+- Change a non-zero allowance by setting it to `0` first. Compose has no `increaseAllowance` or `decreaseAllowance`, so an `N` to `M` change can be front-run by a spender who uses `N` first.
+
+## Integration Notes
+
+Import the module under a namespace and call it from your facet:
+
+<ExpandableCode language="solidity" maxLines={12} title="Calling approve from a custom facet">
+{`import "src/token/ERC20/Approve/ERC20ApproveMod.sol" as ERC20ApproveMod;
+
+contract MyFacet {
+    function approveSpender(address _spender, uint256 _value) external returns (bool) {
+        return ERC20ApproveMod.approve(_spender, _value);
+    }
+}`}
+</ExpandableCode>
+
+`approve` cannot set an allowance for any owner other than `msg.sender`. If your facet authorizes an owner some other way, such as a signature, write `getStorage().allowance[_owner][_spender]` directly and emit `Approval` yourself. [`ERC20PermitFacet`](/docs/library/token/ERC20/Permit/ERC20PermitFacet) does exactly this.
+
+`ERC20Storage` lives at `keccak256("erc20")` inside the diamond. That is the same slot [`ERC20DataFacet`](/docs/library/token/ERC20/Data/ERC20DataFacet), [`ERC20TransferFacet`](/docs/library/token/ERC20/Transfer/ERC20TransferFacet), and the other ERC-20 contracts use, so an allowance set here is what `allowance()` returns and what `transferFrom` spends.
+
+<LastUpdated date="2026-09-15T12:00:00.000Z" />

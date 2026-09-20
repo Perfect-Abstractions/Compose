@@ -1,0 +1,25 @@
+---
+title: "Tokens — Token Standards for Diamonds"
+sidebar_label: "Tokens"
+description: "Token standard implementations for Compose diamonds, composed as granular facets and modules."
+---
+
+import DocCard, { DocCardGrid } from '@site/src/components/docs/DocCard';
+import DocSubtitle from '@site/src/components/docs/DocSubtitle';
+import Icon from '@site/src/components/ui/Icon';
+
+# Token Standards
+
+<DocSubtitle>
+  Add fungible, non-fungible, and multi-token functionality to your diamond
+</DocSubtitle>
+
+<DocCardGrid columns={2}>
+  <DocCard
+    title="ERC-20"
+    description={"Fungible token standard, split into composable facets"}
+    href="/docs/library/token/ERC20"
+    icon={<Icon name="coin" size={28} />}
+    size="medium"
+  />
+</DocCardGrid>
