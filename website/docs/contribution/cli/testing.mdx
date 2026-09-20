@@ -13,7 +13,7 @@ Tests follow the same boundaries as the implementation: module behavior is teste
 
 ## Test Structure
 
-The `cli/test` directory mirrors `cli/src`. Keep each feature's test, harness, and fixtures together.
+The `cli/test` directory mirrors `cli/src`. Keep each feature's test, harness, and fixtures together. Organize adapter tests by interface, with the tests, harnesses, and fixtures for a contract under the same `I<AdapterName>/` directory.
 
 ```text
 cli/test/
