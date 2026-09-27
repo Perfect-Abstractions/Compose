@@ -36,7 +36,7 @@
     "@inquirer/select": "5.2.1",
     "@perfect-abstractions/compose": "0.0.6",
     "commander": "^13.1.0",
-    "compose-bytecode-validator": "0.1.1",
+    "compose-bytecode-validator": "0.1.2",
     "dotenv": "^16.4.7",
     "fs-extra": "^11.3.3",
     "picocolors": "^1.1.1",
