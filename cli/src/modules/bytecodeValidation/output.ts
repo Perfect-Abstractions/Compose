@@ -1,4 +1,5 @@
 import type { ComposeContext, ModuleState } from "../../context/types";
+import type { BytecodeUncertainScope } from "../../adapters/IBytecodeValidatorAdapter/interface";
 import { red, yellow } from "../../utils/terminal";
 import type { BytecodeValidationSummary } from "./types";
 
@@ -8,6 +9,18 @@ function printAffectedSources(sourceNames: string[] | undefined, write: OutputWr
   if (!sourceNames?.length) return;
   write("  Affected:");
   for (const sourceName of sourceNames) write(`    - ${sourceName}`);
+}
+
+function deduplicateUncertainScopes(scopes: BytecodeUncertainScope[]): BytecodeUncertainScope[] {
+  const seen = new Set<string>();
+  return scopes.filter((scope) => {
+    const displayedPath = scope.virtualPath ?? scope.location.symbolicPath;
+    const sources = [...(scope.sourceNames ?? [])].sort();
+    const key = JSON.stringify([scope.reason, displayedPath, sources]);
+    if (seen.has(key)) return false;
+    seen.add(key);
+    return true;
+  });
 }
 
 /** Prints deployed-bytecode collisions and scoped warnings. */
@@ -63,7 +76,7 @@ export function showBytecodeValidationReport(ctx: ComposeContext): void {
         if (collision.location.pc !== undefined) console.error(`  PC: ${collision.location.pc}`);
       }
 
-      for (const uncertain of facet.report.uncertainScopes) {
+      for (const uncertain of deduplicateUncertainScopes(facet.report.uncertainScopes)) {
         console.warn(yellow("\nBytecode validation warning"));
         console.warn(yellow(`  ${uncertain.reason}`));
         console.warn(`${scope} / ${facet.address}`);

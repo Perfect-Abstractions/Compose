@@ -80,11 +80,18 @@ describe("validate pipeline", () => {
     await harness.writeLock({ StorageDiamond: { local: deployment() } });
     const report = {
       ...emptyReport(),
-      uncertainScopes: [{
-        location: { slot: "0", offset: 0, selector: "12345678", symbolicPath: "slot(0)" },
-        virtualPath: "compose.fixture.virtual-storage",
-        reason: "Scoped evidence is incomplete.",
-      }],
+      uncertainScopes: [
+        {
+          location: { slot: "0", offset: 0, selector: "12345678", pc: 42, symbolicPath: "slot(0)" },
+          virtualPath: "compose.fixture.virtual-storage",
+          reason: "Scoped evidence is incomplete.",
+        },
+        {
+          location: { slot: "0", offset: 0, selector: "87654321", pc: 84, symbolicPath: "slot(0)" },
+          virtualPath: "compose.fixture.virtual-storage",
+          reason: "Scoped evidence is incomplete.",
+        },
+      ],
     };
     const { rpc, validator } = bytecodeDependencies(report);
     const originalResolve = DependencyResolver.resolve.bind(DependencyResolver);
@@ -116,6 +123,8 @@ describe("validate pipeline", () => {
         "\u001b[33m  Scoped evidence is incomplete.\u001b[39m",
       );
       expect(warningOutput).toContain("  compose.fixture.virtual-storage");
+      expect(warningOutput.filter((line) => line.includes("Bytecode validation warning")))
+        .toHaveLength(1);
       const reasonIndex = warningOutput.findIndex((line) => line.includes("Scoped evidence is incomplete."));
       const pathIndex = warningOutput.findIndex((line) => line.includes("compose.fixture.virtual-storage"));
       expect(reasonIndex).toBeGreaterThan(-1);
