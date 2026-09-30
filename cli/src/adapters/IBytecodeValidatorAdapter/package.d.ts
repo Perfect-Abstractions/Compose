@@ -1,3 +1,8 @@
 declare module "compose-bytecode-validator" {
-  export function validateStorage(input: unknown): unknown;
+  import type { StorageValidationReport, VirtualStorageLayout } from "compose-bytecode-validator/dist/evmole.js";
+
+  export function validateStorage(input: {
+    bytecode: string;
+    virtualStorageLayout: VirtualStorageLayout;
+  }): StorageValidationReport;
 }

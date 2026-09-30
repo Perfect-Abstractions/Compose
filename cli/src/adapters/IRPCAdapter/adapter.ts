@@ -59,12 +59,7 @@ export async function createRPCAdapter(options: RPCAdapterOptions): Promise<IRPC
     );
   }
 
-  /**
-   * Returns deployed bytecode at an address, or no code for an EOA/empty account.
-   * @param address Address to inspect.
-   * @returns Deployed bytecode, or `undefined` when no bytecode exists.
-   * @throws {RPCAdapterError} If the RPC request fails.
-   */
+  /** Returns the current block number for pinned reads. */
   async function getBlockNumber(): Promise<bigint> {
     try {
       return await retryRPC(() => client.getBlockNumber());
@@ -73,6 +68,13 @@ export async function createRPCAdapter(options: RPCAdapterOptions): Promise<IRPC
     }
   }
 
+  /**
+   * Returns deployed bytecode at an address, or no code for an EOA/empty account.
+   * @param address Address to inspect.
+   * @param blockNumber Optional block number to pin the read.
+   * @returns Deployed bytecode, or `undefined` when no bytecode exists.
+   * @throws {RPCAdapterError} If the RPC request fails.
+   */
   async function getCode(address: Address, blockNumber?: bigint): Promise<Hex | undefined> {
     try {
       return await retryRPC(() => client.getCode({ address, blockNumber }));

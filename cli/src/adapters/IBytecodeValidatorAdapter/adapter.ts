@@ -1,8 +1,8 @@
 import { validateStorage } from "compose-bytecode-validator";
+import type { StorageLocation, StorageValidationReport } from "compose-bytecode-validator/dist/evmole.js";
 import type {
   BytecodeValidationInput,
   BytecodeValidationReport,
-  BytecodeStorageLocation,
   IBytecodeValidatorAdapter,
 } from "./interface";
 
@@ -18,14 +18,14 @@ export function formatSymbolicStoragePath(path: string): string {
   });
 }
 
-function normalizeLocation(location: BytecodeStorageLocation): BytecodeStorageLocation {
+function normalizeLocation(location: StorageLocation): StorageLocation {
   return {
     ...location,
     symbolicPath: formatSymbolicStoragePath(location.symbolicPath),
   };
 }
 
-function normalizeReport(report: BytecodeValidationReport): BytecodeValidationReport {
+function normalizeReport(report: StorageValidationReport): BytecodeValidationReport {
   return {
     collisions: report.collisions.map((collision) => ({
       ...collision,
@@ -49,6 +49,6 @@ function normalizeReport(report: BytecodeValidationReport): BytecodeValidationRe
 
 export const BytecodeValidatorAdapter: IBytecodeValidatorAdapter = {
   validate(input: BytecodeValidationInput): BytecodeValidationReport {
-    return normalizeReport(validateStorage(input) as BytecodeValidationReport);
+    return normalizeReport(validateStorage(input));
   },
 };
