@@ -1,12 +1,9 @@
 import fs from "node:fs";
 import path from "node:path";
-import { fileURLToPath } from "node:url";
-
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
+import { CLI_ROOT } from "./cliRoot";
 
 function readVersion(): string {
-  const pkgPath = path.resolve(__dirname, "..", "..", "package.json");
+  const pkgPath = path.join(CLI_ROOT, "package.json");
   const pkg = JSON.parse(fs.readFileSync(pkgPath, "utf8"));
   return pkg.version;
 }
@@ -24,4 +21,3 @@ export const COMPOSE_HEADER = `
   \\_____\\____/|_|  |_|_|     \\____/|_____/|______|   \\_____|______|_____|
   
   `;
-

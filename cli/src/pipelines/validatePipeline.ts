@@ -4,6 +4,15 @@ import { ValidationModule } from "../modules/validation/module";
 import { DependencyKey } from "../resolver/dependencyKey";
 import { DependencyResolver } from "../resolver/dependencyResolver";
 import { loadValidationProject } from "../modules/validation/project";
+import { Context } from "../context/context";
+import type { ModuleState } from "../context/types";
+import { LockFileModule } from "../modules/lockFile/module";
+import type { LockFileState } from "../modules/lockFile/types";
+import { BytecodeValidationPipeline } from "./bytecodeValidationPipeline";
+import { BytecodeValidationModule } from "../modules/bytecodeValidation/module";
+import { showBytecodeValidationReport } from "../modules/bytecodeValidation/output";
+import type { BytecodeValidationSummary } from "../modules/bytecodeValidation/types";
+import type { VirtualStorageLayoutResult } from "../modules/validation/types";
 
 /** Runs source-side validation directly from compiler AST output. */
 export const ValidatePipeline = {
@@ -47,9 +56,59 @@ export const ValidatePipeline = {
 
     const selectorCollisions = ValidationModule.getSelectorCollisionValidationState(ctx);
     const virtualStorageLayout = ValidationModule.getVirtualStorageLayoutValidationState(ctx);
-    const pipelineError = selectorCollisions?.error ?? virtualStorageLayout?.error ?? null;
+    const sourceSuccess = selectorCollisions?.success === true && virtualStorageLayout?.success === true;
+
+    if (sourceSuccess) {
+      ctx = await LockFileModule.readLockFile(ctx);
+      const lockState = ctx.state.lockFile as ModuleState<LockFileState> | undefined;
+      if (!lockState?.success) {
+        ctx.state.bytecodeValidation = {
+          success: false,
+          result: null,
+          error: lockState?.error ?? {
+            code: "LOCK_FILE_INVALID",
+            message: "Unable to read compose.lock.",
+            nativeError: null,
+          },
+        };
+      } else if (!lockState.result) {
+        ctx = BytecodeValidationModule.mergeDeployments(ctx, [], true);
+      } else {
+        const records = (virtualStorageLayout.result as VirtualStorageLayoutResult).records;
+        const childContexts: ComposeContext[] = [];
+        for (const diamond of project.diamonds) {
+          const chainDeployments = lockState.result.lock.deployments[diamond.name] ?? {};
+          for (const [chainKey, deployment] of Object.entries(chainDeployments)) {
+            const child = Context.create();
+            child.param = {
+              projectRoot: ctx.param.projectRoot,
+              diamondName: diamond.name,
+              chainKey,
+              diamondAddress: deployment.diamond,
+              virtualStorageRecords: records.filter((record) => record.diamondName === diamond.name),
+            };
+            childContexts.push(await BytecodeValidationPipeline.execute(child));
+          }
+        }
+        ctx = BytecodeValidationModule.mergeDeployments(
+          ctx,
+          childContexts,
+          childContexts.length === 0,
+        );
+      }
+    } else {
+      ctx = BytecodeValidationModule.mergeDeployments(ctx, [], true);
+    }
+
+    const bytecodeValidation = ctx.state.bytecodeValidation as
+      | ModuleState<BytecodeValidationSummary>
+      | undefined;
+    const pipelineError = selectorCollisions?.error
+      ?? virtualStorageLayout?.error
+      ?? bytecodeValidation?.error
+      ?? null;
     ctx.state.validatePipeline = {
-      success: selectorCollisions?.success === true && virtualStorageLayout?.success === true,
+      success: sourceSuccess && bytecodeValidation?.success === true,
       result: {
         checkedFacets: project.facetSources.length,
       },
@@ -66,9 +125,14 @@ export const ValidatePipeline = {
     }
 
     ctx = await ValidationModule.showReport(ctx);
+    showBytecodeValidationReport(ctx);
 
     if (ctx.state.validatePipeline.success) {
-      ValidationModule.showSuccess();
+      if (bytecodeValidation?.result?.complete === false) {
+        ValidationModule.showIncomplete();
+      } else {
+        ValidationModule.showSuccess();
+      }
     }
 
     return ctx;

@@ -122,6 +122,7 @@ export type VirtualStorageLayoutSource =
 export type VirtualStorageLayoutRecord = {
   id: string;
   virtualPath: string;
+  parentVirtualPath: string | null;
   kind: VirtualStorageLayoutKind;
   codeWidth: 1;
   layout: string[];

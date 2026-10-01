@@ -9,4 +9,5 @@ export enum DependencyKey {
   RPC = "rpc",
   Foundry = "foundry",
   Hardhat = "hardhat",
+  BytecodeValidator = "bytecodeValidator",
 }

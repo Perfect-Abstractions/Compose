@@ -1,7 +1,7 @@
 /**
  * Standard 4-byte function signatures for common ERC and Diamond interfaces.
  *
- * Covers ERC-20, ERC-721, ERC-1155, Diamond Loupe/Cut, and Compose-specific
+ * Covers ERC-20, ERC-721, ERC-1155, Diamond introspection/cut, and Compose-specific
  * functions. Used to build the initial selector-to-signature lookup map.
  */
 export const COMMON_SIGNATURES: readonly string[] = [

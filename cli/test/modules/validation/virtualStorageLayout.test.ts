@@ -370,6 +370,7 @@ function record(layout: string[]): VirtualStorageLayoutRecord {
   return {
     id: hashVirtualPath("shared.storage"),
     virtualPath: "shared.storage",
+    parentVirtualPath: null,
     kind: "normal",
     codeWidth: 1,
     layout,
@@ -456,21 +457,25 @@ describe("virtual storage layout", () => {
       id: record.id,
       kind: record.kind,
       path: record.virtualPath,
+      parentPath: record.parentVirtualPath,
     }))).toEqual([
       {
         id: hashVirtualPath("erc20"),
         kind: "normal",
         path: "erc20",
+        parentPath: null,
       },
       {
         id: hashVirtualPath("erc20.5"),
         kind: "normal",
         path: "erc20.5",
+        parentPath: "erc20",
       },
       {
         id: hashVirtualPath("erc20.5.3"),
         kind: "immutable",
         path: "erc20.5.3",
+        parentPath: "erc20.5",
       },
     ]);
   });
@@ -563,6 +568,7 @@ describe("virtual storage layout", () => {
     expect(result.records[0]).toEqual({
       id: "0xb4df32537f6767405c9db7d67260e5375218aecdea91f4240ad14000623cbdff",
       virtualPath: "evmole.normal",
+      parentVirtualPath: null,
       kind: "normal",
       codeWidth: 1,
       layout: [

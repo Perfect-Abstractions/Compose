@@ -169,6 +169,11 @@ export function showSuccess(): void {
   console.log(green("\nValidation passed.\n"));
 }
 
+/** Prints a non-blocking command result when some evidence could not be validated. */
+export function showIncomplete(): void {
+  console.warn(yellow("\nValidation completed with warnings.\n"));
+}
+
 function printStorageVariable(variable: StorageVariableReference): void {
   const name = variable.structName
     ? `${variable.structName}.${variable.variableName}`

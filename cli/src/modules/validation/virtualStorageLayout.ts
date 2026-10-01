@@ -172,6 +172,7 @@ export function buildVirtualStorageLayout(
     const emitted = emitRecord({
       id: deriveStorageRootId(root.id, root.source),
       virtualPath: root.id,
+      parentVirtualPath: null,
       kind: "normal",
       fields: root.fields ?? structMembers(root.structId, index),
       root,
@@ -264,6 +265,7 @@ function compareVirtualStorageLayouts(
 function emitRecord(options: {
   id: string;
   virtualPath: string;
+  parentVirtualPath: string | null;
   kind: VirtualStorageLayoutRecord["kind"];
   fields: AstNode[];
   root: StorageRoot;
@@ -281,6 +283,7 @@ function emitRecord(options: {
   const record: VirtualStorageLayoutRecord = {
     id: options.id,
     virtualPath: options.virtualPath,
+    parentVirtualPath: options.parentVirtualPath,
     kind: options.kind,
     codeWidth: 1,
     layout: analysis.layout,
@@ -309,6 +312,7 @@ function emitRecord(options: {
     const emitted = emitRecord({
       id: childId,
       virtualPath: childPath,
+      parentVirtualPath: options.virtualPath,
       kind: child.containerKind === "mapping" ? "normal" : "immutable",
       fields: structMembers(child.structId, options.index),
       root: options.root,

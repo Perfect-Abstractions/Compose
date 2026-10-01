@@ -116,7 +116,7 @@ describe("InspectModule", () => {
 });
 
 describe("decodeSelector", () => {
-  it("decodes Diamond Loupe selectors", () => {
+  it("decodes Diamond introspection selectors", () => {
     expect(decodeSelector("0x7a0ed627")).toBe("facets()");
     expect(decodeSelector("0x52ef6b2c")).toBe("facetAddresses()");
     expect(decodeSelector("0xadfca15e")).toBe("facetFunctionSelectors(address)");

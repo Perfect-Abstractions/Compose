@@ -20,7 +20,7 @@ import {
   getSelectorExportValidationState,
   getVirtualStorageLayoutValidationState,
 } from "./state";
-import { showReport, showSuccess } from "./output";
+import { showIncomplete, showReport, showSuccess } from "./output";
 import { getResolvedFacetSources, resolveFacetSources } from "./sourceResolution";
 import { IFrameworkAdapter } from "../../adapters/IFrameworkAdapter/interface";
 
@@ -34,6 +34,7 @@ import { IFrameworkAdapter } from "../../adapters/IFrameworkAdapter/interface";
 export const ValidationModule = {
   showReport,
   showSuccess,
+  showIncomplete,
   getFacetScanState,
   getSelectorExportValidationState,
   getSelectorCollisionValidationState,

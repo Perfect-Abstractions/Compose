@@ -9,6 +9,8 @@ import type { IRPCAdapter } from "../adapters/IRPCAdapter/interface";
 import { createRPCAdapter } from "../adapters/IRPCAdapter/adapter";
 import { resolveChainConfig } from "../utils/chainConfig";
 import { DependencyKey } from "./dependencyKey";
+import { BytecodeValidatorAdapter } from "../adapters/IBytecodeValidatorAdapter/adapter";
+import type { IBytecodeValidatorAdapter } from "../adapters/IBytecodeValidatorAdapter/interface";
 
 /** Optional parameters passed to a dependency factory. */
 export type DependencyParams = Record<string, unknown>;
@@ -29,6 +31,7 @@ export type DependencyMap = {
   [DependencyKey.RPC]: IRPCAdapter;
   [DependencyKey.Foundry]: IFrameworkAdapter;
   [DependencyKey.Hardhat]: IFrameworkAdapter;
+  [DependencyKey.BytecodeValidator]: IBytecodeValidatorAdapter;
 };
 
 /**
@@ -51,4 +54,5 @@ export const DependencyRegistry: {
   },
   [DependencyKey.Foundry]: () => foundryAdapter,
   [DependencyKey.Hardhat]: () => hardhatAdapter,
+  [DependencyKey.BytecodeValidator]: () => BytecodeValidatorAdapter,
 };

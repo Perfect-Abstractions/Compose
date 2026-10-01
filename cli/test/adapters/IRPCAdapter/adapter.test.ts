@@ -35,6 +35,7 @@ import { createRPCAdapter } from "../../../src/adapters/IRPCAdapter/adapter";
 type MockClient = {
   chain: { id: number };
   getChainId: ReturnType<typeof vi.fn>;
+  getBlockNumber: ReturnType<typeof vi.fn>;
   getCode: ReturnType<typeof vi.fn>;
   readContract: ReturnType<typeof vi.fn>;
 };
@@ -46,6 +47,7 @@ function useClient(overrides: Record<string, unknown> = {}): void {
   mocks.activeClient = {
     chain: { id: 11155111 },
     getChainId: vi.fn().mockResolvedValue(11155111),
+    getBlockNumber: vi.fn().mockResolvedValue(123n),
     getCode: vi.fn().mockResolvedValue("0x6000"),
     readContract: vi.fn().mockResolvedValue("result"),
     ...overrides,
@@ -82,6 +84,29 @@ describe("createRPCAdapter", () => {
 
     await adapter.readContract({ address, abi: [], functionName: "example" } as never, { verifyCode: true });
     expect((mocks.activeClient as MockClient).getCode).toHaveBeenCalledOnce();
+  });
+
+  it("pins block and code reads to an explicit block number", async () => {
+    useClient();
+    const adapter = await createRPCAdapter({ rpcUrl: "https://rpc.example", chainId: 11155111 });
+
+    await expect(adapter.getBlockNumber()).resolves.toBe(123n);
+    await adapter.getCode(address, 120n);
+    await adapter.readContract({
+      address,
+      abi: [],
+      functionName: "example",
+      blockNumber: 120n,
+    } as never, { verifyCode: true });
+
+    expect((mocks.activeClient as MockClient).getCode).toHaveBeenNthCalledWith(1, {
+      address,
+      blockNumber: 120n,
+    });
+    expect((mocks.activeClient as MockClient).getCode).toHaveBeenNthCalledWith(2, {
+      address,
+      blockNumber: 120n,
+    });
   });
 
   it("reports missing contract code when verification is enabled", async () => {

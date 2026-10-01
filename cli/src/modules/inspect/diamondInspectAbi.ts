@@ -1,9 +1,9 @@
 /**
- * ABI for the EIP-2535 Diamond Loupe `facets()` view function.
+ * ABI for the Diamond `facets()` introspection function.
  *
- * Used to query on-chain diamonds for their registered facets and selectors.
+ * ERC-8153 and ERC-2535 expose the same response shape at this boundary.
  */
-export const DIAMOND_LOUPE_ABI = [
+export const DIAMOND_INSPECT_ABI = [
   {
     name: "facets",
     type: "function",

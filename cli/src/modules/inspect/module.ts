@@ -7,7 +7,7 @@ import { resolveChainConfig } from "../../utils/chainConfig";
 import { findFileAncestor } from "../../utils/files";
 import { RPCAdapterError } from "../../adapters/IRPCAdapter/errors";
 import { showInspect } from "./output";
-import { DIAMOND_LOUPE_ABI } from "./diamondLoupeAbi";
+import { DIAMOND_INSPECT_ABI } from "./diamondInspectAbi";
 import { toFacetInfo } from "./facetFormatter";
 import { mergeProjectSignatures } from "./selectorDecoder";
 import type { InspectResult, FacetInfo } from "./types";
@@ -17,7 +17,7 @@ export const InspectModule = {
    * Inspects an on-chain Diamond and displays its facets and selectors.
    *
    * Validates the diamond address, resolves the RPC adapter for the target
-   * chain, fetches facets via the Diamond Loupe, and decodes each selector
+   * chain, fetches facets via Diamond introspection, and decodes each selector
    * using a combination of common signatures and project ABI files.
    *
    * @param ctx - The compose context with `address` and optional `chain` params.
@@ -60,7 +60,7 @@ export const InspectModule = {
       { facet: Address; functionSelectors: Hex[] }[]
     >({
       address: diamondAddress,
-      abi: DIAMOND_LOUPE_ABI,
+      abi: DIAMOND_INSPECT_ABI,
       functionName: "facets",
     });
 

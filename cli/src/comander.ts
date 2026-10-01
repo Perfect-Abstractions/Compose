@@ -57,7 +57,7 @@ export function buildProgram(): Command {
 
   program
     .command("inspect")
-    .description("Inspect a deployed diamond's facets and selectors via Loupe")
+    .description("Inspect a deployed diamond's facets and selectors")
     .argument("<address>", "Diamond contract address")
     .option("--chain <chain-key>", "Chain key from compose.json", "local")
 

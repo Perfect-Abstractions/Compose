@@ -7,17 +7,20 @@ import { Context } from "../../../src/context/context";
 export type ValidatePipelineHarness = {
   ctx: ComposeContext;
   projectRoot: string;
+  writeLock(deployments: Record<string, unknown>): Promise<void>;
   cleanup(): Promise<void>;
 };
 
-const facets = [
+const defaultFacets = [
   "FullStorageFacet",
   "CompatibleStorageFacet",
   "IncompatibleStorageFacet",
 ];
 
 /** Creates a Foundry project containing compatible and incompatible storage facets. */
-export async function createValidatePipelineHarness(): Promise<ValidatePipelineHarness> {
+export async function createValidatePipelineHarness(
+  facets: string[] = defaultFacets,
+): Promise<ValidatePipelineHarness> {
   const projectRoot = await fs.mkdtemp(path.join(os.tmpdir(), "compose-validate-pipeline-"));
   const sourceRoot = path.join(projectRoot, "src");
   const fixtureRoot = path.join(__dirname, "fixtures");
@@ -55,6 +58,11 @@ export async function createValidatePipelineHarness(): Promise<ValidatePipelineH
   return {
     ctx,
     projectRoot,
+    writeLock: (deployments) => fs.writeFile(
+      path.join(projectRoot, "compose.lock"),
+      JSON.stringify({ compose: "0.0.6", deployments }, null, 2),
+      "utf8",
+    ),
     cleanup: () => fs.rm(projectRoot, { recursive: true, force: true }),
   };
 }

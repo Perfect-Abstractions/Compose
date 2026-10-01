@@ -1,7 +1,7 @@
 import { ComposeContext } from "../context/types";
 import { InspectModule } from "../modules/inspect/module";
 
-/** Diamond inspect pipeline for querying on-chain facets via Loupe. */
+/** Diamond inspect pipeline for querying on-chain facets and selectors. */
 export const InspectPipeline = {
   async execute(ctx: ComposeContext): Promise<ComposeContext> {
     return InspectModule.inspect(ctx);
