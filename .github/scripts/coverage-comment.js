@@ -145,3 +145,5 @@ function generateCoverageFile() {
 if (require.main === module) {
   generateCoverageFile();
 }
+
+module.exports = { parseLcovContent, calculateCoverage };

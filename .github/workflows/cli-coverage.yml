@@ -1,0 +1,55 @@
+name: CLI Coverage
+
+on:
+  pull_request:
+    paths:
+      - 'cli/**'
+      - '.github/workflows/cli-coverage.yml'
+      - '.github/workflows/cli-coverage-comment.yml'
+      - '.github/scripts/cli-coverage-report.js'
+      - '.github/scripts/post-cli-coverage-comment.js'
+
+permissions:
+  contents: read
+
+jobs:
+  coverage:
+    runs-on: ubuntu-latest
+    env:
+      FOUNDRY_PROFILE: ci
+    steps:
+      - name: Checkout PR branch
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - name: Install Foundry
+        uses: foundry-rs/foundry-toolchain@v1
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24.x
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run CLI coverage
+        run: npm run cli@coverage
+
+      - name: Generate report
+        env:
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+          WORKFLOW_SHA: ${{ github.event.pull_request.head.sha }}
+        run: node .github/scripts/cli-coverage-report.js
+
+      - name: Upload report
+        uses: actions/upload-artifact@v4
+        with:
+          name: cli-coverage-data
+          path: |
+            cli-coverage-report.md
+            cli-coverage-data.json
+          retention-days: 1
