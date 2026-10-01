@@ -1,0 +1,30 @@
+---
+title: "ERC-20 Permit"
+sidebar_label: "Permit"
+description: "ERC-20 approvals signed off-chain with EIP-2612."
+---
+
+import DocCard, { DocCardGrid } from '@site/src/components/docs/DocCard';
+import DocSubtitle from '@site/src/components/docs/DocSubtitle';
+import Icon from '@site/src/components/ui/Icon';
+
+<DocSubtitle>
+  Approve a spender with an EIP-2612 signature instead of a transaction
+</DocSubtitle>
+
+<DocCardGrid columns={2}>
+  <DocCard
+    title="ERC-20 Permit Facet"
+    description={"Approve with an EIP-2612 signature instead of a transaction"}
+    href="/docs/library/token/ERC20/Permit/ERC20PermitFacet"
+    icon={<Icon name="showcase-facet" size={28} />}
+    size="medium"
+  />
+  <DocCard
+    title="ERC-20 Permit Module"
+    description={"EIP-2612 signature approval for use inside your own facets"}
+    href="/docs/library/token/ERC20/Permit/ERC20PermitMod"
+    icon={<Icon name="box-detailed" size={28} />}
+    size="medium"
+  />
+</DocCardGrid>

@@ -1,0 +1,30 @@
+---
+title: "ERC-20 Burn"
+sidebar_label: "Burn"
+description: "Destroy ERC-20 tokens and reduce the total supply."
+---
+
+import DocCard, { DocCardGrid } from '@site/src/components/docs/DocCard';
+import DocSubtitle from '@site/src/components/docs/DocSubtitle';
+import Icon from '@site/src/components/ui/Icon';
+
+<DocSubtitle>
+  Destroy tokens and reduce the total supply
+</DocSubtitle>
+
+<DocCardGrid columns={2}>
+  <DocCard
+    title="ERC-20 Burn Facet"
+    description={"Destroy the caller's tokens, or burn from an allowance"}
+    href="/docs/library/token/ERC20/Burn/ERC20BurnFacet"
+    icon={<Icon name="showcase-facet" size={28} />}
+    size="medium"
+  />
+  <DocCard
+    title="ERC-20 Burn Module"
+    description={"Burn from any account. Your facet must enforce access control"}
+    href="/docs/library/token/ERC20/Burn/ERC20BurnMod"
+    icon={<Icon name="box-detailed" size={28} />}
+    size="medium"
+  />
+</DocCardGrid>

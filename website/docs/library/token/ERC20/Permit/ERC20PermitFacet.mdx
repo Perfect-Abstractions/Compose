@@ -1,0 +1,391 @@
+---
+sidebar_position: 100
+title: "ERC-20 Permit Facet"
+description: "Approve an ERC-20 spender with an off-chain signature, following EIP-2612"
+sidebar_label: "Facet"
+gitSource: "https://github.com/Perfect-Abstractions/Compose/tree/main/src/token/ERC20/Permit/ERC20PermitFacet.sol"
+---
+
+import DocSubtitle  from '@site/src/components/docs/DocSubtitle';
+import Callout from '@site/src/components/ui/Callout';
+import Accordion, { AccordionGroup } from '@site/src/components/ui/Accordion';
+import PropertyTable from '@site/src/components/api/PropertyTable';
+import ExpandableCode from '@site/src/components/code/ExpandableCode';
+import LastUpdated from '@site/src/components/docs/LastUpdated';
+import PackageImport from '@site/src/components/docs/PackageImport';
+
+<PackageImport/>
+
+<DocSubtitle>
+Set an allowance from a signed message instead of a transaction, following EIP-2612
+</DocSubtitle>
+
+<Callout type="info" title="Key Features">
+- `permit` sets an allowance from an owner's signature, so the owner never has to send a transaction.
+- Anyone may submit a valid signature. The allowance is still recorded for the signer.
+- Each success increments the owner's nonce, so a signature works exactly once.
+</Callout>
+
+## Storage
+
+This facet touches three separate slots: the allowance it writes, the token name it hashes into the EIP-712 domain, and the nonce it consumes.
+
+### State Variables
+
+<PropertyTable
+  properties={[
+    {
+      name: "ERC20_METADATA_STORAGE_POSITION",
+      type: "bytes32",
+      description: "Metadata storage position, read for the token name (Value: `keccak256(\"erc20.metadata\")`)"
+    },
+    {
+      name: "ERC20_STORAGE_POSITION",
+      type: "bytes32",
+      description: "ERC-20 storage position, where the allowance is written (Value: `keccak256(\"erc20\")`)"
+    },
+    {
+      name: "STORAGE_POSITION",
+      type: "bytes32",
+      description: "Nonce storage position (Value: `keccak256(\"nonces\")`)"
+    }
+  ]}
+  showRequired={false}
+/>
+
+### ERC20MetadataStorage
+
+Only the `name` field is declared here, because the domain separator needs nothing else.
+
+<ExpandableCode language="solidity" maxLines={15} title="Definition">
+{`/** @custom:storage-location erc8042:erc20.metadata */
+struct ERC20MetadataStorage {
+    string name;
+}`}
+</ExpandableCode>
+
+<Callout type="info" title="Why the struct is shorter here">
+This is a layout-compatible prefix of the metadata struct, not a different slot. `name` is the first field either way, so this facet reads exactly the same string that [`ERC20MetadataFacet`](/docs/library/token/ERC20/Metadata/ERC20MetadataFacet) returns from `name()`. The `symbol` and `decimals` fields are simply not declared, because permit never reads them.
+</Callout>
+
+### ERC20Storage
+
+<ExpandableCode language="solidity" maxLines={15} title="Definition">
+{`/** @custom:storage-location erc8042:erc20 */
+struct ERC20Storage {
+    mapping(address owner => uint256 balance) balanceOf;
+    uint256 totalSupply;
+    mapping(address owner => mapping(address spender => uint256 allowance)) allowance;
+}`}
+</ExpandableCode>
+
+### NoncesStorage
+
+<ExpandableCode language="solidity" maxLines={15} title="Definition">
+{`/** @custom:storage-location erc8042:nonces */
+struct NoncesStorage {
+    mapping(address owner => uint256) nonces;
+}`}
+</ExpandableCode>
+
+<Callout type="warning" title="Slot identifier is not namespaced">
+The nonce slot is `keccak256("nonces")`, a bare identifier rather than something like `erc20.nonces`. Any other contract in the same diamond that picks the string `"nonces"` for its own storage will land on this slot and corrupt permit nonces. Nothing else in Compose uses it today.
+</Callout>
+
+## Functions
+
+### nonces
+
+Returns the number of permits `_owner` has already used. The next signature must be signed with this value.
+
+<ExpandableCode language="solidity" maxLines={8}>
+{`function nonces(address _owner) external view returns (uint256);`}
+</ExpandableCode>
+
+**Parameters:**
+
+<PropertyTable
+  properties={[
+    {
+      name: "_owner",
+      type: "address",
+      description: "The address to query. Any address that has never used a permit returns `0`."
+    }
+  ]}
+  showRequired={false}
+/>
+
+**Returns:**
+
+<PropertyTable
+  properties={[
+    {
+      name: "-",
+      type: "uint256",
+      description: "The owner's current nonce, which is also the nonce the next signature must carry."
+    }
+  ]}
+  showRequired={false}
+/>
+
+---
+### DOMAIN_SEPARATOR
+
+Returns the EIP-712 domain separator that signatures must be built against.
+
+It is computed on every call rather than cached at deployment, from four inputs: the token `name` read from metadata storage, the hardcoded version string `"1"`, the current `block.chainid`, and the diamond's own address.
+
+<ExpandableCode language="solidity" maxLines={8}>
+{`function DOMAIN_SEPARATOR() external view returns (bytes32);`}
+</ExpandableCode>
+
+**Returns:**
+
+<PropertyTable
+  properties={[
+    {
+      name: "-",
+      type: "bytes32",
+      description: "The domain separator for this token on this chain."
+    }
+  ]}
+  showRequired={false}
+/>
+
+---
+### permit
+
+Verifies an EIP-2612 signature and sets `allowance[_owner][_spender]` to `_value`.
+
+The call is permissionless. Whoever relays the signature pays the gas, and the allowance is recorded for `_owner` regardless of who submitted it. The owner's nonce increases by one, and only on success.
+
+<ExpandableCode language="solidity" maxLines={12}>
+{`function permit(
+    address _owner,
+    address _spender,
+    uint256 _value,
+    uint256 _deadline,
+    uint8 _v,
+    bytes32 _r,
+    bytes32 _s
+) external;`}
+</ExpandableCode>
+
+**Parameters:**
+
+<PropertyTable
+  properties={[
+    {
+      name: "_owner",
+      type: "address",
+      description: "The address that signed the permit and whose allowance is set. Must match the recovered signer."
+    },
+    {
+      name: "_spender",
+      type: "address",
+      description: "The address receiving the allowance. Cannot be `address(0)`."
+    },
+    {
+      name: "_value",
+      type: "uint256",
+      description: "The new allowance. It replaces any previous value rather than adding to it."
+    },
+    {
+      name: "_deadline",
+      type: "uint256",
+      description: "Unix timestamp after which the signature is refused. A permit submitted in the block where `block.timestamp` equals the deadline is still accepted."
+    },
+    {
+      name: "_v",
+      type: "uint8",
+      description: "Recovery byte of the signature."
+    },
+    {
+      name: "_r",
+      type: "bytes32",
+      description: "The `r` value of the signature."
+    },
+    {
+      name: "_s",
+      type: "bytes32",
+      description: "The `s` value of the signature."
+    }
+  ]}
+  showRequired={false}
+/>
+
+**Reverts:**
+
+<PropertyTable
+  properties={[
+    {
+      name: "ERC20InvalidSpender",
+      type: "error",
+      description: "`_spender` is `address(0)`. Checked before anything else."
+    },
+    {
+      name: "ERC2612InvalidSignature",
+      type: "error",
+      description: "The deadline has passed, or the recovered signer is not `_owner`, or recovery failed. All three cases share this one error."
+    }
+  ]}
+  showRequired={false}
+/>
+
+## Events
+
+<AccordionGroup>
+  <Accordion title="Approval" defaultOpen={false}>
+
+    <div style={{marginBottom: "1rem"}}>
+      Emitted on every successful permit. Identical in shape to the event [`ERC20ApproveFacet`](/docs/library/token/ERC20/Approve/ERC20ApproveFacet) emits, so an allowance set by signature is indistinguishable in the logs from one set by a transaction.
+    </div>
+
+    <div style={{marginBottom: "1rem"}}>
+      <strong>Signature:</strong>
+      <ExpandableCode language="solidity" maxLines={5}>
+{`event Approval(address indexed _owner, address indexed _spender, uint256 _value);`}
+      </ExpandableCode>
+    </div>
+
+    <div style={{marginBottom: "1rem"}}>
+      <strong>Parameters:</strong>
+      <PropertyTable
+        properties={[
+          {
+            name: "_owner",
+            type: "address",
+            description: "The signer granting the allowance. Not the account that submitted the transaction."
+          },
+          {
+            name: "_spender",
+            type: "address",
+            description: "The address receiving the allowance."
+          },
+          {
+            name: "_value",
+            type: "uint256",
+            description: "The new allowance."
+          }
+        ]}
+        showRequired={false}
+      />
+    </div>
+
+  </Accordion>
+</AccordionGroup>
+
+## Errors
+
+<AccordionGroup>
+  <Accordion title="ERC2612InvalidSignature" defaultOpen={false}>
+
+    <div style={{marginBottom: "1rem"}}>
+      Thrown for every signature failure: an expired deadline, a signer that does not match `_owner`, or a recovery that returned `address(0)`. Because one error covers all three, a caller cannot tell an expired permit from a malformed one without checking the deadline separately.
+    </div>
+
+    <div style={{marginBottom: "1rem"}}>
+      <strong>Signature:</strong>
+      <ExpandableCode language="solidity" maxLines={5}>
+{`error ERC2612InvalidSignature(
+    address _owner, address _spender, uint256 _value, uint256 _deadline, uint8 _v, bytes32 _r, bytes32 _s
+);`}
+      </ExpandableCode>
+    </div>
+
+    <div style={{marginBottom: "1rem"}}>
+      <strong>Parameters:</strong>
+      <PropertyTable
+        properties={[
+          {
+            name: "_owner",
+            type: "address",
+            description: "The address the permit claimed to be from."
+          },
+          {
+            name: "_spender",
+            type: "address",
+            description: "The spender named in the permit."
+          },
+          {
+            name: "_value",
+            type: "uint256",
+            description: "The allowance the permit asked for."
+          },
+          {
+            name: "_deadline",
+            type: "uint256",
+            description: "The deadline carried by the permit."
+          },
+          {
+            name: "_v",
+            type: "uint8",
+            description: "Recovery byte of the rejected signature."
+          },
+          {
+            name: "_r",
+            type: "bytes32",
+            description: "The `r` value of the rejected signature."
+          },
+          {
+            name: "_s",
+            type: "bytes32",
+            description: "The `s` value of the rejected signature."
+          }
+        ]}
+        showRequired={false}
+      />
+    </div>
+
+  </Accordion>
+
+  <Accordion title="ERC20InvalidSpender" defaultOpen={false}>
+
+    <div style={{marginBottom: "1rem"}}>
+      Thrown when `_spender` is the zero address. This check runs before the deadline and signature checks, so it fires even on an otherwise invalid permit.
+    </div>
+
+    <div style={{marginBottom: "1rem"}}>
+      <strong>Signature:</strong>
+      <ExpandableCode language="solidity" maxLines={5}>
+{`error ERC20InvalidSpender(address _spender);`}
+      </ExpandableCode>
+    </div>
+
+    <div style={{marginBottom: "1rem"}}>
+      <strong>Parameters:</strong>
+      <PropertyTable
+        properties={[
+          {
+            name: "_spender",
+            type: "address",
+            description: "The rejected spender. Always `address(0)`."
+          }
+        ]}
+        showRequired={false}
+      />
+    </div>
+
+  </Accordion>
+</AccordionGroup>
+
+## Best Practices
+
+- Add [`ERC20MetadataFacet`](/docs/library/token/ERC20/Metadata/ERC20MetadataFacet) and call `setMetadata` before anyone signs a permit. With an unset name the domain is built from an empty string, and every signature becomes invalid the moment the name is filled in.
+- Read `nonces(owner)` when building a signature, and `DOMAIN_SEPARATOR()` rather than reconstructing the domain by hand.
+- Sign permits one at a time per owner. The nonce is a single counter, so two signatures created against the same nonce cannot both be used: whichever lands first invalidates the other.
+- Pair this facet with [`ERC20TransferFacet`](/docs/library/token/ERC20/Transfer/ERC20TransferFacet), since a permit is only useful if the spender can then call `transferFrom`.
+
+## Security Considerations
+
+**Renaming the token invalidates every outstanding permit.** The domain separator hashes the `name` read from metadata storage, and it is recomputed on each call rather than cached. Calling `setMetadata` with a different name silently changes the domain, so signatures already in flight stop verifying and any integrator caching the old `DOMAIN_SEPARATOR()` starts producing rejected signatures.
+
+**The nonce is consumed only on success.** It is incremented after the signature check passes, so failed submissions do not burn nonces and cannot be used to grief an owner's pending signatures.
+
+**Anyone can submit someone else's permit.** That is the design, but it means a contract that bundles `permit` and a follow-up action in one transaction can be broken by a third party submitting the permit first: the bundled call then reverts on the now-stale nonce. Tolerate an already-consumed permit if you bundle.
+
+**Signature malleability is not rejected, but replay is prevented.** `ecrecover` is called directly, with no low-`s` bound and no check that `_v` is 27 or 28, so an altered but still valid encoding of a signature recovers the same signer. This does not enable replay, because the nonce has already moved on after the first use. The one failure mode `ecrecover` does have is covered: a recovery that returns `address(0)` is rejected explicitly, so a malformed signature cannot be passed off as a permit from the zero address.
+
+**The deadline is inclusive.** The check rejects only when `block.timestamp` is strictly greater than `_deadline`, so a permit remains usable during the block whose timestamp equals its deadline.
+
+<LastUpdated date="2026-09-16T12:00:00.000Z" />

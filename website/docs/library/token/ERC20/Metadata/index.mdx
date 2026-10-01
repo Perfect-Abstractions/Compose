@@ -1,0 +1,30 @@
+---
+title: "ERC-20 Metadata"
+sidebar_label: "Metadata"
+description: "ERC-20 token name, symbol, and decimals."
+---
+
+import DocCard, { DocCardGrid } from '@site/src/components/docs/DocCard';
+import DocSubtitle from '@site/src/components/docs/DocSubtitle';
+import Icon from '@site/src/components/ui/Icon';
+
+<DocSubtitle>
+  Read and initialize the token name, symbol, and decimals
+</DocSubtitle>
+
+<DocCardGrid columns={2}>
+  <DocCard
+    title="ERC-20 Metadata Facet"
+    description={"Read the token name, symbol, and decimals"}
+    href="/docs/library/token/ERC20/Metadata/ERC20MetadataFacet"
+    icon={<Icon name="showcase-facet" size={28} />}
+    size="medium"
+  />
+  <DocCard
+    title="ERC-20 Metadata Module"
+    description={"Set the token name, symbol, and decimals during initialization"}
+    href="/docs/library/token/ERC20/Metadata/ERC20MetadataMod"
+    icon={<Icon name="box-detailed" size={28} />}
+    size="medium"
+  />
+</DocCardGrid>

@@ -113,7 +113,7 @@ function DOMAIN_SEPARATOR() view returns (bytes32) {
 
 /**
  * @notice         Validates a permit signature and sets allowance.
- * @dev            Emits Approval event; must be emitted by the calling facet/contract.
+ * @dev            Emits Approval event;
  * @param _owner   Token owner.
  * @param _spender Token spender.
  * @param _value   Allowance value.

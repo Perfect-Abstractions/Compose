@@ -1,0 +1,30 @@
+---
+title: "ERC-20 Transfer"
+sidebar_label: "Transfer"
+description: "Move ERC-20 tokens directly or through an allowance."
+---
+
+import DocCard, { DocCardGrid } from '@site/src/components/docs/DocCard';
+import DocSubtitle from '@site/src/components/docs/DocSubtitle';
+import Icon from '@site/src/components/ui/Icon';
+
+<DocSubtitle>
+  Move tokens between accounts, directly or by spending an allowance
+</DocSubtitle>
+
+<DocCardGrid columns={2}>
+  <DocCard
+    title="ERC-20 Transfer Facet"
+    description={"Move tokens directly, or spend an allowance with transferFrom"}
+    href="/docs/library/token/ERC20/Transfer/ERC20TransferFacet"
+    icon={<Icon name="showcase-facet" size={28} />}
+    size="medium"
+  />
+  <DocCard
+    title="ERC-20 Transfer Module"
+    description={"Transfer helpers for use inside your own facets"}
+    href="/docs/library/token/ERC20/Transfer/ERC20TransferMod"
+    icon={<Icon name="box-detailed" size={28} />}
+    size="medium"
+  />
+</DocCardGrid>

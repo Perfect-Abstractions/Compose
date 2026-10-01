@@ -31,7 +31,7 @@ const sidebars = {
     {
       type: 'category',
       label: 'Foundations',
-      collapsed: false,
+      collapsed: true,
       link: {
         type: 'doc',
         id: 'foundations/index',
