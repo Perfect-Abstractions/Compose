@@ -35,6 +35,9 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
+      - name: Build CLI
+        run: npm run cli@build
+
       - name: Run CLI coverage
         run: npm run cli@coverage
 
