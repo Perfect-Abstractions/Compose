@@ -100,7 +100,7 @@ export default function AnnouncementBanner({
           className={styles.closeButton}
           onClick={handleDismiss}
           aria-label="Dismiss announcement">
-          <Icon name="close" size={18} decorative={false} alt="Close" />
+          <Icon name="close" size={16} decorative={false} alt="Close" />
         </button>
       </div>
     </div>

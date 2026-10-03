@@ -60,6 +60,11 @@
   border-radius: 0.75rem;
 }
 
+.featureCardLink:focus-visible {
+  outline: 2px solid var(--compose-primary-500);
+  outline-offset: 4px;
+}
+
 .featureCard {
   position: relative;
   height: 100%;

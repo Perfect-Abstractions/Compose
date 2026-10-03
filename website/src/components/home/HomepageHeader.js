@@ -16,8 +16,7 @@ export default function HomepageHeader() {
   const badgeAndTitle = (
     <>
       <Heading as="h1" className={styles.heroTitle}>
-        Build the future of<br />
-        <span className={styles.heroTitleGradient}>Smart Contracts</span>
+        Infrastructure for evolving <br/><span className={styles.heroTitleGradient}>onchain systems</span>
       </Heading>
     </>
   );
@@ -26,14 +25,12 @@ export default function HomepageHeader() {
     <>
       <div className={styles.heroDescriptionWrapper}>
         <p className={styles.heroSubtitle}>
-        On-chain infrastructure should be shared, not rebuilt.
-        <br/>
-        Compose is the composition toolkit for modular on-chain systems.
+          A framework for modular, maintainable smart contracts.
         </p>
       </div>
       <div className={styles.heroCta}>
-        <Link className={clsx(styles.ctaButton, styles.ctaPrimary)} to="/docs">
-          <span>Get Started</span>
+        <Link className={clsx(styles.ctaButton, styles.ctaPrimary)} to="/docs/getting-started/installation">
+          <span>Start Building</span>
           <svg
             className={styles.ctaButtonIcon}
             width={20}
@@ -51,8 +48,8 @@ export default function HomepageHeader() {
             />
           </svg>
         </Link>
-        <Link className={clsx(styles.ctaButton, styles.ctaSecondary)} to="/whitepaper">
-          <span>Read Our Whitepaper</span>
+        <Link className={clsx(styles.ctaButton, styles.ctaSecondary)} to="/docs">
+          <span>Read the docs</span>
         </Link>
       </div>
     </>

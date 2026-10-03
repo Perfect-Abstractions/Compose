@@ -117,15 +117,9 @@
   line-height: 1.05;
   letter-spacing: -0.03em;
   margin-bottom: 0.4rem;
-  background: linear-gradient(
-    135deg,
-    #93c5fd 0%,
-    var(--compose-primary-500) 42%,
-    var(--compose-primary-600) 100%
-  );
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
+  color: #fff;
+  background: none;
+  -webkit-text-fill-color: #fff;
   white-space: nowrap;
 }
 

@@ -15,7 +15,7 @@
 .footerWrapper :global(.footer__links) {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-  gap: 2rem;
+  gap: 1.5rem;
 }
 
 /* Newsletter section styling - appears as a footer column */
@@ -28,8 +28,8 @@
 /* Desktop: Newsletter appears as rightmost column with larger width */
 @media (min-width: 997px) {
   .footerWrapper :global(.footer__links) {
-    grid-template-columns: repeat(3, 1fr) 480px;
-    gap: 2rem;
+    grid-template-columns: repeat(3, 1fr) 320px;
+    gap: 1.5rem;
   }
   
   /* Newsletter is naturally last in DOM on desktop, no order needed */

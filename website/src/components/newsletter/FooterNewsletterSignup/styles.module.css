@@ -25,8 +25,8 @@
 }
 
 .footerNewsletterDescription {
-  margin: 0 0 1rem 0;
-  font-size: 0.8125rem;
+  margin: 0 0 0.75rem 0;
+  font-size: 0.75rem;
   line-height: 1.5;
   color: rgba(255, 255, 255, 0.8);
   padding: 0;
@@ -70,15 +70,15 @@
 /* Larger desktop: maximize input field width */
 @media (min-width: 997px) {
   .footerNewsletterInput {
-    min-width: 320px;
-    font-size: 1rem;
-    padding: 0.625rem 1rem;
+    min-width: 240px;
+    font-size: 0.875rem;
+    padding: 0.5rem 0.75rem;
   }
-  
+
   .footerNewsletterButton {
-    min-width: 120px;
-    padding: 0.625rem 1.5rem;
-    font-size: 0.9375rem;
+    min-width: 100px;
+    padding: 0.5rem 1rem;
+    font-size: 0.875rem;
   }
 }
 
@@ -209,7 +209,7 @@
   display: flex;
   align-items: center;
   gap: 0.5rem;
-  font-size: 0.75rem;
+  font-size: 0.6875rem;
   color: rgba(255, 255, 255, 0.7);
   margin: 0.25rem 0 0 0;
   padding: 0;

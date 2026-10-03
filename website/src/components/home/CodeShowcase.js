@@ -8,28 +8,29 @@ import Icon from '../ui/Icon';
 import { useMatchMedia } from '../../hooks/useMatchMedia';
 import styles from './codeShowcase.module.css';
 
-const CODE_FILENAME = 'GameNFTFacet.sol';
+const CODE_FILENAME = 'StablecoinMintFacet.sol';
 const PANEL_TITLE_ID = 'code-showcase-panel-title';
 
-const SHOWCASE_EXAMPLE_CODE = `// Your custom facet uses the ERC721 module
-import { ERC721Mod } from "compose/ERC721Mod.sol";
+const SHOWCASE_EXAMPLE_CODE = `// Role-gated mint policy on shared ERC-20 storage
+import { ERC20MintMod } from "compose/ERC20MintMod.sol";
+import { AccessControlDataMod } from "compose/AccessControlDataMod.sol";
+import { NonReentrancyMod } from "compose/NonReentrancyMod.sol";
 
-contract GameNFTFacet {
-    function mintWithGameLogic(
-        address player,
-        uint256 tokenId
+contract StablecoinMintFacet {
+    function mint(
+        address recipient,
+        uint256 amount
     ) external {
-        // Your custom game logic
-        require(
-            playerHasEnoughPoints(player),
-            "Not enough points"
+        // Only the MINTER_ROLE can mint
+        AccessControlDataMod.requireRole(
+            keccak256("MINTER_ROLE"),
+            msg.sender
         );
 
-        // Use ERC721Mod - same storage
-        ERC721Mod.mint(player, tokenId);
-
-        // Standard ERC721Facet functions work seamlessly
-        updatePlayerStats(player);
+        // Reentrancy guard on shared storage
+        NonReentrancyMod.enter();
+        ERC20MintMod.mint(recipient, amount);
+        NonReentrancyMod.exit();
     }
 }`;
 

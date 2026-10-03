@@ -5,39 +5,39 @@ export default function FeaturesSection() {
   const features = [
     {
       kicker: 'Design principle',
-      title: 'Read First',
-      description: 'Code written to be understood first, not just executed. Every facet is self-contained and readable top-to-bottom.',
+      title: 'Readable by Design',
+      description: 'Keep each facet focused, self-contained, and understandable from top to bottom.',
       link: '/docs/design/written-to-be-read',
     },
     {
       kicker: 'ERC-2535 / ERC-8153',
       title: 'Diamond-Native',
-      description: 'Deploy facets once, reuse them across multiple diamonds on chain.',
+      description: 'Build modular systems around the ERC-2535 Diamond architecture and its shared storage model.',
       link: '/docs/foundations/diamond-contracts',
     },
     {
       kicker: 'Architecture',
-      title: 'Composition Over Inheritance',
-      description: 'Combine deployed facets instead of inheriting contracts. Build systems from simple, reusable pieces.',
+      title: 'Composable Architecture',
+      description: 'Assemble systems from focused facets and modules instead of coupling functionality through inheritance.',
       link: '/docs/design/design-for-composition',
     },
     {
-      kicker: 'SCOP',
-      title: 'Intentional Simplicity',
-      description: 'Smart Contract Oriented Programming (SCOP) - designed specifically for smart contracts, not general software.',
+      kicker: 'Smart Contract Oriented Programming',
+      title: 'Domain-Specific Discipline',
+      description: 'Use deliberate Solidity constraints and conventions designed for the realities of smart contract development.',
       link: '/docs/design',
     },
     {
-      kicker: 'Roadmap',
-      title: 'On-chain Standard Library',
-      description: '(In the future) Access verified, audited facets deployed on multiple blockchains.',
-      link: '/docs/foundations/onchain-contract-library',
+      kicker: 'Developer tooling',
+      title: 'A Structured Starting Point',
+      description: 'Scaffold a diamond project with the Compose CLI, then develop with the Foundry or Hardhat workflow you already use.',
+      link: '/docs/getting-started/installation',
     },
     {
-      kicker: 'Ecosystem',
-      title: 'Community-Driven',
-      description: 'Built with love by the community. Join us in creating the standard library for ERC-2535 / ERC-8153 Diamonds.',
-      link: '/docs/contribution/how-to-contribute',
+      kicker: 'Extensibility',
+      title: 'Built to Evolve',
+      description: 'Add custom facets that work with Compose modules and shared diamond storage as your system develops.',
+      link: '/docs/foundations/custom-facets',
     },
   ];
 
@@ -47,17 +47,10 @@ export default function FeaturesSection() {
         <div className={styles.sectionHeader}>
           <span className={styles.sectionBadge}>Why Compose</span>
           <Heading as="h2" className={styles.sectionTitle}>
-            Rethinking Smart Contract Development
+            Architecture for evolving protocols
           </Heading>
           <p className={styles.sectionSubtitle}>
-            Forget traditional smart contract design patterns. Compose takes a radically
-            different approach with <b>Smart Contract Oriented Programming (SCOP)</b>.
-          </p>
-          <br />
-          <p className={styles.sectionSubtitle}>
-          We focus on building <b>small, independent, and easy-to-understand</b> smart contracts called <b>facets</b>.
-          Each facet is designed to be deployed once, then reused and composed seamlessly with others to form
-          complete smart contract systems.
+            Compose gives teams a structured foundation for building, extending, and maintaining modular smart contract systems.
           </p>
         </div>
         <div className={styles.featuresGrid}>

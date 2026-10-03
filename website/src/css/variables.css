@@ -51,6 +51,10 @@
   --ifm-toc-padding-horizontal: 0.375rem;
   --ifm-toc-font-size: 0.75rem;
   --ifm-toc-line-height: 1.45;
+
+  /* Footer padding — scaled down from Infima defaults (2rem) */
+  --ifm-footer-padding-vertical: 1.25rem;
+  --ifm-footer-padding-horizontal: 1.5rem;
   /** Horizontal padding for main content when blog sidebar is closed */
   --ifm-sidebar-content-margin-x: 2rem;
 

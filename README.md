@@ -6,27 +6,30 @@
 
 ## What is Compose?
 
-Compose is a smart contract library that helps developers create smart contract systems using [ERC-2535 Diamonds](https://eips.ethereum.org/EIPS/eip-2535).
+A smart contract development framework for building modular systems with [ERC-8153 Diamonds](https://eips.ethereum.org/EIPS/eip-2535).
 
-**Compose provides:**
+Compose gives you a clear way to split contract functionality into focused facets, reuse proven building blocks, and evolve your onchain application with ease.
 
-- An on-chain standard library of facets (modular smart contracts)
-- Building blocks for diamond-based smart contract systems
-- Patterns and libraries to combine Compose facets with your custom logic
+**The framework includes:**
+
+- A Solidity library of reusable facets and modules
+- A CLI toolkit for projects with Foundry or Hardhat
+- Design patterns for combining Compose components with custom logic
+- Documentation for building, extending, and testing diamond systems
 
 The project actively evolves based on community input—[tell us](https://github.com/Perfect-Abstractions/Compose/discussions/108) what you'd like Compose to do for you.
 
 
 ## Why Compose is Different
 
-**Forget traditional smart contract design patterns**—Compose takes a radically different approach.
+Smart contracts are hard enough to audit and maintain. Compose keeps each piece small, explicit, and easy to read.
 
-We build high-quality smart contracts by <a href="https://compose.diamonds/docs/design/banned-solidity-features">**intentionally restricting Solidity features**</a> and following conventions designed specifically for smart contracts. This is **Smart Contract Oriented Programming (SCOP)**.
+We use <a href="https://compose.diamonds/docs/design/banned-solidity-features">**intentional Solidity constraints**</a> and conventions designed specifically for smart contracts. This is **Smart Contract Oriented Programming (SCOP)**.
 
 ### Core Philosophy
 
 - **Read First**: Code written to be understood, not just executed
-- **Diamond-Native**: Built specifically for ERC-2535 diamond contracts
+- **Diamond-Native**: Built specifically for ERC-2535 / ERC-8153 diamond contracts
 - **Composition Over Inheritance**: Combine facets instead of inheriting contracts
 - **Intentional Simplicity**: Banned features lead to clearer, safer code
 
@@ -71,13 +74,9 @@ Please see the [documentation for contributing](https://compose.diamonds/docs/co
 
 <br>
 
-**Compose is evolving with your help. Join us in building the future of smart contract development.**
-
-**-Nick & The Compose Community**
-
 <!-- automd:contributors github="Perfect-Abstractions/Compose" license="MIT" -->
 
-### Made with 🩵 by the [Compose Community](https://github.com/Perfect-Abstractions/Compose/graphs/contributors)
+### Made with more than 🩵 by the [Compose Community](https://github.com/Perfect-Abstractions/Compose/graphs/contributors)
 
 <a href="https://github.com/Perfect-Abstractions/Compose/graphs/contributors">
 <img src="https://contrib.rocks/image?repo=Perfect-Abstractions/Compose" />

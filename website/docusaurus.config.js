@@ -21,7 +21,7 @@ dotenv.config();
 /** @type {import('@docusaurus/types').Config} */
 const config = {
   title: 'Compose',
-  tagline: 'Smart Contract Oriented Programming for ERC-2535 Diamonds',
+  tagline: 'The smart contract development framework for modular diamond systems',
   favicon: 'img/favicon.ico',
 
   // Future flags, see https://docusaurus.io/docs/api/docusaurus-config#future
@@ -117,7 +117,7 @@ const config = {
         '@type': 'WebSite',
         name: 'Compose',
         url: 'https://compose.diamonds/',
-        about: "Modular Smart Contract Library for ERC-2535 / ERC-8153 diamond proxies",
+         about: "Smart contract development framework for modular ERC-2535 / ERC-8153 diamond systems",
         author: "Perfect Abstractions & the Compose Community",
         potentialAction: {
           '@type': 'SearchAction',
