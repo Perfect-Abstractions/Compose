@@ -1,5 +1,18 @@
 # Changelog
 
+## 0.3.0
+
+### Minor Changes
+
+- 8aa339a: Validate deployed diamond facet bytecode against the source-derived virtual storage layout.
+
+### Patch Changes
+
+- 81b641f: Clarify CLI adapter and adapter test organization in the contributor documentation.
+- 5b20797: Add automated CLI test coverage reporting to pull requests.
+- 509cae0: Automatically sync the CLI's Compose dependency after a library release.
+- 4862d57: Add compose init test coverage and reorganize adapters by interface.
+
 ## 0.2.1
 
 ### Patch Changes
