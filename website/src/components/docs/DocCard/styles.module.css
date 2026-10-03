@@ -3,15 +3,15 @@
 .docCard {
   display: flex;
   align-items: center;
-  gap: 1.25rem;
-  padding: 2rem;
+  gap: 1rem;
+  padding: 1.5rem;
   text-decoration: none;
   color: inherit;
   position: relative;
   overflow: hidden;
   isolation: isolate;
   cursor: pointer;
-  border-radius: 1.25rem;
+  border-radius: 0.75rem;
   background: linear-gradient(155deg, #ffffff 0%, #f1f5f9 55%, #f8fafc 100%);
   border: 1px solid rgba(15, 23, 42, 0.08);
   box-shadow:
@@ -118,9 +118,9 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 3.5rem;
-  height: 3.5rem;
-  border-radius: 0.75rem;
+  width: 2.75rem;
+  height: 2.75rem;
+  border-radius: 0.625rem;
   position: relative;
   z-index: 1;
   color: var(--compose-primary-500);
@@ -143,7 +143,7 @@
 }
 
 .iconEmoji {
-  font-size: 2rem;
+  font-size: 1.5rem;
   line-height: 1;
 }
 
@@ -156,8 +156,8 @@
 }
 
 .docCardTitle {
-  margin: 0 0 0.5rem 0;
-  font-size: 1.125rem;
+  margin: 0 0 0.3rem 0;
+  font-size: 1rem;
   font-weight: 750;
   letter-spacing: -0.025em;
   line-height: 1.22;
@@ -166,8 +166,8 @@
 
 .docCardDescription {
   margin: 0;
-  font-size: 0.96875rem;
-  line-height: 1.65;
+  font-size: 0.875rem;
+  line-height: 1.55;
   color: #334155;
 }
 
@@ -286,117 +286,117 @@
 
 /* Card Sizes */
 .docCard--small {
-  padding: 1.25rem 1.5rem;
-  gap: 1rem;
-  border-radius: 1.125rem;
+  padding: 1rem 1.125rem;
+  gap: 0.875rem;
+  border-radius: 0.75rem;
 }
 
 .docCard--small .docCardIcon {
-  width: 2.5rem;
-  height: 2.5rem;
-  border-radius: 0.625rem;
+  width: 2.125rem;
+  height: 2.125rem;
+  border-radius: 0.5rem;
 }
 
 .docCard--small .iconEmoji {
-  font-size: 1.5rem;
+  font-size: 1.25rem;
 }
 
 .docCard--small .docCardTitle {
-  font-size: 1rem;
+  font-size: 0.9375rem;
   font-weight: 700;
 }
 
 .docCard--small .docCardDescription {
-  font-size: 0.9375rem;
+  font-size: 0.875rem;
 }
 
 .docCard--large {
-  padding: 2.5rem;
-  gap: 1.5rem;
+  padding: 1.75rem;
+  gap: 1.25rem;
 }
 
 .docCard--large .docCardIcon {
-  width: 4rem;
-  height: 4rem;
+  width: 3.25rem;
+  height: 3.25rem;
 }
 
 .docCard--large .iconEmoji {
-  font-size: 2.5rem;
+  font-size: 1.875rem;
 }
 
 .docCard--large .docCardTitle {
-  font-size: 1.3125rem;
+  font-size: 1.1875rem;
 }
 
 /* DocCardGrid — match homepage features grid rhythm */
 .docCardGrid {
   display: grid;
   grid-template-columns: repeat(var(--grid-columns, 2), 1fr);
-  gap: 2rem;
-  margin: 2rem 0;
+  gap: 1rem;
+  margin: 1.25rem 0;
 }
 
 @media (min-width: 997px) and (max-width: 1200px) {
   .docCardGrid {
-    grid-template-columns: 1fr;
-    gap: 1.5rem;
+    grid-template-columns: repeat(var(--grid-columns, 2), 1fr);
+    gap: 1rem;
   }
 }
 
 @media (min-width: 1201px) and (max-width: 1400px) {
   .docCardGrid {
     grid-template-columns: repeat(var(--grid-columns, 2), 1fr);
-    gap: 1.5rem;
+    gap: 1.125rem;
   }
 }
 
 @media (min-width: 1401px) {
   .docCardGrid {
     grid-template-columns: repeat(var(--grid-columns, 2), 1fr);
-    gap: 2rem;
+    gap: 1.125rem;
   }
 }
 
 @media (max-width: 996px) {
   .docCardGrid {
     grid-template-columns: 1fr;
-    gap: 1.25rem;
+    gap: 0.875rem;
   }
 }
 
 @media (min-width: 997px) and (max-width: 1200px) {
   .docCard {
-    padding: 1.75rem;
-    gap: 1.125rem;
+    padding: 1.375rem;
+    gap: 0.875rem;
   }
 
   .docCardIcon {
-    width: 3.25rem;
-    height: 3.25rem;
+    width: 2.5rem;
+    height: 2.5rem;
   }
 }
 
 @media (max-width: 768px) {
   .docCard {
-    padding: 1.75rem 1.5rem 2rem;
-    gap: 1rem;
+    padding: 1.25rem;
+    gap: 0.875rem;
   }
 
   .docCardIcon {
-    width: 3rem;
-    height: 3rem;
+    width: 2.5rem;
+    height: 2.5rem;
   }
 
   .iconEmoji {
-    font-size: 1.75rem;
+    font-size: 1.375rem;
   }
 
   .docCardTitle {
-    font-size: 1.1875rem;
+    font-size: 1.0625rem;
   }
 
   .docCardDescription {
-    font-size: 0.9375rem;
+    font-size: 0.875rem;
   }
 }
 

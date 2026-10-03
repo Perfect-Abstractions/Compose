@@ -161,7 +161,7 @@ export default function WasThisHelpful({
           onClick={handleAsideYes}
           aria-label="Yes, this was helpful"
         >
-          <Icon name={thumbUpName} size={18} className={styles.thumbIcon} />
+          <Icon name={thumbUpName} size={14} className={styles.thumbIcon} />
           Yes
         </button>
         <button
@@ -170,7 +170,7 @@ export default function WasThisHelpful({
           onClick={handleAsideNo}
           aria-label="No, this was not helpful"
         >
-          <Icon name={thumbDownName} size={18} className={styles.thumbIcon} />
+          <Icon name={thumbDownName} size={14} className={styles.thumbIcon} />
           No
         </button>
       </div>
@@ -227,7 +227,7 @@ export default function WasThisHelpful({
           >
             <Icon
               name={thumbUpName}
-              size={20}
+              size={16}
               className={clsx(
                 styles.thumbIcon,
                 feedback === 'yes' && styles.thumbIconOnPrimary
@@ -246,7 +246,7 @@ export default function WasThisHelpful({
           >
             <Icon
               name={thumbDownName}
-              size={20}
+              size={16}
               className={clsx(
                 styles.thumbIcon,
                 feedback === 'no' && styles.thumbIconOnPrimary

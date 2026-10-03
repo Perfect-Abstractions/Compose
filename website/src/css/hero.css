@@ -27,17 +27,17 @@
 
 .hero__title {
   font-family: var(--ifm-heading-font-family);
-  font-size: 3.5rem;
-  font-weight: 800;
+  font-size: 2.5rem;
+  font-weight: 700;
   letter-spacing: -0.02em;
   color: white !important;
 }
 
 .hero__subtitle {
-  font-size: 1.5rem;
+  font-size: 1.125rem;
   color: rgba(255, 255, 255, 0.95) !important;
   font-weight: 400;
   max-width: 700px;
-  margin: 1.5rem auto;
-  line-height: 1.6;
+  margin: 0.75rem auto;
+  line-height: 1.5;
 }

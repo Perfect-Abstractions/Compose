@@ -34,48 +34,62 @@
 }
 
 /* Menu links */
-.menu__link {
+.theme-doc-sidebar-container .menu__link,
+.theme-doc-sidebar-container .menu__caret {
   color: #475569;
-  border-radius: 0.375rem;
-  font-size: 0.8125rem;
-  padding: 0.3rem 0.5rem;
+  border-radius: 0.3125rem;
+  font-size: 0.75rem;
+  padding: 0.225rem 0.4rem;
+  line-height: 1.4;
   transition: all 0.2s ease;
 }
 
 /* Top-level non-collapsible items (e.g. Introduction) */
-.menu__list-item > .menu__link {
-  font-size: 0.875rem;
+.theme-doc-sidebar-container .menu__list-item > .menu__link {
+  font-size: 0.78125rem;
 }
 
-.menu__list-item-collapsible > .menu__caret,
-.menu__list-item-collapsible > .menu__link {
-  font-size: 0.875rem;
-  padding: 0.3rem 0.5rem;
+.theme-doc-sidebar-container .menu__list-item-collapsible > .menu__caret,
+.theme-doc-sidebar-container .menu__list-item-collapsible > .menu__link {
+  font-size: 0.78125rem;
+  padding: 0.225rem 0.4rem;
 }
 
-.menu__link:hover {
+.theme-doc-sidebar-container .menu__list-item-collapsible > .menu__caret:before,
+.theme-doc-sidebar-container .menu__link--sublist-caret:after {
+  width: 0.95rem;
+  height: 0.95rem;
+  min-width: 0.95rem;
+  background-size: 0.95rem 0.95rem;
+}
+
+.theme-doc-sidebar-container .menu__list-item:not(:first-child) {
+  margin-top: 0.125rem;
+}
+
+.theme-doc-sidebar-container .menu__link:hover {
   background: #f1f5f9;
   color: #0f172a;
 }
 
-.menu__link--active {
+.theme-doc-sidebar-container .menu__link--active {
   background: rgba(59, 130, 246, 0.1);
   color: #3b82f6 !important;
   font-weight: 600;
 }
 
-.menu__link:hover {
+.theme-doc-sidebar-container .menu__link:hover {
   background: var(--ifm-color-emphasis-100);
 }
 
-.menu__link--active:hover {
+.theme-doc-sidebar-container .menu__link--active:hover {
   background: rgba(59, 130, 246, 0.15);
   color: #2563eb !important;
 }
 
 /* Dark mode menu */
 [data-theme='dark'] .menu__list-item-collapsible {
-  border-radius: 0.375rem;
+  border-radius: 0.3125rem;
 }
 
 [data-theme='dark'] .menu__list-item-collapsible:hover {
@@ -84,7 +98,7 @@
 
 [data-theme='dark'] .menu__link {
   color: #a0a0a0;
-  border-radius: 0.375rem;
+  border-radius: 0.3125rem;
 }
 
 [data-theme='dark'] .menu__link:hover {
