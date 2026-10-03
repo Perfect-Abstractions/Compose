@@ -66,6 +66,7 @@ jobs:
     runs-on: ubuntu-latest
     environment: npm-publish
     permissions:
+      actions: write
       contents: write
       id-token: write
     strategy:
@@ -101,6 +102,14 @@ jobs:
         run: npm publish -w ${{ matrix.workspace }} --access public
         env:
           NPM_CONFIG_PROVENANCE: "true"
+
+      - name: Sync CLI dependency after library publish
+        if: matrix.id == 'library'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          VERSION=$(node -p "require('./src/package.json').version")
+          gh workflow run sync-compose-cli-dependency.yml --ref main -f version="$VERSION"
 
       - name: Create git tag and GitHub Release
         env:

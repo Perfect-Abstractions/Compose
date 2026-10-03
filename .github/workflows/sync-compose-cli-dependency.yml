@@ -1,0 +1,83 @@
+name: Sync Compose CLI Dependency
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: Published Compose library version
+        required: true
+        type: string
+
+permissions:
+  contents: write
+  pull-requests: write
+  actions: write
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout main
+        uses: actions/checkout@v4
+        with:
+          ref: main
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24.x
+          registry-url: https://registry.npmjs.org
+
+      - name: Wait for published package
+        env:
+          VERSION: ${{ inputs.version }}
+        run: |
+          set -euo pipefail
+          for attempt in {1..12}; do
+            if [ "$(npm view "@perfect-abstractions/compose@${VERSION}" version --prefer-online 2>/dev/null)" = "$VERSION" ]; then
+              exit 0
+            fi
+            sleep 10
+          done
+          echo "::error::Compose ${VERSION} is not visible on npm"
+          exit 1
+
+      - name: Update CLI dependency and changeset
+        id: sync
+        env:
+          VERSION: ${{ inputs.version }}
+        run: node .github/scripts/sync-compose-cli-dependency.js "$VERSION"
+
+      - name: Update lockfile
+        if: steps.sync.outputs.changed == 'true'
+        run: npm install --package-lock-only --ignore-scripts --no-audit --no-fund
+
+      - name: Create or update sync PR
+        if: steps.sync.outputs.changed == 'true'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          VERSION: ${{ inputs.version }}
+        run: |
+          set -euo pipefail
+          BRANCH=automation/sync-compose-cli-dependency
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git switch -c "$BRANCH"
+          git add cli/package.json package-lock.json .changeset/compose-cli-dependency-*.md
+          git commit -m "chore(cli): update Compose dependency to ${VERSION}"
+          git push origin "HEAD:refs/heads/${BRANCH}" --force
+
+          PR=$(gh pr list --head "$BRANCH" --state open --json number --jq '.[0].number')
+          TITLE="chore(cli): update Compose dependency to ${VERSION}"
+          BODY="Updates the CLI's Compose library dependency and lockfile after the ${VERSION} library release. Includes a CLI patch changeset."
+          if [ -z "$PR" ]; then
+            gh pr create \
+              --base main \
+              --head "$BRANCH" \
+              --title "$TITLE" \
+              --body "$BODY"
+          else
+            gh api -X PATCH "repos/${GITHUB_REPOSITORY}/pulls/${PR}" -f title="$TITLE" -f body="$BODY" > /dev/null
+          fi
+
+          gh workflow run cli.yml --ref "$BRANCH"
