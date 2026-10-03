@@ -115,11 +115,11 @@
 }
 
 .table th:first-child {
-  padding-left: 1.5rem;
+  padding-left: 1.125rem;
 }
 
 .table th:last-child {
-  padding-right: 1.5rem;
+  padding-right: 1.125rem;
 }
 
 /* Table Body */
@@ -145,7 +145,7 @@
 }
 
 .table td {
-  padding: 1rem;
+  padding: 0.75rem;
   font-size: 0.875rem;
   color: var(--ifm-font-color-base);
   vertical-align: top;
@@ -156,11 +156,11 @@
 }
 
 .table td:first-child {
-  padding-left: 1.5rem;
+  padding-left: 1.125rem;
 }
 
 .table td:last-child {
-  padding-right: 1.5rem;
+  padding-right: 1.125rem;
 }
 
 /* Column Styles */

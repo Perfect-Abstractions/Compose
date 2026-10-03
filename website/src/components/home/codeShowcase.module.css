@@ -1,13 +1,13 @@
 /* Code Showcase Section */
 
-.showcaseSection { padding: 4rem 0; background: linear-gradient(180deg, #f8fafc 0%, #ffffff 100%); position: relative; overflow-x: clip; }
+.showcaseSection { padding: 2.5rem 0; background: linear-gradient(180deg, #f8fafc 0%, #ffffff 100%); position: relative; overflow-x: clip; }
 
 /* minmax(0, 1fr) + min-width: 0 — without this, the code column's min-content width
    equals the longest pre line and blows out the grid on narrow / zoomed viewports. */
 .showcaseGrid {
   display: grid;
   grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
-  gap: 4rem;
+  gap: 2.5rem;
   align-items: center;
   max-width: 1400px;
   margin: 0 auto;
@@ -19,16 +19,16 @@
   min-width: 0;
 }
 
-.showcaseContent { padding: 0 2rem; text-align: center; display: flex; flex-direction: column; align-items: center; }
-.showcaseBadge { display: inline-block; padding: 0.5rem 1rem; background: linear-gradient(135deg, rgba(59,130,246,0.1), rgba(96,165,250,0.1)); border: 1px solid rgba(59,130,246,0.2); border-radius: 9999px; color: var(--compose-primary-500); font-size: 0.875rem; font-weight: 600; letter-spacing: 0.05em; text-transform: uppercase; margin-bottom: 1.5rem; }
-.showcaseTitle { font-size: clamp(2rem, 4vw, 3rem); font-weight: 800; line-height: 1.2; letter-spacing: -0.03em; color: #0f172a; margin-bottom: 1.5rem; }
-.showcaseDescription { font-size: 1.125rem; line-height: 1.8; color: #334155; margin-bottom: 2.5rem; }
+.showcaseContent { padding: 0 1.5rem; text-align: center; display: flex; flex-direction: column; align-items: center; }
+.showcaseBadge { display: inline-block; padding: 0.4rem 0.875rem; background: linear-gradient(135deg, rgba(59,130,246,0.1), rgba(96,165,250,0.1)); border: 1px solid rgba(59,130,246,0.2); border-radius: 9999px; color: var(--compose-primary-500); font-size: 0.8125rem; font-weight: 600; letter-spacing: 0.05em; text-transform: uppercase; margin-bottom: 1rem; }
+.showcaseTitle { font-size: clamp(1.75rem, 3.5vw, 2.25rem); font-weight: 700; line-height: 1.2; letter-spacing: -0.03em; color: #0f172a; margin-bottom: 1rem; }
+.showcaseDescription { font-size: 1rem; line-height: 1.55; color: #334155; margin-bottom: 1.5rem; }
 
 .showcaseFeatures {
   display: flex;
   flex-direction: column;
-  gap: 1.5rem;
-  margin-bottom: 2.5rem;
+  gap: 1.125rem;
+  margin-bottom: 1.5rem;
   width: 100%;
   max-width: 600px;
   align-self: stretch;
@@ -42,11 +42,11 @@
   position: relative;
   display: flex;
   align-items: flex-start;
-  gap: 1rem;
+  gap: 0.875rem;
   width: 100%;
   box-sizing: border-box;
-  padding: 1.5rem;
-  border-radius: 1rem;
+  padding: 1.125rem;
+  border-radius: 0.75rem;
   overflow: hidden;
   isolation: isolate;
   text-align: left;
@@ -327,15 +327,15 @@
   }
 }
 @media screen and (max-width: 768px) {
-  .showcaseSection { padding: 5rem 0; }
+  .showcaseSection { padding: 2rem 0; }
   .showcaseSection .container { padding-left: 0; padding-right: 0; margin-left: auto; margin-right: auto; width: 100%; }
   .showcaseGrid { grid-template-columns: 1fr; gap: .5rem; justify-items: stretch; margin: 0 auto; width: 100%; }
   .showcaseContent { padding: 0 1.5rem; width: 100%; max-width: 100%; margin: 0 auto; display: flex; flex-direction: column; align-items: center; text-align: center; }
-  .showcaseTitle { font-size: 1.875rem; text-align: center; }
-  .showcaseDescription { font-size: 1rem; margin-bottom: 2rem; text-align: center; }
+  .showcaseTitle { font-size: 1.625rem; text-align: center; }
+  .showcaseDescription { font-size: 0.9375rem; margin-bottom: 1.25rem; text-align: center; }
   .showcaseFeatures { gap: 1rem; width: 100%; max-width: 100%; margin-left: auto; margin-right: auto; display: flex; flex-direction: column; align-items: stretch; }
   .showcaseLink { margin-left: auto; margin-right: auto; }
-  .showcaseFeature { padding: 1.25rem; flex-direction: row; }
+  .showcaseFeature { padding: 1rem; flex-direction: row; }
   .showcaseFeature:hover { transform: translateX(4px); }
   .showcaseFeatureIcon { width: 40px; height: 40px; }
   .showcaseFeature h4 { font-size: 1rem; }
@@ -348,11 +348,11 @@
   }
 }
 @media screen and (max-width: 480px) {
-  .showcaseSection { padding: 3rem 0; }
+  .showcaseSection { padding: 2rem 0; }
   .showcaseSection .container { padding-left: 0; padding-right: 0; margin-left: auto; margin-right: auto; width: 100%; max-width: 100%; }
-  .showcaseGrid { display: flex; flex-direction: column; align-items: stretch; justify-content: flex-start; gap: 2.5rem; width: 100%; margin: 0 auto; padding: 0; }
+  .showcaseGrid { display: flex; flex-direction: column; align-items: stretch; justify-content: flex-start; gap: 2rem; width: 100%; margin: 0 auto; padding: 0; }
   .showcaseContent { padding: 0 1rem; width: 100%; max-width: 100%; margin: 0 auto; display: flex; flex-direction: column; align-items: center; text-align: center; }
-  .showcaseTitle { font-size: 1.5rem; text-align: center; }
+  .showcaseTitle { font-size: 1.375rem; text-align: center; }
   .showcaseDescription { font-size: 0.9375rem; text-align: center; }
   .showcaseFeatures { width: 100%; max-width: 100%; margin-left: auto; margin-right: auto; display: flex; flex-direction: column; align-items: stretch; }
   .showcaseFeature { width: 100%; max-width: 100%; }

@@ -82,7 +82,7 @@ function MDXPageAside({ title, soloInSidebar = false }) {
       className={styles.reportLink}
       target="_blank"
       rel="noopener noreferrer">
-      <Icon name="github" size={16} decorative />
+      <Icon name="github" size={14} decorative />
       Report issue
     </Link>
   );
