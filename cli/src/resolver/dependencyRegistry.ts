@@ -7,6 +7,8 @@ import { foundryAdapter } from "../adapters/IFrameworkAdapter/foundryAdapter/ada
 import { hardhatAdapter } from "../adapters/IFrameworkAdapter/hardhatAdapter/adapter";
 import type { IRPCAdapter } from "../adapters/IRPCAdapter/interface";
 import { createRPCAdapter } from "../adapters/IRPCAdapter/adapter";
+import type { IDiamondAdapter } from "../adapters/IDiamondAdapter/interface";
+import { createDiamondAdapter } from "../adapters/IDiamondAdapter/adapter";
 import { resolveChainConfig } from "../utils/chainConfig";
 import { DependencyKey } from "./dependencyKey";
 import { BytecodeValidatorAdapter } from "../adapters/IBytecodeValidatorAdapter/adapter";
@@ -29,6 +31,7 @@ export type DependencyFactory<T = unknown> = (
 export type DependencyMap = {
   [DependencyKey.Hashing]: IHashingAdapter;
   [DependencyKey.RPC]: IRPCAdapter;
+  [DependencyKey.Diamond]: IDiamondAdapter;
   [DependencyKey.Foundry]: IFrameworkAdapter;
   [DependencyKey.Hardhat]: IFrameworkAdapter;
   [DependencyKey.BytecodeValidator]: IBytecodeValidatorAdapter;
@@ -52,6 +55,8 @@ export const DependencyRegistry: {
     const resolved = await resolveChainConfig(params as RPCDependencyParams | undefined);
     return createRPCAdapter({ rpcUrl: resolved.rpcUrl, chainId: resolved.chainId });
   },
+  [DependencyKey.Diamond]: async (params) =>
+    createDiamondAdapter(await DependencyRegistry[DependencyKey.RPC](params)),
   [DependencyKey.Foundry]: () => foundryAdapter,
   [DependencyKey.Hardhat]: () => hardhatAdapter,
   [DependencyKey.BytecodeValidator]: () => BytecodeValidatorAdapter,

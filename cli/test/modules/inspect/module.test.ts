@@ -1,25 +1,26 @@
 import { describe, expect, it, vi } from "vitest";
 import { Context } from "../../../src/context/context";
-import { DependencyKey } from "../../../src/resolver/dependencyKey";
 import { decodeSelector } from "../../../src/modules/inspect/selectorDecoder";
+import type { IDiamondAdapter } from "../../../src/adapters/IDiamondAdapter/interface";
 
 const mocks = vi.hoisted(() => ({
-  resolveChainConfig: vi.fn(),
-  resolve: vi.fn(),
   showInspect: vi.fn(),
 }));
 
-vi.mock("../../../src/utils/chainConfig", () => ({ resolveChainConfig: mocks.resolveChainConfig }));
-vi.mock("../../../src/resolver/dependencyResolver", () => ({ DependencyResolver: { resolve: mocks.resolve } }));
 vi.mock("../../../src/modules/inspect/output", () => ({ showInspect: mocks.showInspect }));
 
 import { InspectModule } from "../../../src/modules/inspect/module";
 
 const VALID_ADDRESS = "0x0000000000000000000000000000000000000001";
+const chain = { chainKey: "sepolia", rpcUrl: "https://rpc.example", chainId: 11155111 };
+
+function diamondAdapter(facets: ReturnType<typeof vi.fn>): IDiamondAdapter {
+  return { facets } as unknown as IDiamondAdapter;
+}
 
 describe("InspectModule", () => {
   it("inspects a diamond and displays facets", async () => {
-    const readContract = vi.fn().mockResolvedValue([
+    const facets = vi.fn().mockResolvedValue([
       {
         facet: "0x0000000000000000000000000000000000000002",
         functionSelectors: ["0x313ce567", "0x18160ddd"],
@@ -29,24 +30,13 @@ describe("InspectModule", () => {
         functionSelectors: ["0x095ea7b3"],
       },
     ]);
-    const getCode = vi.fn().mockResolvedValue("0x6000");
-    mocks.resolveChainConfig.mockResolvedValue({ chainKey: "sepolia", rpcUrl: "https://rpc.example", chainId: 11155111 });
-    mocks.resolve.mockResolvedValue({ [DependencyKey.RPC]: { readContract, getCode } });
 
     const ctx = Context.create();
     ctx.param = { address: VALID_ADDRESS, chain: "sepolia" };
 
-    const result = await InspectModule.inspect(ctx);
+    const result = await InspectModule.inspect(ctx, diamondAdapter(facets), chain);
 
-    expect(mocks.resolve).toHaveBeenCalledWith([{
-      key: DependencyKey.RPC,
-      params: { chainKey: "sepolia" },
-    }]);
-    expect(readContract).toHaveBeenCalledWith({
-      address: VALID_ADDRESS,
-      abi: expect.any(Array),
-      functionName: "facets",
-    });
+    expect(facets).toHaveBeenCalledWith(VALID_ADDRESS);
     expect(result.state.inspect).toMatchObject({
       success: true,
       result: {
@@ -66,36 +56,34 @@ describe("InspectModule", () => {
     const ctx = Context.create();
     ctx.param = { address: "not-an-address", chain: "sepolia" };
 
-    await expect(InspectModule.inspect(ctx)).rejects.toMatchObject({
+    await expect(InspectModule.inspect(ctx, diamondAdapter(vi.fn()), chain)).rejects.toMatchObject({
       code: "RPC_INVALID_ADDRESS",
     });
   });
 
   it("throws RPC_CONTRACT_NOT_FOUND when no bytecode exists", async () => {
-    const getCode = vi.fn().mockResolvedValue("0x");
-    mocks.resolveChainConfig.mockResolvedValue({ chainKey: "local", rpcUrl: "https://rpc.example", chainId: 31337 });
-    mocks.resolve.mockResolvedValue({ [DependencyKey.RPC]: { getCode, readContract: vi.fn() } });
+    const facets = vi.fn().mockRejectedValue(Object.assign(new Error("No contract code found"), {
+      code: "RPC_CONTRACT_NOT_FOUND",
+    }));
 
     const ctx = Context.create();
     ctx.param = { address: VALID_ADDRESS, chain: "local" };
 
-    await expect(InspectModule.inspect(ctx)).rejects.toMatchObject({
+    await expect(InspectModule.inspect(ctx, diamondAdapter(facets), chain)).rejects.toMatchObject({
       code: "RPC_CONTRACT_NOT_FOUND",
     });
   });
 
   it("defaults chain to local when not provided", async () => {
-    const readContract = vi.fn().mockResolvedValue([]);
-    const getCode = vi.fn().mockResolvedValue("0x6000");
-    mocks.resolveChainConfig.mockResolvedValue({ chainKey: "local", rpcUrl: "https://rpc.example", chainId: 31337 });
-    mocks.resolve.mockResolvedValue({ [DependencyKey.RPC]: { readContract, getCode } });
+    const facets = vi.fn().mockResolvedValue([]);
 
     const ctx = Context.create();
     ctx.param = { address: VALID_ADDRESS };
 
-    const result = await InspectModule.inspect(ctx);
+    const result = await InspectModule.inspect(ctx, diamondAdapter(facets), {
+      ...chain, chainKey: "local", chainId: 31337,
+    });
 
-    expect(mocks.resolveChainConfig).toHaveBeenCalledWith({ chainKey: "local" });
     expect(result.state.inspect).toMatchObject({
       success: true,
       result: { chainKey: "local", facets: [] },
@@ -103,15 +91,12 @@ describe("InspectModule", () => {
   });
 
   it("propagates RPC readContract failures", async () => {
-    const getCode = vi.fn().mockResolvedValue("0x6000");
-    const readContract = vi.fn().mockRejectedValue(new Error("execution reverted"));
-    mocks.resolveChainConfig.mockResolvedValue({ chainKey: "local", rpcUrl: "https://rpc.example", chainId: 31337 });
-    mocks.resolve.mockResolvedValue({ [DependencyKey.RPC]: { readContract, getCode } });
+    const facets = vi.fn().mockRejectedValue(new Error("execution reverted"));
 
     const ctx = Context.create();
     ctx.param = { address: VALID_ADDRESS, chain: "local" };
 
-    await expect(InspectModule.inspect(ctx)).rejects.toThrow("execution reverted");
+    await expect(InspectModule.inspect(ctx, diamondAdapter(facets), chain)).rejects.toThrow("execution reverted");
   });
 });
 

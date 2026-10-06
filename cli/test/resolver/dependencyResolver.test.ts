@@ -8,4 +8,10 @@ describe("DependencyResolver RPC dependency", () => {
       code: "RPC_INVALID_CONFIGURATION",
     });
   });
+
+  it("resolves the Diamond adapter through the same chain configuration", async () => {
+    await expect(DependencyResolver.resolve([{ key: DependencyKey.Diamond, params: { projectRoot: "/path/that/does/not/exist" } }])).rejects.toMatchObject({
+      code: "RPC_INVALID_CONFIGURATION",
+    });
+  });
 });
