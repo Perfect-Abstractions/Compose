@@ -44,7 +44,7 @@
 
 .featuresGrid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  grid-template-columns: repeat(3, 1fr);
   gap: 1.5rem;
   max-width: 1280px;
   margin: 0 auto;
@@ -206,7 +206,7 @@
 
 /* Responsive */
 @media screen and (max-width: 1024px) {
-  .featuresGrid { grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 1.25rem; }
+  .featuresGrid { grid-template-columns: repeat(2, 1fr); gap: 1.25rem; }
 }
 @media screen and (max-width: 768px) {
   .featuresSection { padding: 1rem 0 2.5rem 0; }
