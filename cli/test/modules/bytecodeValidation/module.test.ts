@@ -3,6 +3,7 @@ import type { Address, Hex } from "viem";
 import { Context } from "../../../src/context/context";
 import type { IBytecodeValidatorAdapter } from "../../../src/adapters/IBytecodeValidatorAdapter/interface";
 import type { IRPCAdapter } from "../../../src/adapters/IRPCAdapter/interface";
+import type { IDiamondAdapter } from "../../../src/adapters/IDiamondAdapter/interface";
 import { BytecodeValidationModule } from "../../../src/modules/bytecodeValidation/module";
 
 const diamond = "0x0000000000000000000000000000000000000001" as Address;
@@ -28,38 +29,37 @@ function setup() {
   };
   const rpc: IRPCAdapter = {
     getBlockNumber: vi.fn().mockResolvedValue(100n),
-    readContract: vi.fn().mockResolvedValue([{
+    readContract: vi.fn(),
+    getCode: vi.fn().mockResolvedValue("0x6000" as Hex),
+  };
+  const diamondAdapter = {
+    facets: vi.fn().mockResolvedValue([{
       facet,
       functionSelectors: ["0x12345678"],
     }]),
-    getCode: vi.fn().mockResolvedValue("0x6000" as Hex),
-  };
+  } as unknown as IDiamondAdapter;
   const validator: IBytecodeValidatorAdapter = {
     validate: vi.fn().mockReturnValue(report()),
   };
-  return { ctx, rpc, validator };
+  return { ctx, rpc, diamondAdapter, validator };
 }
 
 describe("BytecodeValidationModule", () => {
   it("uses Diamond introspection and one pinned block", async () => {
-    const { ctx, rpc, validator } = setup();
-    const result = await BytecodeValidationModule.validateDeployment(ctx, { rpc, validator });
+    const { ctx, rpc, diamondAdapter, validator } = setup();
+    const result = await BytecodeValidationModule.validateDeployment(ctx, { rpc, diamond: diamondAdapter, validator });
 
-    expect(rpc.readContract).toHaveBeenCalledWith(expect.objectContaining({
-      address: diamond,
-      blockNumber: 100n,
-      functionName: "facets",
-    }), { verifyCode: true });
+    expect(diamondAdapter.facets).toHaveBeenCalledWith(diamond, { blockNumber: 100n });
     expect(rpc.getCode).toHaveBeenCalledWith(facet, 100n);
     expect(validator.validate).toHaveBeenCalledOnce();
     expect(result.state.bytecodeDeploymentValidation.success).toBe(true);
   });
 
   it("reports introspection errors without blocking validation", async () => {
-    const { ctx, rpc, validator } = setup();
-    vi.mocked(rpc.readContract).mockRejectedValue(new Error("packed selectors are invalid"));
+    const { ctx, rpc, diamondAdapter, validator } = setup();
+    vi.mocked(diamondAdapter.facets).mockRejectedValue(new Error("packed selectors are invalid"));
 
-    const result = await BytecodeValidationModule.validateDeployment(ctx, { rpc, validator });
+    const result = await BytecodeValidationModule.validateDeployment(ctx, { rpc, diamond: diamondAdapter, validator });
     const state = result.state.bytecodeDeploymentValidation;
 
     expect(state.success).toBe(true);
@@ -72,7 +72,7 @@ describe("BytecodeValidationModule", () => {
   });
 
   it("blocks only when the validator proves a collision", async () => {
-    const { ctx, rpc, validator } = setup();
+    const { ctx, rpc, diamondAdapter, validator } = setup();
     ctx.param.virtualStorageRecords = [{
       id: "0x01",
       virtualPath: "example.storage",
@@ -95,7 +95,7 @@ describe("BytecodeValidationModule", () => {
       reason: "type mismatch",
     }]));
 
-    const result = await BytecodeValidationModule.validateDeployment(ctx, { rpc, validator });
+    const result = await BytecodeValidationModule.validateDeployment(ctx, { rpc, diamond: diamondAdapter, validator });
 
     expect(result.state.bytecodeDeploymentValidation.success).toBe(false);
     expect(result.state.bytecodeDeploymentValidation.error?.code).toBe(
@@ -110,10 +110,10 @@ describe("BytecodeValidationModule", () => {
     ["an undefined response", undefined],
     ["empty runtime bytecode", "0x" as Hex],
   ])("marks validation incomplete without failing for %s", async (_case, bytecode) => {
-    const { ctx, rpc, validator } = setup();
+    const { ctx, rpc, diamondAdapter, validator } = setup();
     vi.mocked(rpc.getCode).mockResolvedValue(bytecode);
 
-    const result = await BytecodeValidationModule.validateDeployment(ctx, { rpc, validator });
+    const result = await BytecodeValidationModule.validateDeployment(ctx, { rpc, diamond: diamondAdapter, validator });
     const state = result.state.bytecodeDeploymentValidation;
 
     expect(state.success).toBe(true);
@@ -124,9 +124,9 @@ describe("BytecodeValidationModule", () => {
   });
 
   it("continues after an individual facet cannot be analyzed", async () => {
-    const { ctx, rpc, validator } = setup();
+    const { ctx, rpc, diamondAdapter, validator } = setup();
     const secondFacet = "0x0000000000000000000000000000000000000003" as Address;
-    vi.mocked(rpc.readContract).mockResolvedValue([
+    vi.mocked(diamondAdapter.facets).mockResolvedValue([
       { facet, functionSelectors: [] },
       { facet: secondFacet, functionSelectors: [] },
     ] as never);
@@ -134,7 +134,7 @@ describe("BytecodeValidationModule", () => {
       .mockRejectedValueOnce(new Error("code unavailable"))
       .mockResolvedValueOnce("0x6000");
 
-    const result = await BytecodeValidationModule.validateDeployment(ctx, { rpc, validator });
+    const result = await BytecodeValidationModule.validateDeployment(ctx, { rpc, diamond: diamondAdapter, validator });
     const state = result.state.bytecodeDeploymentValidation;
 
     expect(state.success).toBe(false);

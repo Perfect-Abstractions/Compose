@@ -1,6 +1,7 @@
 import type { ComposeContext, ModuleState } from "../context/types";
 import type { IBytecodeValidatorAdapter } from "../adapters/IBytecodeValidatorAdapter/interface";
 import type { IRPCAdapter } from "../adapters/IRPCAdapter/interface";
+import type { IDiamondAdapter } from "../adapters/IDiamondAdapter/interface";
 import { BytecodeValidationModule } from "../modules/bytecodeValidation/module";
 import { DependencyKey } from "../resolver/dependencyKey";
 import { DependencyResolver } from "../resolver/dependencyResolver";
@@ -27,13 +28,21 @@ export const BytecodeValidationPipeline = {
             projectRoot: String(ctx.param.projectRoot),
           },
         },
+        {
+          key: DependencyKey.Diamond,
+          params: {
+            chainKey: ctx.param.chainKey,
+            projectRoot: String(ctx.param.projectRoot),
+          },
+        },
         { key: DependencyKey.BytecodeValidator },
       ]);
       const rpc = dependencies[DependencyKey.RPC] as IRPCAdapter | undefined;
+      const diamond = dependencies[DependencyKey.Diamond] as IDiamondAdapter | undefined;
       const validator = dependencies[DependencyKey.BytecodeValidator] as IBytecodeValidatorAdapter | undefined;
-      if (!rpc || !validator) throw new Error("Bytecode validation dependencies were not resolved.");
+      if (!rpc || !diamond || !validator) throw new Error("Bytecode validation dependencies were not resolved.");
 
-      ctx = await BytecodeValidationModule.validateDeployment(ctx, { rpc, validator });
+      ctx = await BytecodeValidationModule.validateDeployment(ctx, { rpc, diamond, validator });
       const state = ctx.state.bytecodeDeploymentValidation as ModuleState;
       if (!state.success) {
         ctx.status = {
