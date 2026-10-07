@@ -47,7 +47,7 @@ export default function FeaturesSection() {
         <div className={styles.sectionHeader}>
           <span className={styles.sectionBadge}>Why Compose</span>
           <Heading as="h2" className={styles.sectionTitle}>
-            Architecture for evolving protocols
+            Architecture onchain applications can rely on
           </Heading>
           <p className={styles.sectionSubtitle}>
             Compose gives teams a structured foundation for building, extending, and maintaining modular smart contract systems.
