@@ -19,18 +19,18 @@
 }
 
 .asideLabel {
-  margin: 0 0 0.45rem;
+  margin: 0 0 0.2rem;
   font-size: 0.75rem;
   font-weight: 600;
   letter-spacing: 0.06em;
   text-transform: uppercase;
-  color: var(--ifm-color-emphasis-600);
+  color: var(--ifm-font-color-base);
 }
 
 @media (min-width: 997px) {
   .asideLabel {
     font-size: 0.6875rem;
-    margin-bottom: 0.4rem;
+    margin-bottom: 0.2rem;
   }
 }
 
@@ -72,6 +72,11 @@
   .asideRootWithEndSlot {
     grid-template-columns: 1fr;
     align-items: stretch;
+    row-gap: 0.35rem;
+  }
+
+  .asideRootWithEndSlot .asideEndSlot {
+    margin-top: 0.25rem;
   }
 
   .asideRootWithEndSlot .asideButtons {
@@ -475,6 +480,25 @@
   flex-shrink: 0;
   display: block;
   color: inherit;
+}
+
+.feedbackSubmittedFading {
+  opacity: 0;
+  transform: translateY(-2px);
+  transition:
+    opacity 400ms ease,
+    transform 400ms ease;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .feedbackSubmittedFading {
+    transform: none;
+  }
+}
+
+.asideReportOnly {
+  display: flex;
+  align-items: center;
 }
 
 @media (max-width: 768px) {

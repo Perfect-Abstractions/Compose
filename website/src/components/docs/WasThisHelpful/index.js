@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import clsx from 'clsx';
 import { useColorMode } from '@docusaurus/theme-common';
 import Icon from '../../ui/Icon';
@@ -51,6 +51,18 @@ export default function WasThisHelpful({
   const [feedback, setFeedback] = useState(null);
   const [comment, setComment] = useState('');
   const [submitted, setSubmitted] = useState(false);
+  const [fadingOut, setFadingOut] = useState(false);
+  const [dismissed, setDismissed] = useState(false);
+
+  useEffect(() => {
+    if (!submitted) return undefined;
+    const fadeTimer = setTimeout(() => setFadingOut(true), 4000);
+    const dismissTimer = setTimeout(() => setDismissed(true), 4450);
+    return () => {
+      clearTimeout(fadeTimer);
+      clearTimeout(dismissTimer);
+    };
+  }, [submitted]);
 
   const thumbUpName = colorMode === 'dark' ? 'thumbs-up-dark' : 'thumbs-up';
   const thumbDownName = colorMode === 'dark' ? 'thumbs-down-dark' : 'thumbs-down';
@@ -107,6 +119,13 @@ export default function WasThisHelpful({
   };
 
   if (submitted) {
+    if (dismissed) {
+      if (variant === 'aside' && asideEndSlot) {
+        return <div className={styles.asideReportOnly}>{asideEndSlot}</div>;
+      }
+      return null;
+    }
+
     const submittedBody = (
       <>
         <FeedbackCheckIcon
@@ -130,7 +149,8 @@ export default function WasThisHelpful({
             className={clsx(
               styles.feedbackSubmitted,
               styles.feedbackSubmittedAside,
-              styles.asideSubmittedMain
+              styles.asideSubmittedMain,
+              fadingOut && styles.feedbackSubmittedFading
             )}
           >
             {submittedBody}
@@ -144,7 +164,8 @@ export default function WasThisHelpful({
       <div
         className={clsx(
           styles.feedbackSubmitted,
-          variant === 'aside' && styles.feedbackSubmittedAside
+          variant === 'aside' && styles.feedbackSubmittedAside,
+          fadingOut && styles.feedbackSubmittedFading
         )}
       >
         {submittedBody}

@@ -4,7 +4,7 @@ import gsap from 'gsap';
 import { DiamondShader, ParticleShader, FacetHighlightShader } from './shaders';
 import { createDiamondGeometry, addFacetIds } from './geometry';
 
-export default function DiamondScene({ className, onHoverChange, inline = false }) {
+export default function DiamondScene({ className, onHoverChange, onFacetClick, inline = false }) {
   const canvasContainerRef = useRef(null);
 
   useEffect(() => {
@@ -180,6 +180,15 @@ export default function DiamondScene({ className, onHoverChange, inline = false 
     
     window.addEventListener('mousemove', onMouseMove);
 
+    // Click a hovered facet to open its documentation page
+    const onClick = () => {
+      if (inline || window.innerWidth <= 1024) return;
+      if (currentHoverId !== -1 && onFacetClick) {
+        onFacetClick(currentHoverId);
+      }
+    };
+    renderer.domElement.addEventListener('click', onClick);
+
     // Time Uniform & Loop
     const clock = new THREE.Clock();
     let animationId;
@@ -234,6 +243,15 @@ export default function DiamondScene({ className, onHoverChange, inline = false 
       }
       
       renderer.render(scene, camera);
+      
+      // Facet hover is driven by window mousemove, but the canvas sits in a
+      // z-index: 0 / pointer-events: none container (so hero CTAs stay on top).
+      // While a facet is hovered, raise the container above the overlays
+      // (z-index 1) and enable pointer events so the facet is clickable.
+      const facetHovered = !inline && window.innerWidth > 1024 && currentHoverId !== -1;
+      renderer.domElement.style.cursor = facetHovered ? 'pointer' : 'default';
+      renderer.domElement.style.pointerEvents = facetHovered ? 'auto' : 'none';
+      container.style.zIndex = facetHovered ? '2' : '';
     };
     animate();
 
@@ -270,6 +288,7 @@ export default function DiamondScene({ className, onHoverChange, inline = false 
     return () => {
       window.removeEventListener('resize', handleResize);
       window.removeEventListener('mousemove', onMouseMove);
+      renderer.domElement.removeEventListener('click', onClick);
       cancelAnimationFrame(animationId);
       if (container && renderer.domElement && container.contains(renderer.domElement)) {
         container.removeChild(renderer.domElement);
@@ -280,7 +299,7 @@ export default function DiamondScene({ className, onHoverChange, inline = false 
       particlesGeometry.dispose(); 
       renderer.dispose();
     };
-  }, [onHoverChange, inline]); // Depend on callback and inline
+  }, [onHoverChange, onFacetClick, inline]); // Depend on callbacks and inline
 
   return <div className={className} ref={canvasContainerRef} />;
 }

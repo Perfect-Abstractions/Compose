@@ -46,7 +46,8 @@
 /* ---------- DocItem content / right rail ---------- */
 @media (min-width: 997px) {
   .docItemCol {
-    max-width: 82.5% !important;
+    /* must leave 25% for the col--3 TOC rail, otherwise the row wraps below */
+    max-width: 75% !important;
   }
 
   .docTocRail {
@@ -208,17 +209,13 @@
   gap: 0.3rem;
   font-size: 0.75rem;
   font-weight: 500;
-  color: var(--ifm-color-emphasis-700);
+  color: var(--ifm-font-color-base);
   text-decoration: none;
 }
 
 .reportLink:hover {
   color: var(--ifm-color-primary);
   text-decoration: none;
-}
-
-[data-theme='dark'] .reportLink {
-  color: var(--ifm-color-emphasis-600);
 }
 
 [data-theme='dark'] .reportLink :global(img) {

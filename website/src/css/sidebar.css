@@ -38,7 +38,7 @@
 .theme-doc-sidebar-container .menu__caret {
   color: #475569;
   border-radius: 0.3125rem;
-  font-size: 0.75rem;
+  font-size: 0.8125rem;
   padding: 0.225rem 0.4rem;
   line-height: 1.4;
   transition: all 0.2s ease;
@@ -46,12 +46,12 @@
 
 /* Top-level non-collapsible items (e.g. Introduction) */
 .theme-doc-sidebar-container .menu__list-item > .menu__link {
-  font-size: 0.78125rem;
+  font-size: 0.84375rem;
 }
 
 .theme-doc-sidebar-container .menu__list-item-collapsible > .menu__caret,
 .theme-doc-sidebar-container .menu__list-item-collapsible > .menu__link {
-  font-size: 0.78125rem;
+  font-size: 0.84375rem;
   padding: 0.225rem 0.4rem;
 }
 

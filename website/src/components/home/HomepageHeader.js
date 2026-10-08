@@ -10,7 +10,13 @@ import { FacetBadge } from '../DiamondScene/FacetBadge';
 import { useIsMobile } from '../../hooks/useIsMobile';
 
 export default function HomepageHeader() {
-  const { activeFacetName, handleHover } = useFacetBadges();
+  const {
+    activeFacet,
+    handleHover,
+    handleBadgeEnter,
+    handleBadgeLeave,
+    handleFacetClick,
+  } = useFacetBadges();
   const isMobile = useIsMobile();
 
   const badgeAndTitle = (
@@ -49,7 +55,7 @@ export default function HomepageHeader() {
           </svg>
         </Link>
         <Link className={clsx(styles.ctaButton, styles.ctaSecondary)} to="/docs">
-          <span>Read the docs</span>
+          <span>Read the whitepaper</span>
         </Link>
       </div>
     </>
@@ -59,8 +65,17 @@ export default function HomepageHeader() {
     <header className={clsx(styles.heroBanner, isMobile && styles.heroBannerMobile)}>
       {!isMobile && (
         <>
-          <DiamondScene className={styles.canvasContainer} onHoverChange={handleHover} />
-          <FacetBadge name={activeFacetName} visible={!!activeFacetName} />
+          <DiamondScene
+            className={styles.canvasContainer}
+            onHoverChange={handleHover}
+            onFacetClick={handleFacetClick}
+          />
+          <FacetBadge
+            facet={activeFacet}
+            visible={!!activeFacet}
+            onMouseEnter={handleBadgeEnter}
+            onMouseLeave={handleBadgeLeave}
+          />
         </>
       )}
 

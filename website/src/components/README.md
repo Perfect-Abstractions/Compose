@@ -8,8 +8,8 @@ This directory contains all reusable React components for the Docusaurus documen
 Fundamental, reusable UI building blocks.
 - `Accordion` - Collapsible content sections
 - `Badge` - Status and category badges
-- `Callout` - Informational callout boxes
-- `CalloutBox` - Enhanced callout with icons
+- `Callout` - Admonition-style callouts (7 types, collapsible variant)
+- `CalloutBox` - Deprecated alias of `Callout` (kept for existing pages)
 - `GlassCard` - Card with glass morphism effect
 - `GradientButton` - Button with gradient styling
 - `GradientText` - Text with gradient effects

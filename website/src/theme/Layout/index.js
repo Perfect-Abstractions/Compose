@@ -3,8 +3,8 @@ import Layout from '@theme-original/Layout';
 import AnnouncementBanner from '@site/src/components/ui/AnnouncementBanner';
 
 const CURRENT_BANNER = {
-  id: '2026-q1-eip8153-draft-announcement',
-  message: ' EIP-8153: New Facet-Based Diamond Proposal',
+  id: '2026-q4-erc8153-last-call-announcement',
+  message: ' ERC-8153: Facet-Based Diamonds. Review before it goes final.',
   linkHref: 'https://eips.ethereum.org/EIPS/eip-8153',
   linkLabel: 'Read here',
   persistence: 'session',

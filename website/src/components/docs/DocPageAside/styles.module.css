@@ -48,17 +48,13 @@
   gap: 0.3rem;
   font-size: 0.75rem;
   font-weight: 500;
-  color: var(--ifm-color-emphasis-700);
+  color: var(--ifm-font-color-base);
   text-decoration: none;
 }
 
 .reportLink:hover {
   color: var(--ifm-color-primary);
   text-decoration: none;
-}
-
-[data-theme='dark'] .reportLink {
-  color: var(--ifm-color-emphasis-600);
 }
 
 [data-theme='dark'] .reportLink :global(img) {

@@ -301,7 +301,7 @@
 }
 
 [data-theme='dark'] .table-of-contents__heading {
-  color: #909090;
+  color: #94a3b8;
 }
 
 .table-of-contents__link,
@@ -349,7 +349,7 @@
 [data-theme='dark'] .blog-toc-rail .table-of-contents__link,
 [data-theme='dark'] .theme-blog-wrapper .table-of-contents__link,
 [data-theme='dark'] .blog-wrapper .table-of-contents__link {
-  color: #909090;
+  color: #b6c2d9;
 }
 
 [data-theme='dark'] .table-of-contents__link:hover,
@@ -540,129 +540,65 @@
 
 /* ============================================
    ENHANCED ADMONITIONS
+   Shared design with the Callout component:
+   flat square left edge under the 4px accent
+   bar, rounded right corners, full-width accent
+   fade. Type accents are the single source of
+   truth for both native `:::` admonitions and
+   <Callout> (which emits the same
+   theme-admonition-<type> classes).
    ============================================ */
 
-.admonition {
-  margin: 1rem 0;
-  padding: 0.875rem 1rem;
-  border-radius: 0.625rem;
-  border-left: 4px solid;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-  background: var(--ifm-background-surface-color);
-}
-
-[data-theme='dark'] .admonition {
-  background-color: #0f0f0f;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
-}
-
-.admonition-heading {
-  display: flex;
-  align-items: center;
-  gap: 0.625rem;
-  margin-bottom: 0.5rem;
-  font-weight: 700;
-  font-size: 0.9375rem;
-}
-
-.admonition-icon {
-  font-size: 1.25rem;
-}
-
-.admonition-content > p:last-child {
-  margin-bottom: 0;
-}
-
-/* Admonition types */
-.alert--info,
-.admonition-info {
-  border-left-color: #3b82f6;
-  background: linear-gradient(to right, rgba(59, 130, 246, 0.05), transparent);
-}
-
-[data-theme='dark'] .alert--info,
-[data-theme='dark'] .admonition-info {
-  border-left-color: #60a5fa;
+.theme-admonition {
+  --callout-accent: var(--ifm-color-primary);
+  margin: 1.5rem 0;
+  padding: 1.25rem 1.5rem;
+  border: none;
+  border-left: 4px solid var(--callout-accent);
+  border-radius: 0 0.75rem 0.75rem 0;
+  background-color: var(--ifm-background-color);
   background-image: linear-gradient(
-    90deg,
-    rgba(96, 165, 250, 0.16) 0%,
-    rgba(96, 165, 250, 0.1) 28%,
-    rgba(96, 165, 250, 0.04) 58%,
-    rgba(96, 165, 250, 0) 100%
+    to right,
+    color-mix(in srgb, var(--callout-accent) 10%, transparent),
+    var(--ifm-background-color)
+  );
+  box-shadow: none;
+  color: var(--ifm-font-color-base);
+}
+
+[data-theme='dark'] .theme-admonition {
+  background-image: linear-gradient(
+    to right,
+    color-mix(in srgb, var(--callout-accent) 14%, transparent),
+    var(--ifm-background-color)
   );
 }
 
-.alert--warning,
-.admonition-warning {
-  border-left-color: #f59e0b;
-  background: linear-gradient(to right, rgba(245, 158, 11, 0.05), transparent);
+/* Type icons are intentionally hidden: the accent bar + tint carry meaning */
+.theme-admonition [class*='admonitionIcon'] {
+  display: none;
 }
 
-[data-theme='dark'] .alert--warning,
-[data-theme='dark'] .admonition-warning {
-  border-left-color: #fbbf24;
-  background-image: linear-gradient(
-    90deg,
-    rgba(251, 191, 36, 0.18) 0%,
-    rgba(251, 191, 36, 0.11) 28%,
-    rgba(251, 191, 36, 0.05) 58%,
-    rgba(251, 191, 36, 0) 100%
-  );
-}
+/* Type accents */
+.theme-admonition-info { --callout-accent: #3b82f6; }
+.theme-admonition-tip,
+.theme-admonition-secondary { --callout-accent: #0d9488; }
+.theme-admonition-warning { --callout-accent: #d97706; }
+.theme-admonition-danger,
+.theme-admonition-caution { --callout-accent: #dc2626; }
+.theme-admonition-success { --callout-accent: #059669; }
+.theme-admonition-note { --callout-accent: #64748b; }
+.theme-admonition-important { --callout-accent: #e11d48; }
 
-.alert--danger,
-.admonition-danger {
-  border-left-color: #ef4444;
-  background: linear-gradient(to right, rgba(239, 68, 68, 0.05), transparent);
-}
-
-[data-theme='dark'] .alert--danger,
-[data-theme='dark'] .admonition-danger {
-  border-left-color: #f87171;
-  background-image: linear-gradient(
-    90deg,
-    rgba(248, 113, 113, 0.17) 0%,
-    rgba(248, 113, 113, 0.1) 28%,
-    rgba(248, 113, 113, 0.04) 58%,
-    rgba(248, 113, 113, 0) 100%
-  );
-}
-
-.alert--success,
-.admonition-success {
-  border-left-color: #10b981;
-  background: linear-gradient(to right, rgba(16, 185, 129, 0.05), transparent);
-}
-
-[data-theme='dark'] .alert--success,
-[data-theme='dark'] .admonition-success {
-  border-left-color: #34d399;
-  background-image: linear-gradient(
-    90deg,
-    rgba(52, 211, 153, 0.17) 0%,
-    rgba(52, 211, 153, 0.1) 28%,
-    rgba(52, 211, 153, 0.04) 58%,
-    rgba(52, 211, 153, 0) 100%
-  );
-}
-
-.alert--tip,
-.admonition-tip {
-  border-left-color: #3b82f6;
-  background: linear-gradient(to right, rgba(59, 130, 246, 0.05), transparent);
-}
-
-[data-theme='dark'] .alert--tip,
-[data-theme='dark'] .admonition-tip {
-  border-left-color: #60a5fa;
-  background-image: linear-gradient(
-    90deg,
-    rgba(59, 130, 246, 0.16) 0%,
-    rgba(59, 130, 246, 0.1) 28%,
-    rgba(59, 130, 246, 0.04) 58%,
-    rgba(59, 130, 246, 0) 100%
-  );
-}
+[data-theme='dark'] .theme-admonition-info { --callout-accent: #60a5fa; }
+[data-theme='dark'] .theme-admonition-tip,
+[data-theme='dark'] .theme-admonition-secondary { --callout-accent: #2dd4bf; }
+[data-theme='dark'] .theme-admonition-warning { --callout-accent: #fbbf24; }
+[data-theme='dark'] .theme-admonition-danger,
+[data-theme='dark'] .theme-admonition-caution { --callout-accent: #f87171; }
+[data-theme='dark'] .theme-admonition-success { --callout-accent: #34d399; }
+[data-theme='dark'] .theme-admonition-note { --callout-accent: #94a3b8; }
+[data-theme='dark'] .theme-admonition-important { --callout-accent: #fb7185; }
 
 /* ============================================
    RESPONSIVE DOCUMENTATION

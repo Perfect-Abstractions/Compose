@@ -8,7 +8,8 @@
 
 @media (min-width: 997px) {
   .docItemCol {
-    max-width: 82.5% !important;
+    /* must leave 25% for the col--3 TOC rail, otherwise the row wraps below */
+    max-width: 75% !important;
   }
 
   /**
