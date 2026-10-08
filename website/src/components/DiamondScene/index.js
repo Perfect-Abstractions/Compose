@@ -244,14 +244,12 @@ export default function DiamondScene({ className, onHoverChange, onFacetClick, i
       
       renderer.render(scene, camera);
       
-      // Facet hover is driven by window mousemove, but the canvas sits in a
-      // z-index: 0 / pointer-events: none container (so hero CTAs stay on top).
-      // While a facet is hovered, raise the container above the overlays
-      // (z-index 1) and enable pointer events so the facet is clickable.
+      // Facet hover is driven by window mousemove; the canvas stays behind the
+      // hero overlays (which are pointer-events: none) and only accepts clicks
+      // while a facet is hovered.
       const facetHovered = !inline && window.innerWidth > 1024 && currentHoverId !== -1;
       renderer.domElement.style.cursor = facetHovered ? 'pointer' : 'default';
       renderer.domElement.style.pointerEvents = facetHovered ? 'auto' : 'none';
-      container.style.zIndex = facetHovered ? '2' : '';
     };
     animate();
 

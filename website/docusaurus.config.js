@@ -318,7 +318,7 @@ const config = {
           },
         ],
         copyright: `Made with DELEGATECALL by the <a href="https://github.com/Perfect-Abstractions/Compose/graphs/contributors">Compose Community</a>.<br/>
-          Copyright © ${new Date().getFullYear()}`,
+          Copyright © ${new Date().getFullYear()} · An initiative of <a href="https://www.perfectabstractions.com">Perfect Abstractions</a> & <a href="https://sapient.sh">Sapient Labs</a>`,
       },
       prism: {
         theme: prismThemes.github,

@@ -41,6 +41,16 @@
   z-index: 1;
   /* Removed grid to allow full overlay */
   width: 100%;
+  /* Click-through so the diamond canvas below stays clickable */
+  pointer-events: none;
+}
+
+.heroContent {
+  pointer-events: auto;
+}
+
+.heroWave {
+  pointer-events: none;
 }
 
 /* Canvas container is now absolute and full width to allow particles everywhere */
@@ -66,6 +76,7 @@
   width: 100%;
   max-width: 100%;
   text-align: center;
+  pointer-events: auto;
 }
 
 .heroContentTop {
