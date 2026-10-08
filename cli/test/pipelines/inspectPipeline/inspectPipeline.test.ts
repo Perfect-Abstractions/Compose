@@ -15,13 +15,21 @@ vi.mock("../../../src/modules/inspect/output", () => ({ showInspect: mocks.showI
 import { InspectPipeline } from "../../../src/pipelines/inspectPipeline";
 
 describe("InspectPipeline", () => {
+  it("rejects an invalid address before resolving a chain", async () => {
+    const ctx = Context.create();
+    ctx.param = { address: "not-an-address" };
+
+    await expect(InspectPipeline.execute(ctx)).rejects.toMatchObject({ code: "RPC_INVALID_ADDRESS" });
+    expect(mocks.resolveChainConfig).not.toHaveBeenCalled();
+    expect(mocks.resolve).not.toHaveBeenCalled();
+  });
+
   it("delegates to InspectModule with valid address", async () => {
-    const readContract = vi.fn().mockResolvedValue([
+    const facets = vi.fn().mockResolvedValue([
       { facet: "0x0000000000000000000000000000000000000002", functionSelectors: ["0x313ce567"] },
     ]);
-    const getCode = vi.fn().mockResolvedValue("0x6000");
     mocks.resolveChainConfig.mockResolvedValue({ chainKey: "sepolia", rpcUrl: "https://rpc.example", chainId: 11155111 });
-    mocks.resolve.mockResolvedValue({ [DependencyKey.RPC]: { readContract, getCode } });
+    mocks.resolve.mockResolvedValue({ [DependencyKey.Diamond]: { facets } });
 
     const ctx = Context.create();
     ctx.param = {
@@ -32,9 +40,10 @@ describe("InspectPipeline", () => {
     const result = await InspectPipeline.execute(ctx);
 
     expect(mocks.resolve).toHaveBeenCalledWith([{
-      key: DependencyKey.RPC,
+      key: DependencyKey.Diamond,
       params: { chainKey: "sepolia" },
     }]);
+    expect(facets).toHaveBeenCalledWith(ctx.param.address);
     expect(result.state.inspect).toMatchObject({
       success: true,
       result: { chainKey: "sepolia", chainId: 11155111 },

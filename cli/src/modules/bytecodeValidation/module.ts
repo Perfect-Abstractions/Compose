@@ -1,11 +1,11 @@
-import { getAddress, type Address } from "viem";
+import { getAddress } from "viem";
 import type {
   BytecodeValidationReport,
   IBytecodeValidatorAdapter,
 } from "../../adapters/IBytecodeValidatorAdapter/interface";
 import type { IRPCAdapter } from "../../adapters/IRPCAdapter/interface";
+import type { IDiamondAdapter } from "../../adapters/IDiamondAdapter/interface";
 import type { ComposeContext, ModuleState } from "../../context/types";
-import { DIAMOND_INSPECT_ABI } from "../inspect/diamondInspectAbi";
 import type { VirtualStorageLayoutRecord } from "../validation/types";
 import type {
   BytecodeValidationSummary,
@@ -14,12 +14,8 @@ import type {
 
 type DeploymentDependencies = {
   rpc: IRPCAdapter;
+  diamond: IDiamondAdapter;
   validator: IBytecodeValidatorAdapter;
-};
-
-type InspectedFacet = {
-  facet: Address;
-  functionSelectors: `0x${string}`[];
 };
 
 function storageRecords(ctx: ComposeContext): VirtualStorageLayoutRecord[] {
@@ -80,14 +76,9 @@ export const BytecodeValidationModule = {
     const chainKey = String(ctx.param.chainKey);
     const diamondAddress = getAddress(String(ctx.param.diamondAddress));
     const blockNumber = await dependencies.rpc.getBlockNumber();
-    let rawFacets: InspectedFacet[];
+    let rawFacets;
     try {
-      rawFacets = await dependencies.rpc.readContract<InspectedFacet[]>({
-        address: diamondAddress,
-        abi: DIAMOND_INSPECT_ABI,
-        functionName: "facets",
-        blockNumber,
-      }, { verifyCode: true });
+      rawFacets = await dependencies.diamond.facets(diamondAddress, { blockNumber });
     } catch (error) {
       const message = error instanceof Error ? error.message : "Diamond introspection failed.";
       ctx.state.bytecodeDeploymentValidation = {

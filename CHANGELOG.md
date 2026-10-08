@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.0.7
+
+### Patch Changes
+
+- 56ac1de: use ERC20InvalidSender instead of ERC20InvalidReceiver for zero address _from in crosschainburn by @Jayy4rl
+
 ## 0.0.6
 
 ### Patch Changes

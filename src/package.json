@@ -1,7 +1,7 @@
 {
   "name": "@perfect-abstractions/compose",
-  "description": "Smart contract development framework and reusable library for ERC-2535 Diamonds",
-  "version": "0.0.6",
+  "description": "Composable smart contract library for ERC-2535 Diamonds",
+  "version": "0.0.7",
   "license": "MIT",
   "files": [
     "**/*.sol",

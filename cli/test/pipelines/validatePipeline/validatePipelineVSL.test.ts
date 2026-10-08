@@ -8,6 +8,7 @@ import { createValidatePipelineHarness } from "./harness";
 import { DependencyResolver } from "../../../src/resolver/dependencyResolver";
 import { DependencyKey } from "../../../src/resolver/dependencyKey";
 import type { IRPCAdapter } from "../../../src/adapters/IRPCAdapter/interface";
+import { createDiamondAdapter } from "../../../src/adapters/IDiamondAdapter/adapter";
 import type { IBytecodeValidatorAdapter } from "../../../src/adapters/IBytecodeValidatorAdapter/interface";
 import type { Address, Hex } from "viem";
 import { BytecodeValidatorAdapter } from "../../../src/adapters/IBytecodeValidatorAdapter/adapter";
@@ -99,6 +100,7 @@ describe("validate pipeline", () => {
       if (requests.some((request) => request.key === DependencyKey.BytecodeValidator)) {
         return {
           [DependencyKey.RPC]: rpc,
+          [DependencyKey.Diamond]: createDiamondAdapter(rpc),
           [DependencyKey.BytecodeValidator]: validator,
         };
       }
@@ -150,6 +152,7 @@ describe("validate pipeline", () => {
       if (requests.some((request) => request.key === DependencyKey.BytecodeValidator)) {
         return {
           [DependencyKey.RPC]: rpc,
+          [DependencyKey.Diamond]: createDiamondAdapter(rpc),
           [DependencyKey.BytecodeValidator]: validator,
         };
       }
@@ -204,6 +207,7 @@ describe("validate pipeline", () => {
       if (requests.some((request) => request.key === DependencyKey.BytecodeValidator)) {
         return {
           [DependencyKey.RPC]: rpc,
+          [DependencyKey.Diamond]: createDiamondAdapter(rpc),
           [DependencyKey.BytecodeValidator]: validator,
         };
       }
@@ -258,6 +262,7 @@ describe("validate pipeline", () => {
         if (chainKey === "broken") throw new Error("RPC unavailable");
         return {
           [DependencyKey.RPC]: rpc,
+          [DependencyKey.Diamond]: createDiamondAdapter(rpc),
           [DependencyKey.BytecodeValidator]: validator,
         };
       }
@@ -310,6 +315,7 @@ describe("validate pipeline", () => {
       if (requests.some((request) => request.key === DependencyKey.BytecodeValidator)) {
         return {
           [DependencyKey.RPC]: rpc,
+          [DependencyKey.Diamond]: createDiamondAdapter(rpc),
           [DependencyKey.BytecodeValidator]: BytecodeValidatorAdapter,
         };
       }
