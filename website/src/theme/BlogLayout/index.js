@@ -39,15 +39,23 @@ export default function BlogLayout(props) {
           {hasSidebar && <BlogSidebar sidebar={sidebar} />}
           <main
             className={clsx('col', {
-              'col--7': hasSidebar && !effectiveSidebarHidden,
-              'col--9 col--offset-1': !hasSidebar,
-              /* Left sidebar hidden: main uses 9 cols so right ToC (col--2) stays visible */
-              'col--9': hasSidebar && effectiveSidebarHidden,
+              /* Match docs TOC width (col--3): sidebar 3 + main 6 + ToC 3 */
+              'col--6': hasSidebar && !effectiveSidebarHidden,
+              'col--9': !hasSidebar || (hasSidebar && effectiveSidebarHidden),
             })}>
             {isBlogArticlePage && <BlogArticleBreadcrumbs pageTitle={pageTitle} />}
             {children}
           </main>
-          {toc && <div className="col col--2">{toc}</div>}
+          {toc && (
+            <div className="col col--3 blog-toc-col">
+              {/* Same structure/classes as docs TOC rail so type scale matches exactly */}
+              <div className="docTocRail blog-toc-rail">
+                <div className="docTocRailScroll thin-scrollbar">
+                  <div className="theme-doc-toc-desktop thin-scrollbar">{toc}</div>
+                </div>
+              </div>
+            </div>
+          )}
         </div>
       </div>
     </Layout>

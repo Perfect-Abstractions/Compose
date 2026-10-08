@@ -16,14 +16,14 @@ export default function CtaSection() {
 
           <div className={styles.ctaInner}>
             <Heading as="h2" id="cta-heading" className={styles.ctaTitle}>
-              Ready to build with Compose?
+              Build your next system one facet at a time.
             </Heading>
             <p className={styles.ctaDescription}>
-              Install Compose and put together a diamond-based system you can grow one facet at a time.
+              Start with a working project, add reusable Solidity building blocks, and keep your custom logic easy to understand.
             </p>
             <div className={styles.ctaActions}>
               <Link to="/docs" className={clsx(styles.ctaButton, styles.ctaPrimaryLight)}>
-                <span>Get started</span>
+                <span>Start Building</span>
                 <svg
                   className={styles.ctaButtonIcon}
                   width={20}
@@ -44,7 +44,7 @@ export default function CtaSection() {
               <Link
                 to="/docs/getting-started/installation"
                 className={clsx(styles.ctaButton, styles.ctaSecondaryOutline)}>
-                Installation
+                Read the Docs
               </Link>
             </div>
           </div>

@@ -1,6 +1,6 @@
 # Compose CLI
 
-Command-line toolkit for building, deploying, and managing diamond smart contracts using the Compose Library. Supports both [Foundry](https://book.getfoundry.sh/) and [Hardhat](https://hardhat.org/) frameworks.
+The Compose CLI is the fastest way to start a modular smart contract project. Scaffold a facet-based diamond, choose your building blocks, and develop with [Foundry](https://book.getfoundry.sh/) or [Hardhat](https://hardhat.org/).
 
 ## Quick Start
 
@@ -153,7 +153,7 @@ Please see the [documentation for contributing](https://compose.diamonds/docs/co
 
 <br>
 
-**Compose is evolving with your help. Join us in building the future of smart contract development.**
+**Start your next smart contract system with a structure you can understand and extend.**
 
 **-Nick & The Compose Community**
 

@@ -10,14 +10,19 @@ import { FacetBadge } from '../DiamondScene/FacetBadge';
 import { useIsMobile } from '../../hooks/useIsMobile';
 
 export default function HomepageHeader() {
-  const { activeFacetName, handleHover } = useFacetBadges();
+  const {
+    activeFacet,
+    handleHover,
+    handleBadgeEnter,
+    handleBadgeLeave,
+    handleFacetClick,
+  } = useFacetBadges();
   const isMobile = useIsMobile();
 
   const badgeAndTitle = (
     <>
       <Heading as="h1" className={styles.heroTitle}>
-        Build the future of<br />
-        <span className={styles.heroTitleGradient}>Smart Contracts</span>
+        Infrastructure for evolving <br/><span className={styles.heroTitleGradient}>onchain systems</span>
       </Heading>
     </>
   );
@@ -26,14 +31,12 @@ export default function HomepageHeader() {
     <>
       <div className={styles.heroDescriptionWrapper}>
         <p className={styles.heroSubtitle}>
-        On-chain infrastructure should be shared, not rebuilt.
-        <br/>
-        Compose is the composition toolkit for modular on-chain systems.
+          A framework for modular, maintainable smart contracts.
         </p>
       </div>
       <div className={styles.heroCta}>
-        <Link className={clsx(styles.ctaButton, styles.ctaPrimary)} to="/docs">
-          <span>Get Started</span>
+        <Link className={clsx(styles.ctaButton, styles.ctaPrimary)} to="/docs/getting-started/installation">
+          <span>Start Building</span>
           <svg
             className={styles.ctaButtonIcon}
             width={20}
@@ -51,8 +54,8 @@ export default function HomepageHeader() {
             />
           </svg>
         </Link>
-        <Link className={clsx(styles.ctaButton, styles.ctaSecondary)} to="/whitepaper">
-          <span>Read Our Whitepaper</span>
+        <Link className={clsx(styles.ctaButton, styles.ctaSecondary)} to="/docs">
+          <span>Read the whitepaper</span>
         </Link>
       </div>
     </>
@@ -62,8 +65,17 @@ export default function HomepageHeader() {
     <header className={clsx(styles.heroBanner, isMobile && styles.heroBannerMobile)}>
       {!isMobile && (
         <>
-          <DiamondScene className={styles.canvasContainer} onHoverChange={handleHover} />
-          <FacetBadge name={activeFacetName} visible={!!activeFacetName} />
+          <DiamondScene
+            className={styles.canvasContainer}
+            onHoverChange={handleHover}
+            onFacetClick={handleFacetClick}
+          />
+          <FacetBadge
+            facet={activeFacet}
+            visible={!!activeFacet}
+            onMouseEnter={handleBadgeEnter}
+            onMouseLeave={handleBadgeLeave}
+          />
         </>
       )}
 
