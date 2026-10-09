@@ -59,12 +59,15 @@ describe("compose history over Anvil", () => {
         expect(output).toContain(`Event: ${name}`);
       }
       expect(output).toContain("Data: 0x1234");
+      expect(output).toContain("Selectors: 0x");
+      expect(output).not.toContain("Selectors: unavailable");
 
       const cliOutput = await harness.runHistory();
       expect((cliOutput.match(/Event: FacetAdded/g) ?? []).length).toBe(4);
       for (const name of ["FacetReplaced", "FacetRemoved", "DiamondMetadata", "DiamondDelegateCall"]) {
         expect(cliOutput).toContain(`Event: ${name}`);
       }
+      expect(cliOutput).toContain("Selectors: 0x");
     } finally {
       process.chdir(previousDirectory);
       printed.mockRestore();

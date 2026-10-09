@@ -70,7 +70,7 @@ Exit code non-zero on failure (CI-friendly).
 
 ### `compose history <address> --chain <chain>`
 
-Show the diamond's ERC-8153 events, newest first, with block, timestamp, transaction hash, and decoded event parameters. Reads `FacetAdded`, `FacetReplaced`, `FacetRemoved`, `DiamondDelegateCall`, and `DiamondMetadata`. ERC-2535 `DiamondCut` history is not supported yet.
+Show the diamond's ERC-8153 events, newest first, with block, timestamp, transaction hash, and decoded event parameters. For facet events, selectors are read directly from each facet's `exportSelectors()` function; unavailable results are labeled. Reads `FacetAdded`, `FacetReplaced`, `FacetRemoved`, `DiamondDelegateCall`, and `DiamondMetadata`. ERC-2535 `DiamondCut` history is not supported yet.
 
 ## Base Presets
 

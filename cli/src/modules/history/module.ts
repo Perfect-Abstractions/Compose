@@ -6,6 +6,7 @@ import { decodeHistoryLogs } from "./decoder";
 import { historyEvents } from "./events";
 import { loadHistoryLogs } from "./logs";
 import { showHistory } from "./output";
+import { loadHistorySelectors } from "./selectors";
 import type { HistoryResult } from "./types";
 
 export const HistoryModule = {
@@ -17,6 +18,7 @@ export const HistoryModule = {
       chainId: chain.chainId,
       events: await decodeHistoryLogs(rpc, logs),
     };
+    await loadHistorySelectors(rpc, result.events);
     ctx.state.history = { success: true, result, error: null };
     showHistory(result);
     return ctx;

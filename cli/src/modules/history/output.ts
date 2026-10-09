@@ -32,6 +32,9 @@ export function showHistory(result: HistoryResult): void {
     console.log(`  Event: ${event.name}`);
     for (const parameter of event.parameters) {
       console.log(`    ${parameterLabel(parameter.name)}: ${displayValue(parameter)}`);
+      if (parameter.selectors !== undefined) {
+        console.log(`      Selectors: ${parameter.selectors === null ? "unavailable" : parameter.selectors.join(", ") || "none"}`);
+      }
     }
     console.log();
   }

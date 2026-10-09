@@ -4,6 +4,7 @@ export type HistoryParameter = {
   name: string;
   type: string;
   value: unknown;
+  selectors?: Hex[] | null;
 };
 
 export type HistoryEvent = {

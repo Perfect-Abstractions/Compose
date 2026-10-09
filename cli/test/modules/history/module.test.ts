@@ -55,6 +55,7 @@ describe("HistoryModule", () => {
       eventLog("DiamondMetadata", { _tag: tag, _data: "0x1234" }, 10n, 1),
     ];
     const adapter = rpc(logs);
+    vi.mocked(adapter.readContract).mockResolvedValue("0x12345678abcdef01" as never);
     const printed = vi.spyOn(console, "log").mockImplementation(() => undefined);
     try {
       const ctx = Context.create();
@@ -80,6 +81,11 @@ describe("HistoryModule", () => {
       expect(output).toContain("    Data: 0x1234");
       expect(output).toContain(`    Old Facet: ${oldFacet}`);
       expect(output).toContain(`    New Facet: ${newFacet}`);
+      expect(output).toContain("      Selectors: 0x12345678, 0xabcdef01");
+      expect(adapter.readContract).toHaveBeenCalledTimes(2);
+      expect(vi.mocked(adapter.readContract).mock.calls.map(([parameters]) => parameters.address).sort()).toEqual(
+        [oldFacet, newFacet].sort(),
+      );
       expect(adapter.getBlockTimestamp).toHaveBeenCalledTimes(3);
     } finally {
       printed.mockRestore();
@@ -96,6 +102,26 @@ describe("HistoryModule", () => {
       printed.mockClear();
       await HistoryModule.list(Context.create(), rpc([], 0n), chain, diamond);
       expect(printed.mock.calls.some(([line]) => String(line).includes("No ERC-8153 events found"))).toBe(true);
+    } finally {
+      printed.mockRestore();
+    }
+  });
+
+  it("keeps facet history when exportSelectors is unavailable or malformed", async () => {
+    const adapter = rpc([
+      eventLog("FacetAdded", { _facet: oldFacet }, 2n, 0),
+      eventLog("FacetAdded", { _facet: newFacet }, 3n, 0),
+    ]);
+    vi.mocked(adapter.readContract)
+      .mockRejectedValueOnce(new Error("no code"))
+      .mockResolvedValueOnce("0x123456" as never);
+    const printed = vi.spyOn(console, "log").mockImplementation(() => undefined);
+    try {
+      const ctx = Context.create();
+      await HistoryModule.list(ctx, adapter, chain, diamond);
+      expect(ctx.state.history).toMatchObject({ success: true });
+      const output = printed.mock.calls.map(([line]) => String(line)).join("\n");
+      expect((output.match(/Selectors: unavailable/g) ?? []).length).toBe(2);
     } finally {
       printed.mockRestore();
     }
