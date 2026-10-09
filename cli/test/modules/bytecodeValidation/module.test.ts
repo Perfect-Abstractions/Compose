@@ -31,6 +31,8 @@ function setup() {
     getBlockNumber: vi.fn().mockResolvedValue(100n),
     readContract: vi.fn(),
     getCode: vi.fn().mockResolvedValue("0x6000" as Hex),
+    getLogs: vi.fn(),
+    getBlockTimestamp: vi.fn(),
   };
   const diamondAdapter = {
     facets: vi.fn().mockResolvedValue([{

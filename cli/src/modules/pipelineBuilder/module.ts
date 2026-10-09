@@ -6,6 +6,7 @@ import { BuildPipeline } from "../../pipelines/buildPipeline";
 import { RPCPipeline } from "../../pipelines/rpcPipeline";
 import { InspectPipeline } from "../../pipelines/inspectPipeline";
 import { SelectorsPipeline } from "../../pipelines/selectorsPipeline";
+import { HistoryPipeline } from "../../pipelines/historyPipeline";
 import { ValidatePipeline } from "../../pipelines/validatePipeline";
 
 /**
@@ -84,6 +85,13 @@ export const PipelineBuilderModule = {
           error: null,
         };
         return SelectorsPipeline.execute(ctx);
+      case "history":
+        ctx.state.commandSelected = {
+          success: true,
+          result: { command: ctx.param.command, address: ctx.param.address, chain: ctx.param.chain },
+          error: null,
+        };
+        return HistoryPipeline.execute(ctx);
       default:
         ctx.state.commandRouting = {
           success: false,

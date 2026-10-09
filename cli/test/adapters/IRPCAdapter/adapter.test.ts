@@ -37,6 +37,8 @@ type MockClient = {
   getChainId: ReturnType<typeof vi.fn>;
   getBlockNumber: ReturnType<typeof vi.fn>;
   getCode: ReturnType<typeof vi.fn>;
+  getLogs: ReturnType<typeof vi.fn>;
+  getBlock: ReturnType<typeof vi.fn>;
   readContract: ReturnType<typeof vi.fn>;
 };
 
@@ -49,6 +51,8 @@ function useClient(overrides: Record<string, unknown> = {}): void {
     getChainId: vi.fn().mockResolvedValue(11155111),
     getBlockNumber: vi.fn().mockResolvedValue(123n),
     getCode: vi.fn().mockResolvedValue("0x6000"),
+    getLogs: vi.fn().mockResolvedValue([]),
+    getBlock: vi.fn().mockResolvedValue({ timestamp: 1_000n }),
     readContract: vi.fn().mockResolvedValue("result"),
     ...overrides,
   };
@@ -107,6 +111,30 @@ describe("createRPCAdapter", () => {
       address,
       blockNumber: 120n,
     });
+  });
+
+  it("filters logs by event ABI and reads historical timestamps", async () => {
+    useClient();
+    const adapter = await createRPCAdapter({ rpcUrl: "https://rpc.example", chainId: 11155111 });
+    const events = [{ type: "event", name: "Changed", inputs: [] }] as const;
+
+    await expect(adapter.getLogs(address, events, 10n, 20n)).resolves.toEqual([]);
+    await expect(adapter.getBlockTimestamp(10n)).resolves.toBe(1_000n);
+    expect((mocks.activeClient as MockClient).getLogs).toHaveBeenCalledWith({
+      address, events, fromBlock: 10n, toBlock: 20n,
+    });
+    expect((mocks.activeClient as MockClient).getBlock).toHaveBeenCalledWith({ blockNumber: 10n });
+  });
+
+  it("retries transient log failures and reports persistent block failures", async () => {
+    useClient({
+      getLogs: vi.fn().mockRejectedValueOnce(Object.assign(new Error("temporary"), { status: 503 })).mockResolvedValue([]),
+      getBlock: vi.fn().mockRejectedValue(new Error("unavailable")),
+    });
+    const adapter = await createRPCAdapter({ rpcUrl: "https://rpc.example", chainId: 11155111 });
+    await expect(adapter.getLogs(address, [], 0n, 1n)).resolves.toEqual([]);
+    expect((mocks.activeClient as MockClient).getLogs).toHaveBeenCalledTimes(2);
+    await expect(adapter.getBlockTimestamp(1n)).rejects.toMatchObject({ code: "RPC_REQUEST_FAILED", operation: "getBlock" });
   });
 
   it("reports missing contract code when verification is enabled", async () => {

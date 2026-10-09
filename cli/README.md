@@ -22,6 +22,7 @@ compose init [options]
 compose catalog
 compose info
 compose validate
+compose history <address> --chain <chain>
 compose --version | -v
 compose --help | -h
 ```
@@ -66,6 +67,10 @@ Run static analysis on the local codebase:
 - Missing facet registration warnings
 
 Exit code non-zero on failure (CI-friendly).
+
+### `compose history <address> --chain <chain>`
+
+Show the diamond's ERC-8153 events, newest first, with block, timestamp, transaction hash, and decoded event parameters. Reads `FacetAdded`, `FacetReplaced`, `FacetRemoved`, `DiamondDelegateCall`, and `DiamondMetadata`. ERC-2535 `DiamondCut` history is not supported yet.
 
 ## Base Presets
 
