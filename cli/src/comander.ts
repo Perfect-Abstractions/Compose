@@ -61,6 +61,12 @@ export function buildProgram(): Command {
     .argument("<address>", "Diamond contract address")
     .option("--chain <chain-key>", "Chain key from compose.json", "local")
 
+  program
+    .command("selectors")
+    .description("List a deployed diamond's selectors by facet")
+    .argument("<address>", "Diamond contract address")
+    .option("--chain <chain-key>", "Chain key from compose.json", "local")
+
   return program;
 }
 
@@ -94,7 +100,7 @@ export function parseArgs(argv: string[]): { command: string; flags: Record<stri
     (arg): arg is string => typeof arg === "string" && arg !== command,
   );
   if (positionalArgs.length > 0) {
-    if (command === "inspect" && !flags.address) {
+    if ((command === "inspect" || command === "selectors") && !flags.address) {
       flags.address = positionalArgs[0];
     } else if (!flags.projectName) {
       flags.projectName = positionalArgs[0];

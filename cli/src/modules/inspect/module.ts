@@ -1,14 +1,10 @@
-import path from "node:path";
 import { isAddress, type Address } from "viem";
 import { ComposeContext } from "../../context/types";
 import type { IDiamondAdapter } from "../../adapters/IDiamondAdapter/interface";
 import type { ResolvedChainConfig } from "../../utils/chainConfig";
-import { findFileAncestor } from "../../utils/files";
 import { RPCAdapterError } from "../../adapters/IRPCAdapter/errors";
 import { showInspect } from "./output";
-import { toFacetInfo } from "./facetFormatter";
-import { mergeProjectSignatures } from "./selectorDecoder";
-import type { InspectResult, FacetInfo } from "./types";
+import { loadDiamondSelectors } from "./selectorLoader";
 
 /** Validate the command address before resolving chain dependencies. */
 export function inspectAddress(value: unknown): Address {
@@ -34,28 +30,12 @@ export const InspectModule = {
    * @param diamond - Resolved Diamond adapter for the selected chain.
    * @param chain - Resolved chain identity for the result.
    * @returns The updated context with inspect result stored in
-   *     `ctx.state.inspect` as {@link ModuleState}\<{@link InspectResult}\>.
+   *     `ctx.state.inspect`.
    * @throws {RPCAdapterError} If the address is invalid or no contract code is
    *     found.
    */
   async inspect(ctx: ComposeContext, diamond: IDiamondAdapter, chain: ResolvedChainConfig): Promise<ComposeContext> {
-    const diamondAddress = inspectAddress(ctx.param.address);
-    const rawFacets = await diamond.facets(diamondAddress);
-
-    const composePath = await findFileAncestor(process.cwd(), "compose.json");
-    const projectRoot = composePath ? path.dirname(composePath) : null;
-    if (projectRoot) {
-      await mergeProjectSignatures(projectRoot);
-    }
-
-    const facets: FacetInfo[] = rawFacets.map(toFacetInfo);
-
-    const result: InspectResult = {
-      diamond: diamondAddress,
-      chainKey: chain.chainKey,
-      chainId: chain.chainId,
-      facets,
-    };
+    const result = await loadDiamondSelectors(inspectAddress(ctx.param.address), diamond, chain);
 
     ctx.state.inspect = { success: true, result, error: null };
     showInspect(result);

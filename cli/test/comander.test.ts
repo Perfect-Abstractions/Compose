@@ -105,3 +105,19 @@ describe("inspect command", () => {
   });
 
 });
+
+describe("selectors command", () => {
+  it("parses address and chain", () => {
+    expect(parseArgs(["node", "compose", "selectors", "0x0000000000000000000000000000000000000001", "--chain", "sepolia"])).toEqual({
+      command: "selectors",
+      flags: { address: "0x0000000000000000000000000000000000000001", chain: "sepolia" },
+    });
+  });
+
+  it("defaults to local", () => {
+    expect(parseArgs(["node", "compose", "selectors", "0x0000000000000000000000000000000000000001"])).toEqual({
+      command: "selectors",
+      flags: { address: "0x0000000000000000000000000000000000000001", chain: "local" },
+    });
+  });
+});
