@@ -34,6 +34,8 @@ function bytecodeDependencies(report: ReturnType<IBytecodeValidatorAdapter["vali
       functionSelectors: ["0x12345678"],
     }]),
     getCode: vi.fn().mockResolvedValue("0x6000" as Hex),
+    getLogs: vi.fn(),
+    getBlockTimestamp: vi.fn(),
   };
   const validator: IBytecodeValidatorAdapter = {
     validate: vi.fn().mockReturnValue(report),
@@ -309,6 +311,8 @@ describe("validate pipeline", () => {
         ), "utf8")) as { deployedBytecode: { object: Hex } };
         return artifact.deployedBytecode.object;
       }),
+      getLogs: vi.fn(),
+      getBlockTimestamp: vi.fn(),
     };
     const originalResolve = DependencyResolver.resolve.bind(DependencyResolver);
     const resolver = vi.spyOn(DependencyResolver, "resolve").mockImplementation(async (requests) => {
