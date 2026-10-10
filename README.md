@@ -10,6 +10,8 @@ A smart contract development framework for building modular systems with [ERC-81
 
 Compose gives you a clear way to split contract functionality into focused facets, reuse proven building blocks, and evolve your onchain application with ease.
 
+[Try the visual builder now](https://app.compose.diamonds)
+
 **The framework includes:**
 
 - A Solidity library of reusable facets and modules

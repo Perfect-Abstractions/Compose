@@ -35,7 +35,7 @@ export default function HomepageHeader() {
         </p>
       </div>
       <div className={styles.heroCta}>
-        <Link className={clsx(styles.ctaButton, styles.ctaPrimary)} to="/docs/getting-started/installation">
+        <Link className={clsx(styles.ctaButton, styles.ctaPrimary)} to="https://app.compose.diamonds">
           <span>Start Building</span>
           <svg
             className={styles.ctaButtonIcon}

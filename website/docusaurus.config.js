@@ -299,6 +299,10 @@ const config = {
             title: 'Project',
             items: [
               {
+                label: 'Visual Builder',
+                href: 'https://app.compose.diamonds',
+              },
+              {
                 label: 'Whitepaper',
                 href: '/whitepaper'
               },

@@ -22,7 +22,7 @@ export default function CtaSection() {
               Start with a working project, add reusable Solidity building blocks, and keep your custom logic easy to understand.
             </p>
             <div className={styles.ctaActions}>
-              <Link to="/docs" className={clsx(styles.ctaButton, styles.ctaPrimaryLight)}>
+              <Link to="https://app.compose.diamonds" className={clsx(styles.ctaButton, styles.ctaPrimaryLight)}>
                 <span>Start Building</span>
                 <svg
                   className={styles.ctaButtonIcon}
