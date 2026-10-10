@@ -4,9 +4,9 @@ import AnnouncementBanner from '@site/src/components/ui/AnnouncementBanner';
 
 const CURRENT_BANNER = {
   id: 'visual-builder-launch-announcement',
-  message: 'Compose your diamond visually',
+  message: 'Build your diamond in the browser.',
   linkHref: 'https://app.compose.diamonds',
-  linkLabel: 'Try it now',
+  linkLabel: 'Try the Builder',
   persistence: 'local',
 };
 
