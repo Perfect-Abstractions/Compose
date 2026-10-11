@@ -14,6 +14,7 @@
 .visible {
   opacity: 1;
   transform: translateY(0);
+  pointer-events: auto;
 }
 
 .badgeLabel {
@@ -27,6 +28,7 @@
 }
 
 .badgeValue {
+  display: block;
   font-size: 1.25rem;
   font-weight: 700;
   color: #fff;
@@ -34,6 +36,14 @@
   background: linear-gradient(to right, #fff, #bfdbfe);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
+  cursor: pointer;
+  text-decoration: none;
+  transition: filter 0.2s ease;
+}
+
+.badgeValue:hover {
+  filter: drop-shadow(0 0 8px rgba(147, 197, 253, 0.9));
+  text-decoration: underline;
 }
 
 .badgeLine {

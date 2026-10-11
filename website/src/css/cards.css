@@ -7,8 +7,8 @@
 .feature-card {
   position: relative;
   height: 100%;
-  border-radius: 1.25rem;
-  padding: 2.5rem 2rem;
+  border-radius: 0.75rem;
+  padding: 1.5rem 1.25rem;
   overflow: hidden;
   isolation: isolate;
   background: linear-gradient(155deg, #ffffff 0%, #f1f5f9 55%, #f8fafc 100%);
@@ -77,20 +77,20 @@
 .feature-card h3 {
   position: relative;
   z-index: 1;
-  font-size: 1.25rem;
+  font-size: 1.125rem;
   font-weight: 700;
   letter-spacing: -0.025em;
   line-height: 1.22;
-  margin-top: 0.5rem;
-  margin-bottom: 1rem;
+  margin-top: 0.35rem;
+  margin-bottom: 0.65rem;
   color: #0f172a;
 }
 
 .feature-card p {
   position: relative;
   z-index: 1;
-  line-height: 1.65;
-  font-size: 0.96875rem;
+  line-height: 1.55;
+  font-size: 0.9375rem;
   color: #334155;
   margin: 0;
 }
@@ -98,10 +98,10 @@
 .feature-icon {
   position: relative;
   z-index: 1;
-  font-size: 3.5rem;
+  font-size: 2.5rem;
   line-height: 1;
   display: block;
-  margin-bottom: 1rem;
+  margin-bottom: 0.75rem;
   transition: transform var(--motion-duration-normal) var(--motion-ease-standard);
 }
 

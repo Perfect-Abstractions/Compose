@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { parseArgs } from "../src/comander";
+import { buildProgram, parseArgs } from "../src/comander";
 
 describe("validate command arguments", () => {
   it("accepts a Compose project root", () => {
@@ -68,6 +68,12 @@ describe("rpc command", () => {
 });
 
 describe("inspect command", () => {
+  it("is the only facet and selector listing command", () => {
+    const commands = buildProgram().commands.map((command) => command.name());
+    expect(commands).toContain("inspect");
+    expect(commands).not.toContain("selectors");
+  });
+
   it("parses address positional and chain flag", () => {
     const result = parseArgs([
       "node",
@@ -101,23 +107,6 @@ describe("inspect command", () => {
         address: "0x0000000000000000000000000000000000000001",
         chain: "local",
       },
-    });
-  });
-
-});
-
-describe("selectors command", () => {
-  it("parses address and chain", () => {
-    expect(parseArgs(["node", "compose", "selectors", "0x0000000000000000000000000000000000000001", "--chain", "sepolia"])).toEqual({
-      command: "selectors",
-      flags: { address: "0x0000000000000000000000000000000000000001", chain: "sepolia" },
-    });
-  });
-
-  it("defaults to local", () => {
-    expect(parseArgs(["node", "compose", "selectors", "0x0000000000000000000000000000000000000001"])).toEqual({
-      command: "selectors",
-      flags: { address: "0x0000000000000000000000000000000000000001", chain: "local" },
     });
   });
 });

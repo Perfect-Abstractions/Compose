@@ -1,9 +1,9 @@
 ---
 sidebar_position: 1
 slug: /
-title: "Smart Contract Library for ERC-2535 / ERC-8153 Diamonds"
+title: "Smart Contract Development Framework for Diamonds"
 sidebar_label: "Introduction"
-description: Compose is a smart contract library for building smart contract systems using the ERC-2535 Diamond standard.
+description: Compose is a smart contract development framework for building modular, readable smart contract systems with ERC-2535 Diamonds.
 ---
 
 import DocSubtitle from '@site/src/components/docs/DocSubtitle';
@@ -14,24 +14,21 @@ import FeatureGrid, { FeatureGridItem } from '@site/src/components/features/Feat
 # Introduction to Compose
 
 <DocSubtitle>
-**Compose** is a smart contract library that helps developers build smart contract systems using the [ERC-2535 Diamond](https://eips.ethereum.org/EIPS/eip-2535) standard. It's designed from the ground up for **code clarity**, **reusability**, and **on-chain composability**.
+**Compose** is the smart contract development framework for building modular systems with the [ERC-2535 Diamond](https://eips.ethereum.org/EIPS/eip-2535) standard. It brings together a reusable Solidity library, a project-scaffolding CLI, and design patterns for **clear, composable, upgradeable code**.
 </DocSubtitle>
 
 ## The Vision
 
-Imagine a verified, standard library of **on-chain smart contract components** —
-each one small, self-contained, and reusable like LEGO blocks.
+Smart contract systems grow faster than a single contract can stay understandable. Compose breaks functionality into **small, self-contained facets** and gives you the modules, CLI, and conventions to assemble them into a system.
 
-Deployed once, trusted by all, and combined in endless ways to create new systems.
-
-That's **Compose** — where your unique value and functionality connects seamlessly with simple, transparent, on-chain building blocks.
+That's **Compose**: a framework for shipping your unique protocol logic on top of simple, reusable building blocks.
 
 ## Why Choose Compose?
 
 <FeatureGrid columns={2}>
   <FeatureGridItem
-    title="On-chain Standard Library"
-    description="(Not yet, in the future) - Access verified, audited smart contracts deployed once and reused across multiple diamonds on multiple blockchains."
+    title="Reusable Solidity Building Blocks"
+    description="Start with focused facets and modules for common smart contract functionality, then extend them with your own logic."
   />
   <FeatureGridItem
     title="Composable Architecture"
@@ -46,18 +43,18 @@ That's **Compose** — where your unique value and functionality connects seamle
     description="Full power of ERC-2535 Diamonds means your contracts can evolve without full redeployment."
   />
   <FeatureGridItem
-    title="Battle-Tested Patterns"
-    description="Community-reviewed implementations following proven best practices and security standards."
+    title="Smart Contract Oriented Programming"
+    description="Use conventions and intentional constraints designed for readable, maintainable smart contract code."
   />
   <FeatureGridItem
-    title="Developer Experience"
-    description="Intuitive APIs, comprehensive documentation, and helpful libraries make development a breeze."
+    title="A Faster Starting Point"
+    description="Scaffold a diamond project with the Compose CLI, then develop with Foundry or Hardhat."
   />
 </FeatureGrid>
 
 ## Types of Smart Contract Systems
 
-Compose is a general purpose smart contract library that can be used to build a wide variety of systems, including small, large, upgradeable and immutable smart contract systems.
+Compose is a general-purpose framework for building small or large smart contract systems, including upgradeable and immutable systems.
 
 However Compose **shines** when building these types of systems:
 
@@ -71,7 +68,7 @@ However Compose **shines** when building these types of systems:
 
 ## Perfect For
 
-Our smart contract library is perfect for:
+Compose is a strong fit for:
 - **DeFi Protocols**: Build financial products with composable, upgradeable components
 - **NFT Platforms**: Create custom marketplaces and collections with flexible, reusable logic
 - **DAO Governance**: Implement voting and proposal systems that can evolve over time

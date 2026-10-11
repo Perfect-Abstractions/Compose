@@ -6,14 +6,14 @@ export default function StatsSection() {
   const {value: contributorsValue} = useGithubContributorsCount({
     owner: 'Perfect-Abstractions',
     repo: 'Compose',
-    defaultValue: '17+',
+    defaultValue: '34+',
   });
 
   const stats = [
-    {label: 'Open Source', value: 'MIT', icon: 'scroll'},
-    {label: 'Diamond Standard', value: 'ERC-2535/8153', icon: 'diamond'},
-    {label: 'Contributors', value: contributorsValue, icon: 'community'},
-    {label: 'Diamond Ecosystem TVL', value: 'Over $1B', icon: 'chart'},
+    {label: 'Open-source license', value: 'MIT', icon: 'scroll'},
+    {label: 'Diamond architecture', value: 'ERC-2535 + ERC-8153', icon: 'diamond'},
+    {label: 'GitHub contributors', value: contributorsValue, icon: 'community'},
+    {label: 'Supported workflows', value: 'Foundry + Hardhat', icon: 'package'},
   ];
 
   return (

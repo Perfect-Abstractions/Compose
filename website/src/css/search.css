@@ -244,7 +244,7 @@
 /* Empty state with concentric circles */
 .DocSearch-NoResults,
 .DocSearch-StartScreen {
-  padding: 4rem 2rem;
+  padding: 2rem 1.5rem;
   text-align: center;
   position: relative;
 }
@@ -709,7 +709,7 @@
 
   /* Adjust search bar padding for mobile - lower the input */
   .DocSearch-SearchBar {
-    padding: 3rem 1rem 0.75rem 1rem;
+    padding: 1.5rem 1rem 0.625rem 1rem;
   }
 
   /* Make Cancel button visible on mobile but styled */
@@ -726,7 +726,7 @@
   /* Adjust empty state for mobile */
   .DocSearch-NoResults,
   .DocSearch-StartScreen {
-    padding: 3rem 1.5rem;
+    padding: 2rem 1.25rem;
   }
 
   .DocSearch-NoResults::before,

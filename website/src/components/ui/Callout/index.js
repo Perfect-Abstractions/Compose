@@ -1,47 +1,60 @@
 import React from 'react';
 import clsx from 'clsx';
-import Icon from '../Icon';
 import styles from './styles.module.css';
+
+const TYPES = ['info', 'tip', 'warning', 'danger', 'success', 'note', 'important'];
 
 /**
  * Callout Component - Enhanced admonition-style component
- * 
- * @param {string} type - Callout type ('info', 'warning', 'danger', 'success', 'tip')
+ *
+ * @param {string} type - Callout type ('info', 'tip', 'warning', 'danger', 'success', 'note', 'important')
  * @param {string} title - Optional title
  * @param {ReactNode} children - Content
- * @param {boolean} icon - Show icon (default: true)
+ * @param {boolean} collapsible - Render as expandable disclosure (default: false)
+ * @param {boolean} defaultOpen - Expanded by default (collapsible only, default: false)
+ * @param {string} className - Optional extra class
  */
-export default function Callout({ 
-  type = 'info', 
-  title, 
+export default function Callout({
+  type = 'info',
+  title,
   children,
-  icon = true 
+  collapsible = false,
+  defaultOpen = false,
+  className,
 }) {
-  const iconNames = {
-    info: 'lightbulb',
-    warning: 'warning',
-    danger: 'no-entry',
-    success: 'checkmark',
-    tip: 'lightbulb',
-    note: 'memo'
-  };
+  const resolvedType = TYPES.includes(type) ? type : 'info';
+
+  const classes = clsx(
+    'theme-admonition',
+    `theme-admonition-${resolvedType}`,
+    styles.callout,
+    collapsible && styles.calloutCollapsible,
+    className,
+  );
+
+  if (collapsible) {
+    const label = title || resolvedType.charAt(0).toUpperCase() + resolvedType.slice(1);
+    return (
+      <aside role="note" className={classes}>
+        <details open={defaultOpen || undefined}>
+          <summary className={styles.calloutHeader}>
+            <span className={styles.calloutTitle}>{label}</span>
+            <span className={styles.calloutChevron} aria-hidden="true" />
+          </summary>
+          <div className={styles.calloutContent}>{children}</div>
+        </details>
+      </aside>
+    );
+  }
 
   return (
-    <div className={clsx(styles.callout, styles[`callout--${type}`])}>
-      <div className={styles.calloutHeader}>
-        {icon && (
-          <span className={styles.calloutIcon}>
-            <Icon name={iconNames[type] || iconNames.info} size={24} />
-          </span>
-        )}
-        {title && (
+    <aside role="note" className={classes}>
+      {title && (
+        <div className={styles.calloutHeader}>
           <span className={styles.calloutTitle}>{title}</span>
-        )}
-      </div>
-      <div className={styles.calloutContent}>
-        {children}
-      </div>
-    </div>
+        </div>
+      )}
+      <div className={styles.calloutContent}>{children}</div>
+    </aside>
   );
 }
-

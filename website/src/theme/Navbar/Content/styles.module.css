@@ -41,31 +41,114 @@
   box-shadow: 0 4px 12px rgba(234, 179, 8, 0.2);
 }
 
-/* Badge pulse animation */
+/* 3D rotating facet-orb indicator (EIP-2535 diamond motif):
+   gold facet texture sweeps across a sphere while static specular
+   highlight + limb darkening sell the volume. The roll is done with a
+   composited translate3d (GPU, sub-pixel) instead of background-position
+   (paint-only, snaps to whole device pixels = stutter). */
 .badgeDot {
-  width: 8px;
-  height: 8px;
-  background: #eab308;
+  position: relative;
+  width: 13px;
+  height: 13px;
+  flex-shrink: 0;
   border-radius: 50%;
-  animation: pulse 2s ease-in-out infinite;
+  overflow: hidden;
+  box-shadow: 0 0 6px rgba(250, 204, 21, 0.5);
+  animation: orbBob 3.2s ease-in-out infinite;
+}
+
+/* Oversized facet strip, one 8px period wide, translated by the compositor */
+.badgeDot::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  width: calc(100% + 8px);
+  /* Yellow flame ramp: pale-hot flash over deep amber embers */
+  background: repeating-linear-gradient(
+    90deg,
+    #fbbf24 0,
+    #fef9c3 2px,
+    #f59e0b 3.5px,
+    #fde047 5px,
+    #d97706 6.5px,
+    #fbbf24 8px
+  );
+  animation: gemRoll 2.6s linear infinite;
+  will-change: transform;
+  backface-visibility: hidden;
+}
+
+/* Static sphere shading: hot specular, ember bounce, blue flame core
+   at the base, red limb darkening */
+.badgeDot::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  background:
+    radial-gradient(circle at 32% 28%, rgba(254, 252, 232, 0.95) 0%, rgba(254, 252, 232, 0) 45%),
+    radial-gradient(circle at 68% 80%, rgba(252, 211, 77, 0.5) 0%, rgba(252, 211, 77, 0) 40%),
+    radial-gradient(circle at 50% 92%, rgba(96, 165, 250, 0.3) 0%, rgba(96, 165, 250, 0) 34%),
+    radial-gradient(circle at 50% 50%, rgba(146, 64, 14, 0) 52%, rgba(146, 64, 14, 0.6) 100%);
+  box-shadow: inset 0 -1.5px 2px rgba(253, 224, 71, 0.5);
+  pointer-events: none;
 }
 
 [data-theme='dark'] .badgeDot {
-  background: #fde047;
+  box-shadow: 0 0 9px rgba(253, 224, 71, 0.5);
+}
+
+[data-theme='dark'] .badgeDot::before {
+  background: repeating-linear-gradient(
+    90deg,
+    #facc15 0,
+    #fef08a 2px,
+    #eab308 3.5px,
+    #fde047 5px,
+    #ca8a04 6.5px,
+    #facc15 8px
+  );
+}
+
+[data-theme='dark'] .badgeDot::after {
+  background:
+    radial-gradient(circle at 32% 28%, rgba(254, 253, 240, 0.85) 0%, rgba(254, 253, 240, 0) 45%),
+    radial-gradient(circle at 68% 80%, rgba(253, 224, 71, 0.45) 0%, rgba(253, 224, 71, 0) 40%),
+    radial-gradient(circle at 50% 92%, rgba(59, 130, 246, 0.38) 0%, rgba(59, 130, 246, 0) 34%),
+    radial-gradient(circle at 50% 50%, rgba(113, 63, 18, 0) 52%, rgba(113, 63, 18, 0.68) 100%);
+  box-shadow: inset 0 -1.5px 2px rgba(254, 240, 138, 0.5);
 }
 
 .badgeText {
   line-height: 1;
 }
 
-@keyframes pulse {
-  0%, 100% {
-    opacity: 1;
-    transform: scale(1);
+@keyframes gemRoll {
+  from {
+    transform: translate3d(0, 0, 0);
   }
+
+  to {
+    transform: translate3d(-8px, 0, 0);
+  }
+}
+
+@keyframes orbBob {
+  0%, 100% {
+    transform: translateY(0);
+  }
+
   50% {
-    opacity: 0.5;
-    transform: scale(1.2);
+    transform: translateY(-1px);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .badgeDot,
+  .badgeDot::before {
+    animation: none;
   }
 }
 

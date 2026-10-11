@@ -26,7 +26,7 @@ export default function DocPageAside({ soloInSidebar = false }) {
       target="_blank"
       rel="noopener noreferrer"
     >
-      <Icon name="github" size={16} decorative />
+      <Icon name="github" size={14} decorative />
       Report issue
     </Link>
   );

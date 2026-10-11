@@ -1,12 +1,12 @@
 /* ParameterTable Component */
 .parameterTable {
-  margin: 1.5rem 0;
+  margin: 1.25rem 0;
 }
 
 .tableTitle {
-  font-size: 1.25rem;
+  font-size: 1.125rem;
   font-weight: 700;
-  margin-bottom: 1rem;
+  margin-bottom: 0.75rem;
   color: var(--ifm-heading-color);
 }
 
@@ -33,10 +33,10 @@
 }
 
 .table th {
-  padding: 0.875rem 1rem;
+  padding: 0.625rem 0.875rem;
   text-align: left;
   font-weight: 600;
-  font-size: 0.875rem;
+  font-size: 0.8125rem;
   text-transform: uppercase;
   letter-spacing: 0.05em;
   color: var(--ifm-heading-color);
@@ -49,10 +49,10 @@
 }
 
 .table td {
-  padding: 0.875rem 1rem;
+  padding: 0.625rem 0.875rem;
   border-bottom: 1px solid var(--ifm-color-emphasis-200);
   color: var(--ifm-font-color-base);
-  font-size: 0.9375rem;
+  font-size: 0.875rem;
 }
 
 [data-theme='dark'] .table td {

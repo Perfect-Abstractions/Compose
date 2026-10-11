@@ -2026,13 +2026,22 @@ Your configuration has been saved successfully!
 This is a simple note without a custom title.
 </Callout>
 
+<Callout type="important" title="Critical">
+Use for security-critical or irreversible-operation notices.
+</Callout>
+
+<Callout type="info" title="Advanced configuration" collapsible>
+Collapsible callouts keep long details out of the reading flow.
+</Callout>
+
 #### Props
 
 <PropertyTable 
   properties={[
-    { name: 'type', type: 'string', required: false, description: "Type ('info', 'warning', 'danger', 'success', 'tip', 'note')", default: "'info'" },
+    { name: 'type', type: 'string', required: false, description: "Type ('info', 'tip', 'warning', 'danger', 'success', 'note', 'important')", default: "'info'" },
     { name: 'title', type: 'string', required: false, description: 'Optional custom title', default: 'undefined' },
-    { name: 'icon', type: 'boolean', required: false, description: 'Show icon', default: 'true' },
+    { name: 'collapsible', type: 'boolean', required: false, description: 'Render as expandable disclosure', default: 'false' },
+    { name: 'defaultOpen', type: 'boolean', required: false, description: 'Expanded by default (collapsible only)', default: 'false' },
     { name: 'children', type: 'ReactNode', required: true, description: 'Content' }
   ]}
 />
@@ -2068,31 +2077,19 @@ This is a simple note without a custom title.
 
 ### CalloutBox
 
-Alternative callout component with different styling.
+Deprecated alias of [Callout](#callout), kept for backward compatibility with existing pages. Prefer `Callout` in new docs.
 
 <Badge variant="primary">Content Enhancement</Badge>
 
 #### Live Example
 
 <CalloutBox type="info" title="Did You Know?">
-CalloutBox offers an alternative styling to the standard Callout component.
-</CalloutBox>
-
-<CalloutBox type="success" title="Best Practice">
-Always validate user input before processing.
+CalloutBox renders identically to Callout.
 </CalloutBox>
 
 #### Props
 
 Same as Callout component.
-
-#### Usage
-
-```jsx
-<CalloutBox type="info" title="Note">
-  Content here
-</CalloutBox>
-```
 
 ---
 

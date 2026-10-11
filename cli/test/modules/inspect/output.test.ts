@@ -1,11 +1,11 @@
 import { describe, expect, it, vi } from "vitest";
-import { showSelectors } from "../../../src/modules/selectors/output";
+import { showInspect } from "../../../src/modules/inspect/output";
 
-describe("showSelectors", () => {
-  it("groups signatures by facet and marks unknown selectors", () => {
+describe("showInspect", () => {
+  it("shows known signatures and marks unknown selectors", () => {
     const log = vi.spyOn(console, "log").mockImplementation(() => {});
     try {
-      showSelectors({
+      showInspect({
         diamond: "0x0000000000000000000000000000000000000001",
         chainKey: "local",
         chainId: 31337,
@@ -18,10 +18,13 @@ describe("showSelectors", () => {
           ],
         }],
       });
+
       const output = log.mock.calls.map(([line]) => line).join("\n");
+      expect(output).toContain("1 facets");
+      expect(output).toContain("2 selectors");
       expect(output).toContain("facets()");
-      expect(output).toContain("Unknown signature");
       expect(output).toContain("0xdeadbeef");
+      expect(output).toContain("Unknown signature");
     } finally {
       log.mockRestore();
     }

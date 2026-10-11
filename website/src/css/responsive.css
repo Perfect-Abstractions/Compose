@@ -6,39 +6,39 @@
 /* Feature card responsive adjustments */
 @media (max-width: 1200px) {
   .feature-card {
-    padding: 2rem 1.5rem;
+    padding: 1.375rem 1.125rem;
   }
 }
 
 @media (max-width: 768px) {
   .hero__title {
-    font-size: 2.5rem;
+    font-size: 2.125rem;
   }
   
   .hero__subtitle {
-    font-size: 1.125rem;
+    font-size: 1.0625rem;
   }
   
   .feature-card {
-    padding: 2rem 1.5rem;
+    padding: 1.25rem 1.125rem;
   }
   
   .feature-icon {
-    font-size: 3rem;
+    font-size: 2.25rem;
   }
   
   .feature-card h3 {
-    font-size: 1.125rem;
+    font-size: 1.0625rem;
   }
 }
 
 @media (max-width: 480px) {
   .feature-card {
-    padding: 1.5rem 1.25rem;
+    padding: 1.125rem 1rem;
   }
   
   .feature-icon {
-    font-size: 2.5rem;
+    font-size: 2rem;
   }
 }
 
@@ -46,20 +46,20 @@
 @media (max-width: 996px) {
   /* Footer on mobile - make it more prominent */
   .footer {
-    padding: 2rem 1rem;
+    padding: 1.5rem 1rem;
   }
   
   .footer__title {
-    font-size: 1rem;
-    margin-bottom: 1rem;
+    font-size: 0.875rem;
+    margin-bottom: 0.75rem;
   }
   
   .footer__item {
-    padding: 0.5rem 0;
-    font-size: 0.95rem;
+    padding: 0.35rem 0;
+    font-size: 0.9rem;
   }
   
   .footer__links {
-    margin-bottom: 2rem;
+    margin-bottom: 1.25rem;
   }
 }

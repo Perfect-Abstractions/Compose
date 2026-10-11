@@ -74,8 +74,8 @@ export default function NavbarContent() {
             className={styles.earlyStageLink}
             rel="noopener noreferrer">
             <span className={styles.statusBadge}>
-              <span className={styles.badgeDot} />
-              <span className={styles.badgeText}>Early Stage Development</span>
+              <span className={styles.badgeDot} aria-hidden="true" />
+              <span className={styles.badgeText}>Early Stage</span>
             </span>
             <span className={styles.mobileEarlyStageBadge}>Early Stage</span>
           </a>
