@@ -1,4 +1,4 @@
-import { cyan, dim, green } from "../../utils/terminal";
+import { cyan, dim, green, yellow } from "../../utils/terminal";
 import type { InspectResult } from "./types";
 
 const TREE_BRANCH = "├── ";
@@ -35,7 +35,9 @@ export function showInspect(result: InspectResult): void {
       const isLastSelector = j === facet.selectors.length - 1;
       const selectorBranch = isLastSelector ? TREE_LAST : TREE_BRANCH;
 
-      console.log(`  ${dim(childPrefix + selectorBranch)}${dim(sel.selector)}  ${green(sel.signature)}`);
+      const unknown = sel.signature.toLowerCase() === sel.selector.toLowerCase();
+      const signature = unknown ? yellow("Unknown signature") : green(sel.signature);
+      console.log(`  ${dim(childPrefix + selectorBranch)}${dim(sel.selector)}  ${signature}`);
     }
 
     if (!isLast) {
