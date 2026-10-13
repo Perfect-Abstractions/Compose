@@ -296,7 +296,7 @@ function emitRecord(options: {
   };
   originsByRecord.set(record, analysis.origins);
   const records = [record];
-  const warnings = analysis.warnings.map((warning) => ({
+  const warnings: VirtualStorageLayoutWarning[] = analysis.warnings.map((warning) => ({
     sourceName: options.root.sourceName,
     contractName: options.root.contractName,
     storagePath: warning.storagePath,

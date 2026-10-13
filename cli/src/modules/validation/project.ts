@@ -50,6 +50,7 @@ type PendingFacet = {
 /** Loads validation inputs from the nearest Compose project definition. */
 export async function loadValidationProject(
   ctx: ComposeContext,
+  composeJsonOverride?: Record<string, unknown>,
 ): Promise<ValidationProject> {
   const startDirectory = path.resolve(String(ctx.param.projectRoot ?? process.cwd()));
   const composeJsonPath = await findFileAncestor(startDirectory, "compose.json");
@@ -59,7 +60,7 @@ export async function loadValidationProject(
     );
   }
 
-  const composeJson = JSON.parse(
+  const composeJson = (composeJsonOverride as ComposeProjectDefinition | undefined) ?? JSON.parse(
     await fs.readFile(composeJsonPath, "utf8"),
   ) as ComposeProjectDefinition;
   const projectRoot = path.dirname(composeJsonPath);
