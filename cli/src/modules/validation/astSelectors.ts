@@ -1,11 +1,15 @@
 import { SolidityAstSource } from "../../adapters/IFrameworkAdapter/interface";
 import { matchesAstSource } from "./astIdentity";
+import {
+  astNode,
+  childNodes,
+  numberArray,
+  stringValue,
+  walkAst,
+  walkAstWithAncestors,
+  type AstNode,
+} from "./astUtils";
 import { FacetReference, FacetScanResult, FunctionInfo } from "./types";
-
-type AstNode = Record<string, unknown> & {
-  id?: number;
-  nodeType: string;
-};
 
 type AstIndex = {
   nodesById: Map<number, AstNode>;
@@ -123,7 +127,7 @@ function collectExportedSignatures(
 ): string[] {
   const signatures = new Set<string>();
 
-  walkAst(exportFunction.body, (node, ancestors) => {
+  walkAstWithAncestors(exportFunction.body, (node, ancestors) => {
     if (node.nodeType === "MemberAccess" && node.memberName === "selector") {
       const expression = astNode(node.expression);
       const declarationId = expression && typeof expression.referencedDeclaration === "number"
@@ -226,27 +230,6 @@ function buildAstIndex(sources: SolidityAstSource[]): AstIndex {
   return { nodesById, contractsById, sourceByContractId };
 }
 
-function walkAst(
-  value: unknown,
-  visitor: (node: AstNode, ancestors: AstNode[]) => void,
-  ancestors: AstNode[] = [],
-): void {
-  if (Array.isArray(value)) {
-    for (const child of value) walkAst(child, visitor, ancestors);
-    return;
-  }
-
-  const node = astNode(value);
-  if (!node) return;
-
-  visitor(node, ancestors);
-  for (const child of Object.values(node)) {
-    if (child && typeof child === "object") {
-      walkAst(child, visitor, [...ancestors, node]);
-    }
-  }
-}
-
 function isKeccak256Call(node: AstNode): boolean {
   if (node.nodeType !== "FunctionCall") return false;
   const expression = astNode(node.expression);
@@ -258,25 +241,4 @@ function isBytes4Conversion(node: AstNode): boolean {
   const expression = astNode(node.expression);
   const typeName = expression && astNode(expression.typeName);
   return typeName?.nodeType === "ElementaryTypeName" && typeName.name === "bytes4";
-}
-
-function childNodes(node: AstNode | null, key: string): AstNode[] {
-  const value = node?.[key];
-  return Array.isArray(value)
-    ? value.map(astNode).filter((child): child is AstNode => child !== null)
-    : [];
-}
-
-function astNode(value: unknown): AstNode | null {
-  if (!value || typeof value !== "object" || Array.isArray(value)) return null;
-  const candidate = value as Record<string, unknown>;
-  return typeof candidate.nodeType === "string" ? candidate as AstNode : null;
-}
-
-function numberArray(value: unknown): number[] {
-  return Array.isArray(value) ? value.filter((item): item is number => typeof item === "number") : [];
-}
-
-function stringValue(value: unknown): string {
-  return typeof value === "string" ? value : "";
 }
