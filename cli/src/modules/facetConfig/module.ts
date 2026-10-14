@@ -30,6 +30,7 @@ import { loadComposeProject, writeComposeProject } from "./projectConfig";
 import type { LoadedComposeProject } from "./projectConfig";
 import { showFacetManifestCreated, showFacetMutation } from "./output";
 import type {
+  ComposeDiamondConfig,
   FacetBatch,
   FacetBatchOperation,
   FacetInstallReference,
@@ -64,12 +65,10 @@ function sameRegistration(left: unknown, right: unknown): boolean {
   return a.source === b.source && a.contract === b.contract && a.package === b.package;
 }
 
-type MutableDiamondConfig = { contract: string; facets: Record<string, unknown> };
-
 function getDiamondOrThrow(
-  diamonds: Record<string, MutableDiamondConfig>,
+  diamonds: Record<string, ComposeDiamondConfig>,
   diamondName: string,
-): MutableDiamondConfig {
+): ComposeDiamondConfig {
   if (!Object.hasOwn(diamonds, diamondName)) {
     throw new Error(`Diamond '${diamondName}' is not defined in compose.json.`);
   }
@@ -252,7 +251,7 @@ type FacetBatchMutation = {
   operation: FacetBatchOperation;
   editDiamond(options: {
     diamondName: string;
-    diamond: MutableDiamondConfig;
+    diamond: ComposeDiamondConfig;
     entries: unknown;
     stagedFiles: string[];
   }): Promise<{ facets: string[]; changed: boolean }>;
@@ -269,8 +268,8 @@ async function applyBatch(
   batch: FacetBatch,
   mutation: FacetBatchMutation,
 ): Promise<ComposeContext> {
-  const projectConfig = structuredClone(project.config) as Record<string, unknown>;
-  const diamonds = projectConfig.diamonds as Record<string, MutableDiamondConfig>;
+  const projectConfig = structuredClone(project.config);
+  const diamonds = projectConfig.diamonds;
   const changes: FacetMutationResult["diamondChanges"] = [];
   const stagedFiles: string[] = [];
   let changed = false;
@@ -293,7 +292,7 @@ async function applyBatch(
       ctx = await validateCandidateConfig(ctx, projectConfig);
     }
     if (changed) {
-      await writeComposeProject(project, projectConfig as typeof project.config);
+      await writeComposeProject(project, projectConfig);
       ctx.config.composeJson = projectConfig;
     }
     committed = true;

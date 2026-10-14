@@ -9,6 +9,13 @@ export type FacetRegistration = {
   erc165?: Erc165Entry;
 };
 
+/**
+ * A diamond entry in `compose.json`.
+ *
+ * Entries read back from disk are only validated as an object container
+ * (`projectConfig.ts`), so stored facet values are compared defensively as
+ * `unknown` (`sameRegistration`) rather than trusted as `FacetRegistration`.
+ */
 export type ComposeDiamondConfig = {
   contract: string;
   facets: Record<string, FacetRegistration>;
