@@ -11,6 +11,8 @@ import type {
 
 export const FACET_BATCH_DIRECTORY = path.join("compose", "facet-batches");
 
+const RESERVED_OBJECT_KEYS = new Set(["__proto__", "constructor", "prototype"]);
+
 function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === "object" && value !== null && !Array.isArray(value);
 }
@@ -21,6 +23,12 @@ function hasFilePath(value: string): boolean {
 
 function withJsonExtension(value: string): string {
   return path.extname(value) ? value : `${value}.json`;
+}
+
+function validateSafeName(name: string, kind: string): void {
+  if (RESERVED_OBJECT_KEYS.has(name)) {
+    throw new Error(`${kind} name '${name}' is reserved and cannot be used.`);
+  }
 }
 
 export function resolveFacetBatchPath(projectRoot: string, reference: string): string {
@@ -60,13 +68,16 @@ export function validateFacetBatch(value: unknown, expectedOperation?: FacetBatc
     if (!diamondName.trim() || !Array.isArray(facetsValue) || facetsValue.length === 0) {
       throw new Error(`Manifest diamond '${diamondName || "<empty>"}' must have a non-empty facet list.`);
     }
+    validateSafeName(diamondName, "Diamond");
 
     if (value.operation === "remove") {
       const names = facetsValue.map((facet) => {
         if (typeof facet !== "string" || !facet.trim()) {
           throw new Error(`Remove manifest for '${diamondName}' must contain facet names as strings.`);
         }
-        return facet.trim();
+        const name = facet.trim();
+        validateSafeName(name, "Facet");
+        return name;
       });
       if (new Set(names).size !== names.length) {
         throw new Error(`Remove manifest for '${diamondName}' contains duplicate facet names.`);
@@ -92,6 +103,7 @@ function validateInstallReference(value: unknown, diamondName: string): FacetIns
   if (typeof value === "string" && value.trim()) {
     const localReference = value.trim();
     const contract = localReference.match(/^.+:([A-Za-z_$][A-Za-z0-9_$]*)$/)?.[1];
+    validateSafeName(contract ?? localReference, "Facet");
     return contract
       ? { name: contract, source: "local", contract: localReference }
       : { name: localReference };
@@ -101,6 +113,7 @@ function validateInstallReference(value: unknown, diamondName: string): FacetIns
   }
 
   const name = value.name.trim();
+  validateSafeName(name, "Facet");
   if (value.source === undefined) return { name };
   if (value.source === "local") {
     if (typeof value.contract !== "string" || !/^.+:([A-Za-z_$][A-Za-z0-9_$]*)$/.test(value.contract.trim())) {

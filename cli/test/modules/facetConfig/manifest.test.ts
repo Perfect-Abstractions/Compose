@@ -70,4 +70,12 @@ describe("facet batch manifests", () => {
       diamonds: { Token: [{ name: "FeeFacet", source: "local", contract: "FeeFacet.sol" }] },
     })).toThrow("must use path.sol:ContractName");
   });
+
+  it("rejects reserved object keys as diamond and facet names", () => {
+    for (const name of ["__proto__", "constructor", "prototype"]) {
+      expect(() => createRemoveFacetBatch({ Token: [name] })).toThrow("Facet name");
+      expect(() => createInstallFacetBatch({ Token: [{ name }] })).toThrow("Facet name");
+      expect(() => createRemoveFacetBatch({ [name]: ["LegacyFacet"] })).toThrow("Diamond name");
+    }
+  });
 });

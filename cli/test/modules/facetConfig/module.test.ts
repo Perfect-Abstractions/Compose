@@ -185,6 +185,59 @@ describe("FacetConfigModule", () => {
     expect(await fs.readFile(path.join(project.root, "compose.lock"), "utf8")).toBe("keep-lock-untouched\n");
   });
 
+  it("treats inherited facet names as unregistered no-ops", async () => {
+    const project = await createProject();
+    const adapter = mockValidationDependencies();
+    const before = await fs.readFile(path.join(project.root, "compose.json"), "utf8");
+    project.ctx.param.facets = ["toString", "hasOwnProperty", "valueOf"];
+    vi.spyOn(console, "warn").mockImplementation(() => undefined);
+
+    const result = await FacetConfigModule.execute(project.ctx, "remove");
+
+    expect(result.state.facetMutation).toMatchObject({ success: true, result: { changed: false } });
+    expect(adapter.compileAst).not.toHaveBeenCalled();
+    expect(await fs.readFile(path.join(project.root, "compose.json"), "utf8")).toBe(before);
+  });
+
+  it("registers a facet whose name is inherited from Object.prototype", async () => {
+    const project = await createProject();
+    mockValidationDependencies();
+    project.ctx.param.facets = ["src/facets/toString.sol:toString"];
+    await fs.writeFile(path.join(project.root, "src", "facets", "toString.sol"), "contract toString {}\n", "utf8");
+
+    await FacetConfigModule.execute(project.ctx, "install");
+
+    const config = await project.readConfig();
+    const diamonds = config.diamonds as Record<string, { facets: Record<string, unknown> }>;
+    expect(Object.hasOwn(diamonds.TestDiamond.facets, "toString")).toBe(true);
+  });
+
+  it("rejects inherited diamond names instead of treating them as configured", async () => {
+    const project = await createProject();
+    const manifestRoot = path.join(project.root, FACET_BATCH_DIRECTORY);
+    await fs.mkdir(manifestRoot, { recursive: true });
+    await fs.writeFile(path.join(manifestRoot, "inherited-diamond.json"), JSON.stringify({
+      version: 1,
+      operation: "remove",
+      diamonds: { toString: ["RemoveFacet"] },
+    }), "utf8");
+    project.ctx.param.manifest = "inherited-diamond";
+
+    await expect(FacetConfigModule.execute(project.ctx, "remove"))
+      .rejects.toThrow("Diamond 'toString' is not defined in compose.json.");
+  });
+
+  it("rejects reserved facet names supplied directly to remove", async () => {
+    const project = await createProject();
+    const before = await fs.readFile(path.join(project.root, "compose.json"), "utf8");
+    project.ctx.param.facets = ["__proto__"];
+
+    await expect(FacetConfigModule.execute(project.ctx, "remove"))
+      .rejects.toThrow("Facet name '__proto__' is reserved");
+
+    expect(await fs.readFile(path.join(project.root, "compose.json"), "utf8")).toBe(before);
+  });
+
   it("creates an install manifest under compose/facet-batches without changing compose.json", async () => {
     const project = await createProject();
     vi.spyOn(ConfigModule, "loadBasesCatalog").mockImplementation(async (ctx) => {

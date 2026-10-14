@@ -63,6 +63,18 @@ function sameRegistration(left: unknown, right: unknown): boolean {
   return a.source === b.source && a.contract === b.contract && a.package === b.package;
 }
 
+type MutableDiamondConfig = { contract: string; facets: Record<string, unknown> };
+
+function getDiamondOrThrow(
+  diamonds: Record<string, MutableDiamondConfig>,
+  diamondName: string,
+): MutableDiamondConfig {
+  if (!Object.hasOwn(diamonds, diamondName)) {
+    throw new Error(`Diamond '${diamondName}' is not defined in compose.json.`);
+  }
+  return diamonds[diamondName];
+}
+
 function markFailure(ctx: ComposeContext, failedAt: string, error: unknown): void {
   const message = error instanceof Error ? error.message : String(error);
   ctx.status = {
@@ -239,7 +251,7 @@ async function validateCandidateConfig(
 async function applyInstallBatch(ctx: ComposeContext, batch: FacetBatch): Promise<ComposeContext> {
   const project = await loadComposeProject(ctx);
   const projectConfig = structuredClone(project.config) as Record<string, unknown>;
-  const diamonds = projectConfig.diamonds as Record<string, { contract: string; facets: Record<string, unknown> }>;
+  const diamonds = projectConfig.diamonds as Record<string, MutableDiamondConfig>;
   const { adapter } = await resolveFrameworkAdapter(ctx);
   const contractSourceRoot = adapter.getContractSourceRoot(project.root);
   const catalog = ctx.config.bases as BasesCatalog;
@@ -250,8 +262,7 @@ async function applyInstallBatch(ctx: ComposeContext, batch: FacetBatch): Promis
 
   try {
     for (const [diamondName, references] of Object.entries(batch.diamonds)) {
-      const diamond = diamonds[diamondName];
-      if (!diamond) throw new Error(`Diamond '${diamondName}' is not defined in compose.json.`);
+      const diamond = getDiamondOrThrow(diamonds, diamondName);
       const resolved: ResolvedFacetInstall[] = [];
       for (const reference of references as FacetInstallReference[]) {
         resolved.push(await resolveFacetInstallReference(reference, catalog, project.root));
@@ -261,9 +272,8 @@ async function applyInstallBatch(ctx: ComposeContext, batch: FacetBatch): Promis
       allCreatedFiles.push(...copied.createdFiles);
       const installedNames: string[] = [];
       for (const facet of copied.facets) {
-        const existing = diamond.facets[facet.name];
-        if (existing) {
-          if (!sameRegistration(existing, facet.registration)) {
+        if (Object.hasOwn(diamond.facets, facet.name)) {
+          if (!sameRegistration(diamond.facets[facet.name], facet.registration)) {
             throw new Error(`Facet '${facet.name}' is already registered to a different source in '${diamondName}'.`);
           }
           continue;
@@ -306,16 +316,15 @@ async function applyInstallBatch(ctx: ComposeContext, batch: FacetBatch): Promis
 async function applyRemoveBatch(ctx: ComposeContext, batch: FacetBatch): Promise<ComposeContext> {
   const project = await loadComposeProject(ctx);
   const projectConfig = structuredClone(project.config) as Record<string, unknown>;
-  const diamonds = projectConfig.diamonds as Record<string, { contract: string; facets: Record<string, unknown> }>;
+  const diamonds = projectConfig.diamonds as Record<string, MutableDiamondConfig>;
   const changes: FacetMutationResult["diamondChanges"] = [];
   let changed = false;
 
   for (const [diamondName, facetNames] of Object.entries(batch.diamonds)) {
-    const diamond = diamonds[diamondName];
-    if (!diamond) throw new Error(`Diamond '${diamondName}' is not defined in compose.json.`);
+    const diamond = getDiamondOrThrow(diamonds, diamondName);
     const removed: string[] = [];
     for (const facetName of facetNames as string[]) {
-      if (!(facetName in diamond.facets)) {
+      if (!Object.hasOwn(diamond.facets, facetName)) {
         console.warn(yellow(`Facet '${facetName}' is not registered on '${diamondName}'; skipping.`));
         continue;
       }
