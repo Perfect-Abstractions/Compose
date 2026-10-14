@@ -8,7 +8,7 @@ import type { BasesCatalog } from "../config/types";
 import { ValidationModule } from "../validation/module";
 import { loadValidationProject } from "../validation/project";
 import { loadPrompts, checkboxTheme, selectTheme } from "../../utils/inquirer";
-import { atomicWriteFile, pathExists } from "../../utils/files";
+import { atomicWriteFile, pathExists, toPosixPath } from "../../utils/files";
 import { dim, yellow } from "../../utils/terminal";
 import type { IFrameworkAdapter } from "../../adapters/IFrameworkAdapter/interface";
 import type { IHashingAdapter } from "../../adapters/IHashingAdapter/interface";
@@ -105,37 +105,55 @@ async function selectDiamond(ctx: ComposeContext, names: string[], operation: st
   });
 }
 
+/** Shared selection skeleton: explicit arguments win, otherwise one multi-select prompt. */
+async function selectFacetNames(
+  ctx: ComposeContext,
+  options: {
+    promptMessage: string;
+    withoutArgumentsMessage: string;
+    choices: () => Promise<string[]>;
+  },
+): Promise<string[]> {
+  if (Array.isArray(ctx.param.facets) && ctx.param.facets.length > 0) {
+    return ctx.param.facets.filter((facet): facet is string => typeof facet === "string");
+  }
+  if (!isInteractive()) throw new Error(options.withoutArgumentsMessage);
+
+  const names = await options.choices();
+  const { checkbox } = await loadPrompts();
+  const selected = await checkbox({
+    message: options.promptMessage,
+    choices: names.map((name) => ({ name, value: name })),
+    theme: checkboxTheme,
+  });
+  if (selected.length === 0) throw new Error("No facets selected.");
+  return selected;
+}
+
 async function selectInstallReferences(
   ctx: ComposeContext,
   catalog: BasesCatalog,
   diamondName: string,
   registeredFacetNames: Iterable<string>,
 ): Promise<string[]> {
-  if (Array.isArray(ctx.param.facets) && ctx.param.facets.length > 0) {
-    return ctx.param.facets.filter((facet): facet is string => typeof facet === "string");
-  }
-  if (!isInteractive()) {
-    throw new Error("Provide facet names or path.sol:Contract references, or use --manifest.");
-  }
-  const registeredNames = [...registeredFacetNames];
-  const registered = new Set(registeredNames);
-  const registeredCatalogFacets = listCatalogFacetNames(catalog)
-    .filter((name) => registered.has(name));
-  if (registeredCatalogFacets.length > 0) {
-    console.log(dim(`Already registered on ${diamondName}: ${registeredCatalogFacets.join(", ")}`));
-  }
-  const availableFacetNames = listAvailableCatalogFacetNames(catalog, registeredNames);
-  if (availableFacetNames.length === 0) {
-    throw new Error(`All selectable catalog facets are already registered on '${diamondName}'. Use a local path reference to add a custom facet.`);
-  }
-  const { checkbox } = await loadPrompts();
-  const selected = await checkbox({
-    message: "Select facets to register:",
-    choices: availableFacetNames.map((name) => ({ name, value: name })),
-    theme: checkboxTheme,
+  return selectFacetNames(ctx, {
+    promptMessage: "Select facets to register:",
+    withoutArgumentsMessage: "Provide facet names or path.sol:Contract references, or use --manifest.",
+    choices: async () => {
+      const registeredNames = [...registeredFacetNames];
+      const registered = new Set(registeredNames);
+      const registeredCatalogFacets = listCatalogFacetNames(catalog)
+        .filter((name) => registered.has(name));
+      if (registeredCatalogFacets.length > 0) {
+        console.log(dim(`Already registered on ${diamondName}: ${registeredCatalogFacets.join(", ")}`));
+      }
+      const availableFacetNames = listAvailableCatalogFacetNames(catalog, registeredNames);
+      if (availableFacetNames.length === 0) {
+        throw new Error(`All selectable catalog facets are already registered on '${diamondName}'. Use a local path reference to add a custom facet.`);
+      }
+      return availableFacetNames;
+    },
   });
-  if (selected.length === 0) throw new Error("No facets selected.");
-  return selected;
 }
 
 async function selectRemoveFacetNames(
@@ -143,21 +161,15 @@ async function selectRemoveFacetNames(
   diamondName: string,
   configuredFacets: Record<string, unknown>,
 ): Promise<string[]> {
-  if (Array.isArray(ctx.param.facets) && ctx.param.facets.length > 0) {
-    return ctx.param.facets.filter((facet): facet is string => typeof facet === "string");
-  }
-  if (!isInteractive()) throw new Error("Provide facet names to remove, or use --manifest.");
-
-  const names = Object.keys(configuredFacets);
-  if (names.length === 0) throw new Error(`Diamond '${diamondName}' has no registered facets.`);
-  const { checkbox } = await loadPrompts();
-  const selected = await checkbox({
-    message: `Select facets to unregister from ${diamondName}:`,
-    choices: names.map((name) => ({ name, value: name })),
-    theme: checkboxTheme,
+  return selectFacetNames(ctx, {
+    promptMessage: `Select facets to unregister from ${diamondName}:`,
+    withoutArgumentsMessage: "Provide facet names to remove, or use --manifest.",
+    choices: async () => {
+      const names = Object.keys(configuredFacets);
+      if (names.length === 0) throw new Error(`Diamond '${diamondName}' has no registered facets.`);
+      return names;
+    },
   });
-  if (selected.length === 0) throw new Error("No facets selected.");
-  return selected;
 }
 
 async function createManifest(
@@ -249,31 +261,98 @@ async function validateCandidateConfig(
   return ctx;
 }
 
+/** Per-operation steps for {@link applyBatch}: what differs, nothing else. */
+type FacetBatchMutation = {
+  operation: FacetBatchOperation;
+  editDiamond(options: {
+    diamondName: string;
+    diamond: MutableDiamondConfig;
+    entries: unknown;
+    stagedFiles: string[];
+  }): Promise<{ facets: string[]; changed: boolean }>;
+  revert?(options: { stagedFiles: string[] }): Promise<void>;
+};
+
+/**
+ * Shared write recipe: clone, edit every batch diamond, validate the candidate,
+ * then write once. Nothing here is specific to installing or removing.
+ */
+async function applyBatch(
+  ctx: ComposeContext,
+  project: LoadedComposeProject,
+  batch: FacetBatch,
+  mutation: FacetBatchMutation,
+): Promise<ComposeContext> {
+  const projectConfig = structuredClone(project.config) as Record<string, unknown>;
+  const diamonds = projectConfig.diamonds as Record<string, MutableDiamondConfig>;
+  const changes: FacetMutationResult["diamondChanges"] = [];
+  const stagedFiles: string[] = [];
+  let changed = false;
+  let committed = false;
+
+  try {
+    for (const [diamondName, entries] of Object.entries(batch.diamonds)) {
+      const edit = await mutation.editDiamond({
+        diamondName,
+        diamond: getDiamondOrThrow(diamonds, diamondName),
+        entries,
+        stagedFiles,
+      });
+      changed = changed || edit.changed;
+      changes.push({ diamond: diamondName, facets: edit.facets });
+    }
+
+    // Staged sources are as unverified as a registration change, and only install stages.
+    if (changed || stagedFiles.length > 0) {
+      ctx = await validateCandidateConfig(ctx, projectConfig);
+    }
+    if (changed) {
+      await writeComposeProject(project, projectConfig as typeof project.config);
+      ctx.config.composeJson = projectConfig;
+    }
+    committed = true;
+  } catch (error) {
+    if (!committed && mutation.revert) {
+      await mutation.revert({ stagedFiles });
+    }
+    throw error;
+  }
+
+  const result: FacetMutationResult = {
+    operation: mutation.operation,
+    projectRoot: project.root,
+    composeJsonPath: project.path,
+    diamondChanges: changes,
+    changed,
+    ...(stagedFiles.length > 0
+      ? { materializedFiles: stagedFiles.map((filePath) => toPosixPath(path.relative(project.root, filePath))) }
+      : {}),
+  };
+  ctx.state.facetMutation = { success: true, result, error: null };
+  showFacetMutation(result);
+  return ctx;
+}
+
 async function applyInstallBatch(
   ctx: ComposeContext,
   project: LoadedComposeProject,
   batch: FacetBatch,
 ): Promise<ComposeContext> {
-  const projectConfig = structuredClone(project.config) as Record<string, unknown>;
-  const diamonds = projectConfig.diamonds as Record<string, MutableDiamondConfig>;
   const { adapter } = await resolveFrameworkAdapter(ctx);
   const contractSourceRoot = adapter.getContractSourceRoot(project.root);
   const catalog = ctx.config.bases as BasesCatalog;
-  const changes: FacetMutationResult["diamondChanges"] = [];
-  const allCreatedFiles: string[] = [];
-  let changed = false;
-  let committed = false;
 
-  try {
-    for (const [diamondName, references] of Object.entries(batch.diamonds)) {
-      const diamond = getDiamondOrThrow(diamonds, diamondName);
+  return applyBatch(ctx, project, batch, {
+    operation: "install",
+    editDiamond: async ({ diamondName, diamond, entries, stagedFiles }) => {
       const resolved: ResolvedFacetInstall[] = [];
-      for (const reference of references as FacetInstallReference[]) {
+      for (const reference of entries as FacetInstallReference[]) {
         resolved.push(await resolveFacetInstallReference(reference, catalog, project.root));
       }
 
       const copied = await copyCatalogFacetSources(resolved, project.root, contractSourceRoot);
-      allCreatedFiles.push(...copied.createdFiles);
+      stagedFiles.push(...copied.createdFiles);
+
       const installedNames: string[] = [];
       for (const facet of copied.facets) {
         if (Object.hasOwn(diamond.facets, facet.name)) {
@@ -284,37 +363,13 @@ async function applyInstallBatch(
         }
         diamond.facets[facet.name] = facet.registration;
         installedNames.push(facet.name);
-        changed = true;
       }
-      changes.push({ diamond: diamondName, facets: installedNames });
-    }
-
-    if (changed || allCreatedFiles.length > 0) {
-      ctx = await validateCandidateConfig(ctx, projectConfig);
-    }
-    if (changed) {
-      await writeComposeProject(project, projectConfig as typeof project.config);
-      ctx.config.composeJson = projectConfig;
-    }
-    committed = true;
-
-    const result: FacetMutationResult = {
-      operation: "install",
-      projectRoot: project.root,
-      composeJsonPath: project.path,
-      diamondChanges: changes,
-      changed,
-      materializedFiles: allCreatedFiles.map((filePath) => path.relative(project.root, filePath).replace(/\\/g, "/")),
-    };
-    ctx.state.facetMutation = { success: true, result, error: null };
-    showFacetMutation(result);
-    return ctx;
-  } catch (error) {
-    if (!committed) {
-      await Promise.all(allCreatedFiles.map((filePath) => fs.rm(filePath, { force: true })));
-    }
-    throw error;
-  }
+      return { facets: installedNames, changed: installedNames.length > 0 };
+    },
+    revert: async ({ stagedFiles }) => {
+      await Promise.all(stagedFiles.map((filePath) => fs.rm(filePath, { force: true })));
+    },
+  });
 }
 
 async function applyRemoveBatch(
@@ -322,45 +377,24 @@ async function applyRemoveBatch(
   project: LoadedComposeProject,
   batch: FacetBatch,
 ): Promise<ComposeContext> {
-  const projectConfig = structuredClone(project.config) as Record<string, unknown>;
-  const diamonds = projectConfig.diamonds as Record<string, MutableDiamondConfig>;
-  const changes: FacetMutationResult["diamondChanges"] = [];
-  let changed = false;
-
-  for (const [diamondName, facetNames] of Object.entries(batch.diamonds)) {
-    const diamond = getDiamondOrThrow(diamonds, diamondName);
-    const removed: string[] = [];
-    for (const facetName of facetNames as string[]) {
-      if (!Object.hasOwn(diamond.facets, facetName)) {
-        console.warn(yellow(`Facet '${facetName}' is not registered on '${diamondName}'; skipping.`));
-        continue;
-      }
-      delete diamond.facets[facetName];
-      removed.push(facetName);
-      changed = true;
-    }
-    if (Object.keys(diamond.facets).length === 0) {
-      throw new Error(`Cannot remove every registered facet from '${diamondName}'.`);
-    }
-    changes.push({ diamond: diamondName, facets: removed });
-  }
-
-  if (changed) {
-    await validateCandidateConfig(ctx, projectConfig);
-    await writeComposeProject(project, projectConfig as typeof project.config);
-    ctx.config.composeJson = projectConfig;
-  }
-
-  const result: FacetMutationResult = {
+  return applyBatch(ctx, project, batch, {
     operation: "remove",
-    projectRoot: project.root,
-    composeJsonPath: project.path,
-    diamondChanges: changes,
-    changed,
-  };
-  ctx.state.facetMutation = { success: true, result, error: null };
-  showFacetMutation(result);
-  return ctx;
+    editDiamond: async ({ diamondName, diamond, entries }) => {
+      const removed: string[] = [];
+      for (const facetName of entries as string[]) {
+        if (!Object.hasOwn(diamond.facets, facetName)) {
+          console.warn(yellow(`Facet '${facetName}' is not registered on '${diamondName}'; skipping.`));
+          continue;
+        }
+        delete diamond.facets[facetName];
+        removed.push(facetName);
+      }
+      if (Object.keys(diamond.facets).length === 0) {
+        throw new Error(`Cannot remove every registered facet from '${diamondName}'.`);
+      }
+      return { facets: removed, changed: removed.length > 0 };
+    },
+  });
 }
 
 async function resolveFrameworkAdapter(ctx: ComposeContext): Promise<{
