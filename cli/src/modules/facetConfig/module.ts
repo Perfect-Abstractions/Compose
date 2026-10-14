@@ -27,6 +27,7 @@ import {
   resolveFacetInstallReference,
 } from "./facetResolver";
 import { loadComposeProject, writeComposeProject } from "./projectConfig";
+import type { LoadedComposeProject } from "./projectConfig";
 import { showFacetManifestCreated, showFacetMutation } from "./output";
 import type {
   FacetBatch,
@@ -161,11 +162,12 @@ async function selectRemoveFacetNames(
 
 async function createManifest(
   ctx: ComposeContext,
+  project: LoadedComposeProject,
   operation: FacetBatchOperation,
   diamondName: string,
   references: Array<string | FacetInstallReference>,
 ): Promise<ComposeContext> {
-  const projectRoot = String(ctx.param.projectRoot);
+  const projectRoot = project.root;
   const manifestName = String(ctx.param.createManifest ?? "").trim();
   if (!manifestName) throw new Error("Provide a manifest name with --create-manifest <name>.");
 
@@ -183,11 +185,10 @@ async function createManifest(
     : createRemoveFacetBatch({ [diamondName]: references as string[] });
   await atomicWriteFile(manifestPath, serializeFacetBatch(batch));
 
-  const projectConfigState = moduleState<{ path: string }>(ctx, "facetProjectConfig");
   const result: FacetMutationResult = {
     operation,
     projectRoot,
-    composeJsonPath: projectConfigState?.result?.path ?? "",
+    composeJsonPath: project.path,
     diamondChanges: [{
       diamond: diamondName,
       facets: references.map((reference) =>
@@ -248,8 +249,11 @@ async function validateCandidateConfig(
   return ctx;
 }
 
-async function applyInstallBatch(ctx: ComposeContext, batch: FacetBatch): Promise<ComposeContext> {
-  const project = await loadComposeProject(ctx);
+async function applyInstallBatch(
+  ctx: ComposeContext,
+  project: LoadedComposeProject,
+  batch: FacetBatch,
+): Promise<ComposeContext> {
   const projectConfig = structuredClone(project.config) as Record<string, unknown>;
   const diamonds = projectConfig.diamonds as Record<string, MutableDiamondConfig>;
   const { adapter } = await resolveFrameworkAdapter(ctx);
@@ -313,8 +317,11 @@ async function applyInstallBatch(ctx: ComposeContext, batch: FacetBatch): Promis
   }
 }
 
-async function applyRemoveBatch(ctx: ComposeContext, batch: FacetBatch): Promise<ComposeContext> {
-  const project = await loadComposeProject(ctx);
+async function applyRemoveBatch(
+  ctx: ComposeContext,
+  project: LoadedComposeProject,
+  batch: FacetBatch,
+): Promise<ComposeContext> {
   const projectConfig = structuredClone(project.config) as Record<string, unknown>;
   const diamonds = projectConfig.diamonds as Record<string, MutableDiamondConfig>;
   const changes: FacetMutationResult["diamondChanges"] = [];
@@ -402,17 +409,18 @@ export const FacetConfigModule = {
           const diamond = project.config.diamonds[selectedDiamond as string];
           const references = await selectInstallReferences(ctx, catalog, selectedDiamond as string, Object.keys(diamond.facets));
           const normalized = await normalizeInstallManifestReferences(references, catalog, project.root);
-          return createManifest(ctx, operation, selectedDiamond as string, normalized);
+          return createManifest(ctx, project, operation, selectedDiamond as string, normalized);
         }
         if (ctx.param.manifest) {
           const manifestPath = await resolveExistingFacetBatchPath(project.root, String(ctx.param.manifest));
           const batch = await readFacetBatch(manifestPath, "install");
-          return applyInstallBatch(ctx, batch);
+          return applyInstallBatch(ctx, project, batch);
         }
         const diamond = project.config.diamonds[selectedDiamond as string];
         const references = await selectInstallReferences(ctx, catalog, selectedDiamond as string, Object.keys(diamond.facets));
         return applyInstallBatch(
           ctx,
+          project,
           createInstallFacetBatch({ [selectedDiamond as string]: references.map(catalogManifestReference) }),
         );
       }
@@ -423,14 +431,14 @@ export const FacetConfigModule = {
           selectedDiamond as string,
           project.config.diamonds[selectedDiamond as string].facets,
         );
-        return createManifest(ctx, operation, selectedDiamond as string, refs);
+        return createManifest(ctx, project, operation, selectedDiamond as string, refs);
       }
       if (ctx.param.manifest) {
         const manifestPath = await resolveExistingFacetBatchPath(project.root, String(ctx.param.manifest));
         const batch = await readFacetBatch(manifestPath, "remove");
         const facetNames = Object.values(batch.diamonds).flat() as string[];
         await confirmRemoval(ctx, facetNames);
-        return applyRemoveBatch(ctx, batch);
+        return applyRemoveBatch(ctx, project, batch);
       }
 
       const targetDiamond = selectedDiamond as string;
@@ -441,7 +449,7 @@ export const FacetConfigModule = {
       );
       await confirmRemoval(ctx, refs);
       const batch = createRemoveFacetBatch({ [targetDiamond]: refs });
-      return applyRemoveBatch(ctx, batch);
+      return applyRemoveBatch(ctx, project, batch);
     } catch (error) {
       markFailure(ctx, `facet${operation === "install" ? "Install" : "Remove"}`, error);
       throw error;
