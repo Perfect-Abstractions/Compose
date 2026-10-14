@@ -27,7 +27,7 @@ export const BuildPipeline = {
       throw new Error(`${framework} adapter was not resolved.`);
     }
 
-    await CompileModule.compileIfNeeded(projectRoot, adapter);
+    await CompileModule.compileProject(projectRoot, adapter);
 
     return ctx;
   },
