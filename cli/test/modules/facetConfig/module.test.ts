@@ -382,6 +382,58 @@ describe("FacetConfigModule", () => {
     await expect(fs.access(path.join(project.root, "src", "facets", "CounterIncrementFacet.sol"))).resolves.toBeUndefined();
   });
 
+  it("preserves nested import paths when copying catalog-local facets", async () => {
+    const project = await createProject();
+    mockValidationDependencies();
+    const templateRoot = path.join(project.root, "catalog", "import-review");
+    await fs.mkdir(path.join(templateRoot, "libraries"), { recursive: true });
+    await fs.mkdir(path.join(templateRoot, "mods"), { recursive: true });
+    await fs.writeFile(
+      path.join(templateRoot, "NestedImportFacet.sol"),
+      [
+        'import {LibFee} from "./libraries/LibFee.sol";',
+        'import {calculateReviewFee} from "./mods/FeeMod.sol";',
+        "contract NestedImportFacet {}",
+        "",
+      ].join("\n"),
+      "utf8",
+    );
+    await fs.writeFile(path.join(templateRoot, "libraries", "LibFee.sol"), "library LibFee {}\n", "utf8");
+    await fs.writeFile(
+      path.join(templateRoot, "mods", "FeeMod.sol"),
+      "function calculateReviewFee() pure returns (uint256) { return 1; }\n",
+      "utf8",
+    );
+    vi.spyOn(ConfigModule, "loadBasesCatalog").mockImplementation(async (ctx) => {
+      ctx.config.bases = {
+        globals: {},
+        features: {
+          "import-review": {
+            label: "Import Review",
+            required: {},
+            optional: {
+              NestedImportFacet: {
+                path: path.join(templateRoot, "NestedImportFacet.sol"),
+              },
+            },
+          },
+        },
+      } satisfies BasesCatalog;
+      return ctx;
+    });
+    project.ctx.param.facets = ["NestedImportFacet"];
+
+    await FacetConfigModule.execute(project.ctx, "install");
+
+    const config = await project.readConfig();
+    const diamonds = config.diamonds as Record<string, { facets: Record<string, { contract: string }> }>;
+    expect(diamonds.TestDiamond.facets.NestedImportFacet.contract)
+      .toBe("src/facets/NestedImportFacet.sol:NestedImportFacet");
+    await expect(fs.access(path.join(project.root, "src", "facets", "NestedImportFacet.sol"))).resolves.toBeUndefined();
+    await expect(fs.access(path.join(project.root, "src", "facets", "libraries", "LibFee.sol"))).resolves.toBeUndefined();
+    await expect(fs.access(path.join(project.root, "src", "facets", "mods", "FeeMod.sol"))).resolves.toBeUndefined();
+  });
+
   it("removes staged catalog source files when candidate validation fails", async () => {
     const project = await createProject();
     const adapter = mockValidationDependencies();

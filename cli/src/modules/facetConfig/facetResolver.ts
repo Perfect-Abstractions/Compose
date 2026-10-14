@@ -4,6 +4,7 @@ import path from "node:path";
 import type { BasesCatalog, FacetEntry } from "../config/types";
 import {
   parsePackageName,
+  planImportClosureTargets,
   resolveLocalSolidityImportClosure,
   toPosixPath,
 } from "../../utils/files";
@@ -246,25 +247,15 @@ export async function copyCatalogFacetSources(
       `${facet.contractName ?? facet.name}.sol`,
     ),
   }));
-  const sourceToSeed = new Map(seeds.map((seed) => [path.resolve(seed.source), seed]));
+
+  const closure = await resolveLocalSolidityImportClosure(seeds.map((seed) => seed.source));
   const copyTargets = new Map<string, string>();
-
-  for (const source of await resolveLocalSolidityImportClosure(seeds.map((seed) => seed.source))) {
-    const resolvedSource = path.resolve(source);
-    let target = sourceToSeed.get(resolvedSource)?.target;
-    if (!target) {
-      const parent = seeds.find((seed) => {
-        const relative = path.relative(path.dirname(seed.source), resolvedSource);
-        return relative !== ".." && !relative.startsWith(`..${path.sep}`) && !path.isAbsolute(relative);
-      });
-      target = path.join(parent ? path.dirname(parent.target) : contractSourceRoot, path.basename(source));
-    }
-
-    const existingSource = copyTargets.get(path.resolve(target));
-    if (existingSource && existingSource !== resolvedSource) {
+  for (const [source, target] of planImportClosureTargets(seeds, closure, contractSourceRoot)) {
+    const existingSource = copyTargets.get(target);
+    if (existingSource && existingSource !== source) {
       throw new Error(`Multiple catalog files would be copied to ${target}.`);
     }
-    copyTargets.set(path.resolve(target), resolvedSource);
+    copyTargets.set(target, source);
   }
 
   for (const [target, source] of copyTargets) {

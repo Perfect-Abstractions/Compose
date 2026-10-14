@@ -3,7 +3,7 @@ import path from "node:path";
 import { IFrameworkAdapter } from "../../adapters/IFrameworkAdapter/interface";
 import { ComposeContext, ModuleState } from "../../context/types";
 import { VERSION } from "../../utils/metadata";
-import { copyFileIfMissing, parsePackageName, resolveLocalSolidityImportClosure, toPosixPath } from "../../utils/files";
+import { copyFileIfMissing, parsePackageName, planImportClosureTargets, resolveLocalSolidityImportClosure, toPosixPath } from "../../utils/files";
 import { extractSolidityContractBody, parseExportedSelectorSignatures, parseSolidityFunctions } from "../../utils/solidityText";
 import { contractNameFromSourcePath, isComposePackagePath, resolveCatalogSourceForRead } from "../../utils/soliditySources";
 import { SeedFile, FacetScanResult, ScaffoldMapEntry } from "./types";
@@ -61,22 +61,9 @@ export const ScaffoldingModule = {
 
     const seedSources = allSeeds.map((x) => x.source);
     const closure = await resolveLocalSolidityImportClosure(seedSources);
-
-    const sourceToTarget = new Map<string, string>();
-    for (const seed of allSeeds) {
-      sourceToTarget.set(path.resolve(seed.source), seed.target);
-    }
-
-    for (const file of closure) {
-      const directTarget = sourceToTarget.get(path.resolve(file));
-      if (directTarget) {
-        await copyFileIfMissing(file, directTarget);
-        continue;
-      }
-
-      const parentSeed = allSeeds.find((seed) => file.startsWith(path.dirname(path.resolve(seed.source))));
-      const baseTargetDir = parentSeed ? path.dirname(parentSeed.target) : contractSourceRoot;
-      await copyFileIfMissing(file, path.join(baseTargetDir, path.basename(file)));
+    const plannedTargets = planImportClosureTargets(allSeeds, closure, contractSourceRoot);
+    for (const [source, target] of plannedTargets) {
+      await copyFileIfMissing(source, target);
     }
 
     const localTargetByFacetName = new Map(localFacets.map((facet, index) => [facet.name, allSeeds[index].target]));
