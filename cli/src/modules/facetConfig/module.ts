@@ -76,16 +76,6 @@ function getDiamondOrThrow(
   return diamonds[diamondName];
 }
 
-function markFailure(ctx: ComposeContext, failedAt: string, error: unknown): void {
-  const message = error instanceof Error ? error.message : String(error);
-  ctx.status = {
-    success: false,
-    stopped: true,
-    failedAt,
-    error: { code: "FACET_CONFIG_FAILED", message, nativeError: error },
-  };
-}
-
 async function selectDiamond(ctx: ComposeContext, names: string[], operation: string): Promise<string> {
   if (typeof ctx.param.diamond === "string" && ctx.param.diamond.trim()) {
     if (!names.includes(ctx.param.diamond)) {
@@ -203,18 +193,14 @@ async function createManifest(
     composeJsonPath: project.path,
     diamondChanges: [{
       diamond: diamondName,
+      // Install reaches this with resolved references; remove with plain names.
       facets: references.map((reference) =>
-        typeof reference === "string"
-          ? operation === "install" && reference.includes(":")
-            ? reference.slice(reference.lastIndexOf(":") + 1)
-            : reference
-          : reference.name,
+        typeof reference === "string" ? reference : reference.name,
       ),
     }],
     changed: false,
     manifestPath,
   };
-  ctx.state.facetManifest = { success: true, result, error: null };
   showFacetManifestCreated(result);
   return ctx;
 }
@@ -419,74 +405,69 @@ async function confirmRemoval(ctx: ComposeContext, names: string[]): Promise<voi
 
 export const FacetConfigModule = {
   async execute(ctx: ComposeContext, operation: FacetBatchOperation): Promise<ComposeContext> {
-    try {
-      if (ctx.param.manifest && ctx.param.createManifest) {
-        throw new Error("Use either --manifest or --create-manifest, not both.");
-      }
-      if (ctx.param.manifest && Array.isArray(ctx.param.facets) && ctx.param.facets.length > 0) {
-        throw new Error("Use either facet arguments or --manifest, not both.");
-      }
-      const project = await loadComposeProject(ctx);
-      const names = Object.keys(project.config.diamonds);
-      const selectedDiamond = ctx.param.manifest
-        ? undefined
-        : await selectDiamond(ctx, names, operation === "install" ? "install facets into" : "remove facets from");
+    if (ctx.param.manifest && ctx.param.createManifest) {
+      throw new Error("Use either --manifest or --create-manifest, not both.");
+    }
+    if (ctx.param.manifest && Array.isArray(ctx.param.facets) && ctx.param.facets.length > 0) {
+      throw new Error("Use either facet arguments or --manifest, not both.");
+    }
+    const project = await loadComposeProject(ctx);
+    const names = Object.keys(project.config.diamonds);
+    const selectedDiamond = ctx.param.manifest
+      ? undefined
+      : await selectDiamond(ctx, names, operation === "install" ? "install facets into" : "remove facets from");
 
-      if (ctx.param.manifest && ctx.param.diamond) {
-        throw new Error("The diamond is defined by the manifest; omit --diamond when using --manifest.");
-      }
+    if (ctx.param.manifest && ctx.param.diamond) {
+      throw new Error("The diamond is defined by the manifest; omit --diamond when using --manifest.");
+    }
 
-      if (operation === "install") {
-        ctx = await ConfigModule.loadBasesCatalog(ctx);
-        const catalog = ctx.config.bases as BasesCatalog;
-        if (ctx.param.createManifest) {
-          const diamond = project.config.diamonds[selectedDiamond as string];
-          const references = await selectInstallReferences(ctx, catalog, selectedDiamond as string, Object.keys(diamond.facets));
-          const normalized = await normalizeInstallManifestReferences(references, catalog, project.root);
-          return createManifest(ctx, project, operation, selectedDiamond as string, normalized);
-        }
-        if (ctx.param.manifest) {
-          const manifestPath = await resolveExistingFacetBatchPath(project.root, String(ctx.param.manifest));
-          const batch = await readFacetBatch(manifestPath, "install");
-          return applyInstallBatch(ctx, project, batch);
-        }
+    if (operation === "install") {
+      ctx = await ConfigModule.loadBasesCatalog(ctx);
+      const catalog = ctx.config.bases as BasesCatalog;
+      if (ctx.param.createManifest) {
         const diamond = project.config.diamonds[selectedDiamond as string];
         const references = await selectInstallReferences(ctx, catalog, selectedDiamond as string, Object.keys(diamond.facets));
-        return applyInstallBatch(
-          ctx,
-          project,
-          createInstallFacetBatch({ [selectedDiamond as string]: references.map(catalogManifestReference) }),
-        );
-      }
-
-      if (ctx.param.createManifest) {
-        const refs = await selectRemoveFacetNames(
-          ctx,
-          selectedDiamond as string,
-          project.config.diamonds[selectedDiamond as string].facets,
-        );
-        return createManifest(ctx, project, operation, selectedDiamond as string, refs);
+        const normalized = await normalizeInstallManifestReferences(references, catalog, project.root);
+        return createManifest(ctx, project, operation, selectedDiamond as string, normalized);
       }
       if (ctx.param.manifest) {
         const manifestPath = await resolveExistingFacetBatchPath(project.root, String(ctx.param.manifest));
-        const batch = await readFacetBatch(manifestPath, "remove");
-        const facetNames = Object.values(batch.diamonds).flat() as string[];
-        await confirmRemoval(ctx, facetNames);
-        return applyRemoveBatch(ctx, project, batch);
+        const batch = await readFacetBatch(manifestPath, "install");
+        return applyInstallBatch(ctx, project, batch);
       }
+      const diamond = project.config.diamonds[selectedDiamond as string];
+      const references = await selectInstallReferences(ctx, catalog, selectedDiamond as string, Object.keys(diamond.facets));
+      return applyInstallBatch(
+        ctx,
+        project,
+        createInstallFacetBatch({ [selectedDiamond as string]: references.map(catalogManifestReference) }),
+      );
+    }
 
-      const targetDiamond = selectedDiamond as string;
+    if (ctx.param.createManifest) {
       const refs = await selectRemoveFacetNames(
         ctx,
-        targetDiamond,
-        project.config.diamonds[targetDiamond].facets,
+        selectedDiamond as string,
+        project.config.diamonds[selectedDiamond as string].facets,
       );
-      await confirmRemoval(ctx, refs);
-      const batch = createRemoveFacetBatch({ [targetDiamond]: refs });
-      return applyRemoveBatch(ctx, project, batch);
-    } catch (error) {
-      markFailure(ctx, `facet${operation === "install" ? "Install" : "Remove"}`, error);
-      throw error;
+      return createManifest(ctx, project, operation, selectedDiamond as string, refs);
     }
+    if (ctx.param.manifest) {
+      const manifestPath = await resolveExistingFacetBatchPath(project.root, String(ctx.param.manifest));
+      const batch = await readFacetBatch(manifestPath, "remove");
+      const facetNames = Object.values(batch.diamonds).flat() as string[];
+      await confirmRemoval(ctx, facetNames);
+      return applyRemoveBatch(ctx, project, batch);
+    }
+
+    const targetDiamond = selectedDiamond as string;
+    const refs = await selectRemoveFacetNames(
+      ctx,
+      targetDiamond,
+      project.config.diamonds[targetDiamond].facets,
+    );
+    await confirmRemoval(ctx, refs);
+    const batch = createRemoveFacetBatch({ [targetDiamond]: refs });
+    return applyRemoveBatch(ctx, project, batch);
   },
 };
