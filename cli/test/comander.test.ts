@@ -110,3 +110,12 @@ describe("inspect command", () => {
     });
   });
 });
+
+describe("history command", () => {
+  it("parses the diamond address and chain", () => {
+    expect(parseArgs(["node", "compose", "history", "0x0000000000000000000000000000000000000001", "--chain", "sepolia"])).toEqual({
+      command: "history",
+      flags: { address: "0x0000000000000000000000000000000000000001", chain: "sepolia" },
+    });
+  });
+});

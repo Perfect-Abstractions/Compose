@@ -1,4 +1,4 @@
-import type { Address, Abi, Hex } from "viem";
+import type { Address, Abi, AbiEvent, Hex, Log } from "viem";
 import type { ReadContractParameters } from "viem";
 
 /** Optional behavior for a contract read. */
@@ -20,4 +20,10 @@ export interface IRPCAdapter {
 
   /** Return deployed bytecode, or undefined when the account has no code. */
   getCode(address: Address, blockNumber?: bigint): Promise<Hex | undefined>;
+
+  /** Return logs emitted by an address in an inclusive block range, filtered by event ABI. */
+  getLogs(address: Address, events: readonly AbiEvent[], fromBlock: bigint, toBlock: bigint): Promise<Log[]>;
+
+  /** Return the timestamp of a historical block, in Unix seconds. */
+  getBlockTimestamp(blockNumber: bigint): Promise<bigint>;
 }

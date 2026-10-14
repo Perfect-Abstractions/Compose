@@ -4,8 +4,10 @@ import {
   getAddress,
   http,
   type Address,
+  type AbiEvent,
   type Chain,
   type Hex,
+  type Log,
   type ReadContractParameters,
 } from "viem";
 import type { IRPCAdapter, RPCReadContractOptions } from "./interface";
@@ -83,6 +85,23 @@ export async function createRPCAdapter(options: RPCAdapterOptions): Promise<IRPC
     }
   }
 
+  async function getLogs(address: Address, events: readonly AbiEvent[], fromBlock: bigint, toBlock: bigint): Promise<Log[]> {
+    try {
+      return await retryRPC(() => client.getLogs({ address, events, fromBlock, toBlock }));
+    } catch (error) {
+      throw requestError("getLogs", options.chainId, error);
+    }
+  }
+
+  async function getBlockTimestamp(blockNumber: bigint): Promise<bigint> {
+    try {
+      const block = await retryRPC(() => client.getBlock({ blockNumber }));
+      return block.timestamp;
+    } catch (error) {
+      throw requestError("getBlock", options.chainId, error);
+    }
+  }
+
   /**
    * Reads and decodes a view/pure contract function through the configured RPC.
    * @param parameters Contract address, ABI, function name, and arguments.
@@ -118,5 +137,7 @@ export async function createRPCAdapter(options: RPCAdapterOptions): Promise<IRPC
     getBlockNumber,
     readContract,
     getCode,
+    getLogs,
+    getBlockTimestamp,
   };
 }
