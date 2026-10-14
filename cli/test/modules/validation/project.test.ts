@@ -202,4 +202,58 @@ describe("validation project loader", () => {
       await fs.rm(projectRoot, { recursive: true, force: true });
     }
   });
+  it("rejects package facet sources when both package roots contain a match", async () => {
+    const projectRoot = await fs.mkdtemp(path.join(os.tmpdir(), "compose-validation-package-ambiguous-"));
+    const packageSourcePath = path.join(
+      projectRoot,
+      "node_modules",
+      "@perfect-abstractions",
+      "compose",
+      "src",
+      "diamond",
+      "PackageFacet.sol",
+    );
+    const foundrySourcePath = path.join(
+      projectRoot,
+      "lib",
+      "Compose",
+      "src",
+      "diamond",
+      "PackageFacet.sol",
+    );
+    const ctx = Context.create();
+
+    try {
+      await fs.mkdir(path.dirname(packageSourcePath), { recursive: true });
+      await fs.mkdir(path.dirname(foundrySourcePath), { recursive: true });
+      await fs.writeFile(packageSourcePath, "contract PackageFacet {}", "utf8");
+      await fs.writeFile(foundrySourcePath, "contract PackageFacet {}", "utf8");
+      await fs.writeFile(
+        path.join(projectRoot, "compose.json"),
+        JSON.stringify({
+          framework: "foundry",
+          diamonds: {
+            Example: {
+              contract: "src/Diamond.sol:Diamond",
+              facets: {
+                PackageFacet: {
+                  source: "package",
+                  contract: "PackageFacet",
+                  package: "@perfect-abstractions/compose",
+                },
+              },
+            },
+          },
+        }),
+        "utf8",
+      );
+      ctx.param.projectRoot = projectRoot;
+
+      await expect(loadValidationProject(ctx)).rejects.toThrow(
+        /Package facet source is ambiguous: @perfect-abstractions\/compose\/PackageFacet\.sol/,
+      );
+    } finally {
+      await fs.rm(projectRoot, { recursive: true, force: true });
+    }
+  });
 });

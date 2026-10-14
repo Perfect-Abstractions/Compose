@@ -6,6 +6,7 @@ import {
   parseExportedSelectorSignatures,
   parseSolidityFunctions,
 } from "../../utils/solidityText";
+import { findPackageFacetSourceMatches } from "../../utils/packageFacetSources";
 import { ScaffoldingModule } from "../scaffolding/module";
 import { ComposeProjectInfo, DiamondInfo, FacetInfo } from "./types";
 
@@ -39,25 +40,11 @@ async function resolvePackageFacetPath(
   packageName: string,
   projectRoot: string,
 ): Promise<string | null> {
-  const candidates = [
-    path.join(projectRoot, "node_modules", packageName),
-    path.join(projectRoot, "lib", "Compose", "src"),
-  ];
-
-  for (const candidate of candidates) {
-    try {
-      const entries = await fs.readdir(candidate, { recursive: true, withFileTypes: true });
-      for (const entry of entries) {
-        if (entry.isFile() && entry.name === `${facetName}.sol`) {
-          return path.join(entry.parentPath ?? entry.path, entry.name);
-        }
-      }
-    } catch {
-      // Directory doesn't exist, continue
-    }
-  }
-
-  return null;
+  const matches = await findPackageFacetSourceMatches(projectRoot, packageName, facetName, {
+    ignoreReadErrors: true,
+    stopAfterFirstMatch: true,
+  });
+  return matches[0] ?? null;
 }
 
 /**
