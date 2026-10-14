@@ -1,3 +1,4 @@
+import path from "node:path";
 import { ComposeContext } from "../../context/types";
 import { cyan, dim, green, yellow } from "../../utils/terminal";
 import { COMPOSE_HEADER, COMPOSE_DOCS_URL } from "../../utils/metadata";
@@ -43,8 +44,9 @@ export function showSuccess(ctx: ComposeContext): void {
   console.log(green("Next steps:"));
 
   let stepCount = 1;
-  if (projectRoot !== process.cwd()) {
-    console.log(green(`${stepCount}.`) + ` cd ${projectName}`);
+  const projectPath = path.relative(process.cwd(), projectRoot);
+  if (projectPath) {
+    console.log(green(`${stepCount}.`) + ` cd "${projectPath}"`);
     stepCount++;
   }
 
