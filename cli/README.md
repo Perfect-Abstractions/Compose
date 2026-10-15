@@ -9,7 +9,7 @@ npx @perfect-abstractions/compose-cli init
 ```
 
 This starts an interactive flow to scaffold a new diamond project with:
-- Base preset selection (Counter, ERC-20, ERC-721, ERC-1155, ERC-6909)
+- Base preset selection (Counter, ERC-20, ERC-721, ERC-721 Enumerable, ERC-1155, ERC-6909)
 - Extension facet selection
 - Ownership and access control configuration
 - Compose library facet selection
@@ -18,20 +18,20 @@ This starts an interactive flow to scaffold a new diamond project with:
 ## Usage
 
 ```bash
-compose init [options]
+compose init [options] [project-name]
 compose install [facet-ref...] [options]
-compose remove [facet-name...] [options]
+compose remove [facet-ref...] [options]
 compose catalog
 compose info
-compose validate
+compose validate [options]
 compose build
 compose rpc [options]
 compose inspect <address> [options]
-compose --version | -v
+compose help [command]
+compose --version | -V
 compose --help | -h
 ```
-
-`compose install` also has the short alias `compose i`. `compose remove` also has the alias `compose rm`.
+```
 
 ### `compose init`
 
@@ -39,18 +39,20 @@ Scaffold a new Compose diamond project.
 
 **Options:**
 - `[project-name]`: directory name for the new project
-- `--framework <foundry|hardhat>`: target framework
+- `--framework <foundry|hardhat>`: target framework (default: foundry)
 - `--toolbox <ethers|viem>`: Hardhat toolbox (default: ethers)
-- `--base <base-id>`: base preset (counter, erc-20, erc-721, erc-1155, erc-6909)
-- `--ownership <none|owner|owner-two-step>`: ownership model
-- `--access-control <facets...>`: access control facets to include
-- `--libraries <facets...>`: Compose library facets to include
-- `--extensions <facets...>`: extension facets to include
+- `--base <base-id>`: base preset — `counter`, `erc-20`, `erc-721`, `erc-721-enumerable`, `erc-1155`, `erc-6909`, or `none` for a blank project
+- `--ownership <base>`: ownership base — `owner` or `owner-two-step`; omit the flag for no ownership
+- `--ownership-extensions <facets>`: comma-separated ownership extension facets
+- `--access-control <bases>`: comma-separated access control bases (for example `access-control`)
+- `--access-control-extensions <facets>`: comma-separated access control extension facets
+- `--libraries <facets>`: comma-separated Compose library facets
+- `--extensions <facets>`: comma-separated extension facets
 - `--out <dir>`: parent directory for the project (defaults to the current directory)
-- `--yes`: non-interactive mode with sensible defaults
+- `--yes`: non-interactive mode; requires `--base`
 - `--install-deps` / `--no-install-deps`: install or skip framework dependencies
 
-When `--yes` is not provided, `compose init` will prompt for any values you omit.
+Selection flags apply to `--yes` runs. Without `--yes`, only `[project-name]` and `--out` are honored and `compose init` prompts for the framework, toolbox, base, extensions, libraries, ownership, access control, and dependency installation.
 
 ### `compose catalog`
 
@@ -76,6 +78,9 @@ compose install ERC20BurnFacet DiamondUpgradeFacet --diamond my-token
 # Register a local facet (the source file must already be in the project)
 compose i src/facets/FeeFacet.sol:FeeFacet --diamond my-token
 
+# Register a local facet by contract name; the source file is located by fuzzy match
+compose i FeeFacet --diamond my-token
+
 # Create a reviewable batch file without applying it
 compose install --create-manifest add-fees --diamond my-token
 
@@ -90,7 +95,7 @@ compose install --manifest add-fees
 - `--create-manifest <name>`: create a manifest in `compose/facet-batches/` without changing `compose.json`
 - `--yes`: skip interactive confirmation prompts
 
-Catalog facets backed by local Compose templates are copied into the framework's Solidity source tree. Local `path.sol:ContractName` references are registered in place. Package facets require their package source to be available in the project.
+Catalog facets backed by local Compose templates are copied into the framework's Solidity source tree. Local `path.sol:ContractName` references are registered in place. A bare name that is not in the catalog is fuzzy-matched against the project's Solidity sources (file name first, then declared contract names, then substring matches); several matches prompt interactively outside of `--yes`/non-interactive use. Package facets require their package source to be available in the project.
 
 ### `compose remove` / `compose rm`
 
@@ -103,7 +108,7 @@ compose rm --manifest remove-legacy
 compose remove --create-manifest remove-legacy --diamond my-token
 ```
 
-The options are the same as `compose install`. In an interactive terminal, direct removals ask for confirmation. `--manifest` accepts a file path or a name under `compose/facet-batches/`.
+The options are the same as `compose install`. Facet arguments take the same forms as install — a catalog or project contract name, or a `path.sol:ContractName` reference — and both resolve to the registered facet name. In an interactive terminal, direct removals ask for confirmation. `--manifest` accepts a file path or a name under `compose/facet-batches/`.
 
 ### Facet batch manifests
 
@@ -146,7 +151,32 @@ Run static analysis on the local codebase:
 - `exportSelectors` consistency checks
 - Missing facet registration warnings
 
+**Options:**
+- `--project-root <dir>`: start searching for the project from this directory
+
 Exit code non-zero on failure (CI-friendly).
+
+### `compose build`
+
+Compile the project if artifacts are stale or missing.
+
+### `compose rpc`
+
+Check RPC connectivity and optionally inspect contract bytecode.
+
+**Options:**
+- `--chain <chain-key>`: chain key from `compose.json` (default: `local`)
+- `--address <address>`: contract address to check or inspect
+
+### `compose inspect`
+
+Inspect a deployed diamond's facets and selectors.
+
+**Arguments:**
+- `<address>`: diamond contract address to inspect
+
+**Options:**
+- `--chain <chain-key>`: chain key from `compose.json` (default: `local`)
 
 ## Base Presets
 
@@ -154,11 +184,12 @@ Each base preset provides a starting point for common diamond patterns:
 
 | Base | Description | Required Facets |
 |------|-------------|-----------------|
-| **Counter** (local) | Simple counter with increment/decrement | CounterDataFacet, CounterIncrementFacet, CounterDecrementFacet |
+| **Counter** (local) | Simple counter with increment/decrement | CounterDataFacet, CounterIncrementFacet |
 | **ERC-20** (package) | Fungible token standard | ERC20DataFacet, ERC20ApproveFacet, ERC20TransferFacet |
 | **ERC-721** (package) | Non-fungible token standard | ERC721DataFacet, ERC721ApproveFacet, ERC721TransferFacet |
+| **ERC-721 Enumerable** (package) | ERC-721 with token enumeration | ERC721ApproveFacet, ERC721DataFacet, ERC721EnumerableDataFacet, ERC721EnumerableTransferFacet |
 | **ERC-1155** (package) | Multi-token standard | ERC1155DataFacet, ERC1155ApproveFacet, ERC1155TransferFacet |
-| **ERC-6909** (package) | Minimal multi-token standard | ERC6909DataFacet, ERC6909TransferFacet |
+| **ERC-6909** (package) | Minimal multi-token standard | ERC6909DataFacet, ERC6909TransferFacet, ERC6909ApproveFacet, ERC6909OperatorFacet |
 
 Each base has compatible extension facets that are filtered during interactive selection to prevent cross-standard conflicts.
 
@@ -184,7 +215,7 @@ compose init my-token \
   --toolbox ethers \
   --base erc-20 \
   --ownership owner-two-step \
-  --extensions ERC20BurnFacet,ERC20MintFacet \
+  --extensions ERC20BurnFacet,ERC20PermitFacet \
   --libraries ERC165Facet \
   --yes
 
