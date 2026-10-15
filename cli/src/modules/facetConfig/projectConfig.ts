@@ -1,7 +1,7 @@
 import { ComposeContext } from "../../context/types";
 import { atomicWriteFile } from "../../utils/files";
 import { locateComposeProjectFile, readComposeProjectFile } from "../../utils/composeProjectFile";
-import type { ComposeProjectConfig } from "./types";
+import type { ComposeDiamondConfig, ComposeProjectConfig } from "./types";
 
 export type LoadedComposeProject = {
   path: string;
@@ -11,6 +11,17 @@ export type LoadedComposeProject = {
 
 function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === "object" && value !== null && !Array.isArray(value);
+}
+
+/** Looks up a diamond by name, guarding against inherited object keys. */
+export function getDiamondOrThrow(
+  diamonds: Record<string, ComposeDiamondConfig>,
+  diamondName: string,
+): ComposeDiamondConfig {
+  if (!Object.hasOwn(diamonds, diamondName)) {
+    throw new Error(`Diamond '${diamondName}' is not defined in compose.json.`);
+  }
+  return diamonds[diamondName];
 }
 
 export async function loadComposeProject(ctx: ComposeContext): Promise<LoadedComposeProject> {

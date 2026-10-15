@@ -267,7 +267,7 @@ Please see the [documentation for contributing](https://compose.diamonds/docs/co
 
 **Start your next smart contract system with a structure you can understand and extend.**
 
-**-Nick & The Compose Community**
+**-The Compose Community**
 
 <!-- automd:contributors github="Perfect-Abstractions/Compose" license="MIT" -->
 
