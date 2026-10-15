@@ -1,5 +1,5 @@
-import fs from "node:fs/promises";
 import path from "node:path";
+import { findPackageFacetSourceMatches } from "../../utils/packageFacetSources";
 import { ResolvedFacetSource } from "./types";
 
 export type ComposeProjectFacet = {
@@ -45,25 +45,7 @@ async function findPackageFacetSource(
   packageName: string,
   facetName: string,
 ): Promise<string> {
-  const candidates = [
-    path.join(projectRoot, "node_modules", packageName),
-    path.join(projectRoot, "lib", "Compose", "src"),
-  ];
-  const matches: string[] = [];
-
-  for (const candidate of candidates) {
-    try {
-      const entries = await fs.readdir(candidate, { recursive: true, withFileTypes: true });
-      for (const entry of entries) {
-        if (entry.isFile() && entry.name === `${facetName}.sol`) {
-          matches.push(path.join(entry.parentPath, entry.name));
-        }
-      }
-    } catch (error) {
-      if ((error as NodeJS.ErrnoException).code !== "ENOENT") throw error;
-    }
-  }
-
+  const matches = await findPackageFacetSourceMatches(projectRoot, packageName, facetName);
   const uniqueMatches = [...new Set(matches.map((match) => path.resolve(match)))];
   if (uniqueMatches.length === 0) {
     throw new Error(`Package facet source not found: ${packageName}/${facetName}.sol`);

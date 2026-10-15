@@ -110,3 +110,42 @@ describe("inspect command", () => {
     });
   });
 });
+
+describe("facet configuration commands", () => {
+  it("parses direct install arguments and batch manifest options", () => {
+    expect(parseArgs([
+      "node",
+      "compose",
+      "install",
+      "ERC20BurnFacet",
+      "src/facets/FeeFacet.sol:FeeFacet",
+      "--diamond",
+      "Token",
+      "--project-root",
+      "./project",
+    ])).toEqual({
+      command: "install",
+      flags: {
+        facets: ["ERC20BurnFacet", "src/facets/FeeFacet.sol:FeeFacet"],
+        diamond: "Token",
+        projectRoot: "./project",
+      },
+    });
+
+    expect(parseArgs(["node", "compose", "install", "--manifest", "add-fees"])).toEqual({
+      command: "install",
+      flags: { manifest: "add-fees" },
+    });
+  });
+
+  it("normalizes the i and rm aliases to canonical command names", () => {
+    expect(parseArgs(["node", "compose", "i", "FacetA", "--diamond", "Token"])).toEqual({
+      command: "install",
+      flags: { facets: ["FacetA"], diamond: "Token" },
+    });
+    expect(parseArgs(["node", "compose", "rm", "FacetA", "--diamond", "Token"])).toEqual({
+      command: "remove",
+      flags: { facets: ["FacetA"], diamond: "Token" },
+    });
+  });
+});

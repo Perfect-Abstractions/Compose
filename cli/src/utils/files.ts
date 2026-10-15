@@ -162,6 +162,64 @@ export function parsePackageName(importPath: string): string {
   return parts[0];
 }
 
+/** A seed file pair describing a Solidity source and its copy destination. */
+export type SeedCopyPlan = {
+  source: string;
+  target: string;
+};
+
+/**
+ * Plans copy destinations for a set of seed Solidity files and their local
+ * import closure, preserving the relative folder structure each file has
+ * under its seed's directory.
+ *
+ * Preserving the relative structure keeps the seed's relative imports
+ * (`./libraries/Lib.sol`) resolving after the files are copied into the
+ * project. Dependencies outside every seed directory fall back to
+ * `fallbackDir` keyed by basename.
+ *
+ * @param seeds - The seed source/target pairs being copied.
+ * @param closure - The full import closure (including the seeds themselves).
+ * @param fallbackDir - Destination directory for dependencies outside every seed directory.
+ * @returns A Map from resolved source path to resolved target path.
+ */
+export function planImportClosureTargets(
+  seeds: SeedCopyPlan[],
+  closure: Iterable<string>,
+  fallbackDir: string,
+): Map<string, string> {
+  const seedTargets = new Map(
+    seeds.map((seed) => [path.resolve(seed.source), path.resolve(seed.target)]),
+  );
+  const targets = new Map<string, string>();
+
+  for (const file of closure) {
+    const resolvedSource = path.resolve(file);
+    const seedTarget = seedTargets.get(resolvedSource);
+    if (seedTarget) {
+      targets.set(resolvedSource, seedTarget);
+      continue;
+    }
+
+    const parent = seeds.find((seed) => {
+      const relative = path.relative(path.dirname(path.resolve(seed.source)), resolvedSource);
+      return relative !== ".." && !relative.startsWith(`..${path.sep}`) && !path.isAbsolute(relative);
+    });
+    if (parent) {
+      const relative = path.relative(path.dirname(path.resolve(parent.source)), resolvedSource);
+      targets.set(
+        resolvedSource,
+        path.resolve(path.dirname(path.resolve(parent.target)), relative),
+      );
+      continue;
+    }
+
+    targets.set(resolvedSource, path.resolve(fallbackDir, path.basename(resolvedSource)));
+  }
+
+  return targets;
+}
+
 /**
  * Resolves the transitive closure of local Solidity imports reachable from a set of seed source files.
  * Follows relative imports (`./` or `../`) recursively, skipping already-visited files.

@@ -32,27 +32,7 @@ export const ValidatePipeline = {
       throw new Error(`${framework} adapter was not resolved.`);
     }
 
-    const sources = await adapter.compileAst(
-      ctx,
-      project.facetSources.map((facet) => facet.sourcePath),
-    );
-    const scopes = project.diamonds.map((diamond) => ({
-      diamondName: diamond.name,
-      facets: diamond.facets,
-    }));
-
-    ctx = ValidationModule.scanFacetSelectors(ctx, sources, project.facetSources);
-    ctx = ValidationModule.buildVirtualStorageLayout(
-      ctx,
-      sources,
-      project.facetSources,
-      scopes,
-    );
-    ctx = await ValidationModule.validateSelectorExports(ctx);
-    ctx = await ValidationModule.detectSelectorCollisions(ctx, {
-      hashing: deps.hashing,
-      scopes,
-    });
+    ctx = await ValidationModule.validateProjectSources(ctx, project, adapter, deps.hashing);
 
     const selectorCollisions = ValidationModule.getSelectorCollisionValidationState(ctx);
     const virtualStorageLayout = ValidationModule.getVirtualStorageLayoutValidationState(ctx);

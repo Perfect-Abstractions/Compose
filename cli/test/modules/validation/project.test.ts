@@ -6,6 +6,21 @@ import { Context } from "../../../src/context/context";
 import { loadValidationProject } from "../../../src/modules/validation/project";
 
 describe("validation project loader", () => {
+  it("throws the existing not-found error when no compose.json exists", async () => {
+    const projectRoot = await fs.mkdtemp(path.join(os.tmpdir(), "compose-validation-project-missing-"));
+
+    try {
+      const ctx = Context.create();
+      ctx.param.projectRoot = projectRoot;
+
+      await expect(loadValidationProject(ctx)).rejects.toThrow(
+        "compose.json not found. Run 'compose init' first or navigate to a Compose project directory.",
+      );
+    } finally {
+      await fs.rm(projectRoot, { recursive: true, force: true });
+    }
+  });
+
   it("loads framework and facet contract names from the nearest compose.json", async () => {
     const projectRoot = await fs.mkdtemp(path.join(os.tmpdir(), "compose-validation-project-"));
     const nestedDirectory = path.join(projectRoot, "src", "facets");
@@ -198,6 +213,110 @@ describe("validation project loader", () => {
       expect(project.facetSources).toEqual([
         { contractName: "PackageFacet", sourcePath: packageFacetPath },
       ]);
+    } finally {
+      await fs.rm(projectRoot, { recursive: true, force: true });
+    }
+  });
+
+  it("rejects package facet sources when both package roots contain a match", async () => {
+    const projectRoot = await fs.mkdtemp(path.join(os.tmpdir(), "compose-validation-package-ambiguous-"));
+    const packageSourcePath = path.join(
+      projectRoot,
+      "node_modules",
+      "@perfect-abstractions",
+      "compose",
+      "src",
+      "diamond",
+      "PackageFacet.sol",
+    );
+    const foundrySourcePath = path.join(
+      projectRoot,
+      "lib",
+      "Compose",
+      "src",
+      "diamond",
+      "PackageFacet.sol",
+    );
+    const ctx = Context.create();
+
+    try {
+      await fs.mkdir(path.dirname(packageSourcePath), { recursive: true });
+      await fs.mkdir(path.dirname(foundrySourcePath), { recursive: true });
+      await fs.writeFile(packageSourcePath, "contract PackageFacet {}", "utf8");
+      await fs.writeFile(foundrySourcePath, "contract PackageFacet {}", "utf8");
+      await fs.writeFile(
+        path.join(projectRoot, "compose.json"),
+        JSON.stringify({
+          framework: "foundry",
+          diamonds: {
+            Example: {
+              contract: "src/Diamond.sol:Diamond",
+              facets: {
+                PackageFacet: {
+                  source: "package",
+                  contract: "PackageFacet",
+                  package: "@perfect-abstractions/compose",
+                },
+              },
+            },
+          },
+        }),
+        "utf8",
+      );
+      ctx.param.projectRoot = projectRoot;
+
+      await expect(loadValidationProject(ctx)).rejects.toThrow(
+        /Package facet source is ambiguous: @perfect-abstractions\/compose\/PackageFacet\.sol/,
+      );
+    } finally {
+      await fs.rm(projectRoot, { recursive: true, force: true });
+    }
+  });
+
+  it("uses an in-memory config override while deriving the root from the discovered file", async () => {
+    const projectRoot = await fs.mkdtemp(path.join(os.tmpdir(), "compose-validation-project-override-"));
+
+    try {
+      await fs.writeFile(path.join(projectRoot, "compose.json"), JSON.stringify({
+        framework: "foundry",
+        diamonds: {
+          DiskDiamond: {
+            contract: "src/DiskDiamond.sol:DiskDiamond",
+            facets: {
+              DiskFacet: { source: "local", contract: "src/DiskFacet.sol:DiskFacet" },
+            },
+          },
+        },
+      }), "utf8");
+      const ctx = Context.create();
+      ctx.param.projectRoot = projectRoot;
+      const override = {
+        framework: "foundry",
+        diamonds: {
+          CandidateDiamond: {
+            contract: "src/CandidateDiamond.sol:CandidateDiamond",
+            facets: {
+              CandidateFacet: {
+                source: "local",
+                contract: "src/CandidateFacet.sol:CandidateFacet",
+              },
+            },
+          },
+        },
+      };
+
+      const project = await loadValidationProject(ctx, override);
+
+      expect(project.diamonds).toEqual([{
+        name: "CandidateDiamond",
+        sourcePath: path.join(projectRoot, "src", "CandidateDiamond.sol"),
+        facets: [{
+          contractName: "CandidateFacet",
+          sourcePath: path.join(projectRoot, "src", "CandidateFacet.sol"),
+        }],
+      }]);
+      expect(ctx.config.composeJson).toBe(override);
+      expect(ctx.param.projectRoot).toBe(projectRoot);
     } finally {
       await fs.rm(projectRoot, { recursive: true, force: true });
     }
