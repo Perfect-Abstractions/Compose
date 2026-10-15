@@ -78,4 +78,21 @@ describe("facet batch manifests", () => {
       expect(() => createRemoveFacetBatch({ [name]: ["LegacyFacet"] })).toThrow("Diamond name");
     }
   });
+
+  it("normalizes remove references to the registered facet name", async () => {
+    const root = await createRoot();
+
+    expect(createRemoveFacetBatch({ Token: ["src/facets/FeeFacet.sol:FeeFacet"] }).diamonds.Token)
+      .toEqual(["FeeFacet"]);
+    expect(() => createRemoveFacetBatch({ Token: ["FeeFacet", "src/facets/FeeFacet.sol:FeeFacet"] }))
+      .toThrow("contains duplicate facet names");
+    expect(() => createRemoveFacetBatch({ Token: ["src/facets/FeeFacet.sol:__proto__"] }))
+      .toThrow("Facet name");
+
+    const manifestPath = path.join(root, "remove.json");
+    await fs.writeFile(manifestPath, serializeFacetBatch(
+      createRemoveFacetBatch({ Token: ["src/facets/FeeFacet.sol:FeeFacet"] }),
+    ), "utf8");
+    expect((await readFacetBatch(manifestPath, "remove")).diamonds.Token).toEqual(["FeeFacet"]);
+  });
 });

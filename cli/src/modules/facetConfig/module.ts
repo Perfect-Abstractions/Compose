@@ -21,10 +21,12 @@ import {
   serializeFacetBatch,
 } from "./manifest";
 import {
+  contractReferenceName,
   copyCatalogFacetSources,
   listAvailableCatalogFacetNames,
   listCatalogFacetNames,
   resolveFacetInstallReference,
+  type FacetReferenceResolutionOptions,
 } from "./facetResolver";
 import { loadComposeProject, writeComposeProject } from "./projectConfig";
 import type { LoadedComposeProject } from "./projectConfig";
@@ -46,6 +48,21 @@ function moduleState<T>(ctx: ComposeContext, key: string): ModuleState<T> | unde
   return ctx.state[key] as ModuleState<T> | undefined;
 }
 
+/** Resolution hooks that let interactive installs pick among fuzzy source matches. */
+function facetReferenceOptions(): FacetReferenceResolutionOptions | undefined {
+  if (!isInteractive()) return undefined;
+  return {
+    selectLocalMatch: async (candidates: string[]) => {
+      const { select } = await loadPrompts();
+      return select({
+        message: "Multiple project sources match this facet; select one:",
+        choices: candidates.map((candidate) => ({ name: candidate, value: candidate })),
+        theme: selectTheme,
+      });
+    },
+  };
+}
+
 function frameworkDependency(framework: string): DependencyKey {
   if (framework === "foundry") return DependencyKey.Foundry;
   if (framework === "hardhat") return DependencyKey.Hardhat;
@@ -53,9 +70,8 @@ function frameworkDependency(framework: string): DependencyKey {
 }
 
 function catalogManifestReference(value: string): FacetInstallReference {
-  const match = value.match(/:([A-Za-z_$][A-Za-z0-9_$]*)$/);
-  if (!match) return { name: value };
-  return { name: match[1], source: "local", contract: value };
+  const name = contractReferenceName(value);
+  return name ? { name, source: "local", contract: value } : { name: value };
 }
 
 function sameRegistration(left: unknown, right: unknown): boolean {
@@ -150,15 +166,17 @@ async function selectRemoveFacetNames(
   diamondName: string,
   configuredFacets: Record<string, unknown>,
 ): Promise<string[]> {
-  return selectFacetNames(ctx, {
+  const names = await selectFacetNames(ctx, {
     promptMessage: `Select facets to unregister from ${diamondName}:`,
     withoutArgumentsMessage: "Provide facet names to remove, or use --manifest.",
     choices: async () => {
-      const names = Object.keys(configuredFacets);
-      if (names.length === 0) throw new Error(`Diamond '${diamondName}' has no registered facets.`);
-      return names;
+      const configured = Object.keys(configuredFacets);
+      if (configured.length === 0) throw new Error(`Diamond '${diamondName}' has no registered facets.`);
+      return configured;
     },
   });
+  // Callers pass the same `path.sol:ContractName` reference they used to install; the key is the contract name.
+  return names.map((name) => contractReferenceName(name) ?? name);
 }
 
 async function createManifest(
@@ -208,15 +226,19 @@ async function normalizeInstallManifestReferences(
   references: string[],
   catalog: BasesCatalog,
   projectRoot: string,
+  options?: FacetReferenceResolutionOptions,
 ): Promise<FacetInstallReference[]> {
   const normalized: FacetInstallReference[] = [];
   for (const reference of references) {
-    const resolved = await resolveFacetInstallReference(reference, catalog, projectRoot);
-    normalized.push(reference.includes(":")
+    const resolved = await resolveFacetInstallReference(reference, catalog, projectRoot, options);
+    const localContract = resolved.registration.source === "local" && !resolved.catalogSource
+      ? resolved.registration.contract
+      : "";
+    normalized.push(localContract
       ? {
           name: resolved.name,
           source: "local",
-          contract: resolved.registration.contract,
+          contract: localContract,
         }
       : { name: resolved.name });
   }
@@ -326,13 +348,14 @@ async function applyInstallBatch(
   const { adapter } = await resolveFrameworkAdapter(ctx);
   const contractSourceRoot = adapter.getContractSourceRoot(project.root);
   const catalog = ctx.config.bases as BasesCatalog;
+  const resolution = facetReferenceOptions();
 
   return applyBatch(ctx, project, batch, {
     operation: "install",
     editDiamond: async ({ diamondName, diamond, entries, stagedFiles }) => {
       const resolved: ResolvedFacetInstall[] = [];
       for (const reference of entries as FacetInstallReference[]) {
-        resolved.push(await resolveFacetInstallReference(reference, catalog, project.root));
+        resolved.push(await resolveFacetInstallReference(reference, catalog, project.root, resolution));
       }
 
       const copied = await copyCatalogFacetSources(resolved, project.root, contractSourceRoot);
@@ -426,7 +449,12 @@ export const FacetConfigModule = {
       if (ctx.param.createManifest) {
         const diamond = project.config.diamonds[selectedDiamond as string];
         const references = await selectInstallReferences(ctx, catalog, selectedDiamond as string, Object.keys(diamond.facets));
-        const normalized = await normalizeInstallManifestReferences(references, catalog, project.root);
+        const normalized = await normalizeInstallManifestReferences(
+          references,
+          catalog,
+          project.root,
+          facetReferenceOptions(),
+        );
         return createManifest(ctx, project, operation, selectedDiamond as string, normalized);
       }
       if (ctx.param.manifest) {

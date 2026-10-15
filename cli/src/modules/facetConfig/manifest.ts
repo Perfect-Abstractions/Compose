@@ -1,6 +1,7 @@
 import fs from "node:fs/promises";
 import path from "node:path";
 import { pathExists } from "../../utils/files";
+import { contractReferenceName } from "./facetResolver";
 import type {
   FacetBatch,
   FacetBatchOperation,
@@ -75,7 +76,8 @@ export function validateFacetBatch(value: unknown, expectedOperation?: FacetBatc
         if (typeof facet !== "string" || !facet.trim()) {
           throw new Error(`Remove manifest for '${diamondName}' must contain facet names as strings.`);
         }
-        const name = facet.trim();
+        // Remove accepts the same `path.sol:ContractName` form install does; the registration key is the contract name.
+        const name = contractReferenceName(facet.trim()) ?? facet.trim();
         validateSafeName(name, "Facet");
         return name;
       });

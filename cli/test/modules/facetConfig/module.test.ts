@@ -135,6 +135,35 @@ describe("FacetConfigModule", () => {
     expect(await fs.readFile(path.join(project.root, "compose.lock"), "utf8")).toBe("keep-lock-untouched\n");
   });
 
+  it("installs a bare contract name by fuzzy-matching the project source", async () => {
+    const project = await createProject();
+    mockValidationDependencies();
+    project.ctx.param.facets = ["FeeFacet"];
+    await fs.writeFile(path.join(project.root, "src", "facets", "FeeFacet.sol"), "contract FeeFacet {}\n", "utf8");
+
+    const result = await FacetConfigModule.execute(project.ctx, "install");
+    const config = await project.readConfig();
+    const diamonds = config.diamonds as Record<string, { facets: Record<string, unknown> }>;
+
+    expect(result.status.success).toBe(true);
+    expect(diamonds.TestDiamond.facets.FeeFacet).toEqual({
+      source: "local",
+      contract: "src/facets/FeeFacet.sol:FeeFacet",
+    });
+  });
+
+  it("rejects an ambiguous bare contract name when no picker is available", async () => {
+    const project = await createProject();
+    mockValidationDependencies();
+    project.ctx.param.facets = ["FeeFacet"];
+    await fs.writeFile(path.join(project.root, "src", "facets", "FeeFacet.sol"), "contract FeeFacet {}\n", "utf8");
+    await fs.mkdir(path.join(project.root, "src", "alt"), { recursive: true });
+    await fs.writeFile(path.join(project.root, "src", "alt", "FeeFacet.sol"), "contract FeeFacet {}\n", "utf8");
+
+    await expect(FacetConfigModule.execute(project.ctx, "install"))
+      .rejects.toThrow("matches several project sources");
+  });
+
   it("treats registering an identical facet as an idempotent no-op", async () => {
     const project = await createProject();
     mockValidationDependencies();
@@ -183,6 +212,23 @@ describe("FacetConfigModule", () => {
     expect(diamonds.TestDiamond.facets.KeepFacet).toBeDefined();
     await expect(fs.access(path.join(project.root, "src", "facets", "RemoveFacet.sol"))).resolves.toBeUndefined();
     expect(await fs.readFile(path.join(project.root, "compose.lock"), "utf8")).toBe("keep-lock-untouched\n");
+  });
+
+  it("unregisters a local facet addressed by its path.sol:Contract reference", async () => {
+    const project = await createProject();
+    mockValidationDependencies();
+    vi.spyOn(console, "warn").mockImplementation(() => undefined);
+    project.ctx.param.facets = ["src/facets/RemoveFacet.sol:RemoveFacet"];
+
+    const result = await FacetConfigModule.execute(project.ctx, "remove");
+    const config = await project.readConfig();
+    const diamonds = config.diamonds as Record<string, { facets: Record<string, unknown> }>;
+
+    expect(result.state.facetMutation).toMatchObject({ success: true, result: { changed: true } });
+    expect(console.warn).not.toHaveBeenCalledWith(expect.stringContaining("is not registered"));
+    expect(diamonds.TestDiamond.facets.RemoveFacet).toBeUndefined();
+    expect(diamonds.TestDiamond.facets.KeepFacet).toBeDefined();
+    expect(diamonds.TestDiamond.facets.ExistingFacet).toBeDefined();
   });
 
   it("treats inherited facet names as unregistered no-ops", async () => {

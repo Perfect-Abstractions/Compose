@@ -13,11 +13,45 @@ import {
   isComposePackagePath,
   resolveCatalogSourceForRead,
 } from "../../utils/soliditySources";
+import { removeSolidityComments } from "../../utils/solidityText";
 import type {
   FacetInstallReference,
   FacetRegistration,
   ResolvedFacetInstall,
 } from "./types";
+
+/** A project Solidity source that fuzzy-matched a bare facet reference. */
+export type LocalContractMatch = {
+  /** Project-relative POSIX path of the matching source. */
+  source: string;
+  /** Contract name to register for the matching source. */
+  contractName: string;
+};
+
+/** Hooks that let the caller resolve ambiguous bare facet references. */
+export type FacetReferenceResolutionOptions = {
+  /**
+   * Called when a bare facet name matches several project sources.
+   * Returns the chosen project-relative source path.
+   */
+  selectLocalMatch?: (candidates: string[]) => Promise<string>;
+};
+
+/** Dependency and generated directories excluded from bare-name source scans. */
+const IGNORED_SOURCE_DIRECTORIES = new Set([
+  "node_modules",
+  "lib",
+  "out",
+  "cache",
+  "artifacts",
+  "broadcast",
+  "broadcasts",
+  "typechain-types",
+  "coverage",
+  "dist",
+]);
+
+const CONTRACT_DECLARATION = /\b(?:abstract\s+)?(?:contract|library|interface)\s+([A-Za-z_$][A-Za-z0-9_$]*)/g;
 
 type CatalogCandidate = {
   name: string;
@@ -72,7 +106,8 @@ export function listAvailableCatalogFacetNames(
   return listCatalogFacetNames(catalog).filter((name) => !registered.has(name));
 }
 
-function contractReferenceName(contract: string): string | null {
+/** Contract suffix of a `path.sol:ContractName` reference, or null when the value carries none. */
+export function contractReferenceName(contract: string): string | null {
   const match = contract.match(/:([A-Za-z_$][A-Za-z0-9_$]*)$/);
   return match?.[1] ?? null;
 }
@@ -130,6 +165,7 @@ export async function resolveFacetInstallReference(
   reference: string | FacetInstallReference,
   catalog: BasesCatalog,
   projectRoot: string,
+  options?: FacetReferenceResolutionOptions,
 ): Promise<ResolvedFacetInstall> {
   if (typeof reference === "string") {
     const catalogMatches = catalogCandidates(catalog).filter((candidate) => candidate.name === reference);
@@ -140,10 +176,15 @@ export async function resolveFacetInstallReference(
     }
 
     const contractName = contractReferenceName(reference);
-    if (!contractName) {
-      throw new Error(`Unknown catalog facet '${reference}'. Use a catalog name or path.sol:ContractName.`);
+    if (contractName) {
+      return resolveLocalReference(reference, contractName, projectRoot);
     }
-    return resolveLocalReference(reference, contractName, projectRoot);
+
+    const matched = await resolveFuzzyLocalReference(reference, projectRoot, options);
+    if (matched) return matched;
+    throw new Error(
+      `Unknown catalog facet '${reference}'. Use a catalog name, path.sol:ContractName, or the name of a contract in this project.`,
+    );
   }
 
   if (!reference.source) {
@@ -152,6 +193,8 @@ export async function resolveFacetInstallReference(
     if (matches.length > 1) {
       throw new Error(`Facet name '${reference.name}' is ambiguous; specify its source in the manifest.`);
     }
+    const matched = await resolveFuzzyLocalReference(reference.name, projectRoot, options);
+    if (matched) return matched;
     throw new Error(`Unknown catalog facet '${reference.name}'. Add a local or package source to the manifest.`);
   }
 
@@ -210,6 +253,153 @@ async function resolveLocalReference(
     contractName,
     registration,
   };
+}
+
+/**
+ * Lists every Solidity source in the project that can back a bare facet
+ * reference, skipping dependency and generated directories.
+ *
+ * @param projectRoot - The Compose project root to scan.
+ * @returns Project-relative POSIX paths of `.sol` files, in directory order.
+ */
+async function listProjectSoliditySources(projectRoot: string): Promise<string[]> {
+  const sources: string[] = [];
+
+  const walk = async (directory: string): Promise<void> => {
+    const entries = await fs.readdir(directory, { withFileTypes: true });
+    for (const entry of entries) {
+      const target = path.join(directory, entry.name);
+      if (entry.isDirectory()) {
+        if (entry.name.startsWith(".") || IGNORED_SOURCE_DIRECTORIES.has(entry.name)) continue;
+        await walk(target);
+      } else if (entry.isFile() && entry.name.toLowerCase().endsWith(".sol")) {
+        sources.push(toPosixPath(path.relative(projectRoot, target)));
+      }
+    }
+  };
+
+  await walk(projectRoot);
+  return sources;
+}
+
+/** Returns the contract, library, and interface names declared by a source. */
+function declaredContractNames(source: string): string[] {
+  const names: string[] = [];
+  const pattern = new RegExp(CONTRACT_DECLARATION, "g");
+  for (const match of removeSolidityComments(source).matchAll(pattern)) {
+    if (match[1]) names.push(match[1]);
+  }
+  return names;
+}
+
+/**
+ * Picks the contract name to register for a matched source: a declared name
+ * equal to the reference wins, then a declared name equal to the file name,
+ * then the file name itself.
+ */
+function contractNameForMatch(source: string, declared: string[], reference: string): string {
+  const lowerReference = reference.toLowerCase();
+  const fileName = path.basename(source, path.extname(source));
+  return (
+    declared.find((name) => name.toLowerCase() === lowerReference) ??
+    declared.find((name) => name.toLowerCase() === fileName.toLowerCase()) ??
+    fileName
+  );
+}
+
+/**
+ * Fuzzy-matches a bare facet reference against the project's Solidity sources.
+ *
+ * Match tiers, in order: file name equality, declared contract name equality,
+ * then substring containment in either direction. Only the best non-empty tier
+ * is returned.
+ *
+ * @param reference - A bare facet/contract name with no `path.sol:` prefix.
+ * @param projectRoot - The Compose project root to scan.
+ * @returns Matching sources, best tier first.
+ */
+export async function findLocalContractMatches(
+  reference: string,
+  projectRoot: string,
+): Promise<LocalContractMatch[]> {
+  const sources = await listProjectSoliditySources(projectRoot);
+  const lowerReference = reference.toLowerCase();
+
+  const fileNameMatches = sources.filter(
+    (source) => path.basename(source, path.extname(source)).toLowerCase() === lowerReference,
+  );
+  if (fileNameMatches.length > 0) {
+    return Promise.all(fileNameMatches.map(async (source) => ({
+      source,
+      contractName: contractNameForMatch(
+        source,
+        declaredContractNames(await fs.readFile(path.join(projectRoot, source), "utf8")),
+        reference,
+      ),
+    })));
+  }
+
+  const scanned = await Promise.all(sources.map(async (source) => ({
+    source,
+    declared: declaredContractNames(await fs.readFile(path.join(projectRoot, source), "utf8")),
+  })));
+
+  const declaredExact = scanned
+    .filter((file) => file.declared.some((name) => name.toLowerCase() === lowerReference))
+    .map((file) => ({
+      source: file.source,
+      contractName: contractNameForMatch(file.source, file.declared, reference),
+    }));
+  if (declaredExact.length > 0) return declaredExact;
+
+  const fuzzy: LocalContractMatch[] = [];
+  for (const file of scanned) {
+    const fileName = path.basename(file.source, path.extname(file.source));
+    const contains = (candidate: string): boolean =>
+      candidate.toLowerCase().includes(lowerReference) || lowerReference.includes(candidate.toLowerCase());
+    const declaredHit = file.declared.find(contains);
+    if (declaredHit) {
+      fuzzy.push({ source: file.source, contractName: declaredHit });
+    } else if (contains(fileName)) {
+      fuzzy.push({ source: file.source, contractName: contractNameForMatch(file.source, file.declared, reference) });
+    }
+  }
+  return fuzzy;
+}
+
+/**
+ * Resolves a bare facet reference to the project source it names, prompting
+ * (or failing with the candidate list) when several sources match.
+ *
+ * @param reference - A bare facet/contract name with no `path.sol:` prefix.
+ * @param projectRoot - The Compose project root to scan.
+ * @param options - Optional ambiguity resolution hooks.
+ * @returns The resolved facet, or `null` when no project source matches.
+ */
+async function resolveFuzzyLocalReference(
+  reference: string,
+  projectRoot: string,
+  options?: FacetReferenceResolutionOptions,
+): Promise<ResolvedFacetInstall | null> {
+  const matches = await findLocalContractMatches(reference, projectRoot);
+  if (matches.length === 0) return null;
+
+  let chosen = matches[0];
+  if (matches.length > 1) {
+    const sources = matches.map((match) => match.source);
+    const selected = options?.selectLocalMatch
+      ? await options.selectLocalMatch(sources)
+      : undefined;
+    const picked = matches.find((match) => match.source === selected);
+    if (!picked) {
+      throw new Error(
+        `Facet '${reference}' matches several project sources:\n  ${sources.join("\n  ")}\nUse path.sol:ContractName to choose one.`,
+      );
+    }
+    chosen = picked;
+  }
+
+  return resolveLocalReference(`${chosen.source}:${chosen.contractName}`, chosen.contractName, projectRoot);
 }
 
 export function withCatalogCopyTarget(
