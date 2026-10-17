@@ -36,6 +36,34 @@ describe("init command arguments", () => {
       },
     });
   });
+
+  it("parses upgradeability flags", () => {
+    expect(
+      parseArgs(["node", "compose", "init", "--base", "none", "--yes", "--immutable"]),
+    ).toEqual({
+      command: "init",
+      flags: {
+        framework: "foundry",
+        toolbox: "ethers",
+        base: "none",
+        yes: true,
+        immutable: true,
+      },
+    });
+
+    expect(
+      parseArgs(["node", "compose", "init", "--base", "none", "--yes", "--upgradeable"]),
+    ).toEqual({
+      command: "init",
+      flags: {
+        framework: "foundry",
+        toolbox: "ethers",
+        base: "none",
+        yes: true,
+        upgradeable: true,
+      },
+    });
+  });
 });
 
 describe("rpc command", () => {

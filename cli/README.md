@@ -10,6 +10,7 @@ npx @perfect-abstractions/compose-cli init
 
 This starts an interactive flow to scaffold a new diamond project with:
 - Base preset selection (Counter, ERC-20, ERC-721, ERC-721 Enumerable, ERC-1155, ERC-6909)
+- Upgradeability selection (immutable by default)
 - Extension facet selection
 - Ownership and access control configuration
 - Compose library facet selection
@@ -42,17 +43,23 @@ Scaffold a new Compose diamond project.
 - `--framework <foundry|hardhat>`: target framework (default: foundry)
 - `--toolbox <ethers|viem>`: Hardhat toolbox (default: ethers)
 - `--base <base-id>`: base preset — `counter`, `erc-20`, `erc-721`, `erc-721-enumerable`, `erc-1155`, `erc-6909`, or `none` for a blank project
-- `--ownership <base>`: ownership base — `owner` or `owner-two-step`; omit the flag for no ownership
+- `--ownership <base>`: ownership base — `owner` or `owner-two-step`; omit the flag for no ownership (upgradeable projects without an ownership base default to `owner`)
 - `--ownership-extensions <facets>`: comma-separated ownership extension facets
 - `--access-control <bases>`: comma-separated access control bases (for example `access-control`)
 - `--access-control-extensions <facets>`: comma-separated access control extension facets
+- `--upgradeable`: include `DiamondUpgradeFacet` and the owner coupling
+- `--immutable`: scaffold without the upgrade facet and owner coupling (default)
 - `--libraries <facets>`: comma-separated Compose library facets
 - `--extensions <facets>`: comma-separated extension facets
 - `--out <dir>`: parent directory for the project (defaults to the current directory)
 - `--yes`: non-interactive mode; requires `--base`
 - `--install-deps` / `--no-install-deps`: install or skip framework dependencies
 
-Selection flags apply to `--yes` runs. Without `--yes`, only `[project-name]` and `--out` are honored and `compose init` prompts for the framework, toolbox, base, extensions, libraries, ownership, access control, and dependency installation.
+Selection flags apply to `--yes` runs. Without `--yes`, only `[project-name]` and `--out` are honored and `compose init` prompts for the framework, toolbox, base, upgradeability, extensions, libraries, ownership, access control, and dependency installation.
+
+Immutable is the default. `--upgradeable` adds `DiamondUpgradeFacet` and, when no ownership base is chosen, Compose offers the `owner` base (interactive) or adds it with a note (non-interactive). An explicit `DiamondUpgradeFacet` in `--libraries` opts into upgradeability the same way for compatibility; combining it with `--immutable` is an error.
+
+Hardhat projects scaffold a `local` network entry (`http://127.0.0.1:8545`, remote accounts) so deployments can target a locally running Anvil node.
 
 ### `compose catalog`
 

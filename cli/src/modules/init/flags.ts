@@ -1,5 +1,29 @@
 import { uniqueStrings, splitCommaSeparated } from "../../utils/strings";
-import { AccessFlagSelection } from "./types";
+import { AccessFlagSelection, UpgradeabilitySelection } from "./types";
+
+/**
+ * Resolves the upgradeability choice from CLI flags.
+ *
+ * Immutable is the default; `--upgradeable` opts in to the upgrade facet and
+ * the owner coupling derived from it.
+ *
+ * @param param - Raw CLI parameter record containing upgradeability flags.
+ * @returns The resolved upgradeability selection with explicitness tracking.
+ * @throws {Error} If both `--upgradeable` and `--immutable` are provided.
+ */
+export function resolveUpgradeability(param: Record<string, unknown>): UpgradeabilitySelection {
+  const upgradeable = param.upgradeable === true;
+  const immutable = param.immutable === true;
+
+  if (upgradeable && immutable) {
+    throw new Error("Use either --upgradeable or --immutable, not both.");
+  }
+
+  return {
+    upgradeable,
+    explicit: upgradeable || immutable,
+  };
+}
 
 /**
  * Resolves grouped access flags from raw CLI parameters into a structured selection.

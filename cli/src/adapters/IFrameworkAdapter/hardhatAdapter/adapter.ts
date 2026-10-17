@@ -170,6 +170,14 @@ ${npmFilesToBuild}    profiles: {
       },
     },
   },
+  networks: {
+    local: {
+      type: "http",
+      chainType: "l1",
+      url: "http://127.0.0.1:8545",
+      accounts: "remote",
+    },
+  },
   paths: {
     sources: "./contracts",
     tests: "./test",
@@ -200,7 +208,7 @@ ${npmFilesToBuild}    profiles: {
     await fs.writeFile(path.join(root, "tsconfig.json"), tsconfig);
 
     const gitignore = `node_modules/
-.cache/
+cache/
 artifacts/
 dist/
 .env

@@ -35,6 +35,7 @@ async function readComposeJson(projectRoot: string): Promise<ComposeJson> {
 }
 
 function useHarnessDependencies(harness: InitPipelineHarness): void {
+  vi.spyOn(console, "log").mockImplementation(() => undefined);
   vi.spyOn(InitModule, "showComposeHeader").mockImplementation(() => undefined);
   vi.spyOn(InitModule, "showSuccess").mockImplementation(() => undefined);
   vi.spyOn(PreflightModule, "check").mockImplementation(async (ctx) => ctx);
@@ -128,6 +129,35 @@ describe("InitPipeline", () => {
         "ERC20TransferFacet",
       ]);
       expect(harness.adapter.compileAst).toHaveBeenCalledOnce();
+    } finally {
+      await harness.cleanup();
+    }
+  });
+
+  it("scaffolds an upgradeable ERC-20 diamond with --upgradeable", async () => {
+    const harness = await createInitPipelineHarness(
+      "foundry",
+      "erc-20",
+      "erc20-upgradeable",
+      { upgradeable: true },
+    );
+    useHarnessDependencies(harness);
+
+    try {
+      const result = await InitPipeline.execute(harness.ctx);
+      const composeJson = await readComposeJson(harness.projectRoot);
+      const facetNames = Object.keys(composeJson.diamonds["erc20-upgradeable"].facets).sort();
+
+      expect(result.status.success).toBe(true);
+      expect(facetNames).toEqual([
+        "DiamondInspectFacet",
+        "DiamondUpgradeFacet",
+        "ERC20ApproveFacet",
+        "ERC20DataFacet",
+        "ERC20TransferFacet",
+        "OwnerDataFacet",
+        "OwnerTransferFacet",
+      ]);
     } finally {
       await harness.cleanup();
     }

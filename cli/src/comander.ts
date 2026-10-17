@@ -26,6 +26,8 @@ export function buildProgram(): Command {
     .option("--ownership-extensions <facets>", "Ownership extension facets")
     .option("--access-control <bases>", "Comma-separated access control bases")
     .option("--access-control-extensions <facets>", "Access control extension facets")
+    .option("--upgradeable", "Include the upgrade facet and owner coupling")
+    .option("--immutable", "Deploy without the upgrade facet (default)")
     .option("--out <dir>", "Output directory")
     .option("--yes", "Non-interactive mode (requires --base)")
     .option("--install-deps", "Install dependencies (default)")
