@@ -28,10 +28,10 @@ compose validate [options]
 compose build
 compose rpc [options]
 compose inspect <address> [options]
+compose deploy [options]
 compose help [command]
 compose --version | -V
 compose --help | -h
-```
 ```
 
 ### `compose init`
@@ -184,6 +184,30 @@ Inspect a deployed diamond's facets and selectors.
 
 **Options:**
 - `--chain <chain-key>`: chain key from `compose.json` (default: `local`)
+
+### `compose deploy`
+
+Plan a diamond deployment, generate a reviewable framework script, execute it, verify the result on-chain, and record it in `compose.lock`.
+
+**Options:**
+- `--diamond <name>`: diamond definition to deploy (inferred when the project has one)
+- `--chain <chain-key>`: chain key from `compose.json` (default: `local`)
+- `--instance <name>`: deployment instance name (default: `default`)
+- `--project-root <dir>`: start searching for the project from this directory
+- `--dry-run`: print the plan and a script preview without writing anything
+- `--broadcast`: execute the managed script, verify the deployment, and write `compose.lock`
+- `--redeploy`: deploy a new diamond when a lock record already exists (the previous one is abandoned, not upgraded)
+- `--`: everything after it is forwarded to the framework (`forge script` / `hardhat run`) — use it for signing options like `--private-key` or `--account`
+
+Signing stays in the framework; the CLI never handles keys. A run without `--broadcast` writes `script/ComposeDeploy.s.sol` (Foundry) or `scripts/compose-deploy.ts` (Hardhat) for review. Interactive runs print the script path (relative to the project root) and ask whether to run it now; non-interactive runs stop with instructions to review and re-run with `--broadcast`. `--dry-run` prints the script source inline instead.
+
+```bash
+compose deploy                       # plan, write the script, review it
+compose deploy --broadcast           # execute the reviewed script, verify, write compose.lock
+compose deploy --broadcast -- --account deployer
+```
+
+A run reports `in sync` and stops when the recorded facet set already matches `compose.json`. When the composition changed, it prints the add/remove diff and exits non-zero (applying upgrades is a later milestone — `--redeploy` abandons the record and deploys fresh instead).
 
 ## Base Presets
 

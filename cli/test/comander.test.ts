@@ -1,4 +1,4 @@
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import { buildProgram, parseArgs } from "../src/comander";
 
 describe("validate command arguments", () => {
@@ -175,5 +175,92 @@ describe("facet configuration commands", () => {
       command: "remove",
       flags: { facets: ["FacetA"], diamond: "Token" },
     });
+  });
+});
+
+describe("deploy command arguments", () => {
+  it("defaults chain, instance, and deployment flags", () => {
+    expect(parseArgs(["node", "compose", "deploy"])).toEqual({
+      command: "deploy",
+      flags: { chain: "local", instance: "default" },
+    });
+  });
+
+  it("parses deploy options", () => {
+    expect(
+      parseArgs([
+        "node",
+        "compose",
+        "deploy",
+        "--diamond",
+        "Token",
+        "--chain",
+        "sepolia",
+        "--instance",
+        "staging",
+        "--project-root",
+        "./project",
+        "--broadcast",
+        "--redeploy",
+      ]),
+    ).toEqual({
+      command: "deploy",
+      flags: {
+        diamond: "Token",
+        chain: "sepolia",
+        instance: "staging",
+        projectRoot: "./project",
+        broadcast: true,
+        redeploy: true,
+      },
+    });
+  });
+
+  it("forwards arguments after -- as passthrough", () => {
+    expect(
+      parseArgs([
+        "node",
+        "compose",
+        "deploy",
+        "--broadcast",
+        "--",
+        "--private-key",
+        "0xabc",
+        "--non-interactive",
+      ]),
+    ).toEqual({
+      command: "deploy",
+      flags: {
+        broadcast: true,
+        chain: "local",
+        instance: "default",
+        passthrough: ["--private-key", "0xabc", "--non-interactive"],
+      },
+    });
+  });
+
+  it("keeps commander strict about unknown options before --", () => {
+    const exitSpy = vi
+      .spyOn(process, "exit")
+      .mockImplementation(((code?: number) => {
+        throw new Error(`exit:${code}`);
+      }) as never);
+    const stderrSpy = vi.spyOn(process.stderr, "write").mockImplementation(() => true);
+
+    try {
+      expect(() => parseArgs(["node", "compose", "deploy", "--nope"])).toThrow("exit:1");
+    } finally {
+      exitSpy.mockRestore();
+      stderrSpy.mockRestore();
+    }
+  });
+
+  it("rejects passthrough arguments for commands that do not accept them", () => {
+    expect(() => parseArgs(["node", "compose", "validate", "--", "--ast"])).toThrow(
+      "Only 'compose deploy' accepts passthrough arguments.",
+    );
+    expect(() => parseArgs(["node", "compose", "init", "example", "--", "--foo"])).toThrow(
+      "Only 'compose deploy' accepts passthrough arguments.",
+    );
   });
 });

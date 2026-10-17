@@ -1,10 +1,40 @@
 import { ComposeContext } from "../../context/types";
+import type { Hex } from "viem";
 
 /** Options passed to adapter config writing. */
 export type ConfigOptions = {
   compilerVersion: string;
   projectName: string;
   installDeps: boolean;
+};
+
+/** Options for building the framework command that runs a managed deploy script. */
+export type DeployCommandOptions = {
+  /** Absolute project root the command runs in. */
+  projectRoot: string;
+  /** Absolute path of the managed deploy script. */
+  scriptPath: string;
+  /** Chain key as defined in compose.json. */
+  chainKey: string;
+  /** RPC endpoint for the target chain. */
+  rpcUrl: string;
+  /** Expected EVM chain ID for the target chain. */
+  chainId: number;
+  /** Extra arguments forwarded to the framework after `--`. */
+  passthrough: string[];
+};
+
+/** A framework command ready to be executed. */
+export type DeployCommand = {
+  command: string;
+  args: string[];
+};
+
+/** A contract deployment recorded by a framework broadcast. */
+export type BroadcastTransaction = {
+  contractName?: string | null;
+  contractAddress?: string | null;
+  txHash?: string | null;
 };
 
 /** A Solidity source unit AST returned by a framework compiler. */
@@ -62,4 +92,36 @@ export interface IFrameworkAdapter {
    * Called after facets are copied.
    */
   writeConfig(ctx: ComposeContext, opts: ConfigOptions): Promise<void>;
+
+  /** Resolve the path of the CLI-managed deploy script inside the project. */
+  getManagedDeployScriptPath(projectRoot: string): string;
+
+  /**
+   * Resolve the path of the CLI-managed deploy result file inside the project.
+   * Returns null for frameworks that record deployments through their broadcast.
+   */
+  getManagedDeployResultPath(projectRoot: string): string | null;
+
+  /** Build the framework command that executes the managed deploy script. */
+  createDeployCommand(opts: DeployCommandOptions): DeployCommand;
+
+  /**
+   * Read compiled deployed bytecode for a contract from the framework's
+   * local build artifacts. Returns undefined when no artifact is available.
+   */
+  readDeployedBytecode(
+    projectRoot: string,
+    sourcePath: string,
+    contractName: string,
+  ): Promise<Hex | undefined>;
+
+  /**
+   * Read the contract deployments recorded by a framework broadcast.
+   * Returns an empty list for frameworks that report transactions elsewhere.
+   */
+  readBroadcastTransactions(
+    projectRoot: string,
+    scriptPath: string,
+    chainId: number,
+  ): Promise<BroadcastTransaction[]>;
 }

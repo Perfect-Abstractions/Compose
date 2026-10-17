@@ -1,12 +1,16 @@
 import fs from "node:fs/promises";
 import path from "node:path";
+import type { Hex } from "viem";
 import { ComposeContext } from "../../../context/types";
 import {
+  BroadcastTransaction,
   ConfigOptions,
+  DeployCommand,
+  DeployCommandOptions,
   IFrameworkAdapter,
   SolidityAstSource,
 } from "../interface";
-import { writeFileIfMissing } from "../../../utils/files";
+import { toPosixPath, writeFileIfMissing } from "../../../utils/files";
 import { runCommand } from "../../../utils/exec";
 import {
   composePackageSubpath,
@@ -17,6 +21,9 @@ import { isSourceUnitAst, listJsonFiles, uniqueAstSources } from "../../../utils
 import { ensureTomlSectionSettings } from "./helpers";
 
 /** Framework adapter for Foundry-based Diamond projects. */
+const MANAGED_SCRIPT_NAME = "ComposeDeploy.s.sol";
+const MANAGED_SCRIPT_CONTRACT = "ComposeDeployScript";
+
 const adapter: IFrameworkAdapter = {
   getContractSourceRoot(projectRoot: string): string {
     return path.join(projectRoot, "src");
@@ -136,6 +143,82 @@ const adapter: IFrameworkAdapter = {
     await writeFileIfMissing(path.join(root, "remappings.txt"), remappings);
     await writeFileIfMissing(path.join(root, ".gitignore"), gitignore);
     await fs.writeFile(path.join(root, "README.md"), readme, "utf8");
+  },
+
+  getManagedDeployScriptPath(projectRoot: string): string {
+    return path.join(projectRoot, "script", MANAGED_SCRIPT_NAME);
+  },
+
+  getManagedDeployResultPath(): string | null {
+    // Foundry records deployments in the run broadcast, not a result file.
+    return null;
+  },
+
+  createDeployCommand(opts: DeployCommandOptions): DeployCommand {
+    const relativeScriptPath = toPosixPath(path.relative(opts.projectRoot, opts.scriptPath));
+    return {
+      command: "forge",
+      args: [
+        "script",
+        `${relativeScriptPath}:${MANAGED_SCRIPT_CONTRACT}`,
+        "--rpc-url",
+        opts.rpcUrl,
+        "--broadcast",
+        ...opts.passthrough,
+      ],
+    };
+  },
+
+  async readDeployedBytecode(
+    projectRoot: string,
+    sourcePath: string,
+    contractName: string,
+  ): Promise<Hex | undefined> {
+    const artifactPath = path.join(
+      projectRoot,
+      "out",
+      path.basename(sourcePath),
+      `${contractName}.json`,
+    );
+    try {
+      const artifact = JSON.parse(await fs.readFile(artifactPath, "utf8")) as {
+        deployedBytecode?: { object?: unknown };
+      };
+      const object = artifact.deployedBytecode?.object;
+      return typeof object === "string" && object.length > 2 ? (object as Hex) : undefined;
+    } catch {
+      return undefined;
+    }
+  },
+
+  async readBroadcastTransactions(
+    projectRoot: string,
+    scriptPath: string,
+    chainId: number,
+  ): Promise<BroadcastTransaction[]> {
+    const broadcastPath = path.join(
+      projectRoot,
+      "broadcast",
+      path.basename(scriptPath),
+      String(chainId),
+      "run-latest.json",
+    );
+
+    let raw: unknown;
+    try {
+      raw = JSON.parse(await fs.readFile(broadcastPath, "utf8")) as unknown;
+    } catch {
+      return [];
+    }
+
+    const transactions = (raw as { transactions?: unknown }).transactions;
+    if (!Array.isArray(transactions)) return [];
+
+    return (transactions as Array<Record<string, unknown>>).map((transaction) => ({
+      contractAddress: typeof transaction.contractAddress === "string" ? transaction.contractAddress : null,
+      contractName: typeof transaction.contractName === "string" ? transaction.contractName : null,
+      txHash: typeof transaction.hash === "string" ? transaction.hash : null,
+    }));
   },
 };
 

@@ -1,12 +1,16 @@
 import fs from "node:fs/promises";
 import path from "node:path";
+import type { Hex } from "viem";
 import { ComposeContext } from "../../../context/types";
 import {
+  BroadcastTransaction,
   ConfigOptions,
+  DeployCommand,
+  DeployCommandOptions,
   IFrameworkAdapter,
   SolidityAstSource,
 } from "../interface";
-import { writeFileIfMissing } from "../../../utils/files";
+import { toPosixPath, writeFileIfMissing } from "../../../utils/files";
 import { runCommand } from "../../../utils/exec";
 import {
   composePackageSubpath,
@@ -15,9 +19,14 @@ import {
 import { ScaffoldingModule } from "../../../modules/scaffolding/module";
 import { CLI_ROOT } from "../../../utils/cliRoot";
 import { isSourceUnitAst, listJsonFiles, uniqueAstSources } from "../../../utils/solidityAst";
-import { resolveHardhatAstSourcePath } from "./helpers";
+import { resolveHardhatArtifactSourceName, resolveHardhatAstSourcePath } from "./helpers";
 
 /** Framework adapter for Hardhat-based Diamond projects. */
+const MANAGED_SCRIPT_NAME = "compose-deploy.ts";
+
+/** Managed deploy result, kept inside Hardhat's default `cache` directory. */
+const MANAGED_RESULT_RELATIVE_PATH = path.join("cache", "compose", "deploy-result.json");
+
 const adapter: IFrameworkAdapter = {
   getContractSourceRoot(projectRoot: string): string {
     return path.join(projectRoot, "contracts");
@@ -231,6 +240,60 @@ dist/
     if (opts.installDeps) {
       await runCommand("npm", ["install"], { cwd: root });
     }
+  },
+
+  getManagedDeployScriptPath(projectRoot: string): string {
+    return path.join(projectRoot, "scripts", MANAGED_SCRIPT_NAME);
+  },
+
+  getManagedDeployResultPath(projectRoot: string): string | null {
+    return path.join(projectRoot, MANAGED_RESULT_RELATIVE_PATH);
+  },
+
+  createDeployCommand(opts: DeployCommandOptions): DeployCommand {
+    const relativeScriptPath = toPosixPath(path.relative(opts.projectRoot, opts.scriptPath));
+    return {
+      command: "npx",
+      args: [
+        "hardhat",
+        "run",
+        relativeScriptPath,
+        "--network",
+        opts.chainKey,
+        ...opts.passthrough,
+      ],
+    };
+  },
+
+  async readDeployedBytecode(
+    projectRoot: string,
+    sourcePath: string,
+    contractName: string,
+  ): Promise<Hex | undefined> {
+    const sourceName = await resolveHardhatArtifactSourceName(projectRoot, sourcePath);
+    if (!sourceName) return undefined;
+
+    const artifactPath = path.join(
+      projectRoot,
+      "artifacts",
+      ...sourceName.split("/"),
+      `${contractName}.json`,
+    );
+    try {
+      const artifact = JSON.parse(await fs.readFile(artifactPath, "utf8")) as {
+        deployedBytecode?: unknown;
+      };
+      return typeof artifact.deployedBytecode === "string" && artifact.deployedBytecode.length > 2
+        ? (artifact.deployedBytecode as Hex)
+        : undefined;
+    } catch {
+      return undefined;
+    }
+  },
+
+  async readBroadcastTransactions(): Promise<BroadcastTransaction[]> {
+    // Hardhat deploy scripts report their transactions in the result file.
+    return [];
   },
 };
 
