@@ -236,6 +236,7 @@ dist/
     await writeFileIfMissing(path.join(root, "README.md"), readme);
 
     await fs.mkdir(path.join(root, "test"), { recursive: true });
+    await fs.mkdir(path.join(root, "scripts"), { recursive: true });
 
     if (opts.installDeps) {
       await runCommand("npm", ["install"], { cwd: root });

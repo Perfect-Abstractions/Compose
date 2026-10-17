@@ -62,11 +62,11 @@ describe("InitPipeline", () => {
       framework: "foundry" as const,
       projectName: "bare-foundry",
       contract: "src/Diamond.sol:Diamond",
+      scriptRoot: "script",
       files: [
         "compose.json",
         "foundry.toml",
         "src/Diamond.sol",
-        "script/Deploy.s.sol",
         "test/Diamond.t.sol",
       ],
     },
@@ -74,12 +74,12 @@ describe("InitPipeline", () => {
       framework: "hardhat" as const,
       projectName: "bare-hardhat",
       contract: "contracts/Diamond.sol:Diamond",
+      scriptRoot: "scripts",
       files: [
         "compose.json",
         "package.json",
         "hardhat.config.ts",
         "contracts/Diamond.sol",
-        "scripts/deploy.ts",
         "test/Diamond.ts",
       ],
     },
@@ -87,6 +87,7 @@ describe("InitPipeline", () => {
     framework,
     projectName,
     contract,
+    scriptRoot,
     files,
   }) => {
     const harness = await createInitPipelineHarness(framework, "none", projectName);
@@ -105,6 +106,9 @@ describe("InitPipeline", () => {
       expect(diamond.contract).toBe(contract);
       expect(Object.keys(diamond.facets)).toEqual(["DiamondInspectFacet"]);
       await expectFiles(harness.projectRoot, files);
+      await expect(
+        fs.access(path.join(harness.projectRoot, scriptRoot)),
+      ).resolves.toBeUndefined();
       expect(harness.adapter.compileAst).toHaveBeenCalledOnce();
     } finally {
       await harness.cleanup();

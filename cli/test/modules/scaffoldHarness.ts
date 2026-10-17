@@ -1,14 +1,13 @@
 import fs from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
-import { ComposeContext } from "../../../src/context/types";
-import { Context } from "../../../src/context/context";
-import { BasesCatalog, FacetEntry } from "../../../src/modules/config/types";
+import { ComposeContext } from "../../src/context/types";
+import { Context } from "../../src/context/context";
+import { BasesCatalog, FacetEntry } from "../../src/modules/config/types";
 
-export type DeployGenerationHarness = {
+export type ScaffoldHarness = {
   ctx: ComposeContext;
   projectRoot: string;
-  scriptRoot: string;
   cleanup(): Promise<void>;
 };
 
@@ -107,14 +106,14 @@ function scaffoldEntry(facetName: FacetName) {
 }
 
 /**
- * Builds the Compose context needed to test a full ERC-20 deploy script.
+ * Creates a temporary project context with a full ERC-20 catalog selection.
  *
- * It selects every facet used by the snapshot script: the ERC-20 base and
- * extensions, DiamondUpgrade, Owner with renounce, and AccessControl batches.
+ * It selects every facet used by the init-stage fixtures: the ERC-20 base and
+ * extensions, DiamondUpgrade, Owner with renounce, and AccessControl batches,
+ * and records a matching scaffold map.
  */
-export async function createDeployGenerationHarness(): Promise<DeployGenerationHarness> {
-  const projectRoot = await fs.mkdtemp(path.join(os.tmpdir(), "compose-cli-deploy-generation-"));
-  const scriptRoot = path.join(projectRoot, "script");
+export async function createScaffoldHarness(): Promise<ScaffoldHarness> {
+  const projectRoot = await fs.mkdtemp(path.join(os.tmpdir(), "compose-cli-scaffold-"));
   const ctx = Context.create();
 
   ctx.param.projectRoot = projectRoot;
@@ -140,7 +139,6 @@ export async function createDeployGenerationHarness(): Promise<DeployGenerationH
   return {
     ctx,
     projectRoot,
-    scriptRoot,
     cleanup: () => fs.rm(projectRoot, { recursive: true, force: true }),
   };
 }

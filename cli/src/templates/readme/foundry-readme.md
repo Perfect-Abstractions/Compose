@@ -5,6 +5,7 @@ Scaffolded by [Compose CLI](https://compose.diamonds) - The open-source toolkit 
 ## Prerequisites
 
 - [Foundry](https://book.getfoundry.sh/getting-started/installation)
+- [Compose CLI](https://compose.diamonds)
 
 ## Build
 
@@ -18,7 +19,7 @@ forge build
 forge test
 ```
 
-## Deploy Locally
+## Deploy
 
 Start a local Ethereum node:
 
@@ -26,16 +27,16 @@ Start a local Ethereum node:
 anvil
 ```
 
-Deploy to the local network:
+Plan the deployment and generate the managed deploy script:
 
 ```shell
-forge script script/Deploy.s.sol:DeployScript --rpc-url http://localhost:8545 --private-key <anvil_private_key> --broadcast
+compose deploy
 ```
 
-## Deploy
+Review the script, then run it against the local chain:
 
 ```shell
-forge script script/Deploy.s.sol:DeployScript --rpc-url <your_rpc_url> --private-key <your_private_key> --broadcast
+compose deploy --broadcast
 ```
 
 ## Format

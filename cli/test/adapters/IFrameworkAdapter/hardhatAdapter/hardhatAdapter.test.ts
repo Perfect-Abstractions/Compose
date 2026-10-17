@@ -114,6 +114,9 @@ describe("hardhatAdapter.writeConfig", () => {
       expect(gitignore).toContain("cache/");
       expect(gitignore).not.toContain(".cache/");
 
+      await expect(
+        fs.access(path.join(projectRoot, "scripts")),
+      ).resolves.toBeUndefined();
     } finally {
       await fs.rm(projectRoot, { recursive: true, force: true });
     }

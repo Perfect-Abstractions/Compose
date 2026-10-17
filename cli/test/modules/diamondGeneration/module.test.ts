@@ -4,7 +4,7 @@ import { describe, expect, it } from "vitest";
 import { ModuleState } from "../../../src/context/types";
 import { BasesCatalog } from "../../../src/modules/config/types";
 import { DiamondGenerationModule } from "../../../src/modules/diamondGeneration/module";
-import { createDeployGenerationHarness } from "../deployGeneration/harness";
+import { createScaffoldHarness } from "../scaffoldHarness";
 
 type DiamondGenerationResult = {
   outputPath: string;
@@ -15,7 +15,7 @@ type DiamondGenerationResult = {
 /** Tests Diamond.sol generation from the full ERC-20 fixture selection. */
 describe("DiamondGenerationModule", () => {
   it("generates Diamond.sol with selected facet imports and constructors", async () => {
-    const harness = await createDeployGenerationHarness();
+    const harness = await createScaffoldHarness();
     const sourceRoot = path.join(harness.projectRoot, "src");
     const catalog = harness.ctx.config.bases as BasesCatalog;
     catalog.features.owner.required.OwnerDataFacet = {
