@@ -1,6 +1,6 @@
 import type { ComposeContext } from "../../context/types";
 import type { BasesCatalog } from "../config/types";
-import { loadPrompts, checkboxTheme, selectTheme } from "../../utils/inquirer";
+import { loadPrompts, checkboxTheme, selectTheme, isInteractive } from "../../utils/inquirer";
 import { dim } from "../../utils/terminal";
 import {
   contractReferenceName,
@@ -8,10 +8,6 @@ import {
   listCatalogFacetNames,
   type FacetReferenceResolutionOptions,
 } from "./facetResolver";
-
-function isInteractive(): boolean {
-  return Boolean(process.stdin.isTTY && process.stdout.isTTY);
-}
 
 /** Resolution hooks that let interactive installs pick among fuzzy source matches. */
 export function facetReferenceOptions(): FacetReferenceResolutionOptions | undefined {

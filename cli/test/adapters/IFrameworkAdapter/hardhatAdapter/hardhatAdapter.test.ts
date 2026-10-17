@@ -1,15 +1,18 @@
 import fs from "node:fs/promises";
+import os from "node:os";
 import path from "node:path";
 import { beforeAll, describe, expect, it } from "vitest";
 import { hardhatAdapter } from "../../../../src/adapters/IFrameworkAdapter/hardhatAdapter/adapter";
 import { resolveHardhatAstSourcePath } from "../../../../src/adapters/IFrameworkAdapter/hardhatAdapter/helpers";
+import { Context } from "../../../../src/context/context";
+import { ConfigModule } from "../../../../src/modules/config/module";
 import { canonicalizeAst } from "../canonicalAst";
 import {
   createHardhatAdapterFixtureHarness,
   ensureHardhatFixtureDependencies,
 } from "./harness";
 
-/** Tests Hardhat AST compilation and build-info normalization. */
+/** Tests Hardhat AST compilation, build-info normalization, and config scaffolding. */
 describe("hardhatAdapter.compileAst", () => {
   beforeAll(() => ensureHardhatFixtureDependencies(), 120_000);
 
@@ -77,4 +80,45 @@ describe("hardhatAdapter.compileAst", () => {
     },
     30_000,
   );
+});
+
+/** Tests Hardhat project config scaffolding written by compose init. */
+describe("hardhatAdapter.writeConfig", () => {
+  it("scaffolds a local network entry for the default Anvil RPC", async () => {
+    const projectRoot = await fs.mkdtemp(path.join(os.tmpdir(), "compose-hardhat-config-"));
+    const ctx = Context.create();
+    ctx.param.projectRoot = projectRoot;
+    ctx.param.base = "none";
+    ctx.param.toolbox = "ethers";
+    await ConfigModule.loadBasesCatalog(ctx);
+
+    try {
+      await hardhatAdapter.writeConfig(ctx, {
+        compilerVersion: "0.8.30",
+        projectName: "hardhat-config-fixture",
+        installDeps: false,
+      });
+
+      const config = await fs.readFile(path.join(projectRoot, "hardhat.config.ts"), "utf8");
+
+      expect(config).toContain(`  networks: {
+    local: {
+      type: "http",
+      chainType: "l1",
+      url: "http://127.0.0.1:8545",
+      accounts: "remote",
+    },
+  },`);
+
+      const gitignore = await fs.readFile(path.join(projectRoot, ".gitignore"), "utf8");
+      expect(gitignore).toContain("cache/");
+      expect(gitignore).not.toContain(".cache/");
+
+      await expect(
+        fs.access(path.join(projectRoot, "scripts")),
+      ).resolves.toBeUndefined();
+    } finally {
+      await fs.rm(projectRoot, { recursive: true, force: true });
+    }
+  });
 });

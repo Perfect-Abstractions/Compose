@@ -6,21 +6,23 @@ import {
   getOwnershipExtensionChoices,
   getRoleAccessChoices,
   getRoleAccessExtensionChoices,
+  getUpgradeabilityChoices,
   toFacetChoices,
 } from "./prompts";
 import { checkboxTheme, clearStdin , inputTheme, loadPrompts, selectTheme } from "../../utils/inquirer";
 import { getFrameworkDependencies } from "./frameworkDeps";
-import { resolveAccessFlags } from "./flags";
-import { splitCommaSeparated } from "../../utils/strings";
+import { resolveAccessFlags, resolveUpgradeability } from "./flags";
+import { splitCommaSeparated, uniqueStrings } from "../../utils/strings";
 import { validateProjectName, validateProjectNameWithFolder } from "./projectNameValidation";
 import { showComposeHeader, showDependencies, showSuccess } from "./output";
+import { dim, yellow } from "../../utils/terminal";
 
 /**
  * Handles interactive and non-interactive init input collection.
  *
  * Validates user selections against the loaded bases catalog, resolves
- * framework, base, library, extension, access, and example choices, and stores
- * the assembled configuration on the context.
+ * framework, base, upgradeability, library, extension, and access choices, and
+ * stores the assembled configuration on the context.
  */
 export const InitModule = {
   showComposeHeader,
@@ -30,8 +32,10 @@ export const InitModule = {
    *
    * Validates the framework (`foundry` or `hardhat`), base key, library
    * extensions, access layers, and example selections against the catalog. Defaults the
-   * Hardhat toolbox to `ethers` if not specified. Throws on any invalid
-   * selection.
+   * Hardhat toolbox to `ethers` if not specified. Immutable is the default:
+   * `--upgradeable` adds `DiamondUpgradeFacet` and couples the `owner` base,
+   * and an explicit `DiamondUpgradeFacet` in `--libraries` opts in for
+   * compatibility. Throws on any invalid selection.
    *
    * @param ctx - The compose context with CLI flags and the loaded bases catalog.
    * @returns The context with init options stored in `ctx.state.entry`.
@@ -56,8 +60,45 @@ export const InitModule = {
       throw new Error(`Unknown base: ${baseKey}. Available: ${Object.keys(catalog.features).join(", ")}`);
     }
 
+    const upgradeability = resolveUpgradeability(ctx.param);
+    const selectedBase = baseKey === "none" ? ConfigModule.EMPTY_BASE : catalog.features[baseKey];
+    const availableLibraryFacets = ConfigModule.getAvailableLibraryFacets(catalog, selectedBase);
     const selectedLibraries = splitCommaSeparated(ctx.param.libraries);
     const selectedExtensions = splitCommaSeparated(ctx.param.extensions);
+
+    const requestsUpgradeFacet = selectedLibraries.includes(ConfigModule.UPGRADE_FACET_NAME);
+    if (!upgradeability.upgradeable && upgradeability.explicit && requestsUpgradeFacet) {
+      throw new Error(
+        `${ConfigModule.UPGRADE_FACET_NAME} in --libraries conflicts with --immutable. `
+        + "Remove it or use --upgradeable.",
+      );
+    }
+
+    // An explicit library entry opts into upgradeability for compatibility;
+    // otherwise the diamond is immutable unless --upgradeable is passed.
+    const upgradeable = upgradeability.upgradeable || requestsUpgradeFacet;
+    if (
+      upgradeable
+      && !requestsUpgradeFacet
+      && ConfigModule.UPGRADE_FACET_NAME in availableLibraryFacets
+    ) {
+      selectedLibraries.push(ConfigModule.UPGRADE_FACET_NAME);
+    }
+
+    const accessSelection = resolveAccessFlags(ctx.param);
+    const hasOwnership =
+      selectedBase.accessType === "ownership" || accessSelection.selectedOwnership.length > 0;
+    if (upgradeable && !hasOwnership) {
+      accessSelection.selectedOwnership = [ConfigModule.DEFAULT_OWNER_BASE];
+      accessSelection.selectedAccess = uniqueStrings([
+        ...accessSelection.selectedOwnership,
+        ...accessSelection.selectedRoleAccess,
+      ]);
+      console.log(dim(
+        "Upgradeable diamonds need an owner; added the "
+        + `'${ConfigModule.DEFAULT_OWNER_BASE}' base. Pass --ownership <base> to choose another.`,
+      ));
+    }
 
     const {
       selectedOwnership,
@@ -66,7 +107,7 @@ export const InitModule = {
       selectedRoleAccessExtensions,
       selectedAccess,
       selectedAccessExtensions,
-    } = resolveAccessFlags(ctx.param);
+    } = accessSelection;
 
     ConfigModule.validateGroupedAccessFlags(
       catalog,
@@ -105,6 +146,7 @@ export const InitModule = {
         framework,
         selectedBaseKey: baseKey,
         selectedBaseLabel: selection.selectedBase.label,
+        upgradeable,
         selectedLibraries,
         selectedAccess,
         selectedExtensions: selection.selectedExtensions,
@@ -122,8 +164,8 @@ export const InitModule = {
    * Runs the init flow interactively using Inquirer prompt primitives.
    *
    * Prompts the user for project name, framework (Foundry/Hardhat), toolbox
-   * (for Hardhat), base, library facets, extension facets, access layers,
-   * access extension facets, and local example
+   * (for Hardhat), base, upgradeability, library facets, extension facets,
+   * access layers, access extension facets, and local example
    * facets via select and checkbox prompts. Each selection is validated against
    * the loaded bases catalog.
    *
@@ -131,7 +173,7 @@ export const InitModule = {
    * @returns The context with user selections stored in `ctx.state.entry`.
    */
   async runInitInteractive(ctx: ComposeContext): Promise<ComposeContext> {
-    const { input, checkbox, select } = await loadPrompts();
+    const { input, checkbox, select, confirm } = await loadPrompts();
     const catalog = ctx.config.bases as BasesCatalog;
 
     if (!ctx.param.projectName) {
@@ -197,6 +239,15 @@ export const InitModule = {
       ? ConfigModule.EMPTY_BASE
       : catalog.features[selectedBaseKey];
 
+    await clearStdin();
+    const upgradeability = await select({
+      message: "Select upgradeability:",
+      choices: getUpgradeabilityChoices(),
+      default: "immutable" as const,
+      theme: selectTheme,
+    });
+    const upgradeable = upgradeability === "upgradeable";
+
     const availableExtensions = selectedBase.optional ?? {};
     const extensionChoices = toFacetChoices(Object.keys(availableExtensions));
 
@@ -212,17 +263,25 @@ export const InitModule = {
       : [];
 
     const availableLibraryFacets = ConfigModule.getAvailableLibraryFacets(catalog, selectedBase);
-    const libraryChoices = toFacetChoices(Object.keys(availableLibraryFacets));
+    const libraryChoices = toFacetChoices(
+      Object.keys(availableLibraryFacets).filter(
+        (facetName) => facetName !== ConfigModule.UPGRADE_FACET_NAME,
+      ),
+    );
 
     await clearStdin();
-    const selectedLibraries = await checkbox({
+    const selectedLibraryFacets = await checkbox({
       message: "Select Compose library facets:",
       choices: libraryChoices,
       theme: checkboxTheme,
     });
+    const selectedLibraries = [...selectedLibraryFacets];
+    if (upgradeable && ConfigModule.UPGRADE_FACET_NAME in availableLibraryFacets) {
+      selectedLibraries.push(ConfigModule.UPGRADE_FACET_NAME);
+    }
 
     const accessBases = ConfigModule.getAccessBases(catalog, selectedBaseKey);
-    const selectedOwnership = selectedBase.accessType === "ownership"
+    let selectedOwnership = selectedBase.accessType === "ownership"
       ? undefined
       : await (async () => {
           await clearStdin();
@@ -232,6 +291,22 @@ export const InitModule = {
             theme: selectTheme,
           });
         })();
+
+    if (upgradeable && selectedBase.accessType !== "ownership" && !selectedOwnership) {
+      await clearStdin();
+      const includeOwner = await confirm({
+        message: "Upgradeable diamonds need an owner. Include the owner base?",
+        default: true,
+      });
+      if (includeOwner) {
+        selectedOwnership = ConfigModule.DEFAULT_OWNER_BASE;
+      } else {
+        console.log(yellow(
+          "Upgradeable diamonds without an owner cannot be upgraded; "
+          + "add an ownership base before deploying.",
+        ));
+      }
+    }
 
     const ownershipExtensionChoices = getOwnershipExtensionChoices(accessBases, selectedOwnership);
     const selectedOwnershipExtensions = ownershipExtensionChoices.length > 0
@@ -279,7 +354,7 @@ export const InitModule = {
     const { deps, packageType } = getFrameworkDependencies(framework, String(ctx.param.toolbox));
     showDependencies(deps, packageType);
     await clearStdin();
-    const installDeps = await (await loadPrompts()).confirm({
+    const installDeps = await confirm({
       message: "Install project dependencies?",
       default: true,
     });
@@ -308,6 +383,7 @@ export const InitModule = {
         framework,
         selectedBaseKey,
         selectedBaseLabel: selectedBase.label,
+        upgradeable,
         selectedLibraries,
         selectedAccess,
         selectedExtensions: selection.selectedExtensions,

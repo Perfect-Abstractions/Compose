@@ -1,4 +1,4 @@
-import { statusCode } from "./utils";
+import { errorChain, statusCode } from "./utils";
 
 /** Stable error categories emitted by the RPC adapter. */
 export type RPCErrorCode =
@@ -42,14 +42,46 @@ export class RPCAdapterError extends Error {
 }
 
 /**
+ * Returns the deepest non-empty message in an error's cause chain.
+ *
+ * Transport failures hide the useful reason (e.g. `connect ECONNREFUSED`) in a
+ * cause, so the summary walks to the bottom instead of quoting the wrapper.
+ * @param error Error whose cause chain should be summarized.
+ * @returns The collapsed, bounded message, or `undefined` when none is found.
+ */
+function causeSummary(error: unknown): string | undefined {
+  const causes = errorChain(error).slice(1);
+  for (let index = causes.length - 1; index >= 0; index -= 1) {
+    const item = causes[index];
+    const raw = item instanceof Error ? item.message : typeof item === "string" ? item : "";
+    const message = raw.replace(/\s+/g, " ").trim();
+    if (message) return message.length > 200 ? `${message.slice(0, 197)}...` : message;
+  }
+  return undefined;
+}
+
+/**
  * Converts an unknown transport failure into a stable adapter error.
  * @param operation RPC operation that failed.
  * @param chainId Chain on which the operation was attempted.
  * @param error Original transport or client failure.
+ * @param rpcUrl Endpoint the operation targeted, when known.
  * @returns A normalized adapter error with a stable error code.
  */
-export function requestError(operation: string, chainId: number, error: unknown): RPCAdapterError {
+export function requestError(
+  operation: string,
+  chainId: number,
+  error: unknown,
+  rpcUrl?: string,
+): RPCAdapterError {
   const status = statusCode(error);
   const code = status === 401 ? "RPC_UNAUTHORIZED" : "RPC_REQUEST_FAILED";
-  return new RPCAdapterError(code, `RPC ${operation} failed on chain ${chainId}`, { operation, chainId, cause: error });
+  const target = rpcUrl ? ` at ${rpcUrl}` : "";
+  const cause = causeSummary(error);
+  const detail = cause ? `: ${cause}` : "";
+  return new RPCAdapterError(code, `RPC ${operation} failed on chain ${chainId}${target}${detail}`, {
+    operation,
+    chainId,
+    cause: error,
+  });
 }

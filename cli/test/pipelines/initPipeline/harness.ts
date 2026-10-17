@@ -102,6 +102,7 @@ export async function createInitPipelineHarness(
   framework: InitFramework,
   base: string,
   projectName: string,
+  overrides: Record<string, unknown> = {},
 ): Promise<InitPipelineHarness> {
   const outputRoot = await fs.mkdtemp(path.join(os.tmpdir(), "compose-init-pipeline-"));
   const projectRoot = path.join(outputRoot, projectName);
@@ -117,6 +118,7 @@ export async function createInitPipelineHarness(
     projectName,
     outDir: outputRoot,
     installDeps: false,
+    ...overrides,
   });
 
   return {

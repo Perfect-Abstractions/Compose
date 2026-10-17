@@ -103,6 +103,24 @@ export function toRelativeImport(relativePath: string): string {
 }
 
 /**
+ * Renders a path relative to the project root for CLI output.
+ *
+ * Falls back to the input path when the target lives outside the project
+ * (or on a different Windows drive), so callers can print the result as-is.
+ *
+ * @param projectRoot - Absolute project root.
+ * @param targetPath - The path to display.
+ * @returns A project-relative POSIX-style path, or the input when it cannot be made relative.
+ */
+export function toProjectRelativePath(projectRoot: string, targetPath: string): string {
+  const relative = path.relative(projectRoot, targetPath);
+  if (!relative || relative.startsWith("..") || path.isAbsolute(relative)) {
+    return targetPath;
+  }
+  return toPosixPath(relative);
+}
+
+/**
  * Checks whether a directory is empty, optionally ignoring specific entries.
  *
  * @param dirPath - The directory path to check.

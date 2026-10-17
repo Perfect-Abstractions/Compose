@@ -2,12 +2,12 @@ import fs from "node:fs/promises";
 import path from "node:path";
 import { describe, expect, it } from "vitest";
 import { ScaffoldingModule } from "../../../src/modules/scaffolding/module";
-import { createDeployGenerationHarness } from "../deployGeneration/harness";
+import { createScaffoldHarness } from "../scaffoldHarness";
 
 /** Tests compose.json assembly and persistence from a prepared scaffold map. */
 describe("ScaffoldingModule", () => {
   it("writes selected package facets to compose.json", async () => {
-    const harness = await createDeployGenerationHarness();
+    const harness = await createScaffoldHarness();
     const contractSourceRoot = path.join(harness.projectRoot, "src");
 
     try {

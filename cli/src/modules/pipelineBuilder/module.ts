@@ -8,6 +8,7 @@ import { InspectPipeline } from "../../pipelines/inspectPipeline";
 import { ValidatePipeline } from "../../pipelines/validatePipeline";
 import { InstallPipeline } from "../../pipelines/installPipeline";
 import { RemovePipeline } from "../../pipelines/removePipeline";
+import { DeployPipeline } from "../../pipelines/deployPipeline";
 
 /**
  * Pipeline builder module that routes CLI commands to their corresponding pipelines.
@@ -92,6 +93,18 @@ export const PipelineBuilderModule = {
           error: null,
         };
         return RemovePipeline.execute(ctx);
+      case "deploy":
+        ctx.state.commandSelected = {
+          success: true,
+          result: {
+            command: ctx.param.command,
+            diamond: ctx.param.diamond,
+            chain: ctx.param.chain,
+            instance: ctx.param.instance,
+          },
+          error: null,
+        };
+        return DeployPipeline.execute(ctx);
       default:
         ctx.state.commandRouting = {
           success: false,

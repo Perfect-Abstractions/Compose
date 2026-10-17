@@ -5,6 +5,7 @@ Scaffolded by [Compose CLI](https://compose.diamonds) - The open-source toolkit 
 ## Prerequisites
 
 - [Node.js](https://nodejs.org/) (v20 or later)
+- [Compose CLI](https://compose.diamonds)
 
 ## Install Dependencies
 
@@ -24,7 +25,7 @@ npm run build
 npm run test
 ```
 
-## Deploy Locally
+## Deploy
 
 Start a local Ethereum node:
 
@@ -32,16 +33,16 @@ Start a local Ethereum node:
 npx hardhat node
 ```
 
-Deploy to the local network (in a separate terminal):
+Plan the deployment and generate the managed deploy script (in a separate terminal):
 
 ```shell
-npx hardhat run scripts/deploy.ts --network localhost
+compose deploy
 ```
 
-## Deploy
+Review the script, then run it against the local chain:
 
 ```shell
-npx hardhat run scripts/deploy.ts --network <network_name>
+compose deploy --broadcast
 ```
 
 ## Learn More

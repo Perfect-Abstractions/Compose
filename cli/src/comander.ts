@@ -26,6 +26,8 @@ export function buildProgram(): Command {
     .option("--ownership-extensions <facets>", "Ownership extension facets")
     .option("--access-control <bases>", "Comma-separated access control bases")
     .option("--access-control-extensions <facets>", "Access control extension facets")
+    .option("--upgradeable", "Include the upgrade facet and owner coupling")
+    .option("--immutable", "Deploy without the upgrade facet (default)")
     .option("--out <dir>", "Output directory")
     .option("--yes", "Non-interactive mode (requires --base)")
     .option("--install-deps", "Install dependencies (default)")
@@ -53,6 +55,17 @@ export function buildProgram(): Command {
     .option("--manifest <path-or-name>", "Apply a remove batch manifest")
     .option("--create-manifest <name>", "Create a remove batch manifest without applying it")
     .option("--yes", "Skip confirmation prompts");
+
+  program
+    .command("deploy")
+    .description("Deploy a diamond from compose.json and record it in compose.lock")
+    .option("--diamond <name>", "Diamond name from compose.json")
+    .option("--chain <chain-key>", "Chain key from compose.json", "local")
+    .option("--instance <name>", "Deployment instance name", "default")
+    .option("--project-root <dir>", "Compose project directory")
+    .option("--broadcast", "Run the managed deploy script without asking")
+    .option("--dry-run", "Print the plan and generated script without writing or deploying")
+    .option("--redeploy", "Abandon the existing lock record and deploy fresh");
 
   program
     .command("validate")
@@ -89,12 +102,21 @@ export function buildProgram(): Command {
 /**
  * Parses CLI arguments using commander and returns a structured result.
  *
+ * Everything from the first `--` (at or after the command) onward is
+ * passthrough: it is split off before commander parses, so unknown options
+ * before the separator are still rejected, and the tail is forwarded to the
+ * framework by `compose deploy`.
+ *
  * @param argv - The raw process.argv array (e.g. ["node", "cli.ts", "init", "--yes"])
  * @returns The parsed command name and flags object ready for ctx.param.
  */
 export function parseArgs(argv: string[]): { command: string; flags: Record<string, unknown> } {
+  const separatorIndex = argv.indexOf("--", 2);
+  const cliArgv = separatorIndex === -1 ? argv : argv.slice(0, separatorIndex);
+  const passthrough = separatorIndex === -1 ? [] : argv.slice(separatorIndex + 1);
+
   const program = buildProgram();
-  program.parse(argv);
+  program.parse(cliArgv);
 
   const invokedCommand = program.args[0] ?? "";
   const commandInstance = program.commands.find(
@@ -102,6 +124,11 @@ export function parseArgs(argv: string[]): { command: string; flags: Record<stri
   );
 
   if (!commandInstance) {
+    if (passthrough.length > 0) {
+      throw new Error(
+        `Unexpected arguments after '--': ${passthrough.join(" ")}. Only 'compose deploy' accepts passthrough arguments.`,
+      );
+    }
     return { command: invokedCommand, flags: {} };
   }
 
@@ -113,6 +140,15 @@ export function parseArgs(argv: string[]): { command: string; flags: Record<stri
   if (flags.out !== undefined) {
     flags.outDir = flags.out;
     delete flags.out;
+  }
+
+  if (passthrough.length > 0) {
+    if (command !== "deploy") {
+      throw new Error(
+        `Unexpected arguments after '--': ${passthrough.join(" ")}. Only 'compose deploy' accepts passthrough arguments.`,
+      );
+    }
+    flags.passthrough = passthrough;
   }
 
   const positionalArgs = commandInstance.args.filter((arg): arg is string => typeof arg === "string");

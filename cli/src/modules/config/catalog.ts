@@ -7,6 +7,12 @@ export const EMPTY_BASE: BaseDefinition = {
   optional: {},
 };
 
+/** Name of the optional global library facet that exposes diamond upgrades. */
+export const UPGRADE_FACET_NAME = "DiamondUpgradeFacet";
+
+/** Catalog key of the ownership base added when an upgradeable diamond has no owner. */
+export const DEFAULT_OWNER_BASE = "owner";
+
 /**
  * Sorts a record of base feature definitions by their `order` metadata property,
  * falling back to alphabetical label comparison when orders are equal or missing.

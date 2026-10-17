@@ -76,6 +76,20 @@ describe("createRPCAdapter", () => {
     });
   });
 
+  it("reports the endpoint and the root cause when a request fails", async () => {
+    useClient({
+      getChainId: vi.fn().mockRejectedValue(
+        new Error("HTTP request failed", { cause: new Error("connect ECONNREFUSED 127.0.0.1:8545") }),
+      ),
+    });
+
+    await expect(
+      createRPCAdapter({ rpcUrl: "http://127.0.0.1:8545", chainId: 31337 }),
+    ).rejects.toThrow(
+      "RPC getChainId failed on chain 31337 at http://127.0.0.1:8545: connect ECONNREFUSED 127.0.0.1:8545",
+    );
+  });
+
   it("checks bytecode only when requested", async () => {
     useClient();
     const adapter = await createRPCAdapter({ rpcUrl: "https://rpc.example", chainId: 11155111 });

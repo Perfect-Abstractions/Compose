@@ -264,24 +264,20 @@ Start a local Ethereum node in one terminal:
 
 In a second terminal, deploy your Counter application:
 
-<ExpandableCode language="bash" maxLines={5}>
-{`forge script script/Deploy.s.sol:DeployScript \\
-  --rpc-url http://localhost:8545 \\
-  --private-key 0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80 \\
-  --broadcast`}
+<ExpandableCode language="bash" maxLines={2}>
+{`compose deploy -- --private-key 0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80`}
 </ExpandableCode>
+
+`compose deploy` plans the deployment from `compose.json` and writes a managed deploy script (`script/ComposeDeploy.s.sol`). It prints the script path and asks for confirmation before running it, so you can review exactly what will execute first. The deployment is recorded in `compose.lock`.
 
 <Callout type="warning" title="Test private key only">
 The private key above is Anvil's default test key. **Never use it on a real network.**
 </Callout>
 
-You'll see the deployed addresses logged:
+You'll see the diamond address logged as the script runs:
 
 <ExpandableCode language="text" maxLines={10}>
 {`== Logs ==
-  CounterDataFacet: 0x5FbDB2315678afecb367f032d93F642f64180aa3
-  CounterIncrementFacet: 0xe7f1725E7734CE288F8367e1Bb143E90bb3F0512
-  DiamondInspectFacet: 0x9fE46736679d2D9a65F0992F2272dE9f3c7fa6e0
   Diamond: 0xCf7Ed3AccA5a467e9e704C703E8D87F634fB0Fc9`}
 </ExpandableCode>
 
