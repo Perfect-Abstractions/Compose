@@ -32,7 +32,7 @@ describe.sequential("deploy pipeline E2E", () => {
       path.join(harness.projectRoot, "script", "ComposeDeploy.s.sol"),
       "utf8",
     );
-    expect(script).toMatch(/^\/\/ compose-plan-hash: 0x[0-9a-f]{64}$/m);
+    expect(script).toMatch(/^\/\* compose-plan-hash: 0x[0-9a-f]{64} \*\/$/m);
     expect(script).toContain("CounterFacet counterFacet = new CounterFacet();");
 
     await expect(fs.access(path.join(harness.projectRoot, "compose.lock"))).rejects.toThrow();

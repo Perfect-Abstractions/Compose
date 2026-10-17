@@ -155,7 +155,7 @@ describe("DeployScriptModule.write", () => {
     await DeployScriptModule.write(model);
 
     const source = await fs.readFile(model.outputPath, "utf8");
-    expect(source).toContain(`// compose-plan-hash: ${PLAN_HASH}`);
+    expect(source).toContain(`/* compose-plan-hash: ${PLAN_HASH} */`);
     expect(source).toContain("CounterFacet counterFacet = new CounterFacet();");
     expect(await DeployScriptModule.readPlanHash(model.outputPath)).toBe(PLAN_HASH);
   });

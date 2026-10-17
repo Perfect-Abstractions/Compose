@@ -48,8 +48,8 @@ describe("renderFoundryDeployScript", () => {
   it("renders the plan hash, imports, and facet deployments in order", async () => {
     const source = await renderFoundryDeployScript(model());
 
-    expect(source).toContain(`// compose-plan-hash: ${PLAN_HASH}`);
-    expect(source).toContain("// compose-target: local (chain id 31337)");
+    expect(source).toContain(`/* compose-plan-hash: ${PLAN_HASH} */`);
+    expect(source).toContain("/* compose-target: local (chain id 31337) */");
     expect(source).toContain('import {Diamond} from "../src/Diamond.sol";');
     expect(source).toContain('import {AlphaFacet} from "../src/AlphaFacet.sol";');
     expect(source).toContain(

@@ -133,7 +133,7 @@ describe("DeployPipeline script generation", () => {
     expect(output()).not.toContain(harness.projectRoot);
 
     const source = await fs.readFile(scriptPath(), "utf8");
-    expect(source).toMatch(/^\/\/ compose-plan-hash: 0x[0-9a-f]{64}$/m);
+    expect(source).toMatch(/^\/\* compose-plan-hash: 0x[0-9a-f]{64} \*\/$/m);
     expect(source).toContain("CounterFacet counterFacet = new CounterFacet();");
     await expect(fs.access(path.join(harness.projectRoot, "compose.lock"))).rejects.toThrow();
   });

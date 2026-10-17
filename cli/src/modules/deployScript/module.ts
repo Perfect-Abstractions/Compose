@@ -8,7 +8,8 @@ import { buildScriptModel } from "./model";
 import { renderFoundryDeployScript, renderHardhatDeployScript } from "./renderers";
 import type { ManagedScriptModel } from "./types";
 
-const PLAN_HASH_LINE = /^\/\/\s*compose-plan-hash:\s*(0x[0-9a-fA-F]{64})\s*$/m;
+/** Plan-hash marker: `//` line comment (Hardhat) or block comment (Foundry). */
+const PLAN_HASH_LINE = /^(?:\/\/|\/\*)\s*compose-plan-hash:\s*(0x[0-9a-fA-F]{64})\s*(?:\*\/)?\s*$/m;
 
 /**
  * Deploy script module.
