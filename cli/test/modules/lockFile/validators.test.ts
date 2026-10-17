@@ -1,26 +1,43 @@
 import { describe, expect, it } from "vitest";
 import { validateLockFile } from "../../../src/modules/lockFile/validators";
 
-describe("validateLockFile", () => {
-  const validLock = {
+const deployment = {
+  diamond: "0x1234567890abcdef1234567890abcdef12345678",
+  facets: {
+    FacetA: "0xabcdef1234567890abcdef1234567890abcdef12",
+  },
+  facetHash: "0x1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef12",
+  lastSync: "2026-08-03T12:00:00Z",
+  txHash: "0x1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef12",
+};
+
+function lockWith(chainDeployments: unknown) {
+  return {
     compose: "0.0.3",
     deployments: {
       MyDiamond: {
-        sepolia: {
-          diamond: "0x1234567890abcdef1234567890abcdef12345678",
-          facets: {
-            FacetA: "0xabcdef1234567890abcdef1234567890abcdef12",
-          },
-          facetHash: "0x1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef12",
-          lastSync: "2026-08-03T12:00:00Z",
-          txHash: "0x1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef12",
-        },
+        sepolia: chainDeployments,
       },
     },
   };
+}
+
+function lockWithDeployment(overrides: Record<string, unknown>, instance = "default") {
+  return lockWith({ [instance]: { ...deployment, ...overrides } });
+}
+
+describe("validateLockFile", () => {
+  const validLock = lockWith({ default: deployment });
 
   it("accepts valid lock file structure", () => {
     expect(() => validateLockFile(validLock)).not.toThrow();
+  });
+
+  it("accepts multiple instances on one chain", () => {
+    expect(() => validateLockFile(lockWith({
+      default: deployment,
+      staging: { ...deployment, diamond: "0x9999999999999999999999999999999999999999" },
+    }))).not.toThrow();
   });
 
   it("rejects null input", () => {
@@ -36,7 +53,7 @@ describe("validateLockFile", () => {
     expect(() => validateLockFile(invalid)).toThrow("missing 'compose' version string");
   });
 
-  it("rejects non-string compose version", () => {
+  it("rejects invalid compose version", () => {
     const invalid = { compose: 123, deployments: {} };
     expect(() => validateLockFile(invalid)).toThrow("missing 'compose' version string");
   });
@@ -51,116 +68,54 @@ describe("validateLockFile", () => {
     expect(() => validateLockFile(invalid)).toThrow("missing 'deployments' object");
   });
 
-  it("rejects invalid diamond address", () => {
-    const invalid = {
-      compose: "0.0.3",
-      deployments: {
-        MyDiamond: {
-          sepolia: {
-            diamond: "not-an-address",
-            facets: {},
-            facetHash: "0x...",
-            lastSync: "2026-08-03T12:00:00Z",
-            txHash: "0x...",
-          },
-        },
-      },
-    };
+  it("rejects non-object chain deployments", () => {
+    expect(() => validateLockFile(lockWith("string")))
+      .toThrow("Deployments for 'MyDiamond' on 'sepolia' must be an object");
+  });
 
+  it("rejects non-object instance deployments", () => {
+    expect(() => validateLockFile(lockWith({ default: "string" })))
+      .toThrow("Deployment for 'MyDiamond' on 'sepolia' instance 'default' must be an object");
+  });
+
+  it("explains the legacy two-level lock format", () => {
+    expect(() => validateLockFile(lockWith(deployment))).toThrow("legacy lock format");
+  });
+
+  it("rejects invalid diamond address", () => {
+    const invalid = lockWithDeployment({ diamond: "not-an-address" });
     expect(() => validateLockFile(invalid)).toThrow("invalid or missing 'diamond' address");
   });
 
   it("rejects missing facets", () => {
-    const invalid = {
-      compose: "0.0.3",
-      deployments: {
-        MyDiamond: {
-          sepolia: {
-            diamond: "0x1234567890abcdef1234567890abcdef12345678",
-            facetHash: "0x...",
-            lastSync: "2026-08-03T12:00:00Z",
-            txHash: "0x...",
-          },
-        },
-      },
-    };
-
+    const invalid = lockWithDeployment({ facets: undefined });
     expect(() => validateLockFile(invalid)).toThrow("missing 'facets' object");
   });
 
   it("rejects invalid facet address", () => {
-    const invalid = {
-      compose: "0.0.3",
-      deployments: {
-        MyDiamond: {
-          sepolia: {
-            diamond: "0x1234567890abcdef1234567890abcdef12345678",
-            facets: {
-              FacetA: "not-an-address",
-            },
-            facetHash: "0x...",
-            lastSync: "2026-08-03T12:00:00Z",
-            txHash: "0x...",
-          },
-        },
-      },
-    };
-
+    const invalid = lockWithDeployment({ facets: { FacetA: "not-an-address" } });
     expect(() => validateLockFile(invalid)).toThrow("invalid address for facet 'FacetA'");
   });
 
   it("rejects missing facetHash", () => {
-    const invalid = {
-      compose: "0.0.3",
-      deployments: {
-        MyDiamond: {
-          sepolia: {
-            diamond: "0x1234567890abcdef1234567890abcdef12345678",
-            facets: {},
-            lastSync: "2026-08-03T12:00:00Z",
-            txHash: "0x...",
-          },
-        },
-      },
-    };
-
+    const invalid = lockWithDeployment({ facetHash: undefined });
     expect(() => validateLockFile(invalid)).toThrow("invalid or missing 'facetHash'");
   });
 
   it("rejects invalid lastSync", () => {
-    const invalid = {
-      compose: "0.0.3",
-      deployments: {
-        MyDiamond: {
-          sepolia: {
-            diamond: "0x1234567890abcdef1234567890abcdef12345678",
-            facets: {},
-            facetHash: "0x...",
-            lastSync: "not-a-date",
-            txHash: "0x...",
-          },
-        },
-      },
-    };
-
+    const invalid = lockWithDeployment({ lastSync: "not-a-date" });
     expect(() => validateLockFile(invalid)).toThrow("invalid or missing 'lastSync' timestamp");
   });
 
   it("rejects missing txHash", () => {
-    const invalid = {
-      compose: "0.0.3",
-      deployments: {
-        MyDiamond: {
-          sepolia: {
-            diamond: "0x1234567890abcdef1234567890abcdef12345678",
-            facets: {},
-            facetHash: "0x...",
-            lastSync: "2026-08-03T12:00:00Z",
-          },
-        },
-      },
-    };
-
+    const invalid = lockWithDeployment({ txHash: undefined });
     expect(() => validateLockFile(invalid)).toThrow("invalid or missing 'txHash'");
+  });
+
+  it("names the offending instance in field errors", () => {
+    const invalid = lockWithDeployment({ diamond: "not-an-address" }, "staging");
+    expect(() => validateLockFile(invalid)).toThrow(
+      "'MyDiamond' on 'sepolia' instance 'staging': invalid or missing 'diamond' address",
+    );
   });
 });
