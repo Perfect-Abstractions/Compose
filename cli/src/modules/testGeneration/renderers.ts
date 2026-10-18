@@ -1,6 +1,7 @@
 import { TestFacetEntry, TestGenerationModel } from "./types";
 import { toCamelCase } from "../../utils/strings";
 import { loadTemplate } from "../../utils/codegen";
+import { renderFacetSections } from "../facetSections";
 
 /**
  * Checks if an import path refers to an npm package (starts with "@").
@@ -31,8 +32,6 @@ export async function renderFoundryTest(model: TestGenerationModel): Promise<str
     })
     .join("\n");
 
-  const baseFacets = model.facets.filter((facet) => facet.group === "base");
-  const libraryFacets = model.facets.filter((facet) => facet.group === "library");
   let index = 0;
 
   const renderSetupLine = (facet: TestFacetEntry): string => {
@@ -41,8 +40,7 @@ export async function renderFoundryTest(model: TestGenerationModel): Promise<str
     return line;
   };
 
-  const baseLines = baseFacets.map(renderSetupLine).join("\n");
-  const libraryLines = libraryFacets.map(renderSetupLine).join("\n");
+  const { baseLines, libraryLines } = renderFacetSections(model.facets, renderSetupLine, "\n");
 
   return template
     .replaceAll("{{IMPORTS}}", imports)
@@ -77,30 +75,6 @@ function renderHardhatViemFacetDeploy(facet: TestFacetEntry): string {
 }
 
 /**
- * Renders base and library facet deploy sections for a Hardhat test file
- * using the provided per-facet renderer.
- *
- * @param model - The test generation model with facet entries.
- * @param renderFacetDeploy - Callback to render a single facet's deploy code.
- * @returns An object with `baseLines` and `libraryLines` strings.
- */
-function renderHardhatDeploySections(
-  model: TestGenerationModel,
-  renderFacetDeploy: (facet: TestFacetEntry) => string,
-): { baseLines: string; libraryLines: string } {
-  const baseLines = model.facets
-    .filter((facet) => facet.group === "base")
-    .map(renderFacetDeploy)
-    .join("\n\n");
-  const libraryLines = model.facets
-    .filter((facet) => facet.group === "library")
-    .map(renderFacetDeploy)
-    .join("\n\n");
-
-  return { baseLines, libraryLines };
-}
-
-/**
  * Renders a complete Hardhat + ethers.js test file for the Diamond.
  *
  * @param model - The test generation model with facet entries.
@@ -109,7 +83,7 @@ function renderHardhatDeploySections(
 export async function renderHardhatEthersTest(model: TestGenerationModel): Promise<string> {
   const [template, { baseLines, libraryLines }] = await Promise.all([
     loadTemplate("test", "hardhat-ethers-test.ts"),
-    renderHardhatDeploySections(model, renderHardhatEthersFacetDeploy),
+    renderFacetSections(model.facets, renderHardhatEthersFacetDeploy, "\n\n"),
   ]);
 
   return template
@@ -127,7 +101,7 @@ export async function renderHardhatEthersTest(model: TestGenerationModel): Promi
 export async function renderHardhatViemTest(model: TestGenerationModel): Promise<string> {
   const [template, { baseLines, libraryLines }] = await Promise.all([
     loadTemplate("test", "hardhat-viem-test.ts"),
-    renderHardhatDeploySections(model, renderHardhatViemFacetDeploy),
+    renderFacetSections(model.facets, renderHardhatViemFacetDeploy, "\n\n"),
   ]);
 
   return template

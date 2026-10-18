@@ -33,6 +33,28 @@ export function buildProgram(): Command {
     .option("--toolbox <ethers|viem>", "Hardhat toolbox", "ethers");
 
   program
+    .command("install")
+    .alias("i")
+    .description("Register facets in compose.json without deploying them")
+    .argument("[facets...]", "Catalog facet names, project contract names, or local path:Contract references")
+    .option("--diamond <name>", "Diamond name from compose.json")
+    .option("--project-root <dir>", "Compose project directory")
+    .option("--manifest <path-or-name>", "Apply an install batch manifest")
+    .option("--create-manifest <name>", "Create an install batch manifest without applying it")
+    .option("--yes", "Skip confirmation prompts")
+
+  program
+    .command("remove")
+    .alias("rm")
+    .description("Unregister facets from compose.json without changing a deployment")
+    .argument("[facets...]", "Facet names or local path:Contract references to unregister")
+    .option("--diamond <name>", "Diamond name from compose.json")
+    .option("--project-root <dir>", "Compose project directory")
+    .option("--manifest <path-or-name>", "Apply a remove batch manifest")
+    .option("--create-manifest <name>", "Create a remove batch manifest without applying it")
+    .option("--yes", "Skip confirmation prompts");
+
+  program
     .command("validate")
     .description("Validate selectors and virtual storage layouts")
     .option("--project-root <dir>", "Compose project directory")
@@ -74,12 +96,16 @@ export function parseArgs(argv: string[]): { command: string; flags: Record<stri
   const program = buildProgram();
   program.parse(argv);
 
-  const command = program.args[0] ?? "";
-  const commandInstance = program.commands.find((c) => c.name() === command);
+  const invokedCommand = program.args[0] ?? "";
+  const commandInstance = program.commands.find(
+    (candidate) => candidate.name() === invokedCommand || candidate.aliases().includes(invokedCommand),
+  );
 
   if (!commandInstance) {
-    return { command, flags: {} };
+    return { command: invokedCommand, flags: {} };
   }
+
+  const command = commandInstance.name();
 
   const opts = commandInstance.opts();
   const flags: Record<string, unknown> = { ...opts };
@@ -89,11 +115,10 @@ export function parseArgs(argv: string[]): { command: string; flags: Record<stri
     delete flags.out;
   }
 
-  // Map the first positional argument to projectName if --name wasn't passed
-  const positionalArgs = commandInstance.args.filter(
-    (arg): arg is string => typeof arg === "string" && arg !== command,
-  );
-  if (positionalArgs.length > 0) {
+  const positionalArgs = commandInstance.args.filter((arg): arg is string => typeof arg === "string");
+  if (command === "install" || command === "remove") {
+    if (positionalArgs.length > 0) flags.facets = positionalArgs;
+  } else if (positionalArgs.length > 0) {
     if (command === "inspect" && !flags.address) {
       flags.address = positionalArgs[0];
     } else if (!flags.projectName) {

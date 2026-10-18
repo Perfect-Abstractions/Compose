@@ -1,7 +1,6 @@
-import fs from "node:fs/promises";
 import { ComposeContext } from "../../context/types";
 import { DiamondInfo, FacetInfo } from "./types";
-import { findFileAncestor } from "../../utils/files";
+import { locateComposeProjectFile, readComposeProjectFile } from "../../utils/composeProjectFile";
 
 /**
  * Reads and parses compose.json, storing the result in ctx.state.infoLoader.
@@ -11,9 +10,9 @@ import { findFileAncestor } from "../../utils/files";
  */
 export async function loadComposeJson(ctx: ComposeContext): Promise<ComposeContext> {
   const startDir = String(ctx.param.projectRoot ?? process.cwd());
-  const composeJsonPath = await findFileAncestor(startDir, "compose.json");
+  const composeProjectFile = await locateComposeProjectFile(startDir);
 
-  if (!composeJsonPath) {
+  if (!composeProjectFile) {
     ctx.state.infoLoader = {
       success: false,
       result: null,
@@ -26,14 +25,13 @@ export async function loadComposeJson(ctx: ComposeContext): Promise<ComposeConte
     return ctx;
   }
 
-  const content = await fs.readFile(composeJsonPath, "utf8");
-  const composeJson = JSON.parse(content);
+  const composeJson = await readComposeProjectFile(composeProjectFile.path);
 
   ctx.config.composeJson = composeJson;
   ctx.state.infoLoader = {
     success: true,
     result: {
-      composeJsonPath,
+      composeJsonPath: composeProjectFile.path,
       composeJson,
     },
     error: null,

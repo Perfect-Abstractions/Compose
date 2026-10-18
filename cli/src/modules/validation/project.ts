@@ -1,7 +1,6 @@
-import fs from "node:fs/promises";
 import path from "node:path";
 import { ComposeContext } from "../../context/types";
-import { findFileAncestor } from "../../utils/files";
+import { locateComposeProjectFile, readComposeProjectFile } from "../../utils/composeProjectFile";
 import { ResolvedFacetSource } from "./types";
 import {
   ComposeProjectFacet,
@@ -50,19 +49,19 @@ type PendingFacet = {
 /** Loads validation inputs from the nearest Compose project definition. */
 export async function loadValidationProject(
   ctx: ComposeContext,
+  composeJsonOverride?: Record<string, unknown>,
 ): Promise<ValidationProject> {
-  const startDirectory = path.resolve(String(ctx.param.projectRoot ?? process.cwd()));
-  const composeJsonPath = await findFileAncestor(startDirectory, "compose.json");
-  if (!composeJsonPath) {
+  const startDirectory = String(ctx.param.projectRoot ?? process.cwd());
+  const composeProjectFile = await locateComposeProjectFile(startDirectory);
+  if (!composeProjectFile) {
     throw new Error(
       "compose.json not found. Run 'compose init' first or navigate to a Compose project directory.",
     );
   }
 
-  const composeJson = JSON.parse(
-    await fs.readFile(composeJsonPath, "utf8"),
-  ) as ComposeProjectDefinition;
-  const projectRoot = path.dirname(composeJsonPath);
+  const composeJson = (composeJsonOverride as ComposeProjectDefinition | undefined) ??
+    (await readComposeProjectFile(composeProjectFile.path)) as ComposeProjectDefinition;
+  const projectRoot = composeProjectFile.root;
   const configuredFramework = String(composeJson.framework ?? "");
   const framework = String(ctx.param.framework ?? configuredFramework);
   if (framework !== "foundry" && framework !== "hardhat") {
@@ -147,7 +146,7 @@ export async function loadValidationProject(
   ctx.state.validationProject = {
     success: true,
     result: {
-      composeJsonPath,
+      composeJsonPath: composeProjectFile.path,
       projectRoot,
       framework,
       diamonds,

@@ -23,6 +23,8 @@ import {
 import { showIncomplete, showReport, showSuccess } from "./output";
 import { getResolvedFacetSources, resolveFacetSources } from "./sourceResolution";
 import { IFrameworkAdapter } from "../../adapters/IFrameworkAdapter/interface";
+import type { IHashingAdapter } from "../../adapters/IHashingAdapter/interface";
+import type { ValidationProject } from "./project";
 
 /**
  * Validates facet scans for selector export guidance and collision-free layouts.
@@ -41,6 +43,44 @@ export const ValidationModule = {
   getIdentifierCollisionValidationState,
   getVirtualStorageLayoutValidationState,
   getResolvedFacetSources,
+
+  /** Runs source-only selector and virtual-storage validation for a project model. */
+  async validateProjectSources(
+    ctx: ComposeContext,
+    project: ValidationProject,
+    adapter: IFrameworkAdapter,
+    hashing: IHashingAdapter,
+  ): Promise<ComposeContext> {
+    const sources = await adapter.compileAst(
+      ctx,
+      project.facetSources.map((facet) => facet.sourcePath),
+    );
+    const scopes = project.diamonds.map((diamond) => ({
+      diamondName: diamond.name,
+      facets: diamond.facets,
+    }));
+
+    ctx = ValidationModule.scanFacetSelectors(ctx, sources, project.facetSources);
+    ctx = ValidationModule.buildVirtualStorageLayout(
+      ctx,
+      sources,
+      project.facetSources,
+      scopes,
+    );
+    ctx = await ValidationModule.validateSelectorExports(ctx);
+    ctx = await ValidationModule.detectSelectorCollisions(ctx, { hashing, scopes });
+
+    const selectorCollisions = getSelectorCollisionValidationState(ctx);
+    const virtualStorageLayout = getVirtualStorageLayoutValidationState(ctx);
+    const success = selectorCollisions?.success === true && virtualStorageLayout?.success === true;
+    const error = selectorCollisions?.error ?? virtualStorageLayout?.error ?? null;
+    ctx.state.validationSourceProject = {
+      success,
+      result: { checkedFacets: project.facetSources.length },
+      error,
+    };
+    return ctx;
+  },
 
   /** Resolves selected Compose package facets into compiler input paths. */
   async resolveComposeFacetSources(

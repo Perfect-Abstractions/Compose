@@ -3,6 +3,7 @@ import { toCamelCase } from "../../utils/strings";
 import { loadTemplate } from "../../utils/codegen";
 import path from "node:path";
 import { toPosixPath, toRelativeImport } from "../../utils/files";
+import { renderFacetSections } from "../facetSections";
 
 function scriptImport(model: DeployGenerationModel, importPath: string): string {
   return toRelativeImport(toPosixPath(path.relative(
@@ -28,8 +29,6 @@ export async function renderFoundryDeployScript(model: DeployGenerationModel): P
       return `import {${facet.contractName}} from "${importPath}";`;
     })
     .join("\n");
-  const baseFacets = model.facets.filter((facet) => facet.group === "base");
-  const libraryFacets = model.facets.filter((facet) => facet.group === "library");
   let index = 0;
 
   const renderDeployLine = (facet: DeployFacetEntry): string => {
@@ -39,8 +38,7 @@ export async function renderFoundryDeployScript(model: DeployGenerationModel): P
     return line;
   };
 
-  const baseLines = baseFacets.map(renderDeployLine).join("\n");
-  const libraryLines = libraryFacets.map(renderDeployLine).join("\n");
+  const { baseLines, libraryLines } = renderFacetSections(model.facets, renderDeployLine, "\n");
 
   return template
     .replaceAll("{{DIAMOND_NAME}}", model.diamond.contractName)
@@ -79,30 +77,6 @@ function renderHardhatViemFacetDeploy(facet: DeployFacetEntry): string {
 }
 
 /**
- * Renders base and library facet deploy sections for a Hardhat deploy script
- * using the provided per-facet renderer.
- *
- * @param model - The deploy generation model with facet entries.
- * @param renderFacetDeploy - Callback to render a single facet's deploy code.
- * @returns An object with `baseLines` and `libraryLines` strings.
- */
-function renderHardhatDeploySections(
-  model: DeployGenerationModel,
-  renderFacetDeploy: (facet: DeployFacetEntry) => string,
-): { baseLines: string; libraryLines: string } {
-  const baseLines = model.facets
-    .filter((facet) => facet.group === "base")
-    .map(renderFacetDeploy)
-    .join("\n\n");
-  const libraryLines = model.facets
-    .filter((facet) => facet.group === "library")
-    .map(renderFacetDeploy)
-    .join("\n\n");
-
-  return { baseLines, libraryLines };
-}
-
-/**
  * Renders a complete Hardhat + ethers.js deploy script that deploys a Diamond proxy.
  *
  * @param model - The deploy generation model with facet entries and output path.
@@ -111,7 +85,7 @@ function renderHardhatDeploySections(
 export async function renderHardhatEthersDeployScript(model: DeployGenerationModel): Promise<string> {
   const [template, { baseLines, libraryLines }] = await Promise.all([
     loadTemplate("deploy", "hardhat-ethers-deploy.ts"),
-    renderHardhatDeploySections(model, renderHardhatEthersFacetDeploy),
+    renderFacetSections(model.facets, renderHardhatEthersFacetDeploy, "\n\n"),
   ]);
 
   return template
@@ -129,7 +103,7 @@ export async function renderHardhatEthersDeployScript(model: DeployGenerationMod
 export async function renderHardhatViemDeployScript(model: DeployGenerationModel): Promise<string> {
   const [template, { baseLines, libraryLines }] = await Promise.all([
     loadTemplate("deploy", "hardhat-viem-deploy.ts"),
-    renderHardhatDeploySections(model, renderHardhatViemFacetDeploy),
+    renderFacetSections(model.facets, renderHardhatViemFacetDeploy, "\n\n"),
   ]);
 
   return template

@@ -6,6 +6,8 @@ import { BuildPipeline } from "../../pipelines/buildPipeline";
 import { RPCPipeline } from "../../pipelines/rpcPipeline";
 import { InspectPipeline } from "../../pipelines/inspectPipeline";
 import { ValidatePipeline } from "../../pipelines/validatePipeline";
+import { InstallPipeline } from "../../pipelines/installPipeline";
+import { RemovePipeline } from "../../pipelines/removePipeline";
 
 /**
  * Pipeline builder module that routes CLI commands to their corresponding pipelines.
@@ -76,6 +78,20 @@ export const PipelineBuilderModule = {
           error: null,
         };
         return InspectPipeline.execute(ctx);
+      case "install":
+        ctx.state.commandSelected = {
+          success: true,
+          result: { command: ctx.param.command, diamond: ctx.param.diamond },
+          error: null,
+        };
+        return InstallPipeline.execute(ctx);
+      case "remove":
+        ctx.state.commandSelected = {
+          success: true,
+          result: { command: ctx.param.command, diamond: ctx.param.diamond },
+          error: null,
+        };
+        return RemovePipeline.execute(ctx);
       default:
         ctx.state.commandRouting = {
           success: false,

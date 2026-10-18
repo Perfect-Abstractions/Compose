@@ -2,6 +2,15 @@ import { keccak256, stringToBytes, toHex } from "viem";
 import { SolidityAstSource } from "../../adapters/IFrameworkAdapter/interface";
 import { matchesAstSource } from "./astIdentity";
 import {
+  astNode,
+  childNodes,
+  numberArray,
+  stringValue,
+  walkAst,
+  walkAstWithContract,
+  type AstNode,
+} from "./astUtils";
+import {
   DiamondValidationScope,
   FacetReference,
   StorageVariableReference,
@@ -57,11 +66,6 @@ export function buildScopedVirtualStorageLayout(
     unsupported: results.flatMap((result) => result.unsupported),
   };
 }
-
-type AstNode = Record<string, unknown> & {
-  id?: number;
-  nodeType: string;
-};
 
 type ContainerKind = "mapping" | "dynamic-array" | "fixed-array";
 
@@ -296,7 +300,7 @@ function emitRecord(options: {
   };
   originsByRecord.set(record, analysis.origins);
   const records = [record];
-  const warnings = analysis.warnings.map((warning) => ({
+  const warnings: VirtualStorageLayoutWarning[] = analysis.warnings.map((warning) => ({
     sourceName: options.root.sourceName,
     contractName: options.root.contractName,
     storagePath: warning.storagePath,
@@ -1248,60 +1252,8 @@ function arraysEqual<T>(left: T[], right: T[]): boolean {
   return left.length === right.length && left.every((value, index) => value === right[index]);
 }
 
-function walkAst(value: unknown, visitor: (node: AstNode) => void): void {
-  if (Array.isArray(value)) {
-    for (const child of value) walkAst(child, visitor);
-    return;
-  }
-  const node = astNode(value);
-  if (!node) return;
-  visitor(node);
-  for (const child of Object.values(node)) {
-    if (child && typeof child === "object") walkAst(child, visitor);
-  }
-}
-
-function walkAstWithContract(
-  value: unknown,
-  ownerContractId: number | null,
-  visitor: (node: AstNode, ownerContractId: number | null) => void,
-): void {
-  if (Array.isArray(value)) {
-    for (const child of value) walkAstWithContract(child, ownerContractId, visitor);
-    return;
-  }
-  const node = astNode(value);
-  if (!node) return;
-  const nextOwner = node.nodeType === "ContractDefinition" && typeof node.id === "number"
-    ? node.id
-    : ownerContractId;
-  visitor(node, nextOwner);
-  for (const child of Object.values(node)) {
-    if (child && typeof child === "object") walkAstWithContract(child, nextOwner, visitor);
-  }
-}
-
-function childNodes(node: AstNode | null, key: string): AstNode[] {
-  const value = node?.[key];
-  return Array.isArray(value)
-    ? value.map(astNode).filter((child): child is AstNode => child !== null)
-    : [];
-}
-
-function astNode(value: unknown): AstNode | null {
-  return isRecord(value) && typeof value.nodeType === "string" ? value as AstNode : null;
-}
-
-function numberArray(value: unknown): number[] {
-  return Array.isArray(value) ? value.filter((item): item is number => typeof item === "number") : [];
-}
-
 function isRecord(value: unknown): value is Record<string, unknown> {
   return Boolean(value) && typeof value === "object" && !Array.isArray(value);
-}
-
-function stringValue(value: unknown): string {
-  return typeof value === "string" ? value : "";
 }
 
 function hexByte(value: number): string {
