@@ -56,6 +56,8 @@ function createFixtureAdapter(framework: InitFramework): IFrameworkAdapter {
     getScriptRoot: (projectRoot) => path.join(projectRoot, scriptDirectory),
     getTestRoot: (projectRoot) => path.join(projectRoot, "test"),
     getArtifactDir: (projectRoot) => path.join(projectRoot, artifactDirectory),
+    getDeploymentToolbox: async () => framework === "hardhat" ? "ethers" : null,
+    getDeploymentContractReference: async (_root, sourcePath, contractName) => `${sourcePath}:${contractName}`,
     compile: vi.fn(async () => undefined),
     compileAst: vi.fn(async (_ctx, sourcePaths) => sourcePaths.map((sourcePath, index) =>
       contractAst(sourcePath, contractNameFromSourcePath(sourcePath), index * 10 + 1)

@@ -1,0 +1,10 @@
+{
+  "name": "compose-deploy-script-hardhat-fixture",
+  "private": true,
+  "type": "module",
+  "devDependencies": {
+    "hardhat": "3.8.0",
+    "@nomicfoundation/hardhat-ethers": "4.0.3",
+    "@nomicfoundation/hardhat-viem": "3.0.9"
+  }
+}

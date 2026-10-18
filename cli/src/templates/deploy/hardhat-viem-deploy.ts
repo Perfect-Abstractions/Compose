@@ -14,7 +14,7 @@ async function deploy() {
 {{LIBRARY_LINES}}
 
   // Define diamond proxy.
-  const diamond = await viem.deployContract("Diamond", [facets]);
+  const diamond = await viem.deployContract("{{DIAMOND_REFERENCE}}", [facets]);
 
   console.log("Diamond:", diamond.address);
 }

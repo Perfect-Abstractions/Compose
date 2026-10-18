@@ -14,7 +14,7 @@ async function deploy() {
 {{LIBRARY_LINES}}
 
   // Define diamond proxy.
-  const diamond = await ethers.deployContract("Diamond", [facets]);
+  const diamond = await ethers.deployContract("{{DIAMOND_REFERENCE}}", [facets]);
   await diamond.waitForDeployment();
 
   console.log("Diamond:", await diamond.getAddress());

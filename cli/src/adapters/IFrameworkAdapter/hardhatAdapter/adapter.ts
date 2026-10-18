@@ -15,7 +15,7 @@ import {
 import { ScaffoldingModule } from "../../../modules/scaffolding/module";
 import { CLI_ROOT } from "../../../utils/cliRoot";
 import { isSourceUnitAst, listJsonFiles, uniqueAstSources } from "../../../utils/solidityAst";
-import { resolveHardhatAstSourcePath } from "./helpers";
+import { resolveHardhatAstSourcePath, resolveDeploymentContractReference } from "./helpers";
 
 /** Framework adapter for Hardhat-based Diamond projects. */
 const adapter: IFrameworkAdapter = {
@@ -37,6 +37,22 @@ const adapter: IFrameworkAdapter = {
 
   async compile(projectRoot: string): Promise<void> {
     await runCommand("npx", ["hardhat", "compile"], { cwd: projectRoot });
+  },
+
+  async getDeploymentToolbox(projectRoot: string): Promise<"ethers" | "viem"> {
+    const manifest = JSON.parse(await fs.readFile(path.join(projectRoot, "package.json"), "utf8")) as {
+      dependencies?: Record<string, string>;
+      devDependencies?: Record<string, string>;
+    };
+    const packages = { ...manifest.dependencies, ...manifest.devDependencies };
+    const ethers = Boolean(packages["@nomicfoundation/hardhat-ethers"] || packages["@nomicfoundation/hardhat-toolbox-mocha-ethers"] || packages["@nomicfoundation/hardhat-toolbox"]);
+    const viem = Boolean(packages["@nomicfoundation/hardhat-viem"] || packages["@nomicfoundation/hardhat-toolbox-viem"]);
+    if (ethers === viem) throw new Error("Cannot determine the Hardhat deployment toolbox. Specify ethers or viem explicitly.");
+    return viem ? "viem" : "ethers";
+  },
+
+  async getDeploymentContractReference(projectRoot: string, sourcePath: string, contractName: string): Promise<string> {
+    return resolveDeploymentContractReference(projectRoot, adapter.getArtifactDir(projectRoot), sourcePath, contractName);
   },
 
   async resolveSoliditySourcePath(ctx: ComposeContext, sourcePath: string): Promise<string> {

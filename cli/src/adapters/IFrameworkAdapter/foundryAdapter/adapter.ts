@@ -6,7 +6,7 @@ import {
   IFrameworkAdapter,
   SolidityAstSource,
 } from "../interface";
-import { writeFileIfMissing } from "../../../utils/files";
+import { writeFileIfMissing, toPosixPath } from "../../../utils/files";
 import { runCommand } from "../../../utils/exec";
 import {
   composePackageSubpath,
@@ -36,6 +36,14 @@ const adapter: IFrameworkAdapter = {
 
   async compile(projectRoot: string): Promise<void> {
     await runCommand("forge", ["build"], { cwd: projectRoot });
+  },
+
+  async getDeploymentToolbox(): Promise<null> {
+    return null;
+  },
+
+  async getDeploymentContractReference(projectRoot: string, sourcePath: string, contractName: string): Promise<string> {
+    return `${toPosixPath(path.relative(projectRoot, sourcePath))}:${contractName}`;
   },
 
   async resolveSoliditySourcePath(ctx: ComposeContext, sourcePath: string): Promise<string> {

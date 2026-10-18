@@ -74,7 +74,13 @@ export async function loadValidationProject(
   const pendingFacets: PendingFacet[] = [];
   const composeFacets: ComposeProjectFacet[] = [];
   const userFacets: UserProjectFacet[] = [];
-  for (const [diamondName, diamond] of Object.entries(composeJson.diamonds ?? {})) {
+  const configuredDiamonds = Object.entries(composeJson.diamonds ?? {});
+  const selectedDiamond = ctx.param.diamond;
+  if (selectedDiamond !== undefined && !configuredDiamonds.some(([name]) => name === selectedDiamond)) {
+    throw new Error(`Diamond '${String(selectedDiamond)}' was not found in compose.json.`);
+  }
+  for (const [diamondName, diamond] of configuredDiamonds) {
+    if (selectedDiamond !== undefined && diamondName !== selectedDiamond) continue;
     const diamondReference = typeof diamond.contract === "string" ? diamond.contract : "";
     const diamondSourcePath = diamondReference.split(":")[0];
     if (!diamondSourcePath) {
@@ -89,7 +95,7 @@ export async function loadValidationProject(
       const separatorIndex = contractReference.lastIndexOf(":");
       const contractName = separatorIndex >= 0
         ? contractReference.slice(separatorIndex + 1)
-        : facetAlias;
+        : facet.source === "package" ? contractReference || facetAlias : facetAlias;
       if (!contractName) continue;
 
       if (facet.source === "package") {

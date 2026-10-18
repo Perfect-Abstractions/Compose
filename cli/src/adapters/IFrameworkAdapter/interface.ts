@@ -43,6 +43,12 @@ export interface IFrameworkAdapter {
   /** Compile explicit Solidity entrypoints and return every unique source unit AST. */
   compileAst(ctx: ComposeContext, sourcePaths: string[]): Promise<SolidityAstSource[]>;
 
+  /** Detect the deployment API installed in a Hardhat project, or null for Foundry. */
+  getDeploymentToolbox(projectRoot: string): Promise<"ethers" | "viem" | null>;
+
+  /** Resolve the compiled contract identity used by the framework's deployment API. */
+  getDeploymentContractReference(projectRoot: string, sourcePath: string, contractName: string): Promise<string>;
+
   /**
    * Resolve a catalog Solidity path to a readable local file.
    *

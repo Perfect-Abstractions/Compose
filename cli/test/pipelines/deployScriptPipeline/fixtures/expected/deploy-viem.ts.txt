@@ -1,0 +1,31 @@
+import { network } from "hardhat";
+
+const { viem, networkName } = await network.create();
+
+async function deploy() {
+  console.log(`Deploying Diamond to ${networkName}...`);
+
+  const facets: `0x${string}`[] = [];
+
+  // Base facet generation.
+  const localFacet = await viem.deployContract("contracts/nested/counter/LocalFacet.sol:LocalFacet");
+  console.log("LocalFacet:", localFacet.address);
+  facets.push(localFacet.address);
+
+  const packageFacet = await viem.deployContract("sample-facets/PackageFacet.sol:PackageFacet");
+  console.log("PackageFacet:", packageFacet.address);
+  facets.push(packageFacet.address);
+
+  // Library facet generation.
+
+
+  // Define diamond proxy.
+  const diamond = await viem.deployContract("contracts/proxy/Proxy.sol:CustomDiamond", [facets]);
+
+  console.log("Diamond:", diamond.address);
+}
+
+deploy().catch((error) => {
+  console.error(error);
+  process.exitCode = 1;
+});

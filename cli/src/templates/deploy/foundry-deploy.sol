@@ -7,25 +7,22 @@ pragma solidity ^0.8.30;
 
 import {Script} from "forge-std/Script.sol";
 import {console} from "forge-std/console.sol";
-import {Diamond} from "../src/Diamond.sol";
+import {{{DIAMOND_NAME}}} from "{{DIAMOND_IMPORT}}";
 {{IMPORTS}}
 
 contract DeployScript is Script {
     function setUp() public {}
 
-    function run() public returns (Diamond diamond) {
+    function run() public returns ({{DIAMOND_NAME}} diamond) {
         vm.startBroadcast();
 
         address[] memory facets = new address[]({{FACET_COUNT}});
 
         /* Base facet generation. */
-{{BASE_LINES}}
-
-        /* Library facet generation. */
-{{LIBRARY_LINES}}
+{{BASE_LINES}}{{LIBRARY_SECTION}}
 
         /* Define diamond proxy. */
-        diamond = new Diamond(facets);
+        diamond = new {{DIAMOND_NAME}}(facets);
         console.log("Diamond:", address(diamond));
 
         vm.stopBroadcast();

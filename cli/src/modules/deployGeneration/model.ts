@@ -79,7 +79,6 @@ export function resolveDeployGenerationModel(
       facetName: facet.name,
       contractName: scaffoldEntry.contractName,
       importPath,
-      source: facet.source,
       origin: scaffoldEntry.origin,
       group: classifyDeployGroup(facet.source),
     };
@@ -92,6 +91,8 @@ export function resolveDeployGenerationModel(
 
   return {
     outputPath: path.join(scriptRoot, outputFileName),
+    projectRoot,
+    diamond: { contractName: "Diamond", importPath: `${ctx.param.framework === "hardhat" ? "contracts" : "src"}/Diamond.sol` },
     facets,
   };
 }
