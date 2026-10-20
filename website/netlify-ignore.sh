@@ -1,5 +1,5 @@
 #!/bin/bash
-# Netlify ignore script - Skip builds if website/ directory hasn't changed
+# Skip builds only when website inputs have not changed.
 # Based on official Netlify documentation: https://docs.netlify.com/configure-builds/ignore-builds/
 # Exit code: 0 = skip build, 1 = proceed with build
 
@@ -14,8 +14,9 @@ if [ -z "$CACHED_COMMIT_REF" ] || [ -z "$COMMIT_REF" ] || [ "$CACHED_COMMIT_REF"
   exit 1
 fi
 
-# Skip only when Netlify provides a valid baseline and website content is unchanged.
-if git diff --quiet "$CACHED_COMMIT_REF" "$COMMIT_REF" -- website/ 2>/dev/null; then
+# Library catalog generation reads Solidity sources and CLI presets at build time.
+if git diff --quiet "$CACHED_COMMIT_REF" "$COMMIT_REF" -- \
+  website/ cli/ ':(top,glob)src/**/*.sol' 2>/dev/null; then
   exit 0
 fi
 

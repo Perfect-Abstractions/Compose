@@ -4,11 +4,18 @@ on:
   pull_request:
     paths:
       - 'website/**'
+      - 'cli/**'
+      - 'src/**/*.sol'
       - '.github/workflows/docs-build.yml'
+      - '.github/scripts/netlify-ignore.test.mjs'
   push:
     branches: [main]
     paths:
       - 'website/**'
+      - 'cli/**'
+      - 'src/**/*.sol'
+      - '.github/workflows/docs-build.yml'
+      - '.github/scripts/netlify-ignore.test.mjs'
 
 jobs:
   lint-and-build:
@@ -24,6 +31,9 @@ jobs:
         with:
           node-version: '20'
           cache: 'npm'
+
+      - name: Check docs rebuild rules
+        run: node --test .github/scripts/netlify-ignore.test.mjs
 
       - name: Install dependencies
         run: npm ci
