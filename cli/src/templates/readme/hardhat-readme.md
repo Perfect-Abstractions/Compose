@@ -5,7 +5,6 @@ Scaffolded by [Compose CLI](https://compose.diamonds) - The open-source toolkit 
 ## Prerequisites
 
 - [Node.js](https://nodejs.org/) (v20 or later)
-- [Compose CLI](https://compose.diamonds)
 
 ## Install Dependencies
 
@@ -22,7 +21,7 @@ npm run build
 ## Test
 
 ```shell
-npm run test
+npx compose test
 ```
 
 ## Deploy
@@ -36,14 +35,16 @@ npx hardhat node
 Plan the deployment and generate the managed deploy script (in a separate terminal):
 
 ```shell
-compose deploy
+npx compose deploy
 ```
 
 Review the script, then run it against the local chain:
 
 ```shell
-compose deploy --broadcast
+npx compose deploy --broadcast
 ```
+
+The Compose CLI is a dev dependency of this project, so `npx compose` always runs the local version.
 
 ## Learn More
 

@@ -14,6 +14,7 @@ import {
 } from "../interface";
 import { toPosixPath, writeFileIfMissing } from "../../../utils/files";
 import { runCommand } from "../../../utils/exec";
+import { CLI_DEV_DEPENDENCY_VERSION, CLI_PACKAGE_NAME } from "../../../utils/metadata";
 import {
   composePackageSubpath,
   isComposePackagePath,
@@ -115,6 +116,9 @@ const adapter: IFrameworkAdapter = {
             hardhat: "^3.8.0",
             "@nomicfoundation/hardhat-toolbox-mocha-ethers": "^3.0.0",
           };
+
+    // Declared locally so every Compose command can run with `npx compose`.
+    devDeps[CLI_PACKAGE_NAME] = CLI_DEV_DEPENDENCY_VERSION;
 
     const packageJson = {
       name: projectName,

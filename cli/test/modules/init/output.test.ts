@@ -35,5 +35,6 @@ describe("init success output", () => {
     showSuccess(ctx);
 
     expect(log.mock.calls.flat().join("\n")).not.toContain("cd ");
+    expect(log.mock.calls.flat().join("\n")).toContain("npx compose test");
   });
 });

@@ -29,36 +29,23 @@ Althought the CLI support both Foundry and Hardhat, this tutorial will focus on 
 If you haven't used Foundry before, follow the <a href="https://book.getfoundry.sh/getting-started/installation">official installation guide</a> first. You only need `forge` and `anvil` for this tutorial.
 </Callout>
 
-## Step 1) Install the CLI
+## 1. Scaffold the project
 
-Install the Compose CLI so you can run all the CLI commands
-
-<ExpandableCode language="bash" maxLines={3}>
-{`npm install -g @perfect-abstractions/compose-cli`}
-</ExpandableCode>
-
-Verify it's installed:
+Run the Compose CLI with `npx` — no global installation needed:
 
 <ExpandableCode language="bash" maxLines={2}>
-{`compose --help`}
-</ExpandableCode>
-
-You can skip the global package installation. Just use `npx @perfect-abstractions/compose-cli` wherever you see `compose` in this tutorial.
-
-## Step 2) Scaffold the project
-
-<ExpandableCode language="bash" maxLines={2}>
-{`compose init`}
+{`npx @perfect-abstractions/compose-cli init`}
 </ExpandableCode>
 
 You'll be prompt to choose from a lot of different options from framework, ERC standards templates, and others. 
 
 For this tutorial, we will choose the `Counter` example with the following options:
 
-<ExpandableCode language="text" maxLines={15}>
+<ExpandableCode language="text" maxLines={16}>
 {`Enter project name: my-diamond
 Select project framework: Foundry
 Select base: Counter
+Select upgradeability: Immutable (no upgrade facet)
 Select extension facets: None
 Select Compose library facets: None
 Select ownership: None
@@ -71,9 +58,12 @@ Take the time to review the full library available to you. We support most major
 
 You can always skip the interactive prompts entirely:
 <ExpandableCode language="bash" maxLines={2}>
-{`compose init my-first-diamond --framework foundry --base counter --yes`}
+{`npx @perfect-abstractions/compose-cli init my-first-diamond --framework foundry --base counter --yes`}
 </ExpandableCode>
 
+<Callout type="tip" title="The CLI is now a project dependency">
+`compose init` adds `@perfect-abstractions/compose-cli` to the project's `devDependencies` and installs it. From inside the project, run every Compose command with `npx compose`
+</Callout>
 
 When the CLI finishes, follow the next steps instruction to move into your project and test it:
 
@@ -82,10 +72,10 @@ When the CLI finishes, follow the next steps instruction to move into your proje
 
 Next steps:
 1. cd my-first-diamond
-2. forge build && forge test`}
+2. npx compose test`}
 </ExpandableCode>
 
-## Step 3) Explore the project structure
+## 2. Explore the project structure
 
 The scaffold generates a diamond with two local facets and one from the Compose library.
 
@@ -163,19 +153,20 @@ Any facet that need `Counter` data uses the same `STORAGE_POSITION [ keccak256("
 
 Facets can be scoped based on your project needs. Compose encourages small scoped facets, one facet per responsibility, to allow granular composition. In this example, `CounterDataFacet` handles reads and `CounterIncrementFacet` handles mutations. You could combine them into a single facet, but keeping them separate lets you pick exactly the functionality you need at anytime
 
-## Step 4) Build and test
+## 3. Build and test
 
 Now let's compile and run the tests:
 
 <ExpandableCode language="bash" maxLines={2}>
-{`forge build && forge test -vv`}
+{`npx compose build
+npx compose test -- -vv`}
 </ExpandableCode>
 
 You should see compilation succeed and one passing test in `/test/Diamond.t.sol`
 
 The test deploys a diamond with all three facets the `Counter` needs, then calls `facetAddresses()` on `DiamondInspectFacet` to verify the right number of facets are registered.
 
-## Step 5) Write your own test
+## 4. Write your own test
 
 Let's interact with the `Counter` through a test. Open `test/Diamond.t.sol` and take a look at what's already there:
 
@@ -249,12 +240,12 @@ Now let's add a test that actually uses our `Counter`. Add this function inside 
 Run the test suite:
 
 <ExpandableCode language="bash" maxLines={2}>
-{`forge test`}
+{`npx compose test`}
 </ExpandableCode>
 
 All tests pass, demonstrating that data written by one facet is immediately visible to another through the diamond's shared storage.
 
-## Step 6) Deploy locally
+## 5. Deploy locally
 
 Start a local Ethereum node in one terminal:
 
@@ -265,10 +256,10 @@ Start a local Ethereum node in one terminal:
 In a second terminal, deploy your Counter application:
 
 <ExpandableCode language="bash" maxLines={2}>
-{`compose deploy -- --private-key 0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80`}
+{`npx compose deploy -- --private-key 0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80`}
 </ExpandableCode>
 
-`compose deploy` plans the deployment from `compose.json` and writes a managed deploy script (`script/ComposeDeploy.s.sol`). It prints the script path and asks for confirmation before running it, so you can review exactly what will execute first. The deployment is recorded in `compose.lock`.
+`npx compose deploy` plans the deployment from `compose.json` and writes a managed deploy script (`script/ComposeDeploy.s.sol`). It prints the script path and asks for confirmation before running it, so you can review exactly what will execute first. The deployment is recorded in `compose.lock`.
 
 <Callout type="warning" title="Test private key only">
 The private key above is Anvil's default test key. **Never use it on a real network.**
@@ -285,7 +276,7 @@ You'll see the diamond address logged as the script runs:
 
 You just deployed your first diamond proxy application. You've scaffolded a `Counter` project using the CLI, written tests that verify shared storage across facets, and deployed a composed system to a local network.
 
-We recommend you to explore all the template available to scaffold. Use the the `catalog` command to review what's available to you.
+We recommend you to explore all the template available to scaffold. Use the `npx compose catalog` command to review what's available to you.
 
 ## What's next?
 

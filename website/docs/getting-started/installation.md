@@ -27,15 +27,22 @@ Compose is published as two npm packages:
 
 ## Create a new project with Compose CLI
 
-The fastest path is to run the CLI with `npx` (no global install):
+Run the CLI with `npx` (no global install):
 
 ```bash
 npx @perfect-abstractions/compose-cli init
 ```
 
+`compose init` adds `@perfect-abstractions/compose-cli` to the generated project's `devDependencies` and installs it, so every Compose command runs from inside the project with `npx compose`:
+
+```bash
+cd my-diamond
+npx compose deploy
+```
+
 ### Manual Installation
 
-To install the CLI globally:
+To install the CLI globally instead:
 
 ```bash
 npm install -g @perfect-abstractions/compose-cli

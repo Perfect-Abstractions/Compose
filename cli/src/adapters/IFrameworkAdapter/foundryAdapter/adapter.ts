@@ -20,11 +20,35 @@ import {
 } from "../../../utils/soliditySources";
 import { CLI_ROOT } from "../../../utils/cliRoot";
 import { isSourceUnitAst, listJsonFiles, uniqueAstSources } from "../../../utils/solidityAst";
-import { ensureTomlSectionSettings } from "./helpers";
+import { yellow } from "../../../utils/terminal";
+import {
+  buildFoundryPackageJson,
+  ensureGitignoreEntry,
+  ensureTomlSectionSettings,
+} from "./helpers";
 
 /** Framework adapter for Foundry-based Diamond projects. */
 const MANAGED_SCRIPT_NAME = "ComposeDeploy.s.sol";
 const MANAGED_SCRIPT_CONTRACT = "ComposeDeployScript";
+
+/**
+ * Installs the generated project's npm dev dependencies (the Compose CLI).
+ *
+ * Foundry projects build and test without npm, so a failed install only warns:
+ * the user can rerun `npm install` later to get the local `npx compose` binary.
+ *
+ * @param projectRoot - Absolute path of the generated project.
+ */
+async function installNpmDependencies(projectRoot: string): Promise<void> {
+  try {
+    await runCommand("npm", ["install"], { cwd: projectRoot });
+  } catch {
+    console.log(yellow(
+      "Could not install npm dependencies. Run `npm install` inside the project "
+      + "to use the local Compose CLI with `npx compose`.",
+    ));
+  }
+}
 
 const adapter: IFrameworkAdapter = {
   getContractSourceRoot(projectRoot: string): string {
@@ -109,6 +133,12 @@ const adapter: IFrameworkAdapter = {
 
     await fs.mkdir(path.join(root, "test"), { recursive: true });
     await fs.mkdir(path.join(root, "script"), { recursive: true });
+
+    await fs.writeFile(
+      path.join(root, "package.json"),
+      buildFoundryPackageJson(String(ctx.param.projectName ?? "my-diamond")),
+      "utf8",
+    );
   },
 
   async writeConfig(ctx: ComposeContext, opts: ConfigOptions): Promise<void> {
@@ -128,7 +158,6 @@ const adapter: IFrameworkAdapter = {
     });
 
     const remappings = "@perfect-abstractions/compose/=lib/Compose/src/\n";
-    const gitignore = "out/\ncache/\n";
 
     let readme: string;
     try {
@@ -143,8 +172,24 @@ const adapter: IFrameworkAdapter = {
       await fs.writeFile(foundryTomlPath, updatedFoundryToml, "utf8");
     }
     await writeFileIfMissing(path.join(root, "remappings.txt"), remappings);
-    await writeFileIfMissing(path.join(root, ".gitignore"), gitignore);
+
+    const gitignorePath = path.join(root, ".gitignore");
+    let gitignore = "out/\ncache/\n";
+    try {
+      gitignore = await fs.readFile(gitignorePath, "utf8");
+    } catch (error) {
+      if ((error as NodeJS.ErrnoException).code !== "ENOENT") throw error;
+    }
+    const updatedGitignore = ensureGitignoreEntry(gitignore, "node_modules/");
+    if (updatedGitignore !== gitignore) {
+      await fs.writeFile(gitignorePath, updatedGitignore, "utf8");
+    }
+
     await fs.writeFile(path.join(root, "README.md"), readme, "utf8");
+
+    if (opts.installDeps) {
+      await installNpmDependencies(root);
+    }
   },
 
   getManagedDeployScriptPath(projectRoot: string): string {

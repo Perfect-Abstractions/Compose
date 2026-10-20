@@ -6,6 +6,7 @@ import { hardhatAdapter } from "../../../../src/adapters/IFrameworkAdapter/hardh
 import { resolveHardhatAstSourcePath } from "../../../../src/adapters/IFrameworkAdapter/hardhatAdapter/helpers";
 import { Context } from "../../../../src/context/context";
 import { ConfigModule } from "../../../../src/modules/config/module";
+import { CLI_DEV_DEPENDENCY_VERSION, CLI_PACKAGE_NAME } from "../../../../src/utils/metadata";
 import { canonicalizeAst } from "../canonicalAst";
 import {
   createHardhatAdapterFixtureHarness,
@@ -117,6 +118,29 @@ describe("hardhatAdapter.writeConfig", () => {
       await expect(
         fs.access(path.join(projectRoot, "scripts")),
       ).resolves.toBeUndefined();
+    } finally {
+      await fs.rm(projectRoot, { recursive: true, force: true });
+    }
+  });
+});
+
+/** Tests Hardhat project initialization written by compose init. */
+describe("hardhatAdapter.initProject", () => {
+  it("declares the Compose CLI as a dev dependency for local npx usage", async () => {
+    const projectRoot = await fs.mkdtemp(path.join(os.tmpdir(), "compose-hardhat-init-"));
+    const ctx = Context.create();
+    ctx.param.projectRoot = projectRoot;
+    ctx.param.projectName = "my-diamond";
+    ctx.param.toolbox = "ethers";
+
+    try {
+      await hardhatAdapter.initProject(ctx);
+
+      const packageJson = JSON.parse(
+        await fs.readFile(path.join(projectRoot, "package.json"), "utf8"),
+      ) as { devDependencies: Record<string, string> };
+
+      expect(packageJson.devDependencies[CLI_PACKAGE_NAME]).toBe(CLI_DEV_DEPENDENCY_VERSION);
     } finally {
       await fs.rm(projectRoot, { recursive: true, force: true });
     }

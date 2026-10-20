@@ -5,7 +5,13 @@ Scaffolded by [Compose CLI](https://compose.diamonds) - The open-source toolkit 
 ## Prerequisites
 
 - [Foundry](https://book.getfoundry.sh/getting-started/installation)
-- [Compose CLI](https://compose.diamonds)
+- [Node.js](https://nodejs.org/) (v20 or later) for the Compose CLI
+
+## Install Dependencies
+
+```shell
+npm install
+```
 
 ## Build
 
@@ -16,7 +22,7 @@ forge build
 ## Test
 
 ```shell
-forge test
+npx compose test
 ```
 
 ## Deploy
@@ -30,14 +36,16 @@ anvil
 Plan the deployment and generate the managed deploy script:
 
 ```shell
-compose deploy
+npx compose deploy
 ```
 
 Review the script, then run it against the local chain:
 
 ```shell
-compose deploy --broadcast
+npx compose deploy --broadcast
 ```
+
+The Compose CLI is a dev dependency of this project, so `npx compose` always runs the local version.
 
 ## Format
 
