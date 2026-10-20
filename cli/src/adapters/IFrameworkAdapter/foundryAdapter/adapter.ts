@@ -7,8 +7,10 @@ import {
   ConfigOptions,
   DeployCommand,
   DeployCommandOptions,
+  FrameworkCommand,
   IFrameworkAdapter,
   SolidityAstSource,
+  TestCommandOptions,
 } from "../interface";
 import { toPosixPath, writeFileIfMissing } from "../../../utils/files";
 import { runCommand } from "../../../utils/exec";
@@ -166,6 +168,13 @@ const adapter: IFrameworkAdapter = {
         "--broadcast",
         ...opts.passthrough,
       ],
+    };
+  },
+
+  createTestCommand(opts: TestCommandOptions): FrameworkCommand {
+    return {
+      command: "forge",
+      args: ["test", ...opts.passthrough],
     };
   },
 

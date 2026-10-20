@@ -24,11 +24,22 @@ export type DeployCommandOptions = {
   passthrough: string[];
 };
 
+/** Options for building the framework command that runs the project test suite. */
+export type TestCommandOptions = {
+  /** Absolute project root the command runs in. */
+  projectRoot: string;
+  /** Extra arguments forwarded to the framework after `--`. */
+  passthrough: string[];
+};
+
 /** A framework command ready to be executed. */
-export type DeployCommand = {
+export type FrameworkCommand = {
   command: string;
   args: string[];
 };
+
+/** A deploy command ready to be executed. */
+export type DeployCommand = FrameworkCommand;
 
 /** A contract deployment recorded by a framework broadcast. */
 export type BroadcastTransaction = {
@@ -104,6 +115,9 @@ export interface IFrameworkAdapter {
 
   /** Build the framework command that executes the managed deploy script. */
   createDeployCommand(opts: DeployCommandOptions): DeployCommand;
+
+  /** Build the framework command that executes the project test suite. */
+  createTestCommand(opts: TestCommandOptions): FrameworkCommand;
 
   /**
    * Read compiled deployed bytecode for a contract from the framework's

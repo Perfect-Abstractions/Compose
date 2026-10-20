@@ -178,6 +178,37 @@ describe("facet configuration commands", () => {
   });
 });
 
+describe("test command arguments", () => {
+  it("accepts a project root and framework passthrough arguments", () => {
+    expect(
+      parseArgs([
+        "node",
+        "compose",
+        "test",
+        "--project-root",
+        "./project",
+        "--",
+        "--match-test",
+        "test_Increment",
+        "-vvv",
+      ]),
+    ).toEqual({
+      command: "test",
+      flags: {
+        projectRoot: "./project",
+        passthrough: ["--match-test", "test_Increment", "-vvv"],
+      },
+    });
+  });
+
+  it("accepts test without options", () => {
+    expect(parseArgs(["node", "compose", "test"])).toEqual({
+      command: "test",
+      flags: {},
+    });
+  });
+});
+
 describe("deploy command arguments", () => {
   it("defaults chain, instance, and deployment flags", () => {
     expect(parseArgs(["node", "compose", "deploy"])).toEqual({
@@ -257,10 +288,10 @@ describe("deploy command arguments", () => {
 
   it("rejects passthrough arguments for commands that do not accept them", () => {
     expect(() => parseArgs(["node", "compose", "validate", "--", "--ast"])).toThrow(
-      "Only 'compose deploy' accepts passthrough arguments.",
+      "Only 'compose deploy' and 'compose test' accept passthrough arguments.",
     );
     expect(() => parseArgs(["node", "compose", "init", "example", "--", "--foo"])).toThrow(
-      "Only 'compose deploy' accepts passthrough arguments.",
+      "Only 'compose deploy' and 'compose test' accept passthrough arguments.",
     );
   });
 });

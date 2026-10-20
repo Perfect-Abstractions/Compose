@@ -26,6 +26,7 @@ compose catalog
 compose info
 compose validate [options]
 compose build
+compose test [options]
 compose rpc [options]
 compose inspect <address> [options]
 compose deploy [options]
@@ -166,6 +167,25 @@ Exit code non-zero on failure (CI-friendly).
 ### `compose build`
 
 Compile the project if artifacts are stale or missing.
+
+### `compose test`
+
+Run the project's test suite through the detected framework: `forge test` for Foundry projects or `npx hardhat test` for Hardhat projects. Framework output streams directly to the terminal, and a failing suite exits non-zero.
+
+**Options:**
+- `--project-root <dir>`: start searching for the project from this directory
+- `--`: everything after it is forwarded to the framework — use it for filters and reporting flags such as `--match-test`, `--gas-report`, or `--grep`
+
+```bash
+# Run the full suite
+compose test
+
+# Foundry: run one test verbosely
+compose test -- --match-test test_Increment -vvv
+
+# Hardhat: filter by test name
+compose test -- --grep "increment"
+```
 
 ### `compose rpc`
 

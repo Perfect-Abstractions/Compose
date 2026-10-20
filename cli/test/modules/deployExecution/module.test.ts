@@ -81,6 +81,7 @@ function stubAdapter(overrides: Partial<IFrameworkAdapter> = {}): IFrameworkAdap
     getManagedDeployScriptPath: () => path.join(projectRoot, "script", "ComposeDeploy.s.sol"),
     getManagedDeployResultPath: () => path.join(projectRoot, "cache", "compose", "deploy-result.json"),
     createDeployCommand: () => ({ command: process.execPath, args: ["-e", ""] }),
+    createTestCommand: () => ({ command: process.execPath, args: ["-e", ""] }),
     readDeployedBytecode: async () => undefined,
     readBroadcastTransactions: async () => [],
     ...overrides,

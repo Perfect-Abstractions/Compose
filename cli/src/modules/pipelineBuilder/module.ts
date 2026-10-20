@@ -3,6 +3,7 @@ import { InitPipeline } from "../../pipelines/initPipeline";
 import { InfoPipeline } from "../../pipelines/infoPipeline";
 import { CatalogPipeline } from "../../pipelines/catalogPipeline";
 import { BuildPipeline } from "../../pipelines/buildPipeline";
+import { TestPipeline } from "../../pipelines/testPipeline";
 import { RPCPipeline } from "../../pipelines/rpcPipeline";
 import { InspectPipeline } from "../../pipelines/inspectPipeline";
 import { ValidatePipeline } from "../../pipelines/validatePipeline";
@@ -65,6 +66,13 @@ export const PipelineBuilderModule = {
           error: null,
         };
         return BuildPipeline.execute(ctx);
+      case "test":
+        ctx.state.commandSelected = {
+          success: true,
+          result: { command: ctx.param.command },
+          error: null,
+        };
+        return TestPipeline.execute(ctx);
       case "rpc":
         ctx.state.commandSelected = {
           success: true,

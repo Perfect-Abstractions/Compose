@@ -7,6 +7,7 @@ import type {
   IFrameworkAdapter,
 } from "../../adapters/IFrameworkAdapter/interface";
 import { runCommand } from "../../utils/exec";
+import { toPassthroughArgs } from "../../utils/args";
 import { toProjectRelativePath, writeFileIfMissing } from "../../utils/files";
 import type { DeployPlan } from "../deployPlan/types";
 import type { DeployExecutionResult, DeployResultFile } from "./types";
@@ -24,12 +25,6 @@ function requireAddress(value: unknown, label: string): Hex {
 
 function toTransactionHash(value: unknown): Hex | null {
   return typeof value === "string" && isHex(value) && value.length === 66 ? (value as Hex) : null;
-}
-
-function toPassthroughArgs(value: unknown): string[] {
-  return Array.isArray(value)
-    ? value.filter((item): item is string => typeof item === "string")
-    : [];
 }
 
 /** The framework's deploy result file, when it captures one. */

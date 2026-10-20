@@ -85,6 +85,11 @@ export function buildProgram(): Command {
     .description("Compile the project if artifacts are stale or missing")
 
   program
+    .command("test")
+    .description("Run the project's test suite through its framework")
+    .option("--project-root <dir>", "Start searching for the project from this directory")
+
+  program
     .command("rpc")
     .description("Check RPC connectivity and optionally inspect contract bytecode")
     .option("--chain <chain-key>", "Chain key from compose.json", "local")
@@ -126,7 +131,7 @@ export function parseArgs(argv: string[]): { command: string; flags: Record<stri
   if (!commandInstance) {
     if (passthrough.length > 0) {
       throw new Error(
-        `Unexpected arguments after '--': ${passthrough.join(" ")}. Only 'compose deploy' accepts passthrough arguments.`,
+        `Unexpected arguments after '--': ${passthrough.join(" ")}. Only 'compose deploy' and 'compose test' accept passthrough arguments.`,
       );
     }
     return { command: invokedCommand, flags: {} };
@@ -143,9 +148,9 @@ export function parseArgs(argv: string[]): { command: string; flags: Record<stri
   }
 
   if (passthrough.length > 0) {
-    if (command !== "deploy") {
+    if (command !== "deploy" && command !== "test") {
       throw new Error(
-        `Unexpected arguments after '--': ${passthrough.join(" ")}. Only 'compose deploy' accepts passthrough arguments.`,
+        `Unexpected arguments after '--': ${passthrough.join(" ")}. Only 'compose deploy' and 'compose test' accept passthrough arguments.`,
       );
     }
     flags.passthrough = passthrough;
