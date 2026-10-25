@@ -1,0 +1,2771 @@
+{
+  "schemaVersion": 1,
+  "source": {
+    "directories": [
+      "src",
+      "cli/bases"
+    ],
+    "sha256": "a47058e7d9a4db9b62c3be2643be05bdc90e4042441152f3c3db71275f5c685a"
+  },
+  "files": [
+    {
+      "path": "src/access/AccessControl/Admin/AccessControlAdminFacet.sol",
+      "name": "AccessControlAdminFacet",
+      "kind": "facet",
+      "category": "access",
+      "family": "AccessControl",
+      "sha256": "b1865df3506b5aac12eaa6454dee12c1d0b4686efe0856514de8abbae8030e9c",
+      "presets": [
+        {
+          "id": "access-control",
+          "field": "optional.AccessControlAdminFacet.path",
+          "role": "optional"
+        }
+      ]
+    },
+    {
+      "path": "src/access/AccessControl/Admin/AccessControlAdminMod.sol",
+      "name": "AccessControlAdminMod",
+      "kind": "module",
+      "category": "access",
+      "family": "AccessControl",
+      "sha256": "811a34f3868c386a3f5b40c6f3eb24a9d23146e6e7f24f73867c3b88efde198d",
+      "presets": [
+        {
+          "id": "access-control",
+          "field": "optional.AccessControlAdminFacet.mod",
+          "role": "optional"
+        }
+      ]
+    },
+    {
+      "path": "src/access/AccessControl/Batch/Grant/AccessControlGrantBatchFacet.sol",
+      "name": "AccessControlGrantBatchFacet",
+      "kind": "facet",
+      "category": "access",
+      "family": "AccessControl",
+      "sha256": "52a3c62a3d9c73b6603f8a9e99ed6c2295545f588b71382cbc8b81a30196d799",
+      "presets": [
+        {
+          "id": "access-control",
+          "field": "optional.AccessControlGrantBatchFacet.path",
+          "role": "optional"
+        }
+      ]
+    },
+    {
+      "path": "src/access/AccessControl/Batch/Grant/AccessControlGrantBatchMod.sol",
+      "name": "AccessControlGrantBatchMod",
+      "kind": "module",
+      "category": "access",
+      "family": "AccessControl",
+      "sha256": "2d5fe4aaabf19b4dcc906250f7414723111ad6c0b888ac1a232502f9bdc6177b",
+      "presets": [
+        {
+          "id": "access-control",
+          "field": "optional.AccessControlGrantBatchFacet.mod",
+          "role": "optional"
+        }
+      ]
+    },
+    {
+      "path": "src/access/AccessControl/Batch/Revoke/AccessControlRevokeBatchFacet.sol",
+      "name": "AccessControlRevokeBatchFacet",
+      "kind": "facet",
+      "category": "access",
+      "family": "AccessControl",
+      "sha256": "bff7127fc5895ac37889e1c069b885e299fd114df04d88d57255290b1949e185",
+      "presets": [
+        {
+          "id": "access-control",
+          "field": "optional.AccessControlRevokeBatchFacet.path",
+          "role": "optional"
+        }
+      ]
+    },
+    {
+      "path": "src/access/AccessControl/Batch/Revoke/AccessControlRevokeBatchMod.sol",
+      "name": "AccessControlRevokeBatchMod",
+      "kind": "module",
+      "category": "access",
+      "family": "AccessControl",
+      "sha256": "216f83b594362695a270f96450fc21afeb877c470d3eb88b9f2bd617b6abe329",
+      "presets": [
+        {
+          "id": "access-control",
+          "field": "optional.AccessControlRevokeBatchFacet.mod",
+          "role": "optional"
+        }
+      ]
+    },
+    {
+      "path": "src/access/AccessControl/Data/AccessControlDataFacet.sol",
+      "name": "AccessControlDataFacet",
+      "kind": "facet",
+      "category": "access",
+      "family": "AccessControl",
+      "sha256": "32f3c644c05a683cf615eeb7eb5881e0befd0d395ed2c5975c56c6a09cddc273",
+      "presets": [
+        {
+          "id": "access-control",
+          "field": "required.AccessControlDataFacet.path",
+          "role": "required"
+        }
+      ]
+    },
+    {
+      "path": "src/access/AccessControl/Data/AccessControlDataMod.sol",
+      "name": "AccessControlDataMod",
+      "kind": "module",
+      "category": "access",
+      "family": "AccessControl",
+      "sha256": "7cfe4b91db41496d624c30475b0e966dd685a1152a61f5bb5d61be69936caa1c",
+      "presets": [
+        {
+          "id": "access-control",
+          "field": "required.AccessControlDataFacet.mod",
+          "role": "required"
+        }
+      ]
+    },
+    {
+      "path": "src/access/AccessControl/Grant/AccessControlGrantFacet.sol",
+      "name": "AccessControlGrantFacet",
+      "kind": "facet",
+      "category": "access",
+      "family": "AccessControl",
+      "sha256": "dd407c4cb90430c035d4ddbdfabee920a079a09d6773e71b3694c05d4d09a3ab",
+      "presets": [
+        {
+          "id": "access-control",
+          "field": "required.AccessControlGrantFacet.path",
+          "role": "required"
+        }
+      ]
+    },
+    {
+      "path": "src/access/AccessControl/Grant/AccessControlGrantMod.sol",
+      "name": "AccessControlGrantMod",
+      "kind": "module",
+      "category": "access",
+      "family": "AccessControl",
+      "sha256": "f8fbbc976a518fde5a25b56b028e5cc86c849f2b549f975eba4e851befa7c84f",
+      "presets": [
+        {
+          "id": "access-control",
+          "field": "required.AccessControlGrantFacet.mod",
+          "role": "required"
+        }
+      ]
+    },
+    {
+      "path": "src/access/AccessControl/Pausable/AccessControlPausableFacet.sol",
+      "name": "AccessControlPausableFacet",
+      "kind": "facet",
+      "category": "access",
+      "family": "AccessControl",
+      "sha256": "67a87e3775523c8d5a410053f209182424bc8704271795a677044abf147a3218",
+      "presets": [
+        {
+          "id": "access-control",
+          "field": "optional.AccessControlPausableFacet.path",
+          "role": "optional"
+        }
+      ]
+    },
+    {
+      "path": "src/access/AccessControl/Pausable/AccessControlPausableMod.sol",
+      "name": "AccessControlPausableMod",
+      "kind": "module",
+      "category": "access",
+      "family": "AccessControl",
+      "sha256": "aa5de5476e2807a19f6df16c35c5d608506b61a212c611541061ab94f6ed1212",
+      "presets": [
+        {
+          "id": "access-control",
+          "field": "optional.AccessControlPausableFacet.mod",
+          "role": "optional"
+        }
+      ]
+    },
+    {
+      "path": "src/access/AccessControl/Renounce/AccessControlRenounceFacet.sol",
+      "name": "AccessControlRenounceFacet",
+      "kind": "facet",
+      "category": "access",
+      "family": "AccessControl",
+      "sha256": "1d62dfe83a1958ca9fcdc6d65ca11b02beb244586f7e303ad78f99cff1a8f0a1",
+      "presets": [
+        {
+          "id": "access-control",
+          "field": "optional.AccessControlRenounceFacet.path",
+          "role": "optional"
+        }
+      ]
+    },
+    {
+      "path": "src/access/AccessControl/Renounce/AccessControlRenounceMod.sol",
+      "name": "AccessControlRenounceMod",
+      "kind": "module",
+      "category": "access",
+      "family": "AccessControl",
+      "sha256": "b1eeeadb4ae8a932ec5148f2f9bd8a334618efd9167e6d948d4f72ddf3fed4e0",
+      "presets": [
+        {
+          "id": "access-control",
+          "field": "optional.AccessControlRenounceFacet.mod",
+          "role": "optional"
+        }
+      ]
+    },
+    {
+      "path": "src/access/AccessControl/Revoke/AccessControlRevokeFacet.sol",
+      "name": "AccessControlRevokeFacet",
+      "kind": "facet",
+      "category": "access",
+      "family": "AccessControl",
+      "sha256": "c850334e7660b312cb88c03f5f88bfb0c1eb2575f531d76bdb7c38f4199a888b",
+      "presets": [
+        {
+          "id": "access-control",
+          "field": "required.AccessControlRevokeFacet.path",
+          "role": "required"
+        }
+      ]
+    },
+    {
+      "path": "src/access/AccessControl/Revoke/AccessControlRevokeMod.sol",
+      "name": "AccessControlRevokeMod",
+      "kind": "module",
+      "category": "access",
+      "family": "AccessControl",
+      "sha256": "ec6eba64a8b31c155c5fec25d0c9b4d74340953f98505a7fe3ed0ad5a8c47e4d",
+      "presets": [
+        {
+          "id": "access-control",
+          "field": "required.AccessControlRevokeFacet.mod",
+          "role": "required"
+        }
+      ]
+    },
+    {
+      "path": "src/access/AccessControl/Temporal/Data/AccessControlTemporalDataFacet.sol",
+      "name": "AccessControlTemporalDataFacet",
+      "kind": "facet",
+      "category": "access",
+      "family": "AccessControl",
+      "sha256": "9071c9898442e5bd3343247442dd63cdd84fa3fb4e2258ac93354b166659f99a",
+      "presets": [
+        {
+          "id": "access-control",
+          "field": "optional.AccessControlTemporalDataFacet.path",
+          "role": "optional"
+        }
+      ]
+    },
+    {
+      "path": "src/access/AccessControl/Temporal/Data/AccessControlTemporalDataMod.sol",
+      "name": "AccessControlTemporalDataMod",
+      "kind": "module",
+      "category": "access",
+      "family": "AccessControl",
+      "sha256": "ff209280707af8af62a061f030eb8b873d13c126f7bb73b0a47736d699e797f9",
+      "presets": [
+        {
+          "id": "access-control",
+          "field": "optional.AccessControlTemporalDataFacet.mod",
+          "role": "optional"
+        }
+      ]
+    },
+    {
+      "path": "src/access/AccessControl/Temporal/Grant/AccessControlTemporalGrantFacet.sol",
+      "name": "AccessControlTemporalGrantFacet",
+      "kind": "facet",
+      "category": "access",
+      "family": "AccessControl",
+      "sha256": "7d73f8efa3521c6ec3452ff3c75751aac443c7daf87cbc59320a530bd233ebab",
+      "presets": [
+        {
+          "id": "access-control",
+          "field": "optional.AccessControlTemporalGrantFacet.path",
+          "role": "optional"
+        }
+      ]
+    },
+    {
+      "path": "src/access/AccessControl/Temporal/Grant/AccessControlTemporalGrantMod.sol",
+      "name": "AccessControlTemporalGrantMod",
+      "kind": "module",
+      "category": "access",
+      "family": "AccessControl",
+      "sha256": "af5756514f5f14ac1c0a3851779546f60de565e48a810162d4a37cc873bc1dc7",
+      "presets": [
+        {
+          "id": "access-control",
+          "field": "optional.AccessControlTemporalGrantFacet.mod",
+          "role": "optional"
+        }
+      ]
+    },
+    {
+      "path": "src/access/Owner/Data/OwnerDataFacet.sol",
+      "name": "OwnerDataFacet",
+      "kind": "facet",
+      "category": "access",
+      "family": "Owner",
+      "sha256": "bed2e7824e6e7998e22503d441bab7619df87080fad84f041acdb4959ebfb760",
+      "presets": [
+        {
+          "id": "owner",
+          "field": "required.OwnerDataFacet.path",
+          "role": "required"
+        },
+        {
+          "id": "owner-two-step",
+          "field": "required.OwnerDataFacet.path",
+          "role": "required"
+        }
+      ]
+    },
+    {
+      "path": "src/access/Owner/Data/OwnerDataMod.sol",
+      "name": "OwnerDataMod",
+      "kind": "module",
+      "category": "access",
+      "family": "Owner",
+      "sha256": "0075c032f104fc73ae2d64533a140407878234f00bcf8deb025607216c0eca0c",
+      "presets": [
+        {
+          "id": "owner",
+          "field": "required.OwnerDataFacet.mod",
+          "role": "required"
+        },
+        {
+          "id": "owner-two-step",
+          "field": "required.OwnerDataFacet.mod",
+          "role": "required"
+        }
+      ]
+    },
+    {
+      "path": "src/access/Owner/Renounce/OwnerRenounceFacet.sol",
+      "name": "OwnerRenounceFacet",
+      "kind": "facet",
+      "category": "access",
+      "family": "Owner",
+      "sha256": "956afac8c7a0b846bf311bac262f922f5f58b1e42c7329d77fa243bbf100dfb2",
+      "presets": [
+        {
+          "id": "owner",
+          "field": "optional.OwnerRenounceFacet.path",
+          "role": "optional"
+        }
+      ]
+    },
+    {
+      "path": "src/access/Owner/Renounce/OwnerRenounceMod.sol",
+      "name": "OwnerRenounceMod",
+      "kind": "module",
+      "category": "access",
+      "family": "Owner",
+      "sha256": "67302ec7a76268d2997e1e5f01210adc3556c8179a3812929ff7c5f1f7628060",
+      "presets": [
+        {
+          "id": "owner",
+          "field": "optional.OwnerRenounceFacet.mod",
+          "role": "optional"
+        }
+      ]
+    },
+    {
+      "path": "src/access/Owner/Transfer/OwnerTransferFacet.sol",
+      "name": "OwnerTransferFacet",
+      "kind": "facet",
+      "category": "access",
+      "family": "Owner",
+      "sha256": "8789256ca46bb600622cb70a047657e3e2acc97761aa4ccb817886173037fb3d",
+      "presets": [
+        {
+          "id": "owner",
+          "field": "required.OwnerTransferFacet.path",
+          "role": "required"
+        }
+      ]
+    },
+    {
+      "path": "src/access/Owner/Transfer/OwnerTransferMod.sol",
+      "name": "OwnerTransferMod",
+      "kind": "module",
+      "category": "access",
+      "family": "Owner",
+      "sha256": "4f892916c134376c3d6c8df315497944dd08dcbbd161113d46dfaf5387afe55c",
+      "presets": [
+        {
+          "id": "owner",
+          "field": "required.OwnerTransferFacet.mod",
+          "role": "required"
+        }
+      ]
+    },
+    {
+      "path": "src/access/Owner/TwoSteps/Data/OwnerTwoStepDataFacet.sol",
+      "name": "OwnerTwoStepDataFacet",
+      "kind": "facet",
+      "category": "access",
+      "family": "Owner",
+      "sha256": "993a32d4b2d00017b62c484ea687bd9e9b31b57f07fab96eb9849eeb00985af7",
+      "presets": [
+        {
+          "id": "owner-two-step",
+          "field": "required.OwnerTwoStepDataFacet.path",
+          "role": "required"
+        }
+      ]
+    },
+    {
+      "path": "src/access/Owner/TwoSteps/Data/OwnerTwoStepDataMod.sol",
+      "name": "OwnerTwoStepDataMod",
+      "kind": "module",
+      "category": "access",
+      "family": "Owner",
+      "sha256": "7f27e6f17c8505d3978586482200108009b7ea3bda9e5aa6946c24f20056760c",
+      "presets": [
+        {
+          "id": "owner-two-step",
+          "field": "required.OwnerTwoStepDataFacet.mod",
+          "role": "required"
+        }
+      ]
+    },
+    {
+      "path": "src/access/Owner/TwoSteps/Renounce/OwnerTwoStepRenounceFacet.sol",
+      "name": "OwnerTwoStepRenounceFacet",
+      "kind": "facet",
+      "category": "access",
+      "family": "Owner",
+      "sha256": "dd4654a846c1f7c338c59a18a42eba05f2fac631edb3b043cff56e8f9932ce66",
+      "presets": [
+        {
+          "id": "owner-two-step",
+          "field": "optional.OwnerTwoStepRenounceFacet.path",
+          "role": "optional"
+        }
+      ]
+    },
+    {
+      "path": "src/access/Owner/TwoSteps/Renounce/OwnerTwoStepRenounceMod.sol",
+      "name": "OwnerTwoStepRenounceMod",
+      "kind": "module",
+      "category": "access",
+      "family": "Owner",
+      "sha256": "4472732ae965d132cb3bb5384a5d37abeaf513e635827e3c13c528f241b8211b",
+      "presets": [
+        {
+          "id": "owner-two-step",
+          "field": "optional.OwnerTwoStepRenounceFacet.mod",
+          "role": "optional"
+        }
+      ]
+    },
+    {
+      "path": "src/access/Owner/TwoSteps/Transfer/OwnerTwoStepTransferFacet.sol",
+      "name": "OwnerTwoStepTransferFacet",
+      "kind": "facet",
+      "category": "access",
+      "family": "Owner",
+      "sha256": "ff8fbff2b59e9cf3ed50242f63b8ab9404e927135d335433fc7185f94aa07da3",
+      "presets": [
+        {
+          "id": "owner-two-step",
+          "field": "required.OwnerTwoStepTransferFacet.path",
+          "role": "required"
+        }
+      ]
+    },
+    {
+      "path": "src/access/Owner/TwoSteps/Transfer/OwnerTwoStepTransferMod.sol",
+      "name": "OwnerTwoStepTransferMod",
+      "kind": "module",
+      "category": "access",
+      "family": "Owner",
+      "sha256": "8da4e777347aa824c5de9c5c67b8fcb025e132431e83f50a6566d762d9c1657b",
+      "presets": [
+        {
+          "id": "owner-two-step",
+          "field": "required.OwnerTwoStepTransferFacet.mod",
+          "role": "required"
+        }
+      ]
+    },
+    {
+      "path": "src/diamond/DiamondInspectFacet.sol",
+      "name": "DiamondInspectFacet",
+      "kind": "facet",
+      "category": "diamond",
+      "family": null,
+      "sha256": "d8a41156002d47ac015485467d865ae5df059a443bfdedcfd65422a1673206b3",
+      "presets": [
+        {
+          "id": "diamond",
+          "field": "required.DiamondInspectFacet.path",
+          "role": "required"
+        }
+      ]
+    },
+    {
+      "path": "src/diamond/DiamondMod.sol",
+      "name": "DiamondMod",
+      "kind": "module",
+      "category": "diamond",
+      "family": null,
+      "sha256": "23bdff8c0660ff2d6f1e434ec69e5f736400eb870a0e57d2eff688169e2160a5",
+      "presets": []
+    },
+    {
+      "path": "src/diamond/DiamondUpgradeFacet.sol",
+      "name": "DiamondUpgradeFacet",
+      "kind": "facet",
+      "category": "diamond",
+      "family": null,
+      "sha256": "db81deb8a5c30575da9f579507db684ac35f8af0c9b30e10176ea13f5fb0505a",
+      "presets": [
+        {
+          "id": "diamond",
+          "field": "optional.DiamondUpgradeFacet.path",
+          "role": "optional"
+        }
+      ]
+    },
+    {
+      "path": "src/diamond/DiamondUpgradeMod.sol",
+      "name": "DiamondUpgradeMod",
+      "kind": "module",
+      "category": "diamond",
+      "family": null,
+      "sha256": "b561e2b76d53ea9e96546761b1d18e8ab700fa0068f822d3c5fd2a54aa5a9afd",
+      "presets": []
+    },
+    {
+      "path": "src/diamond/example/ExampleDiamond.sol",
+      "name": "ExampleDiamond",
+      "kind": "other",
+      "category": "diamond",
+      "family": "example",
+      "sha256": "6e9c5224fc427a8226a2f74c845302af444f937a04fa7b735ba63b537ef858a5",
+      "presets": []
+    },
+    {
+      "path": "src/interfaceDetection/ERC165/ERC165Facet.sol",
+      "name": "ERC165Facet",
+      "kind": "facet",
+      "category": "interfaceDetection",
+      "family": "ERC165",
+      "sha256": "6dd84649d6d342246c46eda8f7b4b12447285badd4fae9f46f7f5868dc4f95aa",
+      "presets": [
+        {
+          "id": "libraries",
+          "field": "optional.ERC165Facet.path",
+          "role": "optional"
+        }
+      ]
+    },
+    {
+      "path": "src/interfaceDetection/ERC165/ERC165Mod.sol",
+      "name": "ERC165Mod",
+      "kind": "module",
+      "category": "interfaceDetection",
+      "family": "ERC165",
+      "sha256": "5d94ccd1a866a72e938a4cff62061e1691f7995f520a77ed363a02d4a88b4808",
+      "presets": []
+    },
+    {
+      "path": "src/interfaces/IERC1155.sol",
+      "name": "IERC1155",
+      "kind": "interface",
+      "category": "interfaces",
+      "family": null,
+      "sha256": "34095796fdeb3fb6253e153ec3051c0ac805a8df8a7a210bc789baee340d3b00",
+      "presets": [
+        {
+          "id": "erc-1155",
+          "field": "erc165.path",
+          "role": null
+        }
+      ]
+    },
+    {
+      "path": "src/interfaces/IERC1155Metadata_URI.sol",
+      "name": "IERC1155Metadata_URI",
+      "kind": "interface",
+      "category": "interfaces",
+      "family": null,
+      "sha256": "3add6c3a671c148549cefe3ed7c5c5903b314557be7f6c3e7ec9608d5f31603f",
+      "presets": [
+        {
+          "id": "erc-1155",
+          "field": "optional.ERC1155MetadataFacet.erc165.path",
+          "role": "optional"
+        }
+      ]
+    },
+    {
+      "path": "src/interfaces/IERC1155Receiver.sol",
+      "name": "IERC1155Receiver",
+      "kind": "interface",
+      "category": "interfaces",
+      "family": null,
+      "sha256": "d5d731e52ab1fc83c6fd953c7eeeca8a3afdf254d2959de2d25fdb56a670face",
+      "presets": []
+    },
+    {
+      "path": "src/interfaces/IERC173.sol",
+      "name": "IERC173",
+      "kind": "interface",
+      "category": "interfaces",
+      "family": null,
+      "sha256": "e749fa585f22799647d1d14e3879d86c24c8663f0b2a403eb87372797ba5b17f",
+      "presets": [
+        {
+          "id": "owner",
+          "field": "erc165.path",
+          "role": null
+        }
+      ]
+    },
+    {
+      "path": "src/interfaces/IERC20.sol",
+      "name": "IERC20",
+      "kind": "interface",
+      "category": "interfaces",
+      "family": null,
+      "sha256": "617f384e099eee7b5174f41ce487de006e1e9a467f69738e7a9cd09270d7e589",
+      "presets": [
+        {
+          "id": "erc-20",
+          "field": "erc165.path",
+          "role": null
+        }
+      ]
+    },
+    {
+      "path": "src/interfaces/IERC2981.sol",
+      "name": "IERC2981",
+      "kind": "interface",
+      "category": "interfaces",
+      "family": null,
+      "sha256": "4ab8f2c941a0e42bfa137301fe9e15be1c9259bbda9ba9793560d7d56bf2c16d",
+      "presets": [
+        {
+          "id": "erc-1155",
+          "field": "optional.RoyaltyFacet.erc165.path",
+          "role": "optional"
+        },
+        {
+          "id": "erc-6909",
+          "field": "optional.RoyaltyFacet.erc165.path",
+          "role": "optional"
+        },
+        {
+          "id": "erc-721",
+          "field": "optional.RoyaltyFacet.erc165.path",
+          "role": "optional"
+        },
+        {
+          "id": "erc-721-enumerable",
+          "field": "optional.RoyaltyFacet.erc165.path",
+          "role": "optional"
+        }
+      ]
+    },
+    {
+      "path": "src/interfaces/IERC6909.sol",
+      "name": "IERC6909",
+      "kind": "interface",
+      "category": "interfaces",
+      "family": null,
+      "sha256": "918a0bffcbed43d1dc7f95f9f6223337f861d3fd368201090a0b1637a369c7b4",
+      "presets": [
+        {
+          "id": "erc-6909",
+          "field": "erc165.path",
+          "role": null
+        }
+      ]
+    },
+    {
+      "path": "src/interfaces/IERC721.sol",
+      "name": "IERC721",
+      "kind": "interface",
+      "category": "interfaces",
+      "family": null,
+      "sha256": "f891f08d58a8cb508ee172ba48912606078ea99731f29e3ee3df6653e6a1840a",
+      "presets": [
+        {
+          "id": "erc-721",
+          "field": "erc165.path",
+          "role": null
+        },
+        {
+          "id": "erc-721-enumerable",
+          "field": "erc165.path",
+          "role": null
+        }
+      ]
+    },
+    {
+      "path": "src/interfaces/IERC721Enumerable.sol",
+      "name": "IERC721Enumerable",
+      "kind": "interface",
+      "category": "interfaces",
+      "family": null,
+      "sha256": "5974309e0f25d19e31169fb2969d96582cf3eb310cbaf5c72994e4497286644c",
+      "presets": []
+    },
+    {
+      "path": "src/interfaces/IERC721Metadata.sol",
+      "name": "IERC721Metadata",
+      "kind": "interface",
+      "category": "interfaces",
+      "family": null,
+      "sha256": "143d656919d1d9150dbe92e557ff77a2a30bbb802c79363f7c392f69221f952f",
+      "presets": [
+        {
+          "id": "erc-721",
+          "field": "optional.ERC721MetadataFacet.erc165.path",
+          "role": "optional"
+        },
+        {
+          "id": "erc-721-enumerable",
+          "field": "optional.ERC721MetadataFacet.erc165.path",
+          "role": "optional"
+        }
+      ]
+    },
+    {
+      "path": "src/interfaces/IERC721Receiver.sol",
+      "name": "IERC721Receiver",
+      "kind": "interface",
+      "category": "interfaces",
+      "family": null,
+      "sha256": "04f34d64ebd96f727f220851f96056379cdc37aeb029c7f1d5611b3e6d0e3b85",
+      "presets": []
+    },
+    {
+      "path": "src/interfaces/IFacet.sol",
+      "name": "IFacet",
+      "kind": "interface",
+      "category": "interfaces",
+      "family": null,
+      "sha256": "570d5128e3ee269a7bcdcb513d4cda3e35f7808a509f884cd175d20044efeb6d",
+      "presets": []
+    },
+    {
+      "path": "src/libraries/NonReentrancyMod.sol",
+      "name": "NonReentrancyMod",
+      "kind": "module",
+      "category": "libraries",
+      "family": null,
+      "sha256": "1d7a95e2f001970eb3367da10596dbe8f91d653776b28c05e52a2b7abe83b1b4",
+      "presets": []
+    },
+    {
+      "path": "src/libraries/Utils.sol",
+      "name": "Utils",
+      "kind": "other",
+      "category": "libraries",
+      "family": null,
+      "sha256": "fd7932511bbbfa1ba872374f9efeeefaed021ff745f3432f49edd78351b09da8",
+      "presets": []
+    },
+    {
+      "path": "src/token/ERC1155/Approve/ERC1155ApproveFacet.sol",
+      "name": "ERC1155ApproveFacet",
+      "kind": "facet",
+      "category": "token",
+      "family": "ERC1155",
+      "sha256": "2e587e6b065cd593eaf9d157e4079f864d3c6979164d4e9f49b9b547791de67f",
+      "presets": [
+        {
+          "id": "erc-1155",
+          "field": "required.ERC1155ApproveFacet.path",
+          "role": "required"
+        }
+      ]
+    },
+    {
+      "path": "src/token/ERC1155/Approve/ERC1155ApproveMod.sol",
+      "name": "ERC1155ApproveMod",
+      "kind": "module",
+      "category": "token",
+      "family": "ERC1155",
+      "sha256": "8978c630504d0065909279b616c24bc556c261431ca86294618fe0c27f838668",
+      "presets": [
+        {
+          "id": "erc-1155",
+          "field": "required.ERC1155ApproveFacet.mod",
+          "role": "required"
+        }
+      ]
+    },
+    {
+      "path": "src/token/ERC1155/Burn/ERC1155BurnFacet.sol",
+      "name": "ERC1155BurnFacet",
+      "kind": "facet",
+      "category": "token",
+      "family": "ERC1155",
+      "sha256": "0ceb8dba848b8a606d72cece0ce9c62cc89182c4f7b265c72089c562d07d5102",
+      "presets": [
+        {
+          "id": "erc-1155",
+          "field": "optional.ERC1155BurnFacet.path",
+          "role": "optional"
+        }
+      ]
+    },
+    {
+      "path": "src/token/ERC1155/Burn/ERC1155BurnMod.sol",
+      "name": "ERC1155BurnMod",
+      "kind": "module",
+      "category": "token",
+      "family": "ERC1155",
+      "sha256": "6df6f05d85518661d163b40147ef63719f22e10ba41cca1ac9a33163d05bd17e",
+      "presets": [
+        {
+          "id": "erc-1155",
+          "field": "optional.ERC1155BurnFacet.mod",
+          "role": "optional"
+        }
+      ]
+    },
+    {
+      "path": "src/token/ERC1155/Data/ERC1155DataFacet.sol",
+      "name": "ERC1155DataFacet",
+      "kind": "facet",
+      "category": "token",
+      "family": "ERC1155",
+      "sha256": "450404d05c441e301f8eb85ac7ff5ade28862d83f8bb68546ae80b2ee9670b9f",
+      "presets": [
+        {
+          "id": "erc-1155",
+          "field": "required.ERC1155DataFacet.path",
+          "role": "required"
+        }
+      ]
+    },
+    {
+      "path": "src/token/ERC1155/Metadata/ERC1155MetadataFacet.sol",
+      "name": "ERC1155MetadataFacet",
+      "kind": "facet",
+      "category": "token",
+      "family": "ERC1155",
+      "sha256": "23b6a9e0333e34dfdbb1c459d1869bb56364487a91b3e93849388f38e9c6f88a",
+      "presets": [
+        {
+          "id": "erc-1155",
+          "field": "optional.ERC1155MetadataFacet.path",
+          "role": "optional"
+        }
+      ]
+    },
+    {
+      "path": "src/token/ERC1155/Metadata/ERC1155MetadataMod.sol",
+      "name": "ERC1155MetadataMod",
+      "kind": "module",
+      "category": "token",
+      "family": "ERC1155",
+      "sha256": "a2d6852007a1b2e0afbc4a432a7289be30d61d8fe7fbb29765091e9af7772ddd",
+      "presets": [
+        {
+          "id": "erc-1155",
+          "field": "optional.ERC1155MetadataFacet.mod",
+          "role": "optional"
+        }
+      ]
+    },
+    {
+      "path": "src/token/ERC1155/Mint/ERC1155MintMod.sol",
+      "name": "ERC1155MintMod",
+      "kind": "module",
+      "category": "token",
+      "family": "ERC1155",
+      "sha256": "1e70927f96288f042d4aac61708d12c796936acce543f4fe38751f501b839ff9",
+      "presets": []
+    },
+    {
+      "path": "src/token/ERC1155/Transfer/ERC1155TransferFacet.sol",
+      "name": "ERC1155TransferFacet",
+      "kind": "facet",
+      "category": "token",
+      "family": "ERC1155",
+      "sha256": "e243c64be551b2998e3bd5fddd23c3081f0ac7e521fa7e22de8e3486ef0b3ccc",
+      "presets": [
+        {
+          "id": "erc-1155",
+          "field": "required.ERC1155TransferFacet.path",
+          "role": "required"
+        }
+      ]
+    },
+    {
+      "path": "src/token/ERC1155/Transfer/ERC1155TransferMod.sol",
+      "name": "ERC1155TransferMod",
+      "kind": "module",
+      "category": "token",
+      "family": "ERC1155",
+      "sha256": "719098b19453421adec038ae11121eb9def06288ed20f6f736629363be09e959",
+      "presets": [
+        {
+          "id": "erc-1155",
+          "field": "required.ERC1155TransferFacet.mod",
+          "role": "required"
+        }
+      ]
+    },
+    {
+      "path": "src/token/ERC20/Approve/ERC20ApproveFacet.sol",
+      "name": "ERC20ApproveFacet",
+      "kind": "facet",
+      "category": "token",
+      "family": "ERC20",
+      "sha256": "d1d99444d39e27750b243cbb55773559d2b95d3755817fe23a80c0f06a597bb9",
+      "presets": [
+        {
+          "id": "erc-20",
+          "field": "required.ERC20ApproveFacet.path",
+          "role": "required"
+        }
+      ]
+    },
+    {
+      "path": "src/token/ERC20/Approve/ERC20ApproveMod.sol",
+      "name": "ERC20ApproveMod",
+      "kind": "module",
+      "category": "token",
+      "family": "ERC20",
+      "sha256": "12736e66eccaf7be9553f144d24b661df6d4537a0e1a0b5495a3462531606ddb",
+      "presets": []
+    },
+    {
+      "path": "src/token/ERC20/Bridgeable/ERC20BridgeableFacet.sol",
+      "name": "ERC20BridgeableFacet",
+      "kind": "facet",
+      "category": "token",
+      "family": "ERC20",
+      "sha256": "50769b7d831548e32960ed1d7e1ddc1591d7c202e93426d685f0b3a5425f80ba",
+      "presets": [
+        {
+          "id": "erc-20",
+          "field": "optional.ERC20BridgeableFacet.path",
+          "role": "optional"
+        }
+      ]
+    },
+    {
+      "path": "src/token/ERC20/Bridgeable/ERC20BridgeableMod.sol",
+      "name": "ERC20BridgeableMod",
+      "kind": "module",
+      "category": "token",
+      "family": "ERC20",
+      "sha256": "c2428169b8d42b3aa97fcf9a304d3d15c956aedc28bd326214fcb9eeffb673d2",
+      "presets": []
+    },
+    {
+      "path": "src/token/ERC20/Burn/ERC20BurnFacet.sol",
+      "name": "ERC20BurnFacet",
+      "kind": "facet",
+      "category": "token",
+      "family": "ERC20",
+      "sha256": "5819be14fdb1aa0dccfe5930d467fd82798e866b95fa596d9c624867ba4bfaeb",
+      "presets": [
+        {
+          "id": "erc-20",
+          "field": "optional.ERC20BurnFacet.path",
+          "role": "optional"
+        }
+      ]
+    },
+    {
+      "path": "src/token/ERC20/Burn/ERC20BurnMod.sol",
+      "name": "ERC20BurnMod",
+      "kind": "module",
+      "category": "token",
+      "family": "ERC20",
+      "sha256": "3e327e58d224e2c0b751125bf8a23833794e831dd7e77e6826c6eadb3d7dba4d",
+      "presets": []
+    },
+    {
+      "path": "src/token/ERC20/Data/ERC20DataFacet.sol",
+      "name": "ERC20DataFacet",
+      "kind": "facet",
+      "category": "token",
+      "family": "ERC20",
+      "sha256": "59f8c9100807c5b06faa90b1b45758a1321efd41ca6245a4b3347527803c8da9",
+      "presets": [
+        {
+          "id": "erc-20",
+          "field": "required.ERC20DataFacet.path",
+          "role": "required"
+        }
+      ]
+    },
+    {
+      "path": "src/token/ERC20/Metadata/ERC20MetadataFacet.sol",
+      "name": "ERC20MetadataFacet",
+      "kind": "facet",
+      "category": "token",
+      "family": "ERC20",
+      "sha256": "0a199c7e50d710340c506f3fb95b798edd749b04aac7fc350d900ea5c7ee2d5d",
+      "presets": [
+        {
+          "id": "erc-20",
+          "field": "optional.ERC20MetadataFacet.path",
+          "role": "optional"
+        }
+      ]
+    },
+    {
+      "path": "src/token/ERC20/Metadata/ERC20MetadataMod.sol",
+      "name": "ERC20MetadataMod",
+      "kind": "module",
+      "category": "token",
+      "family": "ERC20",
+      "sha256": "5bb1980f8ffb77d5e487c7dc23bd149830a09246fa2198e2215f0ed28e2f7825",
+      "presets": [
+        {
+          "id": "erc-20",
+          "field": "optional.ERC20MetadataFacet.mod",
+          "role": "optional"
+        }
+      ]
+    },
+    {
+      "path": "src/token/ERC20/Mint/ERC20MintMod.sol",
+      "name": "ERC20MintMod",
+      "kind": "module",
+      "category": "token",
+      "family": "ERC20",
+      "sha256": "e51573fb880b8999d4968ae6dc09327e308bdda5b8a018cd8d8ce6766defac4e",
+      "presets": []
+    },
+    {
+      "path": "src/token/ERC20/Permit/ERC20PermitFacet.sol",
+      "name": "ERC20PermitFacet",
+      "kind": "facet",
+      "category": "token",
+      "family": "ERC20",
+      "sha256": "910e0450153e8861f5944b54a203cd2aa217d6cd5be15da571923950cd450696",
+      "presets": [
+        {
+          "id": "erc-20",
+          "field": "optional.ERC20PermitFacet.path",
+          "role": "optional"
+        }
+      ]
+    },
+    {
+      "path": "src/token/ERC20/Permit/ERC20PermitMod.sol",
+      "name": "ERC20PermitMod",
+      "kind": "module",
+      "category": "token",
+      "family": "ERC20",
+      "sha256": "99e8c2be4fcacc49b9ff1978de67010a8cb001d742e2c255b1aa5074ca77ebf9",
+      "presets": []
+    },
+    {
+      "path": "src/token/ERC20/Transfer/ERC20TransferFacet.sol",
+      "name": "ERC20TransferFacet",
+      "kind": "facet",
+      "category": "token",
+      "family": "ERC20",
+      "sha256": "3e6c4f419380842daf1f3849d7f72b0d688cccb5dd695fff5a443232df16642d",
+      "presets": [
+        {
+          "id": "erc-20",
+          "field": "required.ERC20TransferFacet.path",
+          "role": "required"
+        }
+      ]
+    },
+    {
+      "path": "src/token/ERC20/Transfer/ERC20TransferMod.sol",
+      "name": "ERC20TransferMod",
+      "kind": "module",
+      "category": "token",
+      "family": "ERC20",
+      "sha256": "e97918e7ce9a8c3dcc17561a64fe9171c7c6dd16d9cfd83759d907f79f15840b",
+      "presets": []
+    },
+    {
+      "path": "src/token/ERC6909/Approve/ERC6909ApproveFacet.sol",
+      "name": "ERC6909ApproveFacet",
+      "kind": "facet",
+      "category": "token",
+      "family": "ERC6909",
+      "sha256": "e9d6789282601aa0c7c6c390d68a683896d17ef59fa22cdd2c18459ddff28633",
+      "presets": [
+        {
+          "id": "erc-6909",
+          "field": "required.ERC6909ApproveFacet.path",
+          "role": "required"
+        }
+      ]
+    },
+    {
+      "path": "src/token/ERC6909/Approve/ERC6909ApproveMod.sol",
+      "name": "ERC6909ApproveMod",
+      "kind": "module",
+      "category": "token",
+      "family": "ERC6909",
+      "sha256": "8d34276f9a8ce25533f9d8474cede98e8507407ff679c53b6b74575294d76381",
+      "presets": [
+        {
+          "id": "erc-6909",
+          "field": "required.ERC6909ApproveFacet.mod",
+          "role": "required"
+        }
+      ]
+    },
+    {
+      "path": "src/token/ERC6909/Burn/ERC6909BurnFacet.sol",
+      "name": "ERC6909BurnFacet",
+      "kind": "facet",
+      "category": "token",
+      "family": "ERC6909",
+      "sha256": "01332a28e7a7b352f60bdc50d2dd840ac2b4e2473140fa0057bed321b2bec28c",
+      "presets": [
+        {
+          "id": "erc-6909",
+          "field": "optional.ERC6909BurnFacet.path",
+          "role": "optional"
+        }
+      ]
+    },
+    {
+      "path": "src/token/ERC6909/Burn/ERC6909BurnMod.sol",
+      "name": "ERC6909BurnMod",
+      "kind": "module",
+      "category": "token",
+      "family": "ERC6909",
+      "sha256": "cb9eb62cde4a12f9999d7cf9533e784d725579ed81252678b428bc9c62ff3665",
+      "presets": [
+        {
+          "id": "erc-6909",
+          "field": "optional.ERC6909BurnFacet.mod",
+          "role": "optional"
+        }
+      ]
+    },
+    {
+      "path": "src/token/ERC6909/Data/ERC6909DataFacet.sol",
+      "name": "ERC6909DataFacet",
+      "kind": "facet",
+      "category": "token",
+      "family": "ERC6909",
+      "sha256": "65e200878bf64f3b9d9269a0d52f1a2f31ca92dd0119ec85551db786f87a9304",
+      "presets": [
+        {
+          "id": "erc-6909",
+          "field": "required.ERC6909DataFacet.path",
+          "role": "required"
+        }
+      ]
+    },
+    {
+      "path": "src/token/ERC6909/Mint/ERC6909MintMod.sol",
+      "name": "ERC6909MintMod",
+      "kind": "module",
+      "category": "token",
+      "family": "ERC6909",
+      "sha256": "81c756fa7b87c5ac9719f6642d917cf5388bc5352cf9cff8c03fbf52204d2d52",
+      "presets": []
+    },
+    {
+      "path": "src/token/ERC6909/Operator/ERC6909OperatorFacet.sol",
+      "name": "ERC6909OperatorFacet",
+      "kind": "facet",
+      "category": "token",
+      "family": "ERC6909",
+      "sha256": "9a6bcf52e67ea428a2616fd61896489798415091ccecfa54260d704c37e892ea",
+      "presets": [
+        {
+          "id": "erc-6909",
+          "field": "required.ERC6909OperatorFacet.path",
+          "role": "required"
+        }
+      ]
+    },
+    {
+      "path": "src/token/ERC6909/Operator/ERC6909OperatorMod.sol",
+      "name": "ERC6909OperatorMod",
+      "kind": "module",
+      "category": "token",
+      "family": "ERC6909",
+      "sha256": "68b14c4cb5c7e23120d15e00564c11b407290ff1243ff483868ea2f166d0d72b",
+      "presets": [
+        {
+          "id": "erc-6909",
+          "field": "required.ERC6909OperatorFacet.mod",
+          "role": "required"
+        }
+      ]
+    },
+    {
+      "path": "src/token/ERC6909/Transfer/ERC6909TransferFacet.sol",
+      "name": "ERC6909TransferFacet",
+      "kind": "facet",
+      "category": "token",
+      "family": "ERC6909",
+      "sha256": "17276ed5cb7addbca42a4214363232252028a0a709db729dd82bfd0981b23644",
+      "presets": [
+        {
+          "id": "erc-6909",
+          "field": "required.ERC6909TransferFacet.path",
+          "role": "required"
+        }
+      ]
+    },
+    {
+      "path": "src/token/ERC6909/Transfer/ERC6909TransferMod.sol",
+      "name": "ERC6909TransferMod",
+      "kind": "module",
+      "category": "token",
+      "family": "ERC6909",
+      "sha256": "566a835d35bcad6c8a19ffafdda58801c5ecf0b216f6c713193371b4b4c9399d",
+      "presets": [
+        {
+          "id": "erc-6909",
+          "field": "required.ERC6909TransferFacet.mod",
+          "role": "required"
+        }
+      ]
+    },
+    {
+      "path": "src/token/ERC721/Approve/ERC721ApproveFacet.sol",
+      "name": "ERC721ApproveFacet",
+      "kind": "facet",
+      "category": "token",
+      "family": "ERC721",
+      "sha256": "e829ed22d9ac8c991371c4fd3ec7af5f8c9c93c14e4a1b20c91072c77ae48f46",
+      "presets": [
+        {
+          "id": "erc-721",
+          "field": "required.ERC721ApproveFacet.path",
+          "role": "required"
+        },
+        {
+          "id": "erc-721-enumerable",
+          "field": "required.ERC721ApproveFacet.path",
+          "role": "required"
+        }
+      ]
+    },
+    {
+      "path": "src/token/ERC721/Approve/ERC721ApproveMod.sol",
+      "name": "ERC721ApproveMod",
+      "kind": "module",
+      "category": "token",
+      "family": "ERC721",
+      "sha256": "6fea4e4f2acb428b452a8bfa3bc18dc48a1106fab06301ceeada74f61fe6b8d3",
+      "presets": []
+    },
+    {
+      "path": "src/token/ERC721/Burn/ERC721BurnFacet.sol",
+      "name": "ERC721BurnFacet",
+      "kind": "facet",
+      "category": "token",
+      "family": "ERC721",
+      "sha256": "bda42d4703382c04fa68428a442ac0c8aae9aaf4dc5d22a8307fe50cbe6e5348",
+      "presets": [
+        {
+          "id": "erc-721",
+          "field": "optional.ERC721BurnFacet.path",
+          "role": "optional"
+        }
+      ]
+    },
+    {
+      "path": "src/token/ERC721/Burn/ERC721BurnMod.sol",
+      "name": "ERC721BurnMod",
+      "kind": "module",
+      "category": "token",
+      "family": "ERC721",
+      "sha256": "d27109c9ffe20b76c7dfde8e7e196f8d23137bef27e54e43034e9bdd05a0e181",
+      "presets": []
+    },
+    {
+      "path": "src/token/ERC721/Data/ERC721DataFacet.sol",
+      "name": "ERC721DataFacet",
+      "kind": "facet",
+      "category": "token",
+      "family": "ERC721",
+      "sha256": "5af762a7f21ce40c6576fccc6747dc677c3cdd851c979ebb69140e6c5559c686",
+      "presets": [
+        {
+          "id": "erc-721",
+          "field": "required.ERC721DataFacet.path",
+          "role": "required"
+        },
+        {
+          "id": "erc-721-enumerable",
+          "field": "required.ERC721DataFacet.path",
+          "role": "required"
+        }
+      ]
+    },
+    {
+      "path": "src/token/ERC721/Enumerable/Burn/ERC721EnumerableBurnFacet.sol",
+      "name": "ERC721EnumerableBurnFacet",
+      "kind": "facet",
+      "category": "token",
+      "family": "ERC721",
+      "sha256": "c4333e63a755235133fe53b1215f042fd0441e6ebb7ed1ba796ebb2266a6744c",
+      "presets": [
+        {
+          "id": "erc-721-enumerable",
+          "field": "optional.ERC721EnumerableBurnFacet.path",
+          "role": "optional"
+        }
+      ]
+    },
+    {
+      "path": "src/token/ERC721/Enumerable/Burn/ERC721EnumerableBurnMod.sol",
+      "name": "ERC721EnumerableBurnMod",
+      "kind": "module",
+      "category": "token",
+      "family": "ERC721",
+      "sha256": "d907811ac83dc607b12d15125a82807717fcdcdf6b7c0b8126ae8c07f12a57fc",
+      "presets": []
+    },
+    {
+      "path": "src/token/ERC721/Enumerable/Data/ERC721EnumerableDataFacet.sol",
+      "name": "ERC721EnumerableDataFacet",
+      "kind": "facet",
+      "category": "token",
+      "family": "ERC721",
+      "sha256": "7813676b850b03975b27339b85c276420fb74980dbda9819f6afae05d4d2d6da",
+      "presets": [
+        {
+          "id": "erc-721-enumerable",
+          "field": "required.ERC721EnumerableDataFacet.path",
+          "role": "required"
+        }
+      ]
+    },
+    {
+      "path": "src/token/ERC721/Enumerable/Mint/ERC721EnumerableMintMod.sol",
+      "name": "ERC721EnumerableMintMod",
+      "kind": "module",
+      "category": "token",
+      "family": "ERC721",
+      "sha256": "368795d800f18cccb3aac43b359dfbcd7389af018f23a836bbf0f1370fda98bc",
+      "presets": []
+    },
+    {
+      "path": "src/token/ERC721/Enumerable/Transfer/ERC721EnumerableTransferFacet.sol",
+      "name": "ERC721EnumerableTransferFacet",
+      "kind": "facet",
+      "category": "token",
+      "family": "ERC721",
+      "sha256": "3c0253477ed826d4f4b2e174b9009b2f5cab6685e37c3e6c2d4f03937c565c5e",
+      "presets": [
+        {
+          "id": "erc-721-enumerable",
+          "field": "required.ERC721EnumerableTransferFacet.path",
+          "role": "required"
+        }
+      ]
+    },
+    {
+      "path": "src/token/ERC721/Enumerable/Transfer/ERC721EnumerableTransferMod.sol",
+      "name": "ERC721EnumerableTransferMod",
+      "kind": "module",
+      "category": "token",
+      "family": "ERC721",
+      "sha256": "75697500a1822a5efda31e9dca55b0ce75cf4713d5a7c82b18dd63fc80fc9ed2",
+      "presets": []
+    },
+    {
+      "path": "src/token/ERC721/Metadata/ERC721MetadataFacet.sol",
+      "name": "ERC721MetadataFacet",
+      "kind": "facet",
+      "category": "token",
+      "family": "ERC721",
+      "sha256": "f9c867dd49408c8aae89e62d17eafceef1f9b81b9c411272e895325954374974",
+      "presets": [
+        {
+          "id": "erc-721",
+          "field": "optional.ERC721MetadataFacet.path",
+          "role": "optional"
+        },
+        {
+          "id": "erc-721-enumerable",
+          "field": "optional.ERC721MetadataFacet.path",
+          "role": "optional"
+        }
+      ]
+    },
+    {
+      "path": "src/token/ERC721/Metadata/ERC721MetadataMod.sol",
+      "name": "ERC721MetadataMod",
+      "kind": "module",
+      "category": "token",
+      "family": "ERC721",
+      "sha256": "e0de3239f4b143333e10ad7c56faa84a867e2fca69661f9c4ca6c82eb86ee69e",
+      "presets": [
+        {
+          "id": "erc-721",
+          "field": "optional.ERC721MetadataFacet.mod",
+          "role": "optional"
+        },
+        {
+          "id": "erc-721-enumerable",
+          "field": "optional.ERC721MetadataFacet.mod",
+          "role": "optional"
+        }
+      ]
+    },
+    {
+      "path": "src/token/ERC721/Mint/ERC721MintMod.sol",
+      "name": "ERC721MintMod",
+      "kind": "module",
+      "category": "token",
+      "family": "ERC721",
+      "sha256": "2bbaa4a50dbda6f3ef9818a135c4548d84197518354da2222c86f772f4cf405d",
+      "presets": []
+    },
+    {
+      "path": "src/token/ERC721/Transfer/ERC721TransferFacet.sol",
+      "name": "ERC721TransferFacet",
+      "kind": "facet",
+      "category": "token",
+      "family": "ERC721",
+      "sha256": "9069a80d777e4e3e3cd1730cb899cbfd8f3bb99b69b8a52876a40a5cac162f62",
+      "presets": [
+        {
+          "id": "erc-721",
+          "field": "required.ERC721TransferFacet.path",
+          "role": "required"
+        }
+      ]
+    },
+    {
+      "path": "src/token/ERC721/Transfer/ERC721TransferMod.sol",
+      "name": "ERC721TransferMod",
+      "kind": "module",
+      "category": "token",
+      "family": "ERC721",
+      "sha256": "9000bff38e2d5e7d4a51fdd949c0437cb94a6ce9db8077f757c082657a9a1cb5",
+      "presets": []
+    },
+    {
+      "path": "src/token/Royalty/RoyaltyFacet.sol",
+      "name": "RoyaltyFacet",
+      "kind": "facet",
+      "category": "token",
+      "family": "Royalty",
+      "sha256": "fa8a6f973ece8f4ab2b35bd24b6e443af08bb582c1ba83e8eb693074ebeda73b",
+      "presets": [
+        {
+          "id": "erc-1155",
+          "field": "optional.RoyaltyFacet.path",
+          "role": "optional"
+        },
+        {
+          "id": "erc-6909",
+          "field": "optional.RoyaltyFacet.path",
+          "role": "optional"
+        },
+        {
+          "id": "erc-721",
+          "field": "optional.RoyaltyFacet.path",
+          "role": "optional"
+        },
+        {
+          "id": "erc-721-enumerable",
+          "field": "optional.RoyaltyFacet.path",
+          "role": "optional"
+        }
+      ]
+    },
+    {
+      "path": "src/token/Royalty/RoyaltyMod.sol",
+      "name": "RoyaltyMod",
+      "kind": "module",
+      "category": "token",
+      "family": "Royalty",
+      "sha256": "48ff996ec943cb17b3362ff336c996be33ad83d00ac7a5d3ea321e03709ad59c",
+      "presets": [
+        {
+          "id": "erc-1155",
+          "field": "optional.RoyaltyFacet.mod",
+          "role": "optional"
+        },
+        {
+          "id": "erc-6909",
+          "field": "optional.RoyaltyFacet.mod",
+          "role": "optional"
+        },
+        {
+          "id": "erc-721",
+          "field": "optional.RoyaltyFacet.mod",
+          "role": "optional"
+        },
+        {
+          "id": "erc-721-enumerable",
+          "field": "optional.RoyaltyFacet.mod",
+          "role": "optional"
+        }
+      ]
+    }
+  ],
+  "presets": [
+    {
+      "id": "access-control",
+      "sourcePath": "cli/bases/accesscontrol.json",
+      "definition": {
+        "label": "AccessControl",
+        "order": 9,
+        "access": true,
+        "accessType": "roles",
+        "required": {
+          "AccessControlDataFacet": {
+            "path": "@perfect-abstractions/compose/access/AccessControl/Data/AccessControlDataFacet.sol",
+            "mod": "@perfect-abstractions/compose/access/AccessControl/Data/AccessControlDataMod.sol"
+          },
+          "AccessControlGrantFacet": {
+            "path": "@perfect-abstractions/compose/access/AccessControl/Grant/AccessControlGrantFacet.sol",
+            "mod": "@perfect-abstractions/compose/access/AccessControl/Grant/AccessControlGrantMod.sol"
+          },
+          "AccessControlRevokeFacet": {
+            "path": "@perfect-abstractions/compose/access/AccessControl/Revoke/AccessControlRevokeFacet.sol",
+            "mod": "@perfect-abstractions/compose/access/AccessControl/Revoke/AccessControlRevokeMod.sol"
+          }
+        },
+        "optional": {
+          "AccessControlAdminFacet": {
+            "path": "@perfect-abstractions/compose/access/AccessControl/Admin/AccessControlAdminFacet.sol",
+            "mod": "@perfect-abstractions/compose/access/AccessControl/Admin/AccessControlAdminMod.sol"
+          },
+          "AccessControlGrantBatchFacet": {
+            "path": "@perfect-abstractions/compose/access/AccessControl/Batch/Grant/AccessControlGrantBatchFacet.sol",
+            "mod": "@perfect-abstractions/compose/access/AccessControl/Batch/Grant/AccessControlGrantBatchMod.sol"
+          },
+          "AccessControlRevokeBatchFacet": {
+            "path": "@perfect-abstractions/compose/access/AccessControl/Batch/Revoke/AccessControlRevokeBatchFacet.sol",
+            "mod": "@perfect-abstractions/compose/access/AccessControl/Batch/Revoke/AccessControlRevokeBatchMod.sol"
+          },
+          "AccessControlPausableFacet": {
+            "path": "@perfect-abstractions/compose/access/AccessControl/Pausable/AccessControlPausableFacet.sol",
+            "mod": "@perfect-abstractions/compose/access/AccessControl/Pausable/AccessControlPausableMod.sol"
+          },
+          "AccessControlRenounceFacet": {
+            "path": "@perfect-abstractions/compose/access/AccessControl/Renounce/AccessControlRenounceFacet.sol",
+            "mod": "@perfect-abstractions/compose/access/AccessControl/Renounce/AccessControlRenounceMod.sol"
+          },
+          "AccessControlTemporalDataFacet": {
+            "path": "@perfect-abstractions/compose/access/AccessControl/Temporal/Data/AccessControlTemporalDataFacet.sol",
+            "mod": "@perfect-abstractions/compose/access/AccessControl/Temporal/Data/AccessControlTemporalDataMod.sol"
+          },
+          "AccessControlTemporalGrantFacet": {
+            "path": "@perfect-abstractions/compose/access/AccessControl/Temporal/Grant/AccessControlTemporalGrantFacet.sol",
+            "mod": "@perfect-abstractions/compose/access/AccessControl/Temporal/Grant/AccessControlTemporalGrantMod.sol"
+          }
+        }
+      },
+      "references": [
+        {
+          "field": "optional.AccessControlAdminFacet.mod",
+          "declaredPath": "@perfect-abstractions/compose/access/AccessControl/Admin/AccessControlAdminMod.sol",
+          "path": "src/access/AccessControl/Admin/AccessControlAdminMod.sol",
+          "role": "optional",
+          "status": "resolved"
+        },
+        {
+          "field": "optional.AccessControlAdminFacet.path",
+          "declaredPath": "@perfect-abstractions/compose/access/AccessControl/Admin/AccessControlAdminFacet.sol",
+          "path": "src/access/AccessControl/Admin/AccessControlAdminFacet.sol",
+          "role": "optional",
+          "status": "resolved"
+        },
+        {
+          "field": "optional.AccessControlGrantBatchFacet.mod",
+          "declaredPath": "@perfect-abstractions/compose/access/AccessControl/Batch/Grant/AccessControlGrantBatchMod.sol",
+          "path": "src/access/AccessControl/Batch/Grant/AccessControlGrantBatchMod.sol",
+          "role": "optional",
+          "status": "resolved"
+        },
+        {
+          "field": "optional.AccessControlGrantBatchFacet.path",
+          "declaredPath": "@perfect-abstractions/compose/access/AccessControl/Batch/Grant/AccessControlGrantBatchFacet.sol",
+          "path": "src/access/AccessControl/Batch/Grant/AccessControlGrantBatchFacet.sol",
+          "role": "optional",
+          "status": "resolved"
+        },
+        {
+          "field": "optional.AccessControlPausableFacet.mod",
+          "declaredPath": "@perfect-abstractions/compose/access/AccessControl/Pausable/AccessControlPausableMod.sol",
+          "path": "src/access/AccessControl/Pausable/AccessControlPausableMod.sol",
+          "role": "optional",
+          "status": "resolved"
+        },
+        {
+          "field": "optional.AccessControlPausableFacet.path",
+          "declaredPath": "@perfect-abstractions/compose/access/AccessControl/Pausable/AccessControlPausableFacet.sol",
+          "path": "src/access/AccessControl/Pausable/AccessControlPausableFacet.sol",
+          "role": "optional",
+          "status": "resolved"
+        },
+        {
+          "field": "optional.AccessControlRenounceFacet.mod",
+          "declaredPath": "@perfect-abstractions/compose/access/AccessControl/Renounce/AccessControlRenounceMod.sol",
+          "path": "src/access/AccessControl/Renounce/AccessControlRenounceMod.sol",
+          "role": "optional",
+          "status": "resolved"
+        },
+        {
+          "field": "optional.AccessControlRenounceFacet.path",
+          "declaredPath": "@perfect-abstractions/compose/access/AccessControl/Renounce/AccessControlRenounceFacet.sol",
+          "path": "src/access/AccessControl/Renounce/AccessControlRenounceFacet.sol",
+          "role": "optional",
+          "status": "resolved"
+        },
+        {
+          "field": "optional.AccessControlRevokeBatchFacet.mod",
+          "declaredPath": "@perfect-abstractions/compose/access/AccessControl/Batch/Revoke/AccessControlRevokeBatchMod.sol",
+          "path": "src/access/AccessControl/Batch/Revoke/AccessControlRevokeBatchMod.sol",
+          "role": "optional",
+          "status": "resolved"
+        },
+        {
+          "field": "optional.AccessControlRevokeBatchFacet.path",
+          "declaredPath": "@perfect-abstractions/compose/access/AccessControl/Batch/Revoke/AccessControlRevokeBatchFacet.sol",
+          "path": "src/access/AccessControl/Batch/Revoke/AccessControlRevokeBatchFacet.sol",
+          "role": "optional",
+          "status": "resolved"
+        },
+        {
+          "field": "optional.AccessControlTemporalDataFacet.mod",
+          "declaredPath": "@perfect-abstractions/compose/access/AccessControl/Temporal/Data/AccessControlTemporalDataMod.sol",
+          "path": "src/access/AccessControl/Temporal/Data/AccessControlTemporalDataMod.sol",
+          "role": "optional",
+          "status": "resolved"
+        },
+        {
+          "field": "optional.AccessControlTemporalDataFacet.path",
+          "declaredPath": "@perfect-abstractions/compose/access/AccessControl/Temporal/Data/AccessControlTemporalDataFacet.sol",
+          "path": "src/access/AccessControl/Temporal/Data/AccessControlTemporalDataFacet.sol",
+          "role": "optional",
+          "status": "resolved"
+        },
+        {
+          "field": "optional.AccessControlTemporalGrantFacet.mod",
+          "declaredPath": "@perfect-abstractions/compose/access/AccessControl/Temporal/Grant/AccessControlTemporalGrantMod.sol",
+          "path": "src/access/AccessControl/Temporal/Grant/AccessControlTemporalGrantMod.sol",
+          "role": "optional",
+          "status": "resolved"
+        },
+        {
+          "field": "optional.AccessControlTemporalGrantFacet.path",
+          "declaredPath": "@perfect-abstractions/compose/access/AccessControl/Temporal/Grant/AccessControlTemporalGrantFacet.sol",
+          "path": "src/access/AccessControl/Temporal/Grant/AccessControlTemporalGrantFacet.sol",
+          "role": "optional",
+          "status": "resolved"
+        },
+        {
+          "field": "required.AccessControlDataFacet.mod",
+          "declaredPath": "@perfect-abstractions/compose/access/AccessControl/Data/AccessControlDataMod.sol",
+          "path": "src/access/AccessControl/Data/AccessControlDataMod.sol",
+          "role": "required",
+          "status": "resolved"
+        },
+        {
+          "field": "required.AccessControlDataFacet.path",
+          "declaredPath": "@perfect-abstractions/compose/access/AccessControl/Data/AccessControlDataFacet.sol",
+          "path": "src/access/AccessControl/Data/AccessControlDataFacet.sol",
+          "role": "required",
+          "status": "resolved"
+        },
+        {
+          "field": "required.AccessControlGrantFacet.mod",
+          "declaredPath": "@perfect-abstractions/compose/access/AccessControl/Grant/AccessControlGrantMod.sol",
+          "path": "src/access/AccessControl/Grant/AccessControlGrantMod.sol",
+          "role": "required",
+          "status": "resolved"
+        },
+        {
+          "field": "required.AccessControlGrantFacet.path",
+          "declaredPath": "@perfect-abstractions/compose/access/AccessControl/Grant/AccessControlGrantFacet.sol",
+          "path": "src/access/AccessControl/Grant/AccessControlGrantFacet.sol",
+          "role": "required",
+          "status": "resolved"
+        },
+        {
+          "field": "required.AccessControlRevokeFacet.mod",
+          "declaredPath": "@perfect-abstractions/compose/access/AccessControl/Revoke/AccessControlRevokeMod.sol",
+          "path": "src/access/AccessControl/Revoke/AccessControlRevokeMod.sol",
+          "role": "required",
+          "status": "resolved"
+        },
+        {
+          "field": "required.AccessControlRevokeFacet.path",
+          "declaredPath": "@perfect-abstractions/compose/access/AccessControl/Revoke/AccessControlRevokeFacet.sol",
+          "path": "src/access/AccessControl/Revoke/AccessControlRevokeFacet.sol",
+          "role": "required",
+          "status": "resolved"
+        }
+      ]
+    },
+    {
+      "id": "counter",
+      "sourcePath": "cli/bases/counter.json",
+      "definition": {
+        "label": "Counter",
+        "order": 2,
+        "required": {
+          "CounterDataFacet": {
+            "path": "./src/templates/counter/CounterDataFacet.sol"
+          },
+          "CounterIncrementFacet": {
+            "path": "./src/templates/counter/CounterIncrementFacet.sol"
+          }
+        },
+        "optional": {
+          "CounterDecrementFacet": {
+            "path": "./src/templates/counter/CounterDecrementFacet.sol"
+          },
+          "CounterResetFacet": {
+            "path": "./src/templates/counter/CounterResetFacet.sol"
+          },
+          "CounterSetFacet": {
+            "path": "./src/templates/counter/CounterSetFacet.sol"
+          }
+        }
+      },
+      "references": [
+        {
+          "field": "optional.CounterDecrementFacet.path",
+          "declaredPath": "./src/templates/counter/CounterDecrementFacet.sol",
+          "path": null,
+          "role": "optional",
+          "status": "external"
+        },
+        {
+          "field": "optional.CounterResetFacet.path",
+          "declaredPath": "./src/templates/counter/CounterResetFacet.sol",
+          "path": null,
+          "role": "optional",
+          "status": "external"
+        },
+        {
+          "field": "optional.CounterSetFacet.path",
+          "declaredPath": "./src/templates/counter/CounterSetFacet.sol",
+          "path": null,
+          "role": "optional",
+          "status": "external"
+        },
+        {
+          "field": "required.CounterDataFacet.path",
+          "declaredPath": "./src/templates/counter/CounterDataFacet.sol",
+          "path": null,
+          "role": "required",
+          "status": "external"
+        },
+        {
+          "field": "required.CounterIncrementFacet.path",
+          "declaredPath": "./src/templates/counter/CounterIncrementFacet.sol",
+          "path": null,
+          "role": "required",
+          "status": "external"
+        }
+      ]
+    },
+    {
+      "id": "diamond",
+      "sourcePath": "cli/bases/diamond.json",
+      "definition": {
+        "label": "Diamond",
+        "pragma": ">=0.8.30",
+        "compilerVersion": "0.8.30",
+        "required": {
+          "DiamondInspectFacet": {
+            "path": "@perfect-abstractions/compose/diamond/DiamondInspectFacet.sol"
+          }
+        },
+        "optional": {
+          "DiamondUpgradeFacet": {
+            "path": "@perfect-abstractions/compose/diamond/DiamondUpgradeFacet.sol"
+          }
+        }
+      },
+      "references": [
+        {
+          "field": "optional.DiamondUpgradeFacet.path",
+          "declaredPath": "@perfect-abstractions/compose/diamond/DiamondUpgradeFacet.sol",
+          "path": "src/diamond/DiamondUpgradeFacet.sol",
+          "role": "optional",
+          "status": "resolved"
+        },
+        {
+          "field": "required.DiamondInspectFacet.path",
+          "declaredPath": "@perfect-abstractions/compose/diamond/DiamondInspectFacet.sol",
+          "path": "src/diamond/DiamondInspectFacet.sol",
+          "role": "required",
+          "status": "resolved"
+        }
+      ]
+    },
+    {
+      "id": "erc-1155",
+      "sourcePath": "cli/bases/erc1155.json",
+      "definition": {
+        "label": "ERC-1155",
+        "order": 5,
+        "erc165": {
+          "path": "@perfect-abstractions/compose/interfaces/IERC1155.sol",
+          "id": "type(IERC1155).interfaceId",
+          "comments": [
+            "Register ERC-1155 interface support."
+          ]
+        },
+        "required": {
+          "ERC1155DataFacet": {
+            "path": "@perfect-abstractions/compose/token/ERC1155/Data/ERC1155DataFacet.sol"
+          },
+          "ERC1155ApproveFacet": {
+            "path": "@perfect-abstractions/compose/token/ERC1155/Approve/ERC1155ApproveFacet.sol",
+            "mod": "@perfect-abstractions/compose/token/ERC1155/Approve/ERC1155ApproveMod.sol"
+          },
+          "ERC1155TransferFacet": {
+            "path": "@perfect-abstractions/compose/token/ERC1155/Transfer/ERC1155TransferFacet.sol",
+            "mod": "@perfect-abstractions/compose/token/ERC1155/Transfer/ERC1155TransferMod.sol"
+          }
+        },
+        "optional": {
+          "ERC1155BurnFacet": {
+            "path": "@perfect-abstractions/compose/token/ERC1155/Burn/ERC1155BurnFacet.sol",
+            "mod": "@perfect-abstractions/compose/token/ERC1155/Burn/ERC1155BurnMod.sol"
+          },
+          "ERC1155MetadataFacet": {
+            "path": "@perfect-abstractions/compose/token/ERC1155/Metadata/ERC1155MetadataFacet.sol",
+            "mod": "@perfect-abstractions/compose/token/ERC1155/Metadata/ERC1155MetadataMod.sol",
+            "constructor": [
+              {
+                "comments": [
+                  "TODO: Review the sample ERC-1155 metadata URI before deployment."
+                ],
+                "code": "ERC1155MetadataMod.setURI(\"https://example.com/metadata/{id}.json\");"
+              }
+            ],
+            "erc165": {
+              "path": "@perfect-abstractions/compose/interfaces/IERC1155Metadata_URI.sol",
+              "id": "type(IERC1155Metadata_URI).interfaceId",
+              "comments": [
+                "Register ERC-1155 metadata URI interface support."
+              ]
+            }
+          },
+          "RoyaltyFacet": {
+            "path": "@perfect-abstractions/compose/token/Royalty/RoyaltyFacet.sol",
+            "mod": "@perfect-abstractions/compose/token/Royalty/RoyaltyMod.sol",
+            "constructor": [
+              {
+                "comments": [
+                  "TODO: Replace the sample royalty receiver and fee before deployment."
+                ],
+                "code": "RoyaltyMod.setDefaultRoyalty(0x0000000000000000000000000000000000000001, 500);"
+              }
+            ],
+            "erc165": {
+              "path": "@perfect-abstractions/compose/interfaces/IERC2981.sol",
+              "id": "type(IERC2981).interfaceId",
+              "comments": [
+                "Register ERC-2981 royalty interface support."
+              ]
+            }
+          }
+        }
+      },
+      "references": [
+        {
+          "field": "erc165.path",
+          "declaredPath": "@perfect-abstractions/compose/interfaces/IERC1155.sol",
+          "path": "src/interfaces/IERC1155.sol",
+          "role": null,
+          "status": "resolved"
+        },
+        {
+          "field": "optional.ERC1155BurnFacet.mod",
+          "declaredPath": "@perfect-abstractions/compose/token/ERC1155/Burn/ERC1155BurnMod.sol",
+          "path": "src/token/ERC1155/Burn/ERC1155BurnMod.sol",
+          "role": "optional",
+          "status": "resolved"
+        },
+        {
+          "field": "optional.ERC1155BurnFacet.path",
+          "declaredPath": "@perfect-abstractions/compose/token/ERC1155/Burn/ERC1155BurnFacet.sol",
+          "path": "src/token/ERC1155/Burn/ERC1155BurnFacet.sol",
+          "role": "optional",
+          "status": "resolved"
+        },
+        {
+          "field": "optional.ERC1155MetadataFacet.erc165.path",
+          "declaredPath": "@perfect-abstractions/compose/interfaces/IERC1155Metadata_URI.sol",
+          "path": "src/interfaces/IERC1155Metadata_URI.sol",
+          "role": "optional",
+          "status": "resolved"
+        },
+        {
+          "field": "optional.ERC1155MetadataFacet.mod",
+          "declaredPath": "@perfect-abstractions/compose/token/ERC1155/Metadata/ERC1155MetadataMod.sol",
+          "path": "src/token/ERC1155/Metadata/ERC1155MetadataMod.sol",
+          "role": "optional",
+          "status": "resolved"
+        },
+        {
+          "field": "optional.ERC1155MetadataFacet.path",
+          "declaredPath": "@perfect-abstractions/compose/token/ERC1155/Metadata/ERC1155MetadataFacet.sol",
+          "path": "src/token/ERC1155/Metadata/ERC1155MetadataFacet.sol",
+          "role": "optional",
+          "status": "resolved"
+        },
+        {
+          "field": "optional.RoyaltyFacet.erc165.path",
+          "declaredPath": "@perfect-abstractions/compose/interfaces/IERC2981.sol",
+          "path": "src/interfaces/IERC2981.sol",
+          "role": "optional",
+          "status": "resolved"
+        },
+        {
+          "field": "optional.RoyaltyFacet.mod",
+          "declaredPath": "@perfect-abstractions/compose/token/Royalty/RoyaltyMod.sol",
+          "path": "src/token/Royalty/RoyaltyMod.sol",
+          "role": "optional",
+          "status": "resolved"
+        },
+        {
+          "field": "optional.RoyaltyFacet.path",
+          "declaredPath": "@perfect-abstractions/compose/token/Royalty/RoyaltyFacet.sol",
+          "path": "src/token/Royalty/RoyaltyFacet.sol",
+          "role": "optional",
+          "status": "resolved"
+        },
+        {
+          "field": "required.ERC1155ApproveFacet.mod",
+          "declaredPath": "@perfect-abstractions/compose/token/ERC1155/Approve/ERC1155ApproveMod.sol",
+          "path": "src/token/ERC1155/Approve/ERC1155ApproveMod.sol",
+          "role": "required",
+          "status": "resolved"
+        },
+        {
+          "field": "required.ERC1155ApproveFacet.path",
+          "declaredPath": "@perfect-abstractions/compose/token/ERC1155/Approve/ERC1155ApproveFacet.sol",
+          "path": "src/token/ERC1155/Approve/ERC1155ApproveFacet.sol",
+          "role": "required",
+          "status": "resolved"
+        },
+        {
+          "field": "required.ERC1155DataFacet.path",
+          "declaredPath": "@perfect-abstractions/compose/token/ERC1155/Data/ERC1155DataFacet.sol",
+          "path": "src/token/ERC1155/Data/ERC1155DataFacet.sol",
+          "role": "required",
+          "status": "resolved"
+        },
+        {
+          "field": "required.ERC1155TransferFacet.mod",
+          "declaredPath": "@perfect-abstractions/compose/token/ERC1155/Transfer/ERC1155TransferMod.sol",
+          "path": "src/token/ERC1155/Transfer/ERC1155TransferMod.sol",
+          "role": "required",
+          "status": "resolved"
+        },
+        {
+          "field": "required.ERC1155TransferFacet.path",
+          "declaredPath": "@perfect-abstractions/compose/token/ERC1155/Transfer/ERC1155TransferFacet.sol",
+          "path": "src/token/ERC1155/Transfer/ERC1155TransferFacet.sol",
+          "role": "required",
+          "status": "resolved"
+        }
+      ]
+    },
+    {
+      "id": "erc-20",
+      "sourcePath": "cli/bases/erc20.json",
+      "definition": {
+        "label": "ERC-20",
+        "order": 2,
+        "erc165": {
+          "path": "@perfect-abstractions/compose/interfaces/IERC20.sol",
+          "id": "type(IERC20).interfaceId",
+          "comments": [
+            "Register ERC-20 interface support."
+          ]
+        },
+        "required": {
+          "ERC20DataFacet": {
+            "path": "@perfect-abstractions/compose/token/ERC20/Data/ERC20DataFacet.sol"
+          },
+          "ERC20ApproveFacet": {
+            "path": "@perfect-abstractions/compose/token/ERC20/Approve/ERC20ApproveFacet.sol"
+          },
+          "ERC20TransferFacet": {
+            "path": "@perfect-abstractions/compose/token/ERC20/Transfer/ERC20TransferFacet.sol"
+          }
+        },
+        "optional": {
+          "ERC20BurnFacet": {
+            "path": "@perfect-abstractions/compose/token/ERC20/Burn/ERC20BurnFacet.sol"
+          },
+          "ERC20MetadataFacet": {
+            "path": "@perfect-abstractions/compose/token/ERC20/Metadata/ERC20MetadataFacet.sol",
+            "mod": "@perfect-abstractions/compose/token/ERC20/Metadata/ERC20MetadataMod.sol",
+            "constructor": [
+              {
+                "comments": [
+                  "TODO: Review the sample token name, symbol, and decimals before deployment."
+                ],
+                "code": "ERC20MetadataMod.setMetadata({_name: \"ExampleToken\", _symbol: \"EXT\", _decimals: 18});"
+              }
+            ]
+          },
+          "ERC20PermitFacet": {
+            "path": "@perfect-abstractions/compose/token/ERC20/Permit/ERC20PermitFacet.sol"
+          },
+          "ERC20BridgeableFacet": {
+            "path": "@perfect-abstractions/compose/token/ERC20/Bridgeable/ERC20BridgeableFacet.sol"
+          }
+        }
+      },
+      "references": [
+        {
+          "field": "erc165.path",
+          "declaredPath": "@perfect-abstractions/compose/interfaces/IERC20.sol",
+          "path": "src/interfaces/IERC20.sol",
+          "role": null,
+          "status": "resolved"
+        },
+        {
+          "field": "optional.ERC20BridgeableFacet.path",
+          "declaredPath": "@perfect-abstractions/compose/token/ERC20/Bridgeable/ERC20BridgeableFacet.sol",
+          "path": "src/token/ERC20/Bridgeable/ERC20BridgeableFacet.sol",
+          "role": "optional",
+          "status": "resolved"
+        },
+        {
+          "field": "optional.ERC20BurnFacet.path",
+          "declaredPath": "@perfect-abstractions/compose/token/ERC20/Burn/ERC20BurnFacet.sol",
+          "path": "src/token/ERC20/Burn/ERC20BurnFacet.sol",
+          "role": "optional",
+          "status": "resolved"
+        },
+        {
+          "field": "optional.ERC20MetadataFacet.mod",
+          "declaredPath": "@perfect-abstractions/compose/token/ERC20/Metadata/ERC20MetadataMod.sol",
+          "path": "src/token/ERC20/Metadata/ERC20MetadataMod.sol",
+          "role": "optional",
+          "status": "resolved"
+        },
+        {
+          "field": "optional.ERC20MetadataFacet.path",
+          "declaredPath": "@perfect-abstractions/compose/token/ERC20/Metadata/ERC20MetadataFacet.sol",
+          "path": "src/token/ERC20/Metadata/ERC20MetadataFacet.sol",
+          "role": "optional",
+          "status": "resolved"
+        },
+        {
+          "field": "optional.ERC20PermitFacet.path",
+          "declaredPath": "@perfect-abstractions/compose/token/ERC20/Permit/ERC20PermitFacet.sol",
+          "path": "src/token/ERC20/Permit/ERC20PermitFacet.sol",
+          "role": "optional",
+          "status": "resolved"
+        },
+        {
+          "field": "required.ERC20ApproveFacet.path",
+          "declaredPath": "@perfect-abstractions/compose/token/ERC20/Approve/ERC20ApproveFacet.sol",
+          "path": "src/token/ERC20/Approve/ERC20ApproveFacet.sol",
+          "role": "required",
+          "status": "resolved"
+        },
+        {
+          "field": "required.ERC20DataFacet.path",
+          "declaredPath": "@perfect-abstractions/compose/token/ERC20/Data/ERC20DataFacet.sol",
+          "path": "src/token/ERC20/Data/ERC20DataFacet.sol",
+          "role": "required",
+          "status": "resolved"
+        },
+        {
+          "field": "required.ERC20TransferFacet.path",
+          "declaredPath": "@perfect-abstractions/compose/token/ERC20/Transfer/ERC20TransferFacet.sol",
+          "path": "src/token/ERC20/Transfer/ERC20TransferFacet.sol",
+          "role": "required",
+          "status": "resolved"
+        }
+      ]
+    },
+    {
+      "id": "erc-6909",
+      "sourcePath": "cli/bases/erc6909.json",
+      "definition": {
+        "label": "ERC-6909",
+        "order": 6,
+        "erc165": {
+          "path": "@perfect-abstractions/compose/interfaces/IERC6909.sol",
+          "id": "type(IERC6909).interfaceId",
+          "comments": [
+            "Register ERC-6909 interface support."
+          ]
+        },
+        "required": {
+          "ERC6909DataFacet": {
+            "path": "@perfect-abstractions/compose/token/ERC6909/Data/ERC6909DataFacet.sol"
+          },
+          "ERC6909TransferFacet": {
+            "path": "@perfect-abstractions/compose/token/ERC6909/Transfer/ERC6909TransferFacet.sol",
+            "mod": "@perfect-abstractions/compose/token/ERC6909/Transfer/ERC6909TransferMod.sol"
+          },
+          "ERC6909ApproveFacet": {
+            "path": "@perfect-abstractions/compose/token/ERC6909/Approve/ERC6909ApproveFacet.sol",
+            "mod": "@perfect-abstractions/compose/token/ERC6909/Approve/ERC6909ApproveMod.sol"
+          },
+          "ERC6909OperatorFacet": {
+            "path": "@perfect-abstractions/compose/token/ERC6909/Operator/ERC6909OperatorFacet.sol",
+            "mod": "@perfect-abstractions/compose/token/ERC6909/Operator/ERC6909OperatorMod.sol"
+          }
+        },
+        "optional": {
+          "ERC6909BurnFacet": {
+            "path": "@perfect-abstractions/compose/token/ERC6909/Burn/ERC6909BurnFacet.sol",
+            "mod": "@perfect-abstractions/compose/token/ERC6909/Burn/ERC6909BurnMod.sol"
+          },
+          "RoyaltyFacet": {
+            "path": "@perfect-abstractions/compose/token/Royalty/RoyaltyFacet.sol",
+            "mod": "@perfect-abstractions/compose/token/Royalty/RoyaltyMod.sol",
+            "constructor": [
+              {
+                "comments": [
+                  "TODO: Replace the sample royalty receiver and fee before deployment."
+                ],
+                "code": "RoyaltyMod.setDefaultRoyalty(0x0000000000000000000000000000000000000001, 500);"
+              }
+            ],
+            "erc165": {
+              "path": "@perfect-abstractions/compose/interfaces/IERC2981.sol",
+              "id": "type(IERC2981).interfaceId",
+              "comments": [
+                "Register ERC-2981 royalty interface support."
+              ]
+            }
+          }
+        }
+      },
+      "references": [
+        {
+          "field": "erc165.path",
+          "declaredPath": "@perfect-abstractions/compose/interfaces/IERC6909.sol",
+          "path": "src/interfaces/IERC6909.sol",
+          "role": null,
+          "status": "resolved"
+        },
+        {
+          "field": "optional.ERC6909BurnFacet.mod",
+          "declaredPath": "@perfect-abstractions/compose/token/ERC6909/Burn/ERC6909BurnMod.sol",
+          "path": "src/token/ERC6909/Burn/ERC6909BurnMod.sol",
+          "role": "optional",
+          "status": "resolved"
+        },
+        {
+          "field": "optional.ERC6909BurnFacet.path",
+          "declaredPath": "@perfect-abstractions/compose/token/ERC6909/Burn/ERC6909BurnFacet.sol",
+          "path": "src/token/ERC6909/Burn/ERC6909BurnFacet.sol",
+          "role": "optional",
+          "status": "resolved"
+        },
+        {
+          "field": "optional.RoyaltyFacet.erc165.path",
+          "declaredPath": "@perfect-abstractions/compose/interfaces/IERC2981.sol",
+          "path": "src/interfaces/IERC2981.sol",
+          "role": "optional",
+          "status": "resolved"
+        },
+        {
+          "field": "optional.RoyaltyFacet.mod",
+          "declaredPath": "@perfect-abstractions/compose/token/Royalty/RoyaltyMod.sol",
+          "path": "src/token/Royalty/RoyaltyMod.sol",
+          "role": "optional",
+          "status": "resolved"
+        },
+        {
+          "field": "optional.RoyaltyFacet.path",
+          "declaredPath": "@perfect-abstractions/compose/token/Royalty/RoyaltyFacet.sol",
+          "path": "src/token/Royalty/RoyaltyFacet.sol",
+          "role": "optional",
+          "status": "resolved"
+        },
+        {
+          "field": "required.ERC6909ApproveFacet.mod",
+          "declaredPath": "@perfect-abstractions/compose/token/ERC6909/Approve/ERC6909ApproveMod.sol",
+          "path": "src/token/ERC6909/Approve/ERC6909ApproveMod.sol",
+          "role": "required",
+          "status": "resolved"
+        },
+        {
+          "field": "required.ERC6909ApproveFacet.path",
+          "declaredPath": "@perfect-abstractions/compose/token/ERC6909/Approve/ERC6909ApproveFacet.sol",
+          "path": "src/token/ERC6909/Approve/ERC6909ApproveFacet.sol",
+          "role": "required",
+          "status": "resolved"
+        },
+        {
+          "field": "required.ERC6909DataFacet.path",
+          "declaredPath": "@perfect-abstractions/compose/token/ERC6909/Data/ERC6909DataFacet.sol",
+          "path": "src/token/ERC6909/Data/ERC6909DataFacet.sol",
+          "role": "required",
+          "status": "resolved"
+        },
+        {
+          "field": "required.ERC6909OperatorFacet.mod",
+          "declaredPath": "@perfect-abstractions/compose/token/ERC6909/Operator/ERC6909OperatorMod.sol",
+          "path": "src/token/ERC6909/Operator/ERC6909OperatorMod.sol",
+          "role": "required",
+          "status": "resolved"
+        },
+        {
+          "field": "required.ERC6909OperatorFacet.path",
+          "declaredPath": "@perfect-abstractions/compose/token/ERC6909/Operator/ERC6909OperatorFacet.sol",
+          "path": "src/token/ERC6909/Operator/ERC6909OperatorFacet.sol",
+          "role": "required",
+          "status": "resolved"
+        },
+        {
+          "field": "required.ERC6909TransferFacet.mod",
+          "declaredPath": "@perfect-abstractions/compose/token/ERC6909/Transfer/ERC6909TransferMod.sol",
+          "path": "src/token/ERC6909/Transfer/ERC6909TransferMod.sol",
+          "role": "required",
+          "status": "resolved"
+        },
+        {
+          "field": "required.ERC6909TransferFacet.path",
+          "declaredPath": "@perfect-abstractions/compose/token/ERC6909/Transfer/ERC6909TransferFacet.sol",
+          "path": "src/token/ERC6909/Transfer/ERC6909TransferFacet.sol",
+          "role": "required",
+          "status": "resolved"
+        }
+      ]
+    },
+    {
+      "id": "erc-721",
+      "sourcePath": "cli/bases/erc721.json",
+      "definition": {
+        "label": "ERC-721",
+        "order": 3,
+        "erc165": {
+          "path": "@perfect-abstractions/compose/interfaces/IERC721.sol",
+          "id": "type(IERC721).interfaceId",
+          "comments": [
+            "Register ERC-721 interface support."
+          ]
+        },
+        "required": {
+          "ERC721ApproveFacet": {
+            "path": "@perfect-abstractions/compose/token/ERC721/Approve/ERC721ApproveFacet.sol"
+          },
+          "ERC721DataFacet": {
+            "path": "@perfect-abstractions/compose/token/ERC721/Data/ERC721DataFacet.sol"
+          },
+          "ERC721TransferFacet": {
+            "path": "@perfect-abstractions/compose/token/ERC721/Transfer/ERC721TransferFacet.sol"
+          }
+        },
+        "optional": {
+          "ERC721BurnFacet": {
+            "path": "@perfect-abstractions/compose/token/ERC721/Burn/ERC721BurnFacet.sol"
+          },
+          "ERC721MetadataFacet": {
+            "path": "@perfect-abstractions/compose/token/ERC721/Metadata/ERC721MetadataFacet.sol",
+            "mod": "@perfect-abstractions/compose/token/ERC721/Metadata/ERC721MetadataMod.sol",
+            "constructor": [
+              {
+                "comments": [
+                  "TODO: Review the sample collection name, symbol, and base URI before deployment."
+                ],
+                "code": "ERC721MetadataMod.setMetadata({_name: \"ExampleDiamondNFT\", _symbol: \"EDN\", _baseURI: \"https://example.com/metadata/\"});"
+              }
+            ],
+            "erc165": {
+              "path": "@perfect-abstractions/compose/interfaces/IERC721Metadata.sol",
+              "id": "type(IERC721Metadata).interfaceId",
+              "comments": [
+                "Register ERC-721 Metadata interface support."
+              ]
+            }
+          },
+          "RoyaltyFacet": {
+            "path": "@perfect-abstractions/compose/token/Royalty/RoyaltyFacet.sol",
+            "mod": "@perfect-abstractions/compose/token/Royalty/RoyaltyMod.sol",
+            "constructor": [
+              {
+                "comments": [
+                  "TODO: Replace the sample royalty receiver and fee before deployment."
+                ],
+                "code": "RoyaltyMod.setDefaultRoyalty(0x0000000000000000000000000000000000000001, 500);"
+              }
+            ],
+            "erc165": {
+              "path": "@perfect-abstractions/compose/interfaces/IERC2981.sol",
+              "id": "type(IERC2981).interfaceId",
+              "comments": [
+                "Register ERC-2981 royalty interface support."
+              ]
+            }
+          }
+        }
+      },
+      "references": [
+        {
+          "field": "erc165.path",
+          "declaredPath": "@perfect-abstractions/compose/interfaces/IERC721.sol",
+          "path": "src/interfaces/IERC721.sol",
+          "role": null,
+          "status": "resolved"
+        },
+        {
+          "field": "optional.ERC721BurnFacet.path",
+          "declaredPath": "@perfect-abstractions/compose/token/ERC721/Burn/ERC721BurnFacet.sol",
+          "path": "src/token/ERC721/Burn/ERC721BurnFacet.sol",
+          "role": "optional",
+          "status": "resolved"
+        },
+        {
+          "field": "optional.ERC721MetadataFacet.erc165.path",
+          "declaredPath": "@perfect-abstractions/compose/interfaces/IERC721Metadata.sol",
+          "path": "src/interfaces/IERC721Metadata.sol",
+          "role": "optional",
+          "status": "resolved"
+        },
+        {
+          "field": "optional.ERC721MetadataFacet.mod",
+          "declaredPath": "@perfect-abstractions/compose/token/ERC721/Metadata/ERC721MetadataMod.sol",
+          "path": "src/token/ERC721/Metadata/ERC721MetadataMod.sol",
+          "role": "optional",
+          "status": "resolved"
+        },
+        {
+          "field": "optional.ERC721MetadataFacet.path",
+          "declaredPath": "@perfect-abstractions/compose/token/ERC721/Metadata/ERC721MetadataFacet.sol",
+          "path": "src/token/ERC721/Metadata/ERC721MetadataFacet.sol",
+          "role": "optional",
+          "status": "resolved"
+        },
+        {
+          "field": "optional.RoyaltyFacet.erc165.path",
+          "declaredPath": "@perfect-abstractions/compose/interfaces/IERC2981.sol",
+          "path": "src/interfaces/IERC2981.sol",
+          "role": "optional",
+          "status": "resolved"
+        },
+        {
+          "field": "optional.RoyaltyFacet.mod",
+          "declaredPath": "@perfect-abstractions/compose/token/Royalty/RoyaltyMod.sol",
+          "path": "src/token/Royalty/RoyaltyMod.sol",
+          "role": "optional",
+          "status": "resolved"
+        },
+        {
+          "field": "optional.RoyaltyFacet.path",
+          "declaredPath": "@perfect-abstractions/compose/token/Royalty/RoyaltyFacet.sol",
+          "path": "src/token/Royalty/RoyaltyFacet.sol",
+          "role": "optional",
+          "status": "resolved"
+        },
+        {
+          "field": "required.ERC721ApproveFacet.path",
+          "declaredPath": "@perfect-abstractions/compose/token/ERC721/Approve/ERC721ApproveFacet.sol",
+          "path": "src/token/ERC721/Approve/ERC721ApproveFacet.sol",
+          "role": "required",
+          "status": "resolved"
+        },
+        {
+          "field": "required.ERC721DataFacet.path",
+          "declaredPath": "@perfect-abstractions/compose/token/ERC721/Data/ERC721DataFacet.sol",
+          "path": "src/token/ERC721/Data/ERC721DataFacet.sol",
+          "role": "required",
+          "status": "resolved"
+        },
+        {
+          "field": "required.ERC721TransferFacet.path",
+          "declaredPath": "@perfect-abstractions/compose/token/ERC721/Transfer/ERC721TransferFacet.sol",
+          "path": "src/token/ERC721/Transfer/ERC721TransferFacet.sol",
+          "role": "required",
+          "status": "resolved"
+        }
+      ]
+    },
+    {
+      "id": "erc-721-enumerable",
+      "sourcePath": "cli/bases/erc721.json",
+      "definition": {
+        "label": "ERC-721 Enumerable",
+        "order": 4,
+        "erc165": {
+          "path": "@perfect-abstractions/compose/interfaces/IERC721.sol",
+          "id": "type(IERC721).interfaceId",
+          "comments": [
+            "Register ERC-721 interface support."
+          ]
+        },
+        "required": {
+          "ERC721ApproveFacet": {
+            "path": "@perfect-abstractions/compose/token/ERC721/Approve/ERC721ApproveFacet.sol"
+          },
+          "ERC721DataFacet": {
+            "path": "@perfect-abstractions/compose/token/ERC721/Data/ERC721DataFacet.sol"
+          },
+          "ERC721EnumerableDataFacet": {
+            "path": "@perfect-abstractions/compose/token/ERC721/Enumerable/Data/ERC721EnumerableDataFacet.sol"
+          },
+          "ERC721EnumerableTransferFacet": {
+            "path": "@perfect-abstractions/compose/token/ERC721/Enumerable/Transfer/ERC721EnumerableTransferFacet.sol"
+          }
+        },
+        "optional": {
+          "ERC721EnumerableBurnFacet": {
+            "path": "@perfect-abstractions/compose/token/ERC721/Enumerable/Burn/ERC721EnumerableBurnFacet.sol"
+          },
+          "ERC721MetadataFacet": {
+            "path": "@perfect-abstractions/compose/token/ERC721/Metadata/ERC721MetadataFacet.sol",
+            "mod": "@perfect-abstractions/compose/token/ERC721/Metadata/ERC721MetadataMod.sol",
+            "constructor": [
+              {
+                "comments": [
+                  "TODO: Review the sample collection name, symbol, and base URI before deployment."
+                ],
+                "code": "ERC721MetadataMod.setMetadata({_name: \"ExampleDiamondNFT\", _symbol: \"EDN\", _baseURI: \"https://example.com/metadata/\"});"
+              }
+            ],
+            "erc165": {
+              "path": "@perfect-abstractions/compose/interfaces/IERC721Metadata.sol",
+              "id": "type(IERC721Metadata).interfaceId",
+              "comments": [
+                "Register ERC-721 Metadata interface support."
+              ]
+            }
+          },
+          "RoyaltyFacet": {
+            "path": "@perfect-abstractions/compose/token/Royalty/RoyaltyFacet.sol",
+            "mod": "@perfect-abstractions/compose/token/Royalty/RoyaltyMod.sol",
+            "constructor": [
+              {
+                "comments": [
+                  "TODO: Replace the sample royalty receiver and fee before deployment."
+                ],
+                "code": "RoyaltyMod.setDefaultRoyalty(0x0000000000000000000000000000000000000001, 500);"
+              }
+            ],
+            "erc165": {
+              "path": "@perfect-abstractions/compose/interfaces/IERC2981.sol",
+              "id": "type(IERC2981).interfaceId",
+              "comments": [
+                "Register ERC-2981 royalty interface support."
+              ]
+            }
+          }
+        }
+      },
+      "references": [
+        {
+          "field": "erc165.path",
+          "declaredPath": "@perfect-abstractions/compose/interfaces/IERC721.sol",
+          "path": "src/interfaces/IERC721.sol",
+          "role": null,
+          "status": "resolved"
+        },
+        {
+          "field": "optional.ERC721EnumerableBurnFacet.path",
+          "declaredPath": "@perfect-abstractions/compose/token/ERC721/Enumerable/Burn/ERC721EnumerableBurnFacet.sol",
+          "path": "src/token/ERC721/Enumerable/Burn/ERC721EnumerableBurnFacet.sol",
+          "role": "optional",
+          "status": "resolved"
+        },
+        {
+          "field": "optional.ERC721MetadataFacet.erc165.path",
+          "declaredPath": "@perfect-abstractions/compose/interfaces/IERC721Metadata.sol",
+          "path": "src/interfaces/IERC721Metadata.sol",
+          "role": "optional",
+          "status": "resolved"
+        },
+        {
+          "field": "optional.ERC721MetadataFacet.mod",
+          "declaredPath": "@perfect-abstractions/compose/token/ERC721/Metadata/ERC721MetadataMod.sol",
+          "path": "src/token/ERC721/Metadata/ERC721MetadataMod.sol",
+          "role": "optional",
+          "status": "resolved"
+        },
+        {
+          "field": "optional.ERC721MetadataFacet.path",
+          "declaredPath": "@perfect-abstractions/compose/token/ERC721/Metadata/ERC721MetadataFacet.sol",
+          "path": "src/token/ERC721/Metadata/ERC721MetadataFacet.sol",
+          "role": "optional",
+          "status": "resolved"
+        },
+        {
+          "field": "optional.RoyaltyFacet.erc165.path",
+          "declaredPath": "@perfect-abstractions/compose/interfaces/IERC2981.sol",
+          "path": "src/interfaces/IERC2981.sol",
+          "role": "optional",
+          "status": "resolved"
+        },
+        {
+          "field": "optional.RoyaltyFacet.mod",
+          "declaredPath": "@perfect-abstractions/compose/token/Royalty/RoyaltyMod.sol",
+          "path": "src/token/Royalty/RoyaltyMod.sol",
+          "role": "optional",
+          "status": "resolved"
+        },
+        {
+          "field": "optional.RoyaltyFacet.path",
+          "declaredPath": "@perfect-abstractions/compose/token/Royalty/RoyaltyFacet.sol",
+          "path": "src/token/Royalty/RoyaltyFacet.sol",
+          "role": "optional",
+          "status": "resolved"
+        },
+        {
+          "field": "required.ERC721ApproveFacet.path",
+          "declaredPath": "@perfect-abstractions/compose/token/ERC721/Approve/ERC721ApproveFacet.sol",
+          "path": "src/token/ERC721/Approve/ERC721ApproveFacet.sol",
+          "role": "required",
+          "status": "resolved"
+        },
+        {
+          "field": "required.ERC721DataFacet.path",
+          "declaredPath": "@perfect-abstractions/compose/token/ERC721/Data/ERC721DataFacet.sol",
+          "path": "src/token/ERC721/Data/ERC721DataFacet.sol",
+          "role": "required",
+          "status": "resolved"
+        },
+        {
+          "field": "required.ERC721EnumerableDataFacet.path",
+          "declaredPath": "@perfect-abstractions/compose/token/ERC721/Enumerable/Data/ERC721EnumerableDataFacet.sol",
+          "path": "src/token/ERC721/Enumerable/Data/ERC721EnumerableDataFacet.sol",
+          "role": "required",
+          "status": "resolved"
+        },
+        {
+          "field": "required.ERC721EnumerableTransferFacet.path",
+          "declaredPath": "@perfect-abstractions/compose/token/ERC721/Enumerable/Transfer/ERC721EnumerableTransferFacet.sol",
+          "path": "src/token/ERC721/Enumerable/Transfer/ERC721EnumerableTransferFacet.sol",
+          "role": "required",
+          "status": "resolved"
+        }
+      ]
+    },
+    {
+      "id": "libraries",
+      "sourcePath": "cli/bases/libraries.json",
+      "definition": {
+        "label": "Libraries",
+        "required": {},
+        "optional": {
+          "ERC165Facet": {
+            "path": "@perfect-abstractions/compose/interfaceDetection/ERC165/ERC165Facet.sol"
+          }
+        }
+      },
+      "references": [
+        {
+          "field": "optional.ERC165Facet.path",
+          "declaredPath": "@perfect-abstractions/compose/interfaceDetection/ERC165/ERC165Facet.sol",
+          "path": "src/interfaceDetection/ERC165/ERC165Facet.sol",
+          "role": "optional",
+          "status": "resolved"
+        }
+      ]
+    },
+    {
+      "id": "owner",
+      "sourcePath": "cli/bases/owner.json",
+      "definition": {
+        "label": "Owner",
+        "order": 7,
+        "access": true,
+        "accessType": "ownership",
+        "erc165": {
+          "path": "@perfect-abstractions/compose/interfaces/IERC173.sol",
+          "id": "type(IERC173).interfaceId",
+          "comments": [
+            "Register ERC-173 ownership interface support."
+          ]
+        },
+        "required": {
+          "OwnerDataFacet": {
+            "path": "@perfect-abstractions/compose/access/Owner/Data/OwnerDataFacet.sol",
+            "mod": "@perfect-abstractions/compose/access/Owner/Data/OwnerDataMod.sol",
+            "constructor": [
+              {
+                "comments": [
+                  "TODO: Review the initial owner policy before deployment."
+                ],
+                "code": "OwnerDataMod.setContractOwner(msg.sender);"
+              }
+            ]
+          },
+          "OwnerTransferFacet": {
+            "path": "@perfect-abstractions/compose/access/Owner/Transfer/OwnerTransferFacet.sol",
+            "mod": "@perfect-abstractions/compose/access/Owner/Transfer/OwnerTransferMod.sol"
+          }
+        },
+        "optional": {
+          "OwnerRenounceFacet": {
+            "path": "@perfect-abstractions/compose/access/Owner/Renounce/OwnerRenounceFacet.sol",
+            "mod": "@perfect-abstractions/compose/access/Owner/Renounce/OwnerRenounceMod.sol"
+          }
+        }
+      },
+      "references": [
+        {
+          "field": "erc165.path",
+          "declaredPath": "@perfect-abstractions/compose/interfaces/IERC173.sol",
+          "path": "src/interfaces/IERC173.sol",
+          "role": null,
+          "status": "resolved"
+        },
+        {
+          "field": "optional.OwnerRenounceFacet.mod",
+          "declaredPath": "@perfect-abstractions/compose/access/Owner/Renounce/OwnerRenounceMod.sol",
+          "path": "src/access/Owner/Renounce/OwnerRenounceMod.sol",
+          "role": "optional",
+          "status": "resolved"
+        },
+        {
+          "field": "optional.OwnerRenounceFacet.path",
+          "declaredPath": "@perfect-abstractions/compose/access/Owner/Renounce/OwnerRenounceFacet.sol",
+          "path": "src/access/Owner/Renounce/OwnerRenounceFacet.sol",
+          "role": "optional",
+          "status": "resolved"
+        },
+        {
+          "field": "required.OwnerDataFacet.mod",
+          "declaredPath": "@perfect-abstractions/compose/access/Owner/Data/OwnerDataMod.sol",
+          "path": "src/access/Owner/Data/OwnerDataMod.sol",
+          "role": "required",
+          "status": "resolved"
+        },
+        {
+          "field": "required.OwnerDataFacet.path",
+          "declaredPath": "@perfect-abstractions/compose/access/Owner/Data/OwnerDataFacet.sol",
+          "path": "src/access/Owner/Data/OwnerDataFacet.sol",
+          "role": "required",
+          "status": "resolved"
+        },
+        {
+          "field": "required.OwnerTransferFacet.mod",
+          "declaredPath": "@perfect-abstractions/compose/access/Owner/Transfer/OwnerTransferMod.sol",
+          "path": "src/access/Owner/Transfer/OwnerTransferMod.sol",
+          "role": "required",
+          "status": "resolved"
+        },
+        {
+          "field": "required.OwnerTransferFacet.path",
+          "declaredPath": "@perfect-abstractions/compose/access/Owner/Transfer/OwnerTransferFacet.sol",
+          "path": "src/access/Owner/Transfer/OwnerTransferFacet.sol",
+          "role": "required",
+          "status": "resolved"
+        }
+      ]
+    },
+    {
+      "id": "owner-two-step",
+      "sourcePath": "cli/bases/owner.json",
+      "definition": {
+        "label": "Owner Two-Step",
+        "order": 8,
+        "access": true,
+        "accessType": "ownership",
+        "required": {
+          "OwnerDataFacet": {
+            "path": "@perfect-abstractions/compose/access/Owner/Data/OwnerDataFacet.sol",
+            "mod": "@perfect-abstractions/compose/access/Owner/Data/OwnerDataMod.sol",
+            "constructor": [
+              {
+                "comments": [
+                  "TODO: Review the initial owner policy before deployment."
+                ],
+                "code": "OwnerDataMod.setContractOwner(msg.sender);"
+              }
+            ]
+          },
+          "OwnerTwoStepDataFacet": {
+            "path": "@perfect-abstractions/compose/access/Owner/TwoSteps/Data/OwnerTwoStepDataFacet.sol",
+            "mod": "@perfect-abstractions/compose/access/Owner/TwoSteps/Data/OwnerTwoStepDataMod.sol"
+          },
+          "OwnerTwoStepTransferFacet": {
+            "path": "@perfect-abstractions/compose/access/Owner/TwoSteps/Transfer/OwnerTwoStepTransferFacet.sol",
+            "mod": "@perfect-abstractions/compose/access/Owner/TwoSteps/Transfer/OwnerTwoStepTransferMod.sol"
+          }
+        },
+        "optional": {
+          "OwnerTwoStepRenounceFacet": {
+            "path": "@perfect-abstractions/compose/access/Owner/TwoSteps/Renounce/OwnerTwoStepRenounceFacet.sol",
+            "mod": "@perfect-abstractions/compose/access/Owner/TwoSteps/Renounce/OwnerTwoStepRenounceMod.sol"
+          }
+        }
+      },
+      "references": [
+        {
+          "field": "optional.OwnerTwoStepRenounceFacet.mod",
+          "declaredPath": "@perfect-abstractions/compose/access/Owner/TwoSteps/Renounce/OwnerTwoStepRenounceMod.sol",
+          "path": "src/access/Owner/TwoSteps/Renounce/OwnerTwoStepRenounceMod.sol",
+          "role": "optional",
+          "status": "resolved"
+        },
+        {
+          "field": "optional.OwnerTwoStepRenounceFacet.path",
+          "declaredPath": "@perfect-abstractions/compose/access/Owner/TwoSteps/Renounce/OwnerTwoStepRenounceFacet.sol",
+          "path": "src/access/Owner/TwoSteps/Renounce/OwnerTwoStepRenounceFacet.sol",
+          "role": "optional",
+          "status": "resolved"
+        },
+        {
+          "field": "required.OwnerDataFacet.mod",
+          "declaredPath": "@perfect-abstractions/compose/access/Owner/Data/OwnerDataMod.sol",
+          "path": "src/access/Owner/Data/OwnerDataMod.sol",
+          "role": "required",
+          "status": "resolved"
+        },
+        {
+          "field": "required.OwnerDataFacet.path",
+          "declaredPath": "@perfect-abstractions/compose/access/Owner/Data/OwnerDataFacet.sol",
+          "path": "src/access/Owner/Data/OwnerDataFacet.sol",
+          "role": "required",
+          "status": "resolved"
+        },
+        {
+          "field": "required.OwnerTwoStepDataFacet.mod",
+          "declaredPath": "@perfect-abstractions/compose/access/Owner/TwoSteps/Data/OwnerTwoStepDataMod.sol",
+          "path": "src/access/Owner/TwoSteps/Data/OwnerTwoStepDataMod.sol",
+          "role": "required",
+          "status": "resolved"
+        },
+        {
+          "field": "required.OwnerTwoStepDataFacet.path",
+          "declaredPath": "@perfect-abstractions/compose/access/Owner/TwoSteps/Data/OwnerTwoStepDataFacet.sol",
+          "path": "src/access/Owner/TwoSteps/Data/OwnerTwoStepDataFacet.sol",
+          "role": "required",
+          "status": "resolved"
+        },
+        {
+          "field": "required.OwnerTwoStepTransferFacet.mod",
+          "declaredPath": "@perfect-abstractions/compose/access/Owner/TwoSteps/Transfer/OwnerTwoStepTransferMod.sol",
+          "path": "src/access/Owner/TwoSteps/Transfer/OwnerTwoStepTransferMod.sol",
+          "role": "required",
+          "status": "resolved"
+        },
+        {
+          "field": "required.OwnerTwoStepTransferFacet.path",
+          "declaredPath": "@perfect-abstractions/compose/access/Owner/TwoSteps/Transfer/OwnerTwoStepTransferFacet.sol",
+          "path": "src/access/Owner/TwoSteps/Transfer/OwnerTwoStepTransferFacet.sol",
+          "role": "required",
+          "status": "resolved"
+        }
+      ]
+    }
+  ]
+}

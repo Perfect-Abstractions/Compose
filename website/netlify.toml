@@ -8,7 +8,7 @@
   # Publish directory (relative to base directory)
   publish = "build"
   
-  # Skip Netlify builds if there are no changes in the website/ directory
+  # Rebuild for website, CLI, or Solidity source changes
   # Based on official Netlify documentation: https://docs.netlify.com/configure-builds/ignore-builds/
   # Works for both regular PRs and forked PRs
   ignore = "./netlify-ignore.sh"

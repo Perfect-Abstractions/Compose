@@ -4,7 +4,13 @@
   "private": true,
   "scripts": {
     "docusaurus": "docusaurus",
+    "catalog:generate": "node scripts/generate-library-catalog.mjs",
+    "catalog:check": "node scripts/generate-library-catalog.mjs --check",
+    "catalog:test": "node --test scripts/generate-library-catalog.test.mjs",
+    "graph:test": "node --test scripts/library-graph.test.mjs",
+    "prestart": "npm run catalog:generate",
     "start": "docusaurus start",
+    "prebuild": "npm run catalog:generate",
     "build": "docusaurus build",
     "swizzle": "docusaurus swizzle",
     "deploy": "docusaurus deploy",
