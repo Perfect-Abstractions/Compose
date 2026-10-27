@@ -14,6 +14,7 @@ import {
 } from "../../../src/modules/deployExecution/module";
 import type { DeployExecutionResult } from "../../../src/modules/deployExecution/types";
 import type { DeployPlan } from "../../../src/modules/deployPlan/types";
+import { getIgnitionDeploymentId, HARDHAT_IGNITION_MODULE_ID } from "../../../src/modules/deployScript/model";
 
 const PLAN_HASH = `0x${"cd".repeat(32)}` as Hex;
 const DIAMOND = "0x00000000000000000000000000000000000000aa";
@@ -46,6 +47,8 @@ function deployPlan(): DeployPlan {
     },
     instance: "default",
     chain: { chainKey: "local", rpcUrl: "http://127.0.0.1:8545", chainId: 31337 },
+    rpcUrlOverridden: false,
+    account: null,
     facets: [
       {
         name: "AlphaFacet",
@@ -67,6 +70,10 @@ function deployPlan(): DeployPlan {
   };
 }
 
+function hardhatPlan(): DeployPlan {
+  return { ...deployPlan(), framework: "hardhat" };
+}
+
 function stubAdapter(overrides: Partial<IFrameworkAdapter> = {}): IFrameworkAdapter {
   return {
     getContractSourceRoot: () => path.join(projectRoot, "src"),
@@ -79,6 +86,7 @@ function stubAdapter(overrides: Partial<IFrameworkAdapter> = {}): IFrameworkAdap
     initProject: async () => {},
     writeConfig: async () => {},
     getManagedDeployScriptPath: () => path.join(projectRoot, "script", "ComposeDeploy.s.sol"),
+    getManagedDeployRunnerPath: () => null,
     getManagedDeployResultPath: () => path.join(projectRoot, "cache", "compose", "deploy-result.json"),
     createDeployCommand: () => ({ command: process.execPath, args: ["-e", ""] }),
     createTestCommand: () => ({ command: process.execPath, args: ["-e", ""] }),
@@ -119,7 +127,11 @@ function broadcastAdapter(transactions: BroadcastTransaction[]): IFrameworkAdapt
   return stubAdapter({ readBroadcastTransactions: async () => transactions });
 }
 
-async function execute(adapter: IFrameworkAdapter): Promise<{
+async function execute(
+  adapter: IFrameworkAdapter,
+  plan = deployPlan(),
+  runnerPath: string | null = null,
+): Promise<{
   result: DeployExecutionResult | null;
   success: boolean;
   message: string | null;
@@ -128,7 +140,7 @@ async function execute(adapter: IFrameworkAdapter): Promise<{
   ctx.param.projectRoot = projectRoot;
   let throwMessage: string | null = null;
   try {
-    await DeployExecutionModule.execute(ctx, deployPlan(), "/tmp/script.s.sol", adapter);
+    await DeployExecutionModule.execute(ctx, plan, "/tmp/script.s.sol", adapter, runnerPath);
   } catch (error) {
     throwMessage = (error as Error).message;
   }
@@ -157,6 +169,30 @@ describe("DeployExecutionModule.execute", () => {
       "utf8",
     );
     expect(gitignore).toContain("deploy-result.json");
+  });
+
+  it("passes adapter environment overrides to the framework command", async () => {
+    const rpcUrl = "https://rpc.example.test/v1/private-token";
+    const resultPath = path.join(projectRoot, "cache", "compose", "deploy-result.json");
+    const observedPath = path.join(projectRoot, "observed-rpc-url.txt");
+    const script = [
+      'const fs = require("node:fs");',
+      'fs.mkdirSync("cache/compose", { recursive: true });',
+      `fs.writeFileSync(${JSON.stringify(resultPath)}, ${JSON.stringify(JSON.stringify(validResult()))});`,
+      `fs.writeFileSync(${JSON.stringify(observedPath)}, process.env.COMPOSE_DEPLOY_RPC_URL ?? "");`,
+    ].join("\n");
+    const adapter = stubAdapter({
+      createDeployCommand: () => ({
+        command: process.execPath,
+        args: ["-e", script],
+        env: { COMPOSE_DEPLOY_RPC_URL: rpcUrl },
+      }),
+    });
+
+    const outcome = await execute(adapter);
+
+    expect(outcome.success).toBe(true);
+    expect(await fs.readFile(observedPath, "utf8")).toBe(rpcUrl);
   });
 
   it("does not manage a capture file for frameworks without one", async () => {
@@ -198,6 +234,112 @@ describe("DeployExecutionModule.execute", () => {
     expect(outcome.message).toContain("ExtraFacet");
   });
 
+  it("records and verifies the selected Hardhat account address", async () => {
+    const accountAddress = "0x00000000000000000000000000000000000000a1";
+    const plan = {
+      ...deployPlan(),
+      framework: "hardhat" as const,
+      account: { alias: "deployer", address: accountAddress as Hex },
+    };
+    const ignitionDeploymentId = getIgnitionDeploymentId(plan);
+    const journalPath = path.join(projectRoot, "ignition", "deployments", ignitionDeploymentId, "journal.jsonl");
+    await fs.mkdir(path.dirname(journalPath), { recursive: true });
+    await fs.writeFile(journalPath, JSON.stringify({
+      type: "TRANSACTION_CONFIRM",
+      futureId: `${HARDHAT_IGNITION_MODULE_ID}#Diamond`,
+      hash: DIAMOND_TX,
+      receipt: { status: "SUCCESS" },
+    }), "utf8");
+    const result = {
+      ...validResult(),
+      framework: "hardhat",
+      deployer: accountAddress,
+      ignitionDeploymentId,
+    };
+
+    const outcome = await execute(await adapterWritingResult(result), plan);
+
+    expect(outcome.success).toBe(true);
+    expect(outcome.result?.deployer).toBe(accountAddress);
+  });
+
+  it("takes the Hardhat diamond transaction hash from the matching successful Ignition journal future", async () => {
+    const plan = hardhatPlan();
+    const runnerPath = path.join(projectRoot, "scripts", ".compose", "ignition-runner.ts");
+    await fs.mkdir(path.dirname(runnerPath), { recursive: true });
+    await fs.writeFile(runnerPath, "transient", "utf8");
+    const ignitionDeploymentId = getIgnitionDeploymentId(plan);
+    const journalPath = path.join(
+      projectRoot,
+      "ignition",
+      "deployments",
+      ignitionDeploymentId,
+      "journal.jsonl",
+    );
+    await fs.mkdir(path.dirname(journalPath), { recursive: true });
+    await fs.writeFile(journalPath, [
+      JSON.stringify({
+        type: "TRANSACTION_CONFIRM",
+        futureId: `${HARDHAT_IGNITION_MODULE_ID}#Facet_0`,
+        hash: `0x${"11".repeat(32)}`,
+        receipt: { status: "SUCCESS" },
+      }),
+      JSON.stringify({
+        type: "TRANSACTION_CONFIRM",
+        futureId: `${HARDHAT_IGNITION_MODULE_ID}#Diamond`,
+        hash: DIAMOND_TX,
+        receipt: { status: "SUCCESS" },
+      }),
+      "",
+    ].join("\n"), "utf8");
+
+    const result = {
+      ...validResult(),
+      framework: "hardhat",
+      ignitionDeploymentId,
+      transactions: { diamond: BROADCAST_DIAMOND_TX },
+    };
+    const outcome = await execute(await adapterWritingResult(result), plan, runnerPath);
+
+    expect(outcome.success).toBe(true);
+    expect(outcome.result).toEqual({
+      diamond: DIAMOND,
+      facets: { AlphaFacet: FACET_A, BetaFacet: FACET_B },
+      ignitionDeploymentId,
+      transactions: { diamond: DIAMOND_TX },
+    });
+    await expect(fs.access(runnerPath)).rejects.toThrow();
+  });
+
+  it("rejects a Hardhat result associated with another Ignition deployment ID", async () => {
+    const outcome = await execute(await adapterWritingResult({
+      ...validResult(),
+      framework: "hardhat",
+      ignitionDeploymentId: "compose-unrelated-deployment",
+    }), hardhatPlan());
+
+    expect(outcome.success).toBe(false);
+    expect(outcome.message).toContain("unexpected Hardhat Ignition deployment ID");
+  });
+
+  it("rejects a deployment from a different account than the Compose alias", async () => {
+    const plan = {
+      ...deployPlan(),
+      account: {
+        alias: "deployer",
+        address: "0x00000000000000000000000000000000000000a1" as Hex,
+      },
+    };
+
+    const outcome = await execute(
+      await adapterWritingResult({ ...validResult(), deployer: "0x00000000000000000000000000000000000000a2" }),
+      plan,
+    );
+
+    expect(outcome.success).toBe(false);
+    expect(outcome.message).toContain("expected Compose account 'deployer'");
+  });
+
   it("rejects a result targeting another chain", async () => {
     const adapter = await adapterWritingResult({ ...validResult(), chainId: 1 });
     const outcome = await execute(adapter);
@@ -227,6 +369,45 @@ describe("DeployExecutionModule.execute", () => {
       facets: { AlphaFacet: FACET_A, BetaFacet: FACET_B },
       transactions: { diamond: BROADCAST_DIAMOND_TX },
     });
+  });
+
+  it("verifies the selected Compose account against the Foundry broadcast sender", async () => {
+    const accountAddress = "0x00000000000000000000000000000000000000a1";
+    const plan = {
+      ...deployPlan(),
+      account: { alias: "deployer", address: accountAddress as Hex, foundryAccount: "deployer" },
+    };
+    const adapter = broadcastAdapter([
+      { contractName: "AlphaFacet", contractAddress: FACET_A, txHash: `0x${"01".repeat(32)}`, from: accountAddress },
+      { contractName: "BetaFacet", contractAddress: FACET_B, txHash: `0x${"02".repeat(32)}`, from: accountAddress },
+      { contractName: "Diamond", contractAddress: DIAMOND, txHash: BROADCAST_DIAMOND_TX, from: accountAddress },
+    ]);
+
+    const outcome = await execute(adapter, plan);
+
+    expect(outcome.success).toBe(true);
+    expect(outcome.result?.deployer).toBe(accountAddress);
+  });
+
+  it("rejects a Foundry broadcast from a different Compose account", async () => {
+    const plan = {
+      ...deployPlan(),
+      account: {
+        alias: "deployer",
+        address: "0x00000000000000000000000000000000000000a1" as Hex,
+        foundryAccount: "deployer",
+      },
+    };
+    const adapter = broadcastAdapter([
+      { contractName: "AlphaFacet", contractAddress: FACET_A, txHash: `0x${"01".repeat(32)}` },
+      { contractName: "BetaFacet", contractAddress: FACET_B, txHash: `0x${"02".repeat(32)}` },
+      { contractName: "Diamond", contractAddress: DIAMOND, txHash: BROADCAST_DIAMOND_TX, from: "0x00000000000000000000000000000000000000a2" },
+    ]);
+
+    const outcome = await execute(adapter, plan);
+
+    expect(outcome.success).toBe(false);
+    expect(outcome.message).toContain("does not match Compose account 'deployer'");
   });
 
   it("falls back to broadcast transactions for the diamond hash", async () => {

@@ -99,6 +99,7 @@ function createFixtureAdapter(framework: InitFramework): IFrameworkAdapter {
       path.join(projectRoot, scriptDirectory, framework === "foundry"
         ? "ComposeDeploy.s.sol"
         : "compose-deploy.ts"),
+    getManagedDeployRunnerPath: () => null,
     getManagedDeployResultPath: () => null,
     createDeployCommand: () => ({ command: "true", args: [] }),
     createTestCommand: () => ({ command: "true", args: [] }),

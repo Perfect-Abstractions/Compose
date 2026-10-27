@@ -69,6 +69,8 @@ export const DeployVerificationModule = {
         ),
         lastSync: new Date().toISOString(),
         txHash: execution.transactions.diamond,
+        ...(execution.deployer ? { deployer: execution.deployer } : {}),
+        ...(execution.ignitionDeploymentId ? { ignitionDeploymentId: execution.ignitionDeploymentId } : {}),
       };
 
       ctx.state.deployVerification = { success: true, result: record, error: null };

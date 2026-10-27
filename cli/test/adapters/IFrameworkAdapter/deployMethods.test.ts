@@ -34,6 +34,7 @@ describe("Foundry adapter deploy methods", () => {
         chainKey: "local",
         rpcUrl: "http://127.0.0.1:8545",
         chainId: 31337,
+        mode: "broadcast",
         passthrough: ["--private-key", "0xabc"],
       }),
     ).toEqual({
@@ -46,6 +47,68 @@ describe("Foundry adapter deploy methods", () => {
         "--broadcast",
         "--private-key",
         "0xabc",
+      ],
+    });
+  });
+
+  it("maps a Compose account to a Foundry keystore account and sender", () => {
+    const scriptPath = path.join(projectRoot, "script", "ComposeDeploy.s.sol");
+    expect(foundryAdapter.createDeployCommand({
+      projectRoot,
+      scriptPath,
+      chainKey: "local",
+      rpcUrl: "http://127.0.0.1:8545",
+      chainId: 31337,
+      mode: "broadcast",
+      account: {
+        alias: "deployer",
+        address: "0x00000000000000000000000000000000000000a1",
+        foundryAccount: "production-deployer",
+      },
+      passthrough: [],
+    })).toEqual({
+      command: "forge",
+      args: [
+        "script",
+        "script/ComposeDeploy.s.sol:ComposeDeployScript",
+        "--rpc-url",
+        "http://127.0.0.1:8545",
+        "--account",
+        "production-deployer",
+        "--sender",
+        "0x00000000000000000000000000000000000000a1",
+        "--broadcast",
+      ],
+    });
+  });
+
+  it("simulates at a pinned fork block without loading a signing account or broadcasting", () => {
+    const scriptPath = path.join(projectRoot, "script", "ComposeDeploy.s.sol");
+    expect(foundryAdapter.createDeployCommand({
+      projectRoot,
+      scriptPath,
+      chainKey: "local",
+      rpcUrl: "http://127.0.0.1:8545",
+      chainId: 31337,
+      mode: "simulate",
+      forkBlockNumber: 123n,
+      account: {
+        alias: "deployer",
+        address: "0x00000000000000000000000000000000000000a1",
+        foundryAccount: "production-deployer",
+      },
+      passthrough: [],
+    })).toEqual({
+      command: "forge",
+      args: [
+        "script",
+        "script/ComposeDeploy.s.sol:ComposeDeployScript",
+        "--rpc-url",
+        "http://127.0.0.1:8545",
+        "--fork-block-number",
+        "123",
+        "--sender",
+        "0x00000000000000000000000000000000000000a1",
       ],
     });
   });
@@ -75,6 +138,7 @@ describe("Foundry adapter deploy methods", () => {
           transactionType: "CREATE",
           contractName: "CounterFacet",
           contractAddress: "0x00000000000000000000000000000000000000b1",
+          transaction: { from: "0x00000000000000000000000000000000000000a1" },
         },
         {
           hash: `0x${"02".repeat(32)}`,
@@ -91,6 +155,7 @@ describe("Foundry adapter deploy methods", () => {
         contractAddress: "0x00000000000000000000000000000000000000b1",
         contractName: "CounterFacet",
         txHash: `0x${"01".repeat(32)}`,
+        from: "0x00000000000000000000000000000000000000a1",
       },
       {
         contractAddress: "0x00000000000000000000000000000000000000aa",
@@ -104,8 +169,10 @@ describe("Foundry adapter deploy methods", () => {
 
 describe("Hardhat adapter deploy methods", () => {
   it("resolves the managed script path and deploy command", () => {
-    const scriptPath = path.join(projectRoot, "scripts", "compose-deploy.ts");
+    const scriptPath = path.join(projectRoot, "ignition", "modules", "ComposeDeploy.ts");
+    const runnerPath = path.join(projectRoot, "scripts", ".compose", "ignition-runner.ts");
     expect(hardhatAdapter.getManagedDeployScriptPath(projectRoot)).toBe(scriptPath);
+    expect(hardhatAdapter.getManagedDeployRunnerPath(projectRoot)).toBe(runnerPath);
     expect(hardhatAdapter.getManagedDeployResultPath(projectRoot)).toBe(
       path.join(projectRoot, "cache", "compose", "deploy-result.json"),
     );
@@ -114,14 +181,61 @@ describe("Hardhat adapter deploy methods", () => {
       hardhatAdapter.createDeployCommand({
         projectRoot,
         scriptPath,
+        runnerPath,
         chainKey: "local",
         rpcUrl: "http://127.0.0.1:8545",
         chainId: 31337,
+        mode: "broadcast",
         passthrough: ["--verbose"],
       }),
     ).toEqual({
       command: "npx",
-      args: ["hardhat", "run", "scripts/compose-deploy.ts", "--network", "local", "--verbose"],
+      args: [
+        "hardhat",
+        "--build-profile",
+        "production",
+        "run",
+        "scripts/.compose/ignition-runner.ts",
+        "--network",
+        "local",
+        "--verbose",
+      ],
+      env: {
+        COMPOSE_DEPLOY_RPC_URL: "http://127.0.0.1:8545",
+        COMPOSE_DEPLOY_MODE: "broadcast",
+      },
+    });
+  });
+
+  it("passes the pinned fork block to the Hardhat simulation mode", () => {
+    const scriptPath = path.join(projectRoot, "ignition", "modules", "ComposeDeploy.ts");
+    const runnerPath = path.join(projectRoot, "scripts", ".compose", "ignition-runner.ts");
+    expect(hardhatAdapter.createDeployCommand({
+      projectRoot,
+      scriptPath,
+      runnerPath,
+      chainKey: "sepolia",
+      rpcUrl: "https://rpc.example.test",
+      chainId: 11155111,
+      mode: "simulate",
+      forkBlockNumber: 987n,
+      passthrough: [],
+    })).toEqual({
+      command: "npx",
+      args: [
+        "hardhat",
+        "--build-profile",
+        "production",
+        "run",
+        "scripts/.compose/ignition-runner.ts",
+        "--network",
+        "sepolia",
+      ],
+      env: {
+        COMPOSE_DEPLOY_RPC_URL: "https://rpc.example.test",
+        COMPOSE_DEPLOY_MODE: "simulate",
+        COMPOSE_DEPLOY_FORK_BLOCK_NUMBER: "987",
+      },
     });
   });
 

@@ -290,3 +290,49 @@ describe("Hardhat official initializer", () => {
     }
   });
 });
+
+describe("Hardhat managed-deploy RPC override", () => {
+  beforeAll(() => ensureHardhatFixtureDependencies(), 120_000);
+
+  it("uses the Compose endpoint instead of the configured endpoint", async () => {
+    const harness = await createHardhatAdapterFixtureHarness();
+    const configuredRPC = await startRPCServer(31337);
+    const composeRPC = await startRPCServer(31337);
+
+    try {
+      await fs.writeFile(
+        path.join(harness.projectRoot, "hardhat.config.ts"),
+        `import { defineConfig } from "hardhat/config";\n\nexport default defineConfig({\n  solidity: { version: "0.8.30" },\n  networks: {\n    local: {\n      type: "http",\n      chainType: "l1",\n      url: "${configuredRPC.url}",\n      accounts: "remote",\n    },\n  },\n});\n`,
+        "utf8",
+      );
+      await fs.mkdir(path.join(harness.projectRoot, "scripts"), { recursive: true });
+      await fs.writeFile(
+        path.join(harness.projectRoot, "scripts", "check-compose-rpc.ts"),
+        [
+          'import { network } from "hardhat";',
+          "const rpcUrl = process.env.COMPOSE_DEPLOY_RPC_URL;",
+          'if (!rpcUrl) throw new Error("Missing Compose RPC URL");',
+          'const connection = await network.create({ network: "local", override: { url: rpcUrl } });',
+          'const chainId = Number(BigInt(String(await connection.provider.request({ method: "eth_chainId", params: [] }))));',
+          'console.log("COMPOSE_RPC_RESULT", JSON.stringify({ chainId }));',
+          "await connection.close();",
+        ].join("\n"),
+        "utf8",
+      );
+
+      const result = await runHardhatScript(
+        harness.projectRoot,
+        "scripts/check-compose-rpc.ts",
+        composeRPC.url,
+      );
+      const output = `${result.stdout}\n${result.stderr}`;
+      expect(result.code, output).toBe(0);
+      expect(output).toContain('COMPOSE_RPC_RESULT {"chainId":31337}');
+      expect(composeRPC.methods).toContain("eth_chainId");
+      expect(configuredRPC.methods).toEqual([]);
+    } finally {
+      await harness.cleanup();
+      await Promise.all([configuredRPC.close(), composeRPC.close()]);
+    }
+  }, 60_000);
+});

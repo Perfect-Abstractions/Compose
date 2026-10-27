@@ -26,6 +26,7 @@ contract ComposeDeployScript is Script {
 
     function run() public {
         vm.startBroadcast();
+{{ACCOUNT_GUARD}}
 
         address[] memory facets = new address[]({{FACET_COUNT}});
 

@@ -34,26 +34,29 @@ type LockDeployment = {
   facetHash: string;
   lastSync: string;
   txHash: string;
+  deployer?: string;
 };
 
 export type DeployE2EHarness = {
   projectRoot: string;
   rpcUrl: string;
-  runDeploy(args: string[]): Promise<ProcessResult>;
+  runAccount(args: string[], env?: NodeJS.ProcessEnv): Promise<ProcessResult>;
+  runDeploy(args: string[], env?: NodeJS.ProcessEnv): Promise<ProcessResult>;
   runValidate(): Promise<ProcessResult>;
   readDeployment(): Promise<LockDeployment>;
-  writeComposeJson(facets: Record<string, unknown>): Promise<void>;
+  writeComposeJson(facets: Record<string, unknown>, rpcUrl?: string): Promise<void>;
   cleanup(): Promise<void>;
 };
 
 function runProcess(
   command: string,
   args: string[],
-  options: { cwd: string },
+  options: { cwd: string; env?: NodeJS.ProcessEnv },
 ): Promise<ProcessResult> {
   return new Promise((resolve, reject) => {
     const child = spawn(command, args, {
       cwd: options.cwd,
+      env: options.env ? { ...process.env, ...options.env } : process.env,
       windowsHide: true,
     });
     let stdout = "";
@@ -247,9 +250,15 @@ export async function createDeployE2EHarness(): Promise<DeployE2EHarness> {
     return {
       projectRoot,
       rpcUrl,
-      runDeploy: (args) =>
+      runAccount: (args, env) =>
+        runProcess(process.execPath, [CLI_ENTRY, "account", ...args, "--project-root", projectRoot], {
+          cwd: projectRoot,
+          env,
+        }),
+      runDeploy: (args, env) =>
         runProcess(process.execPath, [CLI_ENTRY, "deploy", "--project-root", projectRoot, ...args], {
           cwd: projectRoot,
+          env,
         }),
       runValidate: () =>
         runProcess(process.execPath, [CLI_ENTRY, "validate", "--project-root", projectRoot], {
@@ -263,8 +272,8 @@ export async function createDeployE2EHarness(): Promise<DeployE2EHarness> {
         };
         return lock.deployments.CounterDiamond.local.default;
       },
-      async writeComposeJson(facets) {
-        await writeComposeJson(projectRoot, rpcUrl, facets);
+      async writeComposeJson(facets, configuredRpcUrl = rpcUrl) {
+        await writeComposeJson(projectRoot, configuredRpcUrl, facets);
       },
       async cleanup() {
         anvil.kill("SIGTERM");

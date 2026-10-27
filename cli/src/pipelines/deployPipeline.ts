@@ -8,20 +8,22 @@ import { DependencyResolver } from "../resolver/dependencyResolver";
 import { LockFileModule } from "../modules/lockFile/module";
 import type { ComposeLock, DiamondDeployment } from "../modules/lockFile/types";
 import { VERSION } from "../utils/metadata";
+import { assertNoDeploymentNetworkOverrides } from "../utils/args";
 import { toProjectRelativePath } from "../utils/files";
-import { isInteractive, loadPrompts } from "../utils/inquirer";
-import { dim } from "../utils/terminal";
 import { DeployPlanModule } from "../modules/deployPlan/module";
 import type { DeployPlan } from "../modules/deployPlan/types";
 import { showDeployPlan, showDiffStopped, showInSync } from "../modules/deployPlan/output";
 import { DeployScriptModule } from "../modules/deployScript/module";
 import type { ManagedScriptModel } from "../modules/deployScript/types";
-import { showScriptPath, showScriptPreview, showScriptReady } from "../modules/deployScript/output";
+import { showScriptReady } from "../modules/deployScript/output";
 import { DeployExecutionModule } from "../modules/deployExecution/module";
 import type { DeployExecutionResult } from "../modules/deployExecution/types";
 import { DeployVerificationModule } from "../modules/deployVerification/module";
 import { showDeploySuccess } from "../modules/deployVerification/output";
+import { DeploySimulationModule } from "../modules/deploySimulation/module";
+import { showDeploySimulationSuccess } from "../modules/deploySimulation/output";
 import { loadValidationProject } from "../modules/validation/project";
+import { FrameworkModule } from "../modules/framework/module";
 
 function composeError(error: unknown) {
   return {
@@ -65,6 +67,18 @@ export const DeployPipeline = {
       // framework recorded in compose.json.
       const project = await loadValidationProject(ctx);
       const framework = String(ctx.param.framework) as DependencyKey;
+      if (framework === "hardhat") FrameworkModule.assertHardhat3(String(ctx.param.projectRoot));
+      const requestedMode = ctx.param.dryRun
+        ? "simulate"
+        : ctx.param.broadcast
+          ? "broadcast"
+          : "prepare";
+      assertNoDeploymentNetworkOverrides(
+        ctx.param.passthrough,
+        framework as "foundry" | "hardhat",
+        false,
+        "prepare",
+      );
       const frameworkDependencies = await DependencyResolver.resolve([
         { key: DependencyKey.Hashing },
         { key: framework },
@@ -77,6 +91,12 @@ export const DeployPipeline = {
       const planState = ctx.state.deployPlan as ModuleState<DeployPlan>;
       const plan = planState.result;
       if (!plan) throw new Error("Deploy plan was not resolved.");
+      assertNoDeploymentNetworkOverrides(
+        ctx.param.passthrough,
+        plan.framework,
+        plan.account !== null,
+        requestedMode,
+      );
 
       if (plan.mode === "in-sync") {
         showInSync(plan);
@@ -106,83 +126,67 @@ export const DeployPipeline = {
       const scriptPath = scriptState.result?.path;
       const model = scriptState.result?.model;
       if (!scriptPath || !model) throw new Error("Deploy script model was not resolved.");
+      const expectedSource = await DeployScriptModule.render(model);
 
-      if (ctx.param.dryRun) {
-        showScriptPreview(plan.projectRoot, scriptPath, await DeployScriptModule.render(model));
-        console.log(dim("Dry run: no files were written."));
+      const broadcasting = Boolean(ctx.param.broadcast);
+      const simulating = Boolean(ctx.param.dryRun);
+      const expectedScriptHash = hashing.keccak256(expectedSource);
+      const scriptHash = await DeployScriptModule.readScriptHash(scriptPath, hashing);
+      const scriptMatchesExpected = scriptHash === expectedScriptHash;
+
+      if (!broadcasting && !simulating) {
+        if (!scriptMatchesExpected) {
+          await DeployScriptModule.writeSource(scriptPath, expectedSource);
+        }
+        showScriptReady(plan.projectRoot, scriptPath);
         return ctx;
       }
 
-      const interactive = isInteractive();
-      const broadcasting = Boolean(ctx.param.broadcast);
-      const scriptMatchesPlan = (await DeployScriptModule.readPlanHash(scriptPath)) === model.planHash.toLowerCase();
-
-      /**
-       * Prints the managed script path so the run is tied to a concrete file
-       * on disk (review the source there or via `--dry-run`).
-       */
-      const announceScript = (): void => {
-        showScriptPath(plan.projectRoot, scriptPath);
-      };
-
-      /** Asks for confirmation before executing the managed script. */
-      const confirmRun = async (): Promise<boolean> => {
-        const { confirm } = await loadPrompts();
-        return confirm({ message: "Run the deployment script now?", default: true });
-      };
-
-      if (!broadcasting) {
-        if (!scriptMatchesPlan) {
-          await DeployScriptModule.write(model);
-        }
-        if (!interactive) {
-          showScriptReady(plan.projectRoot, scriptPath);
-          return ctx;
-        }
-
-        announceScript();
-        if (!(await confirmRun())) {
-          showScriptReady(plan.projectRoot, scriptPath);
-          return ctx;
-        }
-      } else if (!scriptMatchesPlan) {
-        if (!interactive) {
-          throw new Error(
-            `The managed deploy script at ${toProjectRelativePath(plan.projectRoot, scriptPath)} is missing or stale. Run 'compose deploy' interactively to regenerate it.`,
-          );
-        }
-
-        const { confirm } = await loadPrompts();
-        const regenerate = await confirm({
-          message: "The managed deploy script is missing or stale. Regenerate it?",
-          default: true,
-        });
-        if (!regenerate) {
-          throw new Error("Deployment cancelled: the managed deploy script does not match the current plan.");
-        }
-        await DeployScriptModule.write(model);
-
-        announceScript();
-        if (!(await confirmRun())) {
-          showScriptReady(plan.projectRoot, scriptPath);
-          return ctx;
-        }
+      if (!scriptMatchesExpected) {
+        const modeLabel = simulating ? "simulate" : "broadcast";
+        throw new Error(
+          `The managed deployment artifact at ${toProjectRelativePath(plan.projectRoot, scriptPath)} is missing, modified, or stale. `
+          + `Run 'compose deploy', review the generated artifact, then retry with --${modeLabel}.`,
+        );
       }
 
-      // Resolve the RPC endpoint before broadcasting so a chain mismatch
-      // aborts before any transaction is sent.
+      // Probe and pin the target before a fork simulation or live broadcast.
       const chainDependencies = await DependencyResolver.resolve([
-        { key: DependencyKey.RPC, params: { chainKey: plan.chain.chainKey, projectRoot: plan.projectRoot } },
-        { key: DependencyKey.Diamond, params: { chainKey: plan.chain.chainKey, projectRoot: plan.projectRoot } },
+        { key: DependencyKey.RPC, params: { resolvedChain: plan.chain } },
+        ...(!simulating ? [{ key: DependencyKey.Diamond, params: { resolvedChain: plan.chain } }] : []),
       ]);
       const rpc = chainDependencies[DependencyKey.RPC] as IRPCAdapter | undefined;
+      if (!rpc) throw new Error("Deploy RPC dependency was not resolved.");
+
+      if (simulating) {
+        stage = "deploySimulation";
+        if (plan.framework === "hardhat") await adapter.compile(plan.projectRoot);
+        const forkBlockNumber = await rpc.getBlockNumber();
+        if (plan.framework === "hardhat") await DeployScriptModule.writeRunner(model);
+        ctx = await DeploySimulationModule.simulate(
+          ctx,
+          plan,
+          scriptPath,
+          adapter,
+          forkBlockNumber,
+          model.runnerPath,
+        );
+        showDeploySimulationSuccess(plan, scriptPath, forkBlockNumber);
+        return ctx;
+      }
+
       const diamond = chainDependencies[DependencyKey.Diamond] as IDiamondAdapter | undefined;
-      if (!rpc || !diamond) throw new Error("Deploy chain dependencies were not resolved.");
+      if (!diamond) throw new Error("Deploy diamond dependency was not resolved.");
 
       stage = "deployExecution";
-      await adapter.compile(plan.projectRoot);
+      // `forge script` compiles the Foundry project itself. Running `forge build`
+      // here first duplicates that build on every Foundry deployment.
+      if (plan.framework === "hardhat") await adapter.compile(plan.projectRoot);
 
-      ctx = await DeployExecutionModule.execute(ctx, plan, scriptPath, adapter);
+      // The Ignition module is the reviewed artifact. Its runtime wrapper is
+      // generated on demand and removed by the execution module afterward.
+      if (plan.framework === "hardhat") await DeployScriptModule.writeRunner(model);
+      ctx = await DeployExecutionModule.execute(ctx, plan, scriptPath, adapter, model.runnerPath);
       const executionState = ctx.state.deployExecution as ModuleState<DeployExecutionResult>;
       if (!executionState?.success || !executionState.result) {
         throw new Error(executionState?.error?.message ?? "Deployment failed.");

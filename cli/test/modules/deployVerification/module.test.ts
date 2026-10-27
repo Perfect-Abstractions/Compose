@@ -18,10 +18,11 @@ const FACET_B = "0x00000000000000000000000000000000000000b2";
 const DIAMOND_TX = `0x${"33".repeat(32)}` as Hex;
 const CODE = "0x600060005260206000f3" as Hex;
 
-function executionResult(): DeployExecutionResult {
+function executionResult(ignitionDeploymentId?: string): DeployExecutionResult {
   return {
     diamond: DIAMOND,
     facets: { AlphaFacet: FACET_A, BetaFacet: FACET_B },
+    ...(ignitionDeploymentId ? { ignitionDeploymentId } : {}),
     transactions: { diamond: DIAMOND_TX },
   };
 }
@@ -40,6 +41,8 @@ function deployPlan(): DeployPlan {
     },
     instance: "default",
     chain: { chainKey: "local", rpcUrl: "http://127.0.0.1:8545", chainId: 31337 },
+    rpcUrlOverridden: false,
+    account: null,
     facets: [
       {
         name: "AlphaFacet",
@@ -83,9 +86,10 @@ function stubDiamond(addresses: Address[]): IDiamondAdapter {
 async function verify(
   rpc: IRPCAdapter,
   diamond: IDiamondAdapter,
+  ignitionDeploymentId?: string,
 ): Promise<{ success: boolean; record: DiamondDeployment | null; message: string | null }> {
   const ctx = Context.create();
-  const resolved = await DeployVerificationModule.verify(ctx, deployPlan(), executionResult(), {
+  const resolved = await DeployVerificationModule.verify(ctx, deployPlan(), executionResult(ignitionDeploymentId), {
     diamond,
     hashing: HashingAdapter,
     rpc,
@@ -115,6 +119,18 @@ describe("DeployVerificationModule.verify", () => {
       LockFileModule.computeFacetHash([FACET_A as Hex, FACET_B as Hex], HashingAdapter),
     );
     expect(Date.parse(outcome.record?.lastSync ?? "")).not.toBeNaN();
+  });
+
+  it("persists the Hardhat Ignition deployment ID in the verified lock record", async () => {
+    const ignitionDeploymentId = "compose-counterdiamond-local-default-abcdef12";
+    const outcome = await verify(
+      stubRpc(() => CODE),
+      stubDiamond([getAddress(FACET_A), getAddress(FACET_B)]),
+      ignitionDeploymentId,
+    );
+
+    expect(outcome.success).toBe(true);
+    expect(outcome.record?.ignitionDeploymentId).toBe(ignitionDeploymentId);
   });
 
   it("fails when the diamond has no code", async () => {

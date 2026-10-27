@@ -28,7 +28,6 @@ import { FrameworkModule } from "../../../modules/framework/module";
 import { resolveHardhatArtifactSourceName, resolveHardhatAstSourcePath } from "./helpers";
 
 /** Framework adapter for Hardhat-based Diamond projects. */
-const MANAGED_SCRIPT_NAME = "compose-deploy.ts";
 const MANAGED_RUNNER_RELATIVE_PATH = path.join("scripts", ".compose", "ignition-runner.ts");
 
 /** Managed deploy result, kept inside Hardhat's default `cache` directory. */
@@ -330,7 +329,11 @@ export default defineConfig({
   },
 
   getManagedDeployScriptPath(projectRoot: string): string {
-    return path.join(projectRoot, "scripts", MANAGED_SCRIPT_NAME);
+    return path.join(projectRoot, "ignition", "modules", "ComposeDeploy.ts");
+  },
+
+  getManagedDeployRunnerPath(projectRoot: string): string {
+    return path.join(projectRoot, MANAGED_RUNNER_RELATIVE_PATH);
   },
 
   getManagedDeployResultPath(projectRoot: string): string | null {
@@ -338,17 +341,30 @@ export default defineConfig({
   },
 
   createDeployCommand(opts: DeployCommandOptions): DeployCommand {
-    const relativeScriptPath = toPosixPath(path.relative(opts.projectRoot, opts.scriptPath));
+    if (!opts.runnerPath) {
+      throw new Error("Hardhat Ignition deployment requires the transient Compose runner path.");
+    }
+    const relativeScriptPath = toPosixPath(path.relative(opts.projectRoot, opts.runnerPath));
+    const env: NodeJS.ProcessEnv = {
+      COMPOSE_DEPLOY_RPC_URL: opts.rpcUrl,
+      COMPOSE_DEPLOY_MODE: opts.mode,
+    };
+    if (opts.mode === "simulate" && opts.forkBlockNumber !== undefined) {
+      env.COMPOSE_DEPLOY_FORK_BLOCK_NUMBER = String(opts.forkBlockNumber);
+    }
     return {
       command: "npx",
       args: [
         "hardhat",
+        "--build-profile",
+        "production",
         "run",
         relativeScriptPath,
         "--network",
         opts.chainKey,
         ...opts.passthrough,
       ],
+      env,
     };
   },
 
@@ -386,7 +402,8 @@ export default defineConfig({
   },
 
   async readBroadcastTransactions(): Promise<BroadcastTransaction[]> {
-    // Hardhat deploy scripts report their transactions in the result file.
+    // Compose reads Ignition addresses from its result file and transaction
+    // hashes from the matching future in Hardhat Ignition's journal.
     return [];
   },
 };

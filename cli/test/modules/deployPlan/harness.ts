@@ -91,13 +91,14 @@ export async function createDeployProjectHarness(): Promise<DeployProjectHarness
     projectRoot,
     scriptRoot,
     async writeComposeJson(diamondFacets = DEFAULT_FACETS, options = {}) {
+      const framework = options.framework ?? "foundry";
       await fs.writeFile(
         path.join(projectRoot, "compose.json"),
         JSON.stringify(
           {
             project: "fixture",
             compose: "0.3.0",
-            framework: options.framework ?? "foundry",
+            framework,
             diamonds: {
               CounterDiamond: {
                 contract: "src/Diamond.sol:Diamond",
@@ -113,6 +114,19 @@ export async function createDeployProjectHarness(): Promise<DeployProjectHarness
         ),
         "utf8",
       );
+      if (framework === "hardhat") {
+        await fs.writeFile(
+          path.join(projectRoot, "package.json"),
+          JSON.stringify({
+            type: "module",
+            devDependencies: {
+              hardhat: "^3.8.0",
+              "@nomicfoundation/hardhat-toolbox-mocha-ethers": "^3.0.0",
+            },
+          }, null, 2),
+          "utf8",
+        );
+      }
     },
     async writeLock(deployments) {
       await fs.writeFile(

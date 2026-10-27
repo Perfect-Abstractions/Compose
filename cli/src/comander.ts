@@ -77,8 +77,8 @@ export function buildProgram(): Command {
     .option("--account <alias>", "Compose account alias to use for deployment")
     .option("--instance <name>", "Deployment instance name", "default")
     .option("--project-root <dir>", "Compose project directory")
-    .option("--broadcast", "Run the managed deploy script without asking")
-    .option("--dry-run", "Print the plan and generated script without writing or deploying")
+    .option("--broadcast", "Broadcast the reviewed managed deployment artifact")
+    .option("--dry-run", "Simulate the reviewed deployment artifact on a fork without broadcasting")
     .option("--redeploy", "Abandon the existing lock record and deploy fresh");
 
   program

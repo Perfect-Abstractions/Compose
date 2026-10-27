@@ -208,6 +208,10 @@ const adapter: IFrameworkAdapter = {
     return path.join(projectRoot, "script", MANAGED_SCRIPT_NAME);
   },
 
+  getManagedDeployRunnerPath(): null {
+    return null;
+  },
+
   getManagedDeployResultPath(): string | null {
     // Foundry records deployments in the run broadcast, not a result file.
     return null;
@@ -215,6 +219,7 @@ const adapter: IFrameworkAdapter = {
 
   createDeployCommand(opts: DeployCommandOptions): DeployCommand {
     const relativeScriptPath = toPosixPath(path.relative(opts.projectRoot, opts.scriptPath));
+    const simulating = opts.mode === "simulate";
     return {
       command: "forge",
       args: [
@@ -222,7 +227,14 @@ const adapter: IFrameworkAdapter = {
         `${relativeScriptPath}:${MANAGED_SCRIPT_CONTRACT}`,
         "--rpc-url",
         opts.rpcUrl,
-        "--broadcast",
+        ...(simulating && opts.forkBlockNumber !== undefined
+          ? ["--fork-block-number", String(opts.forkBlockNumber)]
+          : []),
+        ...(!simulating && opts.account?.foundryAccount
+          ? ["--account", opts.account.foundryAccount]
+          : []),
+        ...(opts.account ? ["--sender", opts.account.address] : []),
+        ...(!simulating ? ["--broadcast"] : []),
         ...opts.passthrough,
       ],
     };
@@ -284,6 +296,12 @@ const adapter: IFrameworkAdapter = {
       contractAddress: typeof transaction.contractAddress === "string" ? transaction.contractAddress : null,
       contractName: typeof transaction.contractName === "string" ? transaction.contractName : null,
       txHash: typeof transaction.hash === "string" ? transaction.hash : null,
+      ...(typeof transaction.from === "string"
+        ? { from: transaction.from }
+        : transaction.transaction && typeof transaction.transaction === "object"
+          && typeof (transaction.transaction as Record<string, unknown>).from === "string"
+          ? { from: (transaction.transaction as Record<string, unknown>).from as string }
+          : {}),
     }));
   },
 };

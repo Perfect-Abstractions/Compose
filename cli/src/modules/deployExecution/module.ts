@@ -11,6 +11,8 @@ import { toPassthroughArgs } from "../../utils/args";
 import { toProjectRelativePath, writeFileIfMissing } from "../../utils/files";
 import type { DeployPlan } from "../deployPlan/types";
 import type { DeployExecutionResult, DeployResultFile } from "./types";
+import { getIgnitionDeploymentId, HARDHAT_IGNITION_MODULE_ID } from "../deployScript/model";
+import { parseIgnitionJournalTransactionHash } from "./ignitionJournal";
 
 function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === "object" && value !== null && !Array.isArray(value);
@@ -78,7 +80,7 @@ function validateResult(
   raw: DeployResultFile,
   plan: DeployPlan,
   displayPath: string,
-): { diamond: Hex; facets: Record<string, Hex> } {
+): { diamond: Hex; facets: Record<string, Hex>; deployer?: Hex; ignitionDeploymentId?: string } {
   if (!isRecord(raw)) {
     throw new Error(`${displayPath} must contain a JSON object.`);
   }
@@ -111,7 +113,29 @@ function validateResult(
     );
   }
 
+  let ignitionDeploymentId: string | undefined;
+  if (plan.framework === "hardhat") {
+    const expectedId = getIgnitionDeploymentId(plan);
+    if (raw.ignitionDeploymentId !== expectedId) {
+      throw new Error(
+        `${displayPath} has an unexpected Hardhat Ignition deployment ID. Re-run 'compose deploy' to regenerate the runner.`,
+      );
+    }
+    ignitionDeploymentId = expectedId;
+  }
+
   const diamond = requireAddress(raw.diamond, "diamond");
+  const deployer = typeof raw.deployer === "string"
+    ? requireAddress(raw.deployer, "deployer")
+    : undefined;
+  if (plan.account && !deployer) {
+    throw new Error(`${displayPath} is missing the selected account address.`);
+  }
+  if (plan.account && deployer?.toLowerCase() !== plan.account.address.toLowerCase()) {
+    throw new Error(
+      `The deploy script used signer ${deployer}; expected Compose account '${plan.account.alias}' at ${plan.account.address}.`,
+    );
+  }
   if (!isRecord(raw.facets)) {
     throw new Error(`${displayPath} is missing the facets object.`);
   }
@@ -130,7 +154,7 @@ function validateResult(
   for (const name of desired) {
     facets[name] = requireAddress(raw.facets[name], `facet '${name}'`);
   }
-  return { diamond, facets };
+  return { diamond, facets, deployer, ...(ignitionDeploymentId ? { ignitionDeploymentId } : {}) };
 }
 
 /**
@@ -143,7 +167,7 @@ function validateResult(
 function deriveFromBroadcast(
   broadcast: BroadcastTransaction[],
   plan: DeployPlan,
-): { diamond: Hex; facets: Record<string, Hex>; txHash: Hex | null } {
+): { diamond: Hex; facets: Record<string, Hex>; txHash: Hex | null; deployer?: Hex } {
   const remaining = [...broadcast];
   const facets: Record<string, Hex> = {};
 
@@ -172,10 +196,22 @@ function deriveFromBroadcast(
   }
 
   const diamondTransaction = remaining[diamondIndex];
+  const deployer = typeof diamondTransaction.from === "string"
+    ? requireAddress(diamondTransaction.from, "deployer")
+    : undefined;
+  if (plan.account && !deployer) {
+    throw new Error("The Foundry broadcast did not report the deployer address for the selected Compose account.");
+  }
+  if (plan.account && deployer?.toLowerCase() !== plan.account.address.toLowerCase()) {
+    throw new Error(
+      `Foundry broadcast signer ${deployer} does not match Compose account '${plan.account.alias}' at ${plan.account.address}.`,
+    );
+  }
   return {
     diamond: requireAddress(diamondTransaction.contractAddress, "diamond"),
     facets,
     txHash: toTransactionHash(diamondTransaction.txHash),
+    deployer,
   };
 }
 
@@ -206,6 +242,7 @@ export const DeployExecutionModule = {
     plan: DeployPlan,
     scriptPath: string,
     adapter: IFrameworkAdapter,
+    runnerPath: string | null = adapter.getManagedDeployRunnerPath(plan.projectRoot),
   ): Promise<ComposeContext> {
     const projectRoot = plan.projectRoot;
     const capture = resolveCapture(adapter, projectRoot);
@@ -225,9 +262,15 @@ export const DeployExecutionModule = {
         passthrough: toPassthroughArgs(ctx.param.passthrough),
         projectRoot,
         rpcUrl: plan.chain.rpcUrl,
+        account: plan.account,
         scriptPath,
+        runnerPath,
+        mode: "broadcast",
       });
-      await runCommand(command.command, command.args, { cwd: projectRoot });
+      await runCommand(command.command, command.args, {
+        cwd: projectRoot,
+        ...(command.env ? { env: command.env } : {}),
+      });
 
       const rawResult = capture
         ? await readOptionalResultFile(capture.path, capture.displayPath)
@@ -240,22 +283,57 @@ export const DeployExecutionModule = {
 
       let diamond: Hex;
       let facets: Record<string, Hex>;
+      let deployer: Hex | undefined;
       let diamondTxHash: Hex | null;
+      let ignitionDeploymentId: string | undefined;
       if (rawResult && capture) {
-        ({ diamond, facets } = validateResult(rawResult, plan, capture.displayPath));
-        diamondTxHash = toTransactionHash(
-          isRecord(rawResult.transactions) ? rawResult.transactions.diamond : undefined,
-        );
+        const validated = validateResult(rawResult, plan, capture.displayPath);
+        ({ diamond, facets, deployer, ignitionDeploymentId } = validated);
+        if (plan.framework === "hardhat") {
+          const hardhatDeploymentId = getIgnitionDeploymentId(plan);
+          const journalPath = path.join(
+            projectRoot,
+            "ignition",
+            "deployments",
+            hardhatDeploymentId,
+            "journal.jsonl",
+          );
+          let journal: string;
+          try {
+            journal = await fs.readFile(journalPath, "utf8");
+          } catch (error) {
+            throw new Error(
+              `Unable to read Hardhat Ignition journal for deployment '${hardhatDeploymentId}': ${(error as Error).message}`,
+              { cause: error },
+            );
+          }
+          diamondTxHash = parseIgnitionJournalTransactionHash(
+            journal,
+            `${HARDHAT_IGNITION_MODULE_ID}#Diamond`,
+          );
+        } else {
+          diamondTxHash = toTransactionHash(
+            isRecord(rawResult.transactions) ? rawResult.transactions.diamond : undefined,
+          );
+        }
       } else {
+        if (plan.framework === "hardhat") {
+          throw new Error(
+            `Hardhat did not write the managed deploy result at ${capture?.displayPath ?? "the configured result path"}.`,
+          );
+        }
         const derived = deriveFromBroadcast(broadcast, plan);
         diamond = derived.diamond;
         facets = derived.facets;
+        deployer = derived.deployer;
         diamondTxHash = derived.txHash;
       }
 
-      diamondTxHash ??= toTransactionHash(
-        broadcast.find((transaction) => transaction.contractName === plan.diamond.contractName)?.txHash,
-      );
+      if (plan.framework === "foundry") {
+        diamondTxHash ??= toTransactionHash(
+          broadcast.find((transaction) => transaction.contractName === plan.diamond.contractName)?.txHash,
+        );
+      }
       if (!diamondTxHash) {
         throw new Error(
           "No diamond deployment transaction was recorded. Re-run 'compose deploy --broadcast' and check the framework output.",
@@ -265,6 +343,8 @@ export const DeployExecutionModule = {
       const result: DeployExecutionResult = {
         diamond,
         facets,
+        ...(deployer ? { deployer } : {}),
+        ...(ignitionDeploymentId ? { ignitionDeploymentId } : {}),
         transactions: { diamond: diamondTxHash },
       };
       ctx.state.deployExecution = { success: true, result, error: null };
@@ -280,6 +360,14 @@ export const DeployExecutionModule = {
         },
       };
       throw error;
+    } finally {
+      if (plan.framework === "hardhat" && runnerPath) {
+        try {
+          await fs.rm(runnerPath, { force: true });
+        } catch {
+          // Do not convert a completed broadcast into a failure because cleanup failed.
+        }
+      }
     }
   },
 };

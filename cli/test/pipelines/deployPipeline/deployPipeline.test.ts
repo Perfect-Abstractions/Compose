@@ -3,20 +3,6 @@ import path from "node:path";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import type { ComposeContext } from "../../../src/context/types";
 
-const mocks = vi.hoisted(() => ({
-  isInteractive: vi.fn(() => false),
-  confirm: vi.fn(async () => false),
-}));
-
-vi.mock("../../../src/utils/inquirer", async (importOriginal) => {
-  const actual = await importOriginal<typeof import("../../../src/utils/inquirer")>();
-  return {
-    ...actual,
-    isInteractive: mocks.isInteractive,
-    loadPrompts: async () => ({ confirm: mocks.confirm }),
-  };
-});
-
 import { DeployPipeline } from "../../../src/pipelines/deployPipeline";
 import {
   createDeployProjectHarness,
@@ -34,8 +20,6 @@ beforeEach(async () => {
   harness = await createDeployProjectHarness();
   logSpy = vi.spyOn(console, "log").mockImplementation(() => {});
   errorSpy = vi.spyOn(console, "error").mockImplementation(() => {});
-  mocks.isInteractive.mockReturnValue(false);
-  mocks.confirm.mockReset().mockResolvedValue(false);
 });
 
 afterEach(async () => {
@@ -67,19 +51,29 @@ describe("DeployPipeline option handling", () => {
     expect(ctx.status.success).toBe(false);
     expect(output()).toContain("Use either --dry-run or --broadcast");
   });
-});
 
-describe("DeployPipeline dry-run", () => {
-  it("prints the plan and the generated script without writing anything", async () => {
-    harness.ctx.param.dryRun = true;
+  it("rejects network endpoint overrides hidden in Foundry passthrough", async () => {
+    harness.ctx.param.passthrough = ["--rpc-url", "https://other.example"];
 
     const ctx = await executePipeline(harness.ctx);
 
-    expect(ctx.status.success).toBe(true);
-    expect(output()).toContain("Deploy plan");
-    expect(output()).toContain("Generated script");
-    expect(output()).toContain("contract ComposeDeployScript is Script");
-    expect(output()).toContain("Dry run: no files were written.");
+    expect(ctx.status.success).toBe(false);
+    expect(output()).toContain("cannot change the planned deployment target");
+    expect(output()).toContain("compose deploy --chain <key> and --rpc-url <url>");
+  });
+});
+
+describe("DeployPipeline dry-run", () => {
+  it("requires a prepared script instead of previewing the script source", async () => {
+    harness.ctx.param.dryRun = true;
+    harness.ctx.param.passthrough = ["--sender", "0x00000000000000000000000000000000000000a1"];
+
+    const ctx = await executePipeline(harness.ctx);
+
+    expect(ctx.status.success).toBe(false);
+    expect(output()).toContain("missing, modified, or stale");
+    expect(output()).toContain("Run 'compose deploy'");
+    expect(output()).not.toContain("contract ComposeDeployScript is Script");
 
     await expect(fs.access(scriptPath())).rejects.toThrow();
     await expect(fs.access(path.join(harness.projectRoot, "compose.lock"))).rejects.toThrow();
@@ -124,12 +118,14 @@ describe("DeployPipeline composition drift", () => {
 });
 
 describe("DeployPipeline script generation", () => {
-  it("writes the managed script and stops before broadcasting when non-interactive", async () => {
+  it("writes the managed script and gives review instructions without prompting or broadcasting", async () => {
     const ctx = await executePipeline(harness.ctx);
 
     expect(ctx.status.success).toBe(true);
-    expect(output()).toContain("Script: script/ComposeDeploy.s.sol");
+    expect(output()).toContain("script/ComposeDeploy.s.sol");
+    expect(output()).toContain("Review this artifact before deploying.");
     expect(output()).toContain("compose deploy --broadcast");
+    expect(output()).not.toContain("Run the deployment script now?");
     expect(output()).not.toContain(harness.projectRoot);
 
     const source = await fs.readFile(scriptPath(), "utf8");
@@ -138,7 +134,7 @@ describe("DeployPipeline script generation", () => {
     await expect(fs.access(path.join(harness.projectRoot, "compose.lock"))).rejects.toThrow();
   });
 
-  it("reuses a script whose plan hash still matches", async () => {
+  it("reuses a script whose rendered-source hash still matches", async () => {
     await executePipeline(harness.ctx);
     const firstWrite = await fs.stat(scriptPath());
     await new Promise((resolve) => setTimeout(resolve, 20));
@@ -158,14 +154,14 @@ describe("DeployPipeline framework selection", () => {
     const ctx = await executePipeline(harness.ctx);
 
     expect(ctx.status.success).toBe(true);
-    const hardhatScriptPath = path.join(harness.projectRoot, "scripts", "compose-deploy.ts");
+    const hardhatScriptPath = path.join(harness.projectRoot, "ignition", "modules", "ComposeDeploy.ts");
     const source = await fs.readFile(hardhatScriptPath, "utf8");
     expect(source).toMatch(/^\/\/ compose-plan-hash: 0x[0-9a-f]{64}$/m);
-    expect(source).toContain('import { network } from "hardhat";');
-    expect(source).toContain('await network.create({ network: "local" });');
-    expect(source).toContain('await ethers.deployContract("CounterFacet");');
+    expect(source).toContain('buildModule("ComposeDeploy"');
+    expect(source).toContain('m.contract("CounterFacet", [], {');
+    expect(source).toContain('m.contract("Diamond", [[diamondInspectFacet, counterFacet]], {');
     await expect(fs.access(scriptPath())).rejects.toThrow();
-    expect(output()).toContain("Script: scripts/compose-deploy.ts");
+    expect(output()).toContain("ignition/modules/ComposeDeploy.ts");
     expect(output()).not.toContain(harness.projectRoot);
   });
 });
@@ -178,7 +174,7 @@ describe("DeployPipeline broadcast gating", () => {
 
     expect(ctx.status.success).toBe(false);
     expect(ctx.status.failedAt).toBe("deployScript");
-    expect(output()).toContain("missing or stale");
+    expect(output()).toContain("missing, modified, or stale");
   });
 
   it("refuses --broadcast when an existing script belongs to another plan", async () => {
@@ -189,48 +185,77 @@ describe("DeployPipeline broadcast gating", () => {
     const ctx = await executePipeline(harness.ctx);
 
     expect(ctx.status.success).toBe(false);
-    expect(output()).toContain("missing or stale");
+    expect(output()).toContain("missing, modified, or stale");
+  });
+
+  it("refuses --broadcast when the body changed but the plan marker is unchanged", async () => {
+    await executePipeline(harness.ctx);
+    const originalSource = await fs.readFile(scriptPath(), "utf8");
+    const modifiedSource = originalSource.replace(
+      "        vm.stopBroadcast();",
+      "        payable(address(0xdead)).transfer(1 ether);\n        vm.stopBroadcast();",
+    );
+    expect(modifiedSource).not.toBe(originalSource);
+    const planMarker = originalSource.match(/\/\* compose-plan-hash: 0x[0-9a-f]{64} \*\//)?.[0];
+    expect(planMarker).toBeDefined();
+    if (!planMarker) throw new Error("Generated script is missing its plan hash marker.");
+    expect(modifiedSource).toContain(planMarker);
+    await fs.writeFile(scriptPath(), modifiedSource, "utf8");
+    harness.ctx.param.broadcast = true;
+
+    const ctx = await executePipeline(harness.ctx);
+
+    expect(ctx.status.success).toBe(false);
+    expect(ctx.status.failedAt).toBe("deployScript");
+    expect(output()).toContain("missing, modified, or stale");
+    await expect(fs.readFile(scriptPath(), "utf8")).resolves.toBe(modifiedSource);
+  });
+
+  it("keeps the reviewable Ignition module stable across supported toolbox choices", async () => {
+    await harness.writeComposeJson(DEFAULT_FACETS, { framework: "hardhat" });
+    await executePipeline(harness.ctx);
+
+    const hardhatModulePath = path.join(harness.projectRoot, "ignition", "modules", "ComposeDeploy.ts");
+    const ethersSource = await fs.readFile(hardhatModulePath, "utf8");
+
+    await fs.writeFile(
+      path.join(harness.projectRoot, "package.json"),
+      JSON.stringify({
+        type: "module",
+        devDependencies: {
+          hardhat: "^3.8.0",
+          "@nomicfoundation/hardhat-toolbox-viem": "^5.0.0",
+        },
+      }),
+      "utf8",
+    );
+    const ctx = await executePipeline(harness.ctx);
+
+    expect(ctx.status.success).toBe(true);
+    await expect(fs.readFile(hardhatModulePath, "utf8")).resolves.toBe(ethersSource);
   });
 });
 
-describe("DeployPipeline interactive review", () => {
-  it("prints the script path before asking to run it and stops when declined", async () => {
-    mocks.isInteractive.mockReturnValue(true);
-
+describe("DeployPipeline broadcast gating", () => {
+  it("does not regenerate a missing or stale script before broadcast", async () => {
+    harness.ctx.param.broadcast = true;
     const ctx = await executePipeline(harness.ctx);
 
-    expect(ctx.status.success).toBe(true);
-    expect(mocks.confirm).toHaveBeenCalledWith({
-      message: "Run the deployment script now?",
-      default: true,
-    });
-
-    const printed = output();
-    expect(printed).toContain("Script: script/ComposeDeploy.s.sol");
-    expect(printed).not.toContain("contract ComposeDeployScript is Script");
-    expect(printed.indexOf("Script: script/ComposeDeploy.s.sol")).toBeLessThan(
-      printed.indexOf("Review it, then run"),
-    );
+    expect(ctx.status.success).toBe(false);
+    expect(output()).toContain("Run 'compose deploy', review the generated artifact");
+    await expect(fs.access(scriptPath())).rejects.toThrow();
   });
 
-  it("prints the path of a regenerated script before broadcasting it", async () => {
+  it("refuses a script modified after review", async () => {
+    await executePipeline(harness.ctx);
+    const modifiedSource = `${await fs.readFile(scriptPath(), "utf8")}\n// changed\n`;
+    await fs.writeFile(scriptPath(), modifiedSource, "utf8");
     harness.ctx.param.broadcast = true;
-    mocks.isInteractive.mockReturnValue(true);
-    mocks.confirm.mockResolvedValueOnce(true).mockResolvedValueOnce(false);
 
     const ctx = await executePipeline(harness.ctx);
 
-    expect(ctx.status.success).toBe(true);
-    expect(mocks.confirm).toHaveBeenNthCalledWith(1, {
-      message: "The managed deploy script is missing or stale. Regenerate it?",
-      default: true,
-    });
-    expect(mocks.confirm).toHaveBeenNthCalledWith(2, {
-      message: "Run the deployment script now?",
-      default: true,
-    });
-    expect(output()).toContain("Script: script/ComposeDeploy.s.sol");
-    expect(output()).not.toContain("contract ComposeDeployScript is Script");
-    await expect(fs.access(scriptPath())).resolves.toBeUndefined();
+    expect(ctx.status.success).toBe(false);
+    expect(output()).toContain("missing, modified, or stale");
+    await expect(fs.readFile(scriptPath(), "utf8")).resolves.toBe(modifiedSource);
   });
 });

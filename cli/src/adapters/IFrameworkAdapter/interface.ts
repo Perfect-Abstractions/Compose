@@ -8,18 +8,26 @@ export type ConfigOptions = {
   installDeps: boolean;
 };
 
-/** Options for building the framework command that runs a managed deploy script. */
+/** Options for building the framework command that runs a managed deployment artifact. */
 export type DeployCommandOptions = {
   /** Absolute project root the command runs in. */
   projectRoot: string;
-  /** Absolute path of the managed deploy script. */
+  /** Absolute path of the reviewable managed deployment artifact. */
   scriptPath: string;
+  /** Absolute path of a framework runner that invokes the reviewed artifact. */
+  runnerPath?: string | null;
   /** Chain key as defined in compose.json. */
   chainKey: string;
   /** RPC endpoint for the target chain. */
   rpcUrl: string;
   /** Expected EVM chain ID for the target chain. */
   chainId: number;
+  /** Whether the managed script is simulated locally or broadcast to the target. */
+  mode: "simulate" | "broadcast";
+  /** Target-chain block used as the fork point for simulations. */
+  forkBlockNumber?: bigint;
+  /** Optional Compose account selection mapped to a framework-native signer. */
+  account?: { alias: string; address: string; foundryAccount?: string } | null;
   /** Extra arguments forwarded to the framework after `--`. */
   passthrough: string[];
 };
@@ -36,6 +44,8 @@ export type TestCommandOptions = {
 export type FrameworkCommand = {
   command: string;
   args: string[];
+  /** Environment overrides for the spawned framework process. */
+  env?: NodeJS.ProcessEnv;
 };
 
 /** A deploy command ready to be executed. */
@@ -46,6 +56,7 @@ export type BroadcastTransaction = {
   contractName?: string | null;
   contractAddress?: string | null;
   txHash?: string | null;
+  from?: string | null;
 };
 
 /** A Solidity source unit AST returned by a framework compiler. */
@@ -104,8 +115,11 @@ export interface IFrameworkAdapter {
    */
   writeConfig(ctx: ComposeContext, opts: ConfigOptions): Promise<void>;
 
-  /** Resolve the path of the CLI-managed deploy script inside the project. */
+  /** Resolve the path of the CLI-managed deployment artifact inside the project. */
   getManagedDeployScriptPath(projectRoot: string): string;
+
+  /** Resolve an optional runtime runner separate from the reviewed deploy artifact. */
+  getManagedDeployRunnerPath(projectRoot: string): string | null;
 
   /**
    * Resolve the path of the CLI-managed deploy result file inside the project.
@@ -113,7 +127,7 @@ export interface IFrameworkAdapter {
    */
   getManagedDeployResultPath(projectRoot: string): string | null;
 
-  /** Build the framework command that executes the managed deploy script. */
+  /** Build the framework command that simulates or broadcasts the managed deployment artifact. */
   createDeployCommand(opts: DeployCommandOptions): DeployCommand;
 
   /** Build the framework command that executes the project test suite. */

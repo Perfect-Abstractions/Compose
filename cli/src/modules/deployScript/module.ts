@@ -2,21 +2,23 @@ import fs from "node:fs/promises";
 import type { Hex } from "viem";
 import type { ComposeContext, ModuleState } from "../../context/types";
 import type { IFrameworkAdapter } from "../../adapters/IFrameworkAdapter/interface";
+import type { IHashingAdapter } from "../../adapters/IHashingAdapter/interface";
 import { atomicWriteFile } from "../../utils/files";
 import type { DeployPlan } from "../deployPlan/types";
 import { buildScriptModel } from "./model";
-import { renderFoundryDeployScript, renderHardhatDeployScript } from "./renderers";
+import {
+  renderFoundryDeployScript,
+  renderHardhatIgnitionModule,
+  renderHardhatIgnitionRunner,
+} from "./renderers";
 import type { ManagedScriptModel } from "./types";
-
-/** Plan-hash marker: `//` line comment (Hardhat) or block comment (Foundry). */
-const PLAN_HASH_LINE = /^(?:\/\/|\/\*)\s*compose-plan-hash:\s*(0x[0-9a-fA-F]{64})\s*(?:\*\/)?\s*$/m;
 
 /**
  * Deploy script module.
  *
  * Builds, renders, and writes the CLI-managed framework script for a plan.
- * The script carries the plan hash in its header so the executor can tell
- * whether a reviewed script still matches the current plan.
+ * Script freshness is determined by hashing the complete rendered source and
+ * the complete source on disk; the plan-hash header remains plan metadata.
  */
 export const DeployScriptModule = {
   /**
@@ -53,7 +55,15 @@ export const DeployScriptModule = {
   async render(model: ManagedScriptModel): Promise<string> {
     return model.framework === "foundry"
       ? renderFoundryDeployScript(model)
-      : renderHardhatDeployScript(model);
+      : renderHardhatIgnitionModule(model);
+  },
+
+  /** Renders the transient Hardhat runtime without changing the reviewable module. */
+  async renderRunner(model: ManagedScriptModel): Promise<string> {
+    if (model.framework !== "hardhat") {
+      throw new Error("Only Hardhat deployments use a transient deploy runner.");
+    }
+    return renderHardhatIgnitionRunner(model);
   },
 
   /**
@@ -63,20 +73,36 @@ export const DeployScriptModule = {
    */
   async write(model: ManagedScriptModel): Promise<void> {
     const source = await DeployScriptModule.render(model);
-    await atomicWriteFile(model.outputPath, source);
+    await DeployScriptModule.writeSource(model.outputPath, source);
+  },
+
+  /** Atomically writes the transient Hardhat runner. */
+  async writeRunner(model: ManagedScriptModel): Promise<void> {
+    if (!model.runnerPath) throw new Error("The Hardhat deployment runner path is missing.");
+    await DeployScriptModule.writeSource(model.runnerPath, await DeployScriptModule.renderRunner(model));
   },
 
   /**
-   * Reads the plan hash a managed script was generated from, if present.
+   * Atomically writes already-rendered script source.
    *
    * @param scriptPath - Absolute path of the managed script.
-   * @returns The lowercase plan hash, or null when missing or unreadable.
+   * @param source - Complete rendered script source.
    */
-  async readPlanHash(scriptPath: string): Promise<Hex | null> {
+  async writeSource(scriptPath: string, source: string): Promise<void> {
+    await atomicWriteFile(scriptPath, source);
+  },
+
+  /**
+   * Hashes the complete UTF-8 contents of the managed script on disk.
+   *
+   * @param scriptPath - Absolute path of the managed script.
+   * @param hashing - Hashing adapter used for the expected script source.
+   * @returns The script's content hash, or null when missing or unreadable.
+   */
+  async readScriptHash(scriptPath: string, hashing: IHashingAdapter): Promise<Hex | null> {
     try {
       const source = await fs.readFile(scriptPath, "utf8");
-      const match = source.match(PLAN_HASH_LINE);
-      return match ? (match[1].toLowerCase() as Hex) : null;
+      return hashing.keccak256(source);
     } catch {
       return null;
     }

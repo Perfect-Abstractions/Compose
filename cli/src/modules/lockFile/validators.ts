@@ -129,4 +129,18 @@ function validateInstanceDeployment(
   if (typeof deployment.txHash !== "string" || !deployment.txHash.startsWith("0x")) {
     throw new Error(`${prefix}: invalid or missing 'txHash'`);
   }
+
+  if (
+    deployment.deployer !== undefined
+    && (typeof deployment.deployer !== "string" || !isAddress(deployment.deployer, { strict: false }))
+  ) {
+    throw new Error(`${prefix}: invalid 'deployer' address`);
+  }
+
+  if (
+    deployment.ignitionDeploymentId !== undefined
+    && (typeof deployment.ignitionDeploymentId !== "string" || deployment.ignitionDeploymentId.length === 0)
+  ) {
+    throw new Error(`${prefix}: invalid 'ignitionDeploymentId'`);
+  }
 }

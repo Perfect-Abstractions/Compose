@@ -32,6 +32,10 @@ export type DiamondDeployment = {
   lastSync: string;
   /** Transaction hash of the deployment/upgrade */
   txHash: Hex;
+  /** Public address that broadcast the deployment, when reported by the framework. */
+  deployer?: Hex;
+  /** Hardhat Ignition journal identity, when the deployment used Ignition. */
+  ignitionDeploymentId?: string;
 };
 
 /** State stored in ctx.state.lockFile after reading */

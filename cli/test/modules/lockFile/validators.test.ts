@@ -33,6 +33,17 @@ describe("validateLockFile", () => {
     expect(() => validateLockFile(validLock)).not.toThrow();
   });
 
+  it("accepts optional Hardhat Ignition deployment metadata", () => {
+    expect(() => validateLockFile(lockWithDeployment({
+      ignitionDeploymentId: "compose-my-diamond-local-default-abcdef12",
+    }))).not.toThrow();
+  });
+
+  it("rejects an empty Hardhat Ignition deployment ID", () => {
+    expect(() => validateLockFile(lockWithDeployment({ ignitionDeploymentId: "" })))
+      .toThrow("invalid 'ignitionDeploymentId'");
+  });
+
   it("accepts multiple instances on one chain", () => {
     expect(() => validateLockFile(lockWith({
       default: deployment,

@@ -4,6 +4,10 @@ import type { Hex } from "viem";
 export type DeployExecutionResult = {
   diamond: Hex;
   facets: Record<string, Hex>;
+  /** Actual account used by the framework, when reported. */
+  deployer?: Hex;
+  /** Hardhat Ignition journal identity, when the deployment used Ignition. */
+  ignitionDeploymentId?: string;
   transactions: {
     diamond: Hex;
   };
@@ -19,5 +23,7 @@ export type DeployResultFile = {
   instance?: unknown;
   diamond?: unknown;
   facets?: unknown;
+  deployer?: unknown;
   transactions?: unknown;
+  ignitionDeploymentId?: unknown;
 };

@@ -46,6 +46,7 @@ export function showDeploySuccess(
     `${green("Deployed")} '${plan.diamondName}' on ${plan.chain.chainKey} (instance '${plan.instance}').`,
   );
   console.log(`  Diamond: ${record.diamond}`);
+  if (record.deployer) console.log(`  Deployer: ${record.deployer}`);
   console.log(`  Facets:  ${Object.keys(record.facets).length}`);
   console.log(`  Tx:      ${record.txHash}`);
   console.log(`  Lock:    ${toProjectRelativePath(plan.projectRoot, lockPath)}`);
