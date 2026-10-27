@@ -32,7 +32,7 @@ export function buildProgram(): Command {
     .option("--out <dir>", "Output directory")
     .option("--yes", "Non-interactive mode (requires --base)")
     .option("--install-deps", "Install dependencies (default)")
-    .option("--no-install-deps", "Skip dependency installation")
+    .option("--no-install-deps", "Skip dependency installation (Foundry only; Hardhat 3 init installs its template)")
     .option("--toolbox <ethers|viem>", "Hardhat toolbox", "ethers");
 
   program

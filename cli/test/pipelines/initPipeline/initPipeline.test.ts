@@ -91,6 +91,7 @@ describe("InitPipeline", () => {
     files,
   }) => {
     const harness = await createInitPipelineHarness(framework, "none", projectName);
+    if (framework === "hardhat") harness.ctx.param.installDeps = true;
     useHarnessDependencies(harness);
 
     try {

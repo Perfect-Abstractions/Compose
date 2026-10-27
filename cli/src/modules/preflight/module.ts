@@ -13,7 +13,9 @@ export const PreflightModule = {
    *
    * - Foundry: checks for `forge`, plus `npm` when project dependencies
    *   (including the local Compose CLI) will be installed.
-   * - Hardhat with `installDeps !== false`: checks for `npm`.
+ * - Hardhat: requires Node.js 22.13+, npm, git (the official template includes
+ *   forge-std), and dependency installation because its non-interactive
+ *   initializer installs the selected template.
    *
    * Throws an error with an install suggestion if a binary is not found.
    *
@@ -30,9 +32,22 @@ export const PreflightModule = {
         await isBinaryInPath("npm");
       }
     } else if (framework === "hardhat") {
-      if (shouldInstallDeps) {
-        await isBinaryInPath("npm");
+      const [major = 0, minor = 0] = process.versions.node
+        .split(".")
+        .map((part) => Number.parseInt(part, 10));
+      if (major < 22 || (major === 22 && minor < 13)) {
+        throw new Error(
+          `Hardhat 3 requires Node.js 22.13.0 or newer; current version is ${process.versions.node}.`,
+        );
       }
+      if (!shouldInstallDeps) {
+        throw new Error(
+          "Hardhat's official non-interactive initializer installs the selected template dependencies. "
+          + "Use --install-deps for Hardhat projects.",
+        );
+      }
+      await isBinaryInPath("npm");
+      await isBinaryInPath("git");
     }
 
     return ctx;

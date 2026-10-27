@@ -29,6 +29,7 @@ export const TestPipeline = {
           `Expected foundry.toml or hardhat.config.*`,
       );
     }
+    if (framework === "hardhat") FrameworkModule.assertHardhat3(projectRoot);
 
     const deps = await DependencyResolver.resolve([
       { key: framework as DependencyKey },

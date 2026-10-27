@@ -353,12 +353,19 @@ export const InitModule = {
 
     const { deps, packageType } = getFrameworkDependencies(framework, String(ctx.param.toolbox));
     showDependencies(deps, packageType);
-    await clearStdin();
-    const installDeps = await confirm({
-      message: "Install project dependencies?",
-      default: true,
-    });
-    ctx.param.installDeps = installDeps;
+    if (framework === "hardhat") {
+      // Hardhat's official non-interactive template initializer installs the
+      // selected toolbox and its peer dependencies as part of scaffolding.
+      ctx.param.installDeps = true;
+      console.log(dim("Hardhat 3 initializes from its official template and installs its dependencies."));
+    } else {
+      await clearStdin();
+      const installDeps = await confirm({
+        message: "Install project dependencies?",
+        default: true,
+      });
+      ctx.param.installDeps = installDeps;
+    }
 
     const selection = ConfigModule.resolveCatalogSelection(
       catalog,

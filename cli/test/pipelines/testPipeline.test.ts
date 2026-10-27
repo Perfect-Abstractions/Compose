@@ -34,6 +34,11 @@ describe("TestPipeline", () => {
 
   it("runs hardhat test for a Hardhat project", async () => {
     await fs.writeFile(path.join(projectRoot, "hardhat.config.ts"), "", "utf8");
+    await fs.writeFile(
+      path.join(projectRoot, "package.json"),
+      JSON.stringify({ devDependencies: { hardhat: "^3.8.0" } }),
+      "utf8",
+    );
     const ctx = Context.create();
     ctx.param.projectRoot = projectRoot;
 
