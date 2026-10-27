@@ -11,7 +11,8 @@ export type HashablePlan = Omit<DeployPlan, "planHash">;
  * Facets are sorted by name so reordering registrations does not change the
  * hash, while every other field is included verbatim so drift in the target
  * chain, diamond, or facet set produces a new hash. Observed state (the
- * existing lock record and its diff) is intentionally excluded.
+ * existing lock record and its diff) is intentionally excluded, as is the RPC
+ * endpoint: it is access configuration, not part of the deployment identity.
  */
 export function canonicalPlanJson(plan: HashablePlan): string {
   const facets = [...plan.facets]
@@ -23,7 +24,7 @@ export function canonicalPlanJson(plan: HashablePlan): string {
     .sort((left, right) => (left.name < right.name ? -1 : left.name > right.name ? 1 : 0));
 
   return JSON.stringify({
-    chain: { chainId: plan.chain.chainId, key: plan.chain.chainKey, rpcUrl: plan.chain.rpcUrl },
+    chain: { chainId: plan.chain.chainId, key: plan.chain.chainKey },
     account: plan.account ? { alias: plan.account.alias, address: plan.account.address } : null,
     diamond: {
       contract: plan.diamond.contractName,

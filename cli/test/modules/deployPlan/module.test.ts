@@ -93,7 +93,9 @@ describe("DeployPlanModule.resolve", () => {
     });
     expect(plan.rpcUrlOverridden).toBe(true);
     harness.ctx.param.rpcUrl = undefined;
-    expect(plan.planHash).not.toBe((await resolve(harness)).planHash);
+    const configuredPlan = await resolve(harness);
+    expect(configuredPlan.rpcUrlOverridden).toBe(false);
+    expect(plan.planHash).toBe(configuredPlan.planHash);
   });
 
   it("resolves the chain's default Compose account profile", async () => {
@@ -233,6 +235,27 @@ describe("DeployPlanModule.resolve", () => {
 
     expect(plan.upgradeable).toBe(true);
     expect(plan.facets.map((facet) => facet.name)).toContain("DiamondUpgradeFacet");
+  });
+
+  it("rejects two facets that resolve to the same contract name", async () => {
+    await harness.writeComposeJson({
+      FirstFacet: { source: "local", contract: "src/CounterFacet.sol:CounterFacet" },
+      SecondFacet: { source: "local", contract: "src/CounterFacet.sol:CounterFacet" },
+    });
+
+    await expect(resolve(harness)).rejects.toThrow(
+      "Facets 'FirstFacet' and 'SecondFacet' both resolve to contract 'CounterFacet'",
+    );
+  });
+
+  it("rejects a facet that uses the diamond contract name", async () => {
+    await harness.writeComposeJson({
+      DiamondAsFacet: { source: "local", contract: "src/Diamond.sol:Diamond" },
+    });
+
+    await expect(resolve(harness)).rejects.toThrow(
+      "The diamond contract 'Diamond' is also registered as a facet",
+    );
   });
 
   it("rejects instance names that cannot become lock keys", async () => {

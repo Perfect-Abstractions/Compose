@@ -44,6 +44,39 @@ export async function detectHardhatToolbox(projectRoot: string): Promise<ScriptT
 
 export const HARDHAT_IGNITION_MODULE_ID = "ComposeDeploy";
 
+/**
+ * Names the generated artifacts declare themselves, plus JavaScript and
+ * Solidity keywords. A facet contract named `M` or `Static` must not shadow
+ * the Ignition module parameter or produce an invalid identifier.
+ */
+const RESERVED_VARIABLE_NAMES = new Set([
+  "composeSigner",
+  "diamond",
+  "facets",
+  "m",
+  "abstract", "address", "after", "alias", "anonymous", "apply", "arguments", "as",
+  "assembly", "auto", "await", "bool", "break", "byte", "bytes", "calldata", "case",
+  "catch", "class", "constant", "constructor", "const", "continue", "contract", "copyof",
+  "debugger", "default", "define", "delete", "do", "else", "emit", "enum", "error",
+  "eval", "event", "export", "extends", "external", "fallback", "false", "final",
+  "finally", "fixed", "for", "function", "if", "immutable", "implements", "import", "in",
+  "indexed", "inline", "instanceof", "int", "interface", "internal", "is", "let",
+  "library", "macro", "mapping", "match", "memory", "modifier", "mutable", "new", "null",
+  "of", "override", "package", "partial", "payable", "pragma", "private", "promise",
+  "protected", "public", "pure", "receive", "reference", "relocatable", "return",
+  "returns", "revert", "sealed", "sizeof", "static", "storage", "string", "struct",
+  "super", "supports", "switch", "this", "throw", "transient", "true", "try", "type",
+  "typedef", "typeof", "ufixed", "uint", "unchecked", "using", "var", "view", "virtual",
+  "void", "while", "with", "yield",
+]);
+
+/** Elementary type names such as `uint256` and `bytes32` are not valid variables. */
+const RESERVED_TYPE_NAME = /^(?:u?int\d*|bytes\d*|u?fixed(?:x\d+)?\d*)$/;
+
+function isReservedVariableName(name: string): boolean {
+  return RESERVED_VARIABLE_NAMES.has(name) || RESERVED_TYPE_NAME.test(name);
+}
+
 /** Ignition Future IDs use a predictable identifier independent of local variable naming. */
 function toIgnitionFacetId(name: string): string {
   const slug = name.replace(/[^A-Za-z0-9_]+/g, "_").replace(/^_+|_+$/g, "").slice(0, 32) || "Facet";
@@ -53,9 +86,12 @@ function toIgnitionFacetId(name: string): string {
 
 /** Assigns a unique camelCase variable name to every facet entry. */
 function assignVariableNames(facets: DeployPlan["facets"]): ScriptFacetEntry[] {
-  const used = new Set(["diamond", "facets"]);
+  const used = new Set<string>();
   return facets.map((facet, index) => {
-    const base = toCamelCase(facet.contractName) || `facet${index}`;
+    const rawBase = toCamelCase(facet.contractName) || `facet${index}`;
+    const base = isReservedVariableName(rawBase)
+      ? `facet${rawBase.charAt(0).toUpperCase()}${rawBase.slice(1)}`
+      : rawBase;
     let variableName = base;
     let suffix = 2;
     while (used.has(variableName)) {

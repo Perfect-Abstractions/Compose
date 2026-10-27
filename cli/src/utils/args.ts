@@ -17,23 +17,28 @@ export function toPassthroughArgs(value: unknown): string[] {
 
 /**
  * Prevents framework passthrough flags from silently changing the planned
- * deployment endpoint or chain selection.
+ * deployment target, reviewed artifact sources, deploy mode, or signer.
  *
  * @param passthrough - Raw arguments supplied after `--`.
  * @param framework - Framework running the managed deployment.
- * @throws {Error} If a passthrough argument conflicts with Compose's target.
+ * @param accountSelected - Whether Compose selected the signer.
+ * @param mode - The Compose deploy mode.
+ * @throws {Error} If a passthrough argument conflicts with the deploy plan.
  */
-export function assertNoDeploymentNetworkOverrides(
+export function assertSafeDeploymentPassthrough(
   passthrough: unknown,
   framework: "foundry" | "hardhat",
   accountSelected = false,
   mode: "prepare" | "simulate" | "broadcast" = "prepare",
 ): void {
   const networkOptions = framework === "foundry"
-    ? ["--rpc-url", "--fork-url", "--chain-id"]
+    ? ["-r", "--rpc-url", "--fork-url", "--fork-block-number", "--chain", "--chain-id"]
     : ["--network", "--rpc-url"];
+  const buildOptions = framework === "foundry"
+    ? ["--root", "--config-path", "--contracts", "--lib-paths", "--remappings", "--remappings-env", "--hardhat", "--hh"]
+    : ["--config"];
   const accountOptions = framework === "foundry"
-    ? ["--account", "--private-key", "--private-keys", "--mnemonic", "--mnemonics", "--keystore", "--keystores", "--password", "--sender", "--ledger", "--trezor", "--aws", "--gcp", "--turnkey", "--unlocked"]
+    ? ["--account", "--accounts", "-i", "--interactive", "--interactives", "--private-key", "--private-keys", "--mnemonic", "--mnemonics", "--keystore", "--keystores", "--password", "--sender", "--ledger", "--trezor", "--aws", "--gcp", "--turnkey", "--unlocked"]
     : ["--account"];
   const args = toPassthroughArgs(passthrough);
   const conflictingBroadcastOption = args.find((argument) =>
@@ -42,6 +47,15 @@ export function assertNoDeploymentNetworkOverrides(
     throw new Error(
       `Framework passthrough '${redactSensitiveArgument(conflictingBroadcastOption)}' cannot change Compose deploy mode. `
       + "Use compose deploy --broadcast to send transactions.",
+    );
+  }
+
+  const conflictingResumeOption = args.find((argument) =>
+    argument === "--resume" || argument.startsWith("--resume-"));
+  if (conflictingResumeOption) {
+    throw new Error(
+      `Framework passthrough '${redactSensitiveArgument(conflictingResumeOption)}' cannot resume a past deployment. `
+      + "Run compose deploy --broadcast to execute the current reviewed artifact.",
     );
   }
 
@@ -66,6 +80,15 @@ export function assertNoDeploymentNetworkOverrides(
       );
     }
   }
+  const conflictingBuildOption = args.find((argument) =>
+    buildOptions.some((option) => argument === option || argument.startsWith(`${option}=`)));
+  if (conflictingBuildOption) {
+    throw new Error(
+      `Framework passthrough '${redactSensitiveArgument(conflictingBuildOption)}' cannot change the reviewed deployment artifact's project or sources. `
+      + "Configure the project before running compose deploy.",
+    );
+  }
+
   const conflictingNetworkOption = args.find((argument) =>
     networkOptions.some((option) => argument === option || argument.startsWith(`${option}=`)));
 

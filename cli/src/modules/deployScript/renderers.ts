@@ -49,14 +49,14 @@ export async function renderFoundryDeployScript(model: ManagedScriptModel): Prom
     : `        (, address composeSigner, ) = vm.readCallers();\n        console.log("Deployer:", composeSigner);`;
 
   return template
-    .replace(/\{\{PLAN_HASH\}\}/g, model.planHash)
-    .replace(/\{\{IMPORTS\}\}/g, importLines(model).join("\n"))
-    .replace(/\{\{DIAMOND_CONTRACT\}\}/g, model.diamond.contractName)
-    .replace(/\{\{FACET_COUNT\}\}/g, String(model.facets.length))
-    .replace(/\{\{ACCOUNT_GUARD\}\}/g, accountGuard)
-    .replace(/\{\{DEPLOY_LINES\}\}/g, deployLines)
-    .replace(/\{\{CHAIN_KEY\}\}/g, jsonEscape(model.chainKey))
-    .replace(/\{\{CHAIN_ID\}\}/g, String(model.chainId));
+    .split("{{PLAN_HASH}}").join(model.planHash)
+    .split("{{IMPORTS}}").join(importLines(model).join("\n"))
+    .split("{{DIAMOND_CONTRACT}}").join(model.diamond.contractName)
+    .split("{{FACET_COUNT}}").join(String(model.facets.length))
+    .split("{{ACCOUNT_GUARD}}").join(accountGuard)
+    .split("{{DEPLOY_LINES}}").join(deployLines)
+    .split("{{CHAIN_KEY}}").join(jsonEscape(model.chainKey))
+    .split("{{CHAIN_ID}}").join(String(model.chainId));
 }
 
 function renderIgnitionFacetFutures(facets: ScriptFacetEntry[]): string {

@@ -119,7 +119,7 @@ const adapter: IFrameworkAdapter = {
   },
 
   getScriptRoot(projectRoot: string): string {
-    return path.join(projectRoot, "scripts");
+    return path.join(projectRoot, "ignition", "modules");
   },
 
   getTestRoot(projectRoot: string): string {

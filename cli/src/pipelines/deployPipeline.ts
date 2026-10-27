@@ -1,4 +1,4 @@
-import type { ComposeContext, ModuleState } from "../context/types";
+import type { ComposeContext, ComposeError, ModuleState } from "../context/types";
 import type { IHashingAdapter } from "../adapters/IHashingAdapter/interface";
 import type { IFrameworkAdapter } from "../adapters/IFrameworkAdapter/interface";
 import type { IRPCAdapter } from "../adapters/IRPCAdapter/interface";
@@ -8,7 +8,7 @@ import { DependencyResolver } from "../resolver/dependencyResolver";
 import { LockFileModule } from "../modules/lockFile/module";
 import type { ComposeLock, DiamondDeployment } from "../modules/lockFile/types";
 import { VERSION } from "../utils/metadata";
-import { assertNoDeploymentNetworkOverrides } from "../utils/args";
+import { assertSafeDeploymentPassthrough } from "../utils/args";
 import { toProjectRelativePath } from "../utils/files";
 import { DeployPlanModule } from "../modules/deployPlan/module";
 import type { DeployPlan } from "../modules/deployPlan/types";
@@ -25,7 +25,7 @@ import { showDeploySimulationSuccess } from "../modules/deploySimulation/output"
 import { loadValidationProject } from "../modules/validation/project";
 import { FrameworkModule } from "../modules/framework/module";
 
-function composeError(error: unknown) {
+function composeError(error: unknown): ComposeError {
   return {
     code: typeof error === "object" && error && "code" in error
       ? String(error.code)
@@ -68,17 +68,11 @@ export const DeployPipeline = {
       const project = await loadValidationProject(ctx);
       const framework = String(ctx.param.framework) as DependencyKey;
       if (framework === "hardhat") FrameworkModule.assertHardhat3(String(ctx.param.projectRoot));
-      const requestedMode = ctx.param.dryRun
+      const deployMode = ctx.param.dryRun
         ? "simulate"
         : ctx.param.broadcast
           ? "broadcast"
           : "prepare";
-      assertNoDeploymentNetworkOverrides(
-        ctx.param.passthrough,
-        framework as "foundry" | "hardhat",
-        false,
-        "prepare",
-      );
       const frameworkDependencies = await DependencyResolver.resolve([
         { key: DependencyKey.Hashing },
         { key: framework },
@@ -91,11 +85,11 @@ export const DeployPipeline = {
       const planState = ctx.state.deployPlan as ModuleState<DeployPlan>;
       const plan = planState.result;
       if (!plan) throw new Error("Deploy plan was not resolved.");
-      assertNoDeploymentNetworkOverrides(
+      assertSafeDeploymentPassthrough(
         ctx.param.passthrough,
         plan.framework,
         plan.account !== null,
-        requestedMode,
+        deployMode,
       );
 
       if (plan.mode === "in-sync") {
@@ -128,13 +122,11 @@ export const DeployPipeline = {
       if (!scriptPath || !model) throw new Error("Deploy script model was not resolved.");
       const expectedSource = await DeployScriptModule.render(model);
 
-      const broadcasting = Boolean(ctx.param.broadcast);
-      const simulating = Boolean(ctx.param.dryRun);
       const expectedScriptHash = hashing.keccak256(expectedSource);
       const scriptHash = await DeployScriptModule.readScriptHash(scriptPath, hashing);
       const scriptMatchesExpected = scriptHash === expectedScriptHash;
 
-      if (!broadcasting && !simulating) {
+      if (deployMode === "prepare") {
         if (!scriptMatchesExpected) {
           await DeployScriptModule.writeSource(scriptPath, expectedSource);
         }
@@ -143,22 +135,24 @@ export const DeployPipeline = {
       }
 
       if (!scriptMatchesExpected) {
-        const modeLabel = simulating ? "simulate" : "broadcast";
+        const modeFlag = deployMode === "simulate" ? "dry-run" : "broadcast";
         throw new Error(
           `The managed deployment artifact at ${toProjectRelativePath(plan.projectRoot, scriptPath)} is missing, modified, or stale. `
-          + `Run 'compose deploy', review the generated artifact, then retry with --${modeLabel}.`,
+          + `Run 'compose deploy', review the generated artifact, then retry with --${modeFlag}.`,
         );
       }
 
       // Probe and pin the target before a fork simulation or live broadcast.
       const chainDependencies = await DependencyResolver.resolve([
         { key: DependencyKey.RPC, params: { resolvedChain: plan.chain } },
-        ...(!simulating ? [{ key: DependencyKey.Diamond, params: { resolvedChain: plan.chain } }] : []),
+        ...(deployMode !== "simulate"
+          ? [{ key: DependencyKey.Diamond, params: { resolvedChain: plan.chain } }]
+          : []),
       ]);
       const rpc = chainDependencies[DependencyKey.RPC] as IRPCAdapter | undefined;
       if (!rpc) throw new Error("Deploy RPC dependency was not resolved.");
 
-      if (simulating) {
+      if (deployMode === "simulate") {
         stage = "deploySimulation";
         if (plan.framework === "hardhat") await adapter.compile(plan.projectRoot);
         const forkBlockNumber = await rpc.getBlockNumber();
@@ -200,11 +194,13 @@ export const DeployPipeline = {
       });
       const verificationState = ctx.state.deployVerification as ModuleState<DiamondDeployment>;
       if (!verificationState?.success || !verificationState.result) {
+        const error = verificationState?.error ?? null;
+        ctx.state.deployPipeline = { success: false, result: { stage }, error };
         ctx.status = {
           success: false,
           stopped: true,
           failedAt: stage,
-          error: verificationState?.error ?? null,
+          error,
         };
         return ctx;
       }

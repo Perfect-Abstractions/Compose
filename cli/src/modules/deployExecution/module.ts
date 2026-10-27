@@ -52,8 +52,9 @@ async function readOptionalResultFile(
   let raw: string;
   try {
     raw = await fs.readFile(resultPath, "utf8");
-  } catch {
-    return null;
+  } catch (error) {
+    if ((error as NodeJS.ErrnoException).code === "ENOENT") return null;
+    throw new Error(`Unable to read ${displayPath}: ${(error as Error).message}`, { cause: error });
   }
 
   try {

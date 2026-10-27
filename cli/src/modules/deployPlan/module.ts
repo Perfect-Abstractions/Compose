@@ -96,6 +96,7 @@ function zipFacets(
     );
   }
 
+  const seenContracts = new Map<string, string>();
   return configured.map(([name, entry], index) => {
     const resolved = resolvedFacets[index];
     const reference = typeof (entry as { contract?: unknown })?.contract === "string"
@@ -109,6 +110,14 @@ function zipFacets(
         `Facet '${name}' resolved to '${resolved.contractName}' instead of '${expectedName}'. Check compose.json.`,
       );
     }
+    const duplicateOf = seenContracts.get(resolved.contractName);
+    if (duplicateOf) {
+      throw new Error(
+        `Facets '${duplicateOf}' and '${name}' both resolve to contract '${resolved.contractName}'. `
+        + "Each facet must use a distinct contract name in the managed deploy script.",
+      );
+    }
+    seenContracts.set(resolved.contractName, name);
 
     return {
       name,
@@ -153,6 +162,7 @@ export const DeployPlanModule = {
       ctx,
       project.diamonds.map((diamond) => diamond.name),
       "deploy",
+      { allowPrompt: false },
     );
     const diamond = project.diamonds.find((candidate) => candidate.name === diamondName);
     if (!diamond) {
@@ -168,7 +178,6 @@ export const DeployPlanModule = {
       rpcUrlOverride: ctx.param.rpcUrl,
     });
     validateOptions({ rpcUrl: chain.rpcUrl, chainId: chain.chainId });
-    ctx.param.chainKey = chain.chainKey;
 
     const composeJson = ctx.config.composeJson as {
       accounts?: unknown;
@@ -195,6 +204,12 @@ export const DeployPlanModule = {
 
     const scriptRoot = adapter.getScriptRoot(projectRoot);
     const facets = zipFacets(diamondName, diamondConfig, diamond.facets, projectRoot, scriptRoot);
+    if (facets.some((facet) => facet.contractName === diamondContractName)) {
+      throw new Error(
+        `The diamond contract '${diamondContractName}' is also registered as a facet. `
+        + "Use a distinct contract name for the facet.",
+      );
+    }
 
     ctx = await LockFileModule.readLockFile(ctx);
     const lockState = ctx.state.lockFile as ModuleState<{ path: string; lock: ComposeLock } | null>;

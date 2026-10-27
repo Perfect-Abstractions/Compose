@@ -146,6 +146,12 @@ describe("Foundry adapter deploy methods", () => {
           contractName: "Diamond",
           contractAddress: "0x00000000000000000000000000000000000000aa",
         },
+        {
+          hash: `0x${"03".repeat(32)}`,
+          transactionType: "CALL",
+          contractName: "CounterFacet",
+          contractAddress: "0x00000000000000000000000000000000000000b1",
+        },
       ],
     });
 
@@ -165,12 +171,29 @@ describe("Foundry adapter deploy methods", () => {
     ]);
     expect(await foundryAdapter.readBroadcastTransactions(projectRoot, scriptPath, 1)).toEqual([]);
   });
+
+  it("reports an unreadable or malformed broadcast artifact", async () => {
+    const scriptPath = path.join(projectRoot, "script", "ComposeDeploy.s.sol");
+    const broadcastPath = path.join(projectRoot, "broadcast", "ComposeDeploy.s.sol", "31337", "run-latest.json");
+    await fs.mkdir(path.dirname(broadcastPath), { recursive: true });
+
+    await fs.writeFile(broadcastPath, "{not json", "utf8");
+    await expect(
+      foundryAdapter.readBroadcastTransactions(projectRoot, scriptPath, 31337),
+    ).rejects.toThrow("Unable to parse the Foundry broadcast");
+
+    await fs.writeFile(broadcastPath, JSON.stringify({ transactions: "invalid" }), "utf8");
+    await expect(
+      foundryAdapter.readBroadcastTransactions(projectRoot, scriptPath, 31337),
+    ).rejects.toThrow("missing a transactions array");
+  });
 });
 
 describe("Hardhat adapter deploy methods", () => {
   it("resolves the managed script path and deploy command", () => {
     const scriptPath = path.join(projectRoot, "ignition", "modules", "ComposeDeploy.ts");
     const runnerPath = path.join(projectRoot, "scripts", ".compose", "ignition-runner.ts");
+    expect(hardhatAdapter.getScriptRoot(projectRoot)).toBe(path.join(projectRoot, "ignition", "modules"));
     expect(hardhatAdapter.getManagedDeployScriptPath(projectRoot)).toBe(scriptPath);
     expect(hardhatAdapter.getManagedDeployRunnerPath(projectRoot)).toBe(runnerPath);
     expect(hardhatAdapter.getManagedDeployResultPath(projectRoot)).toBe(

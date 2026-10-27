@@ -45,12 +45,16 @@ Plan the deployment and generate the managed deploy script:
 npm run deploy
 ```
 
-Review the script, then run it against the local chain:
+Review the script, then simulate or deploy it against the local chain:
 
 ```shell
-npm run deploy -- --dry-run -- --sender "$DEPLOYER_ADDRESS"
-npm run deploy -- --broadcast
+npm run deploy -- --dry-run -- --sender 0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266
+npm run deploy -- --broadcast -- \
+  --private-key 0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80 \
+  --non-interactive
 ```
+
+The key above belongs to Anvil's first default account. Use it for local testing only, never on a public network.
 
 Use `--account <alias>` instead of `--sender` when a Compose account is configured. Dry-run needs only the public sender address, not its private key.
 

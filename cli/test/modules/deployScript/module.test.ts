@@ -142,6 +142,59 @@ describe("DeployScriptModule.buildModel", () => {
     })).toBe(redeployId);
   });
 
+  it("avoids template identifiers and language keywords for facet variables", async () => {
+    const plan = deployPlan();
+    plan.facets = [
+      {
+        name: "M",
+        contractName: "M",
+        sourcePath: path.join(projectRoot, "src", "M.sol"),
+        importSpec: "../src/M.sol",
+      },
+      {
+        name: "Static",
+        contractName: "Static",
+        sourcePath: path.join(projectRoot, "src", "Static.sol"),
+        importSpec: "../src/Static.sol",
+      },
+      {
+        name: "ComposeSigner",
+        contractName: "ComposeSigner",
+        sourcePath: path.join(projectRoot, "src", "ComposeSigner.sol"),
+        importSpec: "../src/ComposeSigner.sol",
+      },
+      {
+        name: "Diamond",
+        contractName: "Diamond",
+        sourcePath: path.join(projectRoot, "src", "DiamondFacet.sol"),
+        importSpec: "../src/DiamondFacet.sol",
+      },
+      {
+        name: "Uint256",
+        contractName: "Uint256",
+        sourcePath: path.join(projectRoot, "src", "Uint256.sol"),
+        importSpec: "../src/Uint256.sol",
+      },
+      {
+        name: "Revert",
+        contractName: "Revert",
+        sourcePath: path.join(projectRoot, "src", "Revert.sol"),
+        importSpec: "../src/Revert.sol",
+      },
+    ];
+
+    const model = await buildScriptModel(plan, foundryAdapter);
+
+    expect(model.facets.map((facet) => facet.variableName)).toEqual([
+      "facetM",
+      "facetStatic",
+      "facetComposeSigner",
+      "facetDiamond",
+      "facetUint256",
+      "facetRevert",
+    ]);
+  });
+
   it("records the Hardhat Ignition module, runner, and result paths in the model", async () => {
     await fs.writeFile(
       path.join(projectRoot, "package.json"),

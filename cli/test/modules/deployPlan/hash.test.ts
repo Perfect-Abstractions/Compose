@@ -61,6 +61,15 @@ describe("canonicalPlanJson", () => {
     };
     expect(canonicalPlanJson(observed)).toBe(canonicalPlanJson(plan));
   });
+
+  it("excludes the RPC endpoint from the deployment identity", () => {
+    const plan = basePlan();
+    const otherEndpoint: HashablePlan = {
+      ...plan,
+      chain: { ...plan.chain, rpcUrl: "https://rpc.example.test/v1/private-token" },
+    };
+    expect(canonicalPlanJson(otherEndpoint)).toBe(canonicalPlanJson(plan));
+  });
 });
 
 describe("computePlanHash", () => {
@@ -93,12 +102,24 @@ describe("computePlanHash", () => {
 
   it("changes when the chain or instance changes", () => {
     const plan = basePlan();
-    const otherChain = { ...plan, chain: { ...plan.chain, rpcUrl: "http://127.0.0.1:9999" } };
+    const otherChainId = { ...plan, chain: { ...plan.chain, chainId: 1 } };
+    const otherChainKey = { ...plan, chain: { ...plan.chain, chainKey: "sepolia" } };
     const otherInstance = { ...plan, instance: "staging" };
-    expect(computePlanHash(otherChain, HashingAdapter)).not.toBe(
+    expect(computePlanHash(otherChainId, HashingAdapter)).not.toBe(
+      computePlanHash(plan, HashingAdapter),
+    );
+    expect(computePlanHash(otherChainKey, HashingAdapter)).not.toBe(
       computePlanHash(plan, HashingAdapter),
     );
     expect(computePlanHash(otherInstance, HashingAdapter)).not.toBe(
+      computePlanHash(plan, HashingAdapter),
+    );
+  });
+
+  it("is stable when only the RPC endpoint changes", () => {
+    const plan = basePlan();
+    const otherEndpoint = { ...plan, chain: { ...plan.chain, rpcUrl: "https://rpc.example.test" } };
+    expect(computePlanHash(otherEndpoint, HashingAdapter)).toBe(
       computePlanHash(plan, HashingAdapter),
     );
   });

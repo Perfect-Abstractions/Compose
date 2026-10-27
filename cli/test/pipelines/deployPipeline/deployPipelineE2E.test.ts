@@ -42,7 +42,8 @@ describe.sequential("deploy pipeline E2E", () => {
     expect(result.code, output).toBe(0);
     expect(output).toContain("Deploy plan");
     expect(output).toContain("Review this artifact before deploying.");
-    expect(output).toContain("When ready, run 'compose deploy --broadcast'");
+    expect(output).toContain("When ready, run 'compose deploy --dry-run' to simulate");
+    expect(output).toContain("'compose deploy --broadcast' to send transactions");
 
     const script = await fs.readFile(
       path.join(harness.projectRoot, "script", "ComposeDeploy.s.sol"),

@@ -4,7 +4,7 @@ Scaffolded by [Compose CLI](https://compose.diamonds) - The open-source toolkit 
 
 ## Prerequisites
 
-- [Node.js](https://nodejs.org/) (v20 or later)
+- [Node.js](https://nodejs.org/) (v22.13 or later)
 
 ## Install Dependencies
 

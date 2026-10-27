@@ -12,7 +12,7 @@ import {
   SolidityAstSource,
   TestCommandOptions,
 } from "../interface";
-import { toPosixPath, writeFileIfMissing } from "../../../utils/files";
+import { toPosixPath, toProjectRelativePath, writeFileIfMissing } from "../../../utils/files";
 import { runCommand } from "../../../utils/exec";
 import {
   composePackageSubpath,
@@ -48,6 +48,10 @@ async function installNpmDependencies(projectRoot: string): Promise<void> {
       + "to use the local Compose CLI with `npx compose`.",
     ));
   }
+}
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === "object" && value !== null && !Array.isArray(value);
 }
 
 const adapter: IFrameworkAdapter = {
@@ -281,28 +285,54 @@ const adapter: IFrameworkAdapter = {
       String(chainId),
       "run-latest.json",
     );
+    const displayPath = toProjectRelativePath(projectRoot, broadcastPath);
+
+    let content: string;
+    try {
+      content = await fs.readFile(broadcastPath, "utf8");
+    } catch (error) {
+      if ((error as NodeJS.ErrnoException).code === "ENOENT") return [];
+      throw new Error(`Unable to read the Foundry broadcast at ${displayPath}: ${(error as Error).message}`, {
+        cause: error,
+      });
+    }
 
     let raw: unknown;
     try {
-      raw = JSON.parse(await fs.readFile(broadcastPath, "utf8")) as unknown;
-    } catch {
-      return [];
+      raw = JSON.parse(content) as unknown;
+    } catch (error) {
+      throw new Error(`Unable to parse the Foundry broadcast at ${displayPath}: ${(error as Error).message}`, {
+        cause: error,
+      });
+    }
+    if (!isRecord(raw) || !Array.isArray(raw.transactions)) {
+      throw new Error(`The Foundry broadcast at ${displayPath} is missing a transactions array.`);
     }
 
-    const transactions = (raw as { transactions?: unknown }).transactions;
-    if (!Array.isArray(transactions)) return [];
+    const deployments: BroadcastTransaction[] = [];
+    for (const transaction of raw.transactions) {
+      if (!isRecord(transaction)) continue;
+      const transactionType = transaction.transactionType;
+      if (
+        typeof transactionType === "string"
+        && transactionType !== "CREATE"
+        && transactionType !== "CREATE2"
+      ) {
+        continue;
+      }
 
-    return (transactions as Array<Record<string, unknown>>).map((transaction) => ({
-      contractAddress: typeof transaction.contractAddress === "string" ? transaction.contractAddress : null,
-      contractName: typeof transaction.contractName === "string" ? transaction.contractName : null,
-      txHash: typeof transaction.hash === "string" ? transaction.hash : null,
-      ...(typeof transaction.from === "string"
-        ? { from: transaction.from }
-        : transaction.transaction && typeof transaction.transaction === "object"
-          && typeof (transaction.transaction as Record<string, unknown>).from === "string"
-          ? { from: (transaction.transaction as Record<string, unknown>).from as string }
-          : {}),
-    }));
+      deployments.push({
+        contractAddress: typeof transaction.contractAddress === "string" ? transaction.contractAddress : null,
+        contractName: typeof transaction.contractName === "string" ? transaction.contractName : null,
+        txHash: typeof transaction.hash === "string" ? transaction.hash : null,
+        ...(typeof transaction.from === "string"
+          ? { from: transaction.from }
+          : isRecord(transaction.transaction) && typeof transaction.transaction.from === "string"
+            ? { from: transaction.transaction.from }
+            : {}),
+      });
+    }
+    return deployments;
   },
 };
 

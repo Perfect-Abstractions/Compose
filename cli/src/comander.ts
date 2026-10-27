@@ -79,7 +79,7 @@ export function buildProgram(): Command {
     .option("--project-root <dir>", "Compose project directory")
     .option("--broadcast", "Broadcast the reviewed managed deployment artifact")
     .option("--dry-run", "Simulate the reviewed deployment artifact on a fork without broadcasting")
-    .option("--redeploy", "Abandon the existing lock record and deploy fresh");
+    .option("--redeploy", "Abandon the existing lock record and plan a fresh deployment");
 
   program
     .command("validate")

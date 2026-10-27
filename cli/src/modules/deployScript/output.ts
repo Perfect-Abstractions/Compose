@@ -10,5 +10,8 @@ import { dim, green } from "../../utils/terminal";
 export function showScriptReady(projectRoot: string, scriptPath: string): void {
   console.log(`${green("Deployment artifact ready")}: ${toProjectRelativePath(projectRoot, scriptPath)}`);
   console.log(dim("Review this artifact before deploying."));
-  console.log(dim("When ready, run 'compose deploy --broadcast' to send transactions."));
+  console.log(dim(
+    "When ready, run 'compose deploy --dry-run' to simulate on a fork "
+    + "or 'compose deploy --broadcast' to send transactions.",
+  ));
 }

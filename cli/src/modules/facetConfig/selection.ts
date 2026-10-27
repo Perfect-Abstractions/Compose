@@ -24,7 +24,22 @@ export function facetReferenceOptions(): FacetReferenceResolutionOptions | undef
   };
 }
 
-export async function selectDiamond(ctx: ComposeContext, names: string[], operation: string): Promise<string> {
+/**
+ * Resolves the diamond named by `--diamond`, or the sole defined diamond.
+ *
+ * @param ctx - The compose context with command parameters.
+ * @param names - Diamond names defined in the project.
+ * @param operation - Human-readable action used in the prompt.
+ * @param options - Prompt behavior for ambiguous projects.
+ * @param options.allowPrompt - Whether an ambiguous project may prompt interactively.
+ * @returns The selected diamond name.
+ */
+export async function selectDiamond(
+  ctx: ComposeContext,
+  names: string[],
+  operation: string,
+  options: { allowPrompt?: boolean } = {},
+): Promise<string> {
   if (typeof ctx.param.diamond === "string" && ctx.param.diamond.trim()) {
     if (!names.includes(ctx.param.diamond)) {
       throw new Error(`Diamond '${ctx.param.diamond}' not found. Available: ${names.join(", ")}`);
@@ -32,7 +47,7 @@ export async function selectDiamond(ctx: ComposeContext, names: string[], operat
     return ctx.param.diamond;
   }
   if (names.length === 1) return names[0];
-  if (!isInteractive()) {
+  if (options.allowPrompt === false || !isInteractive()) {
     throw new Error(`Specify --diamond for this project. Available: ${names.join(", ")}`);
   }
   const { select } = await loadPrompts();

@@ -47,7 +47,7 @@ export function showInSync(plan: DeployPlan): void {
   if (plan.existing) {
     console.log(dim(`  Diamond: ${plan.existing.diamond} (${Object.keys(plan.existing.facets).length} facets)`));
   }
-  console.log(dim("Nothing to do. Use --redeploy to replace the deployment with a fresh one."));
+  console.log(dim("Nothing to do. Use --redeploy to plan a fresh deployment."));
 }
 
 /**
@@ -73,7 +73,7 @@ export function showDiffStopped(plan: DeployPlan): void {
     console.log(`  Facets to remove: ${plan.diff.removed.join(", ")}`);
   }
   console.log();
-  console.log("Nothing was changed. Use --redeploy to abandon this deployment and deploy fresh,");
+  console.log("Nothing was changed. Use --redeploy to plan a fresh deployment,");
   console.log("or restore compose.json to match the recorded deployment.");
   console.log();
 }

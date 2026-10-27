@@ -73,6 +73,8 @@ describe("DeployPipeline dry-run", () => {
     expect(ctx.status.success).toBe(false);
     expect(output()).toContain("missing, modified, or stale");
     expect(output()).toContain("Run 'compose deploy'");
+    expect(output()).toContain("retry with --dry-run");
+    expect(output()).not.toContain("--simulate");
     expect(output()).not.toContain("contract ComposeDeployScript is Script");
 
     await expect(fs.access(scriptPath())).rejects.toThrow();
@@ -124,6 +126,7 @@ describe("DeployPipeline script generation", () => {
     expect(ctx.status.success).toBe(true);
     expect(output()).toContain("script/ComposeDeploy.s.sol");
     expect(output()).toContain("Review this artifact before deploying.");
+    expect(output()).toContain("compose deploy --dry-run");
     expect(output()).toContain("compose deploy --broadcast");
     expect(output()).not.toContain("Run the deployment script now?");
     expect(output()).not.toContain(harness.projectRoot);
@@ -162,6 +165,7 @@ describe("DeployPipeline framework selection", () => {
     expect(source).toContain('m.contract("Diamond", [[diamondInspectFacet, counterFacet]], {');
     await expect(fs.access(scriptPath())).rejects.toThrow();
     expect(output()).toContain("ignition/modules/ComposeDeploy.ts");
+    expect(output()).toContain("../../src/CounterFacet.sol");
     expect(output()).not.toContain(harness.projectRoot);
   });
 });
@@ -236,7 +240,7 @@ describe("DeployPipeline broadcast gating", () => {
   });
 });
 
-describe("DeployPipeline broadcast gating", () => {
+describe("DeployPipeline artifact freshness", () => {
   it("does not regenerate a missing or stale script before broadcast", async () => {
     harness.ctx.param.broadcast = true;
     const ctx = await executePipeline(harness.ctx);
