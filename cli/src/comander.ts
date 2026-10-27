@@ -73,6 +73,7 @@ export function buildProgram(): Command {
     .description("Deploy a diamond from compose.json and record it in compose.lock")
     .option("--diamond <name>", "Diamond name from compose.json")
     .option("--chain <chain-key>", "Chain key from compose.json", "local")
+    .option("--rpc-url <url>", "Override this chain's RPC URL for this deployment")
     .option("--account <alias>", "Compose account alias to use for deployment")
     .option("--instance <name>", "Deployment instance name", "default")
     .option("--project-root <dir>", "Compose project directory")

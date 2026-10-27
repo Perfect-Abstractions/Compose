@@ -306,6 +306,25 @@ describe("deploy command arguments", () => {
     });
   });
 
+  it("parses a per-deployment RPC URL override", () => {
+    expect(parseArgs([
+      "node",
+      "compose",
+      "deploy",
+      "--chain",
+      "sepolia",
+      "--rpc-url",
+      "https://rpc.example.test/v1/token",
+    ])).toEqual({
+      command: "deploy",
+      flags: {
+        chain: "sepolia",
+        instance: "default",
+        rpcUrl: "https://rpc.example.test/v1/token",
+      },
+    });
+  });
+
   it("forwards arguments after -- as passthrough", () => {
     expect(
       parseArgs([

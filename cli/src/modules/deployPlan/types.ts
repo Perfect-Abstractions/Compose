@@ -40,6 +40,8 @@ export type DeployPlan = {
   };
   instance: string;
   chain: ResolvedChainConfig;
+  /** Whether `chain.rpcUrl` came from the command-line override. */
+  rpcUrlOverridden: boolean;
   /** Selected non-secret signer profile, or null for the framework default. */
   account: DeploymentAccount | null;
   /** Desired composition in compose.json registration order. */

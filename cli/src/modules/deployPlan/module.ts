@@ -162,7 +162,12 @@ export const DeployPlanModule = {
     const instance = String(ctx.param.instance ?? DEFAULT_INSTANCE);
     assertValidInstance(instance);
 
-    const chain = await resolveChainConfig({ chainKey: ctx.param.chain, projectRoot });
+    const chain = await resolveChainConfig({
+      chainKey: ctx.param.chain,
+      projectRoot,
+      rpcUrlOverride: ctx.param.rpcUrl,
+    });
+    validateOptions({ rpcUrl: chain.rpcUrl, chainId: chain.chainId });
     ctx.param.chainKey = chain.chainKey;
 
     const composeJson = ctx.config.composeJson as {
@@ -228,6 +233,7 @@ export const DeployPlanModule = {
       },
       instance,
       chain,
+      rpcUrlOverridden: ctx.param.rpcUrl !== undefined,
       account,
       facets,
       existing,

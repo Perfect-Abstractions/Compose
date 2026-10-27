@@ -1,4 +1,5 @@
 import { dim, green, yellow } from "../../utils/terminal";
+import { safeRpcEndpoint } from "../../adapters/IRPCAdapter/utils";
 import type { DeployPlan } from "./types";
 
 /**
@@ -10,7 +11,10 @@ export function showDeployPlan(plan: DeployPlan): void {
   console.log();
   console.log(`${green("Deploy plan")} ${dim(`(${plan.mode === "redeploy" ? "redeploy" : "fresh"})`)}`);
   console.log(`  Diamond:  ${plan.diamondName} (${plan.diamond.contractName})`);
-  console.log(`  Chain:    ${plan.chain.chainKey} (chain id ${plan.chain.chainId}) at ${plan.chain.rpcUrl}`);
+  const rpcEndpoint = safeRpcEndpoint(plan.chain.rpcUrl) ?? "[invalid endpoint]";
+  const rpcSource = plan.rpcUrlOverridden ? "CLI override" : "compose.json";
+  console.log(`  Chain:    ${plan.chain.chainKey} (chain id ${plan.chain.chainId})`);
+  console.log(`  RPC:      ${rpcEndpoint} (${rpcSource}; credentials and path redacted)`);
   console.log(plan.account
     ? `  Signer:   ${plan.account.alias} (${plan.account.address})`
     : "  Signer:   framework default");

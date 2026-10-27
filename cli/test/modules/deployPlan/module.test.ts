@@ -81,6 +81,21 @@ describe("DeployPlanModule.resolve", () => {
     });
   });
 
+  it("uses the CLI RPC override while retaining the Compose chain ID", async () => {
+    harness.ctx.param.rpcUrl = "https://override.example.test/v1/private-token";
+
+    const plan = await resolve(harness);
+
+    expect(plan.chain).toEqual({
+      chainKey: "local",
+      rpcUrl: "https://override.example.test/v1/private-token",
+      chainId: CHAIN_ID,
+    });
+    expect(plan.rpcUrlOverridden).toBe(true);
+    harness.ctx.param.rpcUrl = undefined;
+    expect(plan.planHash).not.toBe((await resolve(harness)).planHash);
+  });
+
   it("resolves the chain's default Compose account profile", async () => {
     const composePath = path.join(harness.projectRoot, "compose.json");
     const composeJson = JSON.parse(await fs.readFile(composePath, "utf8")) as Record<string, unknown>;
