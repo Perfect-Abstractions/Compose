@@ -294,4 +294,26 @@ describe("deploy command arguments", () => {
       "Only 'compose deploy' and 'compose test' accept passthrough arguments.",
     );
   });
+
+  it("redacts sensitive passthrough values in rejection errors", () => {
+    let message = "";
+    try {
+      parseArgs([
+        "node",
+        "compose",
+        "validate",
+        "--",
+        "--private-key",
+        "0xsecret",
+        "--mnemonic=test test test",
+      ]);
+    } catch (error) {
+      message = (error as Error).message;
+    }
+
+    expect(message).toContain("--private-key [REDACTED]");
+    expect(message).toContain("--mnemonic=[REDACTED]");
+    expect(message).not.toContain("0xsecret");
+    expect(message).not.toContain("test test test");
+  });
 });

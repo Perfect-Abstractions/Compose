@@ -1,5 +1,6 @@
 import { Command } from "commander";
 import { VERSION } from "./utils/metadata";
+import { formatCommandArgs } from "./utils/redaction";
 
 /**
  * Defines the CLI program with per-command flags.
@@ -131,7 +132,7 @@ export function parseArgs(argv: string[]): { command: string; flags: Record<stri
   if (!commandInstance) {
     if (passthrough.length > 0) {
       throw new Error(
-        `Unexpected arguments after '--': ${passthrough.join(" ")}. Only 'compose deploy' and 'compose test' accept passthrough arguments.`,
+        `Unexpected arguments after '--': ${formatCommandArgs(passthrough)}. Only 'compose deploy' and 'compose test' accept passthrough arguments.`,
       );
     }
     return { command: invokedCommand, flags: {} };
@@ -150,14 +151,17 @@ export function parseArgs(argv: string[]): { command: string; flags: Record<stri
   if (passthrough.length > 0) {
     if (command !== "deploy" && command !== "test") {
       throw new Error(
-        `Unexpected arguments after '--': ${passthrough.join(" ")}. Only 'compose deploy' and 'compose test' accept passthrough arguments.`,
+        `Unexpected arguments after '--': ${formatCommandArgs(passthrough)}. Only 'compose deploy' and 'compose test' accept passthrough arguments.`,
       );
     }
     flags.passthrough = passthrough;
   }
 
   const positionalArgs = commandInstance.args.filter((arg): arg is string => typeof arg === "string");
-  if (command === "install" || command === "remove") {
+  if (command === "account") {
+    if (positionalArgs[0]) flags.action = positionalArgs[0];
+    if (positionalArgs[1]) flags.accountName = positionalArgs[1];
+  } else if (command === "install" || command === "remove") {
     if (positionalArgs.length > 0) flags.facets = positionalArgs;
   } else if (positionalArgs.length > 0) {
     if (command === "inspect" && !flags.address) {
