@@ -58,10 +58,22 @@ export function buildProgram(): Command {
     .option("--yes", "Skip confirmation prompts");
 
   program
+    .command("account")
+    .description("Set up, check, list, or remove non-secret deployment account aliases")
+    .argument("<action>", "setup, check, list, or remove")
+    .argument("[name]", "Account alias")
+    .option("--address <address>", "Public address for the account")
+    .option("--foundry-account <name>", "Existing Foundry keystore account name")
+    .option("--chain <chain-key>", "Set this account as the chain's default signer")
+    .option("--rpc-url <url>", "RPC endpoint override for account verification")
+    .option("--project-root <dir>", "Compose project directory");
+
+  program
     .command("deploy")
     .description("Deploy a diamond from compose.json and record it in compose.lock")
     .option("--diamond <name>", "Diamond name from compose.json")
     .option("--chain <chain-key>", "Chain key from compose.json", "local")
+    .option("--account <alias>", "Compose account alias to use for deployment")
     .option("--instance <name>", "Deployment instance name", "default")
     .option("--project-root <dir>", "Compose project directory")
     .option("--broadcast", "Run the managed deploy script without asking")

@@ -11,6 +11,9 @@ export function showDeployPlan(plan: DeployPlan): void {
   console.log(`${green("Deploy plan")} ${dim(`(${plan.mode === "redeploy" ? "redeploy" : "fresh"})`)}`);
   console.log(`  Diamond:  ${plan.diamondName} (${plan.diamond.contractName})`);
   console.log(`  Chain:    ${plan.chain.chainKey} (chain id ${plan.chain.chainId}) at ${plan.chain.rpcUrl}`);
+  console.log(plan.account
+    ? `  Signer:   ${plan.account.alias} (${plan.account.address})`
+    : "  Signer:   framework default");
   console.log(`  Instance: ${plan.instance}`);
   console.log(`  Facets (${plan.facets.length}):`);
   for (const facet of plan.facets) {

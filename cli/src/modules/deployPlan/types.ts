@@ -1,6 +1,7 @@
 import type { Hex } from "viem";
 import type { ResolvedChainConfig } from "../../utils/chainConfig";
 import type { DiamondDeployment } from "../lockFile/types";
+import type { DeploymentAccount } from "../accounts/types";
 
 /** How `compose deploy` treats the current deployment record, if any. */
 export type DeployMode =
@@ -39,6 +40,8 @@ export type DeployPlan = {
   };
   instance: string;
   chain: ResolvedChainConfig;
+  /** Selected non-secret signer profile, or null for the framework default. */
+  account: DeploymentAccount | null;
   /** Desired composition in compose.json registration order. */
   facets: PlannedFacet[];
   /** The existing lock record for the target; null for a fresh deployment. */

@@ -178,6 +178,62 @@ describe("facet configuration commands", () => {
   });
 });
 
+describe("account command arguments", () => {
+  it("parses account setup options", () => {
+    expect(parseArgs([
+      "node",
+      "compose",
+      "account",
+      "setup",
+      "deployer",
+      "--address",
+      "0x00000000000000000000000000000000000000a1",
+      "--foundry-account",
+      "prod-key",
+      "--chain",
+      "sepolia",
+    ])).toEqual({
+      command: "account",
+      flags: {
+        action: "setup",
+        accountName: "deployer",
+        address: "0x00000000000000000000000000000000000000a1",
+        foundryAccount: "prod-key",
+        chain: "sepolia",
+      },
+    });
+  });
+
+  it("parses account list", () => {
+    expect(parseArgs(["node", "compose", "account", "list"])).toEqual({
+      command: "account",
+      flags: { action: "list" },
+    });
+  });
+
+  it("parses account check options", () => {
+    expect(parseArgs([
+      "node",
+      "compose",
+      "account",
+      "check",
+      "deployer",
+      "--chain",
+      "sepolia",
+      "--rpc-url",
+      "https://rpc.example.test",
+    ])).toEqual({
+      command: "account",
+      flags: {
+        action: "check",
+        accountName: "deployer",
+        chain: "sepolia",
+        rpcUrl: "https://rpc.example.test",
+      },
+    });
+  });
+});
+
 describe("test command arguments", () => {
   it("accepts a project root and framework passthrough arguments", () => {
     expect(
@@ -227,6 +283,8 @@ describe("deploy command arguments", () => {
         "Token",
         "--chain",
         "sepolia",
+        "--account",
+        "deployer",
         "--instance",
         "staging",
         "--project-root",
@@ -239,6 +297,7 @@ describe("deploy command arguments", () => {
       flags: {
         diamond: "Token",
         chain: "sepolia",
+        account: "deployer",
         instance: "staging",
         projectRoot: "./project",
         broadcast: true,

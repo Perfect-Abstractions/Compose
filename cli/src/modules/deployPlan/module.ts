@@ -11,6 +11,9 @@ import { VERSION } from "../../utils/metadata";
 import { UPGRADE_FACET_NAME } from "../config/catalog";
 import { LockFileModule } from "../lockFile/module";
 import { DEFAULT_INSTANCE, type ComposeLock } from "../lockFile/types";
+import { validateOptions } from "../../adapters/IRPCAdapter/validation";
+import { resolveAccountProfile } from "../accounts/config";
+import type { DeploymentAccount } from "../accounts/types";
 import { computePlanHash } from "./hash";
 import type { DeployPlan, PlannedFacet } from "./types";
 
@@ -162,7 +165,19 @@ export const DeployPlanModule = {
     const chain = await resolveChainConfig({ chainKey: ctx.param.chain, projectRoot });
     ctx.param.chainKey = chain.chainKey;
 
-    const composeJson = ctx.config.composeJson as { diamonds?: Record<string, DiamondConfig> } | undefined;
+    const composeJson = ctx.config.composeJson as {
+      accounts?: unknown;
+      diamonds?: Record<string, DiamondConfig>;
+    } | undefined;
+    const accountAliasValue = ctx.param.account ?? chain.account;
+    let account: DeploymentAccount | null = null;
+    if (accountAliasValue !== undefined) {
+      if (typeof accountAliasValue !== "string") {
+        throw new Error("Account alias must be a string.");
+      }
+      account = resolveAccountProfile(composeJson?.accounts, accountAliasValue, framework);
+    }
+
     const diamondConfig = composeJson?.diamonds?.[diamondName];
     if (!diamondConfig) {
       throw new Error(`Diamond '${diamondName}' is missing from compose.json.`);
@@ -213,6 +228,7 @@ export const DeployPlanModule = {
       },
       instance,
       chain,
+      account,
       facets,
       existing,
       diff,

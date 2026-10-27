@@ -24,6 +24,7 @@ export function canonicalPlanJson(plan: HashablePlan): string {
 
   return JSON.stringify({
     chain: { chainId: plan.chain.chainId, key: plan.chain.chainKey, rpcUrl: plan.chain.rpcUrl },
+    account: plan.account ? { alias: plan.account.alias, address: plan.account.address } : null,
     diamond: {
       contract: plan.diamond.contractName,
       name: plan.diamondName,

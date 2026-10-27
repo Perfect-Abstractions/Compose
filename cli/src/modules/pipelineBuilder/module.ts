@@ -10,6 +10,7 @@ import { ValidatePipeline } from "../../pipelines/validatePipeline";
 import { InstallPipeline } from "../../pipelines/installPipeline";
 import { RemovePipeline } from "../../pipelines/removePipeline";
 import { DeployPipeline } from "../../pipelines/deployPipeline";
+import { AccountPipeline } from "../../pipelines/accountPipeline";
 
 /**
  * Pipeline builder module that routes CLI commands to their corresponding pipelines.
@@ -109,10 +110,18 @@ export const PipelineBuilderModule = {
             diamond: ctx.param.diamond,
             chain: ctx.param.chain,
             instance: ctx.param.instance,
+            account: ctx.param.account,
           },
           error: null,
         };
         return DeployPipeline.execute(ctx);
+      case "account":
+        ctx.state.commandSelected = {
+          success: true,
+          result: { command: ctx.param.command, action: ctx.param.action },
+          error: null,
+        };
+        return AccountPipeline.execute(ctx);
       default:
         ctx.state.commandRouting = {
           success: false,

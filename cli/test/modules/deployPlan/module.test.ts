@@ -1,3 +1,4 @@
+import fs from "node:fs/promises";
 import path from "node:path";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { foundryAdapter } from "../../../src/adapters/IFrameworkAdapter/foundryAdapter/adapter";
@@ -77,6 +78,57 @@ describe("DeployPlanModule.resolve", () => {
       contractName: "CounterFacet",
       importSpec: "../src/CounterFacet.sol",
       sourcePath: path.join(harness.projectRoot, "src", "CounterFacet.sol"),
+    });
+  });
+
+  it("resolves the chain's default Compose account profile", async () => {
+    const composePath = path.join(harness.projectRoot, "compose.json");
+    const composeJson = JSON.parse(await fs.readFile(composePath, "utf8")) as Record<string, unknown>;
+    composeJson.accounts = {
+      deployer: {
+        address: "0x00000000000000000000000000000000000000a1",
+        foundry: { account: "production-deployer" },
+      },
+    };
+    composeJson.chains = {
+      local: { rpc: RPC_URL, chainId: CHAIN_ID, account: "deployer" },
+    };
+    await fs.writeFile(composePath, JSON.stringify(composeJson, null, 2), "utf8");
+
+    const plan = await resolve(harness);
+
+    expect(plan.account).toEqual({
+      alias: "deployer",
+      address: "0x00000000000000000000000000000000000000A1",
+      foundryAccount: "production-deployer",
+    });
+  });
+
+  it("uses --account to override the chain's default signer", async () => {
+    const composePath = path.join(harness.projectRoot, "compose.json");
+    const composeJson = JSON.parse(await fs.readFile(composePath, "utf8")) as Record<string, unknown>;
+    composeJson.accounts = {
+      deployer: {
+        address: "0x00000000000000000000000000000000000000a1",
+        foundry: { account: "production-deployer" },
+      },
+      operator: {
+        address: "0x00000000000000000000000000000000000000a2",
+        foundry: { account: "production-operator" },
+      },
+    };
+    composeJson.chains = {
+      local: { rpc: RPC_URL, chainId: CHAIN_ID, account: "deployer" },
+    };
+    await fs.writeFile(composePath, JSON.stringify(composeJson, null, 2), "utf8");
+    harness.ctx.param.account = "operator";
+
+    const plan = await resolve(harness);
+
+    expect(plan.account).toEqual({
+      alias: "operator",
+      address: "0x00000000000000000000000000000000000000A2",
+      foundryAccount: "production-operator",
     });
   });
 
