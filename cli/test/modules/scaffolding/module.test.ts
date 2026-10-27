@@ -24,11 +24,16 @@ describe("ScaffoldingModule", () => {
           contract: string;
           facets: Record<string, { source: string; contract: string; package?: string }>;
         }>;
+        chains: Record<string, { rpc: string; chainId: number }>;
       };
       const diamond = composeJson.diamonds["my-diamond"];
 
       expect(composeJson.project).toBe("my-diamond");
       expect(composeJson.framework).toBe("foundry");
+      expect(composeJson.chains).toEqual({
+        local: { rpc: "http://127.0.0.1:8545", chainId: 31337 },
+        sepolia: { rpc: "${SEPOLIA_RPC_URL}", chainId: 11155111 },
+      });
       expect(diamond.contract).toBe("src/Diamond.sol:Diamond");
       expect(Object.keys(diamond.facets)).toHaveLength(16);
       expect(diamond.facets.ERC20DataFacet).toEqual({

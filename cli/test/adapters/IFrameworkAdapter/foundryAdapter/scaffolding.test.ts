@@ -54,7 +54,13 @@ describe("foundryAdapter project scaffolding", () => {
     };
 
     expect(packageJson.name).toBe("my-diamond");
-    expect(packageJson.scripts).toEqual({ build: "forge build", test: "forge test" });
+    expect(packageJson.scripts).toEqual({
+      build: "forge build",
+      test: "forge test",
+      fmt: "forge fmt",
+      validate: "compose validate",
+      deploy: "compose deploy",
+    });
     expect(packageJson.devDependencies).toEqual({
       [CLI_PACKAGE_NAME]: CLI_DEV_DEPENDENCY_VERSION,
     });
@@ -71,6 +77,32 @@ describe("foundryAdapter project scaffolding", () => {
     await foundryAdapter.writeConfig(createContext(projectRoot, false), configOptions(false));
 
     expect(runCommand).not.toHaveBeenCalledWith("npm", ["install"], { cwd: projectRoot });
+  });
+
+  it("adds Sepolia RPC and compile settings without overwriting existing config", async () => {
+    await fs.writeFile(
+      path.join(projectRoot, "foundry.toml"),
+      [
+        "[profile.default]",
+        'solc = "0.8.28"',
+        "",
+        "[rpc_endpoints]",
+        'mainnet = "https://ethereum.example"',
+        "",
+      ].join("\n"),
+      "utf8",
+    );
+
+    await foundryAdapter.writeConfig(createContext(projectRoot, false), configOptions(false));
+
+    const foundryToml = await fs.readFile(path.join(projectRoot, "foundry.toml"), "utf8");
+    expect(foundryToml).toContain('solc = "0.8.28"');
+    expect(foundryToml).toContain("optimizer = true");
+    expect(foundryToml).toContain("[rpc_endpoints]");
+    expect(foundryToml).toContain('sepolia = "${SEPOLIA_RPC_URL}"');
+    expect(foundryToml).toContain('mainnet = "https://ethereum.example"');
+    await expect(fs.readFile(path.join(projectRoot, ".env.example"), "utf8"))
+      .resolves.toContain("SEPOLIA_RPC_URL=");
   });
 
   it("warns and keeps going when npm install fails", async () => {

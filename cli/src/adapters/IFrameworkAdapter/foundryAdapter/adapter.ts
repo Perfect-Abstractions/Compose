@@ -152,9 +152,12 @@ const adapter: IFrameworkAdapter = {
       if ((error as NodeJS.ErrnoException).code !== "ENOENT") throw error;
     }
 
-    const updatedFoundryToml = ensureTomlSectionSettings(foundryToml, "profile.default", {
+    const profileFoundryToml = ensureTomlSectionSettings(foundryToml, "profile.default", {
       solc: `"${opts.compilerVersion}"`,
       optimizer: "true",
+    });
+    const updatedFoundryToml = ensureTomlSectionSettings(profileFoundryToml, "rpc_endpoints", {
+      sepolia: '"${SEPOLIA_RPC_URL}"',
     });
 
     const remappings = "@perfect-abstractions/compose/=lib/Compose/src/\n";
@@ -172,6 +175,15 @@ const adapter: IFrameworkAdapter = {
       await fs.writeFile(foundryTomlPath, updatedFoundryToml, "utf8");
     }
     await writeFileIfMissing(path.join(root, "remappings.txt"), remappings);
+    await writeFileIfMissing(
+      path.join(root, ".env.example"),
+      [
+        "# Sepolia RPC endpoint used by `compose deploy --chain sepolia`.",
+        "# Sign with a Foundry keystore account or pass --private-key after `--`.",
+        "SEPOLIA_RPC_URL=",
+        "",
+      ].join("\n"),
+    );
 
     const gitignorePath = path.join(root, ".gitignore");
     let gitignore = "out/\ncache/\n";

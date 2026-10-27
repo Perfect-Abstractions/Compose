@@ -20,6 +20,7 @@ type ComposeJson = {
       package?: string;
     }>;
   }>;
+  chains: Record<string, { rpc: string; chainId: number }>;
 };
 
 async function expectFiles(projectRoot: string, files: string[]): Promise<void> {
@@ -104,6 +105,10 @@ describe("InitPipeline", () => {
       expect(result.state.initPipeline?.success).toBe(true);
       expect(composeJson.project).toBe(projectName);
       expect(composeJson.framework).toBe(framework);
+      expect(composeJson.chains).toEqual({
+        local: { rpc: "http://127.0.0.1:8545", chainId: 31337 },
+        sepolia: { rpc: "${SEPOLIA_RPC_URL}", chainId: 11155111 },
+      });
       expect(diamond.contract).toBe(contract);
       expect(Object.keys(diamond.facets)).toEqual(["DiamondInspectFacet"]);
       await expectFiles(harness.projectRoot, files);
