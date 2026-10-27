@@ -61,14 +61,13 @@ export function showSuccess(ctx: ComposeContext): void {
     }
   }
 
-  console.log(green(`${stepCount}.`) + ` npx compose test`);
+  console.log(green(`${stepCount}.`) + ` npm test`);
 
   console.log("");
-  console.log(dim(installDeps
-    ? "The Compose CLI is installed in the project: run commands with `npx compose` "
-      + "(e.g. `npx compose deploy`)."
-    : "After `npm install`, run Compose commands with `npx compose` "
-      + "(e.g. `npx compose deploy`)."));
+  if (!installDeps) {
+    console.log(dim("After `npm install`, run project scripts with `npm run ...` "
+      + "(e.g. `npm run deploy`) or other Compose commands with `npx compose`."));
+  }
   console.log(green("You're all set. We hope you'll Compose something great!\n"));
   console.log(yellow(`If this helped you, please give us a star on GitHub\n`) + `✨ https://github.com/Perfect-Abstractions/Compose ✨\n`);
   console.log(`Please report any issues or feedback:\nhttps://github.com/Perfect-Abstractions/Compose/issues\n`);

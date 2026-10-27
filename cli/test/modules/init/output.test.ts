@@ -35,6 +35,7 @@ describe("init success output", () => {
     showSuccess(ctx);
 
     expect(log.mock.calls.flat().join("\n")).not.toContain("cd ");
-    expect(log.mock.calls.flat().join("\n")).toContain("npx compose test");
+    expect(log.mock.calls.flat().join("\n")).toContain("npm test");
+    expect(log.mock.calls.flat().join("\n")).not.toContain("The Compose CLI is installed in the project");
   });
 });
