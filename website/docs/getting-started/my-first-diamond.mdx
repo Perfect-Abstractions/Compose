@@ -62,7 +62,7 @@ You can always skip the interactive prompts entirely:
 </ExpandableCode>
 
 <Callout type="tip" title="The CLI is now a project dependency">
-`compose init` adds `@perfect-abstractions/compose-cli` to the project's `devDependencies` and installs it. From inside the project, run every Compose command with `npx compose`
+`compose init` adds `@perfect-abstractions/compose-cli` to the project's `devDependencies` and installs it. From inside the project, run native commands with `npm run build` and `npm test`, Compose workflows with `npm run validate` and `npm run deploy`, and other Compose commands with `npx compose`.
 </Callout>
 
 When the CLI finishes, follow the next steps instruction to move into your project and test it:
@@ -72,7 +72,7 @@ When the CLI finishes, follow the next steps instruction to move into your proje
 
 Next steps:
 1. cd my-first-diamond
-2. npx compose test`}
+2. npm test`}
 </ExpandableCode>
 
 ## 2. Explore the project structure
@@ -158,8 +158,8 @@ Facets can be scoped based on your project needs. Compose encourages small scope
 Now let's compile and run the tests:
 
 <ExpandableCode language="bash" maxLines={2}>
-{`npx compose build
-npx compose test -- -vv`}
+{`npm run build
+npm test -- -vv`}
 </ExpandableCode>
 
 You should see compilation succeed and one passing test in `/test/Diamond.t.sol`
@@ -240,7 +240,7 @@ Now let's add a test that actually uses our `Counter`. Add this function inside 
 Run the test suite:
 
 <ExpandableCode language="bash" maxLines={2}>
-{`npx compose test`}
+{`npm test`}
 </ExpandableCode>
 
 All tests pass, demonstrating that data written by one facet is immediately visible to another through the diamond's shared storage.
@@ -253,13 +253,19 @@ Start a local Ethereum node in one terminal:
 {`anvil`}
 </ExpandableCode>
 
-In a second terminal, deploy your Counter application:
+In a second terminal, plan the deployment and generate the managed script:
 
 <ExpandableCode language="bash" maxLines={2}>
-{`npx compose deploy -- --private-key 0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80`}
+{`npm run deploy`}
 </ExpandableCode>
 
-`npx compose deploy` plans the deployment from `compose.json` and writes a managed deploy script (`script/ComposeDeploy.s.sol`). It prints the script path and asks for confirmation before running it, so you can review exactly what will execute first. The deployment is recorded in `compose.lock`.
+`npm run deploy` plans the deployment from `compose.json` and writes `script/ComposeDeploy.s.sol`. Review the script, then broadcast it with Anvil's test key:
+
+<ExpandableCode language="bash" maxLines={2}>
+{`npm run deploy -- --broadcast -- --private-key 0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80`}
+</ExpandableCode>
+
+The deployment is verified and recorded in `compose.lock`.
 
 <Callout type="warning" title="Test private key only">
 The private key above is Anvil's default test key. **Never use it on a real network.**

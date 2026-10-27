@@ -33,12 +33,17 @@ Run the CLI with `npx` (no global install):
 npx @perfect-abstractions/compose-cli init
 ```
 
-`compose init` adds `@perfect-abstractions/compose-cli` to the generated project's `devDependencies` and installs it, so every Compose command runs from inside the project with `npx compose`:
+`compose init` adds `@perfect-abstractions/compose-cli` to the generated project's `devDependencies` and installs it, so project commands run from inside the project:
 
 ```bash
 cd my-diamond
-npx compose deploy
+npm run build
+npm test
+npm run validate
+npm run deploy
 ```
+
+The generated `package.json` exposes native framework commands as `npm run build` and `npm test` (plus `npm run fmt` for Foundry), and Compose workflows as `npm run validate` and `npm run deploy`. Use `npx compose` for the remaining Compose commands.
 
 ### Manual Installation
 

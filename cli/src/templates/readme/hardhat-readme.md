@@ -21,7 +21,13 @@ npm run build
 ## Test
 
 ```shell
-npx compose test
+npm test
+```
+
+## Validate
+
+```shell
+npm run validate
 ```
 
 ## Deploy
@@ -32,19 +38,29 @@ Start a local Ethereum node:
 npx hardhat node
 ```
 
-Plan the deployment and generate the managed deploy script (in a separate terminal):
+Plan the deployment and generate the managed Ignition module (in a separate terminal):
 
 ```shell
-npx compose deploy
+npm run deploy
 ```
 
-Review the script, then run it against the local chain:
+Review `ignition/modules/ComposeDeploy.ts`, then simulate or deploy it against the local chain:
 
 ```shell
-npx compose deploy --broadcast
+npm run deploy -- --dry-run
+npm run deploy -- --broadcast
 ```
 
-The Compose CLI is a dev dependency of this project, so `npx compose` always runs the local version.
+### Sepolia
+
+Sepolia is preconfigured in `compose.json` and `hardhat.config.ts`. Copy `.env.example` to `.env` and set `SEPOLIA_RPC_URL`, store the deployer key with `npx hardhat keystore set SEPOLIA_PRIVATE_KEY`, then plan and broadcast:
+
+```shell
+npm run deploy -- --chain sepolia
+npm run deploy -- --chain sepolia --broadcast
+```
+
+The Compose CLI is a dev dependency of this project, so the `npm run` scripts use the local version. Use `npx compose` for other Compose commands.
 
 ## Learn More
 

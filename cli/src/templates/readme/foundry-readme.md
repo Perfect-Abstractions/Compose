@@ -16,13 +16,19 @@ npm install
 ## Build
 
 ```shell
-forge build
+npm run build
 ```
 
 ## Test
 
 ```shell
-npx compose test
+npm test
+```
+
+## Validate
+
+```shell
+npm run validate
 ```
 
 ## Deploy
@@ -36,21 +42,40 @@ anvil
 Plan the deployment and generate the managed deploy script:
 
 ```shell
-npx compose deploy
+npm run deploy
 ```
 
 Review the script, then run it against the local chain:
 
 ```shell
-npx compose deploy --broadcast
+npm run deploy -- --dry-run -- --sender "$DEPLOYER_ADDRESS"
+npm run deploy -- --broadcast
 ```
 
-The Compose CLI is a dev dependency of this project, so `npx compose` always runs the local version.
+Use `--account <alias>` instead of `--sender` when a Compose account is configured. Dry-run needs only the public sender address, not its private key.
+
+### Sepolia
+
+Sepolia is preconfigured in `compose.json` and `foundry.toml`. Copy `.env.example` to `.env` and set `SEPOLIA_RPC_URL`, then register a Compose account backed by a Foundry keystore entry:
+
+```shell
+npx compose account setup deployer --foundry-account <keystore-name> \
+  --address <deployer-address> --chain sepolia
+```
+
+Plan and broadcast the deployment:
+
+```shell
+npm run deploy -- --chain sepolia --account deployer
+npm run deploy -- --chain sepolia --account deployer --broadcast
+```
+
+The Compose CLI is a dev dependency of this project, so the `npm run` scripts use the local version. Use `npx compose` for other Compose commands.
 
 ## Format
 
 ```shell
-forge fmt
+npm run fmt
 ```
 
 ## Learn More
