@@ -1,4 +1,4 @@
-import { errorChain, statusCode } from "./utils";
+import { errorChain, safeRpcEndpoint, sanitizeRpcCause, statusCode } from "./utils";
 
 /** Stable error categories emitted by the RPC adapter. */
 export type RPCErrorCode =
@@ -76,8 +76,10 @@ export function requestError(
 ): RPCAdapterError {
   const status = statusCode(error);
   const code = status === 401 ? "RPC_UNAUTHORIZED" : "RPC_REQUEST_FAILED";
-  const target = rpcUrl ? ` at ${rpcUrl}` : "";
-  const cause = causeSummary(error);
+  const endpoint = rpcUrl ? safeRpcEndpoint(rpcUrl) : undefined;
+  const target = endpoint ? ` at ${endpoint}` : "";
+  const rawCause = causeSummary(error);
+  const cause = rawCause ? sanitizeRpcCause(rawCause, rpcUrl) : undefined;
   const detail = cause ? `: ${cause}` : "";
   return new RPCAdapterError(code, `RPC ${operation} failed on chain ${chainId}${target}${detail}`, {
     operation,
