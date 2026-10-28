@@ -57,9 +57,10 @@ function createFixtureAdapter(framework: InitFramework): IFrameworkAdapter {
     getTestRoot: (projectRoot) => path.join(projectRoot, "test"),
     getArtifactDir: (projectRoot) => path.join(projectRoot, artifactDirectory),
     compile: vi.fn(async () => undefined),
-    compileAst: vi.fn(async (_ctx, sourcePaths) => sourcePaths.map((sourcePath, index) =>
-      contractAst(sourcePath, contractNameFromSourcePath(sourcePath), index * 10 + 1)
-    )),
+    compileAst: vi.fn(async (_ctx: ComposeContext, sourcePaths: string[]) =>
+      sourcePaths.map((sourcePath: string, index: number) =>
+        contractAst(sourcePath, contractNameFromSourcePath(sourcePath), index * 10 + 1)
+      )),
     resolveSoliditySourcePath: vi.fn(async (_ctx, sourcePath) =>
       resolveCatalogSourceForRead(sourcePath)),
     initProject: vi.fn(async (ctx) => {
@@ -94,6 +95,16 @@ function createFixtureAdapter(framework: InitFramework): IFrameworkAdapter {
         ),
       ]);
     }),
+    getManagedDeployScriptPath: (projectRoot) =>
+      path.join(projectRoot, scriptDirectory, framework === "foundry"
+        ? "ComposeDeploy.s.sol"
+        : "compose-deploy.ts"),
+    getManagedDeployRunnerPath: () => null,
+    getManagedDeployResultPath: () => null,
+    createDeployCommand: () => ({ command: "true", args: [] }),
+    createTestCommand: () => ({ command: "true", args: [] }),
+    readDeployedBytecode: async () => undefined,
+    readBroadcastTransactions: async () => [],
   };
 }
 
@@ -102,6 +113,7 @@ export async function createInitPipelineHarness(
   framework: InitFramework,
   base: string,
   projectName: string,
+  overrides: Record<string, unknown> = {},
 ): Promise<InitPipelineHarness> {
   const outputRoot = await fs.mkdtemp(path.join(os.tmpdir(), "compose-init-pipeline-"));
   const projectRoot = path.join(outputRoot, projectName);
@@ -117,6 +129,7 @@ export async function createInitPipelineHarness(
     projectName,
     outDir: outputRoot,
     installDeps: false,
+    ...overrides,
   });
 
   return {

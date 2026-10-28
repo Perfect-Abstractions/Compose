@@ -20,6 +20,7 @@ type ComposeJson = {
       package?: string;
     }>;
   }>;
+  chains: Record<string, { rpc: string; chainId: number }>;
 };
 
 async function expectFiles(projectRoot: string, files: string[]): Promise<void> {
@@ -35,6 +36,7 @@ async function readComposeJson(projectRoot: string): Promise<ComposeJson> {
 }
 
 function useHarnessDependencies(harness: InitPipelineHarness): void {
+  vi.spyOn(console, "log").mockImplementation(() => undefined);
   vi.spyOn(InitModule, "showComposeHeader").mockImplementation(() => undefined);
   vi.spyOn(InitModule, "showSuccess").mockImplementation(() => undefined);
   vi.spyOn(PreflightModule, "check").mockImplementation(async (ctx) => ctx);
@@ -61,11 +63,11 @@ describe("InitPipeline", () => {
       framework: "foundry" as const,
       projectName: "bare-foundry",
       contract: "src/Diamond.sol:Diamond",
+      scriptRoot: "script",
       files: [
         "compose.json",
         "foundry.toml",
         "src/Diamond.sol",
-        "script/Deploy.s.sol",
         "test/Diamond.t.sol",
       ],
     },
@@ -73,12 +75,12 @@ describe("InitPipeline", () => {
       framework: "hardhat" as const,
       projectName: "bare-hardhat",
       contract: "contracts/Diamond.sol:Diamond",
+      scriptRoot: "scripts",
       files: [
         "compose.json",
         "package.json",
         "hardhat.config.ts",
         "contracts/Diamond.sol",
-        "scripts/deploy.ts",
         "test/Diamond.ts",
       ],
     },
@@ -86,9 +88,11 @@ describe("InitPipeline", () => {
     framework,
     projectName,
     contract,
+    scriptRoot,
     files,
   }) => {
     const harness = await createInitPipelineHarness(framework, "none", projectName);
+    if (framework === "hardhat") harness.ctx.param.installDeps = true;
     useHarnessDependencies(harness);
 
     try {
@@ -101,9 +105,16 @@ describe("InitPipeline", () => {
       expect(result.state.initPipeline?.success).toBe(true);
       expect(composeJson.project).toBe(projectName);
       expect(composeJson.framework).toBe(framework);
+      expect(composeJson.chains).toEqual({
+        local: { rpc: "http://127.0.0.1:8545", chainId: 31337 },
+        sepolia: { rpc: "${SEPOLIA_RPC_URL}", chainId: 11155111 },
+      });
       expect(diamond.contract).toBe(contract);
       expect(Object.keys(diamond.facets)).toEqual(["DiamondInspectFacet"]);
       await expectFiles(harness.projectRoot, files);
+      await expect(
+        fs.access(path.join(harness.projectRoot, scriptRoot)),
+      ).resolves.toBeUndefined();
       expect(harness.adapter.compileAst).toHaveBeenCalledOnce();
     } finally {
       await harness.cleanup();
@@ -128,6 +139,35 @@ describe("InitPipeline", () => {
         "ERC20TransferFacet",
       ]);
       expect(harness.adapter.compileAst).toHaveBeenCalledOnce();
+    } finally {
+      await harness.cleanup();
+    }
+  });
+
+  it("scaffolds an upgradeable ERC-20 diamond with --upgradeable", async () => {
+    const harness = await createInitPipelineHarness(
+      "foundry",
+      "erc-20",
+      "erc20-upgradeable",
+      { upgradeable: true },
+    );
+    useHarnessDependencies(harness);
+
+    try {
+      const result = await InitPipeline.execute(harness.ctx);
+      const composeJson = await readComposeJson(harness.projectRoot);
+      const facetNames = Object.keys(composeJson.diamonds["erc20-upgradeable"].facets).sort();
+
+      expect(result.status.success).toBe(true);
+      expect(facetNames).toEqual([
+        "DiamondInspectFacet",
+        "DiamondUpgradeFacet",
+        "ERC20ApproveFacet",
+        "ERC20DataFacet",
+        "ERC20TransferFacet",
+        "OwnerDataFacet",
+        "OwnerTransferFacet",
+      ]);
     } finally {
       await harness.cleanup();
     }

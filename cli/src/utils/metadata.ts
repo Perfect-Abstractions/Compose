@@ -12,6 +12,12 @@ export const COMPOSE_DOCS_URL = "https://compose.diamonds/";
 export const VERSION = readVersion();
 export const LOCK_FILE_NAME = "compose.lock";
 
+/** npm package that provides the `compose` binary. */
+export const CLI_PACKAGE_NAME = "@perfect-abstractions/compose-cli";
+
+/** Version range written into generated projects so they run the CLI locally. */
+export const CLI_DEV_DEPENDENCY_VERSION = `^${VERSION}`;
+
 export const COMPOSE_HEADER = `
    _____ ____  __  __ _____   ____   _____ ______     _____ _      _____ 
   / ____/ __ \\|  \\/  |  __ \\ / __ \\ / ____|  ____|   / ____| |    |_   _|

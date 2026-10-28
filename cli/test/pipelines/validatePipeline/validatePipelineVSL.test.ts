@@ -78,7 +78,7 @@ describe("validate pipeline", () => {
       "FullStorageFacet",
       "CompatibleStorageFacet",
     ]);
-    await harness.writeLock({ StorageDiamond: { local: deployment() } });
+    await harness.writeLock({ StorageDiamond: { local: { default: deployment() } } });
     const report = {
       ...emptyReport(),
       uncertainScopes: [
@@ -144,7 +144,7 @@ describe("validate pipeline", () => {
       "FullStorageFacet",
       "CompatibleStorageFacet",
     ]);
-    await harness.writeLock({ StorageDiamond: { local: deployment() } });
+    await harness.writeLock({ StorageDiamond: { local: { default: deployment() } } });
     const { rpc, validator } = bytecodeDependencies(emptyReport());
     vi.mocked(rpc.getCode).mockResolvedValue("0x");
     const originalResolve = DependencyResolver.resolve.bind(DependencyResolver);
@@ -190,7 +190,7 @@ describe("validate pipeline", () => {
       "FullStorageFacet",
       "CompatibleStorageFacet",
     ]);
-    await harness.writeLock({ StorageDiamond: { local: deployment() } });
+    await harness.writeLock({ StorageDiamond: { local: { default: deployment() } } });
     const collision = {
       location: { slot: "0", offset: 0, selector: "12345678", pc: 42, symbolicPath: "slot(0)" },
       virtualPath: "compose.fixture.virtual-storage",
@@ -249,8 +249,8 @@ describe("validate pipeline", () => {
     ]);
     await harness.writeLock({
       StorageDiamond: {
-        broken: deployment(),
-        healthy: deployment(),
+        broken: { default: deployment() },
+        healthy: { default: deployment() },
       },
     });
     const { rpc, validator } = bytecodeDependencies(emptyReport());
@@ -291,9 +291,57 @@ describe("validate pipeline", () => {
     }
   }, 30_000);
 
+  it("validates every instance of a diamond on the same chain", async () => {
+    const harness = await createValidatePipelineHarness([
+      "FullStorageFacet",
+      "CompatibleStorageFacet",
+    ]);
+    await harness.writeLock({
+      StorageDiamond: {
+        local: {
+          default: deployment(),
+          staging: { ...deployment(), diamond: "0x0000000000000000000000000000000000000009" },
+        },
+      },
+    });
+    const { rpc, validator } = bytecodeDependencies(emptyReport());
+    const originalResolve = DependencyResolver.resolve.bind(DependencyResolver);
+    const resolver = vi.spyOn(DependencyResolver, "resolve").mockImplementation(async (requests) => {
+      if (requests.some((request) => request.key === DependencyKey.BytecodeValidator)) {
+        return {
+          [DependencyKey.RPC]: rpc,
+          [DependencyKey.Diamond]: createDiamondAdapter(rpc),
+          [DependencyKey.BytecodeValidator]: validator,
+        };
+      }
+      return originalResolve(requests);
+    });
+    const logs = vi.spyOn(console, "log").mockImplementation(() => undefined);
+    const errors = vi.spyOn(console, "error").mockImplementation(() => undefined);
+
+    try {
+      const result = await ValidatePipeline.execute(harness.ctx);
+      expect(result.state.bytecodeValidation).toMatchObject({
+        success: true,
+        result: {
+          deployments: [
+            expect.objectContaining({ instance: "default" }),
+            expect.objectContaining({ instance: "staging" }),
+          ],
+        },
+      });
+      expect(validator.validate).toHaveBeenCalledTimes(2);
+    } finally {
+      resolver.mockRestore();
+      logs.mockRestore();
+      errors.mockRestore();
+      await harness.cleanup();
+    }
+  }, 30_000);
+
   it("runs compiled facet bytecode through the packaged validator", async () => {
     const harness = await createValidatePipelineHarness(["FullStorageFacet"]);
-    await harness.writeLock({ StorageDiamond: { local: deployment() } });
+    await harness.writeLock({ StorageDiamond: { local: { default: deployment() } } });
     const rpc: IRPCAdapter = {
       getBlockNumber: vi.fn().mockResolvedValue(100n),
       readContract: vi.fn().mockResolvedValue([{

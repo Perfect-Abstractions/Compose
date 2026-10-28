@@ -27,10 +27,8 @@ cli/test/
 │   └── IRPCAdapter/
 │       └── adapter.test.ts
 ├── modules/
-│   └── deployGeneration/
-│       ├── fixtures/
-│       │   └── expected/
-│       │       └── Deploy.s.sol
+│   ├── scaffoldHarness.ts
+│   └── deployPlan/
 │       ├── harness.ts
 │       └── module.test.ts
 ├── pipelines/
@@ -101,22 +99,21 @@ Modules are the main place to test CLI behavior.
 - Assert the resulting module state and any generated files.
 - Keep harnesses, fixtures, and mocks under `cli/test`.
 
-The deploy generation test builds a complete ERC-20 context through its harness, executes the real module, and compares the generated script with an expected-output snapshot:
+The test generation test builds a complete ERC-20 context through its harness, executes the real module, and asserts both the module state and the generated file:
 
 ```ts
-const harness = await createDeployGenerationHarness();
+const harness = await createScaffoldHarness();
 
 try {
-  const result = await DeployGenerationModule.generateDeployScript(
+  const result = await TestGenerationModule.generateTestFile(
     harness.ctx,
-    harness.scriptRoot,
+    path.join(harness.projectRoot, "test"),
   );
-  const state = result.state.generateDeployScript as ModuleState<GeneratedDeployScriptState>;
-  const generated = await fs.readFile(state.result!.outputPath, "utf8");
-  const expected = await fs.readFile(expectedDeployScriptPath, "utf8");
+  const state = result.state.generateTestFile as ModuleState<TestGenerationResult>;
+  const source = await fs.readFile(state.result!.outputPath, "utf8");
 
   expect(state.success).toBe(true);
-  expect(generated).toBe(expected);
+  expect(source).toContain("contract DiamondTest is Test");
 } finally {
   await harness.cleanup();
 }
@@ -131,7 +128,7 @@ Some module actions depend on state produced by an earlier action.
 - Use a pipeline test when module order or the complete workflow is part of the behavior.
 - Avoid reproducing a large production state object in every test; move shared setup into the feature harness.
 
-For example, a deploy generation harness provides the selected catalog, scaffold map, and project parameters because those are direct inputs to `DeployGenerationModule`. An info pipeline harness instead writes a real `compose.json` and facet source because loading and scanning are part of that pipeline's behavior.
+For example, the shared scaffold harness provides the selected catalog, scaffold map, and project parameters because those are direct inputs to `ScaffoldingModule` and `TestGenerationModule`. An info pipeline harness instead writes a real `compose.json` and facet source because loading and scanning are part of that pipeline's behavior.
 
 ## Pipeline Tests
 

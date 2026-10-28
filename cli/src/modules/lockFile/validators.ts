@@ -44,25 +44,59 @@ function validateDiamondDeployments(diamondName: string, data: unknown): void {
 
   const chains = data as Record<string, unknown>;
   for (const [chainName, chainData] of Object.entries(chains)) {
-    validateChainDeployment(diamondName, chainName, chainData);
+    validateChainDeployments(diamondName, chainName, chainData);
   }
 }
 
 /**
- * Validates a chain deployment entry.
+ * Validates the instance deployments for a diamond on a chain.
  *
  * @param diamondName - The diamond name being validated.
  * @param chainName - The chain name being validated.
- * @param data - The chain deployment data.
- * @throws {Error} If the chain deployment structure is invalid.
+ * @param data - The chain deployments data.
+ * @throws {Error} If the chain deployments structure is invalid.
  */
-function validateChainDeployment(diamondName: string, chainName: string, data: unknown): void {
+function validateChainDeployments(diamondName: string, chainName: string, data: unknown): void {
   if (!data || typeof data !== "object") {
-    throw new Error(`Deployment for '${diamondName}' on '${chainName}' must be an object`);
+    throw new Error(`Deployments for '${diamondName}' on '${chainName}' must be an object`);
+  }
+
+  const instances = data as Record<string, unknown>;
+  if (typeof instances.diamond === "string") {
+    throw new Error(
+      `Deployments for '${diamondName}' on '${chainName}' use the legacy lock format; ` +
+      `nest each deployment under an instance, for example { "default": { ... } }.`,
+    );
+  }
+
+  for (const [instance, instanceData] of Object.entries(instances)) {
+    validateInstanceDeployment(diamondName, chainName, instance, instanceData);
+  }
+}
+
+/**
+ * Validates a single instance deployment entry.
+ *
+ * @param diamondName - The diamond name being validated.
+ * @param chainName - The chain name being validated.
+ * @param instance - The instance name being validated.
+ * @param data - The instance deployment data.
+ * @throws {Error} If the instance deployment structure is invalid.
+ */
+function validateInstanceDeployment(
+  diamondName: string,
+  chainName: string,
+  instance: string,
+  data: unknown,
+): void {
+  if (!data || typeof data !== "object") {
+    throw new Error(
+      `Deployment for '${diamondName}' on '${chainName}' instance '${instance}' must be an object`,
+    );
   }
 
   const deployment = data as Record<string, unknown>;
-  const prefix = `'${diamondName}' on '${chainName}'`;
+  const prefix = `'${diamondName}' on '${chainName}' instance '${instance}'`;
 
   // Validate diamond address
   if (typeof deployment.diamond !== "string" || !isAddress(deployment.diamond, { strict: false })) {
@@ -94,5 +128,19 @@ function validateChainDeployment(diamondName: string, chainName: string, data: u
   // Validate txHash
   if (typeof deployment.txHash !== "string" || !deployment.txHash.startsWith("0x")) {
     throw new Error(`${prefix}: invalid or missing 'txHash'`);
+  }
+
+  if (
+    deployment.deployer !== undefined
+    && (typeof deployment.deployer !== "string" || !isAddress(deployment.deployer, { strict: false }))
+  ) {
+    throw new Error(`${prefix}: invalid 'deployer' address`);
+  }
+
+  if (
+    deployment.ignitionDeploymentId !== undefined
+    && (typeof deployment.ignitionDeploymentId !== "string" || deployment.ignitionDeploymentId.length === 0)
+  ) {
+    throw new Error(`${prefix}: invalid 'ignitionDeploymentId'`);
   }
 }

@@ -49,7 +49,7 @@ export async function createRPCAdapter(options: RPCAdapterOptions): Promise<IRPC
   try {
     endpointChainId = await retryRPC(() => client.getChainId());
   } catch (error) {
-    throw error instanceof RPCAdapterError ? error : requestError("getChainId", options.chainId, error);
+    throw error instanceof RPCAdapterError ? error : requestError("getChainId", options.chainId, error, options.rpcUrl);
   }
   if (endpointChainId !== options.chainId) {
     throw new RPCAdapterError(
@@ -64,7 +64,7 @@ export async function createRPCAdapter(options: RPCAdapterOptions): Promise<IRPC
     try {
       return await retryRPC(() => client.getBlockNumber());
     } catch (error) {
-      throw requestError("getBlockNumber", options.chainId, error);
+      throw requestError("getBlockNumber", options.chainId, error, options.rpcUrl);
     }
   }
 
@@ -79,7 +79,7 @@ export async function createRPCAdapter(options: RPCAdapterOptions): Promise<IRPC
     try {
       return await retryRPC(() => client.getCode({ address, blockNumber }));
     } catch (error) {
-      throw requestError("getCode", options.chainId, error);
+      throw requestError("getCode", options.chainId, error, options.rpcUrl);
     }
   }
 
@@ -110,7 +110,7 @@ export async function createRPCAdapter(options: RPCAdapterOptions): Promise<IRPC
       return await retryRPC(() => client.readContract(parameters)) as T;
     } catch (error) {
       if (error instanceof RPCAdapterError) throw error;
-      throw requestError("readContract", options.chainId, error);
+      throw requestError("readContract", options.chainId, error, options.rpcUrl);
     }
   }
 

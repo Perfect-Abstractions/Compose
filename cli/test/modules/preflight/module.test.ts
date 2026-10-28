@@ -15,12 +15,23 @@ describe("PreflightModule", () => {
     isBinaryInPath.mockClear();
   });
 
-  it("requires forge for Foundry", async () => {
+  it("requires forge and npm for Foundry when dependencies will be installed", async () => {
     const ctx = Context.create();
     ctx.param.framework = "foundry";
 
     await expect(PreflightModule.check(ctx)).resolves.toBe(ctx);
     expect(isBinaryInPath).toHaveBeenCalledWith("forge");
+    expect(isBinaryInPath).toHaveBeenCalledWith("npm");
+  });
+
+  it("skips npm for Foundry when dependency installation is disabled", async () => {
+    const ctx = Context.create();
+    ctx.param.framework = "foundry";
+    ctx.param.installDeps = false;
+
+    await PreflightModule.check(ctx);
+    expect(isBinaryInPath).toHaveBeenCalledWith("forge");
+    expect(isBinaryInPath).not.toHaveBeenCalledWith("npm");
   });
 
   it("requires npm when Hardhat dependencies will be installed", async () => {
@@ -30,14 +41,15 @@ describe("PreflightModule", () => {
 
     await PreflightModule.check(ctx);
     expect(isBinaryInPath).toHaveBeenCalledWith("npm");
+    expect(isBinaryInPath).toHaveBeenCalledWith("git");
   });
 
-  it("skips npm when Hardhat dependency installation is disabled", async () => {
+  it("rejects --no-install-deps for Hardhat because the official initializer installs its template", async () => {
     const ctx = Context.create();
     ctx.param.framework = "hardhat";
     ctx.param.installDeps = false;
 
-    await PreflightModule.check(ctx);
+    await expect(PreflightModule.check(ctx)).rejects.toThrow("official non-interactive initializer installs");
     expect(isBinaryInPath).not.toHaveBeenCalled();
   });
 });

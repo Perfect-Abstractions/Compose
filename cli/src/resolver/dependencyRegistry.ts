@@ -9,7 +9,7 @@ import type { IRPCAdapter } from "../adapters/IRPCAdapter/interface";
 import { createRPCAdapter } from "../adapters/IRPCAdapter/adapter";
 import type { IDiamondAdapter } from "../adapters/IDiamondAdapter/interface";
 import { createDiamondAdapter } from "../adapters/IDiamondAdapter/adapter";
-import { resolveChainConfig } from "../utils/chainConfig";
+import { resolveChainConfig, type ResolvedChainConfig } from "../utils/chainConfig";
 import { DependencyKey } from "./dependencyKey";
 import { BytecodeValidatorAdapter } from "../adapters/IBytecodeValidatorAdapter/adapter";
 import type { IBytecodeValidatorAdapter } from "../adapters/IBytecodeValidatorAdapter/interface";
@@ -20,6 +20,8 @@ export type DependencyParams = Record<string, unknown>;
 type RPCDependencyParams = DependencyParams & {
   chainKey?: unknown;
   projectRoot?: string;
+  rpcUrlOverride?: unknown;
+  resolvedChain?: ResolvedChainConfig;
 };
 
 /** Factory function that creates or returns a dependency instance. */
@@ -52,7 +54,8 @@ export const DependencyRegistry: {
 } = {
   [DependencyKey.Hashing]: () => HashingAdapter,
   [DependencyKey.RPC]: async (params) => {
-    const resolved = await resolveChainConfig(params as RPCDependencyParams | undefined);
+    const rpcParams = params as RPCDependencyParams | undefined;
+    const resolved = rpcParams?.resolvedChain ?? await resolveChainConfig(rpcParams);
     return createRPCAdapter({ rpcUrl: resolved.rpcUrl, chainId: resolved.chainId });
   },
   [DependencyKey.Diamond]: async (params) =>

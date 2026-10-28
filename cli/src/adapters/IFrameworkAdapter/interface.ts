@@ -1,10 +1,62 @@
 import { ComposeContext } from "../../context/types";
+import type { Hex } from "viem";
 
 /** Options passed to adapter config writing. */
 export type ConfigOptions = {
   compilerVersion: string;
   projectName: string;
   installDeps: boolean;
+};
+
+/** Options for building the framework command that runs a managed deployment artifact. */
+export type DeployCommandOptions = {
+  /** Absolute project root the command runs in. */
+  projectRoot: string;
+  /** Absolute path of the reviewable managed deployment artifact. */
+  scriptPath: string;
+  /** Absolute path of a framework runner that invokes the reviewed artifact. */
+  runnerPath?: string | null;
+  /** Chain key as defined in compose.json. */
+  chainKey: string;
+  /** RPC endpoint for the target chain. */
+  rpcUrl: string;
+  /** Expected EVM chain ID for the target chain. */
+  chainId: number;
+  /** Whether the managed script is simulated locally or broadcast to the target. */
+  mode: "simulate" | "broadcast";
+  /** Target-chain block used as the fork point for simulations. */
+  forkBlockNumber?: bigint;
+  /** Optional Compose account selection mapped to a framework-native signer. */
+  account?: { alias: string; address: string; foundryAccount?: string } | null;
+  /** Extra arguments forwarded to the framework after `--`. */
+  passthrough: string[];
+};
+
+/** Options for building the framework command that runs the project test suite. */
+export type TestCommandOptions = {
+  /** Absolute project root the command runs in. */
+  projectRoot: string;
+  /** Extra arguments forwarded to the framework after `--`. */
+  passthrough: string[];
+};
+
+/** A framework command ready to be executed. */
+export type FrameworkCommand = {
+  command: string;
+  args: string[];
+  /** Environment overrides for the spawned framework process. */
+  env?: NodeJS.ProcessEnv;
+};
+
+/** A deploy command ready to be executed. */
+export type DeployCommand = FrameworkCommand;
+
+/** A contract deployment recorded by a framework broadcast. */
+export type BroadcastTransaction = {
+  contractName?: string | null;
+  contractAddress?: string | null;
+  txHash?: string | null;
+  from?: string | null;
 };
 
 /** A Solidity source unit AST returned by a framework compiler. */
@@ -62,4 +114,42 @@ export interface IFrameworkAdapter {
    * Called after facets are copied.
    */
   writeConfig(ctx: ComposeContext, opts: ConfigOptions): Promise<void>;
+
+  /** Resolve the path of the CLI-managed deployment artifact inside the project. */
+  getManagedDeployScriptPath(projectRoot: string): string;
+
+  /** Resolve an optional runtime runner separate from the reviewed deploy artifact. */
+  getManagedDeployRunnerPath(projectRoot: string): string | null;
+
+  /**
+   * Resolve the path of the CLI-managed deploy result file inside the project.
+   * Returns null for frameworks that record deployments through their broadcast.
+   */
+  getManagedDeployResultPath(projectRoot: string): string | null;
+
+  /** Build the framework command that simulates or broadcasts the managed deployment artifact. */
+  createDeployCommand(opts: DeployCommandOptions): DeployCommand;
+
+  /** Build the framework command that executes the project test suite. */
+  createTestCommand(opts: TestCommandOptions): FrameworkCommand;
+
+  /**
+   * Read compiled deployed bytecode for a contract from the framework's
+   * local build artifacts. Returns undefined when no artifact is available.
+   */
+  readDeployedBytecode(
+    projectRoot: string,
+    sourcePath: string,
+    contractName: string,
+  ): Promise<Hex | undefined>;
+
+  /**
+   * Read the contract deployments recorded by a framework broadcast.
+   * Returns an empty list for frameworks that report transactions elsewhere.
+   */
+  readBroadcastTransactions(
+    projectRoot: string,
+    scriptPath: string,
+    chainId: number,
+  ): Promise<BroadcastTransaction[]>;
 }
