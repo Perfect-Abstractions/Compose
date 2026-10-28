@@ -9,6 +9,14 @@ Scaffolded by [Compose CLI](https://compose.diamonds) - The open-source toolkit 
 
 ## Install Dependencies
 
+Install the Solidity dependencies:
+
+```shell
+forge install
+```
+
+Install the Compose CLI and Node tooling:
+
 ```shell
 npm install
 ```
@@ -16,19 +24,19 @@ npm install
 ## Build
 
 ```shell
-npm run build
+forge build
 ```
 
 ## Test
 
 ```shell
-npm test
+forge test
 ```
 
 ## Validate
 
 ```shell
-npm run validate
+npx compose validate
 ```
 
 ## Deploy
@@ -42,14 +50,14 @@ anvil
 Plan the deployment and generate the managed deploy script:
 
 ```shell
-npm run deploy
+npx compose deploy
 ```
 
 Review the script, then simulate or deploy it against the local chain:
 
 ```shell
-npm run deploy -- --dry-run -- --sender 0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266
-npm run deploy -- --broadcast -- \
+npx compose deploy -- --dry-run -- --sender 0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266
+npx compose deploy -- --broadcast -- \
   --private-key 0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80 \
   --non-interactive
 ```
@@ -70,16 +78,16 @@ npx compose account setup deployer --foundry-account <keystore-name> \
 Plan and broadcast the deployment:
 
 ```shell
-npm run deploy -- --chain sepolia --account deployer
-npm run deploy -- --chain sepolia --account deployer --broadcast
+npx compose deploy -- --chain sepolia --account deployer
+npx compose deploy -- --chain sepolia --account deployer --broadcast
 ```
 
-The Compose CLI is a dev dependency of this project, so the `npm run` scripts use the local version. Use `npx compose` for other Compose commands.
+The Compose CLI is a dev dependency of this project, so `npx compose` uses the local version.
 
 ## Format
 
 ```shell
-npm run fmt
+forge fmt
 ```
 
 ## Learn More

@@ -217,7 +217,6 @@ describe("hardhatAdapter.writeConfig", () => {
         validate: "custom validate",
         build: "hardhat build",
         test: "hardhat test",
-        deploy: "compose deploy",
       });
       expect(JSON.parse(await fs.readFile(path.join(projectRoot, "tsconfig.json"), "utf8")))
         .toMatchObject({ compilerOptions: { module: "node20" } });

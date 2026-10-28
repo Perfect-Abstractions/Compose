@@ -35,8 +35,8 @@ export function ensureTomlSectionSettings(
  * Builds the `package.json` written into generated Foundry projects.
  *
  * The manifest exposes native Foundry commands alongside the Compose
- * workflows, and declares the Compose CLI as a dev dependency so project
- * scripts run the local CLI instead of a global install.
+ * validate workflow, and declares the Compose CLI as a dev dependency so
+ * project scripts run the local CLI instead of a global install.
  *
  * @param projectName - Name recorded in the generated package manifest.
  * @returns Pretty-printed package.json content with a trailing newline.

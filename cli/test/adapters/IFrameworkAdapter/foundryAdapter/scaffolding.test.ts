@@ -59,7 +59,6 @@ describe("foundryAdapter project scaffolding", () => {
       test: "forge test",
       fmt: "forge fmt",
       validate: "compose validate",
-      deploy: "compose deploy",
     });
     expect(packageJson.devDependencies).toEqual({
       [CLI_PACKAGE_NAME]: CLI_DEV_DEPENDENCY_VERSION,

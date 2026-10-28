@@ -15,19 +15,19 @@ npm install
 ## Build
 
 ```shell
-npm run build
+npx hardhat build
 ```
 
 ## Test
 
 ```shell
-npm test
+npx hardhat test
 ```
 
 ## Validate
 
 ```shell
-npm run validate
+npx compose validate
 ```
 
 ## Deploy
@@ -41,14 +41,14 @@ npx hardhat node
 Plan the deployment and generate the managed Ignition module (in a separate terminal):
 
 ```shell
-npm run deploy
+npx compose deploy
 ```
 
 Review `ignition/modules/ComposeDeploy.ts`, then simulate or deploy it against the local chain:
 
 ```shell
-npm run deploy -- --dry-run
-npm run deploy -- --broadcast
+npx compose deploy -- --dry-run
+npx compose deploy -- --broadcast
 ```
 
 ### Sepolia
@@ -56,11 +56,11 @@ npm run deploy -- --broadcast
 Sepolia is preconfigured in `compose.json` and `hardhat.config.ts`. Copy `.env.example` to `.env` and set `SEPOLIA_RPC_URL`, store the deployer key with `npx hardhat keystore set SEPOLIA_PRIVATE_KEY`, then plan and broadcast:
 
 ```shell
-npm run deploy -- --chain sepolia
-npm run deploy -- --chain sepolia --broadcast
+npx compose deploy -- --chain sepolia
+npx compose deploy -- --chain sepolia --broadcast
 ```
 
-The Compose CLI is a dev dependency of this project, so the `npm run` scripts use the local version. Use `npx compose` for other Compose commands.
+The Compose CLI is a dev dependency of this project, so `npx compose` uses the local version.
 
 ## Learn More
 

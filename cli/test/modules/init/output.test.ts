@@ -35,7 +35,21 @@ describe("init success output", () => {
     showSuccess(ctx);
 
     expect(log.mock.calls.flat().join("\n")).not.toContain("cd ");
-    expect(log.mock.calls.flat().join("\n")).toContain("npm test");
+    expect(log.mock.calls.flat().join("\n")).toContain("forge test");
     expect(log.mock.calls.flat().join("\n")).not.toContain("The Compose CLI is installed in the project");
+  });
+
+  it("prints the native test command for Hardhat projects", () => {
+    const ctx = Context.create();
+    ctx.param = {
+      projectName: "my-diamond",
+      projectRoot: process.cwd(),
+      framework: "hardhat",
+    };
+    const log = vi.spyOn(console, "log").mockImplementation(() => undefined);
+
+    showSuccess(ctx);
+
+    expect(log.mock.calls.flat().join("\n")).toContain("npx hardhat test");
   });
 });

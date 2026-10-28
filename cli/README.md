@@ -39,7 +39,7 @@ compose --version | -V
 compose --help | -h
 ```
 
-Generated projects expose framework-native commands as `npm run build` and `npm test` (plus `npm run fmt` for Foundry), alongside Compose workflows as `npm run validate` and `npm run deploy`. The `compose build` and `compose test` commands remain available as convenience wrappers.
+Generated projects expose framework-native commands as `npm run build` and `npm test` (plus `npm run fmt` for Foundry), alongside the Compose `npm run validate` workflow. Use `npx compose deploy` to deploy. The `compose build` and `compose test` commands remain available as convenience wrappers.
 
 ### `compose init`
 
