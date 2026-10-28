@@ -33,17 +33,15 @@ Run the CLI with `npx` (no global install):
 npx @perfect-abstractions/compose-cli init
 ```
 
-`compose init` adds `@perfect-abstractions/compose-cli` to the generated project's `devDependencies` and installs it, so project commands run from inside the project:
 
 ```bash
 cd my-diamond
 npm run build
 npm test
 npm run validate
-npm run deploy
 ```
 
-The generated `package.json` exposes native framework commands as `npm run build` and `npm test` (plus `npm run fmt` for Foundry), and Compose workflows as `npm run validate` and `npm run deploy`. Use `npx compose` for the remaining Compose commands.
+The generated `package.json` exposes native framework commands as `npm run build` and `npm test` (plus `npm run fmt` for Foundry), and the Compose `npm run validate` workflow. Use `npx compose` for the remaining Compose commands, including `npx compose deploy`.
 
 ### Manual Installation
 
@@ -54,7 +52,7 @@ npm install -g @perfect-abstractions/compose-cli
 compose init
 ```
 
-## Add Compose to an existing project
+## Add Compose library to an existing project
 
 ### Foundry
 
@@ -74,7 +72,7 @@ Create a `remappings.txt` file in the root of your project with the following co
 npm install @perfect-abstractions/compose
 ```
 
-## Import Compose in your project
+## Import in your project
 
 ```solidity
 import {DiamondMod} from "@perfect-abstractions/compose/diamond/DiamondMod.sol";

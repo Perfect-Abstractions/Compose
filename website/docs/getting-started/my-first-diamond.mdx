@@ -20,7 +20,7 @@ This tutorial uses the `Counter` example: a minimal diamond with increment and r
 
 ## Prerequisites
 
-- [Node.js](https://nodejs.org/) >= 20
+- [Node.js](https://nodejs.org/) >= 22
 - [Foundry](https://book.getfoundry.sh/getting-started/installation) installed and on your PATH
 
 <Callout type="tip" title="New to Foundry?">
@@ -31,13 +31,13 @@ If you haven't used Foundry before, follow the <a href="https://book.getfoundry.
 
 ## 1. Scaffold the project
 
-Run the Compose CLI with `npx` — no global installation needed:
+Run the Compose CLI with `npx`
 
 <ExpandableCode language="bash" maxLines={2}>
 {`npx @perfect-abstractions/compose-cli init`}
 </ExpandableCode>
 
-You'll be prompt to choose from a lot of different options from framework, ERC standards templates, and others. 
+You'll be prompt with lot of different options from framework, ERC standards templates, and others. 
 
 For this tutorial, we will choose the `Counter` example with the following options:
 
@@ -61,18 +61,14 @@ You can always skip the interactive prompts entirely:
 {`npx @perfect-abstractions/compose-cli init my-first-diamond --framework foundry --base counter --yes`}
 </ExpandableCode>
 
-<Callout type="tip" title="The CLI is now a project dependency">
-`compose init` adds `@perfect-abstractions/compose-cli` to the project's `devDependencies` and installs it. From inside the project, run native commands with `npm run build` and `npm test`, Compose workflows with `npm run validate` and `npm run deploy`, and other Compose commands with `npx compose`.
-</Callout>
-
 When the CLI finishes, follow the next steps instruction to move into your project and test it:
 
 <ExpandableCode language="text" maxLines={8}>
 {`✔ Project "my-first-diamond" scaffolded in ".../my-first-diamond"
 
 Next steps:
-1. cd my-first-diamond
-2. npm test`}
+1. cd "my-first-diamond"
+2. forge test`}
 </ExpandableCode>
 
 ## 2. Explore the project structure
@@ -87,11 +83,11 @@ The scaffold generates a diamond with two local facets and one from the Compose 
     CounterIncrementFacet.sol    ← increment the counter`}
 </ExpandableCode>
 
-Each facet owns a slice of the logic. `CounterDataFacet` exposes the count, `CounterIncrementFacet` mutates it. The `Diamond.sol` proxy routes calls to the right facet via function selectors.
+Each facet owns a slice of the applicstion logic. `CounterDataFacet` exposes the count, `CounterIncrementFacet` mutates it. The `Diamond.sol` proxy routes calls to the right logic block via function selectors.
 
 ### Diamond.sol: The proxy
 
-The diamond is the application entrypoint. Users call it, but it holds no logic itself, only the storage state. Every call is delegated to a stateless facet via the fallback function:
+The [diamond](/docs/foundations/diamond-contracts) is the application entrypoint. Users call it, but it holds no logic itself, only the storage state. Every call is delegated to a stateless facet via the fallback function:
 
 <ExpandableCode language="solidity" maxLines={20}>
 {`contract Diamond {
@@ -110,11 +106,17 @@ The diamond is the application entrypoint. Users call it, but it holds no logic 
 
 When a function is called on the diamond, [`DiamondMod.diamondFallback()`](/docs/library/diamond/DiamondMod#diamondfallback) looks up which contract owns that selector and forwards the call.
 
+<img
+  src="/img/svg/counter-proxy.svg"
+  alt="Diagram showing a call being routed through the diamond proxy to the getCount() and increment() facets"
+  style={{ width: '100%', height: 'auto' }}
+/>
+
 There nothing more to make a diamond proxy work. Now, let's transition where our application logic lives
 
 ### CounterDataFacet.sol
 
-Facets need to share state. They do this by pointing to the same storage slot:
+Facet are where you implement your application logic. Think of it as stateless logic block that borrow the diamond storage to handle any data.
 
 <ExpandableCode language="solidity" maxLines={40}>
 {`contract CounterDataFacet {
@@ -149,17 +151,19 @@ Facets need to share state. They do this by pointing to the same storage slot:
 }`}
 </ExpandableCode>
 
-Any facet that need `Counter` data uses the same `STORAGE_POSITION [ keccak256("counter") ]` and `CounterStorage` struct. They never import each other. They just agree on the same storage location.
+Any facet that need `Counter` data uses the same `STORAGE_POSITION = keccak256("counter")` and `CounterStorage` struct. They never import each other. They just agree on the same storage contract.
 
+<Callout type="tip" title="Facet scoping">
 Facets can be scoped based on your project needs. Compose encourages small scoped facets, one facet per responsibility, to allow granular composition. In this example, `CounterDataFacet` handles reads and `CounterIncrementFacet` handles mutations. You could combine them into a single facet, but keeping them separate lets you pick exactly the functionality you need at anytime
+</Callout>
 
 ## 3. Build and test
 
 Now let's compile and run the tests:
 
 <ExpandableCode language="bash" maxLines={2}>
-{`npm run build
-npm test -- -vv`}
+{`forge build
+forge test -vv`}
 </ExpandableCode>
 
 You should see compilation succeed and one passing test in `/test/Diamond.t.sol`
@@ -208,7 +212,11 @@ contract DiamondTest is Test {
 
 The test file already has a `setUp()` function that deploys a fresh `Diamond` instance before each test. There's also one test that verifies all three facets are properly registered on the proxy.
 
-Take a look at the order here. The facets are deployed first as separate contracts, then the Diamond proxy is created with references to those pre-deployed facet addresses. This is the core of [composition](/docs/design/design-for-composition) over inheritance. Instead of a monolithic contract that `is` everything through inheritance chains, the Diamond `has` the facets it needs. They're composed at runtime via the constructor or the upgrade functionality.
+Take a look at the order here. The facets are deployed first as separate contracts, then the proxy is created with references to those pre-deployed facet addresses. 
+
+This is the core of [composition](/docs/design/design-for-composition) over inheritance. Instead of a monolithic contract that `is` everything through inheritance chains, the Diamond `has` the facets it needs. 
+
+They're composed at runtime via the constructor or the upgrade functionality.
 
 Now let's add a test that actually uses our `Counter`. Add this function inside the `DiamondTest` contract:
 
@@ -240,7 +248,7 @@ Now let's add a test that actually uses our `Counter`. Add this function inside 
 Run the test suite:
 
 <ExpandableCode language="bash" maxLines={2}>
-{`npm test`}
+{`forge test`}
 </ExpandableCode>
 
 All tests pass, demonstrating that data written by one facet is immediately visible to another through the diamond's shared storage.
@@ -256,13 +264,15 @@ Start a local Ethereum node in one terminal:
 In a second terminal, plan the deployment and generate the managed script:
 
 <ExpandableCode language="bash" maxLines={2}>
-{`npm run deploy`}
+{`npx compose deploy`}
 </ExpandableCode>
 
-`npm run deploy` plans the deployment from `compose.json` and writes `script/ComposeDeploy.s.sol`. Review the script, then broadcast it with Anvil's test key:
+`npx compose deploy` plans the deployment from `compose.json` and writes `script/ComposeDeploy.s.sol`. 
+
+Always review the script, then broadcast it with Anvil's test key:
 
 <ExpandableCode language="bash" maxLines={2}>
-{`npm run deploy -- --broadcast -- --private-key 0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80`}
+{`npx compose deploy --broadcast -- --private-key 0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80`}
 </ExpandableCode>
 
 The deployment is verified and recorded in `compose.lock`.
@@ -280,7 +290,9 @@ You'll see the diamond address logged as the script runs:
 
 #### Congratulations!
 
-You just deployed your first diamond proxy application. You've scaffolded a `Counter` project using the CLI, written tests that verify shared storage across facets, and deployed a composed system to a local network.
+You just deployed your first diamond application.
+
+We've scaffolded together a `Counter` project using the CLI, written tests that verify shared storage across facets, and deployed a composed system to a local network.
 
 We recommend you to explore all the template available to scaffold. Use the `npx compose catalog` command to review what's available to you.
 
