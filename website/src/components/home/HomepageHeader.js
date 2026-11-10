@@ -54,7 +54,7 @@ export default function HomepageHeader() {
             />
           </svg>
         </Link>
-        <Link className={clsx(styles.ctaButton, styles.ctaSecondary)} to="/docs">
+        <Link className={clsx(styles.ctaButton, styles.ctaSecondary)} to="/whitepaper">
           <span>Read the whitepaper</span>
         </Link>
       </div>
