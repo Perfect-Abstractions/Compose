@@ -58,16 +58,19 @@ export const ValidatePipeline = {
         const childContexts: ComposeContext[] = [];
         for (const diamond of project.diamonds) {
           const chainDeployments = lockState.result.lock.deployments[diamond.name] ?? {};
-          for (const [chainKey, deployment] of Object.entries(chainDeployments)) {
-            const child = Context.create();
-            child.param = {
-              projectRoot: ctx.param.projectRoot,
-              diamondName: diamond.name,
-              chainKey,
-              diamondAddress: deployment.diamond,
-              virtualStorageRecords: records.filter((record) => record.diamondName === diamond.name),
-            };
-            childContexts.push(await BytecodeValidationPipeline.execute(child));
+          for (const [chainKey, instanceDeployments] of Object.entries(chainDeployments)) {
+            for (const [instance, deployment] of Object.entries(instanceDeployments)) {
+              const child = Context.create();
+              child.param = {
+                projectRoot: ctx.param.projectRoot,
+                diamondName: diamond.name,
+                chainKey,
+                instance,
+                diamondAddress: deployment.diamond,
+                virtualStorageRecords: records.filter((record) => record.diamondName === diamond.name),
+              };
+              childContexts.push(await BytecodeValidationPipeline.execute(child));
+            }
           }
         }
         ctx = BytecodeValidationModule.mergeDeployments(

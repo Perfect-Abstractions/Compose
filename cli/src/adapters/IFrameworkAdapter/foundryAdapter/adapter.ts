@@ -1,12 +1,18 @@
 import fs from "node:fs/promises";
 import path from "node:path";
+import type { Hex } from "viem";
 import { ComposeContext } from "../../../context/types";
 import {
+  BroadcastTransaction,
   ConfigOptions,
+  DeployCommand,
+  DeployCommandOptions,
+  FrameworkCommand,
   IFrameworkAdapter,
   SolidityAstSource,
+  TestCommandOptions,
 } from "../interface";
-import { writeFileIfMissing } from "../../../utils/files";
+import { toPosixPath, toProjectRelativePath, writeFileIfMissing } from "../../../utils/files";
 import { runCommand } from "../../../utils/exec";
 import {
   composePackageSubpath,
@@ -14,9 +20,40 @@ import {
 } from "../../../utils/soliditySources";
 import { CLI_ROOT } from "../../../utils/cliRoot";
 import { isSourceUnitAst, listJsonFiles, uniqueAstSources } from "../../../utils/solidityAst";
-import { ensureTomlSectionSettings } from "./helpers";
+import { yellow } from "../../../utils/terminal";
+import {
+  buildFoundryPackageJson,
+  ensureGitignoreEntry,
+  ensureTomlSectionSettings,
+} from "./helpers";
 
 /** Framework adapter for Foundry-based Diamond projects. */
+const MANAGED_SCRIPT_NAME = "ComposeDeploy.s.sol";
+const MANAGED_SCRIPT_CONTRACT = "ComposeDeployScript";
+
+/**
+ * Installs the generated project's npm dev dependencies (the Compose CLI).
+ *
+ * Foundry projects build and test without npm, so a failed install only warns:
+ * the user can rerun `npm install` later to get the local `npx compose` binary.
+ *
+ * @param projectRoot - Absolute path of the generated project.
+ */
+async function installNpmDependencies(projectRoot: string): Promise<void> {
+  try {
+    await runCommand("npm", ["install"], { cwd: projectRoot });
+  } catch {
+    console.log(yellow(
+      "Could not install npm dependencies. Run `npm install` inside the project "
+      + "to use the local Compose CLI with `npx compose`.",
+    ));
+  }
+}
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === "object" && value !== null && !Array.isArray(value);
+}
+
 const adapter: IFrameworkAdapter = {
   getContractSourceRoot(projectRoot: string): string {
     return path.join(projectRoot, "src");
@@ -100,6 +137,12 @@ const adapter: IFrameworkAdapter = {
 
     await fs.mkdir(path.join(root, "test"), { recursive: true });
     await fs.mkdir(path.join(root, "script"), { recursive: true });
+
+    await fs.writeFile(
+      path.join(root, "package.json"),
+      buildFoundryPackageJson(String(ctx.param.projectName ?? "my-diamond")),
+      "utf8",
+    );
   },
 
   async writeConfig(ctx: ComposeContext, opts: ConfigOptions): Promise<void> {
@@ -113,13 +156,15 @@ const adapter: IFrameworkAdapter = {
       if ((error as NodeJS.ErrnoException).code !== "ENOENT") throw error;
     }
 
-    const updatedFoundryToml = ensureTomlSectionSettings(foundryToml, "profile.default", {
+    const profileFoundryToml = ensureTomlSectionSettings(foundryToml, "profile.default", {
       solc: `"${opts.compilerVersion}"`,
       optimizer: "true",
     });
+    const updatedFoundryToml = ensureTomlSectionSettings(profileFoundryToml, "rpc_endpoints", {
+      sepolia: '"${SEPOLIA_RPC_URL}"',
+    });
 
     const remappings = "@perfect-abstractions/compose/=lib/Compose/src/\n";
-    const gitignore = "out/\ncache/\n";
 
     let readme: string;
     try {
@@ -134,8 +179,160 @@ const adapter: IFrameworkAdapter = {
       await fs.writeFile(foundryTomlPath, updatedFoundryToml, "utf8");
     }
     await writeFileIfMissing(path.join(root, "remappings.txt"), remappings);
-    await writeFileIfMissing(path.join(root, ".gitignore"), gitignore);
+    await writeFileIfMissing(
+      path.join(root, ".env.example"),
+      [
+        "# Sepolia RPC endpoint used by `compose deploy --chain sepolia`.",
+        "# Sign with a Foundry keystore account or pass --private-key after `--`.",
+        "SEPOLIA_RPC_URL=",
+        "",
+      ].join("\n"),
+    );
+
+    const gitignorePath = path.join(root, ".gitignore");
+    let gitignore = "out/\ncache/\n";
+    try {
+      gitignore = await fs.readFile(gitignorePath, "utf8");
+    } catch (error) {
+      if ((error as NodeJS.ErrnoException).code !== "ENOENT") throw error;
+    }
+    const updatedGitignore = ensureGitignoreEntry(gitignore, "node_modules/");
+    if (updatedGitignore !== gitignore) {
+      await fs.writeFile(gitignorePath, updatedGitignore, "utf8");
+    }
+
     await fs.writeFile(path.join(root, "README.md"), readme, "utf8");
+
+    if (opts.installDeps) {
+      await installNpmDependencies(root);
+    }
+  },
+
+  getManagedDeployScriptPath(projectRoot: string): string {
+    return path.join(projectRoot, "script", MANAGED_SCRIPT_NAME);
+  },
+
+  getManagedDeployRunnerPath(): null {
+    return null;
+  },
+
+  getManagedDeployResultPath(): string | null {
+    // Foundry records deployments in the run broadcast, not a result file.
+    return null;
+  },
+
+  createDeployCommand(opts: DeployCommandOptions): DeployCommand {
+    const relativeScriptPath = toPosixPath(path.relative(opts.projectRoot, opts.scriptPath));
+    const simulating = opts.mode === "simulate";
+    return {
+      command: "forge",
+      args: [
+        "script",
+        `${relativeScriptPath}:${MANAGED_SCRIPT_CONTRACT}`,
+        "--rpc-url",
+        opts.rpcUrl,
+        ...(simulating && opts.forkBlockNumber !== undefined
+          ? ["--fork-block-number", String(opts.forkBlockNumber)]
+          : []),
+        ...(!simulating && opts.account?.foundryAccount
+          ? ["--account", opts.account.foundryAccount]
+          : []),
+        ...(opts.account ? ["--sender", opts.account.address] : []),
+        ...(!simulating ? ["--broadcast"] : []),
+        ...opts.passthrough,
+      ],
+    };
+  },
+
+  createTestCommand(opts: TestCommandOptions): FrameworkCommand {
+    return {
+      command: "forge",
+      args: ["test", ...opts.passthrough],
+    };
+  },
+
+  async readDeployedBytecode(
+    projectRoot: string,
+    sourcePath: string,
+    contractName: string,
+  ): Promise<Hex | undefined> {
+    const artifactPath = path.join(
+      projectRoot,
+      "out",
+      path.basename(sourcePath),
+      `${contractName}.json`,
+    );
+    try {
+      const artifact = JSON.parse(await fs.readFile(artifactPath, "utf8")) as {
+        deployedBytecode?: { object?: unknown };
+      };
+      const object = artifact.deployedBytecode?.object;
+      return typeof object === "string" && object.length > 2 ? (object as Hex) : undefined;
+    } catch {
+      return undefined;
+    }
+  },
+
+  async readBroadcastTransactions(
+    projectRoot: string,
+    scriptPath: string,
+    chainId: number,
+  ): Promise<BroadcastTransaction[]> {
+    const broadcastPath = path.join(
+      projectRoot,
+      "broadcast",
+      path.basename(scriptPath),
+      String(chainId),
+      "run-latest.json",
+    );
+    const displayPath = toProjectRelativePath(projectRoot, broadcastPath);
+
+    let content: string;
+    try {
+      content = await fs.readFile(broadcastPath, "utf8");
+    } catch (error) {
+      if ((error as NodeJS.ErrnoException).code === "ENOENT") return [];
+      throw new Error(`Unable to read the Foundry broadcast at ${displayPath}: ${(error as Error).message}`, {
+        cause: error,
+      });
+    }
+
+    let raw: unknown;
+    try {
+      raw = JSON.parse(content) as unknown;
+    } catch (error) {
+      throw new Error(`Unable to parse the Foundry broadcast at ${displayPath}: ${(error as Error).message}`, {
+        cause: error,
+      });
+    }
+    if (!isRecord(raw) || !Array.isArray(raw.transactions)) {
+      throw new Error(`The Foundry broadcast at ${displayPath} is missing a transactions array.`);
+    }
+
+    const deployments: BroadcastTransaction[] = [];
+    for (const transaction of raw.transactions) {
+      if (!isRecord(transaction)) continue;
+      const transactionType = transaction.transactionType;
+      if (
+        typeof transactionType === "string"
+        && transactionType !== "CREATE"
+        && transactionType !== "CREATE2"
+      ) {
+        continue;
+      }
+
+      deployments.push({
+        contractAddress: typeof transaction.contractAddress === "string" ? transaction.contractAddress : null,
+        contractName: typeof transaction.contractName === "string" ? transaction.contractName : null,
+        txHash: typeof transaction.hash === "string" ? transaction.hash : null,
+        ...(typeof transaction.from === "string"
+          ? { from: transaction.from }
+          : isRecord(transaction.transaction) && typeof transaction.transaction.from === "string"
+            ? { from: transaction.transaction.from }
+            : {}),
+      });
+    }
+    return deployments;
   },
 };
 

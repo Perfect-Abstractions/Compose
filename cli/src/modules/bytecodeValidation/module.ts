@@ -7,6 +7,7 @@ import type { IRPCAdapter } from "../../adapters/IRPCAdapter/interface";
 import type { IDiamondAdapter } from "../../adapters/IDiamondAdapter/interface";
 import type { ComposeContext, ModuleState } from "../../context/types";
 import type { VirtualStorageLayoutRecord } from "../validation/types";
+import { DEFAULT_INSTANCE } from "../lockFile/types";
 import type {
   BytecodeValidationSummary,
   DeploymentBytecodeValidationResult,
@@ -74,6 +75,7 @@ export const BytecodeValidationModule = {
   ): Promise<ComposeContext> {
     const diamondName = String(ctx.param.diamondName);
     const chainKey = String(ctx.param.chainKey);
+    const instance = String(ctx.param.instance ?? DEFAULT_INSTANCE);
     const diamondAddress = getAddress(String(ctx.param.diamondAddress));
     const blockNumber = await dependencies.rpc.getBlockNumber();
     let rawFacets;
@@ -86,6 +88,7 @@ export const BytecodeValidationModule = {
         result: {
           diamondName,
           chainKey,
+          instance,
           diamondAddress,
           blockNumber,
           complete: false,
@@ -138,6 +141,7 @@ export const BytecodeValidationModule = {
     const result: DeploymentBytecodeValidationResult = {
       diamondName,
       chainKey,
+      instance,
       diamondAddress,
       blockNumber,
       complete: facets.every((facet) => facet.uncertain === null),
@@ -183,6 +187,7 @@ export const BytecodeValidationModule = {
         return [{
           diamondName: String(child.param.diamondName),
           chainKey: String(child.param.chainKey),
+          instance: String(child.param.instance ?? DEFAULT_INSTANCE),
           diamondAddress: String(child.param.diamondAddress),
           message: deployment.error?.message ?? "Bytecode validation failed.",
         }];

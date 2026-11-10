@@ -16,6 +16,7 @@ export type UserProjectFacet = {
 export async function resolveComposeProjectFacetSources(
   projectRoot: string,
   facets: ComposeProjectFacet[],
+  framework?: string,
 ): Promise<ResolvedFacetSource[]> {
   return Promise.all(
     facets.map(async (facet) => ({
@@ -24,6 +25,7 @@ export async function resolveComposeProjectFacetSources(
         projectRoot,
         facet.packageName,
         facet.contractName,
+        framework,
       ),
     })),
   );
@@ -44,8 +46,14 @@ async function findPackageFacetSource(
   projectRoot: string,
   packageName: string,
   facetName: string,
+  framework?: string,
 ): Promise<string> {
-  const matches = await findPackageFacetSourceMatches(projectRoot, packageName, facetName);
+  const matches = await findPackageFacetSourceMatches(
+    projectRoot,
+    packageName,
+    facetName,
+    { framework },
+  );
   const uniqueMatches = [...new Set(matches.map((match) => path.resolve(match)))];
   if (uniqueMatches.length === 0) {
     throw new Error(`Package facet source not found: ${packageName}/${facetName}.sol`);

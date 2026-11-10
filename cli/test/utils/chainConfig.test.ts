@@ -47,6 +47,36 @@ describe("resolveChainConfig", () => {
     await expect(resolveChainConfig({ chainKey: "embedded", projectRoot: root })).resolves.toMatchObject({ rpcUrl: "https://example.test/v1/secret" });
   });
 
+  it("uses a command RPC override but retains the chain identity from compose.json", async () => {
+    process.env.TEST_RPC_URL = "https://override.example/rpc";
+    const root = await projectWithCompose({
+      chains: { sepolia: { rpc: "https://configured.example/rpc", chainId: 11155111 } },
+    });
+
+    await expect(resolveChainConfig({
+      chainKey: "sepolia",
+      projectRoot: root,
+      rpcUrlOverride: "${TEST_RPC_URL}",
+    })).resolves.toEqual({
+      chainKey: "sepolia",
+      rpcUrl: "https://override.example/rpc",
+      chainId: 11155111,
+    });
+  });
+
+  it("rejects an empty or non-string RPC override", async () => {
+    const root = await projectWithCompose({
+      chains: { local: { rpc: "http://127.0.0.1:8545", chainId: 31337 } },
+    });
+
+    await expect(resolveChainConfig({ projectRoot: root, rpcUrlOverride: " " })).rejects.toMatchObject({
+      code: "RPC_INVALID_CONFIGURATION",
+    });
+    await expect(resolveChainConfig({ projectRoot: root, rpcUrlOverride: 7 })).rejects.toMatchObject({
+      code: "RPC_INVALID_CONFIGURATION",
+    });
+  });
+
   it("fails when an interpolated variable is missing", async () => {
     const root = await projectWithCompose({ chains: { sepolia: { rpc: "${TEST_RPC_URL}", chainId: 11155111 } } });
 

@@ -2,12 +2,12 @@ import fs from "node:fs/promises";
 import path from "node:path";
 import { describe, expect, it } from "vitest";
 import { ScaffoldingModule } from "../../../src/modules/scaffolding/module";
-import { createDeployGenerationHarness } from "../deployGeneration/harness";
+import { createScaffoldHarness } from "../scaffoldHarness";
 
 /** Tests compose.json assembly and persistence from a prepared scaffold map. */
 describe("ScaffoldingModule", () => {
   it("writes selected package facets to compose.json", async () => {
-    const harness = await createDeployGenerationHarness();
+    const harness = await createScaffoldHarness();
     const contractSourceRoot = path.join(harness.projectRoot, "src");
 
     try {
@@ -24,11 +24,16 @@ describe("ScaffoldingModule", () => {
           contract: string;
           facets: Record<string, { source: string; contract: string; package?: string }>;
         }>;
+        chains: Record<string, { rpc: string; chainId: number }>;
       };
       const diamond = composeJson.diamonds["my-diamond"];
 
       expect(composeJson.project).toBe("my-diamond");
       expect(composeJson.framework).toBe("foundry");
+      expect(composeJson.chains).toEqual({
+        local: { rpc: "http://127.0.0.1:8545", chainId: 31337 },
+        sepolia: { rpc: "${SEPOLIA_RPC_URL}", chainId: 11155111 },
+      });
       expect(diamond.contract).toBe("src/Diamond.sol:Diamond");
       expect(Object.keys(diamond.facets)).toHaveLength(16);
       expect(diamond.facets.ERC20DataFacet).toEqual({

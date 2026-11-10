@@ -55,6 +55,58 @@ describe("BytecodeValidationModule", () => {
     expect(result.state.bytecodeDeploymentValidation.success).toBe(true);
   });
 
+  it("records the selected instance and defaults to the default instance", async () => {
+    const { ctx, rpc, diamondAdapter, validator } = setup();
+    const defaultResult = await BytecodeValidationModule.validateDeployment(
+      ctx,
+      { rpc, diamond: diamondAdapter, validator },
+    );
+    expect(defaultResult.state.bytecodeDeploymentValidation.result)
+      .toMatchObject({ instance: "default" });
+
+    const staging = Context.create();
+    staging.param = { ...ctx.param, instance: "staging" };
+    const stagingResult = await BytecodeValidationModule.validateDeployment(
+      staging,
+      { rpc, diamond: diamondAdapter, validator },
+    );
+    expect(stagingResult.state.bytecodeDeploymentValidation.result)
+      .toMatchObject({ instance: "staging" });
+  });
+
+  it("includes the instance in merged failure records", () => {
+    const ctx = Context.create();
+    const failed = Context.create();
+    failed.param = {
+      diamondName: "ExampleDiamond",
+      chainKey: "local",
+      instance: "staging",
+      diamondAddress: diamond,
+    };
+    failed.state.bytecodeDeploymentValidation = {
+      success: false,
+      result: null,
+      error: {
+        code: "BYTECODE_FACET_VALIDATION_FAILED",
+        message: "RPC unavailable",
+        nativeError: null,
+      },
+    };
+
+    const merged = BytecodeValidationModule.mergeDeployments(ctx, [failed]);
+    expect(merged.state.bytecodeValidation).toMatchObject({
+      success: false,
+      result: {
+        failures: [{
+          diamondName: "ExampleDiamond",
+          chainKey: "local",
+          instance: "staging",
+          message: "RPC unavailable",
+        }],
+      },
+    });
+  });
+
   it("reports introspection errors without blocking validation", async () => {
     const { ctx, rpc, diamondAdapter, validator } = setup();
     vi.mocked(diamondAdapter.facets).mockRejectedValue(new Error("packed selectors are invalid"));

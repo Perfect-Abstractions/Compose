@@ -30,9 +30,8 @@ export function showDependencies(deps: { name: string; version: string }[], pack
  * Prints the success message with framework-specific next steps.
  *
  * Displays the project name, scaffolded path, and a numbered list of
- * next-step commands (e.g. `forge build && forge test` for Foundry,
- * `npx hardhat compile && npx hardhat test` for Hardhat). Adjusts steps
- * based on whether `installDeps` is enabled.
+ * next-step commands. Adjusts steps based on whether `installDeps` is enabled
+ * and points to the locally installed Compose CLI (`npx compose`).
  *
  * @param ctx - The compose context with `param.projectName`, `param.projectRoot`, and `param.framework`.
  */
@@ -51,25 +50,24 @@ export function showSuccess(ctx: ComposeContext): void {
   }
 
   const framework = String(ctx.param.framework ?? "foundry");
-  if (framework === "foundry") {
-    const installDeps = ctx.param.installDeps !== false;
-    if (installDeps) {
-      console.log(green(`${stepCount}.`) + ` forge build && forge test`);
-    } else {
+  const installDeps = ctx.param.installDeps !== false;
+
+  if (!installDeps) {
+    console.log(green(`${stepCount}.`) + ` npm install`);
+    stepCount++;
+    if (framework === "foundry") {
       console.log(green(`${stepCount}.`) + ` forge install Perfect-Abstractions/Compose`);
-      console.log(green(`${stepCount + 1}.`) + ` forge build && forge test`);
-    }
-  } else if (framework === "hardhat") {
-    const installDeps = ctx.param.installDeps !== false;
-    if (installDeps) {
-      console.log(green(`${stepCount}.`) + ` npx hardhat compile && npx hardhat test`);
-    } else {
-      console.log(green(`${stepCount}.`) + ` npm install`);
-      console.log(green(`${stepCount + 1}.`) + ` npx hardhat compile && npx hardhat test`);
+      stepCount++;
     }
   }
 
+  console.log(green(`${stepCount}.`) + ` ${framework === "hardhat" ? "npx hardhat test" : "forge test"}`);
+
   console.log("");
+  if (!installDeps) {
+    console.log(dim("After `npm install`, run project scripts with `npm run ...` "
+      + "(e.g. `npm run validate`) or other Compose commands with `npx compose`."));
+  }
   console.log(green("You're all set. We hope you'll Compose something great!\n"));
   console.log(yellow(`If this helped you, please give us a star on GitHub\n`) + `✨ https://github.com/Perfect-Abstractions/Compose ✨\n`);
   console.log(`Please report any issues or feedback:\nhttps://github.com/Perfect-Abstractions/Compose/issues\n`);

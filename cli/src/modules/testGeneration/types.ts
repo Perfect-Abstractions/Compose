@@ -1,10 +1,11 @@
-import { DeployFacetGroup } from "../deployGeneration/types";
+/** Test section group: base facets render before library facets. */
+export type TestFacetGroup = "base" | "library";
 
 export type TestFacetEntry = {
   facetName: string;
   contractName: string;
   importPath: string;
-  group: DeployFacetGroup;
+  group: TestFacetGroup;
 };
 
 export type TestGenerationModel = {

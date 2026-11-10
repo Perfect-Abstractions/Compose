@@ -81,6 +81,13 @@ export type AccessFlagSelection = {
   selectedAccessExtensions: string[];
 };
 
+export type UpgradeabilitySelection = {
+  /** Whether the diamond includes the upgrade facet. */
+  upgradeable: boolean;
+  /** Whether the choice came from an explicit flag instead of the default. */
+  explicit: boolean;
+};
+
 export type FrameworkDependencies = {
   deps: { name: string; version: string }[];
   packageType: string;

@@ -31,6 +31,7 @@ vi.mock("viem", () => ({
 }));
 
 import { createRPCAdapter } from "../../../src/adapters/IRPCAdapter/adapter";
+import { requestError } from "../../../src/adapters/IRPCAdapter/errors";
 
 type MockClient = {
   chain: { id: number };
@@ -74,6 +75,39 @@ describe("createRPCAdapter", () => {
     await expect(createRPCAdapter({ rpcUrl: "https://rpc.example", chainId: 11155111 })).rejects.toMatchObject({
       code: "RPC_CHAIN_ID_MISMATCH",
     });
+  });
+
+  it("reports the endpoint and the root cause when a request fails", async () => {
+    useClient({
+      getChainId: vi.fn().mockRejectedValue(
+        new Error("HTTP request failed", { cause: new Error("connect ECONNREFUSED 127.0.0.1:8545") }),
+      ),
+    });
+
+    await expect(
+      createRPCAdapter({ rpcUrl: "http://127.0.0.1:8545", chainId: 31337 }),
+    ).rejects.toThrow(
+      "RPC getChainId failed on chain 31337 at http://127.0.0.1:8545: connect ECONNREFUSED 127.0.0.1:8545",
+    );
+  });
+
+  it("redacts RPC credentials, query values, path tokens, and secrets echoed by the cause", () => {
+    const apiKey = "sample-api-key-123456789";
+    const rpcUrl = `https://user:password@rpc.example/v1/${apiKey}?apikey=${apiKey}&token=query-secret#fragment-secret`;
+    const cause = new Error("HTTP request failed", {
+      cause: new Error(`request failed for ${rpcUrl}; key=${apiKey}`),
+    });
+
+    const error = requestError("getChainId", 1, cause, rpcUrl);
+
+    expect(error.message).toContain("at https://rpc.example");
+    expect(error.message).toContain("request failed");
+    expect(error.message).not.toContain(apiKey);
+    expect(error.message).not.toContain("user:password");
+    expect(error.message).not.toContain("query-secret");
+    expect(error.message).not.toContain("fragment-secret");
+    expect(error.message).not.toContain("/v1/");
+    expect(error.message).not.toContain("?apikey=");
   });
 
   it("checks bytecode only when requested", async () => {

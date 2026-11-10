@@ -1,20 +1,26 @@
 import { type Hex } from "viem";
 
+/** Instance used when a command does not select one. */
+export const DEFAULT_INSTANCE = "default";
+
 /** Top-level compose.lock structure */
 export type ComposeLock = {
   /** Compose schema version (e.g., "0.0.3") */
   compose: string;
-  /** Deployments organized by diamond name and chain */
+  /** Deployments organized by diamond name, chain, and instance */
   deployments: Deployments;
 };
 
 /** Map of diamond names to their chain deployments */
 export type Deployments = Record<string, ChainDeployments>;
 
-/** Map of chain names to deployment details */
-export type ChainDeployments = Record<string, DiamondDeployment>;
+/** Map of chain names to instance deployments */
+export type ChainDeployments = Record<string, InstanceDeployments>;
 
-/** Deployment details for a specific diamond on a specific chain */
+/** Map of instance names to deployment details */
+export type InstanceDeployments = Record<string, DiamondDeployment>;
+
+/** Deployment details for a specific diamond on a specific chain instance */
 export type DiamondDeployment = {
   /** Diamond proxy contract address */
   diamond: Hex;
@@ -26,6 +32,10 @@ export type DiamondDeployment = {
   lastSync: string;
   /** Transaction hash of the deployment/upgrade */
   txHash: Hex;
+  /** Public address that broadcast the deployment, when reported by the framework. */
+  deployer?: Hex;
+  /** Hardhat Ignition journal identity, when the deployment used Ignition. */
+  ignitionDeploymentId?: string;
 };
 
 /** State stored in ctx.state.lockFile after reading */

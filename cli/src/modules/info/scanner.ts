@@ -28,21 +28,24 @@ function resolveLocalFacetPath(
 
 /**
  * Searches for a package facet's .sol file in the installed package directories.
- * Checks node_modules and Foundry lib directories.
+ * Prefers the project framework's package root when both are installed.
  *
  * @param facetName - Name of the facet contract file (without extension).
  * @param packageName - The npm or package name to search within.
  * @param projectRoot - The project root directory.
+ * @param framework - Project framework ("foundry" or "hardhat"), when known.
  * @returns The resolved absolute path, or null if not found.
  */
 async function resolvePackageFacetPath(
   facetName: string,
   packageName: string,
   projectRoot: string,
+  framework?: string,
 ): Promise<string | null> {
   const matches = await findPackageFacetSourceMatches(projectRoot, packageName, facetName, {
     ignoreReadErrors: true,
     stopAfterFirstMatch: true,
+    framework,
   });
   return matches[0] ?? null;
 }
@@ -71,7 +74,7 @@ export async function scanFacets(ctx: ComposeContext): Promise<ComposeContext> {
   const warnings: string[] = [...projectInfo.warnings];
 
   for (const diamond of projectInfo.diamonds) {
-    await scanDiamond(diamond, composeJsonDir, warnings);
+    await scanDiamond(diamond, composeJsonDir, warnings, projectInfo.framework);
   }
 
   projectInfo.warnings = warnings;
@@ -91,14 +94,16 @@ export async function scanFacets(ctx: ComposeContext): Promise<ComposeContext> {
  * @param diamond - The diamond to scan (mutated in place).
  * @param composeJsonDir - Directory containing compose.json for path resolution.
  * @param warnings - Mutable array to append warning messages to.
+ * @param framework - Project framework used to pick the package source root.
  */
 async function scanDiamond(
   diamond: DiamondInfo,
   composeJsonDir: string,
   warnings: string[],
+  framework?: string,
 ): Promise<void> {
   for (const facet of diamond.facets) {
-    await scanFacet(facet, composeJsonDir, warnings);
+    await scanFacet(facet, composeJsonDir, warnings, framework);
   }
 }
 
@@ -108,11 +113,13 @@ async function scanDiamond(
  * @param facet - The facet to scan (mutated in place).
  * @param composeJsonDir - Directory containing compose.json for path resolution.
  * @param warnings - Mutable array to append warning messages to.
+ * @param framework - Project framework used to pick the package source root.
  */
 async function scanFacet(
   facet: FacetInfo,
   composeJsonDir: string,
   warnings: string[],
+  framework?: string,
 ): Promise<void> {
   if (facet.source === "package") {
     if (!facet.package) {
@@ -120,7 +127,12 @@ async function scanFacet(
       return;
     }
 
-    const resolvedPath = await resolvePackageFacetPath(facet.name, facet.package, composeJsonDir);
+    const resolvedPath = await resolvePackageFacetPath(
+      facet.name,
+      facet.package,
+      composeJsonDir,
+      framework,
+    );
     if (!resolvedPath) {
       warnings.push(`Package facet ${facet.name}: source not found in ${facet.package}`);
       return;

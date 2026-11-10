@@ -120,7 +120,11 @@ export async function loadValidationProject(
     throw new Error("compose.json does not define any facets to validate.");
   }
 
-  const composeFacetSources = await resolveComposeProjectFacetSources(projectRoot, composeFacets);
+  const composeFacetSources = await resolveComposeProjectFacetSources(
+    projectRoot,
+    composeFacets,
+    framework,
+  );
   const userFacetSources = resolveUserProjectFacetSources(projectRoot, userFacets);
   const resolvedFacets = pendingFacets.map((facet) => facet.kind === "compose"
     ? composeFacetSources[facet.kindIndex]

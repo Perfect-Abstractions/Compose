@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import { Context } from "../../../src/context/context";
 import { ComposeContext } from "../../../src/context/types";
 import { ConfigModule } from "../../../src/modules/config/module";
@@ -48,10 +48,110 @@ describe("InitModule.runInitNonInteractive", () => {
     expect(result.state.entry?.result).toEqual(expect.objectContaining({
       framework: "foundry",
       selectedBaseKey: "erc-20",
+      upgradeable: false,
       selectedLibraries: ["ERC165Facet"],
       selectedExtensions: ["ERC20BurnFacet"],
       selectedAccess: ["owner", "access-control"],
     }));
+  });
+
+  it("defaults to an immutable diamond without owner coupling", async () => {
+    const logs = vi.spyOn(console, "log").mockImplementation(() => undefined);
+
+    try {
+      const result = await InitModule.runInitNonInteractive(ctx);
+
+      expect(result.param.libraries).toEqual([]);
+      expect(result.param.access).toEqual([]);
+      expect(result.state.entry?.result).toEqual(expect.objectContaining({
+        upgradeable: false,
+        selectedLibraries: [],
+        selectedAccess: [],
+      }));
+      expect(logs).not.toHaveBeenCalled();
+    } finally {
+      logs.mockRestore();
+    }
+  });
+
+  it("adds the upgrade facet and owner coupling with --upgradeable", async () => {
+    const logs = vi.spyOn(console, "log").mockImplementation(() => undefined);
+    ctx.param.upgradeable = true;
+
+    try {
+      const result = await InitModule.runInitNonInteractive(ctx);
+
+      expect(result.param.libraries).toEqual(["DiamondUpgradeFacet"]);
+      expect(result.param.access).toEqual(["owner"]);
+      expect(result.state.entry?.result).toEqual(expect.objectContaining({
+        upgradeable: true,
+        selectedLibraries: ["DiamondUpgradeFacet"],
+        selectedAccess: ["owner"],
+      }));
+      expect(logs.mock.calls.flat().join("\n")).toContain("Upgradeable diamonds need an owner");
+    } finally {
+      logs.mockRestore();
+    }
+  });
+
+  it("omits the upgrade facet and owner coupling when --immutable is set", async () => {
+    ctx.param.immutable = true;
+
+    const result = await InitModule.runInitNonInteractive(ctx);
+
+    expect(result.param.libraries).toEqual([]);
+    expect(result.param.access).toEqual([]);
+    expect(result.state.entry?.result).toEqual(expect.objectContaining({ upgradeable: false }));
+  });
+
+  it("keeps an explicitly selected ownership base", async () => {
+    ctx.param.ownership = "owner-two-step";
+
+    const result = await InitModule.runInitNonInteractive(ctx);
+
+    expect(result.param.access).toEqual(["owner-two-step"]);
+    expect(result.param.libraries).toEqual([]);
+  });
+
+  it("does not add an owner when the base itself is an ownership base", async () => {
+    ctx.param.base = "owner";
+    ctx.param.upgradeable = true;
+
+    const result = await InitModule.runInitNonInteractive(ctx);
+
+    expect(result.param.access).toEqual([]);
+    expect(result.param.libraries).toEqual(["DiamondUpgradeFacet"]);
+  });
+
+  it("honors an explicit DiamondUpgradeFacet library as upgradeable", async () => {
+    const logs = vi.spyOn(console, "log").mockImplementation(() => undefined);
+    ctx.param.libraries = "DiamondUpgradeFacet";
+
+    try {
+      const result = await InitModule.runInitNonInteractive(ctx);
+
+      expect(result.param.libraries).toEqual(["DiamondUpgradeFacet"]);
+      expect(result.param.access).toEqual(["owner"]);
+      expect(result.state.entry?.result).toEqual(expect.objectContaining({ upgradeable: true }));
+    } finally {
+      logs.mockRestore();
+    }
+  });
+
+  it("rejects --immutable with an explicit DiamondUpgradeFacet library", async () => {
+    Object.assign(ctx.param, { immutable: true, libraries: "DiamondUpgradeFacet" });
+
+    await expect(InitModule.runInitNonInteractive(ctx)).rejects.toThrow(
+      "DiamondUpgradeFacet in --libraries conflicts with --immutable",
+    );
+  });
+
+  it("rejects using --upgradeable and --immutable together", async () => {
+    Object.assign(ctx.param, { upgradeable: true, immutable: true });
+
+    await expect(InitModule.runInitNonInteractive(ctx)).rejects.toThrow(
+      "Use either --upgradeable or --immutable, not both.",
+    );
   });
 
   it("defaults Hardhat projects to the ethers toolbox", async () => {

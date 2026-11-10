@@ -37,12 +37,12 @@ export function showBytecodeValidationReport(ctx: ComposeContext): void {
   for (const failure of state.result?.failures ?? []) {
     console.error(red("\nBytecode validation failed"));
     console.error(red(`  ${failure.message}`));
-    console.error(`${failure.diamondName} / ${failure.chainKey}`);
+    console.error(`${failure.diamondName} (${failure.chainKey}/${failure.instance})`);
     console.error(`  ${failure.diamondAddress}`);
   }
 
   for (const deployment of state.result?.deployments ?? []) {
-    const scope = `${deployment.diamondName} / ${deployment.chainKey}`;
+    const scope = `${deployment.diamondName} (${deployment.chainKey}/${deployment.instance})`;
     if (deployment.introspectionError) {
       console.error(red("\nDiamond introspection error"));
       console.error(red(`  ${deployment.introspectionError}`));

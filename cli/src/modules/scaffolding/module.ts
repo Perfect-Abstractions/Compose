@@ -201,6 +201,7 @@ export const ScaffoldingModule = {
       },
       chains: {
         local: { rpc: "http://127.0.0.1:8545", chainId: 31337 },
+        sepolia: { rpc: "${SEPOLIA_RPC_URL}", chainId: 11155111 },
       },
     };
 
