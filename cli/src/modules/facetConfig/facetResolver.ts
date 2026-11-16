@@ -134,6 +134,7 @@ function registrationFromCatalog(candidate: CatalogCandidate): ResolvedFacetInst
       name,
       contractName,
       targetGroup: group,
+      packageSpecifier: entry.path,
       registration: {
         source: "package",
         contract: contractName,
@@ -183,7 +184,8 @@ export async function resolveFacetInstallReference(
     const matched = await resolveFuzzyLocalReference(reference, projectRoot, options);
     if (matched) return matched;
     throw new Error(
-      `Unknown catalog facet '${reference}'. Use a catalog name, path.sol:ContractName, or the name of a contract in this project.`,
+      `Unknown catalog facet '${reference}'. `
+      + "Use a 'compose catalog' name, path.sol:ContractName, or a project contract name.",
     );
   }
 
@@ -195,13 +197,17 @@ export async function resolveFacetInstallReference(
     }
     const matched = await resolveFuzzyLocalReference(reference.name, projectRoot, options);
     if (matched) return matched;
-    throw new Error(`Unknown catalog facet '${reference.name}'. Add a local or package source to the manifest.`);
+    throw new Error(
+      `Unknown catalog facet '${reference.name}'. `
+      + "Use a 'compose catalog' name, path.sol:ContractName, or a project contract name. "
+      + "In a manifest, give the entry a local or package source.",
+    );
   }
 
   if (reference.source === "local") {
     const contractName = contractReferenceName(reference.contract);
     if (!contractName) {
-      throw new Error(`Local facet '${reference.name}' must use path.sol:ContractName.`);
+      throw new Error(`Local facet '${reference.name}' must use path.sol:ContractName, e.g. "./src/facets/${reference.name}.sol:${reference.name}".`);
     }
     if (contractName !== reference.name) {
       throw new Error(`Local facet key '${reference.name}' must match contract '${contractName}'.`);
@@ -241,7 +247,7 @@ async function resolveLocalReference(
   const source = reference.slice(0, separator);
   const absolutePath = path.resolve(projectRoot, source);
   await fs.access(absolutePath).catch(() => {
-    throw new Error(`Facet source not found: ${source}`);
+    throw new Error(`Facet source not found: ${source}. Install paths are relative to the Compose project root.`);
   });
   const registration: FacetRegistration = {
     source: "local",
@@ -453,7 +459,13 @@ export async function copyCatalogFacetSources(
       const existingContent = await fs.readFile(target);
       const sourceContent = await fs.readFile(source);
       if (!existingContent.equals(sourceContent)) {
-        throw new Error(`Facet source destination already exists with different contents: ${target}`);
+        const relativeTarget = projectRelativePath(projectRoot, target);
+        const contractName = path.basename(target, ".sol");
+        throw new Error(
+          `Facet source destination already exists with different contents: ${relativeTarget}. `
+          + `Keep it: compose install "${relativeTarget}:${contractName}". `
+          + "Replace it: move the file, then install again.",
+        );
       }
     } catch (error) {
       if ((error as NodeJS.ErrnoException).code !== "ENOENT") throw error;

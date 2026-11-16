@@ -119,7 +119,7 @@ export async function selectRemoveFacetNames(
     withoutArgumentsMessage: "Provide facet names to remove, or use --manifest.",
     choices: async () => {
       const configured = Object.keys(configuredFacets);
-      if (configured.length === 0) throw new Error(`Diamond '${diamondName}' has no registered facets.`);
+      if (configured.length === 0) throw new Error(`Diamond '${diamondName}' has no registered facets. Nothing to remove; use 'compose install' first.`);
       return configured;
     },
   });

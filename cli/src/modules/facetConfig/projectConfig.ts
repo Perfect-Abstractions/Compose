@@ -19,7 +19,8 @@ export function getDiamondOrThrow(
   diamondName: string,
 ): ComposeDiamondConfig {
   if (!Object.hasOwn(diamonds, diamondName)) {
-    throw new Error(`Diamond '${diamondName}' is not defined in compose.json.`);
+    const available = Object.keys(diamonds).join(", ") || "none defined";
+    throw new Error(`Diamond '${diamondName}' is not defined in compose.json. Available: ${available}.`);
   }
   return diamonds[diamondName];
 }
