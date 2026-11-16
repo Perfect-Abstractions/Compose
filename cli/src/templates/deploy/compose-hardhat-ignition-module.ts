@@ -5,7 +5,7 @@ import { buildModule } from "@nomicfoundation/hardhat-ignition/modules";
 
 export default buildModule("{{IGNITION_MODULE_ID}}", (m) => {
 {{FACET_FUTURES}}
-  const diamond = m.contract("{{DIAMOND_CONTRACT}}", [[{{FACET_VARIABLES}}]], {
+  const diamond = m.contract({{DIAMOND_CONTRACT}}, [[{{FACET_VARIABLES}}]], {
     id: "Diamond",
   });
 

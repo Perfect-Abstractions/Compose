@@ -10,7 +10,7 @@ export type DeployProjectHarness = {
   scriptRoot: string;
   writeComposeJson(
     diamondFacets?: Record<string, unknown>,
-    options?: { framework?: "foundry" | "hardhat" },
+    options?: { framework?: "foundry" | "hardhat"; diamondContract?: string },
   ): Promise<void>;
   writeLock(deployments: Record<string, unknown>): Promise<void>;
   cleanup(): Promise<void>;
@@ -101,7 +101,7 @@ export async function createDeployProjectHarness(): Promise<DeployProjectHarness
             framework,
             diamonds: {
               CounterDiamond: {
-                contract: "src/Diamond.sol:Diamond",
+                contract: options.diamondContract ?? "src/Diamond.sol:Diamond",
                 facets: diamondFacets,
               },
             },

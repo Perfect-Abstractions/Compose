@@ -4,8 +4,10 @@ import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { foundryAdapter } from "../../../src/adapters/IFrameworkAdapter/foundryAdapter/adapter";
 import { HashingAdapter } from "../../../src/adapters/IHashingAdapter/adapter";
 import type { ModuleState } from "../../../src/context/types";
+import { canonicalPlanJson } from "../../../src/modules/deployPlan/hash";
 import { DeployPlanModule } from "../../../src/modules/deployPlan/module";
 import type { DeployPlan } from "../../../src/modules/deployPlan/types";
+import { getIgnitionDeploymentId } from "../../../src/modules/deployScript/model";
 import { loadValidationProject } from "../../../src/modules/validation/project";
 import {
   CHAIN_ID,
@@ -79,6 +81,48 @@ describe("DeployPlanModule.resolve", () => {
       importSpec: "../src/CounterFacet.sol",
       sourcePath: path.join(harness.projectRoot, "src", "CounterFacet.sol"),
     });
+  });
+
+  it("produces the same plan for the same project in different checkout roots", async () => {
+    const other = await createDeployProjectHarness();
+    try {
+      const first = await resolve(harness);
+      const second = await resolve(other);
+
+      expect(canonicalPlanJson(second)).toBe(canonicalPlanJson(first));
+      expect(second.planHash).toBe(first.planHash);
+      expect(getIgnitionDeploymentId(second)).toBe(getIgnitionDeploymentId(first));
+    } finally {
+      await other.cleanup();
+    }
+  });
+
+  it("keeps the plan hash stable when only the signer changes", async () => {
+    const composePath = path.join(harness.projectRoot, "compose.json");
+    const composeJson = JSON.parse(await fs.readFile(composePath, "utf8")) as Record<string, unknown>;
+    composeJson.accounts = {
+      deployer: {
+        address: "0x00000000000000000000000000000000000000a1",
+        foundry: { account: "production-deployer" },
+      },
+      operator: {
+        address: "0x00000000000000000000000000000000000000a2",
+        foundry: { account: "production-operator" },
+      },
+    };
+    composeJson.chains = {
+      local: { rpc: RPC_URL, chainId: CHAIN_ID, account: "deployer" },
+    };
+    await fs.writeFile(composePath, JSON.stringify(composeJson, null, 2), "utf8");
+
+    const deployerPlan = await resolve(harness);
+    harness.ctx.param.account = "operator";
+    const operatorPlan = await resolve(harness);
+
+    expect(operatorPlan.planHash).toBe(deployerPlan.planHash);
+    expect(getIgnitionDeploymentId(operatorPlan)).not.toBe(
+      getIgnitionDeploymentId(deployerPlan),
+    );
   });
 
   it("uses the CLI RPC override while retaining the Compose chain ID", async () => {
@@ -261,5 +305,46 @@ describe("DeployPlanModule.resolve", () => {
   it("rejects instance names that cannot become lock keys", async () => {
     harness.ctx.param.instance = "__proto__";
     await expect(resolve(harness)).rejects.toThrow("Invalid deployment instance");
+  });
+
+  it("rejects a facet contract name that is not a Solidity identifier", async () => {
+    await harness.writeComposeJson({
+      CounterFacet: {
+        source: "local",
+        contract: 'src/CounterFacet.sol:CounterFacet"; contract Evil {}',
+      },
+    });
+
+    await expect(resolve(harness)).rejects.toThrow("Invalid Solidity contract name");
+  });
+
+  it("rejects a diamond contract name that is not a Solidity identifier", async () => {
+    await harness.writeComposeJson(undefined, {
+      diamondContract: 'src/Diamond.sol:Diamond"; contract Evil {}',
+    });
+
+    await expect(resolve(harness)).rejects.toThrow("Invalid Solidity contract name");
+  });
+
+  it("rejects a facet source path that cannot be embedded in a Solidity import", async () => {
+    await harness.writeComposeJson({
+      CounterFacet: {
+        source: "local",
+        contract: 'src/Evil".sol:CounterFacet',
+      },
+    });
+
+    await expect(resolve(harness)).rejects.toThrow("Invalid Solidity import path");
+  });
+
+  it("rejects a facet source path containing a newline", async () => {
+    await harness.writeComposeJson({
+      CounterFacet: {
+        source: "local",
+        contract: "src/Evil\nName.sol:CounterFacet",
+      },
+    });
+
+    await expect(resolve(harness)).rejects.toThrow("Invalid Solidity import path");
   });
 });

@@ -20,9 +20,9 @@ export type PlannedFacet = {
   name: string;
   /** Solidity contract to deploy for this facet. */
   contractName: string;
-  /** Absolute path of the resolved facet source file. */
+  /** Absolute path of the resolved facet source file, used for compilation and validation. */
   sourcePath: string;
-  /** Import path usable from the managed deploy script. */
+  /** Stable import path usable from the managed deploy script; part of the plan identity. */
   importSpec: string;
 };
 
@@ -52,6 +52,9 @@ export type DeployPlan = {
   diff: { added: string[]; removed: string[] } | null;
   /** True when the desired composition registers DiamondUpgradeFacet. */
   upgradeable: boolean;
-  /** keccak256 over the canonical plan JSON used to bind generated scripts. */
+  /**
+   * keccak256 over the checkout- and signer-independent target/composition
+   * identity, used to bind generated scripts.
+   */
   planHash: Hex;
 };

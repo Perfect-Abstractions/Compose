@@ -433,4 +433,58 @@ describe("validation project loader", () => {
       await fs.rm(projectRoot, { recursive: true, force: true });
     }
   });
+
+  it("rejects a facet contract name that is not a Solidity identifier", async () => {
+    const projectRoot = await fs.mkdtemp(path.join(os.tmpdir(), "compose-validation-project-name-"));
+
+    try {
+      await fs.writeFile(path.join(projectRoot, "compose.json"), JSON.stringify({
+        framework: "foundry",
+        diamonds: {
+          Example: {
+            contract: "src/Diamond.sol:Diamond",
+            facets: {
+              CounterFacet: {
+                source: "local",
+                contract: 'src/CounterFacet.sol:CounterFacet"; contract Evil {}',
+              },
+            },
+          },
+        },
+      }), "utf8");
+      const ctx = Context.create();
+      ctx.param.projectRoot = projectRoot;
+
+      await expect(loadValidationProject(ctx)).rejects.toThrow("Invalid Solidity contract name");
+    } finally {
+      await fs.rm(projectRoot, { recursive: true, force: true });
+    }
+  });
+
+  it("rejects a diamond contract name that is not a Solidity identifier", async () => {
+    const projectRoot = await fs.mkdtemp(path.join(os.tmpdir(), "compose-validation-diamond-name-"));
+
+    try {
+      await fs.writeFile(path.join(projectRoot, "compose.json"), JSON.stringify({
+        framework: "foundry",
+        diamonds: {
+          Example: {
+            contract: 'src/Diamond.sol:Diamond"; contract Evil {}',
+            facets: {
+              CounterFacet: {
+                source: "local",
+                contract: "src/CounterFacet.sol:CounterFacet",
+              },
+            },
+          },
+        },
+      }), "utf8");
+      const ctx = Context.create();
+      ctx.param.projectRoot = projectRoot;
+
+      await expect(loadValidationProject(ctx)).rejects.toThrow("Invalid Solidity contract name");
+    } finally {
+      await fs.rm(projectRoot, { recursive: true, force: true });
+    }
+  });
 });

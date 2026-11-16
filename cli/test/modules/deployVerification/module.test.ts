@@ -15,8 +15,23 @@ import { DeployVerificationModule } from "../../../src/modules/deployVerificatio
 const DIAMOND = "0x00000000000000000000000000000000000000aa";
 const FACET_A = "0x00000000000000000000000000000000000000b1";
 const FACET_B = "0x00000000000000000000000000000000000000b2";
+const SELECTOR_A1 = "0xaaaaaaaa" as Hex;
+const SELECTOR_A2 = "0xbbbbbbbb" as Hex;
+const SELECTOR_B = "0xcccccccc" as Hex;
+const ZERO_ADDRESS = "0x0000000000000000000000000000000000000000" as Address;
 const DIAMOND_TX = `0x${"33".repeat(32)}` as Hex;
 const CODE = "0x600060005260206000f3" as Hex;
+
+const DEFAULT_SELECTORS: Record<string, Hex[]> = {
+  [FACET_A.toLowerCase()]: [SELECTOR_A1, SELECTOR_A2],
+  [FACET_B.toLowerCase()]: [SELECTOR_B],
+};
+
+const DEFAULT_ROUTES: Record<string, Address> = {
+  [SELECTOR_A1.toLowerCase()]: FACET_A as Address,
+  [SELECTOR_A2.toLowerCase()]: FACET_A as Address,
+  [SELECTOR_B.toLowerCase()]: FACET_B as Address,
+};
 
 function executionResult(ignitionDeploymentId?: string): DeployExecutionResult {
   return {
@@ -74,12 +89,22 @@ function stubRpc(codeFor: (address: string) => Hex | undefined): IRPCAdapter {
   };
 }
 
-function stubDiamond(addresses: Address[]): IDiamondAdapter {
+type DiamondStubOptions = {
+  addresses?: Address[];
+  selectors?: Record<string, Hex[]>;
+  routes?: Record<string, Address>;
+};
+
+function stubDiamond(options: DiamondStubOptions = {}): IDiamondAdapter {
+  const addresses = options.addresses ?? [getAddress(FACET_A), getAddress(FACET_B)];
+  const selectors = options.selectors ?? DEFAULT_SELECTORS;
+  const routes = options.routes ?? DEFAULT_ROUTES;
+
   return {
     facets: async () => [],
     facetAddresses: async () => addresses,
-    facetFunctionSelectors: async () => [],
-    facetAddress: async () => "0x0000000000000000000000000000000000000000",
+    facetFunctionSelectors: async (_diamond, facet) => selectors[facet.toLowerCase()] ?? [],
+    facetAddress: async (_diamond, selector) => routes[selector.toLowerCase()] ?? ZERO_ADDRESS,
   };
 }
 
@@ -87,9 +112,10 @@ async function verify(
   rpc: IRPCAdapter,
   diamond: IDiamondAdapter,
   ignitionDeploymentId?: string,
+  execution: DeployExecutionResult = executionResult(ignitionDeploymentId),
 ): Promise<{ success: boolean; record: DiamondDeployment | null; message: string | null }> {
   const ctx = Context.create();
-  const resolved = await DeployVerificationModule.verify(ctx, deployPlan(), executionResult(ignitionDeploymentId), {
+  const resolved = await DeployVerificationModule.verify(ctx, deployPlan(), execution, {
     diamond,
     hashing: HashingAdapter,
     rpc,
@@ -106,7 +132,7 @@ describe("DeployVerificationModule.verify", () => {
   it("builds the lock record when chain state matches the result", async () => {
     const outcome = await verify(
       stubRpc(() => CODE),
-      stubDiamond([getAddress(FACET_A), getAddress(FACET_B)]),
+      stubDiamond(),
     );
 
     expect(outcome.success).toBe(true);
@@ -125,7 +151,7 @@ describe("DeployVerificationModule.verify", () => {
     const ignitionDeploymentId = "compose-counterdiamond-local-default-abcdef12";
     const outcome = await verify(
       stubRpc(() => CODE),
-      stubDiamond([getAddress(FACET_A), getAddress(FACET_B)]),
+      stubDiamond(),
       ignitionDeploymentId,
     );
 
@@ -137,7 +163,7 @@ describe("DeployVerificationModule.verify", () => {
     const report = vi.spyOn(console, "error").mockImplementation(() => {});
     const outcome = await verify(
       stubRpc((address) => (address === DIAMOND ? undefined : CODE)),
-      stubDiamond([FACET_A, FACET_B]),
+      stubDiamond(),
     );
 
     expect(outcome.success).toBe(false);
@@ -151,7 +177,7 @@ describe("DeployVerificationModule.verify", () => {
     vi.spyOn(console, "error").mockImplementation(() => {});
     const outcome = await verify(
       stubRpc((address) => (address === FACET_B ? undefined : CODE)),
-      stubDiamond([FACET_A, FACET_B]),
+      stubDiamond(),
     );
 
     expect(outcome.success).toBe(false);
@@ -162,11 +188,13 @@ describe("DeployVerificationModule.verify", () => {
     vi.spyOn(console, "error").mockImplementation(() => {});
     const outcome = await verify(
       stubRpc(() => CODE),
-      stubDiamond([
-        FACET_A,
-        FACET_B,
-        "0x00000000000000000000000000000000000000c3",
-      ] as Address[]),
+      stubDiamond({
+        addresses: [
+          FACET_A,
+          FACET_B,
+          "0x00000000000000000000000000000000000000c3",
+        ] as Address[],
+      }),
     );
 
     expect(outcome.success).toBe(false);
@@ -176,9 +204,108 @@ describe("DeployVerificationModule.verify", () => {
 
   it("fails when a reported facet is missing on-chain", async () => {
     vi.spyOn(console, "error").mockImplementation(() => {});
-    const outcome = await verify(stubRpc(() => CODE), stubDiamond([FACET_A]));
+    const outcome = await verify(stubRpc(() => CODE), stubDiamond({ addresses: [FACET_A] }));
 
     expect(outcome.success).toBe(false);
     expect(outcome.message).toContain(FACET_B);
+  });
+
+  it("fails when two reported facets share an address", async () => {
+    vi.spyOn(console, "error").mockImplementation(() => {});
+    const execution = executionResult();
+    execution.facets = { AlphaFacet: FACET_A, BetaFacet: FACET_A };
+    const outcome = await verify(stubRpc(() => CODE), stubDiamond(), undefined, execution);
+
+    expect(outcome.success).toBe(false);
+    expect(outcome.message).toContain("Facets 'AlphaFacet' and 'BetaFacet' report the same address");
+    expect(outcome.message).toContain("facet addresses must be unique");
+  });
+
+  it("fails when a reported facet address equals the diamond address", async () => {
+    vi.spyOn(console, "error").mockImplementation(() => {});
+    const execution = executionResult();
+    execution.facets = { AlphaFacet: DIAMOND, BetaFacet: FACET_B };
+    const outcome = await verify(stubRpc(() => CODE), stubDiamond(), undefined, execution);
+
+    expect(outcome.success).toBe(false);
+    expect(outcome.message).toContain("Facet 'AlphaFacet' uses the diamond address");
+    expect(outcome.message).toContain("facets must be separate contracts");
+  });
+
+  it("fails when the on-chain facet list contains duplicates", async () => {
+    vi.spyOn(console, "error").mockImplementation(() => {});
+    const outcome = await verify(
+      stubRpc(() => CODE),
+      stubDiamond({ addresses: [FACET_A, FACET_B, FACET_B] }),
+    );
+
+    expect(outcome.success).toBe(false);
+    expect(outcome.message).toContain("The on-chain facet list contains duplicate address");
+    expect(outcome.message).toContain(FACET_B);
+  });
+
+  it("fails when a facet exposes no selectors on the diamond", async () => {
+    vi.spyOn(console, "error").mockImplementation(() => {});
+    const outcome = await verify(
+      stubRpc(() => CODE),
+      stubDiamond({
+        selectors: {
+          ...DEFAULT_SELECTORS,
+          [FACET_B.toLowerCase()]: [],
+        },
+      }),
+    );
+
+    expect(outcome.success).toBe(false);
+    expect(outcome.message).toContain("Facet 'BetaFacet'");
+    expect(outcome.message).toContain("exposes no selectors");
+  });
+
+  it("fails when a selector routes to a different facet", async () => {
+    vi.spyOn(console, "error").mockImplementation(() => {});
+    const outcome = await verify(
+      stubRpc(() => CODE),
+      stubDiamond({
+        routes: {
+          ...DEFAULT_ROUTES,
+          [SELECTOR_B.toLowerCase()]: FACET_A as Address,
+        },
+      }),
+    );
+
+    expect(outcome.success).toBe(false);
+    expect(outcome.message).toContain(`Selector ${SELECTOR_B}`);
+    expect(outcome.message).toContain("is routed to");
+    expect(outcome.message).toContain(FACET_A);
+  });
+
+  it("fails when a selector is not routed by the diamond", async () => {
+    vi.spyOn(console, "error").mockImplementation(() => {});
+    const outcome = await verify(
+      stubRpc(() => CODE),
+      stubDiamond({
+        routes: {
+          ...DEFAULT_ROUTES,
+          [SELECTOR_A1.toLowerCase()]: ZERO_ADDRESS,
+        },
+      }),
+    );
+
+    expect(outcome.success).toBe(false);
+    expect(outcome.message).toContain(`Selector ${SELECTOR_A1}`);
+    expect(outcome.message).toContain("is not routed by the diamond");
+  });
+
+  it("compares facet addresses case-insensitively", async () => {
+    vi.spyOn(console, "error").mockImplementation(() => {});
+    const execution = executionResult();
+    execution.facets = {
+      AlphaFacet: FACET_A.toUpperCase().replace("0X", "0x") as Hex,
+      BetaFacet: FACET_A,
+    };
+    const outcome = await verify(stubRpc(() => CODE), stubDiamond(), undefined, execution);
+
+    expect(outcome.success).toBe(false);
+    expect(outcome.message).toContain("facet addresses must be unique");
   });
 });

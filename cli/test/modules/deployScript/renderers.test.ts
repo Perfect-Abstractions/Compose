@@ -9,7 +9,7 @@ import type { ManagedScriptModel } from "../../../src/modules/deployScript/types
 import type { Hex } from "viem";
 
 const PLAN_HASH = `0x${"ab".repeat(32)}` as Hex;
-const RESULT_PATH = path.join("/tmp/project", "cache", "compose", "deploy-result.json");
+const RESULT_PATH = path.join("/tmp/project", ".compose", "hardhat", "deploy-result.json");
 const IGNITION_DEPLOYMENT_ID = "compose-counter-local-default-abcdef12";
 
 function model(overrides: Partial<ManagedScriptModel> = {}): ManagedScriptModel {
@@ -113,6 +113,53 @@ describe("renderFoundryDeployScript", () => {
       source.indexOf("AlphaFacet alphaFacet = new AlphaFacet();"),
     );
   });
+
+  it("rejects unsafe contract names before rendering", async () => {
+    await expect(renderFoundryDeployScript(model({
+      diamond: {
+        contractName: 'Diamond"; contract Evil {}',
+        importSpec: "../src/Diamond.sol",
+      },
+    }))).rejects.toThrow("Invalid Solidity contract name");
+
+    await expect(renderFoundryDeployScript(model({
+      facets: [{
+        name: "Evil",
+        contractName: 'Evil"; contract Injected {}',
+        importSpec: "../src/Evil.sol",
+        variableName: "evil",
+        futureId: "Facet_Evil",
+      }],
+    }))).rejects.toThrow("Invalid Solidity contract name");
+  });
+
+  it("rejects unsafe import paths before rendering", async () => {
+    await expect(renderFoundryDeployScript(model({
+      diamond: {
+        contractName: "Diamond",
+        importSpec: '../src/Evil".sol',
+      },
+    }))).rejects.toThrow("Invalid Solidity import path");
+
+    await expect(renderFoundryDeployScript(model({
+      facets: [{
+        name: "Evil",
+        contractName: "EvilFacet",
+        importSpec: "../src/Evil.sol\ncontract Injected {}",
+        variableName: "evilFacet",
+        futureId: "Facet_Evil",
+      }],
+    }))).rejects.toThrow("Invalid Solidity import path");
+  });
+
+  it("keeps a block-comment terminator in the target header from closing the comment", async () => {
+    const source = await renderFoundryDeployScript(model({
+      chainKey: "local */ contract Injected {} /*",
+    }));
+
+    expect(source).not.toContain("*/ contract Injected");
+    expect(source.split("\n")[1]).toContain("local *\\/ contract Injected");
+  });
 });
 
 describe("Hardhat Ignition renderers", () => {
@@ -121,7 +168,7 @@ describe("Hardhat Ignition renderers", () => {
       framework: "hardhat",
       toolbox,
       outputPath: path.join("/tmp/project", "ignition", "modules", "ComposeDeploy.ts"),
-      runnerPath: path.join("/tmp/project", "scripts", ".compose", "ignition-runner.ts"),
+      runnerPath: path.join("/tmp/project", ".compose", "hardhat", "ignition-runner.ts"),
       ignitionDeploymentId: IGNITION_DEPLOYMENT_ID,
       resultPath: RESULT_PATH,
       ...overrides,
@@ -180,5 +227,24 @@ describe("Hardhat Ignition renderers", () => {
     await expect(renderHardhatIgnitionRunner(hardhatModel("ethers", {
       runnerPath: null,
     }))).rejects.toThrow("runner is missing");
+  });
+
+  it("rejects unsafe contract names in the Ignition module", async () => {
+    await expect(renderHardhatIgnitionModule(hardhatModel("ethers", {
+      diamond: {
+        contractName: 'Diamond"); contract Evil {}',
+        importSpec: "../src/Diamond.sol",
+      },
+    }))).rejects.toThrow("Invalid Solidity contract name");
+
+    await expect(renderHardhatIgnitionModule(hardhatModel("ethers", {
+      facets: [{
+        name: "Evil",
+        contractName: 'Evil"); contract Injected {}',
+        importSpec: "../src/Evil.sol",
+        variableName: "evil",
+        futureId: "Facet_Evil",
+      }],
+    }))).rejects.toThrow("Invalid Solidity contract name");
   });
 });

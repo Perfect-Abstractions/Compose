@@ -4,6 +4,7 @@ import type { ComposeContext, ModuleState } from "../../context/types";
 import type { IFrameworkAdapter } from "../../adapters/IFrameworkAdapter/interface";
 import type { IHashingAdapter } from "../../adapters/IHashingAdapter/interface";
 import { atomicWriteFile } from "../../utils/files";
+import { ensureComposeRuntimeDir } from "../../utils/composeRuntime";
 import type { DeployPlan } from "../deployPlan/types";
 import { buildScriptModel } from "./model";
 import {
@@ -76,9 +77,10 @@ export const DeployScriptModule = {
     await DeployScriptModule.writeSource(model.outputPath, source);
   },
 
-  /** Atomically writes the transient Hardhat runner. */
+  /** Atomically writes the transient Hardhat runner into the ignored runtime directory. */
   async writeRunner(model: ManagedScriptModel): Promise<void> {
     if (!model.runnerPath) throw new Error("The Hardhat deployment runner path is missing.");
+    await ensureComposeRuntimeDir(model.projectRoot, "hardhat");
     await DeployScriptModule.writeSource(model.runnerPath, await DeployScriptModule.renderRunner(model));
   },
 

@@ -2,13 +2,11 @@ import fs from "node:fs/promises";
 import path from "node:path";
 import { isAddress, isHex, type Hex } from "viem";
 import type { ComposeContext } from "../../context/types";
-import type {
-  BroadcastTransaction,
-  IFrameworkAdapter,
-} from "../../adapters/IFrameworkAdapter/interface";
+import type { IFrameworkAdapter } from "../../adapters/IFrameworkAdapter/interface";
+import type { BroadcastTransaction } from "../../adapters/IFrameworkAdapter/types";
 import { runCommand } from "../../utils/exec";
 import { toPassthroughArgs } from "../../utils/args";
-import { toProjectRelativePath, writeFileIfMissing } from "../../utils/files";
+import { toProjectRelativePath } from "../../utils/files";
 import type { DeployPlan } from "../deployPlan/types";
 import type { DeployExecutionResult, DeployResultFile } from "./types";
 import { getIgnitionDeploymentId, HARDHAT_IGNITION_MODULE_ID } from "../deployScript/model";
@@ -75,12 +73,14 @@ async function readOptionalResultFile(
  * @param raw - The parsed result file.
  * @param plan - The resolved deployment plan.
  * @param displayPath - Project-relative path of the result file, used in messages.
+ * @param expectedDeployer - The signer resolved for this execution, when known.
  * @returns The reported diamond and facet addresses.
  */
 function validateResult(
   raw: DeployResultFile,
   plan: DeployPlan,
   displayPath: string,
+  expectedDeployer: Hex | null,
 ): { diamond: Hex; facets: Record<string, Hex>; deployer?: Hex; ignitionDeploymentId?: string } {
   if (!isRecord(raw)) {
     throw new Error(`${displayPath} must contain a JSON object.`);
@@ -116,7 +116,7 @@ function validateResult(
 
   let ignitionDeploymentId: string | undefined;
   if (plan.framework === "hardhat") {
-    const expectedId = getIgnitionDeploymentId(plan);
+    const expectedId = getIgnitionDeploymentId(plan, expectedDeployer);
     if (raw.ignitionDeploymentId !== expectedId) {
       throw new Error(
         `${displayPath} has an unexpected Hardhat Ignition deployment ID. Re-run 'compose deploy' to regenerate the runner.`,
@@ -129,13 +129,18 @@ function validateResult(
   const deployer = typeof raw.deployer === "string"
     ? requireAddress(raw.deployer, "deployer")
     : undefined;
-  if (plan.account && !deployer) {
-    throw new Error(`${displayPath} is missing the selected account address.`);
-  }
-  if (plan.account && deployer?.toLowerCase() !== plan.account.address.toLowerCase()) {
+  if (expectedDeployer && !deployer) {
     throw new Error(
-      `The deploy script used signer ${deployer}; expected Compose account '${plan.account.alias}' at ${plan.account.address}.`,
+      plan.account
+        ? `${displayPath} is missing the selected account address.`
+        : `${displayPath} is missing the framework default signer address.`,
     );
+  }
+  if (deployer && expectedDeployer && deployer.toLowerCase() !== expectedDeployer.toLowerCase()) {
+    const expected = plan.account
+      ? `Compose account '${plan.account.alias}' at ${plan.account.address}`
+      : `the framework default signer at ${expectedDeployer}`;
+    throw new Error(`The deploy script used signer ${deployer}; expected ${expected}.`);
   }
   if (!isRecord(raw.facets)) {
     throw new Error(`${displayPath} is missing the facets object.`);
@@ -168,6 +173,7 @@ function validateResult(
 function deriveFromBroadcast(
   broadcast: BroadcastTransaction[],
   plan: DeployPlan,
+  expectedDeployer: Hex | null,
 ): { diamond: Hex; facets: Record<string, Hex>; txHash: Hex | null; deployer?: Hex } {
   const remaining = [...broadcast];
   const facets: Record<string, Hex> = {};
@@ -200,12 +206,18 @@ function deriveFromBroadcast(
   const deployer = typeof diamondTransaction.from === "string"
     ? requireAddress(diamondTransaction.from, "deployer")
     : undefined;
-  if (plan.account && !deployer) {
-    throw new Error("The Foundry broadcast did not report the deployer address for the selected Compose account.");
-  }
-  if (plan.account && deployer?.toLowerCase() !== plan.account.address.toLowerCase()) {
+  if (expectedDeployer && !deployer) {
     throw new Error(
-      `Foundry broadcast signer ${deployer} does not match Compose account '${plan.account.alias}' at ${plan.account.address}.`,
+      plan.account
+        ? "The Foundry broadcast did not report the deployer address for the selected Compose account."
+        : "The Foundry broadcast did not report the deployer address for the framework default signer.",
+    );
+  }
+  if (deployer && expectedDeployer && deployer.toLowerCase() !== expectedDeployer.toLowerCase()) {
+    throw new Error(
+      plan.account
+        ? `Foundry broadcast signer ${deployer} does not match Compose account '${plan.account.alias}' at ${plan.account.address}.`
+        : `Foundry broadcast signer ${deployer} does not match the framework default signer at ${expectedDeployer}.`,
     );
   }
   return {
@@ -235,6 +247,9 @@ export const DeployExecutionModule = {
    * @param plan - The resolved deployment plan.
    * @param scriptPath - Absolute path of the managed script to run.
    * @param adapter - The framework adapter building the command.
+   * @param runnerPath - Absolute path of the transient Hardhat runner.
+   * @param expectedSigner - The signer already resolved by the caller; when
+   *   omitted, it is resolved here. Explicit null means no signer is known.
    * @returns The context with `state.deployExecution` populated.
    * @throws {Error} If the framework command fails or the result is invalid.
    */
@@ -244,16 +259,25 @@ export const DeployExecutionModule = {
     scriptPath: string,
     adapter: IFrameworkAdapter,
     runnerPath: string | null = adapter.getManagedDeployRunnerPath(plan.projectRoot),
+    expectedSigner?: Hex | null,
   ): Promise<ComposeContext> {
     const projectRoot = plan.projectRoot;
     const capture = resolveCapture(adapter, projectRoot);
 
     try {
+      const expectedDeployer = expectedSigner === undefined
+        ? await adapter.resolveDeploySigner({
+            projectRoot,
+            chainKey: plan.chain.chainKey,
+            rpcUrl: plan.chain.rpcUrl,
+            chainId: plan.chain.chainId,
+            account: plan.account,
+            passthrough: toPassthroughArgs(ctx.param.passthrough),
+          })
+        : expectedSigner;
       if (capture) {
-        await writeFileIfMissing(
-          path.join(path.dirname(capture.path), ".gitignore"),
-          `${path.basename(capture.path)}\n`,
-        );
+        // The capture file lives under `.compose/`, which the adapter keeps
+        // gitignored; drop a stale capture so a failed run cannot look successful.
         await fs.rm(capture.path, { force: true });
       }
 
@@ -288,10 +312,10 @@ export const DeployExecutionModule = {
       let diamondTxHash: Hex | null;
       let ignitionDeploymentId: string | undefined;
       if (rawResult && capture) {
-        const validated = validateResult(rawResult, plan, capture.displayPath);
+        const validated = validateResult(rawResult, plan, capture.displayPath, expectedDeployer);
         ({ diamond, facets, deployer, ignitionDeploymentId } = validated);
         if (plan.framework === "hardhat") {
-          const hardhatDeploymentId = getIgnitionDeploymentId(plan);
+          const hardhatDeploymentId = getIgnitionDeploymentId(plan, expectedDeployer);
           const journalPath = path.join(
             projectRoot,
             "ignition",
@@ -323,7 +347,7 @@ export const DeployExecutionModule = {
             `Hardhat did not write the managed deploy result at ${capture?.displayPath ?? "the configured result path"}.`,
           );
         }
-        const derived = deriveFromBroadcast(broadcast, plan);
+        const derived = deriveFromBroadcast(broadcast, plan, expectedDeployer);
         diamond = derived.diamond;
         facets = derived.facets;
         deployer = derived.deployer;

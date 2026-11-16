@@ -148,6 +148,28 @@ describe("DeployPipeline script generation", () => {
     const secondWrite = await fs.stat(scriptPath());
     expect(secondWrite.mtimeMs).toBe(firstWrite.mtimeMs);
   });
+
+  it("reuses an artifact generated in another checkout root", async () => {
+    await executePipeline(harness.ctx);
+    const source = await fs.readFile(scriptPath(), "utf8");
+    const other = await createDeployProjectHarness();
+    try {
+      const otherScriptPath = path.join(other.projectRoot, "script", "ComposeDeploy.s.sol");
+      await fs.mkdir(path.dirname(otherScriptPath), { recursive: true });
+      await fs.writeFile(otherScriptPath, source, "utf8");
+      const firstWrite = await fs.stat(otherScriptPath);
+      await new Promise((resolve) => setTimeout(resolve, 20));
+
+      const ctx = await executePipeline(other.ctx);
+
+      expect(ctx.status.success).toBe(true);
+      await expect(fs.readFile(otherScriptPath, "utf8")).resolves.toBe(source);
+      const secondWrite = await fs.stat(otherScriptPath);
+      expect(secondWrite.mtimeMs).toBe(firstWrite.mtimeMs);
+    } finally {
+      await other.cleanup();
+    }
+  });
 });
 
 describe("DeployPipeline framework selection", () => {
@@ -237,6 +259,40 @@ describe("DeployPipeline broadcast gating", () => {
 
     expect(ctx.status.success).toBe(true);
     await expect(fs.readFile(hardhatModulePath, "utf8")).resolves.toBe(ethersSource);
+  });
+});
+
+describe("DeployPipeline code-generation validation", () => {
+  it("refuses to generate a script for a malicious contract name", async () => {
+    await harness.writeComposeJson({
+      CounterFacet: {
+        source: "local",
+        contract: 'src/CounterFacet.sol:CounterFacet"; contract Evil {}',
+      },
+    });
+
+    const ctx = await executePipeline(harness.ctx);
+
+    expect(ctx.status.success).toBe(false);
+    expect(ctx.status.failedAt).toBe("deployPlan");
+    expect(output()).toContain("Invalid Solidity contract name");
+    await expect(fs.access(scriptPath())).rejects.toThrow();
+  });
+
+  it("refuses to generate a script for a malicious facet source path", async () => {
+    await harness.writeComposeJson({
+      CounterFacet: {
+        source: "local",
+        contract: 'src/Evil".sol:CounterFacet',
+      },
+    });
+
+    const ctx = await executePipeline(harness.ctx);
+
+    expect(ctx.status.success).toBe(false);
+    expect(ctx.status.failedAt).toBe("deployPlan");
+    expect(output()).toContain("Invalid Solidity import path");
+    await expect(fs.access(scriptPath())).rejects.toThrow();
   });
 });
 

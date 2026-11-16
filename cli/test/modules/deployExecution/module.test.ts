@@ -3,10 +3,8 @@ import os from "node:os";
 import path from "node:path";
 import type { Hex } from "viem";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
-import type {
-  BroadcastTransaction,
-  IFrameworkAdapter,
-} from "../../../src/adapters/IFrameworkAdapter/interface";
+import type { IFrameworkAdapter } from "../../../src/adapters/IFrameworkAdapter/interface";
+import type { BroadcastTransaction } from "../../../src/adapters/IFrameworkAdapter/types";
 import { Context } from "../../../src/context/context";
 import type { ModuleState } from "../../../src/context/types";
 import {
@@ -85,9 +83,17 @@ function stubAdapter(overrides: Partial<IFrameworkAdapter> = {}): IFrameworkAdap
     resolveSoliditySourcePath: async () => "",
     initProject: async () => {},
     writeConfig: async () => {},
+    supportsAccountImport: false,
+    readAccountAddress: async () => ({ address: null, exists: false, requiresUnlock: false }),
+    resolveAccountAddress: async () => ({ address: null, exists: false, requiresUnlock: false }),
+    listSignerAddresses: async () => [],
+    resolveDeploySigner: async ({ account }) => account ? account.address as Hex : null,
+    importAccount: async () => null,
+    assertSupportedProject: () => {},
+    getDeployToolbox: async () => null,
     getManagedDeployScriptPath: () => path.join(projectRoot, "script", "ComposeDeploy.s.sol"),
     getManagedDeployRunnerPath: () => null,
-    getManagedDeployResultPath: () => path.join(projectRoot, "cache", "compose", "deploy-result.json"),
+    getManagedDeployResultPath: () => path.join(projectRoot, ".compose", "hardhat", "deploy-result.json"),
     createDeployCommand: () => ({ command: process.execPath, args: ["-e", ""] }),
     createTestCommand: () => ({ command: process.execPath, args: ["-e", ""] }),
     readDeployedBytecode: async () => undefined,
@@ -116,8 +122,8 @@ async function adapterWritingResult(result: Record<string, unknown>): Promise<IF
   await fs.writeFile(payloadPath, JSON.stringify(result), "utf8");
 
   const script =
-    'const fs = require("fs"); fs.mkdirSync("cache/compose", { recursive: true });' +
-    `fs.copyFileSync(${JSON.stringify(payloadPath)}, "cache/compose/deploy-result.json");`;
+    'const fs = require("fs"); fs.mkdirSync(".compose/hardhat", { recursive: true });' +
+    `fs.copyFileSync(${JSON.stringify(payloadPath)}, ".compose/hardhat/deploy-result.json");`;
   return stubAdapter({
     createDeployCommand: () => ({ command: process.execPath, args: ["-e", script] }),
   });
@@ -131,6 +137,7 @@ async function execute(
   adapter: IFrameworkAdapter,
   plan = deployPlan(),
   runnerPath: string | null = null,
+  passthrough?: unknown,
 ): Promise<{
   result: DeployExecutionResult | null;
   success: boolean;
@@ -138,6 +145,7 @@ async function execute(
 }> {
   const ctx = Context.create();
   ctx.param.projectRoot = projectRoot;
+  if (passthrough !== undefined) ctx.param.passthrough = passthrough;
   let throwMessage: string | null = null;
   try {
     await DeployExecutionModule.execute(ctx, plan, "/tmp/script.s.sol", adapter, runnerPath);
@@ -163,21 +171,15 @@ describe("DeployExecutionModule.execute", () => {
       facets: { AlphaFacet: FACET_A, BetaFacet: FACET_B },
       transactions: { diamond: DIAMOND_TX },
     });
-
-    const gitignore = await fs.readFile(
-      path.join(projectRoot, "cache", "compose", ".gitignore"),
-      "utf8",
-    );
-    expect(gitignore).toContain("deploy-result.json");
   });
 
   it("passes adapter environment overrides to the framework command", async () => {
     const rpcUrl = "https://rpc.example.test/v1/private-token";
-    const resultPath = path.join(projectRoot, "cache", "compose", "deploy-result.json");
+    const resultPath = path.join(projectRoot, ".compose", "hardhat", "deploy-result.json");
     const observedPath = path.join(projectRoot, "observed-rpc-url.txt");
     const script = [
       'const fs = require("node:fs");',
-      'fs.mkdirSync("cache/compose", { recursive: true });',
+      'fs.mkdirSync(".compose/hardhat", { recursive: true });',
       `fs.writeFileSync(${JSON.stringify(resultPath)}, ${JSON.stringify(JSON.stringify(validResult()))});`,
       `fs.writeFileSync(${JSON.stringify(observedPath)}, process.env.COMPOSE_DEPLOY_RPC_URL ?? "");`,
     ].join("\n");
@@ -208,7 +210,7 @@ describe("DeployExecutionModule.execute", () => {
     const outcome = await execute(adapter);
 
     expect(outcome.success).toBe(true);
-    await expect(fs.access(path.join(projectRoot, "cache", "compose"))).rejects.toThrow();
+    await expect(fs.access(path.join(projectRoot, ".compose"))).rejects.toThrow();
   });
 
   it("rejects a result written by a different plan", async () => {
@@ -265,7 +267,7 @@ describe("DeployExecutionModule.execute", () => {
 
   it("takes the Hardhat diamond transaction hash from the matching successful Ignition journal future", async () => {
     const plan = hardhatPlan();
-    const runnerPath = path.join(projectRoot, "scripts", ".compose", "ignition-runner.ts");
+    const runnerPath = path.join(projectRoot, ".compose", "hardhat", "ignition-runner.ts");
     await fs.mkdir(path.dirname(runnerPath), { recursive: true });
     await fs.writeFile(runnerPath, "transient", "utf8");
     const ignitionDeploymentId = getIgnitionDeploymentId(plan);
@@ -320,6 +322,66 @@ describe("DeployExecutionModule.execute", () => {
 
     expect(outcome.success).toBe(false);
     expect(outcome.message).toContain("unexpected Hardhat Ignition deployment ID");
+  });
+
+  it("validates a Hardhat framework-default deployment against the resolved default signer", async () => {
+    const defaultSigner = "0x00000000000000000000000000000000000000a1" as Hex;
+    const plan = hardhatPlan();
+    const ignitionDeploymentId = getIgnitionDeploymentId(plan, defaultSigner);
+    const journalPath = path.join(
+      projectRoot,
+      "ignition",
+      "deployments",
+      ignitionDeploymentId,
+      "journal.jsonl",
+    );
+    await fs.mkdir(path.dirname(journalPath), { recursive: true });
+    await fs.writeFile(journalPath, JSON.stringify({
+      type: "TRANSACTION_CONFIRM",
+      futureId: `${HARDHAT_IGNITION_MODULE_ID}#Diamond`,
+      hash: DIAMOND_TX,
+      receipt: { status: "SUCCESS" },
+    }), "utf8");
+
+    const base = await adapterWritingResult({
+      ...validResult(),
+      framework: "hardhat",
+      deployer: defaultSigner,
+      ignitionDeploymentId,
+    });
+    const adapter = {
+      ...base,
+      resolveDeploySigner: async () => defaultSigner,
+    };
+
+    const outcome = await execute(adapter, plan);
+
+    expect(outcome.success).toBe(true);
+    expect(outcome.result?.deployer).toBe(defaultSigner);
+    expect(outcome.result?.ignitionDeploymentId).toBe(ignitionDeploymentId);
+  });
+
+  it("rejects a Hardhat framework-default deployment from another default signer", async () => {
+    const expectedSigner = "0x00000000000000000000000000000000000000a1" as Hex;
+    const actualSigner = "0x00000000000000000000000000000000000000a2";
+    const plan = hardhatPlan();
+    const ignitionDeploymentId = getIgnitionDeploymentId(plan, expectedSigner);
+
+    const base = await adapterWritingResult({
+      ...validResult(),
+      framework: "hardhat",
+      deployer: actualSigner,
+      ignitionDeploymentId,
+    });
+    const adapter = {
+      ...base,
+      resolveDeploySigner: async () => expectedSigner,
+    };
+
+    const outcome = await execute(adapter, plan);
+
+    expect(outcome.success).toBe(false);
+    expect(outcome.message).toContain("framework default signer");
   });
 
   it("rejects a deployment from a different account than the Compose alias", async () => {
@@ -408,6 +470,40 @@ describe("DeployExecutionModule.execute", () => {
 
     expect(outcome.success).toBe(false);
     expect(outcome.message).toContain("does not match Compose account 'deployer'");
+  });
+
+  it("validates a Foundry framework-default sender resolved by the adapter", async () => {
+    const sender = "0x00000000000000000000000000000000000000a1";
+    const adapter = {
+      ...broadcastAdapter([
+        { contractName: "AlphaFacet", contractAddress: FACET_A, txHash: `0x${"01".repeat(32)}`, from: sender },
+        { contractName: "BetaFacet", contractAddress: FACET_B, txHash: `0x${"02".repeat(32)}`, from: sender },
+        { contractName: "Diamond", contractAddress: DIAMOND, txHash: BROADCAST_DIAMOND_TX, from: sender },
+      ]),
+      resolveDeploySigner: async () => sender as Hex,
+    };
+
+    const outcome = await execute(adapter);
+
+    expect(outcome.success).toBe(true);
+    expect(outcome.result?.deployer).toBe(sender);
+  });
+
+  it("rejects a Foundry framework-default broadcast from another sender", async () => {
+    const expectedSender = "0x00000000000000000000000000000000000000a1";
+    const adapter = {
+      ...broadcastAdapter([
+        { contractName: "AlphaFacet", contractAddress: FACET_A, txHash: `0x${"01".repeat(32)}` },
+        { contractName: "BetaFacet", contractAddress: FACET_B, txHash: `0x${"02".repeat(32)}` },
+        { contractName: "Diamond", contractAddress: DIAMOND, txHash: BROADCAST_DIAMOND_TX, from: "0x00000000000000000000000000000000000000a2" },
+      ]),
+      resolveDeploySigner: async () => expectedSender as Hex,
+    };
+
+    const outcome = await execute(adapter);
+
+    expect(outcome.success).toBe(false);
+    expect(outcome.message).toContain("does not match the framework default signer");
   });
 
   it("falls back to broadcast transactions for the diamond hash", async () => {

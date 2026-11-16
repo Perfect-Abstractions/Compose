@@ -70,6 +70,37 @@ describe("canonicalPlanJson", () => {
     };
     expect(canonicalPlanJson(otherEndpoint)).toBe(canonicalPlanJson(plan));
   });
+
+  it("is independent of the project's absolute location", () => {
+    const plan = basePlan();
+    const moved: HashablePlan = {
+      ...plan,
+      projectRoot: "/srv/other-checkout",
+      composeJsonPath: "/srv/other-checkout/compose.json",
+      diamond: { ...plan.diamond, sourcePath: "/srv/other-checkout/src/Diamond.sol" },
+      facets: plan.facets.map((facet) => ({
+        ...facet,
+        sourcePath: facet.sourcePath.replace("/tmp/project", "/srv/other-checkout"),
+      })),
+    };
+
+    expect(canonicalPlanJson(moved)).toBe(canonicalPlanJson(plan));
+    expect(computePlanHash(moved, HashingAdapter)).toBe(computePlanHash(plan, HashingAdapter));
+  });
+
+  it("is independent of the selected signer", () => {
+    const plan = basePlan();
+    const withAccount: HashablePlan = {
+      ...plan,
+      account: {
+        alias: "deployer",
+        address: "0x00000000000000000000000000000000000000a1",
+      },
+    };
+
+    expect(canonicalPlanJson(withAccount)).toBe(canonicalPlanJson(plan));
+    expect(computePlanHash(withAccount, HashingAdapter)).toBe(computePlanHash(plan, HashingAdapter));
+  });
 });
 
 describe("computePlanHash", () => {
@@ -96,6 +127,27 @@ describe("computePlanHash", () => {
       ],
     };
     expect(computePlanHash(added, HashingAdapter)).not.toBe(
+      computePlanHash(plan, HashingAdapter),
+    );
+  });
+
+  it("changes when a facet or diamond import path changes", () => {
+    const plan = basePlan();
+    const facetMoved = {
+      ...plan,
+      facets: plan.facets.map((facet, index) => (
+        index === 0 ? { ...facet, importSpec: "../vendor/AlphaFacet.sol" } : facet
+      )),
+    };
+    const diamondMoved = {
+      ...plan,
+      diamond: { ...plan.diamond, importSpec: "../vendor/Diamond.sol" },
+    };
+
+    expect(computePlanHash(facetMoved, HashingAdapter)).not.toBe(
+      computePlanHash(plan, HashingAdapter),
+    );
+    expect(computePlanHash(diamondMoved, HashingAdapter)).not.toBe(
       computePlanHash(plan, HashingAdapter),
     );
   });

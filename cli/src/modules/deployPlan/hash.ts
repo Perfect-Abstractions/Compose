@@ -10,26 +10,33 @@ export type HashablePlan = Omit<DeployPlan, "planHash">;
  *
  * Facets are sorted by name so reordering registrations does not change the
  * hash, while every other field is included verbatim so drift in the target
- * chain, diamond, or facet set produces a new hash. Observed state (the
- * existing lock record and its diff) is intentionally excluded, as is the RPC
- * endpoint: it is access configuration, not part of the deployment identity.
+ * chain, diamond, or facet set produces a new hash. Source identity comes from
+ * the artifact-facing import specifier, not the absolute source path: checkouts
+ * and CI workspaces live at different paths, but the same project must produce
+ * the same plan.
+ *
+ * Observed state (the existing lock record and its diff) is intentionally
+ * excluded, as are the RPC endpoint and selected signer: those are access and
+ * execution configuration, not part of the deployment identity. Execution
+ * still resolves the effective signer (including a framework default) before
+ * running, validates the reported deployer against it, and scopes the Hardhat
+ * Ignition deployment ID to it.
  */
 export function canonicalPlanJson(plan: HashablePlan): string {
   const facets = [...plan.facets]
     .map((facet) => ({
       contract: facet.contractName,
       name: facet.name,
-      source: facet.sourcePath,
+      importSpec: facet.importSpec,
     }))
     .sort((left, right) => (left.name < right.name ? -1 : left.name > right.name ? 1 : 0));
 
   return JSON.stringify({
     chain: { chainId: plan.chain.chainId, key: plan.chain.chainKey },
-    account: plan.account ? { alias: plan.account.alias, address: plan.account.address } : null,
     diamond: {
       contract: plan.diamond.contractName,
       name: plan.diamondName,
-      source: plan.diamond.sourcePath,
+      importSpec: plan.diamond.importSpec,
     },
     facets,
     framework: plan.framework,

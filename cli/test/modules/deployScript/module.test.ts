@@ -142,6 +142,45 @@ describe("DeployScriptModule.buildModel", () => {
     })).toBe(redeployId);
   });
 
+  it("scopes Ignition journals to the signer without changing the plan identity", () => {
+    const plan = { ...deployPlan(), framework: "hardhat" as const };
+    const deployer = {
+      ...plan,
+      account: {
+        alias: "deployer",
+        address: "0x00000000000000000000000000000000000000a1" as const,
+      },
+    };
+    const operator = {
+      ...plan,
+      account: {
+        alias: "operator",
+        address: "0x00000000000000000000000000000000000000a2" as const,
+      },
+    };
+    const renamed = {
+      ...deployer,
+      account: { ...deployer.account, alias: "renamed-deployer" },
+    };
+
+    expect(operator.planHash).toBe(deployer.planHash);
+    expect(getIgnitionDeploymentId(operator)).not.toBe(getIgnitionDeploymentId(deployer));
+    expect(getIgnitionDeploymentId(renamed)).toBe(getIgnitionDeploymentId(deployer));
+  });
+
+  it("scopes Ignition journals to an explicitly resolved framework default signer", () => {
+    const plan = { ...deployPlan(), framework: "hardhat" as const };
+    const first = "0x00000000000000000000000000000000000000a1";
+    const second = "0x00000000000000000000000000000000000000a2";
+
+    expect(getIgnitionDeploymentId(plan, first)).not.toBe(
+      getIgnitionDeploymentId(plan, second),
+    );
+    expect(getIgnitionDeploymentId(plan, first)).toBe(
+      getIgnitionDeploymentId(plan, first.toUpperCase().replace("0X", "0x")),
+    );
+  });
+
   it("avoids template identifiers and language keywords for facet variables", async () => {
     const plan = deployPlan();
     plan.facets = [
@@ -216,12 +255,13 @@ describe("DeployScriptModule.buildModel", () => {
     }>;
 
     expect(state.result?.path).toBe(path.join(projectRoot, "ignition", "modules", "ComposeDeploy.ts"));
+    expect(state.result?.model.toolbox).toBe("ethers");
     expect(state.result?.model.runnerPath).toBe(
-      path.join(projectRoot, "scripts", ".compose", "ignition-runner.ts"),
+      path.join(projectRoot, ".compose", "hardhat", "ignition-runner.ts"),
     );
     expect(state.result?.model.ignitionDeploymentId).toContain("compose-counterdiamond-local-default-");
     expect(state.result?.model.resultPath).toBe(
-      path.join(projectRoot, "cache", "compose", "deploy-result.json"),
+      path.join(projectRoot, ".compose", "hardhat", "deploy-result.json"),
     );
   });
 

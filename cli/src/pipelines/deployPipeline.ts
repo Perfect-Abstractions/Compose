@@ -1,4 +1,4 @@
-import type { ComposeContext, ComposeError, ModuleState } from "../context/types";
+import type { ComposeContext, ModuleState } from "../context/types";
 import type { IHashingAdapter } from "../adapters/IHashingAdapter/interface";
 import type { IFrameworkAdapter } from "../adapters/IFrameworkAdapter/interface";
 import type { IRPCAdapter } from "../adapters/IRPCAdapter/interface";
@@ -8,7 +8,7 @@ import { DependencyResolver } from "../resolver/dependencyResolver";
 import { LockFileModule } from "../modules/lockFile/module";
 import type { ComposeLock, DiamondDeployment } from "../modules/lockFile/types";
 import { VERSION } from "../utils/metadata";
-import { assertSafeDeploymentPassthrough } from "../utils/args";
+import { assertSafeDeploymentPassthrough, toPassthroughArgs } from "../utils/args";
 import { toProjectRelativePath } from "../utils/files";
 import { DeployPlanModule } from "../modules/deployPlan/module";
 import type { DeployPlan } from "../modules/deployPlan/types";
@@ -18,22 +18,13 @@ import type { ManagedScriptModel } from "../modules/deployScript/types";
 import { showScriptReady } from "../modules/deployScript/output";
 import { DeployExecutionModule } from "../modules/deployExecution/module";
 import type { DeployExecutionResult } from "../modules/deployExecution/types";
+import { getIgnitionDeploymentId } from "../modules/deployScript/model";
 import { DeployVerificationModule } from "../modules/deployVerification/module";
 import { showDeploySuccess } from "../modules/deployVerification/output";
 import { DeploySimulationModule } from "../modules/deploySimulation/module";
 import { showDeploySimulationSuccess } from "../modules/deploySimulation/output";
 import { loadValidationProject } from "../modules/validation/project";
-import { FrameworkModule } from "../modules/framework/module";
-
-function composeError(error: unknown): ComposeError {
-  return {
-    code: typeof error === "object" && error && "code" in error
-      ? String(error.code)
-      : "DEPLOY_FAILED",
-    message: error instanceof Error ? error.message : "Deploy failed.",
-    nativeError: error,
-  };
-}
+import { toComposeError } from "../utils/errors";
 
 /**
  * Deploy pipeline.
@@ -67,24 +58,31 @@ export const DeployPipeline = {
       // framework recorded in compose.json.
       const project = await loadValidationProject(ctx);
       const framework = String(ctx.param.framework) as DependencyKey;
-      if (framework === "hardhat") FrameworkModule.assertHardhat3(String(ctx.param.projectRoot));
+
       const deployMode = ctx.param.dryRun
         ? "simulate"
         : ctx.param.broadcast
           ? "broadcast"
           : "prepare";
+
       const frameworkDependencies = await DependencyResolver.resolve([
         { key: DependencyKey.Hashing },
         { key: framework },
       ]);
+
       const adapter = frameworkDependencies[framework] as IFrameworkAdapter | undefined;
       const hashing = frameworkDependencies[DependencyKey.Hashing] as IHashingAdapter | undefined;
+
       if (!adapter || !hashing) throw new Error("Deploy dependencies were not resolved.");
 
+      adapter.assertSupportedProject(String(ctx.param.projectRoot));
+
       ctx = await DeployPlanModule.resolve(ctx, { project, adapter, hashing });
+
       const planState = ctx.state.deployPlan as ModuleState<DeployPlan>;
       const plan = planState.result;
       if (!plan) throw new Error("Deploy plan was not resolved.");
+
       assertSafeDeploymentPassthrough(
         ctx.param.passthrough,
         plan.framework,
@@ -154,6 +152,8 @@ export const DeployPipeline = {
 
       if (deployMode === "simulate") {
         stage = "deploySimulation";
+        // The Hardhat runner is invoked with `--no-compile`, so build the
+        // production artifacts it will execute against.
         if (plan.framework === "hardhat") await adapter.compile(plan.projectRoot);
         const forkBlockNumber = await rpc.getBlockNumber();
         if (plan.framework === "hardhat") await DeployScriptModule.writeRunner(model);
@@ -173,14 +173,37 @@ export const DeployPipeline = {
       if (!diamond) throw new Error("Deploy diamond dependency was not resolved.");
 
       stage = "deployExecution";
-      // `forge script` compiles the Foundry project itself. Running `forge build`
-      // here first duplicates that build on every Foundry deployment.
+      // `forge script` compiles the Foundry project itself. Hardhat's `run`
+      // would also compile on its own, but building once here keeps the
+      // production artifacts deterministic before the signer probe and runner,
+      // which both pass `--no-compile`.
       if (plan.framework === "hardhat") await adapter.compile(plan.projectRoot);
 
-      // The Ignition module is the reviewed artifact. Its runtime wrapper is
-      // generated on demand and removed by the execution module afterward.
-      if (plan.framework === "hardhat") await DeployScriptModule.writeRunner(model);
-      ctx = await DeployExecutionModule.execute(ctx, plan, scriptPath, adapter, model.runnerPath);
+      // Resolve the signer before generating the runtime wrapper so the
+      // Ignition journal is scoped to the account that will actually sign,
+      // including a framework-selected default.
+      const expectedSigner = await adapter.resolveDeploySigner({
+        projectRoot: plan.projectRoot,
+        chainKey: plan.chain.chainKey,
+        rpcUrl: plan.chain.rpcUrl,
+        chainId: plan.chain.chainId,
+        account: plan.account,
+        passthrough: toPassthroughArgs(ctx.param.passthrough),
+      });
+      if (plan.framework === "hardhat") {
+        await DeployScriptModule.writeRunner({
+          ...model,
+          ignitionDeploymentId: getIgnitionDeploymentId(plan, expectedSigner),
+        });
+      }
+      ctx = await DeployExecutionModule.execute(
+        ctx,
+        plan,
+        scriptPath,
+        adapter,
+        model.runnerPath,
+        expectedSigner,
+      );
       const executionState = ctx.state.deployExecution as ModuleState<DeployExecutionResult>;
       if (!executionState?.success || !executionState.result) {
         throw new Error(executionState?.error?.message ?? "Deployment failed.");
@@ -224,7 +247,7 @@ export const DeployPipeline = {
       showDeploySuccess(plan, verificationState.result, writeState.result.path);
       return ctx;
     } catch (error) {
-      const resolved = composeError(error);
+      const resolved = toComposeError(error, "DEPLOY_FAILED", "Deploy failed.");
       ctx.state.deployPipeline = { success: false, result: { stage }, error: resolved };
       ctx.status = { success: false, stopped: true, failedAt: stage, error: resolved };
       console.error(resolved.message);

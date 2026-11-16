@@ -1,46 +1,8 @@
-import fs from "node:fs/promises";
-import path from "node:path";
 import { createHash } from "node:crypto";
 import type { IFrameworkAdapter } from "../../adapters/IFrameworkAdapter/interface";
 import { toCamelCase } from "../../utils/strings";
 import type { DeployPlan } from "../deployPlan/types";
-import type { ManagedScriptModel, ScriptFacetEntry, ScriptToolbox } from "./types";
-
-/**
- * Detects the Hardhat contract interaction plugin from package.json.
- *
- * @param projectRoot - Absolute project root.
- * @returns The detected toolbox variant.
- * @throws {Error} If the project has no supported Hardhat ethers or viem plugin.
- */
-export async function detectHardhatToolbox(projectRoot: string): Promise<ScriptToolbox> {
-  let packageJson: {
-    dependencies?: Record<string, string>;
-    devDependencies?: Record<string, string>;
-  };
-  try {
-    packageJson = JSON.parse(
-      await fs.readFile(path.join(projectRoot, "package.json"), "utf8"),
-    ) as { dependencies?: Record<string, string>; devDependencies?: Record<string, string> };
-  } catch {
-    throw new Error("Cannot determine the Hardhat toolbox: package.json is missing or invalid.");
-  }
-
-  const dependencies = { ...packageJson.dependencies, ...packageJson.devDependencies };
-  if (
-    dependencies["@nomicfoundation/hardhat-toolbox-viem"]
-    || dependencies["@nomicfoundation/hardhat-viem"]
-  ) return "viem";
-  if (
-    dependencies["@nomicfoundation/hardhat-toolbox-mocha-ethers"]
-    || dependencies["@nomicfoundation/hardhat-ethers"]
-  ) return "ethers";
-
-  throw new Error(
-    "Compose Hardhat deploy requires @nomicfoundation/hardhat-ethers or @nomicfoundation/hardhat-viem. "
-    + "Install the toolbox matching your Hardhat project, then retry.",
-  );
-}
+import type { ManagedScriptModel, ScriptFacetEntry } from "./types";
 
 export const HARDHAT_IGNITION_MODULE_ID = "ComposeDeploy";
 
@@ -109,16 +71,31 @@ function assignVariableNames(facets: DeployPlan["facets"]): ScriptFacetEntry[] {
   });
 }
 
-/** Builds a stable journal ID for a plan, with a distinct ID for each redeploy generation. */
-export function getIgnitionDeploymentId(plan: DeployPlan): string {
+/**
+ * Builds a stable journal ID for a plan, with a distinct ID for each redeploy
+ * generation and a distinct ID per signer. The plan hash intentionally excludes
+ * the signer, so the signer digest keeps an incomplete Ignition journal from
+ * being resumed under a different account.
+ *
+ * @param plan - The resolved deployment plan.
+ * @param signerAddress - The signer resolved for this execution. Pass the
+ *   actual framework default before running so two default signers cannot share
+ *   a journal. When omitted, the selected Compose account is used.
+ */
+export function getIgnitionDeploymentId(plan: DeployPlan, signerAddress?: string | null): string {
   const slug = (value: string): string =>
     value.toLowerCase().replace(/[^a-z0-9_-]+/g, "-").replace(/^-+|-+$/g, "").slice(0, 22) || "default";
   const identity = [plan.diamondName, plan.chain.chainKey, plan.instance].map(slug).join("-");
   const planSuffix = plan.planHash.slice(2, 18);
+  const signer = signerAddress ?? plan.account?.address ?? "framework-default";
+  const signerSuffix = createHash("sha256")
+    .update(signer.toLowerCase())
+    .digest("hex")
+    .slice(0, 12);
   const redeploySuffix = plan.mode === "redeploy" && plan.existing
     ? `-from-${plan.existing.txHash.slice(2, 14).toLowerCase()}`
     : "";
-  return `compose-${identity}-${planSuffix}${redeploySuffix}`;
+  return `compose-${identity}-${planSuffix}-${signerSuffix}${redeploySuffix}`;
 }
 
 /**
@@ -135,7 +112,7 @@ export async function buildScriptModel(
   return {
     planHash: plan.planHash,
     framework: plan.framework,
-    toolbox: plan.framework === "hardhat" ? await detectHardhatToolbox(plan.projectRoot) : null,
+    toolbox: await adapter.getDeployToolbox(plan.projectRoot),
     outputPath: adapter.getManagedDeployScriptPath(plan.projectRoot),
     runnerPath: adapter.getManagedDeployRunnerPath(plan.projectRoot),
     ignitionDeploymentId: plan.framework === "hardhat" ? getIgnitionDeploymentId(plan) : null,

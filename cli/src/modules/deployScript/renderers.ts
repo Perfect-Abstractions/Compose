@@ -1,5 +1,9 @@
 import { loadTemplate } from "../../utils/codegen";
 import { toPosixPath, toProjectRelativePath } from "../../utils/files";
+import {
+  assertSafeSolidityImportSpec,
+  assertSolidityContractName,
+} from "../../utils/solidityIdentifiers";
 import path from "node:path";
 import { HARDHAT_IGNITION_MODULE_ID } from "./model";
 import type { ManagedScriptModel, ScriptFacetEntry } from "./types";
@@ -9,11 +13,30 @@ function jsonEscape(value: string): string {
   return JSON.stringify(value).slice(1, -1);
 }
 
+/** Escapes text for a Solidity block comment without allowing the terminator. */
+function commentEscape(value: string): string {
+  return jsonEscape(value).replace(/\*\//g, "*\\/");
+}
+
+/** Rejects values that cannot be safely embedded in a managed artifact. */
+function assertSafeScriptModel(model: ManagedScriptModel): void {
+  assertSolidityContractName(model.diamond.contractName, "diamond contract");
+  assertSafeSolidityImportSpec(model.diamond.importSpec, "diamond import");
+
+  for (const facet of model.facets) {
+    const context = `facet ${JSON.stringify(facet.name)}`;
+    assertSolidityContractName(facet.contractName, `${context} contract`);
+    assertSafeSolidityImportSpec(facet.importSpec, `${context} import`);
+  }
+}
+
 /** Unique import lines: the diamond contract first, then every facet source. */
 function importLines(model: ManagedScriptModel): string[] {
   const lines = [
-    `import {${model.diamond.contractName}} from "${model.diamond.importSpec}";`,
-    ...model.facets.map((facet) => `import {${facet.contractName}} from "${facet.importSpec}";`),
+    `import {${model.diamond.contractName}} from ${JSON.stringify(model.diamond.importSpec)};`,
+    ...model.facets.map(
+      (facet) => `import {${facet.contractName}} from ${JSON.stringify(facet.importSpec)};`,
+    ),
   ];
   return [...new Set(lines)];
 }
@@ -29,6 +52,7 @@ function importLines(model: ManagedScriptModel): string[] {
  * @returns The complete Solidity script source.
  */
 export async function renderFoundryDeployScript(model: ManagedScriptModel): Promise<string> {
+  assertSafeScriptModel(model);
   const template = await loadTemplate("deploy", "compose-foundry.s.sol");
 
   const deployLines = model.facets
@@ -55,7 +79,7 @@ export async function renderFoundryDeployScript(model: ManagedScriptModel): Prom
     .split("{{FACET_COUNT}}").join(String(model.facets.length))
     .split("{{ACCOUNT_GUARD}}").join(accountGuard)
     .split("{{DEPLOY_LINES}}").join(deployLines)
-    .split("{{CHAIN_KEY}}").join(jsonEscape(model.chainKey))
+    .split("{{CHAIN_KEY}}").join(commentEscape(model.chainKey))
     .split("{{CHAIN_ID}}").join(String(model.chainId));
 }
 
@@ -73,6 +97,7 @@ function renderIgnitionResultEntries(facets: ScriptFacetEntry[]): string {
 
 /** Renders the reviewable Hardhat Ignition module. */
 export async function renderHardhatIgnitionModule(model: ManagedScriptModel): Promise<string> {
+  assertSafeScriptModel(model);
   if (!model.ignitionDeploymentId) {
     throw new Error("The Hardhat Ignition module requires a deployment ID.");
   }
@@ -82,7 +107,7 @@ export async function renderHardhatIgnitionModule(model: ManagedScriptModel): Pr
     .split("{{IGNITION_DEPLOYMENT_ID}}").join(model.ignitionDeploymentId)
     .split("{{IGNITION_MODULE_ID}}").join(HARDHAT_IGNITION_MODULE_ID)
     .split("{{FACET_FUTURES}}").join(renderIgnitionFacetFutures(model.facets))
-    .split("{{DIAMOND_CONTRACT}}").join(model.diamond.contractName)
+    .split("{{DIAMOND_CONTRACT}}").join(JSON.stringify(model.diamond.contractName))
     .split("{{FACET_VARIABLES}}").join(model.facets.map((facet) => facet.variableName).join(", "))
     .split("{{FACET_RESULTS}}").join(renderIgnitionResultEntries(model.facets));
 }

@@ -8,6 +8,10 @@ import { selectDiamond } from "../facetConfig/selection";
 import { resolveChainConfig } from "../../utils/chainConfig";
 import { toPosixPath, toRelativeImport } from "../../utils/files";
 import { VERSION } from "../../utils/metadata";
+import {
+  assertSafeSolidityImportSpec,
+  assertSolidityContractName,
+} from "../../utils/solidityIdentifiers";
 import { UPGRADE_FACET_NAME } from "../config/catalog";
 import { LockFileModule } from "../lockFile/module";
 import { DEFAULT_INSTANCE, type ComposeLock } from "../lockFile/types";
@@ -65,17 +69,21 @@ export function resolveFacetImportSpec(
   for (const packageRoot of composePackageRoots) {
     const relative = path.relative(packageRoot, normalized);
     if (relative && !relative.startsWith("..") && !path.isAbsolute(relative)) {
-      return `@perfect-abstractions/compose/${toPosixPath(relative)}`;
+      const spec = `@perfect-abstractions/compose/${toPosixPath(relative)}`;
+      assertSafeSolidityImportSpec(spec, `Compose package source ${JSON.stringify(sourcePath)}`);
+      return spec;
     }
   }
 
   const relativeToProject = path.relative(projectRoot, normalized);
   if (!relativeToProject || relativeToProject.startsWith("..") || path.isAbsolute(relativeToProject)) {
     throw new Error(
-      `Facet source ${sourcePath} is outside the project and not a Compose package file. Fix its path in compose.json or reinstall the facet.`,
+      `Facet source ${JSON.stringify(sourcePath)} is outside the project and not a Compose package file. Fix its path in compose.json or reinstall the facet.`,
     );
   }
-  return toRelativeImport(toPosixPath(path.relative(scriptRoot, normalized)));
+  const spec = toRelativeImport(toPosixPath(path.relative(scriptRoot, normalized)));
+  assertSafeSolidityImportSpec(spec, `facet source ${JSON.stringify(sourcePath)}`);
+  return spec;
 }
 
 /**
@@ -105,6 +113,9 @@ function zipFacets(
     const expectedName = reference.includes(":")
       ? reference.slice(reference.lastIndexOf(":") + 1)
       : name;
+    const context = `facet ${JSON.stringify(name)} in diamond ${JSON.stringify(diamondName)}`;
+    assertSolidityContractName(expectedName, `${context} reference in compose.json`);
+    assertSolidityContractName(resolved.contractName, context);
     if (resolved.contractName !== expectedName) {
       throw new Error(
         `Facet '${name}' resolved to '${resolved.contractName}' instead of '${expectedName}'. Check compose.json.`,
@@ -201,6 +212,10 @@ export const DeployPlanModule = {
       ? diamondReference.slice(diamondReference.lastIndexOf(":") + 1)
       : "";
     const diamondContractName = referenceName || path.basename(diamond.sourcePath, ".sol");
+    assertSolidityContractName(
+      diamondContractName,
+      `diamond ${JSON.stringify(diamondName)} in compose.json`,
+    );
 
     const scriptRoot = adapter.getScriptRoot(projectRoot);
     const facets = zipFacets(diamondName, diamondConfig, diamond.facets, projectRoot, scriptRoot);
