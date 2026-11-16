@@ -20,6 +20,8 @@ vi.mock("../../src/utils/inquirer", async (importOriginal) => {
 });
 
 import { Context } from "../../src/context/context";
+import type { ComposeContext, ModuleState } from "../../src/context/types";
+import type { AccountActionResult } from "../../src/modules/accounts/types";
 import { AccountPipeline } from "../../src/pipelines/accountPipeline";
 
 let projectRoot: string;
@@ -49,6 +51,23 @@ async function readComposeJson(): Promise<Record<string, unknown>> {
   return JSON.parse(await fs.readFile(path.join(projectRoot, "compose.json"), "utf8")) as Record<string, unknown>;
 }
 
+function readAccountState(ctx: ComposeContext): ModuleState<AccountActionResult> {
+  return ctx.state.account as ModuleState<AccountActionResult>;
+}
+
+function expectAccountFailure(ctx: ComposeContext, message: string): void {
+  expect(ctx.status).toMatchObject({
+    success: false,
+    stopped: true,
+    failedAt: "account",
+  });
+
+  const state = readAccountState(ctx);
+  expect(state.success).toBe(false);
+  expect(state.result).toBeNull();
+  expect(state.error?.message).toContain(message);
+}
+
 describe("AccountPipeline", () => {
   it("registers a public address and optional chain default without storing credentials", async () => {
     const log = vi.spyOn(console, "log").mockImplementation(() => {});
@@ -59,6 +78,15 @@ describe("AccountPipeline", () => {
     ctx.param.chain = "local";
 
     await AccountPipeline.execute(ctx);
+
+    expect(readAccountState(ctx).result).toMatchObject({
+      action: "setup",
+      alias: "deployer",
+      address: "0x00000000000000000000000000000000000000A1",
+      framework: "foundry",
+      foundryAccount: "mainnet-deployer",
+      chainKey: "local",
+    });
 
     const composeJson = await readComposeJson();
     expect(composeJson.accounts).toEqual({
@@ -95,6 +123,12 @@ describe("AccountPipeline", () => {
 
     await AccountPipeline.execute(ctx);
 
+    expect(readAccountState(ctx).result).toMatchObject({
+      action: "setup",
+      alias: "deployer",
+      address: "0x00000000000000000000000000000000000000A1",
+      foundryAccount: nativeAccount,
+    });
     expect(mocks.runCommandCaptureStdout).toHaveBeenCalledOnce();
     expect((await readComposeJson()).accounts).toEqual({
       deployer: {
@@ -130,6 +164,12 @@ describe("AccountPipeline", () => {
 
     await AccountPipeline.execute(ctx);
 
+    expect(readAccountState(ctx).result).toMatchObject({
+      action: "setup",
+      alias: nativeAccount,
+      address: "0x8836442b6B4843BA1f077406cC82FddB0F3D16eF",
+      foundryAccount: nativeAccount,
+    });
     expect(mocks.runCommandCaptureStdout).toHaveBeenCalledOnce();
     expect(mocks.confirm).not.toHaveBeenCalled();
     expect(log.mock.calls.flat().join("\n")).not.toContain("Import it into Foundry's keystore");
@@ -152,11 +192,15 @@ describe("AccountPipeline", () => {
     );
     ctx.param.action = "setup";
     ctx.param.accountName = nativeAccount;
+    const errorLog = vi.spyOn(console, "error").mockImplementation(() => {});
 
-    await expect(AccountPipeline.execute(ctx)).rejects.toThrow(
+    await AccountPipeline.execute(ctx);
+
+    expectAccountFailure(
+      ctx,
       "already exists, but its address is encrypted. Run setup interactively, set ETH_PASSWORD to a Foundry password-file path, or pass its public address with --address.",
     );
-
+    expect(errorLog).toHaveBeenCalledOnce();
     expect(mocks.runCommandCaptureStdout).not.toHaveBeenCalled();
     expect(mocks.confirm).not.toHaveBeenCalled();
   });
@@ -166,11 +210,11 @@ describe("AccountPipeline", () => {
     ctx.param.action = "setup";
     ctx.param.accountName = "sepolia-deployer";
     ctx.param.chain = "sepolia";
+    vi.spyOn(console, "error").mockImplementation(() => {});
 
-    await expect(AccountPipeline.execute(ctx)).rejects.toThrow(
-      "Chain 'sepolia' was not found in compose.json.",
-    );
+    await AccountPipeline.execute(ctx);
 
+    expectAccountFailure(ctx, "Chain 'sepolia' was not found in compose.json.");
     expect(mocks.confirm).not.toHaveBeenCalled();
     expect(mocks.runCommandCaptureStdout).not.toHaveBeenCalled();
     expect(await readComposeJson()).toEqual({
@@ -191,6 +235,11 @@ describe("AccountPipeline", () => {
 
     await AccountPipeline.execute(ctx);
 
+    expect(readAccountState(ctx).result).toEqual({
+      action: "list",
+      entries: [{ alias: "deployer", address: "0x00000000000000000000000000000000000000a1" }],
+      defaults: [{ chainKey: "local", alias: "deployer" }],
+    });
     expect(log.mock.calls.flat().join("\n")).toContain("deployer");
     expect(log.mock.calls.flat().join("\n")).toContain("Default for local: deployer");
   });
@@ -220,6 +269,12 @@ describe("AccountPipeline", () => {
 
     await AccountPipeline.execute(ctx);
 
+    expect(readAccountState(ctx).result).toEqual({
+      action: "check",
+      alias: "deployer",
+      address: "0x00000000000000000000000000000000000000A1",
+      chainKey: "local",
+    });
     expect(log.mock.calls.flat().join("\n")).toContain("Account 'deployer' is available on local");
   });
 
@@ -245,16 +300,111 @@ describe("AccountPipeline", () => {
 
     await AccountPipeline.execute(ctx);
 
+    expect(readAccountState(ctx).result).toEqual({
+      action: "check",
+      alias: "deployer",
+      address: "0x00000000000000000000000000000000000000A1",
+      chainKey: "local",
+    });
     expect(mocks.runCommandCaptureStdout).toHaveBeenCalledWith(
       "npx",
-      expect.arrayContaining(["hardhat", "run", "--network", "local"]),
+      expect.arrayContaining(["hardhat", "run", "--no-compile", "--network", "local"]),
       expect.objectContaining({
         cwd: projectRoot,
         env: { COMPOSE_DEPLOY_RPC_URL: "http://127.0.0.1:8545" },
+        forwardStdout: false,
       }),
     );
     expect(log.mock.calls.flat().join("\n")).toContain("Account 'deployer' is available on local");
-    expect(await fs.readdir(path.join(projectRoot, "scripts"))).toEqual([]);
+    expect(await fs.readdir(path.join(projectRoot, ".compose", "hardhat")))
+      .toEqual(["account-probe.ts"]);
+    await expect(fs.access(path.join(projectRoot, "scripts"))).rejects.toThrow();
+  });
+
+  it("lists accounts without requiring a framework adapter", async () => {
+    await fs.writeFile(path.join(projectRoot, "compose.json"), JSON.stringify({
+      accounts: { deployer: { address: "0x00000000000000000000000000000000000000a1" } },
+    }), "utf8");
+    ctx.param.action = "list";
+    vi.spyOn(console, "log").mockImplementation(() => {});
+
+    await AccountPipeline.execute(ctx);
+
+    expect(readAccountState(ctx).result).toEqual({
+      action: "list",
+      entries: [{ alias: "deployer", address: "0x00000000000000000000000000000000000000a1" }],
+      defaults: [],
+    });
+  });
+
+  it("lists an empty account set as successful state", async () => {
+    ctx.param.action = "list";
+    const log = vi.spyOn(console, "log").mockImplementation(() => {});
+
+    await AccountPipeline.execute(ctx);
+
+    expect(readAccountState(ctx).result).toEqual({
+      action: "list",
+      entries: [],
+      defaults: [],
+    });
+    expect(log.mock.calls.flat().join("\n")).toContain("No Compose account aliases are configured.");
+  });
+
+  it("records an unknown action as a failure", async () => {
+    ctx.param.action = "unknown";
+    vi.spyOn(console, "error").mockImplementation(() => {});
+
+    await AccountPipeline.execute(ctx);
+
+    expectAccountFailure(ctx, "Use 'compose account setup <alias>'");
+    expect(await readComposeJson()).toEqual({
+      framework: "foundry",
+      accounts: {},
+      chains: { local: { rpc: "http://127.0.0.1:8545", chainId: 31337 } },
+    });
+  });
+
+  it("requires an alias when setup is non-interactive", async () => {
+    ctx.param.action = "setup";
+    vi.spyOn(console, "error").mockImplementation(() => {});
+
+    await AccountPipeline.execute(ctx);
+
+    expectAccountFailure(ctx, "Account alias is required in non-interactive mode.");
+  });
+
+  it("records an unavailable account as a failure", async () => {
+    await fs.writeFile(path.join(projectRoot, "compose.json"), JSON.stringify({
+      framework: "foundry",
+      accounts: { deployer: { address: "0x00000000000000000000000000000000000000a1" } },
+      chains: { local: { rpc: "http://127.0.0.1:8545", chainId: 31337, account: "deployer" } },
+    }), "utf8");
+    ctx.param.action = "check";
+    ctx.param.accountName = "deployer";
+    vi.spyOn(console, "error").mockImplementation(() => {});
+
+    await AccountPipeline.execute(ctx);
+
+    expectAccountFailure(
+      ctx,
+      "Account 'deployer' (0x00000000000000000000000000000000000000A1) is not available in foundry on chain 'local'.",
+    );
+  });
+
+  it("records removing a missing alias as a failure", async () => {
+    ctx.param.action = "remove";
+    ctx.param.accountName = "missing";
+    vi.spyOn(console, "error").mockImplementation(() => {});
+
+    await AccountPipeline.execute(ctx);
+
+    expectAccountFailure(ctx, "Account alias 'missing' was not found in compose.json.");
+    expect(await readComposeJson()).toEqual({
+      framework: "foundry",
+      accounts: {},
+      chains: { local: { rpc: "http://127.0.0.1:8545", chainId: 31337 } },
+    });
   });
 
   it("removes only the Compose alias and clears its chain defaults", async () => {
@@ -273,6 +423,7 @@ describe("AccountPipeline", () => {
 
     await AccountPipeline.execute(ctx);
 
+    expect(readAccountState(ctx).result).toEqual({ action: "remove", alias: "deployer" });
     const composeJson = await readComposeJson();
     expect(composeJson.accounts).toEqual({});
     expect(composeJson.chains).toEqual({

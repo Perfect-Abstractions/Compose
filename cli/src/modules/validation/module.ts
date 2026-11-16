@@ -1,5 +1,5 @@
 import { ComposeContext } from "../../context/types";
-import { SolidityAstSource } from "../../adapters/IFrameworkAdapter/interface";
+import { SolidityAstSource } from "../../adapters/IFrameworkAdapter/types";
 import { DiamondValidationScope, FacetReference, SelectorCollisionDeps } from "./types";
 import { matchesAstSource } from "./astIdentity";
 import { scanFacetSelectorsFromAst } from "./astSelectors";

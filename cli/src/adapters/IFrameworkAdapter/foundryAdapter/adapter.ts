@@ -2,16 +2,18 @@ import fs from "node:fs/promises";
 import path from "node:path";
 import type { Hex } from "viem";
 import { ComposeContext } from "../../../context/types";
+import { IFrameworkAdapter } from "../interface";
 import {
   BroadcastTransaction,
   ConfigOptions,
   DeployCommand,
   DeployCommandOptions,
+  DeploySignerOptions,
+  DeployToolbox,
   FrameworkCommand,
-  IFrameworkAdapter,
   SolidityAstSource,
   TestCommandOptions,
-} from "../interface";
+} from "../types";
 import { toPosixPath, toProjectRelativePath, writeFileIfMissing } from "../../../utils/files";
 import { runCommand } from "../../../utils/exec";
 import {
@@ -21,11 +23,18 @@ import {
 import { CLI_ROOT } from "../../../utils/cliRoot";
 import { isSourceUnitAst, listJsonFiles, uniqueAstSources } from "../../../utils/solidityAst";
 import { yellow } from "../../../utils/terminal";
+import { ensureGitignoreEntries } from "../../../utils/gitignore";
 import {
   buildFoundryPackageJson,
-  ensureGitignoreEntry,
   ensureTomlSectionSettings,
 } from "./helpers";
+import {
+  importFoundryAccount,
+  listFoundrySignerAddresses,
+  readFoundryAccount,
+  resolveFoundryAccount,
+  resolveFoundryDeploySigner,
+} from "./accounts";
 
 /** Framework adapter for Foundry-based Diamond projects. */
 const MANAGED_SCRIPT_NAME = "ComposeDeploy.s.sol";
@@ -196,7 +205,9 @@ const adapter: IFrameworkAdapter = {
     } catch (error) {
       if ((error as NodeJS.ErrnoException).code !== "ENOENT") throw error;
     }
-    const updatedGitignore = ensureGitignoreEntry(gitignore, "node_modules/");
+    // `.compose/` is reserved for Compose-owned runtime files; Foundry keeps
+    // its deploy script in `script/` because that artifact is reviewed and tracked.
+    const updatedGitignore = ensureGitignoreEntries(gitignore, ["node_modules/", ".compose/"]);
     if (updatedGitignore !== gitignore) {
       await fs.writeFile(gitignorePath, updatedGitignore, "utf8");
     }
@@ -206,6 +217,40 @@ const adapter: IFrameworkAdapter = {
     if (opts.installDeps) {
       await installNpmDependencies(root);
     }
+  },
+
+  supportsAccountImport: true,
+
+  readAccountAddress(_projectRoot: string, accountName: string) {
+    return readFoundryAccount(accountName);
+  },
+
+  resolveAccountAddress(
+    projectRoot: string,
+    accountName: string,
+    options,
+  ) {
+    return resolveFoundryAccount(accountName, projectRoot, options);
+  },
+
+  listSignerAddresses(options) {
+    return listFoundrySignerAddresses(options);
+  },
+
+  resolveDeploySigner(options: DeploySignerOptions) {
+    return resolveFoundryDeploySigner(options);
+  },
+
+  importAccount(projectRoot: string, accountName: string) {
+    return importFoundryAccount(projectRoot, accountName);
+  },
+
+  assertSupportedProject(_projectRoot: string): void {
+    // Foundry projects are validated by the framework's own compiler and tests.
+  },
+
+  async getDeployToolbox(_projectRoot: string): Promise<DeployToolbox | null> {
+    return null;
   },
 
   getManagedDeployScriptPath(projectRoot: string): string {

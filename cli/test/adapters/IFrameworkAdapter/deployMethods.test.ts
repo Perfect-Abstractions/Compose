@@ -192,12 +192,12 @@ describe("Foundry adapter deploy methods", () => {
 describe("Hardhat adapter deploy methods", () => {
   it("resolves the managed script path and deploy command", () => {
     const scriptPath = path.join(projectRoot, "ignition", "modules", "ComposeDeploy.ts");
-    const runnerPath = path.join(projectRoot, "scripts", ".compose", "ignition-runner.ts");
+    const runnerPath = path.join(projectRoot, ".compose", "hardhat", "ignition-runner.ts");
     expect(hardhatAdapter.getScriptRoot(projectRoot)).toBe(path.join(projectRoot, "ignition", "modules"));
     expect(hardhatAdapter.getManagedDeployScriptPath(projectRoot)).toBe(scriptPath);
     expect(hardhatAdapter.getManagedDeployRunnerPath(projectRoot)).toBe(runnerPath);
     expect(hardhatAdapter.getManagedDeployResultPath(projectRoot)).toBe(
-      path.join(projectRoot, "cache", "compose", "deploy-result.json"),
+      path.join(projectRoot, ".compose", "hardhat", "deploy-result.json"),
     );
 
     expect(
@@ -218,7 +218,8 @@ describe("Hardhat adapter deploy methods", () => {
         "--build-profile",
         "production",
         "run",
-        "scripts/.compose/ignition-runner.ts",
+        "--no-compile",
+        ".compose/hardhat/ignition-runner.ts",
         "--network",
         "local",
         "--verbose",
@@ -232,7 +233,7 @@ describe("Hardhat adapter deploy methods", () => {
 
   it("passes the pinned fork block to the Hardhat simulation mode", () => {
     const scriptPath = path.join(projectRoot, "ignition", "modules", "ComposeDeploy.ts");
-    const runnerPath = path.join(projectRoot, "scripts", ".compose", "ignition-runner.ts");
+    const runnerPath = path.join(projectRoot, ".compose", "hardhat", "ignition-runner.ts");
     expect(hardhatAdapter.createDeployCommand({
       projectRoot,
       scriptPath,
@@ -250,7 +251,8 @@ describe("Hardhat adapter deploy methods", () => {
         "--build-profile",
         "production",
         "run",
-        "scripts/.compose/ignition-runner.ts",
+        "--no-compile",
+        ".compose/hardhat/ignition-runner.ts",
         "--network",
         "sepolia",
       ],
@@ -314,5 +316,29 @@ describe("Hardhat adapter deploy methods", () => {
         31337,
       ),
     ).toEqual([]);
+  });
+});
+
+describe("framework adapter project capabilities", () => {
+  it("does not restrict Foundry projects", async () => {
+    expect(() => foundryAdapter.assertSupportedProject(projectRoot)).not.toThrow();
+    await expect(foundryAdapter.getDeployToolbox(projectRoot)).resolves.toBeNull();
+  });
+
+  it("checks the Hardhat version and detects the toolbox", async () => {
+    await writeJson("package.json", {
+      devDependencies: {
+        hardhat: "^3.8.0",
+        "@nomicfoundation/hardhat-toolbox-viem": "^5.0.0",
+      },
+    });
+
+    expect(() => hardhatAdapter.assertSupportedProject(projectRoot)).not.toThrow();
+    await expect(hardhatAdapter.getDeployToolbox(projectRoot)).resolves.toBe("viem");
+  });
+
+  it("rejects an unsupported Hardhat version", async () => {
+    await writeJson("package.json", { devDependencies: { hardhat: "^2.22.0" } });
+    expect(() => hardhatAdapter.assertSupportedProject(projectRoot)).toThrow("Hardhat 3.8 or newer");
   });
 });

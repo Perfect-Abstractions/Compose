@@ -1,6 +1,33 @@
 import { redactSensitiveArgument } from "./redaction";
 
 /**
+ * Foundry passthrough options that select, provide, or override the signing
+ * account. Shared with the Foundry adapter, which must not predict a signer
+ * when the passthrough requests more than one.
+ */
+export const FOUNDRY_SIGNING_PASSTHROUGH_OPTIONS: readonly string[] = [
+  "--account",
+  "--accounts",
+  "-i",
+  "--interactive",
+  "--interactives",
+  "--private-key",
+  "--private-keys",
+  "--mnemonic",
+  "--mnemonics",
+  "--keystore",
+  "--keystores",
+  "--password",
+  "--sender",
+  "--ledger",
+  "--trezor",
+  "--aws",
+  "--gcp",
+  "--turnkey",
+  "--unlocked",
+];
+
+/**
  * Normalizes parsed `--` passthrough arguments.
  *
  * Commander exposes the tail after `--` as `unknown`; only string entries can
@@ -38,7 +65,7 @@ export function assertSafeDeploymentPassthrough(
     ? ["--root", "--config-path", "--contracts", "--lib-paths", "--remappings", "--remappings-env", "--hardhat", "--hh"]
     : ["--config"];
   const accountOptions = framework === "foundry"
-    ? ["--account", "--accounts", "-i", "--interactive", "--interactives", "--private-key", "--private-keys", "--mnemonic", "--mnemonics", "--keystore", "--keystores", "--password", "--sender", "--ledger", "--trezor", "--aws", "--gcp", "--turnkey", "--unlocked"]
+    ? [...FOUNDRY_SIGNING_PASSTHROUGH_OPTIONS]
     : ["--account"];
   const args = toPassthroughArgs(passthrough);
   const conflictingBroadcastOption = args.find((argument) =>

@@ -1,4 +1,4 @@
-import { SoliditySourceUnitAst } from "../../../src/adapters/IFrameworkAdapter/interface";
+import { SoliditySourceUnitAst } from "../../../src/adapters/IFrameworkAdapter/types";
 
 /** Sorts AST object keys recursively so expected fixtures are stable and reviewable. */
 export function canonicalizeAst(ast: SoliditySourceUnitAst): unknown {

@@ -1,7 +1,8 @@
 import type { Hex } from "viem";
+import type { DeployToolbox } from "../../adapters/IFrameworkAdapter/types";
 
 /** Hardhat toolbox variants supported by the managed deploy script. */
-export type ScriptToolbox = "ethers" | "viem";
+export type ScriptToolbox = DeployToolbox;
 
 /** One facet entry rendered into the managed deploy script. */
 export type ScriptFacetEntry = {

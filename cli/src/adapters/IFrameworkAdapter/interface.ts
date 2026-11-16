@@ -1,79 +1,19 @@
 import { ComposeContext } from "../../context/types";
 import type { Hex } from "viem";
-
-/** Options passed to adapter config writing. */
-export type ConfigOptions = {
-  compilerVersion: string;
-  projectName: string;
-  installDeps: boolean;
-};
-
-/** Options for building the framework command that runs a managed deployment artifact. */
-export type DeployCommandOptions = {
-  /** Absolute project root the command runs in. */
-  projectRoot: string;
-  /** Absolute path of the reviewable managed deployment artifact. */
-  scriptPath: string;
-  /** Absolute path of a framework runner that invokes the reviewed artifact. */
-  runnerPath?: string | null;
-  /** Chain key as defined in compose.json. */
-  chainKey: string;
-  /** RPC endpoint for the target chain. */
-  rpcUrl: string;
-  /** Expected EVM chain ID for the target chain. */
-  chainId: number;
-  /** Whether the managed script is simulated locally or broadcast to the target. */
-  mode: "simulate" | "broadcast";
-  /** Target-chain block used as the fork point for simulations. */
-  forkBlockNumber?: bigint;
-  /** Optional Compose account selection mapped to a framework-native signer. */
-  account?: { alias: string; address: string; foundryAccount?: string } | null;
-  /** Extra arguments forwarded to the framework after `--`. */
-  passthrough: string[];
-};
-
-/** Options for building the framework command that runs the project test suite. */
-export type TestCommandOptions = {
-  /** Absolute project root the command runs in. */
-  projectRoot: string;
-  /** Extra arguments forwarded to the framework after `--`. */
-  passthrough: string[];
-};
-
-/** A framework command ready to be executed. */
-export type FrameworkCommand = {
-  command: string;
-  args: string[];
-  /** Environment overrides for the spawned framework process. */
-  env?: NodeJS.ProcessEnv;
-};
-
-/** A deploy command ready to be executed. */
-export type DeployCommand = FrameworkCommand;
-
-/** A contract deployment recorded by a framework broadcast. */
-export type BroadcastTransaction = {
-  contractName?: string | null;
-  contractAddress?: string | null;
-  txHash?: string | null;
-  from?: string | null;
-};
-
-/** A Solidity source unit AST returned by a framework compiler. */
-export type SolidityAstSource = {
-  sourceName: string;
-  ast: SoliditySourceUnitAst;
-};
-
-/** Minimal stable shape shared by Solidity compact AST source units. */
-export type SoliditySourceUnitAst = {
-  id: number;
-  nodeType: "SourceUnit";
-  src: string;
-  absolutePath?: string;
-  nodes?: unknown[];
-  [key: string]: unknown;
-};
+import type {
+  AccountAddressResolution,
+  AccountResolutionOptions,
+  BroadcastTransaction,
+  ConfigOptions,
+  DeployCommand,
+  DeployCommandOptions,
+  DeploySignerOptions,
+  DeployToolbox,
+  FrameworkCommand,
+  SignerAddressOptions,
+  SolidityAstSource,
+  TestCommandOptions,
+} from "./types";
 
 /** Interface for framework-specific project scaffolding adapters. */
 export interface IFrameworkAdapter {
@@ -96,6 +36,17 @@ export interface IFrameworkAdapter {
   compileAst(ctx: ComposeContext, sourcePaths: string[]): Promise<SolidityAstSource[]>;
 
   /**
+   * Optional: makes package-sourced facets part of the framework build before a
+   * validating compile. Hardhat lists them in `npmFilesToBuild`; resolves to a
+   * revert closure, or null when nothing changed. Foundry omits it (its compile
+   * takes explicit source paths, so package facets already build).
+   */
+  ensurePackageFacetsCompilable?(
+    projectRoot: string,
+    packageSpecifiers: string[],
+  ): Promise<(() => Promise<void>) | null>;
+
+  /**
    * Resolve a catalog Solidity path to a readable local file.
    *
    * Package paths resolve from the CLI's own node_modules/@perfect-abstractions/compose/.
@@ -114,6 +65,46 @@ export interface IFrameworkAdapter {
    * Called after facets are copied.
    */
   writeConfig(ctx: ComposeContext, opts: ConfigOptions): Promise<void>;
+
+  /** Whether Compose can import keys into this framework's native keystore. */
+  readonly supportsAccountImport: boolean;
+
+  /** Read a native account's address without unlocking or prompting. */
+  readAccountAddress(
+    projectRoot: string,
+    accountName: string,
+  ): Promise<AccountAddressResolution>;
+
+  /** Resolve a native account's address, optionally unlocking it. */
+  resolveAccountAddress(
+    projectRoot: string,
+    accountName: string,
+    options?: AccountResolutionOptions,
+  ): Promise<AccountAddressResolution>;
+
+  /** List the addresses the framework will use to sign on a chain. */
+  listSignerAddresses(options: SignerAddressOptions): Promise<string[]>;
+
+  /**
+   * Resolve the signer a deploy command will use without signing anything.
+   * Returns null when the framework cannot expose the selected signer.
+   */
+  resolveDeploySigner(options: DeploySignerOptions): Promise<Hex | null>;
+
+  /** Import a key interactively into the framework keystore and return its address. */
+  importAccount(
+    projectRoot: string,
+    accountName: string,
+  ): Promise<string | null>;
+
+  /** Assert that the project uses a framework version Compose supports. */
+  assertSupportedProject(projectRoot: string): void;
+
+  /**
+   * Detect the contract interaction toolbox used by the framework.
+   * Returns null for frameworks without a JavaScript toolbox.
+   */
+  getDeployToolbox(projectRoot: string): Promise<DeployToolbox | null>;
 
   /** Resolve the path of the CLI-managed deployment artifact inside the project. */
   getManagedDeployScriptPath(projectRoot: string): string;

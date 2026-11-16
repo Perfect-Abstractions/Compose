@@ -1,5 +1,88 @@
+import { readFileSync } from "node:fs";
 import fs from "node:fs/promises";
 import path from "node:path";
+import type { DeployToolbox } from "../types";
+
+/**
+ * Detects the Hardhat ethers or viem toolbox from package.json.
+ *
+ * @param projectRoot - Absolute project root.
+ * @returns The detected toolbox variant.
+ * @throws {Error} If the project has no supported Hardhat toolbox.
+ */
+export async function detectHardhatToolbox(projectRoot: string): Promise<DeployToolbox> {
+  let packageJson: {
+    dependencies?: Record<string, string>;
+    devDependencies?: Record<string, string>;
+  };
+  try {
+    packageJson = JSON.parse(
+      await fs.readFile(path.join(projectRoot, "package.json"), "utf8"),
+    ) as {
+      dependencies?: Record<string, string>;
+      devDependencies?: Record<string, string>;
+    };
+  } catch {
+    throw new Error("Cannot determine the Hardhat toolbox: package.json is missing or invalid.");
+  }
+
+  const dependencies = { ...packageJson.dependencies, ...packageJson.devDependencies };
+  if (
+    dependencies["@nomicfoundation/hardhat-toolbox-viem"]
+    || dependencies["@nomicfoundation/hardhat-viem"]
+  ) {
+    return "viem";
+  }
+  if (
+    dependencies["@nomicfoundation/hardhat-toolbox-mocha-ethers"]
+    || dependencies["@nomicfoundation/hardhat-ethers"]
+  ) {
+    return "ethers";
+  }
+
+  throw new Error(
+    "Compose requires @nomicfoundation/hardhat-ethers or @nomicfoundation/hardhat-viem. "
+    + "Install the toolbox matching your Hardhat project, then retry.",
+  );
+}
+
+/** Ensures that a detected Hardhat project uses the supported Hardhat 3 API. */
+export function assertHardhat3(projectRoot: string): void {
+  const packagePath = path.join(projectRoot, "package.json");
+  let packageJson: {
+    dependencies?: Record<string, string>;
+    devDependencies?: Record<string, string>;
+  };
+  try {
+    packageJson = JSON.parse(readFileSync(packagePath, "utf8")) as {
+      dependencies?: Record<string, string>;
+      devDependencies?: Record<string, string>;
+    };
+  } catch {
+    throw new Error("Hardhat project package.json is missing or invalid; Compose supports Hardhat 3 projects only.");
+  }
+
+  let version: string | undefined;
+  try {
+    const installedPath = path.join(projectRoot, "node_modules", "hardhat", "package.json");
+    version = (JSON.parse(readFileSync(installedPath, "utf8")) as { version?: string }).version;
+  } catch {
+    version = packageJson.devDependencies?.hardhat ?? packageJson.dependencies?.hardhat;
+  }
+
+  const match = version?.match(/(?:^|[^0-9])(\d+)\.(\d+)(?:\.(\d+))?/);
+  if (!version || !match) {
+    throw new Error("Could not determine the Hardhat version. Install Hardhat 3 in this project before running Compose.");
+  }
+
+  const major = Number(match[1]);
+  const minor = Number(match[2]);
+  if (major !== 3 || minor < 8) {
+    throw new Error(
+      `Compose supports Hardhat 3.8 or newer; this project declares or installs '${version}'.`,
+    );
+  }
+}
 
 /** Converts a Hardhat compiler source name into its readable filesystem path. */
 export function resolveHardhatAstSourcePath(projectRoot: string, sourceName: string): string {

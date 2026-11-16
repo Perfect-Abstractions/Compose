@@ -9,7 +9,7 @@ const { runCommand } = vi.hoisted(() => ({ runCommand: vi.fn(async () => undefin
 vi.mock("../../../../src/utils/exec", () => ({ runCommand }));
 
 import { foundryAdapter } from "../../../../src/adapters/IFrameworkAdapter/foundryAdapter/adapter";
-import { ConfigOptions } from "../../../../src/adapters/IFrameworkAdapter/interface";
+import { ConfigOptions } from "../../../../src/adapters/IFrameworkAdapter/types";
 import { Context } from "../../../../src/context/context";
 import { ComposeContext } from "../../../../src/context/types";
 
@@ -118,13 +118,23 @@ describe("foundryAdapter project scaffolding", () => {
     }
   });
 
-  it("adds node_modules to an existing .gitignore without dropping forge entries", async () => {
+  it("adds node_modules and the Compose runtime directory to an existing .gitignore without dropping forge entries", async () => {
     await fs.writeFile(path.join(projectRoot, ".gitignore"), "out/\ncache/\n", "utf8");
 
     await foundryAdapter.writeConfig(createContext(projectRoot, false), configOptions(false));
 
     await expect(
       fs.readFile(path.join(projectRoot, ".gitignore"), "utf8"),
-    ).resolves.toBe("out/\ncache/\nnode_modules/\n");
+    ).resolves.toBe("out/\ncache/\nnode_modules/\n.compose/\n");
+  });
+
+  it("does not duplicate the Compose runtime directory when it is already ignored", async () => {
+    await fs.writeFile(path.join(projectRoot, ".gitignore"), "out/\ncache/\n.compose/\n", "utf8");
+
+    await foundryAdapter.writeConfig(createContext(projectRoot, false), configOptions(false));
+
+    await expect(
+      fs.readFile(path.join(projectRoot, ".gitignore"), "utf8"),
+    ).resolves.toBe("out/\ncache/\n.compose/\nnode_modules/\n");
   });
 });

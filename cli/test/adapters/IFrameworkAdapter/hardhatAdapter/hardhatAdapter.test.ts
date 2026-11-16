@@ -224,7 +224,8 @@ describe("hardhatAdapter.writeConfig", () => {
       const gitignore = await fs.readFile(path.join(projectRoot, ".gitignore"), "utf8");
       expect(gitignore).toContain("node_modules/");
       expect(gitignore).toContain("cache/");
-      expect(gitignore).toContain("scripts/.compose/");
+      expect(gitignore).toContain(".compose/");
+      expect(gitignore).not.toContain("scripts/.compose/");
       expect(gitignore).not.toContain(".cache/");
 
       const envExample = await fs.readFile(path.join(projectRoot, ".env.example"), "utf8");
@@ -241,6 +242,61 @@ describe("hardhatAdapter.writeConfig", () => {
 });
 
 /** Verifies Compose invokes Hardhat's official non-interactive template IDs. */
+describe("hardhatAdapter.ensurePackageFacetsCompilable", () => {
+  async function createConfig(contents: string): Promise<string> {
+    const root = await fs.mkdtemp(path.join(os.tmpdir(), "compose-npm-build-"));
+    await fs.writeFile(path.join(root, "hardhat.config.ts"), contents, "utf8");
+    return root;
+  }
+
+  const overlay = (files: string) => `const base = 1;\nconst composeNpmFilesToBuild = ${files};\nexport default base;\n`;
+
+  it("adds missing package specifiers and can revert", async () => {
+    const root = await createConfig(overlay('["@perfect-abstractions/compose/diamond/DiamondInspectFacet.sol"]'));
+    const configPath = path.join(root, "hardhat.config.ts");
+
+    const revert = await hardhatAdapter.ensurePackageFacetsCompilable?.(
+      root,
+      ["@perfect-abstractions/compose/token/ERC20/Data/ERC20DataFacet.sol"],
+    );
+
+    expect(revert).toBeTypeOf("function");
+    const updated = await fs.readFile(configPath, "utf8");
+    expect(updated).toContain('"@perfect-abstractions/compose/diamond/DiamondInspectFacet.sol"');
+    expect(updated).toContain('"@perfect-abstractions/compose/token/ERC20/Data/ERC20DataFacet.sol"');
+
+    await revert?.();
+    expect(await fs.readFile(configPath, "utf8")).toBe(overlay('["@perfect-abstractions/compose/diamond/DiamondInspectFacet.sol"]'));
+    await fs.rm(root, { recursive: true, force: true });
+  });
+
+  it("returns null and leaves the config untouched when nothing is missing", async () => {
+    const contents = overlay('["@perfect-abstractions/compose/token/ERC20/Data/ERC20DataFacet.sol"]');
+    const root = await createConfig(contents);
+    const configPath = path.join(root, "hardhat.config.ts");
+
+    await expect(
+      hardhatAdapter.ensurePackageFacetsCompilable?.(root, ["@perfect-abstractions/compose/token/ERC20/Data/ERC20DataFacet.sol"]),
+    ).resolves.toBeNull();
+    expect(await fs.readFile(configPath, "utf8")).toBe(contents);
+    await fs.rm(root, { recursive: true, force: true });
+  });
+
+  it("gives manual guidance when the compose overlay marker is missing", async () => {
+    const root = await createConfig("export default { solidity: {} };\n");
+
+    await expect(
+      hardhatAdapter.ensurePackageFacetsCompilable?.(
+        root,
+        ["@perfect-abstractions/compose/token/ERC20/Data/ERC20DataFacet.sol"],
+      ),
+    ).rejects.toThrow(
+      'Add "@perfect-abstractions/compose/token/ERC20/Data/ERC20DataFacet.sol" to solidity.npmFilesToBuild in hardhat.config.ts, then install again.',
+    );
+    await fs.rm(root, { recursive: true, force: true });
+  });
+});
+
 describe("Hardhat official initializer", () => {
   it.each([
     ["ethers", "mocha-ethers"],

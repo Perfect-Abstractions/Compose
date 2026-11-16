@@ -1,12 +1,9 @@
 import { getAddress, isAddress } from "viem";
+import { isRecord } from "./model";
 import type { DeploymentAccount } from "./types";
 
 const ACCOUNT_ALIAS_PATTERN = /^[A-Za-z0-9][A-Za-z0-9._-]*$/;
 const RESERVED_ACCOUNT_ALIASES = new Set(["__proto__", "constructor", "prototype"]);
-
-function isRecord(value: unknown): value is Record<string, unknown> {
-  return typeof value === "object" && value !== null && !Array.isArray(value);
-}
 
 /** Ensures an alias is safe to use as a compose.json object key. */
 export function assertValidAccountAlias(alias: string): void {

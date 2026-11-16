@@ -2,11 +2,11 @@ import fs from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
 import { vi } from "vitest";
+import { IFrameworkAdapter } from "../../../src/adapters/IFrameworkAdapter/interface";
 import {
   ConfigOptions,
-  IFrameworkAdapter,
   SolidityAstSource,
-} from "../../../src/adapters/IFrameworkAdapter/interface";
+} from "../../../src/adapters/IFrameworkAdapter/types";
 import { Context } from "../../../src/context/context";
 import { ComposeContext } from "../../../src/context/types";
 import {
@@ -95,6 +95,14 @@ function createFixtureAdapter(framework: InitFramework): IFrameworkAdapter {
         ),
       ]);
     }),
+    supportsAccountImport: false,
+    readAccountAddress: async () => ({ address: null, exists: false, requiresUnlock: false }),
+    resolveAccountAddress: async () => ({ address: null, exists: false, requiresUnlock: false }),
+    listSignerAddresses: async () => [],
+    resolveDeploySigner: async () => null,
+    importAccount: async () => null,
+    assertSupportedProject: () => {},
+    getDeployToolbox: async () => null,
     getManagedDeployScriptPath: (projectRoot) =>
       path.join(projectRoot, scriptDirectory, framework === "foundry"
         ? "ComposeDeploy.s.sol"
