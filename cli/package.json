@@ -19,7 +19,7 @@
     "prepare:lib": "git submodule update --init --recursive"
   },
   "engines": {
-    "node": ">=20"
+    "node": ">=22"
   },
   "files": [
     "dist/",

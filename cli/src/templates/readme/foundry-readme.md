@@ -5,7 +5,7 @@ Scaffolded by [Compose CLI](https://compose.diamonds) - The open-source toolkit 
 ## Prerequisites
 
 - [Foundry](https://book.getfoundry.sh/getting-started/installation)
-- [Node.js](https://nodejs.org/) (v20 or later) for the Compose CLI
+- [Node.js](https://nodejs.org/) (v22 or later) for the Compose CLI
 
 ## Install Dependencies
 

@@ -2,6 +2,8 @@
 
 The Compose CLI is the fastest way to start a modular smart contract project. Scaffold a facet-based diamond, choose your building blocks, and develop with [Foundry](https://book.getfoundry.sh/) or [Hardhat](https://hardhat.org/).
 
+The CLI requires Node.js 22 or newer. Hardhat 3 projects it generates require Node.js 22.13 or newer.
+
 ## Quick Start
 
 ```bash

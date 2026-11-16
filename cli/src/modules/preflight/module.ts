@@ -1,5 +1,6 @@
 import { ComposeContext } from "../../context/types";
 import { isBinaryInPath } from "../../utils/exec";
+import { assertHardhatNodeVersion } from "../../utils/nodeVersion";
 
 /**
  * Pre-flight checks that verify required toolchain binaries are available.
@@ -9,15 +10,15 @@ import { isBinaryInPath } from "../../utils/exec";
  */
 export const PreflightModule = {
   /**
-   * Verifies that the required binaries for the selected framework exist in PATH.
+   * Verifies the toolchain requirements for the selected framework.
    *
    * - Foundry: checks for `forge`, plus `npm` when project dependencies
    *   (including the local Compose CLI) will be installed.
- * - Hardhat: requires Node.js 22.13+, npm, git (the official template includes
- *   forge-std), and dependency installation because its non-interactive
- *   initializer installs the selected template.
+   * - Hardhat: requires Node.js 22.13+, npm, git (the official template includes
+   *   forge-std), and dependency installation because its non-interactive
+   *   initializer installs the selected template.
    *
-   * Throws an error with an install suggestion if a binary is not found.
+   * Throws an error with an install suggestion if a requirement is not met.
    *
    * @param ctx - The compose context with `param.framework` and `param.installDeps`.
    * @returns The context unchanged (validation is pass/fail via throw).
@@ -32,14 +33,7 @@ export const PreflightModule = {
         await isBinaryInPath("npm");
       }
     } else if (framework === "hardhat") {
-      const [major = 0, minor = 0] = process.versions.node
-        .split(".")
-        .map((part) => Number.parseInt(part, 10));
-      if (major < 22 || (major === 22 && minor < 13)) {
-        throw new Error(
-          `Hardhat 3 requires Node.js 22.13.0 or newer; current version is ${process.versions.node}.`,
-        );
-      }
+      assertHardhatNodeVersion();
       if (!shouldInstallDeps) {
         throw new Error(
           "Hardhat's official non-interactive initializer installs the selected template dependencies. "
