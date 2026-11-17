@@ -1,3 +1,27 @@
+import type { ComposeError } from "../context/types";
+
+/**
+ * Normalizes an unknown thrown value into a ComposeError, keeping any error
+ * code exposed by the original value.
+ * @param error
+ * @param fallbackCode Code used when the error does not expose one
+ * @param fallbackMessage Message used when the error is not an Error instance
+ * @returns Normalized compose error
+ */
+function toComposeError(
+  error: unknown,
+  fallbackCode: string,
+  fallbackMessage = "Operation failed.",
+): ComposeError {
+  return {
+    code: typeof error === "object" && error !== null && "code" in error
+      ? String(error.code)
+      : fallbackCode,
+    message: error instanceof Error ? error.message : fallbackMessage,
+    nativeError: error,
+  };
+}
+
 /**
  * Error normalizer
  * @param error 
@@ -25,4 +49,4 @@ function exitWithError(error: unknown): void {
   process.exitCode = 1;
 }
 
-export { normalizeError, exitWithError };
+export { normalizeError, exitWithError, toComposeError };

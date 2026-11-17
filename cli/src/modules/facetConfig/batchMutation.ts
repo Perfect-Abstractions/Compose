@@ -83,6 +83,8 @@ type FacetBatchMutation = {
     entries: unknown;
     stagedFiles: string[];
   }): Promise<{ facets: string[]; changed: boolean }>;
+  /** Runs after edits, before the validating compile; may change project config. */
+  beforeValidate?(): Promise<void>;
   revert?(options: { stagedFiles: string[] }): Promise<void>;
 };
 
@@ -117,6 +119,7 @@ async function applyBatch(
 
     // Staged sources are as unverified as a registration change, and only install stages.
     if (changed || stagedFiles.length > 0) {
+      await mutation.beforeValidate?.();
       ctx = await validateCandidateConfig(ctx, projectConfig);
     }
     if (changed) {
@@ -156,6 +159,8 @@ export async function applyInstallBatch(
   const contractSourceRoot = adapter.getContractSourceRoot(project.root);
   const catalog = ctx.config.bases as BasesCatalog;
   const resolution = facetReferenceOptions();
+  const packageSpecifiers = new Set<string>();
+  let restoreConfig: (() => Promise<void>) | null = null;
 
   return applyBatch(ctx, project, batch, {
     operation: "install",
@@ -163,6 +168,11 @@ export async function applyInstallBatch(
       const resolved: ResolvedFacetInstall[] = [];
       for (const reference of entries as FacetInstallReference[]) {
         resolved.push(await resolveFacetInstallReference(reference, catalog, project.root, resolution));
+      }
+      for (const facet of resolved) {
+        if (facet.registration.source === "package" && facet.packageSpecifier) {
+          packageSpecifiers.add(facet.packageSpecifier);
+        }
       }
 
       const copied = await copyCatalogFacetSources(resolved, project.root, contractSourceRoot);
@@ -172,7 +182,12 @@ export async function applyInstallBatch(
       for (const facet of copied.facets) {
         if (Object.hasOwn(diamond.facets, facet.name)) {
           if (!sameRegistration(diamond.facets[facet.name], facet.registration)) {
-            throw new Error(`Facet '${facet.name}' is already registered to a different source in '${diamondName}'.`);
+            const existing = diamond.facets[facet.name];
+            const current = typeof existing.contract === "string" ? existing.contract : JSON.stringify(existing);
+            throw new Error(
+              `Facet '${facet.name}' already points to ${current} on '${diamondName}'. `
+              + `Remove it first with 'compose remove ${facet.name}', or register the new source under another facet name.`,
+            );
           }
           continue;
         }
@@ -181,8 +196,15 @@ export async function applyInstallBatch(
       }
       return { facets: installedNames, changed: installedNames.length > 0 };
     },
+    // Package facets must join the Hardhat build before the validating compile
+    // can see them; foundry compiles the explicit paths already.
+    beforeValidate: async () => {
+      if (packageSpecifiers.size === 0 || !adapter.ensurePackageFacetsCompilable) return;
+      restoreConfig = await adapter.ensurePackageFacetsCompilable(project.root, [...packageSpecifiers]);
+    },
     revert: async ({ stagedFiles }) => {
       await Promise.all(stagedFiles.map((filePath) => fs.rm(filePath, { force: true })));
+      await restoreConfig?.();
     },
   });
 }
@@ -206,7 +228,10 @@ export async function applyRemoveBatch(
         removed.push(facetName);
       }
       if (Object.keys(diamond.facets).length === 0) {
-        throw new Error(`Cannot remove every registered facet from '${diamondName}'.`);
+        throw new Error(
+          `Cannot remove every registered facet from '${diamondName}'; a diamond needs at least one facet. `
+          + "Leave one facet registered, or remove the diamond entry from compose.json.",
+        );
       }
       return { facets: removed, changed: removed.length > 0 };
     },

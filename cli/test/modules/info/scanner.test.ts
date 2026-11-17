@@ -8,7 +8,10 @@ import { ComposeProjectInfo } from "../../../src/modules/info/types";
 import { scanFacets } from "../../../src/modules/info/scanner";
 
 describe("info package facet scanning", () => {
-  it("uses the first package source match", async () => {
+  it.each([
+    { framework: "foundry", expected: ["fromFoundryLib()"] },
+    { framework: "hardhat", expected: ["fromNodeModules()"] },
+  ])("uses the $framework package source match", async ({ framework, expected }) => {
     const projectRoot = await fs.mkdtemp(path.join(os.tmpdir(), "compose-info-package-facet-"));
 
     try {
@@ -37,7 +40,7 @@ describe("info package facet scanning", () => {
       const projectInfo: ComposeProjectInfo = {
         project: "example",
         composeVersion: "0.1.0",
-        framework: "foundry",
+        framework,
         diamonds: [{
           name: "ExampleDiamond",
           contract: "src/Diamond.sol:Diamond",
@@ -62,7 +65,7 @@ describe("info package facet scanning", () => {
       await scanFacets(ctx);
 
       const state = ctx.state.infoProject as ModuleState<ComposeProjectInfo>;
-      expect(state.result?.diamonds[0].facets[0].selectors).toEqual(["fromNodeModules()"]);
+      expect(state.result?.diamonds[0].facets[0].selectors).toEqual(expected);
     } finally {
       await fs.rm(projectRoot, { recursive: true, force: true });
     }

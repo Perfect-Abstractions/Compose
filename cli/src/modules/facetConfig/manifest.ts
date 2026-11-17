@@ -119,7 +119,7 @@ function validateInstallReference(value: unknown, diamondName: string): FacetIns
   if (value.source === undefined) return { name };
   if (value.source === "local") {
     if (typeof value.contract !== "string" || !/^.+:([A-Za-z_$][A-Za-z0-9_$]*)$/.test(value.contract.trim())) {
-      throw new Error(`Local facet '${name}' must use path.sol:ContractName.`);
+      throw new Error(`Local facet '${name}' must use path.sol:ContractName, e.g. "src/facets/${name}.sol:${name}".`);
     }
     return { name, source: "local", contract: value.contract.trim() };
   }

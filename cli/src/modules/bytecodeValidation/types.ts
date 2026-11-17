@@ -11,6 +11,7 @@ export type FacetBytecodeValidationResult = {
 export type DeploymentBytecodeValidationResult = {
   diamondName: string;
   chainKey: string;
+  instance: string;
   diamondAddress: Address;
   blockNumber: bigint;
   complete: boolean;
@@ -25,6 +26,7 @@ export type BytecodeValidationSummary = {
   failures: Array<{
     diamondName: string;
     chainKey: string;
+    instance: string;
     diamondAddress: string;
     message: string;
   }>;

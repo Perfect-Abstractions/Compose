@@ -2,6 +2,7 @@ import { describe, expect, it, beforeEach, afterEach } from "vitest";
 import fs from "node:fs/promises";
 import path from "node:path";
 import { LockFileModule } from "../../../src/modules/lockFile/module";
+import { Context } from "../../../src/context/context";
 import { createLockFileHarness, LockFileHarness } from "./harness";
 
 describe("LockFileModule.readLockFile / writeLockFile", () => {
@@ -72,5 +73,28 @@ describe("LockFileModule.readLockFile / writeLockFile", () => {
 
     const readCtx = await LockFileModule.readLockFile(harness.ctx);
     expect(readCtx.state.lockFile?.result?.lock).toEqual(lock2);
+  });
+
+  it("does not read or write an ancestor lock for a nested project root", async () => {
+    const parentLockPath = path.join(harness.projectRoot, "compose.lock");
+    const nestedRoot = path.join(harness.projectRoot, "hh-test");
+    const nestedLockPath = path.join(nestedRoot, "compose.lock");
+    await fs.mkdir(nestedRoot, { recursive: true });
+
+    const parentLock = LockFileModule.createEmptyLock("0.3.0");
+    await fs.writeFile(parentLockPath, JSON.stringify(parentLock, null, 2), "utf8");
+
+    const nestedCtx = Context.create();
+    nestedCtx.param.projectRoot = nestedRoot;
+
+    const readCtx = await LockFileModule.readLockFile(nestedCtx);
+    expect(readCtx.state.lockFile?.result).toBeNull();
+
+    const nestedLock = LockFileModule.createEmptyLock("0.4.0");
+    const writeCtx = await LockFileModule.writeLockFile(readCtx, nestedLock);
+
+    expect(writeCtx.state.lockFileWrite?.result?.path).toBe(nestedLockPath);
+    expect(JSON.parse(await fs.readFile(parentLockPath, "utf8"))).toEqual(parentLock);
+    expect(JSON.parse(await fs.readFile(nestedLockPath, "utf8"))).toEqual(nestedLock);
   });
 });

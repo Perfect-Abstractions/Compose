@@ -1,6 +1,7 @@
 import path from "node:path";
 import { ComposeContext } from "../../context/types";
 import { locateComposeProjectFile, readComposeProjectFile } from "../../utils/composeProjectFile";
+import { assertSolidityContractName } from "../../utils/solidityIdentifiers";
 import { ResolvedFacetSource } from "./types";
 import {
   ComposeProjectFacet,
@@ -79,6 +80,16 @@ export async function loadValidationProject(
     if (!diamondSourcePath) {
       throw new Error("Every diamond in compose.json must define its generated contract path.");
     }
+    const diamondContractSuffix = diamondReference.lastIndexOf(":");
+    const diamondContractName = diamondContractSuffix >= 0
+      ? diamondReference.slice(diamondContractSuffix + 1)
+      : "";
+    if (diamondContractName) {
+      assertSolidityContractName(
+        diamondContractName,
+        `diamond ${JSON.stringify(diamondName)} in compose.json`,
+      );
+    }
     const resolvedDiamondSourcePath = path.resolve(projectRoot, diamondSourcePath);
     const diamondFacetIndexes: number[] = [];
     diamondSourcePaths.add(resolvedDiamondSourcePath);
@@ -90,6 +101,10 @@ export async function loadValidationProject(
         ? contractReference.slice(separatorIndex + 1)
         : facetAlias;
       if (!contractName) continue;
+      assertSolidityContractName(
+        contractName,
+        `facet ${JSON.stringify(facetAlias)} in diamond ${JSON.stringify(diamondName)}`,
+      );
 
       if (facet.source === "package") {
         const packageName = typeof facet.package === "string" ? facet.package : "";
@@ -120,7 +135,11 @@ export async function loadValidationProject(
     throw new Error("compose.json does not define any facets to validate.");
   }
 
-  const composeFacetSources = await resolveComposeProjectFacetSources(projectRoot, composeFacets);
+  const composeFacetSources = await resolveComposeProjectFacetSources(
+    projectRoot,
+    composeFacets,
+    framework,
+  );
   const userFacetSources = resolveUserProjectFacetSources(projectRoot, userFacets);
   const resolvedFacets = pendingFacets.map((facet) => facet.kind === "compose"
     ? composeFacetSources[facet.kindIndex]

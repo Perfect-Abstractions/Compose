@@ -29,6 +29,16 @@ export async function loadPrompts(): Promise<PromptApi> {
   return { input, select, checkbox, confirm } as unknown as PromptApi;
 }
 
+/**
+ * Returns true when the CLI can safely prompt the user.
+ *
+ * Both stdin and stdout must be TTYs; piped or redirected runs must never
+ * block waiting for input.
+ */
+export function isInteractive(): boolean {
+  return Boolean(process.stdin.isTTY && process.stdout.isTTY);
+}
+
 /** Custom theme for checkbox prompts with simplified icons, no help tip, and "None" when empty. */
 export const checkboxTheme = {
   prefix: "",

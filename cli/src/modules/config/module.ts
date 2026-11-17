@@ -2,7 +2,7 @@ import fs from "node:fs/promises";
 import path from "node:path";
 import { ComposeContext } from "../../context/types";
 import { BasesCatalog, BaseDefinition, BaseManifest } from "./types";
-import { sortBaseFeatures, EMPTY_BASE, getDiamondCompilerVersion } from "./catalog";
+import { sortBaseFeatures, EMPTY_BASE, UPGRADE_FACET_NAME, DEFAULT_OWNER_BASE, getDiamondCompilerVersion } from "./catalog";
 import { resolveCatalogSelection, getAccessBases, getAvailableLibraryFacets, validateGroupedAccessFlags } from "./selection";
 import { CLI_ROOT } from "../../utils/cliRoot";
 
@@ -15,6 +15,8 @@ import { CLI_ROOT } from "../../utils/cliRoot";
  */
 export const ConfigModule = {
   EMPTY_BASE,
+  UPGRADE_FACET_NAME,
+  DEFAULT_OWNER_BASE,
   getDiamondCompilerVersion,
   resolveCatalogSelection,
   getAccessBases,

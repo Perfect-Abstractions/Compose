@@ -21,5 +21,5 @@ export const FrameworkModule = {
     }
 
     return null;
-  }
-}
+  },
+};

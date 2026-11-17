@@ -3,8 +3,8 @@ import path from "node:path";
 import { type Hex } from "viem";
 import { ComposeContext } from "../../context/types";
 import { IHashingAdapter } from "../../adapters/IHashingAdapter/interface";
-import { atomicWriteFile, findFileAncestor } from "../../utils/files";
-import { ComposeLock, DiamondDeployment } from "./types";
+import { atomicWriteFile, pathExists } from "../../utils/files";
+import { ComposeLock, DEFAULT_INSTANCE, DiamondDeployment } from "./types";
 import { validateLockFile } from "./validators";
 import { LOCK_FILE_NAME } from "../../utils/metadata";
 
@@ -19,18 +19,20 @@ export const LockFileModule = {
   /**
    * Reads and validates compose.lock from the project root.
    *
-   * Searches for compose.lock by walking up the directory tree from the
-   * project root. Returns null result if file doesn't exist (not an error).
+   * The lock file belongs to exactly one Compose project, so the lookup is
+   * confined to the project root. Walking up from a nested project would pick
+   * up an unrelated parent lock and plan against the wrong deployments.
+   * Returns null result if the file doesn't exist (not an error).
    * Throws if file exists but is invalid.
    *
    * @param ctx - The compose context with project root parameter.
    * @returns The updated context with lock file state.
    */
   async readLockFile(ctx: ComposeContext): Promise<ComposeContext> {
-    const startDir = String(ctx.param.projectRoot ?? process.cwd());
-    const lockFilePath = await findFileAncestor(startDir, LOCK_FILE_NAME);
+    const projectRoot = String(ctx.param.projectRoot ?? process.cwd());
+    const lockFilePath = path.join(projectRoot, LOCK_FILE_NAME);
 
-    if (!lockFilePath) {
+    if (!(await pathExists(lockFilePath))) {
       ctx.state.lockFile = {
         success: true,
         result: null,
@@ -138,6 +140,7 @@ export const LockFileModule = {
    * @param chain - The chain to check.
    * @param facetAddresses - Current on-chain facet addresses.
    * @param hashing - Hashing adapter for keccak256 computation.
+   * @param instance - The deployment instance to check.
    * @returns True if the lock file is stale.
    */
   isLockStale(
@@ -146,8 +149,9 @@ export const LockFileModule = {
     chain: string,
     facetAddresses: Hex[],
     hashing: IHashingAdapter,
+    instance: string = DEFAULT_INSTANCE,
   ): boolean {
-    const deployment = lock.deployments[diamondName]?.[chain];
+    const deployment = lock.deployments[diamondName]?.[chain]?.[instance];
     if (!deployment) {
       return true;
     }
@@ -162,14 +166,16 @@ export const LockFileModule = {
    * @param lock - The lock file content.
    * @param diamondName - The diamond name.
    * @param chain - The chain name.
+   * @param instance - The deployment instance.
    * @returns The deployment or undefined if not found.
    */
   getDeployment(
     lock: ComposeLock,
     diamondName: string,
     chain: string,
+    instance: string = DEFAULT_INSTANCE,
   ): DiamondDeployment | undefined {
-    return lock.deployments[diamondName]?.[chain];
+    return lock.deployments[diamondName]?.[chain]?.[instance];
   },
 
   /**
@@ -181,6 +187,7 @@ export const LockFileModule = {
    * @param lock - The lock file content to update.
    * @param diamondName - The diamond name.
    * @param chain - The chain name.
+   * @param instance - The deployment instance.
    * @param deployment - The deployment details.
    * @returns The updated lock file content.
    */
@@ -188,15 +195,23 @@ export const LockFileModule = {
     lock: ComposeLock,
     diamondName: string,
     chain: string,
+    instance: string,
     deployment: DiamondDeployment,
   ): ComposeLock {
+    if (!instance) {
+      throw new Error("Deployment instance must be a non-empty string.");
+    }
+
     return {
       ...lock,
       deployments: {
         ...lock.deployments,
         [diamondName]: {
           ...lock.deployments[diamondName],
-          [chain]: deployment,
+          [chain]: {
+            ...lock.deployments[diamondName]?.[chain],
+            [instance]: deployment,
+          },
         },
       },
     };

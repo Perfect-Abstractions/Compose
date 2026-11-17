@@ -2,7 +2,11 @@ import fs from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
 import { describe, expect, it } from "vitest";
-import { locateComposeProjectFile, readComposeProjectFile } from "../../src/utils/composeProjectFile";
+import {
+  loadComposeProjectFile,
+  locateComposeProjectFile,
+  readComposeProjectFile,
+} from "../../src/utils/composeProjectFile";
 
 describe("compose project file utilities", () => {
   it("locates the nearest compose.json and returns its project root", async () => {
@@ -46,6 +50,50 @@ describe("compose project file utilities", () => {
 
       await fs.writeFile(filePath, "{invalid", "utf8");
       await expect(readComposeProjectFile(filePath)).rejects.toBeInstanceOf(SyntaxError);
+    } finally {
+      await fs.rm(root, { recursive: true, force: true });
+    }
+  });
+
+  it("loads the nearest compose.json with its project root", async () => {
+    const root = await fs.mkdtemp(path.join(os.tmpdir(), "compose-project-load-"));
+    const nestedRoot = path.join(root, "nested");
+    const startDirectory = path.join(nestedRoot, "src");
+
+    try {
+      await fs.mkdir(startDirectory, { recursive: true });
+      await fs.writeFile(
+        path.join(nestedRoot, "compose.json"),
+        '{"framework":"foundry"}',
+        "utf8",
+      );
+
+      await expect(loadComposeProjectFile(startDirectory)).resolves.toEqual({
+        path: path.join(nestedRoot, "compose.json"),
+        root: nestedRoot,
+        composeJson: { framework: "foundry" },
+      });
+    } finally {
+      await fs.rm(root, { recursive: true, force: true });
+    }
+  });
+
+  it("returns null when no compose.json exists", async () => {
+    const root = await fs.mkdtemp(path.join(os.tmpdir(), "compose-project-load-empty-"));
+
+    try {
+      await expect(loadComposeProjectFile(root)).resolves.toBeNull();
+    } finally {
+      await fs.rm(root, { recursive: true, force: true });
+    }
+  });
+
+  it("propagates load parse errors unchanged", async () => {
+    const root = await fs.mkdtemp(path.join(os.tmpdir(), "compose-project-load-json-"));
+
+    try {
+      await fs.writeFile(path.join(root, "compose.json"), "{invalid", "utf8");
+      await expect(loadComposeProjectFile(root)).rejects.toBeInstanceOf(SyntaxError);
     } finally {
       await fs.rm(root, { recursive: true, force: true });
     }

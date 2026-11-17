@@ -1,27 +1,19 @@
 import { ComposeContext } from "../../context/types";
-
-/** Options passed to adapter config writing. */
-export type ConfigOptions = {
-  compilerVersion: string;
-  projectName: string;
-  installDeps: boolean;
-};
-
-/** A Solidity source unit AST returned by a framework compiler. */
-export type SolidityAstSource = {
-  sourceName: string;
-  ast: SoliditySourceUnitAst;
-};
-
-/** Minimal stable shape shared by Solidity compact AST source units. */
-export type SoliditySourceUnitAst = {
-  id: number;
-  nodeType: "SourceUnit";
-  src: string;
-  absolutePath?: string;
-  nodes?: unknown[];
-  [key: string]: unknown;
-};
+import type { Hex } from "viem";
+import type {
+  AccountAddressResolution,
+  AccountResolutionOptions,
+  BroadcastTransaction,
+  ConfigOptions,
+  DeployCommand,
+  DeployCommandOptions,
+  DeploySignerOptions,
+  DeployToolbox,
+  FrameworkCommand,
+  SignerAddressOptions,
+  SolidityAstSource,
+  TestCommandOptions,
+} from "./types";
 
 /** Interface for framework-specific project scaffolding adapters. */
 export interface IFrameworkAdapter {
@@ -44,6 +36,17 @@ export interface IFrameworkAdapter {
   compileAst(ctx: ComposeContext, sourcePaths: string[]): Promise<SolidityAstSource[]>;
 
   /**
+   * Optional: makes package-sourced facets part of the framework build before a
+   * validating compile. Hardhat lists them in `npmFilesToBuild`; resolves to a
+   * revert closure, or null when nothing changed. Foundry omits it (its compile
+   * takes explicit source paths, so package facets already build).
+   */
+  ensurePackageFacetsCompilable?(
+    projectRoot: string,
+    packageSpecifiers: string[],
+  ): Promise<(() => Promise<void>) | null>;
+
+  /**
    * Resolve a catalog Solidity path to a readable local file.
    *
    * Package paths resolve from the CLI's own node_modules/@perfect-abstractions/compose/.
@@ -62,4 +65,88 @@ export interface IFrameworkAdapter {
    * Called after facets are copied.
    */
   writeConfig(ctx: ComposeContext, opts: ConfigOptions): Promise<void>;
+
+  /** Whether Compose can import keys into this framework's native keystore. */
+  readonly supportsAccountImport: boolean;
+
+  /** Read a native account's address without unlocking or prompting. */
+  readAccountAddress(
+    projectRoot: string,
+    accountName: string,
+  ): Promise<AccountAddressResolution>;
+
+  /** Resolve a native account's address, optionally unlocking it. */
+  resolveAccountAddress(
+    projectRoot: string,
+    accountName: string,
+    options?: AccountResolutionOptions,
+  ): Promise<AccountAddressResolution>;
+
+  /** List the addresses the framework will use to sign on a chain. */
+  listSignerAddresses(options: SignerAddressOptions): Promise<string[]>;
+
+  /**
+   * Resolve a single configured key variable for the selected network when
+   * the framework config makes it unambiguous.
+   */
+  getAccountKeyVariable?(projectRoot: string, chainKey: string): Promise<string | null>;
+
+  /**
+   * Resolve the signer a deploy command will use without signing anything.
+   * Returns null when the framework cannot expose the selected signer.
+   */
+  resolveDeploySigner(options: DeploySignerOptions): Promise<Hex | null>;
+
+  /** Import a key interactively into the framework keystore and return its address. */
+  importAccount(
+    projectRoot: string,
+    accountName: string,
+  ): Promise<string | null>;
+
+  /** Assert that the project uses a framework version Compose supports. */
+  assertSupportedProject(projectRoot: string): void;
+
+  /**
+   * Detect the contract interaction toolbox used by the framework.
+   * Returns null for frameworks without a JavaScript toolbox.
+   */
+  getDeployToolbox(projectRoot: string): Promise<DeployToolbox | null>;
+
+  /** Resolve the path of the CLI-managed deployment artifact inside the project. */
+  getManagedDeployScriptPath(projectRoot: string): string;
+
+  /** Resolve an optional runtime runner separate from the reviewed deploy artifact. */
+  getManagedDeployRunnerPath(projectRoot: string): string | null;
+
+  /**
+   * Resolve the path of the CLI-managed deploy result file inside the project.
+   * Returns null for frameworks that record deployments through their broadcast.
+   */
+  getManagedDeployResultPath(projectRoot: string): string | null;
+
+  /** Build the framework command that simulates or broadcasts the managed deployment artifact. */
+  createDeployCommand(opts: DeployCommandOptions): DeployCommand;
+
+  /** Build the framework command that executes the project test suite. */
+  createTestCommand(opts: TestCommandOptions): FrameworkCommand;
+
+  /**
+   * Read compiled deployed bytecode for a contract from the framework's
+   * local build artifacts. Returns undefined when no artifact is available.
+   */
+  readDeployedBytecode(
+    projectRoot: string,
+    sourcePath: string,
+    contractName: string,
+  ): Promise<Hex | undefined>;
+
+  /**
+   * Read the contract deployments recorded by a framework broadcast.
+   * Returns an empty list for frameworks that report transactions elsewhere.
+   */
+  readBroadcastTransactions(
+    projectRoot: string,
+    scriptPath: string,
+    chainId: number,
+  ): Promise<BroadcastTransaction[]>;
 }

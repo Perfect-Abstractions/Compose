@@ -1,4 +1,4 @@
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import { buildProgram, parseArgs } from "../src/comander";
 
 describe("validate command arguments", () => {
@@ -33,6 +33,34 @@ describe("init command arguments", () => {
         base: "counter",
         outDir: "./projects",
         yes: true,
+      },
+    });
+  });
+
+  it("parses upgradeability flags", () => {
+    expect(
+      parseArgs(["node", "compose", "init", "--base", "none", "--yes", "--immutable"]),
+    ).toEqual({
+      command: "init",
+      flags: {
+        framework: "foundry",
+        toolbox: "ethers",
+        base: "none",
+        yes: true,
+        immutable: true,
+      },
+    });
+
+    expect(
+      parseArgs(["node", "compose", "init", "--base", "none", "--yes", "--upgradeable"]),
+    ).toEqual({
+      command: "init",
+      flags: {
+        framework: "foundry",
+        toolbox: "ethers",
+        base: "none",
+        yes: true,
+        upgradeable: true,
       },
     });
   });
@@ -147,5 +175,223 @@ describe("facet configuration commands", () => {
       command: "remove",
       flags: { facets: ["FacetA"], diamond: "Token" },
     });
+  });
+});
+
+describe("account command arguments", () => {
+  it("parses account setup options", () => {
+    expect(parseArgs([
+      "node",
+      "compose",
+      "account",
+      "setup",
+      "deployer",
+      "--address",
+      "0x00000000000000000000000000000000000000a1",
+      "--foundry-account",
+      "prod-key",
+      "--chain",
+      "sepolia",
+    ])).toEqual({
+      command: "account",
+      flags: {
+        action: "setup",
+        accountName: "deployer",
+        address: "0x00000000000000000000000000000000000000a1",
+        foundryAccount: "prod-key",
+        chain: "sepolia",
+      },
+    });
+  });
+
+  it("parses account list", () => {
+    expect(parseArgs(["node", "compose", "account", "list"])).toEqual({
+      command: "account",
+      flags: { action: "list" },
+    });
+  });
+
+  it("parses account check options", () => {
+    expect(parseArgs([
+      "node",
+      "compose",
+      "account",
+      "check",
+      "deployer",
+      "--chain",
+      "sepolia",
+      "--rpc-url",
+      "https://rpc.example.test",
+    ])).toEqual({
+      command: "account",
+      flags: {
+        action: "check",
+        accountName: "deployer",
+        chain: "sepolia",
+        rpcUrl: "https://rpc.example.test",
+      },
+    });
+  });
+});
+
+describe("test command arguments", () => {
+  it("accepts a project root and framework passthrough arguments", () => {
+    expect(
+      parseArgs([
+        "node",
+        "compose",
+        "test",
+        "--project-root",
+        "./project",
+        "--",
+        "--match-test",
+        "test_Increment",
+        "-vvv",
+      ]),
+    ).toEqual({
+      command: "test",
+      flags: {
+        projectRoot: "./project",
+        passthrough: ["--match-test", "test_Increment", "-vvv"],
+      },
+    });
+  });
+
+  it("accepts test without options", () => {
+    expect(parseArgs(["node", "compose", "test"])).toEqual({
+      command: "test",
+      flags: {},
+    });
+  });
+});
+
+describe("deploy command arguments", () => {
+  it("defaults chain, instance, and deployment flags", () => {
+    expect(parseArgs(["node", "compose", "deploy"])).toEqual({
+      command: "deploy",
+      flags: { chain: "local", instance: "default" },
+    });
+  });
+
+  it("parses deploy options", () => {
+    expect(
+      parseArgs([
+        "node",
+        "compose",
+        "deploy",
+        "--diamond",
+        "Token",
+        "--chain",
+        "sepolia",
+        "--account",
+        "deployer",
+        "--instance",
+        "staging",
+        "--project-root",
+        "./project",
+        "--broadcast",
+        "--redeploy",
+      ]),
+    ).toEqual({
+      command: "deploy",
+      flags: {
+        diamond: "Token",
+        chain: "sepolia",
+        account: "deployer",
+        instance: "staging",
+        projectRoot: "./project",
+        broadcast: true,
+        redeploy: true,
+      },
+    });
+  });
+
+  it("parses a per-deployment RPC URL override", () => {
+    expect(parseArgs([
+      "node",
+      "compose",
+      "deploy",
+      "--chain",
+      "sepolia",
+      "--rpc-url",
+      "https://rpc.example.test/v1/token",
+    ])).toEqual({
+      command: "deploy",
+      flags: {
+        chain: "sepolia",
+        instance: "default",
+        rpcUrl: "https://rpc.example.test/v1/token",
+      },
+    });
+  });
+
+  it("forwards arguments after -- as passthrough", () => {
+    expect(
+      parseArgs([
+        "node",
+        "compose",
+        "deploy",
+        "--broadcast",
+        "--",
+        "--private-key",
+        "0xabc",
+        "--non-interactive",
+      ]),
+    ).toEqual({
+      command: "deploy",
+      flags: {
+        broadcast: true,
+        chain: "local",
+        instance: "default",
+        passthrough: ["--private-key", "0xabc", "--non-interactive"],
+      },
+    });
+  });
+
+  it("keeps commander strict about unknown options before --", () => {
+    const exitSpy = vi
+      .spyOn(process, "exit")
+      .mockImplementation(((code?: number) => {
+        throw new Error(`exit:${code}`);
+      }) as never);
+    const stderrSpy = vi.spyOn(process.stderr, "write").mockImplementation(() => true);
+
+    try {
+      expect(() => parseArgs(["node", "compose", "deploy", "--nope"])).toThrow("exit:1");
+    } finally {
+      exitSpy.mockRestore();
+      stderrSpy.mockRestore();
+    }
+  });
+
+  it("rejects passthrough arguments for commands that do not accept them", () => {
+    expect(() => parseArgs(["node", "compose", "validate", "--", "--ast"])).toThrow(
+      "Only 'compose deploy' and 'compose test' accept passthrough arguments.",
+    );
+    expect(() => parseArgs(["node", "compose", "init", "example", "--", "--foo"])).toThrow(
+      "Only 'compose deploy' and 'compose test' accept passthrough arguments.",
+    );
+  });
+
+  it("redacts sensitive passthrough values in rejection errors", () => {
+    let message = "";
+    try {
+      parseArgs([
+        "node",
+        "compose",
+        "validate",
+        "--",
+        "--private-key",
+        "0xsecret",
+        "--mnemonic=test test test",
+      ]);
+    } catch (error) {
+      message = (error as Error).message;
+    }
+
+    expect(message).toContain("--private-key [REDACTED]");
+    expect(message).toContain("--mnemonic=[REDACTED]");
+    expect(message).not.toContain("0xsecret");
+    expect(message).not.toContain("test test test");
   });
 });

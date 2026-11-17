@@ -14,6 +14,18 @@ export function toFacetChoices(facetNames: string[]): { name: string; value: str
 }
 
 /**
+ * Returns the upgradeability choices for the init prompt, with Immutable first (the default).
+ *
+ * @returns Choices for the upgradeability select prompt.
+ */
+export function getUpgradeabilityChoices(): { name: string; value: "upgradeable" | "immutable" }[] {
+  return [
+    { name: "Immutable (no upgrade facet)", value: "immutable" },
+    { name: "Upgradeable", value: "upgradeable" },
+  ];
+}
+
+/**
  * Returns ownership base choices for the select prompt, with "None" as the first option.
  *
  * @param accessBases - Available access bases from the catalog.

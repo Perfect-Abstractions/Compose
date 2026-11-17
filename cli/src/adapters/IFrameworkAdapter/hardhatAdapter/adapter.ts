@@ -1,30 +1,125 @@
 import fs from "node:fs/promises";
 import path from "node:path";
+import { getAddress, type Hex } from "viem";
 import { ComposeContext } from "../../../context/types";
+import { IFrameworkAdapter } from "../interface";
 import {
+  BroadcastTransaction,
   ConfigOptions,
-  IFrameworkAdapter,
+  DeployCommand,
+  DeployCommandOptions,
+  DeploySignerOptions,
+  DeployToolbox,
+  FrameworkCommand,
   SolidityAstSource,
-} from "../interface";
-import { writeFileIfMissing } from "../../../utils/files";
+  TestCommandOptions,
+} from "../types";
+import { toPosixPath, writeFileIfMissing } from "../../../utils/files";
 import { runCommand } from "../../../utils/exec";
+import { CLI_DEV_DEPENDENCY_VERSION, CLI_PACKAGE_NAME } from "../../../utils/metadata";
 import {
   composePackageSubpath,
   isComposePackagePath,
 } from "../../../utils/soliditySources";
 import { ScaffoldingModule } from "../../../modules/scaffolding/module";
 import { CLI_ROOT } from "../../../utils/cliRoot";
+import { ensureGitignoreEntries } from "../../../utils/gitignore";
 import { isSourceUnitAst, listJsonFiles, uniqueAstSources } from "../../../utils/solidityAst";
-import { resolveHardhatAstSourcePath } from "./helpers";
+import { getHardhatInitTemplate, HARDHAT_INIT_VERSION } from "../../../modules/init/frameworkDeps";
+import { withComposeProjectScripts } from "../../../modules/init/projectScripts";
+import {
+  assertHardhat3,
+  detectHardhatToolbox,
+  resolveHardhatArtifactSourceName,
+  resolveHardhatAstSourcePath,
+} from "./helpers";
+import { listHardhatSignerAddresses, readHardhatAccountKeyVariable } from "./accounts";
+import { assertHardhatNodeVersion } from "../../../utils/nodeVersion";
 
 /** Framework adapter for Hardhat-based Diamond projects. */
+const MANAGED_RUNNER_RELATIVE_PATH = path.join(".compose", "hardhat", "ignition-runner.ts");
+
+/** Managed deploy result captured by the transient runner inside Compose's runtime directory. */
+const MANAGED_RESULT_RELATIVE_PATH = path.join(".compose", "hardhat", "deploy-result.json");
+
+const HARDHAT_TEMPLATE_SAMPLE_FILES = [
+  path.join("contracts", "Counter.sol"),
+  path.join("contracts", "Counter.t.sol"),
+  path.join("test", "Counter.ts"),
+  path.join("ignition", "modules", "Counter.ts"),
+  path.join("scripts", "send-op-tx.ts"),
+];
+
+function updatePackageManifest(
+  packageJson: Record<string, unknown>,
+  projectName: string,
+): Record<string, unknown> {
+  const currentDependencies = typeof packageJson.dependencies === "object" && packageJson.dependencies !== null
+    ? packageJson.dependencies as Record<string, string>
+    : {};
+  const currentDevDependencies = typeof packageJson.devDependencies === "object" && packageJson.devDependencies !== null
+    ? packageJson.devDependencies as Record<string, string>
+    : {};
+  const currentScripts = typeof packageJson.scripts === "object" && packageJson.scripts !== null
+    ? packageJson.scripts as Record<string, string>
+    : {};
+  const safeName = projectName.toLowerCase().replace(/[^a-z0-9._-]+/g, "-");
+
+  return {
+    ...packageJson,
+    name: safeName,
+    type: "module",
+    engines: {
+      ...((typeof packageJson.engines === "object" && packageJson.engines !== null)
+        ? packageJson.engines as Record<string, string>
+        : {}),
+      node: ">=22.13.0",
+    },
+    dependencies: {
+      ...currentDependencies,
+      "@perfect-abstractions/compose": "latest",
+    },
+    devDependencies: {
+      ...currentDevDependencies,
+      [CLI_PACKAGE_NAME]: CLI_DEV_DEPENDENCY_VERSION,
+    },
+    scripts: withComposeProjectScripts({
+      ...currentScripts,
+      build: currentScripts.build ?? "hardhat build",
+      test: currentScripts.test ?? "hardhat test",
+    }),
+  };
+}
+
+/** Command used to invoke Hardhat's non-interactive official project template. */
+export function createHardhatInitCommand(toolbox: string): FrameworkCommand {
+  return {
+    command: "npx",
+    args: [
+      "--yes",
+      `--package=hardhat@${HARDHAT_INIT_VERSION}`,
+      "hardhat",
+      "--init",
+      "--template",
+      getHardhatInitTemplate(toolbox),
+    ],
+  };
+}
+
+/** Removes only the known demo files shipped by Hardhat's selected starter templates. */
+export async function removeHardhatTemplateSamples(projectRoot: string): Promise<void> {
+  await Promise.all(HARDHAT_TEMPLATE_SAMPLE_FILES.map((relativePath) =>
+    fs.rm(path.join(projectRoot, relativePath), { force: true }),
+  ));
+}
+
 const adapter: IFrameworkAdapter = {
   getContractSourceRoot(projectRoot: string): string {
     return path.join(projectRoot, "contracts");
   },
 
   getScriptRoot(projectRoot: string): string {
-    return path.join(projectRoot, "scripts");
+    return path.join(projectRoot, "ignition", "modules");
   },
 
   getTestRoot(projectRoot: string): string {
@@ -36,7 +131,8 @@ const adapter: IFrameworkAdapter = {
   },
 
   async compile(projectRoot: string): Promise<void> {
-    await runCommand("npx", ["hardhat", "compile"], { cwd: projectRoot });
+    assertHardhat3(projectRoot);
+    await runCommand("npx", ["hardhat", "build", "--build-profile", "production"], { cwd: projectRoot });
   },
 
   async resolveSoliditySourcePath(ctx: ComposeContext, sourcePath: string): Promise<string> {
@@ -58,6 +154,7 @@ const adapter: IFrameworkAdapter = {
 
   async compileAst(ctx: ComposeContext, sourcePaths: string[]): Promise<SolidityAstSource[]> {
     const root = String(ctx.param.projectRoot ?? "");
+    assertHardhat3(root);
     await Promise.all(sourcePaths.map((sourcePath) => fs.access(sourcePath)));
     await runCommand("npx", ["hardhat", "compile", "--force"], { cwd: root });
 
@@ -89,124 +186,165 @@ const adapter: IFrameworkAdapter = {
     return uniqueSources;
   },
 
-  async initProject(ctx: ComposeContext): Promise<void> {
-    const root = String(ctx.param.projectRoot ?? "");
-    const projectName = String(ctx.param.projectName ?? "my-diamond");
-    const toolbox = String(ctx.param.toolbox ?? "ethers");
+  /**
+   * Adds package facet sources to the Compose `npmFilesToBuild` overlay in
+   * hardhat.config.ts so Hardhat compiles them. Returns a revert closure when
+   * the config changed, or null when nothing needed adding.
+   */
+  async ensurePackageFacetsCompilable(
+    projectRoot: string,
+    packageSpecifiers: string[],
+  ): Promise<(() => Promise<void>) | null> {
+    if (packageSpecifiers.length === 0) return null;
+    const configPath = path.join(projectRoot, "hardhat.config.ts");
+    let original: string;
+    try {
+      original = await fs.readFile(configPath, "utf8");
+    } catch {
+      throw new Error(`Cannot update solidity.npmFilesToBuild: ${configPath} is not readable.`);
+    }
 
-    const devDeps: Record<string, string> =
-      toolbox === "viem"
-        ? {
-            hardhat: "^3.8.0",
-            "@nomicfoundation/hardhat-toolbox-viem": "^5.0.0",
-          }
-        : {
-            hardhat: "^3.8.0",
-            "@nomicfoundation/hardhat-toolbox-mocha-ethers": "^3.0.0",
-          };
+    const guidance = `Add ${packageSpecifiers.map((specifier) => `"${specifier}"`).join(", ")} to solidity.npmFilesToBuild in hardhat.config.ts, then install again.`;
+    const marker = /const composeNpmFilesToBuild = (\[[\s\S]*?\]);/.exec(original);
+    if (!marker) throw new Error(`Cannot update the Compose overlay in hardhat.config.ts. ${guidance}`);
 
-    const packageJson = {
-      name: projectName,
-      version: "0.1.0",
-      description: "Diamond project generated by Compose CLI",
-      type: "module",
-      main: "index.js",
-      scripts: {
-        build: "npx hardhat compile",
-        test: "npx hardhat test",
-      },
-      keywords: ["solidity", "ethereum", "smart-contracts", "diamonds", "ERC-2535"],
-      author: "",
-      license: "MIT",
-      dependencies: {
-        "@perfect-abstractions/compose": "latest",
-      },
-      devDependencies: devDeps,
+    let listed: unknown;
+    try {
+      listed = JSON.parse(marker[1]);
+    } catch {
+      throw new Error(`Cannot update the Compose overlay in hardhat.config.ts. ${guidance}`);
+    }
+    if (!Array.isArray(listed) || !listed.every((entry) => typeof entry === "string")) {
+      throw new Error(`Cannot update the Compose overlay in hardhat.config.ts. ${guidance}`);
+    }
+
+    const merged = [...new Set([...(listed as string[]), ...packageSpecifiers])];
+    if (merged.length === listed.length) return null;
+
+    const updated = original.replace(
+      marker[0],
+      `const composeNpmFilesToBuild = ${JSON.stringify(merged)};`,
+    );
+    await fs.writeFile(configPath, updated, "utf8");
+    return async () => {
+      await fs.writeFile(configPath, original, "utf8");
     };
+  },
 
-    await fs.writeFile(path.join(root, "package.json"), JSON.stringify(packageJson, null, 2));
+  async initProject(ctx: ComposeContext): Promise<void> {
+    assertHardhatNodeVersion();
+    const root = String(ctx.param.projectRoot ?? "");
+    const toolbox = String(ctx.param.toolbox ?? "ethers");
+    const command = createHardhatInitCommand(toolbox);
+    await runCommand(command.command, command.args, { cwd: root });
+
+    // Compose replaces these sample contracts and tests with its selected
+    // facets and generated diamond test, while keeping the official template's
+    // project config, plugins, and directory structure.
+    await removeHardhatTemplateSamples(root);
   },
 
   async writeConfig(ctx: ComposeContext, opts: ConfigOptions): Promise<void> {
     const root = String(ctx.param.projectRoot ?? "");
-    const toolbox = String(ctx.param.toolbox ?? "ethers");
     const selectedFacets = ScaffoldingModule.getSelectedFacets(ctx);
     const packageFacetPaths = selectedFacets
       .map((facet) => facet.entry.path)
       .filter(isComposePackagePath);
 
-    const npmFilesToBuild = packageFacetPaths.length > 0
-      ? `    npmFilesToBuild: ${JSON.stringify(packageFacetPaths, null, 4).replace(/\n/g, "\n    ")},\n`
-      : "";
+    const packageJsonPath = path.join(root, "package.json");
+    const packageJson = JSON.parse(await fs.readFile(packageJsonPath, "utf8")) as Record<string, unknown>;
+    await fs.writeFile(
+      packageJsonPath,
+      `${JSON.stringify(updatePackageManifest(packageJson, opts.projectName), null, 2)}\n`,
+      "utf8",
+    );
 
-    const toolboxImport =
-      toolbox === "viem"
-        ? `import hardhatToolboxViem from "@nomicfoundation/hardhat-toolbox-viem";`
-        : `import hardhatToolboxMochaEthers from "@nomicfoundation/hardhat-toolbox-mocha-ethers";`;
-    const toolboxPlugin = toolbox === "viem" ? "hardhatToolboxViem" : "hardhatToolboxMochaEthers";
+    // Keep Hardhat's official config in the single config file, then append a
+    // Compose overlay so its plugins and network settings remain intact.
+    const officialConfigPath = path.join(root, "hardhat.config.ts");
+    const officialConfig = await fs.readFile(officialConfigPath, "utf8");
+    const defaultConfigExport = /export\s+default\s+defineConfig\s*\(\s*\{/g;
+    const defaultConfigExports = officialConfig.match(defaultConfigExport) ?? [];
+    if (defaultConfigExports.length !== 1) {
+      throw new Error("Hardhat's official config template did not contain the expected default defineConfig export.");
+    }
+    const baseConfigSource = officialConfig.replace(
+      defaultConfigExport,
+      "const baseConfig = defineConfig({",
+    );
+    const composeConfig = `${baseConfigSource.trimEnd()}
 
-    const hardhatConfig = `import { defineConfig } from "hardhat/config";
-${toolboxImport}
+const baseSolidity = typeof baseConfig.solidity === "object" && baseConfig.solidity !== null
+  ? baseConfig.solidity
+  : {};
+const baseProfiles = baseSolidity.profiles ?? {};
+const defaultProfile = baseProfiles.default ?? {};
+const productionProfile = baseProfiles.production ?? {};
+const composeNpmFilesToBuild = ${JSON.stringify(packageFacetPaths)};
 
 export default defineConfig({
-  plugins: [${toolboxPlugin}],
+  ...baseConfig,
   solidity: {
-${npmFilesToBuild}    profiles: {
+    ...baseSolidity,
+    npmFilesToBuild: [...new Set([...(baseSolidity.npmFilesToBuild ?? []), ...composeNpmFilesToBuild])],
+    profiles: {
+      ...baseProfiles,
       default: {
-        version: "${opts.compilerVersion}",
+        ...defaultProfile,
+        version: ${JSON.stringify(opts.compilerVersion)},
         settings: {
-          optimizer: {
-            enabled: true,
-          },
+          ...defaultProfile.settings,
+          optimizer: { ...defaultProfile.settings?.optimizer, enabled: true },
         },
       },
       production: {
-        version: "${opts.compilerVersion}",
+        ...productionProfile,
+        version: ${JSON.stringify(opts.compilerVersion)},
         settings: {
-          optimizer: {
-            enabled: true,
-          },
+          ...productionProfile.settings,
+          optimizer: { ...productionProfile.settings?.optimizer, enabled: true, runs: 200 },
         },
       },
     },
   },
-  paths: {
-    sources: "./contracts",
-    tests: "./test",
-    cache: "./cache",
-    artifacts: "./artifacts",
+  networks: {
+    ...baseConfig.networks,
+    local: {
+      type: "http",
+      chainType: "l1",
+      url: "http://127.0.0.1:8545",
+      accounts: "remote",
+    },
+    sepolia: {
+      type: "http",
+      chainType: "l1",
+      url: configVariable("SEPOLIA_RPC_URL"),
+      accounts: [configVariable("SEPOLIA_PRIVATE_KEY")],
+    },
   },
 });
 `;
+    await fs.writeFile(officialConfigPath, composeConfig, "utf8");
 
-    await fs.writeFile(path.join(root, "hardhat.config.ts"), hardhatConfig);
-
-    const tsconfig = `{
-  "compilerOptions": {
-    "target": "ES2020",
-    "module": "commonjs",
-    "lib": ["ES2020"],
-    "outDir": "./dist",
-    "rootDir": "./contracts",
-    "strict": true,
-    "esModuleInterop": true,
-    "skipLibCheck": true,
-    "forceConsistentCasingInFileNames": true
-  },
-  "include": ["contracts/**/*.ts"],
-  "exclude": ["node_modules", "dist"]
-}`;
-
-    await fs.writeFile(path.join(root, "tsconfig.json"), tsconfig);
-
-    const gitignore = `node_modules/
-.cache/
-artifacts/
-dist/
-.env
-`;
-
-    await fs.writeFile(path.join(root, ".gitignore"), gitignore);
+    const gitignorePath = path.join(root, ".gitignore");
+    let gitignore = "";
+    try {
+      gitignore = await fs.readFile(gitignorePath, "utf8");
+    } catch (error) {
+      if ((error as NodeJS.ErrnoException).code !== "ENOENT") throw error;
+    }
+    await fs.writeFile(
+      gitignorePath,
+      ensureGitignoreEntries(gitignore, [
+        "node_modules/",
+        "cache/",
+        "artifacts/",
+        "dist/",
+        ".env",
+        ".compose/",
+      ]),
+      "utf8",
+    );
 
     let readme: string;
     try {
@@ -216,13 +354,146 @@ dist/
     } catch {
       readme = `# ${opts.projectName}\n\nGenerated by compose init\n`;
     }
-    await writeFileIfMissing(path.join(root, "README.md"), readme);
+    await fs.writeFile(path.join(root, "README.md"), readme, "utf8");
+    await writeFileIfMissing(
+      path.join(root, ".env.example"),
+      [
+        "# Sepolia RPC endpoint used by `compose deploy --chain sepolia`.",
+        "SEPOLIA_RPC_URL=",
+        "# Deployment signer. Prefer `npx hardhat keystore set SEPOLIA_PRIVATE_KEY`.",
+        "SEPOLIA_PRIVATE_KEY=",
+        "",
+      ].join("\n"),
+    );
 
     await fs.mkdir(path.join(root, "test"), { recursive: true });
+    await fs.mkdir(path.join(root, "scripts"), { recursive: true });
 
     if (opts.installDeps) {
       await runCommand("npm", ["install"], { cwd: root });
     }
+  },
+
+  supportsAccountImport: false,
+
+  async readAccountAddress(_projectRoot: string, _accountName: string) {
+    return { address: null, exists: false, requiresUnlock: false };
+  },
+
+  async resolveAccountAddress(
+    _projectRoot: string,
+    _accountName: string,
+    _options,
+  ) {
+    return { address: null, exists: false, requiresUnlock: false };
+  },
+
+  listSignerAddresses(options) {
+    return listHardhatSignerAddresses(options);
+  },
+
+  getAccountKeyVariable(projectRoot, chainKey) {
+    return readHardhatAccountKeyVariable(projectRoot, chainKey);
+  },
+
+  async resolveDeploySigner(options: DeploySignerOptions): Promise<Hex | null> {
+    if (options.account) return getAddress(options.account.address);
+    const [address] = await listHardhatSignerAddresses(options);
+    return address ? getAddress(address) : null;
+  },
+
+  async importAccount(_projectRoot: string, _accountName: string): Promise<string | null> {
+    throw new Error(
+      "Hardhat accounts are configured in hardhat.config.ts; Compose does not import keys.",
+    );
+  },
+
+  assertSupportedProject(projectRoot: string): void {
+    assertHardhat3(projectRoot);
+  },
+
+  async getDeployToolbox(projectRoot: string): Promise<DeployToolbox | null> {
+    return detectHardhatToolbox(projectRoot);
+  },
+
+  getManagedDeployScriptPath(projectRoot: string): string {
+    return path.join(projectRoot, "ignition", "modules", "ComposeDeploy.ts");
+  },
+
+  getManagedDeployRunnerPath(projectRoot: string): string {
+    return path.join(projectRoot, MANAGED_RUNNER_RELATIVE_PATH);
+  },
+
+  getManagedDeployResultPath(projectRoot: string): string | null {
+    return path.join(projectRoot, MANAGED_RESULT_RELATIVE_PATH);
+  },
+
+  createDeployCommand(opts: DeployCommandOptions): DeployCommand {
+    if (!opts.runnerPath) {
+      throw new Error("Hardhat Ignition deployment requires the transient Compose runner path.");
+    }
+    const relativeScriptPath = toPosixPath(path.relative(opts.projectRoot, opts.runnerPath));
+    const env: NodeJS.ProcessEnv = {
+      COMPOSE_DEPLOY_RPC_URL: opts.rpcUrl,
+      COMPOSE_DEPLOY_MODE: opts.mode,
+    };
+    if (opts.mode === "simulate" && opts.forkBlockNumber !== undefined) {
+      env.COMPOSE_DEPLOY_FORK_BLOCK_NUMBER = String(opts.forkBlockNumber);
+    }
+    return {
+      command: "npx",
+      args: [
+        "hardhat",
+        "--build-profile",
+        "production",
+        "run",
+        "--no-compile",
+        relativeScriptPath,
+        "--network",
+        opts.chainKey,
+        ...opts.passthrough,
+      ],
+      env,
+    };
+  },
+
+  createTestCommand(opts: TestCommandOptions): FrameworkCommand {
+    return {
+      command: "npx",
+      args: ["hardhat", "test", ...opts.passthrough],
+    };
+  },
+
+  async readDeployedBytecode(
+    projectRoot: string,
+    sourcePath: string,
+    contractName: string,
+  ): Promise<Hex | undefined> {
+    const sourceName = await resolveHardhatArtifactSourceName(projectRoot, sourcePath);
+    if (!sourceName) return undefined;
+
+    const artifactPath = path.join(
+      projectRoot,
+      "artifacts",
+      ...sourceName.split("/"),
+      `${contractName}.json`,
+    );
+    try {
+      const artifact = JSON.parse(await fs.readFile(artifactPath, "utf8")) as {
+        deployedBytecode?: unknown;
+      };
+      return typeof artifact.deployedBytecode === "string" && artifact.deployedBytecode.length > 2
+        ? (artifact.deployedBytecode as Hex)
+        : undefined;
+    } catch {
+      return undefined;
+    }
+  },
+
+  async readBroadcastTransactions(): Promise<BroadcastTransaction[]> {
+    // Compose reads Ignition addresses from its result file and transaction
+    // hashes from the matching future in Hardhat Ignition's journal.
+    return [];
   },
 };
 

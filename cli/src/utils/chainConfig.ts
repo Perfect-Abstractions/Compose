@@ -9,6 +9,8 @@ export type ResolvedChainConfig = {
   rpcUrl: string;
   /** Expected EVM chain ID for the selected endpoint. */
   chainId: number;
+  /** Optional account alias used by deployments on this chain. */
+  account?: string;
 };
 
 export type ResolveChainOptions = {
@@ -16,6 +18,8 @@ export type ResolveChainOptions = {
   chainKey?: unknown;
   /** Directory from which to search upward for compose.json. */
   projectRoot?: string;
+  /** Optional per-command RPC URL override; chain identity still comes from compose.json. */
+  rpcUrlOverride?: unknown;
 };
 
 const ENVIRONMENT_VARIABLE = /\$\{([A-Za-z_][A-Za-z0-9_]*)\}/g;
@@ -84,11 +88,38 @@ export async function resolveChainConfig(options: ResolveChainOptions = {}): Pro
   if (!Number.isSafeInteger(entry.chainId) || (entry.chainId as number) <= 0) {
     throw new RPCAdapterError("RPC_INVALID_CONFIGURATION", `Chain '${chainKey}' has an invalid chainId`, { operation: "resolveChain" });
   }
+  if (entry.account !== undefined && (typeof entry.account !== "string" || entry.account.trim() === "")) {
+    throw new RPCAdapterError("RPC_INVALID_CONFIGURATION", `Chain '${chainKey}' has an invalid account alias`, { operation: "resolveChain" });
+  }
 
-  const rpcUrl = interpolateRPCUrl(entry.rpc);
+  if (options.rpcUrlOverride !== undefined && typeof options.rpcUrlOverride !== "string") {
+    throw new RPCAdapterError(
+      "RPC_INVALID_CONFIGURATION",
+      "rpcUrlOverride must be a string",
+      { operation: "resolveChain" },
+    );
+  }
+
+  const rpcUrlValue = options.rpcUrlOverride === undefined ? entry.rpc : options.rpcUrlOverride;
+  if (typeof rpcUrlValue !== "string" || rpcUrlValue.trim() === "") {
+    throw new RPCAdapterError(
+      "RPC_INVALID_CONFIGURATION",
+      options.rpcUrlOverride === undefined
+        ? `Chain '${chainKey}' has an invalid rpc value`
+        : "RPC URL override must not be empty",
+      { operation: "resolveChain" },
+    );
+  }
+
+  const rpcUrl = interpolateRPCUrl(rpcUrlValue);
   if (!rpcUrl.trim()) {
     throw new RPCAdapterError("RPC_INVALID_CONFIGURATION", `Chain '${chainKey}' resolved to an empty RPC URL`, { operation: "resolveChain" });
   }
 
-  return { chainKey, rpcUrl, chainId: entry.chainId as number };
+  return {
+    chainKey,
+    rpcUrl,
+    chainId: entry.chainId as number,
+    ...(typeof entry.account === "string" ? { account: entry.account } : {}),
+  };
 }

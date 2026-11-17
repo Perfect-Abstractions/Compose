@@ -6,7 +6,6 @@ import { PreflightModule } from "../modules/preflight/module";
 import { ProjectDirModule } from "../modules/projectDir/module";
 import { ScaffoldingModule } from "../modules/scaffolding/module";
 import { DiamondGenerationModule } from "../modules/diamondGeneration/module";
-import { DeployGenerationModule } from "../modules/deployGeneration/module";
 import { TestGenerationModule } from "../modules/testGeneration/module";
 import { DependencyKey } from "../resolver/dependencyKey";
 import { DependencyResolver } from "../resolver/dependencyResolver";
@@ -104,10 +103,6 @@ export const InitPipeline = {
     }
 
     ctx = await DiamondGenerationModule.generateDiamondContract(ctx, contractSourceRoot);
-    ctx = await DeployGenerationModule.generateDeployScript(
-      ctx,
-      adapter.getScriptRoot(root),
-    );
     ctx = await TestGenerationModule.generateTestFile(
       ctx,
       adapter.getTestRoot(root),

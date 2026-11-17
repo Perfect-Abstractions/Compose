@@ -3,11 +3,14 @@ import { InitPipeline } from "../../pipelines/initPipeline";
 import { InfoPipeline } from "../../pipelines/infoPipeline";
 import { CatalogPipeline } from "../../pipelines/catalogPipeline";
 import { BuildPipeline } from "../../pipelines/buildPipeline";
+import { TestPipeline } from "../../pipelines/testPipeline";
 import { RPCPipeline } from "../../pipelines/rpcPipeline";
 import { InspectPipeline } from "../../pipelines/inspectPipeline";
 import { ValidatePipeline } from "../../pipelines/validatePipeline";
 import { InstallPipeline } from "../../pipelines/installPipeline";
 import { RemovePipeline } from "../../pipelines/removePipeline";
+import { DeployPipeline } from "../../pipelines/deployPipeline";
+import { AccountPipeline } from "../../pipelines/accountPipeline";
 
 /**
  * Pipeline builder module that routes CLI commands to their corresponding pipelines.
@@ -64,6 +67,13 @@ export const PipelineBuilderModule = {
           error: null,
         };
         return BuildPipeline.execute(ctx);
+      case "test":
+        ctx.state.commandSelected = {
+          success: true,
+          result: { command: ctx.param.command },
+          error: null,
+        };
+        return TestPipeline.execute(ctx);
       case "rpc":
         ctx.state.commandSelected = {
           success: true,
@@ -92,6 +102,26 @@ export const PipelineBuilderModule = {
           error: null,
         };
         return RemovePipeline.execute(ctx);
+      case "deploy":
+        ctx.state.commandSelected = {
+          success: true,
+          result: {
+            command: ctx.param.command,
+            diamond: ctx.param.diamond,
+            chain: ctx.param.chain,
+            instance: ctx.param.instance,
+            account: ctx.param.account,
+          },
+          error: null,
+        };
+        return DeployPipeline.execute(ctx);
+      case "account":
+        ctx.state.commandSelected = {
+          success: true,
+          result: { command: ctx.param.command, action: ctx.param.action },
+          error: null,
+        };
+        return AccountPipeline.execute(ctx);
       default:
         ctx.state.commandRouting = {
           success: false,

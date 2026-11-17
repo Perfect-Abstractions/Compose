@@ -1,5 +1,5 @@
 import { keccak256, stringToBytes, toHex } from "viem";
-import { SolidityAstSource } from "../../adapters/IFrameworkAdapter/interface";
+import { SolidityAstSource } from "../../adapters/IFrameworkAdapter/types";
 import { matchesAstSource } from "./astIdentity";
 import {
   astNode,

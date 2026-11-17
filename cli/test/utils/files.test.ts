@@ -1,6 +1,6 @@
 import path from "node:path";
 import { describe, expect, it } from "vitest";
-import { planImportClosureTargets } from "../../src/utils/files";
+import { planImportClosureTargets, toProjectRelativePath } from "../../src/utils/files";
 
 const root = path.resolve("/tmp", "plan-import-closure");
 const templates = path.join(root, "templates", "import-review");
@@ -54,5 +54,22 @@ describe("planImportClosureTargets", () => {
     expect(planned.get(path.resolve(otherDep))).toBe(
       path.join(projectSrc, "facets", "helpers", "OtherHelper.sol"),
     );
+  });
+});
+
+describe("toProjectRelativePath", () => {
+  it("renders paths inside the project relative to its root", () => {
+    const projectRoot = path.resolve("/tmp", "project");
+    const scriptPath = path.join(projectRoot, "scripts", "compose-deploy.ts");
+
+    expect(toProjectRelativePath(projectRoot, scriptPath)).toBe("scripts/compose-deploy.ts");
+  });
+
+  it("keeps paths outside the project unchanged", () => {
+    const projectRoot = path.resolve("/tmp", "project");
+    const outside = path.resolve("/tmp", "other", "file.ts");
+
+    expect(toProjectRelativePath(projectRoot, outside)).toBe(outside);
+    expect(toProjectRelativePath(projectRoot, projectRoot)).toBe(projectRoot);
   });
 });

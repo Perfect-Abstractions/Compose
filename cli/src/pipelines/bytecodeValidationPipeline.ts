@@ -5,16 +5,7 @@ import type { IDiamondAdapter } from "../adapters/IDiamondAdapter/interface";
 import { BytecodeValidationModule } from "../modules/bytecodeValidation/module";
 import { DependencyKey } from "../resolver/dependencyKey";
 import { DependencyResolver } from "../resolver/dependencyResolver";
-
-function composeError(error: unknown) {
-  return {
-    code: typeof error === "object" && error && "code" in error
-      ? String(error.code)
-      : "BYTECODE_VALIDATION_FAILED",
-    message: error instanceof Error ? error.message : "Bytecode validation failed.",
-    nativeError: error,
-  };
-}
+import { toComposeError } from "../utils/errors";
 
 /** Child pipeline for one diamond deployment on one chain. */
 export const BytecodeValidationPipeline = {
@@ -54,7 +45,11 @@ export const BytecodeValidationPipeline = {
       }
       return ctx;
     } catch (error) {
-      const resolvedError = composeError(error);
+      const resolvedError = toComposeError(
+        error,
+        "BYTECODE_VALIDATION_FAILED",
+        "Bytecode validation failed.",
+      );
       ctx.state.bytecodeDeploymentValidation = {
         success: false,
         result: null,

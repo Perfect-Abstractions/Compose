@@ -2,6 +2,9 @@
 cache/
 out/
 
+# Compose runtime files
+.compose/
+
 # Ignores development broadcast logs
 !/broadcast
 /broadcast/*/31337/

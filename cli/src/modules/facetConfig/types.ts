@@ -73,6 +73,8 @@ export type ResolvedFacetInstall = {
   registration: FacetRegistration;
   catalogSource?: string;
   targetGroup?: "diamond" | "libraries" | "facets";
+  /** Package-relative source (`@scope/pkg/path.sol`) for package registrations. */
+  packageSpecifier?: string;
 };
 
 export type FacetBatchOperation = "install" | "remove";

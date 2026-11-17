@@ -2,10 +2,8 @@ import { describe, expect, it, vi } from "vitest";
 import fs from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
-import {
-  IFrameworkAdapter,
-  SolidityAstSource,
-} from "../../../src/adapters/IFrameworkAdapter/interface";
+import { IFrameworkAdapter } from "../../../src/adapters/IFrameworkAdapter/interface";
+import { SolidityAstSource } from "../../../src/adapters/IFrameworkAdapter/types";
 import { HashingAdapter } from "../../../src/adapters/IHashingAdapter/adapter";
 import { Context } from "../../../src/context/context";
 import { ModuleState } from "../../../src/context/types";

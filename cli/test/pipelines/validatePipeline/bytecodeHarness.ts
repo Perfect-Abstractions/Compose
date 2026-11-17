@@ -255,11 +255,13 @@ export async function createBytecodeE2EHarness(): Promise<BytecodeE2EHarness> {
           deployments: {
             ERC20Diamond: {
               local: {
-                diamond: diamondAddress,
-                facets: deployedFacets,
-                facetHash: "0x00",
-                lastSync: new Date().toISOString(),
-                txHash: diamondTransaction.hash ?? "0x00",
+                default: {
+                  diamond: diamondAddress,
+                  facets: deployedFacets,
+                  facetHash: "0x00",
+                  lastSync: new Date().toISOString(),
+                  txHash: diamondTransaction.hash ?? "0x00",
+                },
               },
             },
           },

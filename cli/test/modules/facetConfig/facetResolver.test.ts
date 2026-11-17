@@ -4,6 +4,7 @@ import path from "node:path";
 import { afterEach, describe, expect, it } from "vitest";
 import type { BasesCatalog } from "../../../src/modules/config/types";
 import {
+  copyCatalogFacetSources,
   findLocalContractMatches,
   listAvailableCatalogFacetNames,
   resolveFacetInstallReference,
@@ -142,5 +143,50 @@ describe("bare facet references", () => {
     expect(await findLocalContractMatches("FeeFacet", root)).toEqual([
       { source: "src/facets/FeeFacetV2.sol", contractName: "FeeFacetV2" },
     ]);
+  });
+});
+
+describe("install guidance messages", () => {
+  it("suggests discovery paths for an unknown bare reference", async () => {
+    const root = await createProject();
+
+    await expect(
+      resolveFacetInstallReference("erc20", { globals: {}, features: {} }, root),
+    ).rejects.toThrow(/Use a 'compose catalog' name, path\.sol:ContractName, or a project contract name/);
+  });
+
+  it("adds the manifest hint for unknown manifest entries", async () => {
+    const root = await createProject();
+
+    await expect(
+      resolveFacetInstallReference({ name: "erc20" }, { globals: {}, features: {} }, root),
+    ).rejects.toThrow(
+      /Use a 'compose catalog' name, path\.sol:ContractName, or a project contract name\. In a manifest, give the entry a local or package source\./,
+    );
+  });
+
+  it("points to local registration when a catalog copy would overwrite edited content", async () => {
+    const root = await createProject();
+    await writeSource(root, "fixtures/CounterDecrementFacet.sol", "// catalog version\ncontract CounterDecrementFacet {}\n");
+    await writeSource(root, "contracts/facets/CounterDecrementFacet.sol", "// edited locally\ncontract CounterDecrementFacet {}\n");
+
+    const conflict = copyCatalogFacetSources(
+      [{
+        name: "CounterDecrementFacet",
+        contractName: "CounterDecrementFacet",
+        targetGroup: "facets",
+        catalogSource: path.join(root, "fixtures", "CounterDecrementFacet.sol"),
+        registration: { source: "local", contract: "", constructor: undefined },
+      }],
+      root,
+      path.join(root, "contracts"),
+    );
+
+    await expect(conflict).rejects.toThrow(
+      "Facet source destination already exists with different contents: contracts/facets/CounterDecrementFacet.sol",
+    );
+    await expect(conflict).rejects.toThrow(
+      'Keep it: compose install "contracts/facets/CounterDecrementFacet.sol:CounterDecrementFacet". Replace it: move the file, then install again.',
+    );
   });
 });

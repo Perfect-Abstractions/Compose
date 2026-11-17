@@ -218,8 +218,8 @@ describe("validation project loader", () => {
     }
   });
 
-  it("rejects package facet sources when both package roots contain a match", async () => {
-    const projectRoot = await fs.mkdtemp(path.join(os.tmpdir(), "compose-validation-package-ambiguous-"));
+  it("prefers the Foundry package root when both package roots contain a match", async () => {
+    const projectRoot = await fs.mkdtemp(path.join(os.tmpdir(), "compose-validation-package-foundry-"));
     const packageSourcePath = path.join(
       projectRoot,
       "node_modules",
@@ -244,6 +244,118 @@ describe("validation project loader", () => {
       await fs.mkdir(path.dirname(foundrySourcePath), { recursive: true });
       await fs.writeFile(packageSourcePath, "contract PackageFacet {}", "utf8");
       await fs.writeFile(foundrySourcePath, "contract PackageFacet {}", "utf8");
+      await fs.writeFile(
+        path.join(projectRoot, "compose.json"),
+        JSON.stringify({
+          framework: "foundry",
+          diamonds: {
+            Example: {
+              contract: "src/Diamond.sol:Diamond",
+              facets: {
+                PackageFacet: {
+                  source: "package",
+                  contract: "PackageFacet",
+                  package: "@perfect-abstractions/compose",
+                },
+              },
+            },
+          },
+        }),
+        "utf8",
+      );
+      ctx.param.projectRoot = projectRoot;
+
+      const project = await loadValidationProject(ctx);
+
+      expect(project.facetSources).toEqual([
+        { contractName: "PackageFacet", sourcePath: foundrySourcePath },
+      ]);
+    } finally {
+      await fs.rm(projectRoot, { recursive: true, force: true });
+    }
+  });
+
+  it("prefers the node_modules package root when the project uses Hardhat", async () => {
+    const projectRoot = await fs.mkdtemp(path.join(os.tmpdir(), "compose-validation-package-hardhat-"));
+    const packageSourcePath = path.join(
+      projectRoot,
+      "node_modules",
+      "@perfect-abstractions",
+      "compose",
+      "diamond",
+      "PackageFacet.sol",
+    );
+    const foundrySourcePath = path.join(
+      projectRoot,
+      "lib",
+      "Compose",
+      "src",
+      "diamond",
+      "PackageFacet.sol",
+    );
+    const ctx = Context.create();
+
+    try {
+      await fs.mkdir(path.dirname(packageSourcePath), { recursive: true });
+      await fs.mkdir(path.dirname(foundrySourcePath), { recursive: true });
+      await fs.writeFile(packageSourcePath, "contract PackageFacet {}", "utf8");
+      await fs.writeFile(foundrySourcePath, "contract PackageFacet {}", "utf8");
+      await fs.writeFile(
+        path.join(projectRoot, "compose.json"),
+        JSON.stringify({
+          framework: "hardhat",
+          diamonds: {
+            Example: {
+              contract: "contracts/Diamond.sol:Diamond",
+              facets: {
+                PackageFacet: {
+                  source: "package",
+                  contract: "PackageFacet",
+                  package: "@perfect-abstractions/compose",
+                },
+              },
+            },
+          },
+        }),
+        "utf8",
+      );
+      ctx.param.projectRoot = projectRoot;
+
+      const project = await loadValidationProject(ctx);
+
+      expect(project.facetSources).toEqual([
+        { contractName: "PackageFacet", sourcePath: packageSourcePath },
+      ]);
+    } finally {
+      await fs.rm(projectRoot, { recursive: true, force: true });
+    }
+  });
+
+  it("rejects package facets that are ambiguous within the selected package root", async () => {
+    const projectRoot = await fs.mkdtemp(path.join(os.tmpdir(), "compose-validation-package-ambiguous-"));
+    const firstSourcePath = path.join(
+      projectRoot,
+      "lib",
+      "Compose",
+      "src",
+      "first",
+      "PackageFacet.sol",
+    );
+    const secondSourcePath = path.join(
+      projectRoot,
+      "lib",
+      "Compose",
+      "src",
+      "second",
+      "PackageFacet.sol",
+    );
+    const ctx = Context.create();
+
+    try {
+      await fs.mkdir(path.dirname(firstSourcePath), { recursive: true });
+      await fs.mkdir(path.dirname(secondSourcePath), { recursive: true });
+      await fs.writeFile(firstSourcePath, "contract PackageFacet {}", "utf8");
+      await fs.writeFile(secondSourcePath, "contract PackageFacet {}", "utf8");
       await fs.writeFile(
         path.join(projectRoot, "compose.json"),
         JSON.stringify({
@@ -317,6 +429,60 @@ describe("validation project loader", () => {
       }]);
       expect(ctx.config.composeJson).toBe(override);
       expect(ctx.param.projectRoot).toBe(projectRoot);
+    } finally {
+      await fs.rm(projectRoot, { recursive: true, force: true });
+    }
+  });
+
+  it("rejects a facet contract name that is not a Solidity identifier", async () => {
+    const projectRoot = await fs.mkdtemp(path.join(os.tmpdir(), "compose-validation-project-name-"));
+
+    try {
+      await fs.writeFile(path.join(projectRoot, "compose.json"), JSON.stringify({
+        framework: "foundry",
+        diamonds: {
+          Example: {
+            contract: "src/Diamond.sol:Diamond",
+            facets: {
+              CounterFacet: {
+                source: "local",
+                contract: 'src/CounterFacet.sol:CounterFacet"; contract Evil {}',
+              },
+            },
+          },
+        },
+      }), "utf8");
+      const ctx = Context.create();
+      ctx.param.projectRoot = projectRoot;
+
+      await expect(loadValidationProject(ctx)).rejects.toThrow("Invalid Solidity contract name");
+    } finally {
+      await fs.rm(projectRoot, { recursive: true, force: true });
+    }
+  });
+
+  it("rejects a diamond contract name that is not a Solidity identifier", async () => {
+    const projectRoot = await fs.mkdtemp(path.join(os.tmpdir(), "compose-validation-diamond-name-"));
+
+    try {
+      await fs.writeFile(path.join(projectRoot, "compose.json"), JSON.stringify({
+        framework: "foundry",
+        diamonds: {
+          Example: {
+            contract: 'src/Diamond.sol:Diamond"; contract Evil {}',
+            facets: {
+              CounterFacet: {
+                source: "local",
+                contract: "src/CounterFacet.sol:CounterFacet",
+              },
+            },
+          },
+        },
+      }), "utf8");
+      const ctx = Context.create();
+      ctx.param.projectRoot = projectRoot;
+
+      await expect(loadValidationProject(ctx)).rejects.toThrow("Invalid Solidity contract name");
     } finally {
       await fs.rm(projectRoot, { recursive: true, force: true });
     }

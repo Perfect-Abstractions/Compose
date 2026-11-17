@@ -3,7 +3,7 @@ import os from "node:os";
 import path from "node:path";
 import { describe, expect, it } from "vitest";
 import { Context } from "../../../src/context/context";
-import { loadComposeProject } from "../../../src/modules/facetConfig/projectConfig";
+import { loadComposeProject, getDiamondOrThrow } from "../../../src/modules/facetConfig/projectConfig";
 
 describe("facet config project loader", () => {
   it("validates the project and defaults omitted facet maps", async () => {
@@ -58,5 +58,20 @@ describe("facet config project loader", () => {
     } finally {
       await fs.rm(root, { recursive: true, force: true });
     }
+  });
+});
+
+describe("getDiamondOrThrow", () => {
+  it("lists available diamond names when the requested one is missing", () => {
+    const diamonds = { Alpha: {}, Beta: {} } as never;
+    expect(() => getDiamondOrThrow(diamonds, "Gamma")).toThrow(
+      "Diamond 'Gamma' is not defined in compose.json. Available: Alpha, Beta.",
+    );
+  });
+
+  it("says none defined when the project has no diamonds", () => {
+    expect(() => getDiamondOrThrow({} as never, "Alpha")).toThrow(
+      "Available: none defined.",
+    );
   });
 });
