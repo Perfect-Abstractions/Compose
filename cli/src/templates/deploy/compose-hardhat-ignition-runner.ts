@@ -96,6 +96,10 @@ async function main() {
       return;
     }
 
+    for (const [name, address] of Object.entries(facets)) {
+      console.log(`${name}: ${address}`);
+    }
+
     await fs.mkdir(path.dirname(resultPath), { recursive: true });
     await fs.writeFile(resultPath, JSON.stringify({
       mode: "deploy",

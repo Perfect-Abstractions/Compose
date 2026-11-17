@@ -204,6 +204,8 @@ describe("Hardhat Ignition renderers", () => {
     expect(source).toContain('deploymentConnection.ignition.deploy(ComposeDeploy, {');
     expect(source).toContain(`deploymentId: executionDeploymentId`);
     expect(source).toContain('"AlphaFacet": await addressOf(outputs.alphaFacet)');
+    expect(source).toContain("for (const [name, address] of Object.entries(facets)) {");
+    expect(source).toContain("console.log(`${name}: ${address}`);");
     expect(source).toContain("ignitionDeploymentId,");
     expect(source).not.toContain("transactions:");
     expect(source).toContain("Simulation succeeded. No transactions were broadcast.");
