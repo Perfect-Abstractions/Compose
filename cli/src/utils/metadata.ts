@@ -15,8 +15,16 @@ export const LOCK_FILE_NAME = "compose.lock";
 /** npm package that provides the `compose` binary. */
 export const CLI_PACKAGE_NAME = "@perfect-abstractions/compose-cli";
 
-/** Version range written into generated projects so they run the CLI locally. */
-export const CLI_DEV_DEPENDENCY_VERSION = `^${VERSION}`;
+/** Resolves the CLI dependency written into generated projects. */
+export function getCliDependencySpec(version: string, override?: string): string {
+  return override || `^${version}`;
+}
+
+/** Dependency spec written into generated projects so they run the CLI locally. */
+export const CLI_DEV_DEPENDENCY_SPEC = getCliDependencySpec(
+  VERSION,
+  process.env.COMPOSE_CLI_DEPENDENCY_SPEC,
+);
 
 export const COMPOSE_HEADER = `
    _____ ____  __  __ _____   ____   _____ ______     _____ _      _____ 

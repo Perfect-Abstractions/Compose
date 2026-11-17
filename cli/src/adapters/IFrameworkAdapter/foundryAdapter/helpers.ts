@@ -1,5 +1,5 @@
 import { withComposeProjectScripts } from "../../../modules/init/projectScripts";
-import { CLI_DEV_DEPENDENCY_VERSION, CLI_PACKAGE_NAME } from "../../../utils/metadata";
+import { CLI_DEV_DEPENDENCY_SPEC, CLI_PACKAGE_NAME } from "../../../utils/metadata";
 
 /** Adds missing settings to a TOML section without overwriting existing values. */
 export function ensureTomlSectionSettings(
@@ -53,7 +53,7 @@ export function buildFoundryPackageJson(projectName: string): string {
       fmt: "forge fmt",
     }),
     devDependencies: {
-      [CLI_PACKAGE_NAME]: CLI_DEV_DEPENDENCY_VERSION,
+      [CLI_PACKAGE_NAME]: CLI_DEV_DEPENDENCY_SPEC,
     },
   };
 
