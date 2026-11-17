@@ -1,4 +1,4 @@
-import { CLI_DEV_DEPENDENCY_VERSION, CLI_PACKAGE_NAME } from "../../utils/metadata";
+import { CLI_DEV_DEPENDENCY_SPEC, CLI_PACKAGE_NAME } from "../../utils/metadata";
 import { FrameworkDependencies } from "./types";
 
 /** Hardhat release line used by Compose's generated Hardhat 3 projects. */
@@ -40,7 +40,7 @@ export function getFrameworkDependencies(
         { name: "Perfect-Abstractions/Compose", version: "(git submodule)" },
         {
           name: CLI_PACKAGE_NAME,
-          version: `${CLI_DEV_DEPENDENCY_VERSION} (npm dev dependency)`,
+          version: `${CLI_DEV_DEPENDENCY_SPEC} (npm dev dependency)`,
         },
       ],
       packageType: "packages",
@@ -58,7 +58,7 @@ export function getFrameworkDependencies(
           "@nomicfoundation/hardhat-toolbox-mocha-ethers": "^3.0.7",
         };
 
-  devDeps[CLI_PACKAGE_NAME] = CLI_DEV_DEPENDENCY_VERSION;
+  devDeps[CLI_PACKAGE_NAME] = CLI_DEV_DEPENDENCY_SPEC;
 
   return {
     deps: [

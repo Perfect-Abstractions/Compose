@@ -16,7 +16,7 @@ import {
 } from "../types";
 import { toPosixPath, writeFileIfMissing } from "../../../utils/files";
 import { runCommand } from "../../../utils/exec";
-import { CLI_DEV_DEPENDENCY_VERSION, CLI_PACKAGE_NAME } from "../../../utils/metadata";
+import { CLI_DEV_DEPENDENCY_SPEC, CLI_PACKAGE_NAME } from "../../../utils/metadata";
 import {
   composePackageSubpath,
   isComposePackagePath,
@@ -81,7 +81,7 @@ function updatePackageManifest(
     },
     devDependencies: {
       ...currentDevDependencies,
-      [CLI_PACKAGE_NAME]: CLI_DEV_DEPENDENCY_VERSION,
+      [CLI_PACKAGE_NAME]: CLI_DEV_DEPENDENCY_SPEC,
     },
     scripts: withComposeProjectScripts({
       ...currentScripts,

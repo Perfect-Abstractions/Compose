@@ -2,7 +2,7 @@ import fs from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { CLI_DEV_DEPENDENCY_VERSION, CLI_PACKAGE_NAME } from "../../../../src/utils/metadata";
+import { CLI_DEV_DEPENDENCY_SPEC, CLI_PACKAGE_NAME } from "../../../../src/utils/metadata";
 
 const { runCommand } = vi.hoisted(() => ({ runCommand: vi.fn(async () => undefined) }));
 
@@ -61,7 +61,7 @@ describe("foundryAdapter project scaffolding", () => {
       validate: "compose validate",
     });
     expect(packageJson.devDependencies).toEqual({
-      [CLI_PACKAGE_NAME]: CLI_DEV_DEPENDENCY_VERSION,
+      [CLI_PACKAGE_NAME]: CLI_DEV_DEPENDENCY_SPEC,
     });
     expect(runCommand).toHaveBeenCalledWith("forge", ["init", "."], { cwd: projectRoot });
   });

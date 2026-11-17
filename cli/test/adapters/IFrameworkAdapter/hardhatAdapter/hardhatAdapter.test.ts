@@ -13,7 +13,7 @@ import {
 import { resolveHardhatAstSourcePath } from "../../../../src/adapters/IFrameworkAdapter/hardhatAdapter/helpers";
 import { Context } from "../../../../src/context/context";
 import { ConfigModule } from "../../../../src/modules/config/module";
-import { CLI_DEV_DEPENDENCY_VERSION, CLI_PACKAGE_NAME } from "../../../../src/utils/metadata";
+import { CLI_DEV_DEPENDENCY_SPEC, CLI_PACKAGE_NAME } from "../../../../src/utils/metadata";
 import { canonicalizeAst } from "../canonicalAst";
 import {
   createHardhatAdapterFixtureHarness,
@@ -208,7 +208,7 @@ describe("hardhatAdapter.writeConfig", () => {
       expect(config).toContain("npmFilesToBuild:");
 
       const packageJson = JSON.parse(await fs.readFile(path.join(projectRoot, "package.json"), "utf8"));
-      expect(packageJson.devDependencies[CLI_PACKAGE_NAME]).toBe(CLI_DEV_DEPENDENCY_VERSION);
+      expect(packageJson.devDependencies[CLI_PACKAGE_NAME]).toBe(CLI_DEV_DEPENDENCY_SPEC);
       expect(packageJson.dependencies["@perfect-abstractions/compose"]).toBe("latest");
       expect(packageJson.devDependencies["@nomicfoundation/hardhat-toolbox-mocha-ethers"]).toBe("^3.0.7");
       expect(packageJson.engines.node).toBe(">=22.13.0");

@@ -71,7 +71,18 @@ jobs:
       - name: Run tests
         run: npm run cli@test
 
+      - name: Pack CLI for smoke tests
+        id: pack-cli
+        working-directory: cli
+        run: |
+          set -euo pipefail
+          PACK_JSON="$(npm pack --pack-destination "$RUNNER_TEMP" --json)"
+          TARBALL="$(node -e 'process.stdout.write(JSON.parse(process.argv[1])[0].filename)' "$PACK_JSON")"
+          echo "tarball=$RUNNER_TEMP/$TARBALL" >> "$GITHUB_OUTPUT"
+
       - name: Smoke test Foundry counter base
+        env:
+          COMPOSE_CLI_DEPENDENCY_SPEC: file:${{ steps.pack-cli.outputs.tarball }}
         run: |
           set -euo pipefail
           rm -rf ci-foundry
@@ -84,6 +95,8 @@ jobs:
           forge build
 
       - name: Smoke test Hardhat counter base (ethers)
+        env:
+          COMPOSE_CLI_DEPENDENCY_SPEC: file:${{ steps.pack-cli.outputs.tarball }}
         run: |
           set -euo pipefail
           rm -rf ci-hardhat
