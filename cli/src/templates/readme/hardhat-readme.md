@@ -53,11 +53,24 @@ npx compose deploy -- --broadcast
 
 ### Sepolia
 
-Sepolia is preconfigured in `compose.json` and `hardhat.config.ts`. Copy `.env.example` to `.env` and set `SEPOLIA_RPC_URL`, store the deployer key with `npx hardhat keystore set SEPOLIA_PRIVATE_KEY`, then plan and broadcast:
+Sepolia is preconfigured in `compose.json` and `hardhat.config.ts`. Copy `.env.example` to `.env` and set `SEPOLIA_RPC_URL`. Store the signer key using the variable already configured for the network:
 
 ```shell
-npx compose deploy -- --chain sepolia
-npx compose deploy -- --chain sepolia --broadcast
+npx hardhat keystore set SEPOLIA_PRIVATE_KEY
+```
+
+Register the matching public address as a Compose account, then verify it:
+
+```shell
+npx compose account setup deployer-sep --address <public-signer-address> --chain sepolia
+npx compose account check deployer-sep --chain sepolia
+```
+
+Plan the deployment and review `ignition/modules/ComposeDeploy.ts`, then broadcast:
+
+```shell
+npx compose deploy --chain sepolia --account deployer-sep
+npx compose deploy --chain sepolia --account deployer-sep --broadcast
 ```
 
 The Compose CLI is a dev dependency of this project, so `npx compose` uses the local version.

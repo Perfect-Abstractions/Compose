@@ -33,7 +33,7 @@ import {
   resolveHardhatArtifactSourceName,
   resolveHardhatAstSourcePath,
 } from "./helpers";
-import { listHardhatSignerAddresses } from "./accounts";
+import { listHardhatSignerAddresses, readHardhatAccountKeyVariable } from "./accounts";
 import { assertHardhatNodeVersion } from "../../../utils/nodeVersion";
 
 /** Framework adapter for Hardhat-based Diamond projects. */
@@ -390,6 +390,10 @@ export default defineConfig({
 
   listSignerAddresses(options) {
     return listHardhatSignerAddresses(options);
+  },
+
+  getAccountKeyVariable(projectRoot, chainKey) {
+    return readHardhatAccountKeyVariable(projectRoot, chainKey);
   },
 
   async resolveDeploySigner(options: DeploySignerOptions): Promise<Hex | null> {

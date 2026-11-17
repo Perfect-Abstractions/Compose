@@ -68,11 +68,13 @@ Use `--account <alias>` instead of `--sender` when a Compose account is configur
 
 ### Sepolia
 
-Sepolia is preconfigured in `compose.json` and `foundry.toml`. Copy `.env.example` to `.env` and set `SEPOLIA_RPC_URL`, then register a Compose account backed by a Foundry keystore entry:
+Sepolia is preconfigured in `compose.json` and `foundry.toml`. Copy `.env.example` to `.env` and set `SEPOLIA_RPC_URL`. Import the signer into Foundry's encrypted keystore, then register its public address with Compose:
 
 ```shell
+cast wallet import <keystore-name>
 npx compose account setup deployer --foundry-account <keystore-name> \
   --address <deployer-address> --chain sepolia
+npx compose account check deployer --chain sepolia
 ```
 
 Plan and broadcast the deployment:

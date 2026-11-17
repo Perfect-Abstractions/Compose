@@ -99,9 +99,93 @@ describe("AccountPipeline", () => {
       local: { rpc: "http://127.0.0.1:8545", chainId: 31337, account: "deployer" },
     });
     expect(JSON.stringify(composeJson)).not.toContain("privateKey");
-    expect(log.mock.calls.flat().join("\n")).toContain(
-      "Import it into Foundry's keystore before deploying with 'cast wallet import mainnet-deployer'.",
-    );
+    const output = log.mock.calls.flat().join("\n");
+    expect(output).toContain("Account registered");
+    expect(output).toContain("  Default chain:   local");
+    expect(output).toContain("Next steps");
+    expect(output).toContain("cast wallet import mainnet-deployer");
+    expect(output).toContain("Enter the key at Foundry's prompt, not in Compose.");
+    expect(output).toContain("compose account check deployer --chain local");
+  });
+
+  it("prints exact Hardhat key-storage and check commands when the network variable is clear", async () => {
+    await fs.writeFile(path.join(projectRoot, "compose.json"), JSON.stringify({
+      framework: "hardhat",
+      accounts: {},
+      chains: { sepolia: { rpc: "https://rpc.example.test", chainId: 11155111 } },
+    }), "utf8");
+    await fs.writeFile(path.join(projectRoot, "hardhat.config.ts"), `
+      export default {
+        networks: {
+          sepolia: {
+            type: "http",
+            accounts: [configVariable("SEPOLIA_PRIVATE_KEY")],
+          },
+        },
+      };
+    `, "utf8");
+    ctx.param.action = "setup";
+    ctx.param.accountName = "deployer";
+    ctx.param.address = "0x00000000000000000000000000000000000000a1";
+    ctx.param.chain = "sepolia";
+    const log = vi.spyOn(console, "log").mockImplementation(() => {});
+
+    await AccountPipeline.execute(ctx);
+
+    const output = log.mock.calls.flat().join("\n");
+    expect(output).toContain("Account registered");
+    expect(output).toContain("  Alias:   deployer");
+    expect(output).toContain("  Default chain:   sepolia");
+    expect(output).toContain("Next steps");
+    expect(output).toContain("npx hardhat keystore set SEPOLIA_PRIVATE_KEY");
+    expect(output).toContain("compose account check deployer --chain sepolia");
+    expect(output).toContain("Use a key whose address matches the registered public address above.");
+    expect(output).not.toContain("COMPOSE_DEPLOYER_PRIVATE_KEY");
+    expect(readAccountState(ctx).result).toHaveProperty("keyVariableName", "SEPOLIA_PRIVATE_KEY");
+  });
+
+  it("prints clear fallback guidance when the Hardhat key variable is not detectable", async () => {
+    await fs.writeFile(path.join(projectRoot, "compose.json"), JSON.stringify({
+      framework: "hardhat",
+      accounts: {},
+      chains: { sepolia: { rpc: "https://rpc.example.test", chainId: 11155111 } },
+    }), "utf8");
+    await fs.writeFile(path.join(projectRoot, "hardhat.config.ts"), `
+      export default {
+        networks: {
+          sepolia: { accounts: getCustomAccounts() },
+        },
+      };
+    `, "utf8");
+    ctx.param.action = "setup";
+    ctx.param.accountName = "deployer";
+    ctx.param.address = "0x00000000000000000000000000000000000000a1";
+    ctx.param.chain = "sepolia";
+    const log = vi.spyOn(console, "log").mockImplementation(() => {});
+
+    await AccountPipeline.execute(ctx);
+
+    const output = log.mock.calls.flat().join("\n");
+    expect(output).toContain("Configure the 'sepolia' network's signer in hardhat.config.ts.");
+    expect(output).toContain("compose account check deployer --chain sepolia");
+    expect(output).not.toContain("npx hardhat keystore set");
+  });
+
+  it("asks for an explicit chain in Hardhat check guidance when setup has no default", async () => {
+    await fs.writeFile(path.join(projectRoot, "compose.json"), JSON.stringify({
+      framework: "hardhat",
+      accounts: {},
+      chains: { sepolia: { rpc: "https://rpc.example.test", chainId: 11155111 } },
+    }), "utf8");
+    ctx.param.action = "setup";
+    ctx.param.accountName = "deployer";
+    ctx.param.address = "0x00000000000000000000000000000000000000a1";
+    const log = vi.spyOn(console, "log").mockImplementation(() => {});
+
+    await AccountPipeline.execute(ctx);
+
+    const output = log.mock.calls.flat().join("\n");
+    expect(output).toContain("compose account check deployer --chain <chain-key>");
   });
 
   it("delegates Foundry key entry to cast's interactive keystore prompt", async () => {
@@ -136,8 +220,9 @@ describe("AccountPipeline", () => {
         foundry: { account: nativeAccount },
       },
     });
-    expect(log.mock.calls.flat().join("\n")).not.toContain("Use 'cast wallet import'");
-    expect(log.mock.calls.flat().join("\n")).not.toContain("Import it into Foundry's keystore");
+    expect(log.mock.calls.flat().join("\n")).not.toContain("cast wallet import");
+    expect(log.mock.calls.flat().join("\n"))
+      .toContain("compose account check deployer --chain <chain-key>");
   });
 
   it("unlocks an existing Foundry keystore to resolve its address without importing again", async () => {
@@ -172,7 +257,9 @@ describe("AccountPipeline", () => {
     });
     expect(mocks.runCommandCaptureStdout).toHaveBeenCalledOnce();
     expect(mocks.confirm).not.toHaveBeenCalled();
-    expect(log.mock.calls.flat().join("\n")).not.toContain("Import it into Foundry's keystore");
+    expect(log.mock.calls.flat().join("\n")).not.toContain("cast wallet import");
+    expect(log.mock.calls.flat().join("\n"))
+      .toContain(`compose account check ${nativeAccount} --chain local`);
     expect((await readComposeJson()).accounts).toEqual({
       [nativeAccount]: {
         address: "0x8836442b6B4843BA1f077406cC82FddB0F3D16eF",

@@ -12,7 +12,10 @@ vi.mock("../../../../src/utils/exec", () => ({
 }));
 
 import { hardhatAdapter } from "../../../../src/adapters/IFrameworkAdapter/hardhatAdapter/adapter";
-import { listHardhatSignerAddresses } from "../../../../src/adapters/IFrameworkAdapter/hardhatAdapter/accounts";
+import {
+  listHardhatSignerAddresses,
+  readHardhatAccountKeyVariable,
+} from "../../../../src/adapters/IFrameworkAdapter/hardhatAdapter/accounts";
 
 let projectRoot: string;
 
@@ -33,6 +36,86 @@ afterEach(async () => {
 });
 
 describe("Hardhat account helpers", () => {
+  it("reads a single key variable from the selected network config", async () => {
+    await fs.writeFile(path.join(projectRoot, "hardhat.config.ts"), `
+      export default {
+        networks: {
+          local: { type: "http", accounts: "remote" },
+          sepolia: {
+            type: "http",
+            url: configVariable("SEPOLIA_RPC_URL"),
+            accounts: [configVariable("SEPOLIA_PRIVATE_KEY")],
+          },
+        },
+      };
+    `, "utf8");
+
+    await expect(readHardhatAccountKeyVariable(projectRoot, "sepolia"))
+      .resolves.toBe("SEPOLIA_PRIVATE_KEY");
+    await expect(readHardhatAccountKeyVariable(projectRoot, "local"))
+      .resolves.toBeNull();
+  });
+
+  it("uses the Compose network overlay when the base config also defines networks", async () => {
+    await fs.writeFile(path.join(projectRoot, "hardhat.config.ts"), `
+      const baseConfig = {
+        networks: {
+          sepolia: {
+            type: "http",
+            accounts: [configVariable("BASE_SEPOLIA_PRIVATE_KEY")],
+          },
+        },
+      };
+      export default {
+        ...baseConfig,
+        networks: {
+          ...baseConfig.networks,
+          sepolia: {
+            type: "http",
+            accounts: [configVariable("SEPOLIA_PRIVATE_KEY")],
+          },
+        },
+      };
+    `, "utf8");
+
+    await expect(readHardhatAccountKeyVariable(projectRoot, "sepolia"))
+      .resolves.toBe("SEPOLIA_PRIVATE_KEY");
+  });
+
+  it("does not guess for custom or ambiguous account config", async () => {
+    await fs.writeFile(path.join(projectRoot, "hardhat.config.ts"), `
+      export default {
+        networks: {
+          sepolia: {
+            accounts: process.env.DEPLOYER_KEY ? [process.env.DEPLOYER_KEY] : [],
+          },
+        },
+      };
+    `, "utf8");
+    await expect(readHardhatAccountKeyVariable(projectRoot, "sepolia"))
+      .resolves.toBeNull();
+
+    await fs.writeFile(path.join(projectRoot, "hardhat.config.ts"), `
+      export default {
+        networks: {
+          sepolia: {
+            accounts: [
+              configVariable("DEPLOYER_KEY"),
+              configVariable("BACKUP_KEY"),
+            ],
+          },
+        },
+      };
+    `, "utf8");
+    await expect(readHardhatAccountKeyVariable(projectRoot, "sepolia"))
+      .resolves.toBeNull();
+  });
+
+  it("returns no key variable when the config file is unavailable", async () => {
+    await expect(readHardhatAccountKeyVariable(projectRoot, "sepolia"))
+      .resolves.toBeNull();
+  });
+
   it("lists the configured signer addresses from the managed probe", async () => {
     const address = "0x00000000000000000000000000000000000000a1";
     mocks.runCommandCaptureStdout.mockResolvedValue(

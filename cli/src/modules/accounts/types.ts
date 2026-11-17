@@ -41,7 +41,7 @@ export type AccountSetupSummary = {
   foundryAccount?: string;
   /** Whether the referenced Foundry keystore file already exists. */
   foundryKeystoreExists: boolean;
-  /** Hardhat key variable users must configure in `hardhat.config.ts`. */
+  /** A single key variable detected in the selected Hardhat network config. */
   keyVariableName?: string;
   /** Chain that now defaults to this alias. */
   chainKey?: string;

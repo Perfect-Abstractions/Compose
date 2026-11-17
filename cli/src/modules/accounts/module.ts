@@ -132,10 +132,6 @@ async function removeAccount(
   showAccountRemoved(alias);
 }
 
-function hardhatKeyVariableName(alias: string): string {
-  return `COMPOSE_${alias.replace(/[^A-Za-z0-9]/g, "_").toUpperCase()}_PRIVATE_KEY`;
-}
-
 async function setupAccount(
   ctx: ComposeContext,
   composeJson: Record<string, unknown>,
@@ -216,6 +212,13 @@ async function setupAccount(
     );
   }
 
+  const chainKey = typeof ctx.param.chain === "string" && ctx.param.chain
+    ? ctx.param.chain
+    : undefined;
+  const keyVariableName = framework === "hardhat" && chainKey
+    ? await adapter.getAccountKeyVariable?.(composeFile.root, chainKey) ?? undefined
+    : undefined;
+
   const accounts = { ...getComposeAccounts(composeJson) };
   const existing = accounts[alias];
   if (isRecord(existing) && existing.address !== address) {
@@ -237,8 +240,8 @@ async function setupAccount(
     framework,
     ...(foundryAccount ? { foundryAccount } : {}),
     foundryKeystoreExists: native.exists,
-    ...(framework === "hardhat" ? { keyVariableName: hardhatKeyVariableName(alias) } : {}),
-    ...(typeof ctx.param.chain === "string" && ctx.param.chain ? { chainKey: ctx.param.chain } : {}),
+    ...(keyVariableName ? { keyVariableName } : {}),
+    ...(chainKey ? { chainKey } : {}),
   };
   showAccountRegistered(summary);
   return summary;

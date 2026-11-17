@@ -173,6 +173,7 @@ The chain passed to `--chain` must already exist in `compose.json`. Freshly init
 
 ```bash
 # Register an existing Foundry keystore account and use it by default on Sepolia
+cast wallet import production-deployer
 npx compose account setup deployer --foundry-account production-deployer \
   --address 0x1234567890123456789012345678901234567890 --chain sepolia
 
@@ -186,7 +187,7 @@ npx compose account check deployer --chain sepolia
 npx compose account remove deployer
 ```
 
-For Foundry, import a key through Foundry's encrypted keystore with `cast wallet import production-deployer`. For Hardhat, generated projects reference the selected HTTP network's signer with `configVariable("SEPOLIA_PRIVATE_KEY")`:
+For Foundry, import a key through Foundry's encrypted keystore with `cast wallet import production-deployer`. Generated Hardhat projects reference the Sepolia signer with `configVariable("SEPOLIA_PRIVATE_KEY")`:
 
 ```ts
 import { configVariable } from "hardhat/config";
@@ -199,7 +200,14 @@ sepolia: {
 }
 ```
 
-Then run `npx hardhat keystore set SEPOLIA_PRIVATE_KEY` (or set it in `.env`) and register the corresponding public address with Compose. `compose deploy` verifies that the selected framework can use the configured address before deployment. Interactive Foundry setup can import through Foundry's own prompt; Compose does not read the key.
+For a generated Hardhat Sepolia project, store the key with `npx hardhat keystore set SEPOLIA_PRIVATE_KEY`, register its public address, then verify the alias:
+
+```bash
+npx compose account setup deployer --address 0x1234567890123456789012345678901234567890 --chain sepolia
+npx compose account check deployer --chain sepolia
+```
+
+If `hardhat.config.ts` uses a different key variable, store the key using that configured variable instead. `compose account check` verifies the configured signer address before deployment. Interactive Foundry setup can import through Foundry's own prompt; Compose does not read private keys.
 
 ### `compose validate`
 

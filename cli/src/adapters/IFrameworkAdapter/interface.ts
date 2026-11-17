@@ -86,6 +86,12 @@ export interface IFrameworkAdapter {
   listSignerAddresses(options: SignerAddressOptions): Promise<string[]>;
 
   /**
+   * Resolve a single configured key variable for the selected network when
+   * the framework config makes it unambiguous.
+   */
+  getAccountKeyVariable?(projectRoot: string, chainKey: string): Promise<string | null>;
+
+  /**
    * Resolve the signer a deploy command will use without signing anything.
    * Returns null when the framework cannot expose the selected signer.
    */

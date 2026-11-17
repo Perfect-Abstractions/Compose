@@ -208,7 +208,9 @@ describe.sequential("deploy pipeline E2E", () => {
       ], childEnv);
       const setupOutput = `${setup.stdout}\n${setup.stderr}`;
       expect(setup.code, setupOutput).toBe(0);
-      expect(setupOutput).toContain(`Registered account 'deployer' at ${deployerAddress}`);
+      expect(setupOutput).toContain("Alias:   deployer");
+      expect(setupOutput).toContain(`Address: ${deployerAddress}`);
+      expect(setupOutput).toContain("compose account check deployer --chain local");
       expect(setupOutput).not.toContain("cast wallet import");
       expect(setupOutput).not.toContain(ANVIL_PRIVATE_KEY);
       expect(setupOutput.split(deployerAddress).length - 1).toBe(1);
