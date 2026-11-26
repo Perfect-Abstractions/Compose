@@ -9,15 +9,7 @@ pragma solidity >=0.8.30;
  * @dev Minimal ERC20 interface.
  */
 interface IERC20 {
-    function totalSupply() external view returns (uint256);
-
     function balanceOf(address account) external view returns (uint256);
-
-    function transfer(address to, uint256 amount) external returns (bool);
-
-    function allowance(address owner, address spender) external view returns (uint256);
-
-    function approve(address spender, uint256 amount) external returns (bool);
 
     function transferFrom(address from, address to, uint256 amount) external returns (bool);
 }
@@ -198,16 +190,13 @@ contract ERC4626DepositFacet {
                 revert MulDivOverflow();
             }
 
-            /**
+            /*
              * Step 5: Compute and subtract remainder from [prod1 prod0] to make the division exact.
              * - Calculate the remainder of (a * b) % denominator.
              * - Remove the remainder from the [prod1 prod0] 512-bit product so division will be exact.
              */
-            uint256 remainder;
             assembly ("memory-safe") {
-                remainder := mulmod(a, b, denominator)
-            }
-            assembly ("memory-safe") {
+                let remainder := mulmod(a, b, denominator)
                 prod1 := sub(prod1, gt(remainder, prod0))
                 prod0 := sub(prod0, remainder)
             }
@@ -310,8 +299,8 @@ contract ERC4626DepositFacet {
     function previewDeposit(uint256 assets) external view returns (uint256 shares) {
         ERC20Storage storage erc20s = getERC20Storage();
         uint256 totalShares = erc20s.totalSupply + VIRTUAL_SHARE;
-        ERC4626Storage storage s = getERC4626Storage();
-        uint256 totalAssets = s.asset.balanceOf(address(this)) + VIRTUAL_ASSET;
+        ERC4626Storage storage erc4626s = getERC4626Storage();
+        uint256 totalAssets = erc4626s.asset.balanceOf(address(this)) + VIRTUAL_ASSET;
         shares = muldiv(totalShares, assets, totalAssets);
         return shares;
     }

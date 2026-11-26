@@ -1,0 +1,122 @@
+Data
+├── Asset
+│   └── when the vault has a configured underlying token
+│       └── it should return the underlying token address
+├── TotalAssets
+│   ├── when the vault is empty
+│   │   └── it should return zero without adding virtual assets
+│   └── when the vault holds assets
+│       └── it should return only the vault's actual underlying balance
+└── ExportSelectors
+    └── it should return the packed selectors for asset and totalAssets
+
+ConvertToShares
+├── when the asset amount is zero
+│   └── it should return zero
+├── when the vault is empty
+│   └── it should use the virtual asset and share offsets
+├── when the vault has assets and shares
+│   └── it should return the equivalent shares rounded down
+├── when the product exceeds 256 bits but the quotient fits
+│   └── it should preserve full precision and round down
+└── ExportSelectors
+    └── it should return only the packed convertToShares selector
+
+ConvertToAssets
+├── when the share amount is zero
+│   └── it should return zero
+├── when the vault is empty
+│   └── it should use the virtual asset and share offsets
+├── when the vault has assets and shares
+│   └── it should return the equivalent assets rounded down
+├── when the product exceeds 256 bits but the quotient fits
+│   └── it should preserve full precision and round down
+└── ExportSelectors
+    └── it should return only the packed convertToAssets selector
+
+Deposit
+├── MaxDeposit
+│   └── it should return the unlimited deposit limit
+├── PreviewDeposit
+│   └── it should quote shares rounded down using the virtual offsets
+├── when the receiver is zero
+│   └── it should revert with the invalid receiver error
+├── when the quote is zero, including a positive deposit that rounds to zero
+│   └── it should revert without pulling assets
+├── when the asset transfer fails or returns malformed data
+│   └── it should leave underlying balances, share balances and supply unchanged
+├── when the deposit succeeds, including an asset that returns no data
+│   └── it should pull the requested assets, mint the quoted shares and emit Transfer and Deposit
+└── ExportSelectors
+    └── it should return the packed maxDeposit, previewDeposit and deposit selectors
+
+Mint
+├── MaxMint
+│   └── it should return the unlimited mint limit
+├── PreviewMint
+│   └── it should quote assets rounded up using the virtual offsets
+├── when the receiver is zero or the quote is zero
+│   └── it should revert with the corresponding error
+├── when the asset transfer fails or returns malformed data
+│   └── it should leave underlying balances, share balances and supply unchanged
+├── when the mint succeeds, including an asset that returns no data
+│   └── it should pull the quoted assets, mint the requested shares and emit Transfer and Deposit
+└── ExportSelectors
+    └── it should return the packed maxMint, previewMint and mint selectors
+
+Withdraw
+├── MaxWithdraw
+│   └── it should return the owner's shares converted to assets rounded down
+├── PreviewWithdraw
+│   └── it should quote shares rounded up using the virtual offsets
+├── when the receiver or owner is zero, the request exceeds the maximum, or the quote is zero
+│   └── it should revert with the corresponding error
+├── when the owner or an approved spender withdraws
+│   └── it should burn the quoted shares, pay the requested assets and emit Transfer and Withdraw
+└── ExportSelectors
+    └── it should return the packed maxWithdraw, previewWithdraw and withdraw selectors
+
+Redeem
+├── MaxRedeem
+│   └── it should return the owner's share balance
+├── PreviewRedeem
+│   └── it should quote assets rounded down using the virtual offsets
+├── when the receiver or owner is zero, the request exceeds the maximum, or the quote is zero (including positive shares that round down to zero assets)
+│   └── it should revert with the corresponding error
+├── when the owner or an approved spender redeems
+│   └── it should burn the requested shares, pay the quoted assets and emit Transfer and Withdraw
+└── ExportSelectors
+    └── it should return the packed maxRedeem, previewRedeem and redeem selectors
+
+Withdrawal and redemption authorization
+├── when the caller is the owner
+│   └── it should not require allowance
+├── when a spender has finite allowance
+│   └── it should spend the shares burned, or revert if allowance is insufficient
+├── when a spender has unlimited allowance
+│   └── it should not decrease allowance
+├── when the transfer fails or returns malformed data
+│   └── it should roll back the share burn and allowance spending
+└── when the asset transfers without returning data
+    └── it should still pay the receiver
+
+Diamond integration
+├── when the facets are installed on one diamond
+│   └── it should share the underlying asset and share storage across the routed calls
+├── when depositing and redeeming on the diamond
+│   └── it should keep data, quotes, balances, supply and asset payouts consistent
+├── when the vault receives an asset transfer directly
+│   └── it should update totalAssets and quotes without minting shares
+├── when the vault receives assets before the first deposit
+│   └── it should mint the quoted shares on the first deposit when the quote is positive
+├── when minting and withdrawing through an approved spender
+│   ├── it should use the share allowance from the installed ERC20 facets
+│   └── it should pull assets before minting shares and burn shares before paying assets
+├── when two users enter and exit a funded vault at a fractional exchange rate
+│   └── it should execute all four actions at their quoted amounts and keep balances and supply consistent
+├── when a user deposits and immediately redeems in a funded vault
+│   ├── it should not return more assets than the user deposited
+│   └── it should quote the same conversions regardless of the caller
+└── when the asset observes the vault during a transfer
+    ├── it should see the pre-deposit quote before pulling assets
+    └── it should see the final withdrawal quote after paying assets
